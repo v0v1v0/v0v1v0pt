@@ -1,0 +1,229 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>merge_expression_module</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merge expression module</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>Convenient wrapper to combine <code>data_extract_multiple_srv()</code> and
+<code>merge_expression_srv()</code> when no additional processing is required.
+Compare the example below with that found in <code>merge_expression_srv()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">merge_expression_module(
+  datasets,
+  join_keys = NULL,
+  data_extract,
+  merge_function = "dplyr::full_join",
+  anl_name = "ANL",
+  id = "merge_id"
+)
+
+## S3 method for class 'reactive'
+merge_expression_module(
+  datasets,
+  join_keys = NULL,
+  data_extract,
+  merge_function = "dplyr::full_join",
+  anl_name = "ANL",
+  id = "merge_id"
+)
+
+## S3 method for class 'list'
+merge_expression_module(
+  datasets,
+  join_keys = NULL,
+  data_extract,
+  merge_function = "dplyr::full_join",
+  anl_name = "ANL",
+  id = "merge_id"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>(named <code>list</code> of <code>reactive</code> or non-<code>reactive</code> <code>data.frame</code>)
+object containing data as a list of <code>data.frame</code>.
+When passing a list of non-reactive <code>data.frame</code> objects, they are
+converted to reactive <code>data.frame</code> objects internally.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>join_keys</code></td>
+<td>
+<p>(<code>join_keys</code>)
+of variables used as join keys for each of the datasets in <code>datasets</code>.
+This will be used to extract the <code>keys</code> of every dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_extract</code></td>
+<td>
+<p>(named <code>list</code> of <code>data_extract_spec</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>merge_function</code></td>
+<td>
+<p>(<code>character(1)</code>)
+A character string of a function that accepts the arguments <code>x</code>, <code>y</code> and
+<code>by</code> to perform the merging of datasets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>anl_name</code></td>
+<td>
+<p>(<code>character(1)</code>)
+Name of the analysis dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>An ID string that corresponds with the ID used to call the module's
+UI function.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Reactive expression with output from <code>merge_expression_srv()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>merge_expression_srv()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+library(teal.data)
+library(teal.widgets)
+
+ADSL &lt;- data.frame(
+  STUDYID = "A",
+  USUBJID = LETTERS[1:10],
+  SEX = rep(c("F", "M"), 5),
+  AGE = rpois(10, 30),
+  BMRKR1 = rlnorm(10)
+)
+ADLB &lt;- expand.grid(
+  STUDYID = "A",
+  USUBJID = LETTERS[1:10],
+  PARAMCD = c("ALT", "CRP", "IGA"),
+  AVISIT = c("SCREENING", "BASELINE", "WEEK 1 DAY 8", "WEEK 2 DAY 15")
+)
+ADLB$AVAL &lt;- rlnorm(120)
+ADLB$CHG &lt;- rnorm(120)
+
+data_list &lt;- list(
+  ADSL = reactive(ADSL),
+  ADLB = reactive(ADLB)
+)
+
+join_keys &lt;- join_keys(
+  join_key("ADSL", "ADSL", c("STUDYID", "USUBJID")),
+  join_key("ADSL", "ADLB", c("STUDYID", "USUBJID")),
+  join_key("ADLB", "ADLB", c("STUDYID", "USUBJID", "PARAMCD", "AVISIT"))
+)
+
+adsl_extract &lt;- data_extract_spec(
+  dataname = "ADSL",
+  select = select_spec(
+    label = "Select variable:",
+    choices = c("AGE", "BMRKR1"),
+    selected = "AGE",
+    multiple = TRUE,
+    fixed = FALSE
+  )
+)
+adlb_extract &lt;- data_extract_spec(
+  dataname = "ADLB",
+  filter = filter_spec(vars = "PARAMCD", choices = c("ALT", "CRP", "IGA"), selected = "ALT"),
+  select = select_spec(
+    label = "Select variable:",
+    choices = c("AVAL", "CHG"),
+    selected = "AVAL",
+    multiple = TRUE,
+    fixed = FALSE
+  )
+)
+
+ui &lt;- fluidPage(
+  standard_layout(
+    output = div(
+      verbatimTextOutput("expr"),
+      dataTableOutput("data")
+    ),
+    encoding = tagList(
+      data_extract_ui("adsl_var", label = "ADSL selection", adsl_extract),
+      data_extract_ui("adlb_var", label = "ADLB selection", adlb_extract)
+    )
+  )
+)
+
+server &lt;- function(input, output, session) {
+  data_q &lt;- qenv()
+
+  data_q &lt;- eval_code(
+    data_q,
+    "ADSL &lt;- data.frame(
+        STUDYID = 'A',
+        USUBJID = LETTERS[1:10],
+        SEX = rep(c('F', 'M'), 5),
+        AGE = rpois(10, 30),
+        BMRKR1 = rlnorm(10)
+      )"
+  )
+
+  data_q &lt;- eval_code(
+    data_q,
+    "ADLB &lt;- expand.grid(
+        STUDYID = 'A',
+        USUBJID = LETTERS[1:10],
+        PARAMCD = c('ALT', 'CRP', 'IGA'),
+        AVISIT = c('SCREENING', 'BASELINE', 'WEEK 1 DAY 8', 'WEEK 2 DAY 15'),
+        AVAL = rlnorm(120),
+        CHG = rlnorm(120)
+       )"
+  )
+
+  merged_data &lt;- merge_expression_module(
+    data_extract = list(adsl_var = adsl_extract, adlb_var = adlb_extract),
+    datasets = data_list,
+    join_keys = join_keys,
+    merge_function = "dplyr::left_join"
+  )
+
+  code_merge &lt;- reactive({
+    for (exp in merged_data()$expr) data_q &lt;- eval_code(data_q, exp)
+    data_q
+  })
+
+  output$expr &lt;- renderText(paste(merged_data()$expr, collapse = "\n"))
+  output$data &lt;- renderDataTable(code_merge()[["ANL"]])
+}
+
+if (interactive()) {
+  shinyApp(ui, server)
+}
+</code></pre>
+
+
+</div>

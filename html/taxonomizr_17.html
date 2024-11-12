@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>prepareDatabase</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Download data from NCBI and set up SQLite database</h2>
+
+<h3>Description</h3>
+
+<p>Convenience function to do all necessary preparations downloading names, nodes and accession2taxid data from NCBI and preprocessing into a SQLite database for downstream use.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">prepareDatabase(
+  sqlFile = "nameNode.sqlite",
+  tmpDir = ".",
+  getAccessions = TRUE,
+  vocal = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sqlFile</code></td>
+<td>
+<p>character string giving the file location to store the SQLite database</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tmpDir</code></td>
+<td>
+<p>location for storing the downloaded files from NCBI. (Note that it may be useful to store these somewhere convenient to avoid redownloading)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>getAccessions</code></td>
+<td>
+<p>if TRUE download the very large accesssion2taxid files necessary to convert accessions to taxonomic IDs</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vocal</code></td>
+<td>
+<p>if TRUE output messages describing progress</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Arguments passed on to <code>getNamesAndNodes</code>, <code>getAccession2taxid</code>, <code>read.accession2taxid</code>
+</p>
+
+<dl>
+<dt><code>url</code></dt>
+<dd>
+<p>the url where taxdump.tar.gz is located</p>
+</dd>
+<dt><code>fileNames</code></dt>
+<dd>
+<p>the filenames desired from the tar.gz file</p>
+</dd>
+<dt><code>protocol</code></dt>
+<dd>
+<p>the protocol to be used for downloading. Probably either <code>'http'</code> or <code>'ftp'</code>. Overridden if <code>url</code> is provided directly</p>
+</dd>
+<dt><code>resume</code></dt>
+<dd>
+<p>if TRUE attempt to resume downloading an interrupted file without starting over from the beginning</p>
+</dd>
+<dt><code>baseUrl</code></dt>
+<dd>
+<p>the url of the directory where accession2taxid.gz files are located</p>
+</dd>
+<dt><code>types</code></dt>
+<dd>
+<p>the types if accession2taxid.gz files desired where type is the prefix of xxx.accession2taxid.gz. The default is to download all nucl_ accessions. For protein accessions, try <code>types=c('prot')</code>.</p>
+</dd>
+<dt><code>extraSqlCommand</code></dt>
+<dd>
+<p>for advanced use. A string giving a command to be called on the SQLite database before loading data. A couple potential uses: 
+</p>
+<ul>
+<li>
+<p> "PRAGMA temp_store_directory = '/MY/TMP/DIR'" to store SQLite temporary files in directory /MY/TMP/DIR. Useful if the temporary directory used by SQLite (which is not necessarily in the same location as R's) is small on your system </p>
+</li>
+<li>
+<p> "pragma temp_store = 2;" to keep all SQLite temp files in memory. Don't do this unless you have a lot (&gt;100 Gb) of RAM</p>
+</li>
+</ul>
+</dd>
+<dt><code>indexTaxa</code></dt>
+<dd>
+<p>if TRUE add an index for taxa ID. This would only be necessary if you want to look up accessions by taxa ID e.g. <code>getAccessions</code></p>
+</dd>
+<dt><code>overwrite</code></dt>
+<dd>
+<p>If TRUE, delete accessionTaxa table in database if present and regenerate</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a vector of character string giving the path to the SQLite file
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>getNamesAndNodes</code>, <code>getAccession2taxid</code>, <code>read.accession2taxid</code>, <code>read.nodes.sql</code>, <code>read.names.sql</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+  if(readline(
+    "This will download a lot data and take a while to process.
+     Make sure you have space and bandwidth. Type y to continue: "
+  )!='y')
+    stop('This is a stop to make sure no one downloads a bunch of data unintentionally')
+
+  prepareDatabase()
+
+## End(Not run)
+</code></pre>
+
+
+</div>

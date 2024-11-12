@@ -1,0 +1,210 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_smooth_seasonal_state_space_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>State space model for a smooth seasonal effect</h2>
+
+<h3>Description</h3>
+
+<p>A state space model (SSM) posits a set of latent (unobserved) variables that
+evolve over time with dynamics specified by a probabilistic transition model
+<code>p(z[t+1] | z[t])</code>. At each timestep, we observe a value sampled from an
+observation model conditioned on the current state, <code>p(x[t] | z[t])</code>. The
+special case where both the transition and observation models are Gaussians
+with mean specified as a linear function of the inputs, is known as a linear
+Gaussian state space model and supports tractable exact probabilistic
+calculations; see <code>tfp$distributions$LinearGaussianStateSpaceModel</code> for
+details.
+A smooth seasonal effect model is a special case of a linear Gaussian SSM. It
+is the sum of a set of "cyclic" components, with one component for each
+frequency:
+</p>
+<div class="sourceCode"><pre>frequencies[j] = 2. * pi * frequency_multipliers[j] / period
+</pre></div>
+<p>Each cyclic component contains two latent states which we denote <code>effect</code> and
+<code>auxiliary</code>. The two latent states for component <code>j</code> drift over time via:
+</p>
+<div class="sourceCode"><pre>effect[t] = (effect[t-1] * cos(frequencies[j]) +
+             auxiliary[t-] * sin(frequencies[j]) +
+             Normal(0., drift_scale))
+auxiliary[t] = (-effect[t-1] * sin(frequencies[j]) +
+                auxiliary[t-] * cos(frequencies[j]) +
+                Normal(0., drift_scale))
+</pre></div>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_smooth_seasonal_state_space_model(
+  num_timesteps,
+  period,
+  frequency_multipliers,
+  drift_scale,
+  initial_state_prior,
+  observation_noise_scale = 0,
+  initial_step = 0,
+  validate_args = FALSE,
+  allow_nan_stats = TRUE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_timesteps</code></td>
+<td>
+<p>Scalar <code>integer</code> <code>Tensor</code> number of timesteps to model
+with this distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>positive scalar <code>float</code> <code>Tensor</code> giving the number of timesteps
+required for the longest cyclic effect to repeat.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frequency_multipliers</code></td>
+<td>
+<p>One-dimensional <code>float</code> <code>Tensor</code> listing the
+frequencies (cyclic components) included in the model, as multipliers of
+the base/fundamental frequency <code>2. * pi / period</code>. Each component is
+specified by the number of times it repeats per period, and adds two
+latent dimensions to the model. A smooth seasonal model that can
+represent any periodic function is given by
+<code style="white-space: pre;">⁠frequency_multipliers = [1,2, ..., floor(period / 2)]⁠</code>.
+However, it is often desirable to enforce a
+smoothness assumption (and reduce the computational burden) by dropping
+some of the higher frequencies.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drift_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are treated as batch
+dimensions) <code>float</code> <code>Tensor</code> indicating the standard deviation of the
+latent state transitions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>instance of <code>tfd$MultivariateNormal</code>
+representing the prior distribution on latent states.  Must have
+event shape <code style="white-space: pre;">⁠[num_features]⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation_noise_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are
+treated as batch dimensions) <code>float</code> <code>Tensor</code> indicating the standard
+deviation of the observation noise. Default value: <code>0.</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_step</code></td>
+<td>
+<p>scalar <code>integer</code> <code>Tensor</code> specifying the starting timestep.
+Default value: <code>0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p><code>logical</code>. Whether to validate input
+with asserts. If <code>validate_args</code> is <code>FALSE</code>, and the inputs are
+invalid, correct behavior is not guaranteed. Default value: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p><code>logical</code>. If <code>FALSE</code>, raise an
+exception if a statistic (e.g. mean/mode/etc...) is undefined for any
+batch member. If <code>TRUE</code>, batch members with valid parameters leading to
+undefined statistics will return NaN for this statistic. Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to ops created by this class.
+Default value: "LocalLinearTrendStateSpaceModel".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>auxiliary</code> latent state only appears as a matter of construction and thus
+its interpretation is not particularly important. The total smooth seasonal
+effect is the sum of the <code>effect</code> values from each of the cyclic components.
+The parameters <code>drift_scale</code> and <code>observation_noise_scale</code> are each (a batch
+of) scalars. The batch shape of this <code>Distribution</code> is the broadcast batch
+shape of these parameters and of the <code>initial_state_prior</code>.
+</p>
+<p>Mathematical Details
+</p>
+<p>The smooth seasonal effect model implements a
+<code>tfp$distributions$LinearGaussianStateSpaceModel</code> with
+<code>latent_size = 2 * len(frequency_multipliers)</code> and <code>observation_size = 1</code>.
+The latent state is the concatenation of the cyclic latent states which themselves
+comprise an <code>effect</code> and an <code>auxiliary</code> state. The transition matrix is a block diagonal
+matrix where block <code>j</code> is:
+</p>
+<div class="sourceCode"><pre>transition_matrix[j] =  [[cos(frequencies[j]), sin(frequencies[j])],
+                         [-sin(frequencies[j]), cos(frequencies[j])]]
+</pre></div>
+<p>The observation model picks out the cyclic <code>effect</code> values from the latent state:
+</p>
+<div class="sourceCode"><pre>observation_matrix = [[1., 0., 1., 0., ..., 1., 0.]]
+observation_noise ~ Normal(loc=0, scale=observation_noise_scale)
+</pre></div>
+<p>For further mathematical details please see Harvey (1990).
+</p>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>LinearGaussianStateSpaceModel</code>.
+</p>
+
+
+<h3>references</h3>
+
+
+<ul><li>
+<p> Harvey, A. Forecasting, Structural Time Series Models and the Kalman Filter. Cambridge: Cambridge University Press, 1990.
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

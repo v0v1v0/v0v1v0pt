@@ -1,0 +1,113 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.tbss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot an Object of the Class tbss</h2>
+
+<h3>Description</h3>
+
+<p>Plots the most interesting components (in the sense of extreme kurtosis) obtained by a tensor blind source separation method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tbss'
+plot(x, first = 2, last = 2, datatype = NULL, 
+     main = "The components with most extreme kurtoses", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Object of class tbss.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>first</code></td>
+<td>
+<p>Number of components with maximal kurtosis to be selected.<br> See <code>selectComponents</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>last</code></td>
+<td>
+<p>Number of components with minimal kurtosis to be selected.<br> See <code>selectComponents</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>The title of the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datatype</code></td>
+<td>
+<p>Parameter for choosing the type of plot, either <code>NULL</code>, <code>"iid"</code> or <code>"ts"</code>. The default <code>NULL</code> means the value from the tbss object <code>x</code> is taken.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to the plotting functions, see details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>plot.tbss</code> first selects the most interesting components using <code>selectComponents</code> and then plots them either as a matrix of scatter plots using <code>pairs</code> (<code>datatype</code> = "iid") or as a time series plot using <code>plot.ts</code> (<code>datatype</code> = "ts"). 
+Note that for <code>tSOBI</code> this criterion might not necessarily be meaningful as the method is based on second moments only.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Joni Virta
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(zip.train)
+x &lt;- zip.train
+
+rows &lt;- which(x[, 1] == 0 | x[, 1] == 1)
+x0 &lt;- x[rows, 2:257]
+y0 &lt;- x[rows, 1] + 1
+
+x0 &lt;- t(x0)
+dim(x0) &lt;- c(16, 16, 2199)
+
+tfobi &lt;- tFOBI(x0)
+plot(tfobi, col=y0)
+
+if(require("stochvol")){
+  n &lt;- 1000
+  S &lt;- t(cbind(svsim(n, mu = -10, phi = 0.98, sigma = 0.2, nu = Inf)$y,
+               svsim(n, mu = -5, phi = -0.98, sigma = 0.2, nu = 10)$y,
+               svsim(n, mu = -10, phi = 0.70, sigma = 0.7, nu = Inf)$y,
+               svsim(n, mu = -5, phi = -0.70, sigma = 0.7, nu = 10)$y,
+               svsim(n, mu = -9, phi = 0.20, sigma = 0.01, nu = Inf)$y,
+               svsim(n, mu = -9, phi = -0.20, sigma = 0.01, nu = 10)$y))
+  dim(S) &lt;- c(3, 2, n)
+
+  A1 &lt;- matrix(rnorm(9), 3, 3)
+  A2 &lt;- matrix(rnorm(4), 2, 2)
+
+  X &lt;- tensorTransform(S, A1, 1)
+  X &lt;- tensorTransform(X, A2, 2)
+
+  tgfobi &lt;- tgFOBI(X)
+  plot(tgfobi, 1, 1)
+}
+</code></pre>
+
+
+</div>

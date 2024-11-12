@@ -1,0 +1,87 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>formattrip</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Formats the triples match for input to other functions</h2>
+
+<h3>Description</h3>
+
+<p>Formats the triples match for input to other functions
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">formattrip(m, y, type = "wide")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>The triples match, typically the output of [triples()]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A vector or matrix containing the outcome(s). If there are multiple
+outcomes, there should be a column for each. The rows (or vector elements) correspond to units.
+The vector should have names or the matrix should have rownames specifying the unit name.
+These unit names should correspond to those used in 'm'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Either 'wide' or 'long'. 'wide' formats the match for input to [sentrip()] whereas
+'long' formats the match for input to [infsentrip()].
+'wide' can only be used if there is
+exactly one outcome in 'y'. 'wide' creates a matrix 'ymat' of outcomes with a row
+corresponding to each triple and three columns corresponding to the units in the triple.
+It also creates a logical vector 'treated1' stating whether the first unit in
+the corresponding row of 'ymat' is the one
+treated in the triple or not (in which case it would be the one control in the triple).
+'long' creates a list of three elements: 'y', 'z', and 'mset'. Each of these elements
+is a vector with one element corresponding to each unit in the triples match. 'y' is the
+outcome, 'z' is 1 if treated and 0 otherwise, and 'mset' is the number of the triple
+to which this unit belongs</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list containing either two elements 'ymat' and 'treated1' if 'type == "wide"'
+or three elements 'y', 'z', and 'mset' if 'type == "long"'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate some data
+set.seed(316)
+n &lt;- 30
+x &lt;- rnorm(n, 0, 1)
+nt &lt;- floor(n * 0.2)
+nc &lt;- n - nt
+z &lt;- c(rep(1, nt), rep(0, nc))
+# Create a distance matrix (all units in one stratum here)
+dist &lt;- dist_mahal(data.frame(x = x), z, rep(1, n))[[1]]
+# Conduct the triples match
+triplesm &lt;- triples_st(cost = dist, z = z, solver = "rlemon")
+# Create primary and negative outcomes with some random unit names
+y &lt;- cbind(rnorm(40), runif(40))
+rownames(y) &lt;- sample(1:40)
+# Reformat the triples match
+ylong &lt;- formattrip(m = triplesm, y = y, type = "long")
+# Wide version only works with a single outcome
+ywide &lt;- formattrip(m = triplesm, y = y[, 1], type = "wide")
+</code></pre>
+
+
+</div>

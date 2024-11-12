@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>coefB</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract cointegration parameters A, B and PI</h2>
+
+<h3>Description</h3>
+
+<p>Extract parameters in VECM: adjustment coefficients <code>A</code>, 
+cointegrating coefficients <code>B</code> , or the composite matrix <code>PI</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">coefB(object, ...)
+
+## S3 method for class 'VECM'
+coefB(object, ...)
+
+## S3 method for class 'ca.jo'
+coefB(object, r = 1, normalize = TRUE, ...)
+
+coefA(object, ...)
+
+## S3 method for class 'VECM'
+coefA(object, ...)
+
+## S3 method for class 'ca.jo'
+coefA(object, r = 1, normalize = TRUE, ...)
+
+coefPI(object, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object of class <code>VECM</code>, <code>ca.jo</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>The cointegrating rank</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>Whether to normalize the A/B coefficients. See details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed to methods</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The functions extract the parameters from a VECM with <code class="reqn">K</code> variables 
+and rank <code class="reqn">r</code>:
+</p>
+
+<dl>
+<dt>A</dt>
+<dd>
+<p>Adjustment coefficients, of dim <code class="reqn">K \times r</code></p>
+</dd>
+<dt>B</dt>
+<dd>
+<p>Cointegrating coefficients, of dim <code class="reqn">K \times r</code></p>
+</dd>
+<dt>Pi</dt>
+<dd>
+<p>Matrix <code class="reqn">\Pi=A B^{'}</code>, of dim <code class="reqn">K \times K</code></p>
+</dd>
+</dl>
+<p>Coefficients are extracted from a VECM in package <code>tsDyn</code>, or from a VECM 
+obtained in package <code>urca</code> from <code>ca.jo</code> or <code>cajorls</code>. 
+</p>
+<p>Note that by default, the A and B coefficients returned are normalized (see below). This is 
+the case for results obtained from <code>VECM</code>/<code>lineVar</code> and 
+<code>cajorls</code>, while for <code>ca.jo</code>, the user has the choice
+(but normalize=TRUE by default), in which case the rank <code>r</code> is also to be specified.
+The normalization is the Phillips triangular representation,  as suggested by Johansen (1995, p. 72), 
+standardising  the first <code class="reqn">r\times r</code> coefficients to <code class="reqn">I_r</code>:
+</p>
+
+<dl>
+<dt>B</dt>
+<dd>
+<p><code class="reqn">B_{norm}=B (c^{'}B)^{-1}</code> with <code class="reqn">c=(I_r,0_{K-r,r})^{'}</code></p>
+</dd>
+<dt>A</dt>
+<dd>
+<p><code class="reqn">A_{norm}=AB^{'}c</code></p>
+</dd>
+</dl>
+<p>Finally, note that the function also apply to objects obtained from tests of class 
+<code>ca.jo.test</code> (from <code>blrtest</code> etc...). Care should be taken 
+however, since the normalization might override the restrictions imposed.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A matrix containing the coefficients
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthieu Stigler
+</p>
+
+
+<h3>References</h3>
+
+<p>Johansen, Soren, (1995), Likelihood-Based Inference in Cointegrated Vector Autoregressive Models, Oxford University Press
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(barry)
+vecm &lt;- VECM(barry,  lag=1, estim="ML")
+vecm_r2 &lt;- VECM(barry,  lag=1, estim="ML", r=2)
+
+## extract coefficients:
+coefA(vecm)
+coefB(vecm)
+coefPI(vecm)
+coefB(vecm_r2)
+coefPI(vecm_r2)
+
+## Beta-Restricted VECM:
+beta_vecm2 &lt;- coefB(vecm_r2) 
+beta_vecm2[3,2] &lt;- 0.02
+vecm_r2_rest &lt;- VECM(barry,  lag=1, estim="ML", r=2, beta=beta_vecm2)
+round(coefB(vecm_r2_rest),5)
+
+## Package vars/urca
+if(require(urca)){
+ vecm_ur &lt;- ca.jo(barry, K=2)
+ coefB(vecm_ur)
+ coefB(vecm_ur,r=2)
+ coefB(cajorls(vecm_ur, r=2))
+ all.equal(coefB(vecm), coefB(vecm_ur), check.attributes=FALSE)
+ all.equal(coefB(vecm_r2), coefB(vecm_ur, r=2), check.attributes=FALSE)
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aggregate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Aggregate raster or vector data</h2>
+
+<h3>Description</h3>
+
+<p>Aggregate a SpatRaster to create a new SpatRaster with a lower resolution (larger cells). Aggregation groups rectangular areas to create larger cells. The value for the resulting cells is computed with a user-specified function. 
+</p>
+<p>You can also aggregate ("dissolve") a SpatVector. This either combines all geometries into one geometry, or it combines the geometries that have the same value for the variable(s) specified with argument <code>by</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+aggregate(x, fact=2, fun="mean", ..., cores=1, filename="", overwrite=FALSE, wopt=list())
+
+## S4 method for signature 'SpatVector'
+aggregate(x, by=NULL, dissolve=TRUE, fun="mean", count=TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fact</code></td>
+<td>
+<p>positive integer. Aggregation factor expressed as number of cells in each direction (horizontally and vertically). Or two integers (horizontal and vertical aggregation factor) or three integers (when also aggregating over layers)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function used to aggregate values. Either an actual function, or for the following, their name: "mean", "max", "min", "median", "sum", "modal", "any", "all", "prod", "which.min", "which.max", "sd" (sample standard deviation) and "std" (population standard deviation)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>fun</code>, such as <code>na.rm=TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>positive integer. If <code>cores &gt; 1</code>, a 'parallel' package cluster with that many cores is created. Ignored for C++ level implemented functions that are listed under <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>character. The variable(s) used to group the geometries</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dissolve</code></td>
+<td>
+<p>logical. Should borders between aggregated geometries be dissolved?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>count</code></td>
+<td>
+<p>logical. If <code>TRUE</code> and <code>by</code> is not <code>NULL</code>, a variable "agg_n" is included that shows the number of input geometries for each output geometry</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Aggregation starts at the upper-left end of a SpatRaster. If a division of the number of columns or rows with <code>factor</code> does not return an integer, the extent of the resulting SpatRaster will be somewhat larger then that of the original SpatRaster. For example, if an input SpatRaster has 100 columns, and <code>fact=12</code>, the output SpatRaster will have 9 columns and the maximum x coordinate of the output SpatRaster is also adjusted.
+</p>
+<p>The function <code>fun</code> should take multiple numbers, and return a single number. For example <code>mean</code>, <code>modal</code>, <code>min</code> or <code>max</code>.
+</p>
+<p>It should also accept a <code>na.rm</code> argument (or ignore it as one of the 'dots' arguments). 
+</p>
+
+
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>disagg</code> to disaggregate</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast()
+# aggregated SpatRaster, no values
+ra &lt;- aggregate(r, fact=10)
+
+values(r) &lt;- runif(ncell(r))
+# aggregated raster, max of the values
+ra &lt;- aggregate(r, fact=10, fun=max)
+
+# multiple layers
+s &lt;- c(r, r*2)
+x &lt;- aggregate(s, 20)
+
+
+## SpatVector 
+f &lt;- system.file("ex/lux.shp", package="terra")
+v &lt;- vect(f)
+va &lt;- aggregate(v, "ID_1")
+
+plot(va, "NAME_1", lwd=5, plg=list(x="topright"), mar=rep(2,4))
+lines(v, lwd=3, col="light gray")
+lines(va)
+text(v, "ID_1", halo=TRUE)
+</code></pre>
+
+
+</div>

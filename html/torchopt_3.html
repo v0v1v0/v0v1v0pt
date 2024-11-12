@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_adabound</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adabound optimizer</h2>
+
+<h3>Description</h3>
+
+<p>R implementation of the AdaBound optimizer proposed
+by Luo et al.(2019). We used the implementation available at
+https://github.com/jettify/pytorch-optimizer/blob/master/torch_optimizer/yogi.py.
+Thanks to Nikolay Novik for providing the pytorch code.
+</p>
+<p>The original implementation is licensed using the Apache-2.0 software license.
+This implementation is also licensed using Apache-2.0 license.
+</p>
+<p>AdaBound is a variant of the Adam stochastic optimizer which is
+designed to be more robust to extreme learning rates.
+Dynamic bounds are employed on learning rates,
+where the lower and upper bound are initialized as zero and
+infinity respectively, and they both smoothly converge to a
+constant final step size. AdaBound can be regarded as an adaptive
+method at the beginning of training, and thereafter it gradually and
+smoothly transforms to SGD (or with momentum) as the time step increases.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_adabound(
+  params,
+  lr = 0.001,
+  betas = c(0.9, 0.999),
+  final_lr = 0.1,
+  gamma = 0.001,
+  eps = 1e-08,
+  weight_decay = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>List of parameters to optimize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>Learning rate (default: 1e-3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>betas</code></td>
+<td>
+<p>Coefficients computing running averages of gradient
+and its square (default: (0.9, 0.999))</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final_lr</code></td>
+<td>
+<p>Final (SGD) learning rate (default: 0.1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>Convergence speed of the bound functions
+(default: 1e-3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Term added to the denominator to improve numerical
+stability (default: 1e-8)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decay</code></td>
+<td>
+<p>Weight decay (L2 penalty) (default: 0)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A torch optimizer object implementing the <code>step</code> method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Rolf Simoes, <a href="mailto:rolf.simoes@inpe.br">rolf.simoes@inpe.br</a>
+</p>
+<p>Felipe Souza, <a href="mailto:lipecaso@gmail.com">lipecaso@gmail.com</a>
+</p>
+<p>Alber Sanchez, <a href="mailto:alber.ipia@inpe.br">alber.ipia@inpe.br</a>
+</p>
+<p>Gilberto Camara, <a href="mailto:gilberto.camara@inpe.br">gilberto.camara@inpe.br</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Liangchen Luo, Yuanhao Xiong, Yan Liu, Xu Sun,
+"Adaptive Gradient Methods with Dynamic Bound of Learning Rate",
+International Conference on Learning Representations (ICLR), 2019.
+https://arxiv.org/abs/1902.09843
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch::torch_is_installed()) {
+# function to demonstrate optimization
+beale &lt;- function(x, y) {
+    log((1.5 - x + x * y)^2 + (2.25 - x - x * y^2)^2 + (2.625 - x + x * y^3)^2)
+ }
+# define optimizer
+optim &lt;- torchopt::optim_adabound
+# define hyperparams
+opt_hparams &lt;- list(lr = 0.01)
+
+# starting point
+x0 &lt;- 3
+y0 &lt;- 3
+# create tensor
+x &lt;- torch::torch_tensor(x0, requires_grad = TRUE)
+y &lt;- torch::torch_tensor(y0, requires_grad = TRUE)
+# instantiate optimizer
+optim &lt;- do.call(optim, c(list(params = list(x, y)), opt_hparams))
+# run optimizer
+steps &lt;- 400
+x_steps &lt;- numeric(steps)
+y_steps &lt;- numeric(steps)
+for (i in seq_len(steps)) {
+    x_steps[i] &lt;- as.numeric(x)
+    y_steps[i] &lt;- as.numeric(y)
+    optim$zero_grad()
+    z &lt;- beale(x, y)
+    z$backward()
+    optim$step()
+}
+print(paste0("starting value = ", beale(x0, y0)))
+print(paste0("final value = ", beale(x_steps[steps], y_steps[steps])))
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_embedding_column</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates embeddings columns</h2>
+
+<h3>Description</h3>
+
+<p>Use this step to create ambeddings columns from categorical
+columns.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_embedding_column(
+  spec,
+  ...,
+  dimension = function(x) {
+     as.integer(x^0.25)
+ },
+  combiner = "mean",
+  initializer = NULL,
+  ckpt_to_load_from = NULL,
+  tensor_name_in_ckpt = NULL,
+  max_norm = NULL,
+  trainable = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>spec</code></td>
+<td>
+<p>A feature specification created with <code>feature_spec()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Comma separated list of variable names to apply the step. selectors can also be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dimension</code></td>
+<td>
+<p>An integer specifying dimension of the embedding, must be &gt; 0.
+Can also be a function of the size of the vocabulary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>combiner</code></td>
+<td>
+<p>A string specifying how to reduce if there are multiple entries in
+a single row. Currently 'mean', 'sqrtn' and 'sum' are supported, with 'mean' the
+default. 'sqrtn' often achieves good accuracy, in particular with bag-of-words
+columns. Each of this can be thought as example level normalizations on
+the column. For more information, see <code>tf.embedding_lookup_sparse</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initializer</code></td>
+<td>
+<p>A variable initializer function to be used in embedding
+variable initialization. If not specified, defaults to
+<code>tf.truncated_normal_initializer</code> with mean <code>0.0</code> and standard deviation
+<code>1/sqrt(dimension)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ckpt_to_load_from</code></td>
+<td>
+<p>String representing checkpoint name/pattern from
+which to restore column weights. Required if <code>tensor_name_in_ckpt</code> is
+not <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tensor_name_in_ckpt</code></td>
+<td>
+<p>Name of the Tensor in ckpt_to_load_from from which to
+restore the column weights. Required if <code>ckpt_to_load_from</code> is not <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_norm</code></td>
+<td>
+<p>If not <code>NULL</code>, embedding values are l2-normalized to this value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trainable</code></td>
+<td>
+<p>Whether or not the embedding is trainable. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>FeatureSpec</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>steps for a complete list of allowed steps.
+</p>
+<p>Other Feature Spec Functions: 
+<code>dataset_use_spec()</code>,
+<code>feature_spec()</code>,
+<code>fit.FeatureSpec()</code>,
+<code>step_bucketized_column()</code>,
+<code>step_categorical_column_with_hash_bucket()</code>,
+<code>step_categorical_column_with_identity()</code>,
+<code>step_categorical_column_with_vocabulary_file()</code>,
+<code>step_categorical_column_with_vocabulary_list()</code>,
+<code>step_crossed_column()</code>,
+<code>step_indicator_column()</code>,
+<code>step_numeric_column()</code>,
+<code>step_remove_column()</code>,
+<code>step_shared_embeddings_column()</code>,
+<code>steps</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(tfdatasets)
+data(hearts)
+file &lt;- tempfile()
+writeLines(unique(hearts$thal), file)
+hearts &lt;- tensor_slices_dataset(hearts) %&gt;% dataset_batch(32)
+
+# use the formula interface
+spec &lt;- feature_spec(hearts, target ~ thal) %&gt;%
+  step_categorical_column_with_vocabulary_list(thal) %&gt;%
+  step_embedding_column(thal, dimension = 3)
+spec_fit &lt;- fit(spec)
+final_dataset &lt;- hearts %&gt;% dataset_use_spec(spec_fit)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mat.tvbeta</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Beta coefficient estimate at each time point
+</h2>
+
+<h3>Description</h3>
+
+<p>Function that ouputs beta coefficient estimate of each covariate at each observation time point for a given tree, which can be used to plot the time-varying coefficients.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mat.tvbeta(indx, fulltree, subtrees = NULL, survtime, survstatus, x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>indx</code></td>
+<td>
+
+<p>Index number of a subtree that needs to be analyzed
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fulltree</code></td>
+<td>
+
+<p>output of <code>output.coxphout</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtrees</code></td>
+<td>
+
+<p>(Optional) output of <code>prune</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survtime</code></td>
+<td>
+
+<p>survival time/ follow up time of subjects
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survstatus</code></td>
+<td>
+
+<p>survival status of subjects. 0 for alive and 1 for dead
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>a data frame of covariates. In case of single covariate, use [,,drop =F] to keep the data frame structure
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>For each predictor, <code>mat.tvbeta</code> gives the coefficient values at each observation time for a given subtree.
+The function outputs a matrix that can be used to plot the time-varying coefficient estimates over time.
+The number of rows in the matrix is the # of observations and the number of columns is the product of the # of covariates and the # of specified subtrees.
+</p>
+
+
+<h3>References</h3>
+
+<p>Xu, R. and Adak, S. (2002), Survival Analysis with Time-Varying Regression Effects Using a Tree-Based Approach. Biometrics, 58: 305-315.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#This function requires output from output.coxphout, prune, and the original data set.
+data('alcohol')
+require(survival)
+
+coxtree &lt;- coxph.tree(alcohol[,'time'], alcohol[,'event'], 
+                      x = alcohol[,'alc', drop = FALSE], D = 4)
+nodetree &lt;- output.coxphout(coxtree)
+
+subtrees &lt;- prune(nodetree)
+
+#creating matrix of beta coefficients at each event time point for all subtrees
+k &lt;- nrow(subtrees)
+for (l in 1:k) {
+    print(paste("Tree #",l))
+    coeftmp &lt;- mat.tvbeta(l,nodetree,subtrees,alcohol[,'time'], alcohol[,'event'],
+                           x = data.frame(model.matrix(~alc, data=alcohol)[,-c(1), drop = FALSE]))
+    if (l == 1) coef &lt;- coeftmp
+    if (l &gt; 1) coef &lt;- cbind(coef,coeftmp) 
+  }
+
+
+##Creating plot of all subtrees for each predictor:
+
+p &lt;- ncol(coef)/k #Number of variables
+x = data.frame(model.matrix(~alc, data=alcohol)[,-c(1), drop = FALSE])
+xnames &lt;- xname(x)
+xnames &lt;- c('Alcohol 1', 'Alcohol 4')
+#Subsetting data
+coefnew &lt;- data.frame(coef)
+survtime &lt;- alcohol[,'time']
+#Setting desired depth (All the subtrees)
+kk &lt;- nrow(subtrees)
+for (j in 1:p) {
+  matplot(survtime,coefnew[,seq(from=j,to=kk*p,by=p)],type="l",lty=1:kk,col= (1:kk)+1
+          ,xlab="Survival Time",ylab=" ")
+  title(main=paste('all:', xnames[j]))
+  legend('bottomleft', legend = paste('tree number', 1:kk), lty=1:kk,col= (1:kk)+1)
+  }
+  
+##Creating a plot showing changes in coefficient of two predictors in full tree
+#creating matrix of beta coefficients at each event time point for full tree
+coeftmp &lt;- mat.tvbeta(1,nodetree,subtrees,alcohol[,'time'], alcohol[,'event'],
+                       x = data.frame(model.matrix(~alc, data=alcohol)[,-c(1), drop = FALSE]))
+coefnew &lt;- coeftmp
+matplot(survtime,coefnew,type="l",lty=1:2,col= (1:2)+1,xlab="Survival Time",ylab=" ")
+legend('bottomleft', legend = c("Alcohol 1", "Alcohol 4"), lty=1:2,col= (1:2)+1)  
+</code></pre>
+
+
+</div>

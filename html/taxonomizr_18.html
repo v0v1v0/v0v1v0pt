@@ -1,0 +1,114 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>read.accession2taxid</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read NCBI accession2taxid files</h2>
+
+<h3>Description</h3>
+
+<p>Take NCBI accession2taxid files, keep only accession and taxa and save it as a SQLite database
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">read.accession2taxid(
+  taxaFiles,
+  sqlFile,
+  vocal = TRUE,
+  extraSqlCommand = "",
+  indexTaxa = FALSE,
+  overwrite = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>taxaFiles</code></td>
+<td>
+<p>a string or vector of strings giving the path(s) to files to be read in</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sqlFile</code></td>
+<td>
+<p>a string giving the path where the output SQLite file should be saved</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vocal</code></td>
+<td>
+<p>if TRUE output status messages</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extraSqlCommand</code></td>
+<td>
+<p>for advanced use. A string giving a command to be called on the SQLite database before loading data. A couple potential uses: 
+</p>
+<ul>
+<li>
+<p> "PRAGMA temp_store_directory = '/MY/TMP/DIR'" to store SQLite temporary files in directory /MY/TMP/DIR. Useful if the temporary directory used by SQLite (which is not necessarily in the same location as R's) is small on your system </p>
+</li>
+<li>
+<p> "pragma temp_store = 2;" to keep all SQLite temp files in memory. Don't do this unless you have a lot (&gt;100 Gb) of RAM</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indexTaxa</code></td>
+<td>
+<p>if TRUE add an index for taxa ID. This would only be necessary if you want to look up accessions by taxa ID e.g. <code>getAccessions</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>If TRUE, delete accessionTaxa table in database if present and regenerate</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>TRUE if sucessful
+</p>
+
+
+<h3>References</h3>
+
+<p><a href="https://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/">https://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>read.nodes.sql</code>, <code>read.names.sql</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">taxa&lt;-c(
+  "accession\taccession.version\ttaxid\tgi",
+  "Z17427\tZ17427.1\t3702\t16569",
+  "Z17428\tZ17428.1\t3702\t16570",
+  "Z17429\tZ17429.1\t3702\t16571",
+  "Z17430\tZ17430.1\t3702\t16572"
+)
+inFile&lt;-tempfile()
+sqlFile&lt;-tempfile()
+writeLines(taxa,inFile)
+read.accession2taxid(inFile,sqlFile,vocal=FALSE)
+db&lt;-RSQLite::dbConnect(RSQLite::SQLite(),dbname=sqlFile)
+RSQLite::dbGetQuery(db,'SELECT * FROM accessionTaxa')
+RSQLite::dbDisconnect(db)
+</code></pre>
+
+
+</div>

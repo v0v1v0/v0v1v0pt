@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ewspec.trend</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of Evolutionary Wavelet Spectrum for Non-Zero Mean Time Series</h2>
+
+<h3>Description</h3>
+
+<p>Internal function to compute the evolutionary wavelet spectrum (EWS) estimate from
+a time series that may include a trend component. The estimate is computed
+by taking the non-decimated wavelet transform of the time series data,
+squaring it, smoothing using a running mean, and then correction for bias
+using the appropriate correction matrix.
+This function is not intended for general use by regular users of the package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ewspec.trend(
+  x,
+  an.filter.number = 4,
+  an.family = "DaubExPhase",
+  gen.filter.number = an.filter.number,
+  gen.family = an.family,
+  binwidth = floor(2 * sqrt(length(x))),
+  max.scale = floor(log2(length(x)) * 0.7),
+  S.smooth = TRUE,
+  smooth.type = "epan",
+  AutoReflect = TRUE,
+  supply.inv.mat = FALSE,
+  inv.mat = NULL,
+  boundary.handle = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The time series you wish to analyse.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>an.filter.number</code></td>
+<td>
+<p>The index number for the wavelet used to analyse the
+time series. For the "DaubExPhase" family, the filter number can be between
+1 to 10. For the "DaubLeAsymm" family, the filter number can be between 4 to
+10. Similarly for gen.filter.number.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>an.family</code></td>
+<td>
+<p>The family of the analysing wavelet. It is recommended to
+use either the Daubechies Extremal Phase family, or the Daubechies Least
+Asymmetric family, corresponding to the "DaubExPhase" or the "DaubLeAsymm"
+options. Similarly for gen.family.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gen.filter.number</code></td>
+<td>
+<p>The index number for the wavelet that generates the
+stochastic component of the time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gen.family</code></td>
+<td>
+<p>The family of the generating wavelet.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>binwidth</code></td>
+<td>
+<p>The bin width of the running mean smoother used to smooth
+the raw wavelet periodogram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.scale</code></td>
+<td>
+<p>The coarsest level to which the time series is analysed to.
+Should be a positive integer less than J, where T=2^J is the length of the
+time series. The default setting is 0.7J, to control for bias from the trend
+and boundary effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.smooth</code></td>
+<td>
+<p>Argument that dictates if smoothing is performed on the raw
+wavelet periodogram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smooth.type</code></td>
+<td>
+<p>String indicating which type of smoothing to use on wavelet periodogram.
+Can be <code>"mean"</code>, <code>"median"</code>, or <code>"epan"</code>. Default is <code>"epan"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AutoReflect</code></td>
+<td>
+<p>As in wavethresh. Decides whether or not the time series
+is reflected when computing the wavelet transform. Helps estimation at the
+boundaries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>supply.inv.mat</code></td>
+<td>
+<p>Not intended for general use. If TRUE, user must supply the
+appropriate correction matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inv.mat</code></td>
+<td>
+<p>If supply.mat is TRUE, user must supply the appropriate
+correction matrix used to correct the raw wavelet periodogram. Equal to <code class="reqn">C^{-1}</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boundary.handle</code></td>
+<td>
+<p>Logical variable, if TRUE, the time series is
+boundary corrected, to get a more accurate spectrum estimate at the
+boundaries of the times series. If FALSE, no boundary correction is applied.
+Recommended to use TRUE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Estimates the evolutionary wavelet spectrum of a
+time series that displays a smooth mean and nonstationary autocovariance.
+The estimation procedure is as follows:
+</p>
+<p>1. The squared modulus of the non-decimated wavelet transform is computed,
+known as the raw wavelet periodogram. This is returned by the function.
+</p>
+<p>2. The raw wavelet periodogram is smoothed using a running mean smoother.
+</p>
+<p>3. The smoothed periodogram is bias corrected using the inverse of the bias
+matrix. The correction is applied across the finest max.scale scales. If the
+analysing wavelet and generating wavelet are different, this is given by the
+inverse of the <code class="reqn">C</code> matrix defined in McGonigle et al. (2022). If they are the
+same, this is the inverse of the <code class="reqn">A</code> matrix, defined in Nason et al. (2000).
+If you are unsure on the filter and wavelet choices, it is recommended to
+use the same wavelet for generating and analysing purposes.
+</p>
+<p>The final estimate, stored in the S component, can be plotted using the plot
+function, please see the example below.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list object, containing the following fields:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>The evolutionary wavelet spectral estimate of the input data. This object is of
+class wd and so can be plotted and printed in the usual way using wavethresh
+functionality. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>WavPer</code></td>
+<td>
+<p> The raw wavelet periodogram of the input
+data. The EWS estimate (above) is the smoothed corrected version of the raw
+wavelet periodogram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SmoothWavPer</code></td>
+<td>
+<p> The smoothed, un-corrected raw
+wavelet periodogram of the input data. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.scale, boundary.handle, S.smooth, smooth.type, binwidth</code></td>
+<td>
+<p>Input parameters</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>McGonigle, E. T., Killick, R., and Nunes, M. (2022). Trend
+locally stationary wavelet processes. <em>Journal of Time Series
+Analysis</em>, 43(6), 895-917.
+</p>
+<p>Nason, G. P., von Sachs, R., and Kroisandt, G. (2000). Wavelet processes and
+adaptive estimation of the evolutionary wavelet spectrum. <em>Journal of
+the Royal Statistical Society: Series B (Statistical Methodology)</em>, <b>62(2)</b>, 271–292.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TLSW</code>, <code>wd</code>
+</p>
+
+
+</div>

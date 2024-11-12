@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thermsumcent</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Summary thermal calculations on a centrally located region of interest from a thermal image dataset 
+</h2>
+
+<h3>Description</h3>
+
+<p>Similarly to the thermsum except this provides thermal summary data on a central region of interest, commonly used in thermal imaging.  The size of the region is a rectangular region corresponding to a fraction of the total image area set by boxsize.   
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thermsumcent(dat, templookup = NULL, w = 640, h = 480, boxsize = 0.05)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dat</code></td>
+<td>
+
+<p>An integer vector of raw binary thermal information (usually) extracted from a thermal video or image using the getFrames or readflirJPG functions to be converted to temperature and summarised.  Instead, this can be a vector of temperature values (numeric); if so, then templookup should be set to NULL or ignored.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>templookup</code></td>
+<td>
+
+<p>A vector of temperatures converted using the raw2temp function, corresponding to the conversion from raw binary thermal information to calibrated temperature estimates.  Typically will be vector of numbers 2^16 long, for a 16-bit camera.  Default is NULL, which assumes that dat has already been converted to temperature.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+
+<p>Width resolution (pixels) of thermal camera.  Can be found by using the flirsettings function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+
+<p>Height resolution (pixels) of thermal camera.  Can be found by using the flirsettings function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boxsize</code></td>
+<td>
+
+<p>Fractional area of the desired rectangular region of interest.  Default is set to 0.05.  Dimensions of the region will depend on w and h dimensions.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A simple summary function for thermal imaging data to allow for extraction of basic statistical data from a thermal image dataset.  If dat is supplied as an integer vector of raw binary values, then templookup should be supplied to use as an indexing function. 
+</p>
+<p>Using raw2temp(1:65535) will produce a vector of temperatures that correspond to the indexed integers 1:65535.  This method of calculation can be faster on large video files.  The default settings for raw2temp() will not be appropriate, and all camera settings should be used according to calibration constants.
+</p>
+<p>If dat is supplied as a vector of temperatures, then templookup must be left blank or NULL as the default.  Summary information will be calculated on the dat variable assuming it is properly calibrated temperature values.
+</p>
+<p>As written, this is a vectorised function, so will only calculate summary on the vector provided.  To perform thermal summaries on multiple frames from the raw binary video data, use a for-loop (usually slow) or the apply function to process (faster processing) or parallel apply functions (best). 
+</p>
+<p>Similar to thermsum, except this assesses only the centrally located region of interest in the image frame centre.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a named vector: CentrePoint, CentreBoxMin, CentreBoxMax, CentreBoxMean, CentreBoxSD, CentreBoxMedian)
+</p>
+
+
+<h3>Warning</h3>
+
+<p>This function simply calculates summary data, and does not detect objects in the image frame.  Use only as rapid way to extract thermal information.  This is not a replacement for doing analysis by hand, and may only be useful for objects that are stationary and remain within the image frame over time.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Glenn J Tattersall
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>raw2temp</code>, 
+<code>thermsum</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># set w to 640 and h to 480
+
+w&lt;-640
+h&lt;-480
+f&lt;-system.file("extdata", "SampleSEQ.seq", package = "Thermimage")
+x&lt;-frameLocates(f)
+suppressWarnings(templookup&lt;-raw2temp(1:65535))
+alldata&lt;-unlist(lapply(x$f.start, getFrames, vidfile=f, w=w, h=h))
+alldata&lt;-matrix(alldata, nrow=w*h, byrow=TRUE)
+
+# Summary on one image or frame of data
+thermsumcent(alldata[,1], templookup)
+
+# Summary on multi-frame seq file
+tsum&lt;-data.frame(t(apply(alldata, 2, thermsumcent, templookup)))
+tsum
+
+# Randomly generated data
+alldata&lt;-floor(runif(w*h*20, 17000, 25000))
+alldata&lt;-matrix(alldata, nrow=w*h)
+
+# depending on the size of alldata, directly calculating temperature can slow down processing
+# For a 20 frame file:
+system.time(alltemperature&lt;-raw2temp(alldata))
+
+# But summary calculations using raw binary with lookup are slightly slower than
+# using numeric temperatures:
+
+# Perform calculations on the raw binary but supply the templookup vector
+system.time(tsum&lt;-data.frame(t(apply(alldata, 2, thermsumcent, templookup))))
+
+# Perform calculations on the converted temperature values
+system.time(tsum&lt;-data.frame(t(apply(alltemperature, 2, thermsumcent))))
+tsum
+
+
+
+
+
+
+</code></pre>
+
+
+</div>

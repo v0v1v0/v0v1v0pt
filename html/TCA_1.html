@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>refactor</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sparse principal component analysis using ReFACTor</h2>
+
+<h3>Description</h3>
+
+<p>Performs unsupervised feature selection followed by principal component analysis (PCA) under a row-sparse model using the ReFACTor algorithm. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), <code>refactor</code> allows to capture the variation in cell-type composition, which was shown to be a dominant sparse signal in methylation data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">refactor(
+  X,
+  k,
+  sparsity = 500,
+  C = NULL,
+  C.remove = FALSE,
+  sd_threshold = 0.02,
+  num_comp = NULL,
+  rand_svd = FALSE,
+  log_file = "TCA.log",
+  debug = FALSE,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>An <code>m</code> by <code>n</code> matrix of measurements of <code>m</code> features for <code>n</code> observations. Each column in <code>X</code> is assumed to be a mixture of <code>k</code> sources. Note that <code>X</code> must include row names and column names and that NA values are currently not supported. <code>X</code> should not include features that are constant across all observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>A numeric value indicating the dimension of the signal in <code>X</code> (i.e. the number of sources).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sparsity</code></td>
+<td>
+<p>A numeric value indicating the sparsity of the signal in <code>X</code> (the number of signal rows).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>C</code></td>
+<td>
+<p>An <code>n</code> by <code>p</code> design matrix of covariates that will be accounted for in the feature selection step. An intercept term will be included automatically. Note that <code>C</code> must include row names and column names and that NA values are currently not supported; set <code>C</code> to be <code>NULL</code> if there are no such covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>C.remove</code></td>
+<td>
+<p>A logical value indicating whether the covariates in X should be accounted for not only in the feature selection step, but also in the final calculation of the principal components (i.e. if <code>C.remove == TRUE</code> then the selected features will be adjusted for the covariates in <code>C</code> prior to calculating principal components). Note that setting <code>C.remove</code> to be <code>TRUE</code> is desired when ReFACTor is intended to be used for correction in downstream analysis, whereas setting <code>C.remove</code> to be <code>FALSE</code> is desired when ReFACTor is merely used for capturing the sparse signals in <code>X</code> (i.e. regardless of correction).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sd_threshold</code></td>
+<td>
+<p>A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in <code>X</code> (i.e. features with standard deviation lower than <code>sd_threshold</code> will be excluded). Set <code>sd_threshold</code> to be <code>NULL</code> for turning off this filter. Note that removing features with very low variability tends to improve speed and performance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_comp</code></td>
+<td>
+<p>A numeric value indicating the number of ReFACTor components to return.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rand_svd</code></td>
+<td>
+<p>A logical value indicating whether to use random svd for estimating the low-rank structure of the data in the first step of the algorithm; random svd can result in a substantial speedup for large data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log_file</code></td>
+<td>
+<p>A path to an output log file. Note that if the file <code>log_file</code> already exists then logs will be appended to the end of the file. Set <code>log_file</code> to <code>NULL</code> to prevent output from being saved into a file; note that if <code>verbose == FALSE</code> then no output file will be generated regardless of the value of <code>log_file</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debug</code></td>
+<td>
+<p>A logical value indicating whether to set the logger to a more detailed debug level; set <code>debug</code> to <code>TRUE</code> before reporting issues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical value indicating whether to print logs.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>ReFACTor is a two-step algorithm for sparse principal component analysis (PCA) under a row-sparse model. The algorithm performs an unsupervised feature selection by ranking the features based on their correlation with their values under a low-rank representation of the data, followed by a calculation of principal components using the top ranking features (ReFACTor components).
+</p>
+<p>Note that ReFACTor is tuned towards capturing sparse signals of the dominant sources of variation in the data. Therefore, in the presence of other potentially dominant factors in the data (i.e. beyond the variation of interest), these factors should be accounted for by including them as covariates (see argument <code>C</code>). In cases where the ReFACTor components are designated to be used as covariates in a downstream analysis alongside the covariates in <code>C</code> (e.g., in a standard regression analysis or in a TCA regression), it is advised to set the argument <code>C.remove</code> to be <code>TRUE</code>. This will adjust the selected features for the information in <code>C</code> prior to the calculation of the ReFACTor components, which will therefore capture only signals that is not present in <code>C</code> (and as a result may benefit the downstream analysis by potentially capturing more signals beyond the information in <code>C</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the estimated components of the ReFACTor model.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>scores</code></td>
+<td>
+<p>An <code>n</code> by <code>num_comp</code> matrix of the ReFACTor components (the projection scores).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coeffs</code></td>
+<td>
+<p>A <code>sparsity</code> by <code>num_comp</code> matrix of the coefficients of the ReFACTor components (the projection loadings).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ranked_list</code></td>
+<td>
+<p>A vector with the features in <code>X</code>, ranked by their scores in the feature selection step of the algorithm; the top scoring features (set according to the argument <code>sparsity</code>) are used for calculating the ReFACTor components. Note that features that were excluded according to <code>sd_threshold</code> will not appear in this <code>ranked_list</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>For very large input matrices it is advised to use random svd for speeding up the feature selection step (see argument <code>rand_svd</code>).
+</p>
+
+
+<h3>References</h3>
+
+<p>Rahmani E, Zaitlen N, Baran Y, Eng C, Hu D, Galanter J, Oh S, Burchard EG, Eskin E, Zou J, Halperin E. Sparse PCA corrects for cell type heterogeneity in epigenome-wide association studies. Nature Methods 2016.
+</p>
+<p>Rahmani E, Zaitlen N, Baran Y, Eng C, Hu D, Galanter J, Oh S, Burchard EG, Eskin E, Zou J, Halperin E. Correcting for cell-type heterogeneity in DNA methylation: a comprehensive evaluation. Nature Methods 2017.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data &lt;- test_data(100, 200, 3, 0, 0, 0.01)
+ref &lt;- refactor(data$X, k = 3, sparsity = 50)
+
+</code></pre>
+
+
+</div>

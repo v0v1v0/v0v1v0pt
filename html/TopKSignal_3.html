@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimateTheta</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of the underlying signal.</h2>
+
+<h3>Description</h3>
+
+<p>The main function for the estimation of the signals informing the ranks is called estimateTheta(). The required parameters are: (1) a rank matrix, (2) the number of bootstrap samples (500 is recommended), (3) a constant for the support variables \(b&gt;0\), default is 0.1, (4)  the type of optimization technique: fullLinear, fullQuadratic, restrictedLinear, and restrictedQuadratic (the latter two recommended), (5) the type of  bootstrap sampling scheme: classic.bootstrap and poisson.bootstrap (recommended), and (6) the number of cores for parallel computation. Each bootstrap sample is executed on a dedicated CPU core.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimateTheta(
+  R.input,
+  b,
+  num.boot,
+  solver,
+  type,
+  bootstrap.type,
+  nCore = ((detectCores() - 1))
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>R.input</code></td>
+<td>
+<p>A matrix where the rows represent the objects and
+the columns the assessors (rankers).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>The penalization term. The suggested value is 0.1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num.boot</code></td>
+<td>
+<p>The number of boostrap samples created from the input ranked matrix. A positive number is expected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>solver</code></td>
+<td>
+<p>A string that indicates which solver to use. Two options are available, 'gurobi' and 'nloptr'.
+We recommend to use gurobi for faster computation. Note, a licence is required. Check the corresponding documentation on how to install gurobi.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>A string that indicates which model to use: four approaches are available: 'restrictedQuadratic', 'fullQuadratic', 'restrictedLinear' and 'fullLinear'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bootstrap.type</code></td>
+<td>
+<p>A string that indicates which bootstrap method to use: 'classic.bootstrap' or 'poisson.bootstrap'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nCore</code></td>
+<td>
+<p>The number of cores used for computation. Each core is used to calculate the signals from a bootstrap sample. Default number is detectCores() - 1.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with the estimation information obtained:
+</p>
+
+<ul>
+<li>
+<p> estimation - A data frame with the signal estimation and the standard error computed by the bootstrap for each object
+</p>
+</li>
+<li>
+<p> estimatedMatrixNoise - The estimated matrix noise 
+</p>
+</li>
+<li>
+<p> time - The execution time of the procedure
+</p>
+</li>
+<li>
+<p> allBootstraps - The signal estimates from all bootstrap iterations
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(TopKSignal)
+set.seed(1421)
+p = 8
+n = 10
+input &lt;- generate.rank.matrix(p, n)
+rownames(input$R.input) &lt;- c("a","b","c","d","e","f","g","h")
+# For the following code Gurobi needs to be installed
+## Not run: 
+estimatedSignal &lt;- estimateTheta(R.input = input$R.input, num.boot = 50, b = 0.1, 
+solver = "gurobi", type = "restrictedQuadratic", bootstrap.type = "poisson.bootstrap",nCore = 1)   
+
+## End(Not run)
+data(estimatedSignal)
+estimatedSignal
+</code></pre>
+
+
+</div>

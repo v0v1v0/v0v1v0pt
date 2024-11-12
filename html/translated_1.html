@@ -1,0 +1,91 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trans</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Translate strings</h2>
+
+<h3>Description</h3>
+
+<p>This function finds a translation for given keys in translation
+JSON files. If none found, a bare key is returned and a warning raised.
+Translation language is controlled by <code>trans_locale()</code> function.
+</p>
+<p>Translation strings may contain <code>{var}</code> chunks. These are replaced in the
+final string by respective strings passed to <code>...</code>.
+</p>
+<p>If a translation depends on a count, a <code>.n</code> parameter allows the user to
+select an appropriate translation form. Count interpretation is defined
+within translation JSONs for each language separately under <code style="white-space: pre;">⁠$.config.plural⁠</code>
+path. Integer returned by this interpretation function is used as index for
+extracting the correct translation from an array.
+</p>
+<p>Thanks to the implementation strategy, it is possible to create recursive
+translations (i.e. translations whose smaller chunks are translations
+themselves). This makes it possible to translate statements like
+"Found n file(s) in m directory/ies" by translating "files" and "directories"
+chunks first. In this case an appropriate translation entry would look like:
+"Found trans("file", .n = n_files) in trans("directory", .n = n_dirs)".
+Braces evaluate the content inside as R code.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trans(.key, ..., .n = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.key</code></td>
+<td>
+<p><code>character()</code><br>
+Keys to the translation map (accepts vectors of strings). Keys should not
+contain dots, unless it's a compound key (where dots separate parts of
+path to the key, e.g. <code>"submit_form.buttons.reset"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p><code>character(1)</code><br>
+Named strings to substitute into translation; they replace substrings of the
+form <code>"{var}"</code> (<code>var</code> being a name of a string). Avoid names starting with
+dots to avoid incompatibility issues with future versions of this package.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.n</code></td>
+<td>
+<p><code>integer(1)</code><br>
+Count for translating value-dependent messages, e.g. "n file(s)".</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A string vector of the same length as <code>.key</code>, each element being a
+translated string.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">trans_path(system.file("examples", package = "translated"))
+
+trans("title")
+trans("btn_insert", number = "five")
+# Non-character values are coerced to strings
+trans("btn_insert", number = 5)
+
+# Missing entries raise a warning and return the key
+trans("missing_entry")
+
+</code></pre>
+
+
+</div>

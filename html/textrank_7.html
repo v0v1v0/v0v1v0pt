@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>textrank_sentences</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Textrank - extract relevant sentences</h2>
+
+<h3>Description</h3>
+
+<p>The textrank algorithm is a technique to rank sentences in order of importance.<br></p>
+<p>In order to find relevant sentences, the textrank algorithm needs 2 inputs:
+a data.frame (<code>data</code>) with sentences and a data.frame (<code>terminology</code>)
+containing tokens which are part of each sentence.<br>
+Based on these 2 datasets, it calculates the pairwise distance between each sentence by computing
+how many terms are overlapping (Jaccard distance, implemented in <code>textrank_jaccard</code>).
+These pairwise distances among the sentences are next passed on to Google's pagerank algorithm
+to identify the most relevant sentences.<br></p>
+<p>If <code>data</code> contains many sentences, it makes sense not to compute all pairwise sentence distances but instead limiting
+the calculation of the Jaccard distance to only sentence combinations which are limited by the Minhash algorithm.
+This is implemented in <code>textrank_candidates_lsh</code> and an example is show below.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">textrank_sentences(
+  data,
+  terminology,
+  textrank_dist = textrank_jaccard,
+  textrank_candidates = textrank_candidates_all(data$textrank_id),
+  max = 1000,
+  options_pagerank = list(directed = FALSE),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with 1 row per sentence where the first column
+is an identifier of a sentence (e.g. textrank_id) and the second column is the raw sentence. See the example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>terminology</code></td>
+<td>
+<p>a data.frame with with one row per token indicating which token is part of each sentence.
+The first column in this data.frame is the identifier which corresponds to the first column of <code>data</code>
+and the second column indicates the token which is part of the sentence which will be passed on to <code>textrank_dist</code>.
+See the example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>textrank_dist</code></td>
+<td>
+<p>a function which calculates the distance between 2 sentences which are represented by a vectors of tokens.
+The first 2 arguments of the function are the tokens in sentence1 and sentence2.
+The function should return a numeric value of length one. The larger the value,
+the larger the connection between the 2 vectors indicating more strength. Defaults to the jaccard distance (<code>textrank_jaccard</code>),
+indicating the percent of common tokens.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>textrank_candidates</code></td>
+<td>
+<p>a data.frame of candidate sentence to sentence comparisons with columns textrank_id_1 and textrank_id_2
+indicating for which combination of sentences we want to compute the Jaccard distance or the distance function as provided in <code>textrank_dist</code>.
+See for example <code>textrank_candidates_all</code> or <code>textrank_candidates_lsh</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max</code></td>
+<td>
+<p>integer indicating to reduce the number of sentence to sentence combinations to compute.
+In case provided, we take only this max amount of rows from <code>textrank_candidates</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>options_pagerank</code></td>
+<td>
+<p>a list of arguments passed on to <code>page_rank</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed on to <code>textrank_dist</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>an object of class textrank_sentences
+which is a list with elements:
+</p>
+
+<ul>
+<li>
+<p> sentences: a data.frame with columns textrank_id, sentence and textrank where the textrank is the Google Pagerank importance metric of the sentence
+</p>
+</li>
+<li>
+<p> sentences_dist: a data.frame with columns textrank_id_1, textrank_id_2 (the sentence id) and weight which
+is the result of the computed distance between the 2 sentences
+</p>
+</li>
+<li>
+<p> pagerank: the result of a call to <code>page_rank</code>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>page_rank</code>, <code>textrank_candidates_all</code>, <code>textrank_candidates_lsh</code>, <code>textrank_jaccard</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(udpipe)
+data(joboffer)
+head(joboffer)
+joboffer$textrank_id &lt;- unique_identifier(joboffer, c("doc_id", "paragraph_id", "sentence_id"))
+sentences &lt;- unique(joboffer[, c("textrank_id", "sentence")])
+cat(sentences$sentence)
+terminology &lt;- subset(joboffer, upos %in% c("NOUN", "ADJ"), select = c("textrank_id", "lemma"))
+head(terminology)
+
+## Textrank for finding the most relevant sentences
+tr &lt;- textrank_sentences(data = sentences, terminology = terminology)
+summary(tr, n = 2)
+summary(tr, n = 5, keep.sentence.order = TRUE)
+
+## Not run: 
+## Using minhash to reduce sentence combinations - relevant if you have a lot of sentences
+library(textreuse)
+minhash &lt;- minhash_generator(n = 1000, seed = 123456789)
+candidates &lt;- textrank_candidates_lsh(x = terminology$lemma, sentence_id = terminology$textrank_id,
+                                      minhashFUN = minhash, bands = 500)
+tr &lt;- textrank_sentences(data = sentences, terminology = terminology,
+                         textrank_candidates = candidates)
+summary(tr, n = 2)
+
+## End(Not run)
+## You can also reduce the number of sentence combinations by sampling
+tr &lt;- textrank_sentences(data = sentences, terminology = terminology, max = 100)
+tr
+summary(tr, n = 2)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,94 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot_weights</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>plot_weights</h2>
+
+<h3>Description</h3>
+
+<p>Plot the unit and predictor variable weights generated using <code>generate_weights()</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plot_weights(data)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>nested data of type <code>tbl_df</code>.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>See <code>grab_unit_weights()</code> and <code>grab_predictor_weights()</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>ggplot</code> object that plots the unit and variable weights.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+
+# Smoking example data
+data(smoking)
+
+smoking_out &lt;-
+smoking %&gt;%
+
+# initial the synthetic control object
+synthetic_control(outcome = cigsale,
+                  unit = state,
+                  time = year,
+                  i_unit = "California",
+                  i_time = 1988,
+                  generate_placebos=TRUE) %&gt;%
+
+# Generate the aggregate predictors used to generate the weights
+  generate_predictor(time_window=1980:1988,
+                     lnincome = mean(lnincome, na.rm = TRUE),
+                     retprice = mean(retprice, na.rm = TRUE),
+                     age15to24 = mean(age15to24, na.rm = TRUE)) %&gt;%
+
+  generate_predictor(time_window=1984:1988,
+                     beer = mean(beer, na.rm = TRUE)) %&gt;%
+
+  generate_predictor(time_window=1975,
+                     cigsale_1975 = cigsale) %&gt;%
+
+  generate_predictor(time_window=1980,
+                     cigsale_1980 = cigsale) %&gt;%
+
+  generate_predictor(time_window=1988,
+                     cigsale_1988 = cigsale) %&gt;%
+
+
+  # Generate the fitted weights for the synthetic control
+  generate_weights(optimization_window =1970:1988,
+                   Margin.ipop=.02,Sigf.ipop=7,Bound.ipop=6) %&gt;%
+
+  # Generate the synthetic control
+  generate_control()
+
+# Plot the observed and synthetic trend
+smoking_out %&gt;% plot_weights()
+
+
+
+</code></pre>
+
+
+</div>

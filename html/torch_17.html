@@ -1,0 +1,77 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>call_torch_function</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Call a (Potentially Unexported) Torch Function</h2>
+
+<h3>Description</h3>
+
+<p>This function allows calling a function prefixed with <code>torch_</code>, including unexported
+functions which could have potentially valuable uses but which do not yet have
+a user-friendly R wrapper function. Therefore, this function should be used with
+extreme caution. Make sure you understand what the function expects as input. It
+may be helpful to read the <code>torch</code> source code for help with this, as well as
+the documentation for the corresponding function in the Pytorch C++ API. Generally
+for development and advanced use only.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">call_torch_function(name, ..., quiet = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Name of the function to call as a string. Should start with "torch_"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>A list of arguments to pass to the function. Argument splicing with
+<code style="white-space: pre;">⁠!!!⁠</code> is supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quiet</code></td>
+<td>
+<p>If TRUE, suppress warnings with valuable information about the dangers of
+this function.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The return value from calling the function <code>name</code> with arguments <code>...</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+## many unexported functions do 'backward' calculations (e.g. derivatives)
+## These could be used as a part of custom autograd functions for example.
+x &lt;- torch_randn(10, requires_grad = TRUE)
+y &lt;- torch_tanh(x)
+## calculate backwards gradient using standard torch method
+y$backward(torch_ones_like(x))
+x$grad
+## we can get the same result by calling the unexported `torch_tanh_backward()`
+## function. The first argument is 1 to setup the Jacobian-vector product.
+## see https://pytorch.org/blog/overview-of-pytorch-autograd-engine/ for details.
+call_torch_function("torch_tanh_backward", 1, y)
+all.equal(call_torch_function("torch_tanh_backward", 1, y, quiet = TRUE), x$grad)
+
+}
+</code></pre>
+
+
+</div>

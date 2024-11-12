@@ -1,0 +1,133 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>distribution</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>distribution</h2>
+
+<h3>Description</h3>
+
+<p>Returns the distribution of values used to compute TSDT summary
+statistics.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">distribution(object, statistic, subgroup = NULL, subsub = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object of class TSDT</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statistic</code></td>
+<td>
+<p>The desired statistic distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subgroup</code></td>
+<td>
+<p>The desired subgroup</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subsub</code></td>
+<td>
+<p>A subset of the subgroup</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function returns the distribution of all values used to compute
+summary statistics for superior subgroups identified by the TSDT algorithm.
+The summary statistics returned for a TSDT object include the mean
+subgroup size, mean response value, and median value of the scoring function.
+These statistics reported seperately for in-bag and out-of-bag data sets, and
+also stratified by treatment arm. This function can also provide the
+distribution of all cutpoints for a numeric splitting variable in a subgroup
+definition.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A vector containing the observed values for the specified subgroup
+</p>
+
+
+<h3>See Also</h3>
+
+<p>TSDT, summary-methods
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(0)
+N &lt;- 200
+continuous_response = runif( min = 0, max = 20, n = N )
+trt &lt;- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6),
+               replace = TRUE )
+X1 &lt;- runif( N, min = 0, max = 1 )
+X2 &lt;- runif( N, min = 0, max = 1 )
+X3 &lt;- sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE )
+X4 &lt;- sample( c('A','B','C'), size = N, prob = c(0.6,0.3,0.1), replace = TRUE )
+covariates &lt;- data.frame( X1 )
+covariates$X2 &lt;- X2
+covariates$X3 &lt;- factor( X3 )
+covariates$X4 &lt;- factor( X4 )
+
+## Create a TSDT object
+ex1 &lt;- TSDT( response = continuous_response,
+            trt = trt, trt_control = 'Control',
+            covariates = covariates[,1:4],
+            inbag_score_margin = 0,
+            desirable_response = "increasing",
+            oob_score_margin = 0,
+            min_subgroup_n_control = 5,
+            min_subgroup_n_trt = 5,
+            n_sample = 5 )
+
+## Show summary statistics
+summary( ex1 )
+
+## Get the number of subjects in each superior in-bag subgroup
+distribution( ex1, statistic = 'Inbag_Subgroup_Size' )
+
+## Get the vector of subgroup sample sizes for a particular subgroup
+distribution( ex1, statistic = 'Inbag_Subgroup_Size',
+              subgroup = 'X1&lt;xxxxx &amp; X1&gt;=xxxxx' )
+
+## Get the observed cutpoints for the numeric splitting variables in a subgroup
+distribution( ex1, statistic = 'Cutpoints', subgroup = 'X1&lt;xxxxx &amp; X1&gt;=xxxxx' )
+
+## If the subgroup definition has more than one numeric splitting variable you
+## can retrieve the numeric cutpoints for the splitting variables individually
+distribution( ex1, statistic = 'Cutpoints', subgroup = 'X1&lt;xxxxx &amp; X1&gt;=xxxxx',
+              subsub = 'X1&lt;xxxxx' )
+distribution( ex1, statistic = 'Cutpoints', subgroup = 'X1&lt;xxxxx &amp; X1&gt;=xxxxx',
+              subsub = 'X1&gt;=xxxxx' )
+
+## Valid statistic names come from the column names in the summary output. If
+## you are uncertain what the possible statistic values could be, you can pass
+## any arbitrary string as the statistic and an error message is returned
+## listing valid statistic values.
+## Not run: 
+distribution( ex1, statistic = 'Invalid_Statistic' )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

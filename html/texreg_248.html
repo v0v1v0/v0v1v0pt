@@ -1,0 +1,487 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create coefficient plots from statistical model output using <span class="pkg">ggplot2</span>.</h2>
+
+<h3>Description</h3>
+
+<p>Create coefficient plots of <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> regression output using <span class="pkg">ggplot2</span>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotreg(
+  l,
+  file = NULL,
+  custom.model.names = NULL,
+  custom.title = NULL,
+  custom.coef.names = NULL,
+  custom.coef.map = NULL,
+  custom.note = NULL,
+  override.coef = 0,
+  override.se = 0,
+  override.pval = 0,
+  override.ci.low = 0,
+  override.ci.up = 0,
+  override.pvalues = 0,
+  omit.coef = NULL,
+  reorder.coef = NULL,
+  ci.level = 0.95,
+  ci.force = FALSE,
+  ci.force.level = 0.95,
+  ci.test = 0,
+  type = "facet",
+  theme = NULL,
+  signif.light = "#FBC9B9",
+  signif.medium = "#F7523A",
+  signif.dark = "#BD0017",
+  insignif.light = "#C5DBE9",
+  insignif.medium = "#5A9ECC",
+  insignif.dark = "#1C5BA6",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>l</code></td>
+<td>
+<p>A statistical model or a list of statistical models. Lists of
+models can be specified as <code>l = list(model.1, model.2, ...)</code>.
+Different object types can also be mixed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>Using this argument, the resulting table is written to a file
+rather than to the <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> prompt. The file name can be specified as a character
+string. Writing a table to a file can be useful for working with MS Office
+or LibreOffice. For example, using the <code>htmlreg</code> function, an
+HTML table can be written to a file with the extension <code>.doc</code> and
+opened with MS Word. The table can then be simply copied into any Word
+document, retaining the formatting of the table. Note that LibreOffice can
+import only plain HTML; CSS decorations are not supported; the resulting
+tables do not retain the full formatting in LibreOffice.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom.model.names</code></td>
+<td>
+<p>A character vector of labels for the models. By
+default, the models are named "Model 1", "Model 2", etc. Specifying
+<code>model.names = c("My name 1", "My name 2")</code> etc. overrides the default
+behavior.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom.title</code></td>
+<td>
+<p>With this argument, a replacement text for the
+<code>ggtitle</code>, which provides a title above the diagram, can be provided.
+If an empty character object is provided (<code>custom.title = ""</code>), the
+title will be omitted completely.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom.coef.names</code></td>
+<td>
+<p>By default, <span class="pkg">texreg</span> uses the coefficient names
+which are stored in the models. The <code>custom.coef.names</code> argument can
+be used to replace them by other character strings in the order of
+appearance. For example, if a table shows a total of three different
+coefficients (including the intercept), the argument
+<code>custom.coef.names = c("Intercept", "variable 1", "variable 2")</code> will
+replace their names in this order.
+</p>
+<p>Sometimes it happens that the same variable has a different name in
+different models. In this case, the user can use this function to assign
+identical names. If possible, the rows will then be merged into a single
+row unless both rows contain values in the same column.
+</p>
+<p>Where the argument contains an <code>NA</code> value, the original name of the
+coefficient is kept. For example, <code>custom.coef.names = c(NA, "age",
+  NA)</code> will only replace the second coefficient name and leave the first and
+third name as they are in the original model.
+</p>
+<p>See also <code>custom.coef.map</code> for an easier and more comprehensive way to
+rename, omit, and reorder coefficients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom.coef.map</code></td>
+<td>
+<p>The <code>custom.coef.map</code> argument can be used to
+select, omit, rename, and reorder coefficients.
+</p>
+<p>Users must supply a named list of this form: <code>list("x" = "First
+  variable", "y" = NA, "z" = "Third variable")</code>. With that particular example
+of <code>custom.coef.map</code>,
+</p>
+
+<ol>
+<li>
+<p> coefficients will be presented in order: <code>"x"</code>, <code>"y"</code>,
+<code>"z"</code>.
+</p>
+</li>
+<li>
+<p> variable <code>"x"</code> will appear as <code>"First variable"</code>, variable
+<code>"y"</code> will appear as <code>"y"</code>, and variable <code>"z"</code> will
+appear as "Third variable".
+</p>
+</li>
+<li>
+<p> all variables not named <code>"x"</code>, <code>"y"</code>, or <code>"z"</code> will
+be omitted from the table.
+</p>
+</li>
+</ol>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom.note</code></td>
+<td>
+<p>With this argument, a replacement text for the
+significance note below the table can be provided. If an empty
+<code>character</code> object is provided (<code>custom.note = ""</code>), the note
+will be omitted completely. If some character string is provided (e.g.,
+<code>custom.note = "My note"</code>), the significance legend is replaced by
+<code>My note</code>. The original significance legend can be included by
+inserting the <code>%stars</code> wildcard. For example, a custom note can be
+added right after the significance legend by providing <code>custom.note =
+  "%stars. My note."</code>.
+</p>
+<p>If the <code>threeparttable</code> argument is used, any note should be preceded
+by <code>"\\item"</code>, for example
+<code>"\\item %stars. \\item Second note. \\item Third note."</code>, and
+it is possible to create line breaks in the formatted table by including
+<code>"\\\\"</code> and line breaks in the LaTeX code by including
+<code>"\n"</code>, for example
+<code>"\n\\item %stars.\\\\\n\\item Second line.\n"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.coef</code></td>
+<td>
+<p>Set custom values for the coefficients. New coefficients
+are provided as a list of numeric vectors. The list contains vectors of
+coefficients for each model. There must be as many vectors of coefficients
+as there are models. For example, if there are two models with three model
+terms each, the argument could be specified as <code>override.coef =
+list(c(0.1, 0.2, 0.3), c(0.05, 0.06, 0.07))</code>. If there is only one model,
+custom values can be provided as a plain vector (not embedded in a list).
+For example: <code>override.coef = c(0.05, 0.06, 0.07)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.se</code></td>
+<td>
+<p>Set custom values for the standard errors. New standard
+errors are provided as a list of numeric vectors. The list contains vectors
+of standard errors for each model. There must be as many vectors of
+standard errors as there are models. For example, if there are two models
+with three coefficients each, the argument could be specified as
+<code>override.se = list(c(0.1, 0.2, 0.3), c(0.05, 0.06, 0.07))</code>. If there
+is only one model, custom values can be provided as a plain vector (not
+embedded in a list).For example: <code>override.se = c(0.05, 0.06, 0.07)</code>.
+Overriding standard errors can be useful for the implementation of robust
+SEs, for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.pval</code></td>
+<td>
+<p>Set custom values for the p-values. New p-values are
+provided as a list of numeric vectors. The list contains vectors of
+p-values for each model. There must be as many vectors of p-values as there
+are models. For example, if there are two models with three coefficients
+each, the argument could be specified as <code>override.pvalues =
+list(c(0.1, 0.2, 0.3), c(0.05, 0.06, 0.07))</code>. If there is only one model,
+custom values can be provided as a plain vector (not embedded in a list).
+For example: <code>override.pvalues = c(0.05, 0.06, 0.07)</code>. Overriding
+p-values can be useful for the implementation of robust SEs and p-values,
+for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.ci.low</code></td>
+<td>
+<p>Set custom lower confidence interval bounds. This
+works like the other override arguments, with one exception: if confidence
+intervals are provided here and in the <code>override.ci.up</code> argument, the
+standard errors and p-values as well as the <code>ci.force</code> argument are
+ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.ci.up</code></td>
+<td>
+<p>Set custom upper confidence interval bounds. This
+works like the other override arguments, with one exception: if confidence
+intervals are provided here and in the <code>override.ci.low</code> argument, the
+standard errors and p values as well as the <code>ci.force</code> argument are
+ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.pvalues</code></td>
+<td>
+<p>Set custom values for the p-values. New p-values are
+provided as a list of numeric vectors. The list contains vectors of
+p-values for each model. There must be as many vectors of p-values as there
+are models. For example, if there are two models with three coefficients
+each, the argument could be specified as <code>override.pvalues =
+list(c(0.1, 0.2, 0.3), c(0.05, 0.06, 0.07))</code>. If there is only one model,
+custom values can be provided as a plain vector (not embedded in a list).
+For example: <code>override.pvalues = c(0.05, 0.06, 0.07)</code>. Overriding
+p-values can be useful for the implementation of robust SEs and p-values,
+for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>omit.coef</code></td>
+<td>
+<p>A character string which is used as a regular expression to
+remove coefficient rows from the table. For example, <code>omit.coef =
+"group"</code> deletes all coefficient rows from the table where the name of the
+coefficient contains the character sequence <code>"group"</code>. More complex
+regular expressions can be used to filter out several kinds of model terms,
+for example <code>omit.coef = "(thresh)|(ranef)"</code> to remove all model terms
+matching either <code>"thresh"</code> or <code>"ranef"</code>. The <code>omit.coef</code>
+argument is processed after the <code>custom.coef.names</code> argument, so the
+regular expression should refer to the custom coefficient names. To omit
+GOF entries instead of coefficient entries, use the custom arguments of the
+extract functions instead (see the help entry of the <code>extract</code>
+function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reorder.coef</code></td>
+<td>
+<p>Reorder the rows of the coefficient block of the
+resulting table in a custom way. The argument takes a vector of the same
+length as the number of coefficients. For example, if there are three
+coefficients, <code>reorder.coef = c(3, 2, 1)</code> will put the third
+coefficient in the first row and the first coefficient in the third row.
+Reordering can be sensible because interaction effects are often added to
+the end of the model output although they were specified earlier in the
+model formula. Note: Reordering takes place after processing custom
+coefficient names and after omitting coefficients, so the
+<code>custom.coef.names</code> and <code>omit.coef</code> arguments should follow the
+original order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci.level</code></td>
+<td>
+<p>If standard errors are converted to confidence intervals
+(because a model does not natively support CIs), what confidence level
+should be used for the outer confidence interval? By default, <code>0.95</code>
+is used (i.e., an alpha value of 0.05).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci.force</code></td>
+<td>
+<p>Should confidence intervals be used instead of the default
+standard errors and p-values? Most models implemented in the <span class="pkg">texreg</span>
+package report standard errors and p-values by default while few models
+report confidence intervals. However, the functions in the <span class="pkg">texreg</span>
+package can convert standard errors and into confidence intervals using
+z-scores if desired. To enforce confidence intervals instead of standard
+errors, the <code>ci.force</code> argument accepts either a logical value
+indicating whether all models or none of the models should be forced to
+report confidence intervals (<code>ci.force = TRUE</code> for all and
+<code>ci.force = FALSE</code> for none) or a vector of logical values indicating
+for each model separately whether the model should be forced to report
+confidence intervals (e.g., <code>ci.force = c(FALSE, TRUE, FALSE)</code>).
+Confidence intervals are computed using the standard normal distribution
+(z-values based on the <code>qnorm</code> function). The
+t-distribution is currently not supported because this would require each
+<code>extract</code> method to have an additional argument for the degrees
+of freedom.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci.force.level</code></td>
+<td>
+<p>If the <code>ci.force</code> argument is used to convert
+standard errors to confidence intervals, what confidence level should be
+used? By default, <code>0.95</code> is used (i.e., an alpha value of 0.05).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci.test</code></td>
+<td>
+<p>If confidence intervals are reported, the <code>ci.test</code>
+argument specifies the reference value to establish whether a
+coefficient/CI is significant. The default value <code>ci.test = 0</code>, for
+example, will display coefficients with a round circle and the red color
+if the confidence interval does not contain <code>0</code>. A value of
+<code>ci.test = 1</code> could be useful if coefficients are provided on the
+odds-ratio scale, for example. It is possible to provide a single value
+for all models or a vector with a separate value for each model
+(even if it would make the plot hard to read). The <code>ci.test</code> argument
+works both for models with native support for confidence intervals and
+in cases where the <code>ci.force</code> argument is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The default option is <code>type = "facet"</code>. If only one model is
+specified, it will print one forest plot applied to point estimates and
+confidence intervals. If more than one model is specified, it will print
+as many facets as the number of models in a column of plots. Alternatively,
+if <code>type = "forest"</code> is specified, coefficients from one or more
+models will be grouped together and displayed as a single forest plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theme</code></td>
+<td>
+<p>The <code>theme</code> argument can be used to customize the
+appearance of the plot. The default theme is <code>theme_bw</code>. It can be
+replaced by any other <span class="pkg">ggplot2</span> theme. See
+<code>ggtheme</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>signif.light</code></td>
+<td>
+<p>Color of outer confidence intervals for significant model
+terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>signif.medium</code></td>
+<td>
+<p>Color of inner confidence intervals for significant
+model terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>signif.dark</code></td>
+<td>
+<p>Color of point estimates and labels for significant model
+terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insignif.light</code></td>
+<td>
+<p>Color of outer confidence intervals for insignificant
+model terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insignif.medium</code></td>
+<td>
+<p>Color of inner confidence intervals for insignificant
+model terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insignif.dark</code></td>
+<td>
+<p>Color of point estimates and labels for insignificant
+model terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Custom options to be passed on to the <code>extract</code>
+function. For example, most extract methods provide custom options for the
+inclusion or exclusion of specific goodness-of-fit statistics. See the help
+entries of <code>extract</code> for more information.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>plotreg</code> function produces coefficient plots (i.e., forest plots
+applied to point estimates and confidence intervals) and works much like the
+<code>screenreg</code>, <code>texreg</code>, <code>htmlreg</code>,
+<code>matrixreg</code> and <code>wordreg</code> functions. It accepts a
+single model or multiple statistical models as input and internally extracts
+the relevant data from the models. If confidence intervals are not defined in
+the extract method of a statistical model (see extract), the default
+standard errors are converted to confidence intervals. Most of the arguments
+work like in the <code>screenreg</code>, <code>texreg</code>, and
+<code>htmlreg</code> <code>matrixreg</code>, and <code>wordreg</code>
+functions. It is possible to display the plots in two ways: using the
+<code>type = "facet"</code> argument, one forest plot applied to point estimates
+and confidence intervals will be visualized in case there is only one model.
+If there is more than one model, each one will be plotted next to the other
+as a separate facet; using the <code>type = "forest"</code> argument, coefficients
+from one or more models will be grouped together and displayed as a single
+forest plot.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Coefficient plot as a <span class="pkg">ggplot2</span> <code>gg</code> object if
+<code>file = FALSE</code>. <code>NULL</code> otherwise.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Claudia Zucca, Philip Leifeld
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>texreg-package</code> <code>extract</code>
+<code>texreg</code> <code>matrixreg</code>
+</p>
+<p>Other texreg: 
+<code>htmlreg()</code>,
+<code>huxtablereg()</code>,
+<code>knitreg()</code>,
+<code>matrixreg()</code>,
+<code>screenreg()</code>,
+<code>texreg</code>,
+<code>wordreg()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# example from the 'lm' help file:
+ctl &lt;- c(4.17, 5.58, 5.18, 6.11, 4.50, 4.61, 5.17, 4.53, 5.33, 5.14)
+trt &lt;- c(4.81, 4.17, 4.41, 3.59, 5.87, 3.83, 6.03, 4.89, 4.32, 4.69)
+group &lt;- gl(2, 10, 20, labels = c("Ctl", "Trt"))
+weight &lt;- c(ctl, trt)
+lm.D9 &lt;- lm(weight ~ group)
+lm.D90 &lt;- lm(weight ~ group - 1)
+plotreg(lm.D9) # plot model output as a diagram
+
+# customize theme and title and save as a PDF file.
+plotreg(lm.D9,
+        theme = theme_dark(),
+        ggtitle = "my title",
+        file = "myplot.pdf")
+unlink("myplot.pdf")
+
+# group coefficients from multiple models
+plotreg(list(lm.D9, lm.D90), type = "forest")
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

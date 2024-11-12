@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rancor_builder</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Build a Random Corpus</h2>
+
+<h3>Description</h3>
+
+<p><code>rancor_builder()</code> generates a random corpus (rancor) based on a user
+defined term probabilities and vocabulary. Users can set the number of
+documents, as well as the mean, standard deviation, minimum, and maximum
+document lengths (i.e., number of tokens) of the parent normal distribution
+from which the document lengths are randomly sampled. The output is a single
+document-term matrix. To produce multiple random corpora, use
+<code>rancors_builder()</code> (note the plural). Term probabilities/vocabulary can
+come from a users own corpus, or a pre-compiled frequency list, such
+as the one derived from the Google Book N-grams corpus
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">rancor_builder(
+  data,
+  vocab,
+  probs,
+  n_docs = 100L,
+  len_mean = 500,
+  len_var = 10L,
+  len_min = 20L,
+  len_max = 1000L,
+  seed = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data.frame containing vocabulary and probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vocab</code></td>
+<td>
+<p>Name of the column containing vocabulary</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs</code></td>
+<td>
+<p>Name of the column containing probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_docs</code></td>
+<td>
+<p>Integer indicating the number of documents to be returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len_mean</code></td>
+<td>
+<p>Integer indicating the mean of the document lengths in the
+parent normal sampling distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len_var</code></td>
+<td>
+<p>Integer indicating the standard deviation of the
+document lengths in the parent normal sampling distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len_min</code></td>
+<td>
+<p>Integer indicating the minimum of the document lengths
+in the parent normal sampling distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len_max</code></td>
+<td>
+<p>Integer indicating the maximum of the document lengths
+in the parent normal sampling distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Optional seed for reproducibility</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Dustin Stoltz and Marshall Taylor
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># create corpus and DTM
+my_corpus &lt;- data.frame(
+  text = c(
+    "I hear babies crying I watch them grow",
+    "They'll learn much more than I'll ever know",
+    "And I think to myself",
+    "What a wonderful world",
+    "Yes I think to myself",
+    "What a wonderful world"
+  ),
+  line_id = paste0("line", seq_len(6))
+)
+## some text preprocessing
+my_corpus$clean_text &lt;- tolower(gsub("'", "", my_corpus$text))
+
+dtm &lt;- dtm_builder(
+  data = my_corpus,
+  text = clean_text,
+  doc_id = line_id
+)
+
+# use colSums to get term frequencies
+df &lt;- data.frame(
+  terms = colnames(dtm),
+  freqs = colSums(dtm)
+)
+# convert to probabilities
+df$probs &lt;- df$freqs / sum(df$freqs)
+
+# create random DTM
+rDTM &lt;- df |&gt;
+  rancor_builder(terms, probs)
+
+</code></pre>
+
+
+</div>

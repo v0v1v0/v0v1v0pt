@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_radam</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>AdamW optimizer</h2>
+
+<h3>Description</h3>
+
+<p>R implementation of the RAdam optimizer proposed
+by Liu et al. (2019).
+We used the implementation in PyTorch as a basis for our
+implementation.
+</p>
+<p>From the abstract by the paper by Liu et al. (2019):
+The learning rate warmup heuristic achieves remarkable success
+in stabilizing training, accelerating convergence and improving
+generalization for adaptive stochastic optimization algorithms
+like RMSprop and Adam. Here, we study its mechanism in details.
+Pursuing the theory behind warmup, we identify a problem of the
+adaptive learning rate (i.e., it has problematically large variance
+in the early stage), suggest warmup works as a variance reduction
+technique, and provide both empirical and theoretical evidence to verify
+our hypothesis. We further propose RAdam, a new variant of Adam,
+by introducing a term to rectify the variance of the adaptive learning rate.
+Extensive experimental results on image classification, language modeling,
+and neural machine translation verify our intuition and demonstrate
+the effectiveness and robustness of our proposed method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_radam(
+  params,
+  lr = 0.01,
+  betas = c(0.9, 0.999),
+  eps = 1e-08,
+  weight_decay = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>List of parameters to optimize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>Learning rate (default: 1e-3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>betas</code></td>
+<td>
+<p>Coefficients computing running averages of gradient
+and its square (default: (0.9, 0.999))</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Term added to the denominator to improve numerical
+stability (default: 1e-8)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decay</code></td>
+<td>
+<p>Weight decay (L2 penalty) (default: 0)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A torch optimizer object implementing the <code>step</code> method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilberto Camara, <a href="mailto:gilberto.camara@inpe.br">gilberto.camara@inpe.br</a>
+</p>
+<p>Daniel Falbel, <a href="mailto:daniel.falble@gmail.com">daniel.falble@gmail.com</a>
+</p>
+<p>Rolf Simoes, <a href="mailto:rolf.simoes@inpe.br">rolf.simoes@inpe.br</a>
+</p>
+<p>Felipe Souza, <a href="mailto:lipecaso@gmail.com">lipecaso@gmail.com</a>
+</p>
+<p>Alber Sanchez, <a href="mailto:alber.ipia@inpe.br">alber.ipia@inpe.br</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Liyuan Liu, Haoming Jiang, Pengcheng He, Weizhu Chen,
+Xiaodong Liu, Jianfeng Gao, Jiawei Han,
+"On the Variance of the Adaptive Learning Rate and Beyond",
+International Conference on Learning Representations (ICLR) 2020.
+https://arxiv.org/abs/1908.03265
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch::torch_is_installed()) {
+# function to demonstrate optimization
+beale &lt;- function(x, y) {
+    log((1.5 - x + x * y)^2 + (2.25 - x - x * y^2)^2 + (2.625 - x + x * y^3)^2)
+ }
+# define optimizer
+optim &lt;- torchopt::optim_radam
+# define hyperparams
+opt_hparams &lt;- list(lr = 0.01)
+
+# starting point
+x0 &lt;- 3
+y0 &lt;- 3
+# create tensor
+x &lt;- torch::torch_tensor(x0, requires_grad = TRUE)
+y &lt;- torch::torch_tensor(y0, requires_grad = TRUE)
+# instantiate optimizer
+optim &lt;- do.call(optim, c(list(params = list(x, y)), opt_hparams))
+# run optimizer
+steps &lt;- 400
+x_steps &lt;- numeric(steps)
+y_steps &lt;- numeric(steps)
+for (i in seq_len(steps)) {
+    x_steps[i] &lt;- as.numeric(x)
+    y_steps[i] &lt;- as.numeric(y)
+    optim$zero_grad()
+    z &lt;- beale(x, y)
+    z$backward()
+    optim$step()
+}
+print(paste0("starting value = ", beale(x0, y0)))
+print(paste0("final value = ", beale(x_steps[steps], y_steps[steps])))
+}
+</code></pre>
+
+
+</div>

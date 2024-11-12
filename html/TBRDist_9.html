@@ -1,0 +1,242 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TreeRearrangementDistances</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate SPR, TBR and Replug distances on unrooted trees</h2>
+
+<h3>Description</h3>
+
+<p>Calculate SPR, TBR and Replug distances on unrooted trees, and the
+information content of the maximum agreement forest.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">USPRDist(
+  tree1,
+  tree2 = NULL,
+  allPairs = is.null(tree2),
+  checks = TRUE,
+  useTbrApproxEstimate = TRUE,
+  useTbrEstimate = TRUE,
+  useReplugEstimate = TRUE
+)
+
+ReplugDist(
+  tree1,
+  tree2 = NULL,
+  allPairs = is.null(tree2),
+  checks = TRUE,
+  maf = FALSE
+)
+
+TBRDist(
+  tree1,
+  tree2 = NULL,
+  allPairs = is.null(tree2),
+  checks = TRUE,
+  maf = FALSE,
+  countMafs = FALSE,
+  printMafs = FALSE,
+  exact = maf,
+  approximate = !exact,
+  optimize = TRUE,
+  protectB = TRUE
+)
+
+MAFInfo(tree1, tree2 = tree1, exact = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Trees of class <code>phylo</code>, or lists thereof.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allPairs</code></td>
+<td>
+<p>Logical; if <code>TRUE</code>, compare each tree in <code>tree1</code> with each
+tree in <code>tree2</code>; if <code>FALSE</code>, compare each tree in <code>tree1</code> only with the
+tree at the corresponding index in <code>tree2</code>.  If <code>tree2</code> is not specified,
+each tree in <code>tree1</code> will be compared with each other tree in <code>tree1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>checks</code></td>
+<td>
+<p>Logical specifying whether to check that trees are properly
+formatted and labelled.  Specify <code>FALSE</code> at your peril, as improper
+input is likely to crash R.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>useTbrApproxEstimate, useTbrEstimate, useReplugEstimate</code></td>
+<td>
+<p>Logical
+specifying whether to use approximate TBR distance, TBR distance or Replug
+distance to help estimate the SPR distance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maf</code></td>
+<td>
+<p>Logical specifying whether to report a maximum agreement forest
+corresponding to the optimal score.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>countMafs</code></td>
+<td>
+<p>Logical specifying whether to count the number of maximum
+agreement forests found.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>printMafs</code></td>
+<td>
+<p>Logical specifying whether to print maximum agreement
+forests to stdout whilst counting.
+Use <code>capture.output</code><code>(TBRDist(tree1, tree2, printMafs = TRUE))</code> to access
+these in R.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exact</code></td>
+<td>
+<p>Logical specifying whether to calculate the exact TBR distance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>approximate</code></td>
+<td>
+<p>Logical specifying whether to calculate the approximate
+TBR distance.  By default, is set to the opposite of <code>exact</code>; either
+<code>approximate</code> or <code>exact</code> should usually be set to <code>TRUE</code> if a distance is
+required.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize</code></td>
+<td>
+<p>Logical specifying whether to use the default optimizations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>protectB</code></td>
+<td>
+<p>Logical specifying whether to use the 'PROTECT_B'
+optimization.
+Overrides value inherited from <code>optimize</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that these distances are NP-hard to compute, so the running time of the
+algorithms used in this software scale exponentially with the distance
+computed.
+The version of 'uspr' linked in this package is aimed at trees with up to
+50 leaves and uSPR distances up to 14.
+</p>
+<p>If you are interested in comparing rooted trees in terms of SPR operations,
+you should use '<a href="https://github.com/cwhidden/rspr/">rspr</a>' instead.
+'rspr' is also much more efficient and can easily handle pairs of binary
+rooted trees with 200+ leaves and distances &gt; 50.
+rspr is not yet incorporated in this R package; please
+<a href="https://github.com/ms609/TBRDist/issues/2/">contact the maintainer</a>
+if this would be useful to you.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>USPRDist()</code> returns a vector of SPR distances between each pair of
+unrooted trees.
+</p>
+<p><code>ReplugDist()</code> returns a vector of Replug distances between each pair
+of trees, or (if <code>maf = TRUE</code>) a named list whose second and third elements
+list a vector of maximum agreement forests for each pair of trees.
+</p>
+<p><code>TBRDist()</code> returns a named list, each element of which bears a
+vector corresponding to the requested value for each tree pair.  If only the
+exact value is requested (<code>exact = TRUE</code>), an unnamed vector of distances is
+returned.
+</p>
+<p><code>MAFInfo()</code> returns the information content of the maximum agreement
+forest, in bits.  This is defined as the sum of the phylogenetic information
+content of each constituent subtree, plus the entropy of the clusters implied
+by the division of the tree into subtrees.  Note that as there is no
+guarantee that the most informative MAF will be encountered,
+this measure is approximate only.  <code>exact</code> will only serve to guarantee
+that a MAF corresponding to the exact TBR distance is among those sampled.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Algorithms implemented by Chris Whidden (<a href="mailto:cwhidden@fredhutch.org">cwhidden@fredhutch.org</a>)
+</p>
+<p>R wrappers by Martin R. Smith (<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>If you use these functions in your research, please cite:
+</p>
+
+<ul><li>
+<p> Chris Whidden and Frederick A. Matsen IV. Calculating the Unrooted
+Subtree-Prune-and-Regraft Distance.
+arXiv:<a href="https://arxiv.org/abs/1511.07529">1511.07529</a>.
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">tree1 &lt;- TreeTools::BalancedTree(6)
+tree2 &lt;- TreeTools::PectinateTree(6)
+
+# SPR distance
+USPRDist(tree1, tree2)
+
+# Replug distance
+ReplugDist(tree1, tree2)
+ReplugDist(tree1, tree2, maf = TRUE)
+
+# TBR distance between two trees
+TBRDist(tree1, tree2, exact = TRUE)
+
+# Compare a list against one tree, using approximate distances
+TBRDist(list(tree1, tree2), tree2, exact = FALSE)
+
+# Compare all pairs in two lists
+TBRDist(list(tree1, tree2), list(tree1, tree2, tree2), allPairs = TRUE,
+        exact = FALSE)
+
+# Compare each tree in a list against each other
+TBRDist(list(one = tree1, two = tree2, twoAgain = tree2))
+
+# Compare each pair in two lists
+TBRDist(list(tree1, tree2, tree2),
+        list(tree2, tree1, tree2),
+        exact = TRUE, approximate = TRUE, countMafs = TRUE)
+
+# Capture maximum agreement forests
+mafs &lt;- capture.output(TBRDist(tree1, tree2, approximate = FALSE,
+                        printMafs = TRUE))
+head(mafs)
+
+MAFInfo(tree1, tree2)
+MAFInfo(list(tree2, tree1), list(tree1, tree2))
+</code></pre>
+
+
+</div>

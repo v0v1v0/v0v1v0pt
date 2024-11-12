@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trans_precision</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transfer learning for vector-valued precision matrix (graphical model).</h2>
+
+<h3>Description</h3>
+
+<p>The transfer learning for vector-valued precision matrix via D-trace loss method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trans_precision(t.data=NULL, A.data=NULL, precision.method="CLIME",
+                       cov.method="opt", cn.lam2=seq(1,2.5,length.out=10),
+                       theta.algm="cd", adjust.BIC=FALSE, symmetry=TRUE,
+                       preselect.aux=0, sel.type="L2", input.A.cov=FALSE,
+                       A.cov=NULL, nA.vec=NULL, t.Theta.hat0=NULL,
+                       t.n=NULL, correlation=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>t.data</code></td>
+<td>
+<p>The target data, a n * p matrix, where n is the sample size and p is data dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.data</code></td>
+<td>
+<p>The auxiliary data in K auxiliary domains, a list with K elements, each of which is a nk * p matrix, where nk is the sample size of the k-th auxiliary domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precision.method</code></td>
+<td>
+<p>The initial method of estimating the target precision matrix, which can be selected as "CLIME" or "glasso".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov.method</code></td>
+<td>
+<p>The method of aggregating K auxiliary covariance matrices, which can be selected as "size" (the sum weighted by the sample sizes), "weight" (the sum weighted by the differences) or "opt" (select the optimal one).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cn.lam2</code></td>
+<td>
+<p>A vector or a float value: the coefficients set in tuning parameters used to solve the target precision matrix, default is cn.lam2*sqrt( log(p) / n ).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.algm</code></td>
+<td>
+<p>The optimization algorithm used to solve the precision, which can be selected as "admm" (ADMM algorithm) or "cd" (coordinate descent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adjust.BIC</code></td>
+<td>
+<p>Whether to use the adjusted BIC to select lambda2, the default setting is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>symmetry</code></td>
+<td>
+<p>Whether to symmetrize the final estimated precision matrices, and the default is True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preselect.aux</code></td>
+<td>
+<p>Whether to pre-select informative auxiliary domains based on the distance between initially estimated auxiliary and target parameters. The default is 0, which means that pre-selection will not be performed. If "preselect.aux" is specified as a real number greater than zero, then the threshold value is forpreselect.aux<em>s</em>sqrt( log(p) / n ).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sel.type</code></td>
+<td>
+<p>If pre-selection should be performed, "sel.type" is the type of distance. The default is L2 norm, and can be specified as "L1" to use L1 norm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>input.A.cov</code></td>
+<td>
+<p>Whether to input the covariance matrices of the auxiliary domains. The default setting is FALSE, which means that the raw data of the auxiliary domain is input, and the covariance will be calculated within this function. If input.A.cov=T, then the calculated covariance matrices must be input through parameter "A.cov", and parameter "A.data" can be defaulted at this time. This setting is suitable for situations where raw data cannot be obtained but the covariance matrix can be obtained.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.cov</code></td>
+<td>
+<p>If input.A.cov=T, the "A.cov" must be auxiliary covariance matrices in K auxiliary domains, a list with K elements, each of which is a p * p matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nA.vec</code></td>
+<td>
+<p>If input.A.cov=T, the "nA.vec" must be a vector consisting of sample sizes of K auxiliary domains.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t.Theta.hat0</code></td>
+<td>
+<p>Whether to input the estimated target precision matrix based on the target domain only, and the default setting is NULL. If "t.Theta.hat0" is specified as an estimated precision matrix, it will not be recalculated in the initialization phase. This parameter mainly plays a role in transfer learning of GGMMs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t.n</code></td>
+<td>
+<p>Whether to input the target sample size, and the default setting is NULL. This parameter mainly plays a role in transfer learning of GGMMs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correlation</code></td>
+<td>
+<p>Whether to use correlation matrix for initial parameters in both target and auxiliary domains. The default setting is F.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A result list including:
+</p>
+
+<dl>
+<dt>Theta.hat</dt>
+<dd>
+<p>The target precision matrix via transfer learning.</p>
+</dd>
+<dt>Theta.hat0</dt>
+<dd>
+<p>The initial target precision matrix.</p>
+</dd>
+<dt>k.check</dt>
+<dd>
+<p>The number of the optimal auxiliary domain.</p>
+</dd>
+<dt>N</dt>
+<dd>
+<p>The minimum sample size for auxiliary domain.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Mingyang Ren <a href="mailto:renmingyang17@mails.ucas.ac.cn">renmingyang17@mails.ucas.ac.cn</a>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Ren, M., Zhen Y., and Wang J. (2022). Transfer learning for tensor graphical models.
+Ren, M., He X., and Wang J. (2023). Structural transfer learning of non-Gaussian DAG.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(TransGraph)
+# load example data from github repository
+# Please refer to https://github.com/Ren-Mingyang/example_data_TransGraph
+# for detailed data information
+githublink = "https://github.com/Ren-Mingyang/example_data_TransGraph/"
+load(url(paste0(githublink,"raw/main/example.data.GGM.RData")))
+t.data = example.data.GGM$target.list$t.data
+t.precision = example.data.GGM$target.list$t.precision
+A.data = example.data.GGM$A.data
+A.data.infor = example.data.GGM$A.data.infor
+
+# using all auxiliary domains
+res.trans.weight = trans_precision(t.data, A.data, cov.method="weight")
+res.trans.opt = trans_precision(t.data, A.data, cov.method="opt")
+res.trans.size = trans_precision(t.data, A.data, cov.method="size")
+Theta.trans.weight = res.trans.weight$Theta.hat
+Theta.trans.opt = res.trans.opt$Theta.hat
+Theta.trans.size = res.trans.size$Theta.hat
+Theta.single = res.trans.weight$Theta.hat0  # initial rough estimation via the target domain
+Theta.single[abs(Theta.single)&lt;0.0001] = 0
+
+Evaluation.GGM(Theta.single, t.precision)
+Evaluation.GGM(Theta.trans.weight, t.precision)
+Evaluation.GGM(Theta.trans.opt, t.precision)
+Evaluation.GGM(Theta.trans.size, t.precision)
+
+# using informative auxiliary domains
+res.trans.size.oracle = trans_precision(t.data, A.data.infor, cov.method="size")
+Evaluation.GGM(res.trans.size.oracle$Theta.hat, t.precision)
+
+
+
+</code></pre>
+
+
+</div>

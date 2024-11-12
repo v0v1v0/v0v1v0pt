@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>source_selection</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Source Specific Objects from Script</h2>
+
+<h3>Description</h3>
+
+<p>The <code>source_selection()</code> function is the same as
+base R's source function, except that it allows only placing
+the selected objects and functions into the current environment,
+instead of all objects. <br><br>
+The objects to be selected can be specified using any combination of the following:
+</p>
+
+<ul>
+<li>
+<p> by supplying a character vector of exact object names to the <code>select</code> argument.
+</p>
+</li>
+<li>
+<p> by supplying a character vector of <code>regex</code> patterns to the <code>regex</code> argument.
+</p>
+</li>
+<li>
+<p> by supplying a character vector of <code>fixed</code> patterns to the <code>fixed</code> argument.
+</p>
+</li>
+</ul>
+<p>Note that the <code>source_selection()</code> function does not suppress output
+(i.e. plots, prints, messages)
+from the sourced script file. <br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">source_selection(lst, select = NULL, regex = NULL, fixed = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lst</code></td>
+<td>
+<p>a named list, giving the arguments to be passed to the
+source function. <br>
+The <code>local</code> argument should not be included in the list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p>a character vector,
+giving the exact names of the functions or objects appearing in the script,
+to expose to the current environment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regex</code></td>
+<td>
+<p>a character vector of <code>regex</code> patterns
+(see about_search_regex). <br>
+These should give regular expressions that match to
+the names of the functions or objects appearing in the script,
+to expose to the current environment. <br>
+For example, to expose the following methods to the current environment, <br><code>mymethod.numeric()</code> and <code>mymethod.character()</code> from generic <code>mymethod()</code>, <br>
+one could specify <code>regex = "^mymethod"</code>. <br><a href="https://stringi.gagolewski.com/rapi/about_search_regex.html"><img src="../help/figures/aboutsearch-regex-darkred.svg" alt="[REGEX]"></a> <br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed</code></td>
+<td>
+<p>a character vector of <code>fixed</code> patterns
+(see about_search_fixed). <br>
+These should give fixed expressions that match to
+the names of the functions or objects appearing in the script,
+to expose to the current environment. <br>
+For example, to expose the following methods to the current environment, <br><code>mymethod.numeric()</code> and <code>mymethod.character()</code> from generic <code>mymethod()</code>, <br>
+one could specify <code>fixed = "mymethod"</code>. <br><a href="https://stringi.gagolewski.com/rapi/about_search_fixed.html"><img src="../help/figures/aboutsearch-fixed-darkgreen.svg" alt="[FIXED]"></a> <br></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>One can specify which objects to expose using arguments
+<code>select</code>, <code>regex</code>, or <code>fixed</code>. <br>
+The user can specify all 3 of them, but at least one of the 3 must be specified. <br>
+It is not a problem if the specifications overlap.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Any specified objects will be placed
+in the current environment. <br><br></p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_misc, <code>base::source()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+exprs &lt;- expression({
+helloworld = function()print("helloworld")
+goodbyeworld &lt;- function() print("goodbye world")
+`%s+test%` &lt;- function(x,y) stringi::`%s+%`(x,y)
+`%s*test%` &lt;- function(x,y) stringi::`%s*%`(x,y)
+ mymethod &lt;- function(x) UseMethod("mymethod", x)
+ mymethod.numeric &lt;- function(x)x * 2
+ mymethod.character &lt;- function(x)chartr(x, old = "a-zA-Z", new = "A-Za-z")
+})
+
+source_selection(list(exprs=exprs), regex = "^mymethod")
+mymethod(1)
+mymethod("a")
+
+
+temp.fun &lt;- function(){
+  source_selection(list(exprs=exprs), regex = "^mymethod", fixed = c("%", ":="))
+  ls() # list all objects residing within the function definition
+}
+temp.fun()
+
+temp.fun &lt;- function(){
+  source_selection(list(exprs=exprs), select = c("helloworld", "goodbyeworld"))
+  ls() # list all objects residing within the function definition
+}
+temp.fun()
+
+
+</code></pre>
+
+
+</div>

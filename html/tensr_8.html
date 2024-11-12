@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>convert_cov</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert the output from <code>equi_mcmc</code> to component covariance matrices.</h2>
+
+<h3>Description</h3>
+
+<p>This takes the output from <code>equi_mcmc</code>, which are the inverses of the
+lower-triangular Cholesky square roots of the component covariance matrices,
+and returns the component covariance matrices. These are the more useful
+posterior draws to use in actual data analysis.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">convert_cov(equi_mcmc_obj)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>equi_mcmc_obj</code></td>
+<td>
+<p>The output from <code>equi_mcmc</code>, which contains a list.
+The first element is a list containing the posterior draws of the inverses
+of the lower-triangular Cholesky square roots of each component covariance
+matrix. The second list element is a total variation parameter, but the
+square root of the version used in calculating the overall covariance
+matrix.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>The output from <code>equi_mcmc</code> is the inverse of the lower-triangular
+Cholesky square root of each component covariance matrix. This output is
+convenient for calculating the Bayes rule under multiway-Stein's loss (see
+<code>get_equi_bayes</code>). Call one of these outputs from
+<code>equi_mcmc</code> <code class="reqn">\Psi</code>. Then this function calculates <code class="reqn">\Sigma =
+\Psi^-1\Psi^-T</code>, which are the posterior draws of the component covariance
+matrices. These component covariance matrices are constrained to have
+determinant one, hence there is a total variation parameter <code class="reqn">\sigma^2</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>cov_post</code> A list containing the posterior draws of each
+component covariance matrix.
+</p>
+<p><code>sig2_post</code> A vector containing the posterior draws of the total
+variation parameter.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Gerard, D., &amp; Hoff, P. (2015). Equivariant minimax
+dominators of the MLE in the array normal model.
+<em>Journal of Multivariate Analysis</em>, 137, 32-49.
+<a href="https://doi.org/10.1016/j.jmva.2015.01.020">https://doi.org/10.1016/j.jmva.2015.01.020</a>
+<a href="http://arxiv.org/pdf/1408.0424.pdf">http://arxiv.org/pdf/1408.0424.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>equi_mcmc</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Generate data whose true covariance is just the identity.
+p &lt;- c(4,4,4)
+X &lt;- array(stats::rnorm(prod(p)),dim = p)
+#Then run the Gibbs sampler.
+mcmc_out &lt;- equi_mcmc(X)
+cov_out &lt;- convert_cov(mcmc_out)
+
+# Some trace plots.
+plot(cov_out[[2]], type = 'l', xlab = 'Iteration',
+     ylab = expression(sigma ^ 2), main = 'Trace Plot')
+abline(h = 1, col = 2, lty = 2)
+legend('topleft', 'True Value', col = 2, lty = 2, bty = 'n')
+
+k &lt;- sample(1:length(p), size = 1)
+i &lt;- sample(1:p[k], size = 1)
+j &lt;- sample(1:p[k], size = 1)
+plot(cov_out[[1]][[k]][i, j, ], type = 'l', xlab = 'Iteration',
+     main = 'Trace Plot',
+     ylab = substitute(Sigma[k][group('[', list(i, j), ']')],
+                       list(k = k, i = i, j = j)))
+abline(h = 1 * (i == j), lty =  2, col = 2)
+legend('topleft', 'True Value', col = 2, lty = 2, bty = 'n')
+</code></pre>
+
+
+</div>

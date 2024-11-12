@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>multipBootstrap</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Multiplier Bootstrap for Persistence Landscapes and Silhouettes
+</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>multipBootstrap</code> computes a confidence band for the average landscape (or the average silhouette) using the multiplier bootstrap.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">multipBootstrap(
+    Y, B = 30, alpha = 0.05, parallel = FALSE,
+    printProgress = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+
+<p>an <code class="reqn">N</code> by <code class="reqn">m</code> matrix of values of <code class="reqn">N</code> persistence landscapes (or silhouettes) evaluated over a 1 dimensional grid of length <code class="reqn">m</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>the number of bootstrap iterations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+
+<p><code>multipBootstrap</code> returns a 1-<code>alpha</code> confidence band for the mean landscape (or silhouette).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+
+<p>logical: if <code>TRUE</code> the bootstrap iterations are parallelized, using the library <code>parallel</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>printProgress</code></td>
+<td>
+
+<p>logical: if <code>TRUE</code> a progress bar is printed. The default value is <code>FALSE</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See Algorithm 1 in the reference.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function <code>multipBootstrap</code> returns a list with the following elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+
+<p>number: half of the width of the unfiorm confidence band; that is, the distance of the upper and lower limits of the band from the empirical average landscape (or silhouette).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean</code></td>
+<td>
+
+<p>a numeric vector of length <code class="reqn">m</code>, storing the values of the empirical average landscape (or silhouette) over a 1 dimensional grid of length <code class="reqn">m</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>band</code></td>
+<td>
+
+<p>an <code class="reqn">m</code> by 2 matrix that stores the values of the lower limit of the confidence band (first column) and upper limit of the confidence band (second column), evaluated over a 1 dimensional grid of length <code class="reqn">m</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Fabrizio Lecci
+</p>
+
+
+<h3>References</h3>
+
+<p>Chazal F, Fasy BT, Lecci F, Rinaldo A, Wasserman L (2014). "Stochastic Convergence of Persistence Landscapes and Silhouettes." Proceedings of the 30th Symposium of Computational Geometry (SoCG). (arXiv:1312.0308)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>landscape</code>, <code>silhouette</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">nn &lt;- 3000  #large sample size
+mm &lt;- 50    #small subsample size
+NN &lt;- 5     #we will compute NN diagrams using subsamples of size mm
+
+XX &lt;- circleUnif(nn)  ## large sample from the unit circle
+
+DiagLim &lt;- 2
+maxdimension &lt;- 1
+tseq &lt;- seq(0, DiagLim, length = 1000)
+
+Diags &lt;- list()  #here we will store the NN rips diagrams
+                 #constructed using different subsamples of mm points
+#here we'll store the landscapes
+Lands &lt;- matrix(0, nrow = NN, ncol = length(tseq))
+
+for (i in seq_len(NN)){
+  subXX &lt;- XX[sample(seq_len(nn), mm), ]
+  Diags[[i]] &lt;- ripsDiag(subXX, maxdimension, DiagLim)
+  Lands[i, ] &lt;- landscape(Diags[[i]][["diagram"]], dimension = 1, KK = 1, tseq)
+}
+
+## now we use the NN landscapes to construct a confidence band
+B &lt;- 50
+alpha &lt;- 0.05
+boot &lt;- multipBootstrap(Lands, B, alpha)
+
+LOWband &lt;- boot[["band"]][, 1]
+UPband &lt;- boot[["band"]][, 2]
+MeanLand &lt;- boot[["mean"]]
+
+plot(tseq, MeanLand, type = "l", lwd = 2, xlab = "", ylab = "",
+     main = "Mean Landscape with band", ylim = c(0, 1.2))
+polygon(c(tseq, rev(tseq)), c(LOWband, rev(UPband)), col = "pink")
+lines(tseq, MeanLand, lwd = 1, col = 2)
+</code></pre>
+
+
+</div>

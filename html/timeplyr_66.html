@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>roll_sum</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fast by-group rolling functions</h2>
+
+<h3>Description</h3>
+
+<p>An efficient method for rolling sum, mean and growth rate for many groups.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">roll_sum(
+  x,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  weights = NULL,
+  na.rm = TRUE,
+  ...
+)
+
+roll_mean(
+  x,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  weights = NULL,
+  na.rm = TRUE,
+  ...
+)
+
+roll_geometric_mean(
+  x,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  weights = NULL,
+  na.rm = TRUE,
+  ...
+)
+
+roll_harmonic_mean(
+  x,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  weights = NULL,
+  na.rm = TRUE,
+  ...
+)
+
+roll_growth_rate(
+  x,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  na.rm = FALSE,
+  log = FALSE,
+  inf_fill = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric vector, data frame, or list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window</code></td>
+<td>
+<p>Rolling window size, default is <code>Inf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Grouping object passed directly to <code>collapse::GRP()</code>.
+This can for example be a vector or data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>partial</code></td>
+<td>
+<p>Should calculations be done using partial windows?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Importance weights. Must be the same length as x.
+Currently, no normalisation of weights occurs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>Should missing values be removed for the calculation?
+The default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>data.table::frollmean</code> and
+<code>data.table::frollsum</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>For <code>roll_growth_rate</code>:
+If <code>TRUE</code> then growth rates are calculated on the log-scale.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inf_fill</code></td>
+<td>
+<p>For <code>roll_growth_rate</code>:
+Numeric value to replace <code>Inf</code> values with.
+Default behaviour is to keep <code>Inf</code> values.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>roll_sum</code> and <code>roll_mean</code> support parallel computations when
+<code>x</code> is a data frame of multiple columns. <br><code>roll_geometric_mean</code> and <code>roll_harmonic_mean</code> are convenience functions that
+utilise <code>roll_mean</code>. <br><code>roll_growth_rate</code> calculates the rate of percentage
+change per unit time on a rolling basis.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric vector the same length as <code>x</code> when <code>x</code> is a vector,
+or a list when <code>x</code> is a <code>data.frame</code>. <br></p>
+
+
+<h3>See Also</h3>
+
+<p>time_roll_mean
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+
+x &lt;- 1:10
+roll_sum(x) # Simple rolling total
+roll_mean(x) # Simple moving average
+roll_sum(x, window = 3)
+roll_mean(x, window = 3)
+roll_sum(x, window = 3, partial = FALSE)
+roll_mean(x, window = 3, partial = FALSE)
+
+# Plot of expected value of 'coin toss' over many flips
+set.seed(42)
+x &lt;- sample(c(1, 0), 10^3, replace = TRUE)
+ev &lt;- roll_mean(x)
+plot(ev)
+abline(h = 0.5, lty = 2)
+
+all.equal(roll_sum(iris$Sepal.Length, g = iris$Species),
+          ave(iris$Sepal.Length, iris$Species, FUN = cumsum))
+# The below is run using parallel computations where applicable
+roll_sum(iris[, 1:4], window = 7, g = iris$Species)
+
+  library(data.table)
+  library(bench)
+  df &lt;- data.table(g = sample.int(10^4, 10^5, TRUE),
+                   x = rnorm(10^5))
+  mark(e1 = df[, mean := frollmean(x, n = 7,
+                                   align = "right", na.rm = FALSE), by = "g"]$mean,
+       e2 = df[, mean := roll_mean(x, window = 7, g = get("g"),
+                                   partial = FALSE, na.rm = FALSE)]$mean)
+
+
+</code></pre>
+
+
+</div>

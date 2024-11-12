@@ -1,0 +1,139 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>torch_istft</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Istft</h2>
+
+<h3>Description</h3>
+
+<p>Inverse short time Fourier Transform. This is expected to be the inverse of <code>torch_stft()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">torch_istft(
+  self,
+  n_fft,
+  hop_length = NULL,
+  win_length = NULL,
+  window = list(),
+  center = TRUE,
+  normalized = FALSE,
+  onesided = NULL,
+  length = NULL,
+  return_complex = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>self</code></td>
+<td>
+<p>(Tensor) The input tensor. Expected to be output of <code>torch_stft()</code>,
+can either be complex (<code>channel</code>, <code>fft_size</code>, <code>n_frame</code>), or real
+(<code>channel</code>, <code>fft_size</code>, <code>n_frame</code>, 2) where the <code>channel</code> dimension is
+optional.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_fft</code></td>
+<td>
+<p>(int) Size of Fourier transform</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hop_length</code></td>
+<td>
+<p>(Optional<code style="white-space: pre;">⁠[int]⁠</code>) The distance between neighboring sliding window frames.
+(Default: <code>n_fft %% 4</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>win_length</code></td>
+<td>
+<p>(Optional<code style="white-space: pre;">⁠[int]⁠</code>) The size of window frame and STFT filter.
+(Default: <code>n_fft</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window</code></td>
+<td>
+<p>(Optional(torch.Tensor)) The optional window function.
+(Default: <code>torch_ones(win_length)</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>center</code></td>
+<td>
+<p>(bool) Whether <code>input</code> was padded on both sides so that the
+<code class="reqn">t</code>-th frame is centered at time <code class="reqn">t \times \mbox{hop\_length}</code>.
+(Default: <code>TRUE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalized</code></td>
+<td>
+<p>(bool) Whether the STFT was normalized. (Default: <code>FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>onesided</code></td>
+<td>
+<p>(Optional(bool)) Whether the STFT was onesided.
+(Default: <code>TRUE</code> if <code>n_fft != fft_size</code> in the input size)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>length</code></td>
+<td>
+<p>(Optional(int)]) The amount to trim the signal by (i.e. the
+original signal length). (Default: whole signal)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_complex</code></td>
+<td>
+<p>(Optional(bool)) Whether the output should be complex,
+or if the input should be assumed to derive from a real signal and window.
+Note that this is incompatible with <code>onesided=TRUE</code>. (Default: <code>FALSE</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It has the same parameters (+ additional optional parameter of <code>length</code>) and it should return the
+least squares estimation of the original signal. The algorithm will check using the NOLA
+condition (nonzero overlap).
+</p>
+<p>Important consideration in the parameters <code>window</code> and <code>center</code> so that the envelop
+created by the summation of all the windows is never zero at certain point in time. Specifically,
+<code class="reqn">\sum_{t=-\infty}^{\infty} |w|^2(n-t\times hop_length) \neq 0</code>.
+</p>
+<p>Since <code>torch_stft()</code> discards elements at the end of the signal if they do not fit in a frame,
+<code>istft</code> may return a shorter signal than the original signal (can occur if <code>center</code> is FALSE
+since the signal isn't padded).
+</p>
+<p>If <code>center</code> is <code>TRUE</code>, then there will be padding e.g. <code>'constant'</code>, <code>'reflect'</code>, etc.
+Left padding can be trimmed off exactly because they can be calculated but right
+padding cannot be calculated without additional information.
+</p>
+<p>Example: Suppose the last window is:
+<code style="white-space: pre;">⁠[c(17, 18, 0, 0, 0)⁠</code> vs <code>c(18, 0, 0, 0, 0)</code>
+</p>
+<p>The <code>n_fft</code>, <code>hop_length</code>, <code>win_length</code> are all the same which prevents the calculation
+of right padding. These additional values could be zeros or a reflection of the signal so providing
+<code>length</code> could be useful. If <code>length</code> is <code>None</code> then padding will be aggressively removed
+(some loss of signal).
+</p>
+<p>D. W. Griffin and J. S. Lim, "Signal estimation from modified short-time Fourier transform,"
+IEEE Trans. ASSP, vol.32, no.2, pp.236-243, Apr. 1984.
+</p>
+
+
+</div>

@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>FitLdaModel</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit a Latent Dirichlet Allocation topic model</h2>
+
+<h3>Description</h3>
+
+<p>Fit a Latent Dirichlet Allocation topic model using collapsed Gibbs sampling.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">FitLdaModel(
+  dtm,
+  k,
+  iterations = NULL,
+  burnin = -1,
+  alpha = 0.1,
+  beta = 0.05,
+  optimize_alpha = FALSE,
+  calc_likelihood = FALSE,
+  calc_coherence = TRUE,
+  calc_r2 = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>A document term matrix or term co-occurrence matrix of class dgCMatrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>Integer number of topics</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>Integer number of iterations for the Gibbs sampler to run. A
+future version may include automatic stopping criteria.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>Integer number of burnin iterations. If <code>burnin</code> is greater than -1,
+the resulting "phi" and "theta" matrices are an average over all iterations
+greater than <code>burnin</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Vector of length <code>k</code> for asymmetric or a number for symmetric.
+This is the prior for topics over documents</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>Vector of length <code>ncol(dtm)</code> for asymmetric or a number for symmetric.
+This is the prior for words over topics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize_alpha</code></td>
+<td>
+<p>Logical. Do you want to optimize alpha every 10 Gibbs iterations?
+Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_likelihood</code></td>
+<td>
+<p>Do you want to calculate the likelihood every 10 Gibbs iterations?
+Useful for assessing convergence. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_coherence</code></td>
+<td>
+<p>Do you want to calculate probabilistic coherence of topics
+after the model is trained? Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_r2</code></td>
+<td>
+<p>Do you want to calculate R-squared after the model is trained?
+Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to <code>TmParallelApply</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>EXPLAIN IMPLEMENTATION DETAILS
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an S3 object of class c("LDA", "TopicModel"). DESCRIBE MORE
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load some data
+data(nih_sample_dtm)
+
+# fit a model 
+set.seed(12345)
+m &lt;- FitLdaModel(dtm = nih_sample_dtm[1:20,], k = 5,
+                 iterations = 200, burnin = 175)
+
+str(m)
+
+# predict on held-out documents using gibbs sampling "fold in"
+p1 &lt;- predict(m, nih_sample_dtm[21:100,], method = "gibbs",
+              iterations = 200, burnin = 175)
+
+# predict on held-out documents using the dot product method
+p2 &lt;- predict(m, nih_sample_dtm[21:100,], method = "dot")
+
+# compare the methods
+barplot(rbind(p1[1,],p2[1,]), beside = TRUE, col = c("red", "blue")) 
+</code></pre>
+
+
+</div>

@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>evaluate_resampling</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Resampling approach for model evaluation</h2>
+
+<h3>Description</h3>
+
+<p><code>evaluate_resampling()</code> uses repeated K-fold cross-validation and
+the Root Mean Square Error (RMSE) of testing sets to measure the predictive
+power of a single model. Methods are provided for
+<code>trending::trending_model</code> (and lists of these) objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">evaluate_resampling(x, ...)
+
+## Default S3 method:
+evaluate_resampling(x, ...)
+
+## S3 method for class 'trending_model'
+evaluate_resampling(
+  x,
+  data,
+  metric = c("rmse", "rsq", "mae"),
+  metric_arguments = list(na.rm = TRUE),
+  v = nrow(data),
+  repeats = 1,
+  ...
+)
+
+## S3 method for class 'list'
+evaluate_resampling(
+  x,
+  data,
+  metric = c("rmse", "rsq", "mae"),
+  metric_arguments = list(na.rm = TRUE),
+  v = nrow(data),
+  repeats = 1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>data.frame</code> containing data (including the response variable
+and all predictors) used in the specified model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metric</code></td>
+<td>
+<p>One of "rmse" (see calculate_rmse), "mae" (see
+calculate_mae) and "rsq" (see calculate_rsq).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metric_arguments</code></td>
+<td>
+<p>A named list of arguments passed to the underlying
+functions that calculate the metrics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>v</code></td>
+<td>
+<p>the number of equally sized data partitions to be used for K-fold
+cross-validation; <code>v</code> cross-validations will be performed, each using <code>v - 1</code> partition as training set, and the remaining partition as testing set.
+Defaults to the number of row in data, so that the method uses
+leave-one-out cross validation, akin to Jackknife except that the testing
+set (and not the training set) is used to compute the fit statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>repeats</code></td>
+<td>
+<p>the number of times the random K-fold cross validation should
+be repeated for; defaults to 1; larger values are likely to yield more
+reliable / stable results, at the expense of computational time</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions wrap around existing functions from several
+packages.  <code>evaluate_resampling.trending_model()</code> and
+<code>evaluate_resampling.list()</code> both use <code>rsample::vfold_cv()</code> for sampling
+and, for the calculating the different metrics, the
+<a href="https://yardstick.tidymodels.org/">yardstick</a> package.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>calculate_aic()</code>, <code>calculate_rmse()</code>, <code>calculate_mae()</code> and
+<code>calculate_rsq()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- rnorm(100, mean = 0)
+y &lt;- rpois(n = 100, lambda = exp(x + 1))
+dat &lt;- data.frame(x = x, y = y)
+model &lt;- trending::glm_model(y ~ x, poisson)
+models &lt;- list(
+  poisson_model = trending::glm_model(y ~ x, poisson),
+  linear_model = trending::lm_model(y ~ x)
+)
+
+evaluate_resampling(model, dat)
+evaluate_resampling(models, dat)
+
+</code></pre>
+
+
+</div>

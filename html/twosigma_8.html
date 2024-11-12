@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>twosigma_custom</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit the TWO-SIGMA model with custom user-specified model formulas.</h2>
+
+<h3>Description</h3>
+
+<p>Fit the TWO-SIGMA model with custom user-specified model formulas.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">twosigma_custom(
+  count_matrix,
+  mean_form,
+  zi_form,
+  id,
+  return_summary_fits = TRUE,
+  silent = FALSE,
+  disp_covar = NULL,
+  weights = rep(1, ncol(count_matrix)),
+  control = glmmTMBControl(),
+  ncores = 1,
+  cluster_type = "Fork",
+  chunk_size = 10,
+  lb = FALSE,
+  internal_call = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>count_matrix</code></td>
+<td>
+<p>Matrix of non-negative integer read counts, with rows corresponding to genes and columns corresponding to cells. It is recommended to make the rownames the gene names for better output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_form</code></td>
+<td>
+<p>Custom two-sided model formula for the (conditional) mean model. Formula is passed directly into glmmTMB with random effects specified as in the lme4 package. Users should ensure that the LHS of the formula begins with "count."</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zi_form</code></td>
+<td>
+<p>Custom one-sided model formula for the zero-inflation model. Formula is passed directly into glmmTMB with random effects specified as in lme4.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Vector of individual-level (sample-level) ID's. Used for random effect prediction but required regardless of their presence in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_summary_fits</code></td>
+<td>
+<p>If TRUE, the package returns a <code>summary.glmmTMB</code> object for each gene.  If FALSE, a <code>glmmTMB</code> object is returned for each gene. The latter requires far more storage space.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>If TRUE, progress is not printed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>disp_covar</code></td>
+<td>
+<p>Covariates for a log-linear model for the dispersion. Either a matrix of covariates or = 1 to indicate an intercept only model. Random effect terms are not permitted in the dispersion model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights, as in glm. Defaults to 1 for all observations and no scaling or centering of weights is performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>Control parameters for optimization in <code>glmmTMB</code>.  See <code>?glmmTMBControl</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncores</code></td>
+<td>
+<p>Number of cores used for parallelization. Defaults to 1, meaning no parallelization of any kind is done.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cluster_type</code></td>
+<td>
+<p>Whether to use a "cluster of type "Fork" or "Sock". On Unix systems, "Fork" will likely improve performance. On Windows, only "Sock" will actually result in parallelized computing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chunk_size</code></td>
+<td>
+<p>Number of genes to be sent to each parallel environment. Parallelization is more efficient, particularly with a large count matrix, when the count matrix is 'chunked' into some common size (e.g. 10, 50, 200). Defaults to 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lb</code></td>
+<td>
+<p>Should load balancing be used for parallelization? Users will likely want to set to FALSE for improved performance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>internal_call</code></td>
+<td>
+<p>Not needed by users called <code>twosigma_custom</code> directly.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with the following elements:
+</p>
+
+<ul>
+<li>
+<p><code>fit: </code> If <code>return_summary_fits=TRUE</code>, returns a list of model fit objects of class <code>summary.glmmTMB</code>. If <code>return_summary_fits=FALSE</code>, returns a list of model fit objects of class <code>glmmTMB</code>. In either case, the order matches the row order of <code>count_matrix</code>, and the names of the list elements are taken as the rownames of <code>count_matrix</code>.
+</p>
+</li>
+<li>
+<p><code>gene_error:</code> Vector indicating whether the particular gene produced an error during model fitting (TRUE) or not (FALSE).
+</p>
+</li>
+</ul>
+<h3>Details</h3>
+
+<p>This function is likely only needed if users wish to include random effect terms beyond random intercepts. Users should be confident in their abilities to specify random effects using the syntax of lme4.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Set Parameters to Simulate Some Data
+
+nind&lt;-10;ncellsper&lt;-rep(50,nind)
+sigma.a&lt;-.5;sigma.b&lt;-.5;phi&lt;-.1
+alpha&lt;-c(1,0,-.5,-2);beta&lt;-c(2,0,-.1,.6)
+beta2&lt;-c(2,1,-.1,.6)
+id.levels&lt;-1:nind;nind&lt;-length(id.levels)
+id&lt;-rep(id.levels,times=ncellsper)
+sim.seed&lt;-1234
+
+# Simulate individual level covariates
+
+t2d_sim&lt;-rep(rbinom(nind,1,p=.4),times=ncellsper)
+cdr_sim&lt;-rbeta(sum(ncellsper),3,6)
+age_sim&lt;-rep(sample(c(20:60),size=nind,replace = TRUE),times=ncellsper)
+
+# Construct design matrices
+
+Z&lt;-cbind(scale(t2d_sim),scale(age_sim),scale(cdr_sim))
+colnames(Z)&lt;-c("t2d_sim","age_sim","cdr_sim")
+X&lt;-cbind(scale(t2d_sim),scale(age_sim),scale(cdr_sim))
+colnames(X)&lt;-c("t2d_sim","age_sim","cdr_sim")
+
+# Simulate Data
+
+sim_dat&lt;-matrix(nrow=2,ncol=sum(ncellsper))
+for(i in 1:nrow(sim_dat)){
+   sim_dat[i,]&lt;-simulate_zero_inflated_nb_random_effect_data(ncellsper,X,Z,alpha,beta2
+   ,phi,sigma.a,sigma.b,id.levels=NULL)$Y
+}
+rownames(sim_dat)&lt;-paste("Gene",1:2)
+
+# Run twosigma_custom
+
+twosigma_custom(sim_dat[1:2,],mean_form = count~X,zi_form = ~0,id=id)
+</code></pre>
+
+
+</div>

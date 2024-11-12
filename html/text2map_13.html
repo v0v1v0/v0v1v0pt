@@ -1,0 +1,251 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dtm_stopper</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Removes terms from a DTM based on rules</h2>
+
+<h3>Description</h3>
+
+<p><code>dtm_stopper</code> will "stop" terms from the analysis by removing columns in a
+DTM based on stop rules. Rules include matching terms in a precompiled or
+custom list, terms meeting an upper or lower document frequency threshold,
+or terms meeting an upper or lower term frequency threshold.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dtm_stopper(
+  dtm,
+  stop_list = NULL,
+  stop_termfreq = NULL,
+  stop_termrank = NULL,
+  stop_termprop = NULL,
+  stop_docfreq = NULL,
+  stop_docprop = NULL,
+  stop_hapax = FALSE,
+  stop_null = FALSE,
+  omit_empty = FALSE,
+  dense = FALSE,
+  ignore_case = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>Document-term matrix with terms as columns. Works with DTMs
+produced by any popular text analysis package, or you can use the
+<code>dtm_builder</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_list</code></td>
+<td>
+<p>Vector of terms, from a precompiled stoplist or
+custom list such as <code>c("never", "gonna", "give")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_termfreq</code></td>
+<td>
+<p>Vector of two numbers indicating the lower and upper
+threshold for exclusion (see details). Use <code>Inf</code>
+for max or min, respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_termrank</code></td>
+<td>
+<p>Single integer indicating upper term rank threshold
+for exclusion (see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_termprop</code></td>
+<td>
+<p>Vector of two numbers indicating the lower and upper
+threshold for exclusion (see details). Use <code>Inf</code>
+for max or min, respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_docfreq</code></td>
+<td>
+<p>Vector of two numbers indicating the lower and upper
+threshold for exclusion (see details). Use <code>Inf</code>
+for max or min, respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_docprop</code></td>
+<td>
+<p>Vector of two numbers indicating the lower and upper
+threshold for exclusion (see details). Use <code>Inf</code>
+for max or min, respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_hapax</code></td>
+<td>
+<p>Logical (default = FALSE) indicating whether to remove
+terms occurring one time (or zero times), a.k.a.
+hapax legomena</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_null</code></td>
+<td>
+<p>Logical (default = FALSE) indicating whether to remove terms
+that occur zero times in the DTM.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>omit_empty</code></td>
+<td>
+<p>Logical (default = FALSE) indicating whether to omit rows
+that are empty after stopping any terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dense</code></td>
+<td>
+<p>The default (<code>FALSE</code>) is to return a matrix of class
+"dgCMatrix". Setting dense to <code>TRUE</code> will return a
+normal base <code>R</code> dense matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_case</code></td>
+<td>
+<p>Logical (default = TRUE) indicating whether to ignore
+capitalization.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Stopping terms by removing their respective columns in the DTM is
+significantly more efficient than searching raw text with string matching
+and deletion rules. Behind the scenes, the function relies on
+the <code>fastmatch</code> package to quickly match/not-match terms.
+</p>
+<p>The <code>stop_list</code> arguments takes a list of terms which are matched and
+removed from the DTM. If <code>ignore_case = TRUE</code> (the default) then word
+case will be ignored.
+</p>
+<p>The <code>stop_termfreq</code> argument provides rules based on a term's occurrences
+in the DTM as a whole – regardless of its within document frequency. If
+real numbers between 0 and 1 are provided then terms will be removed by
+corpus proportion. For example <code>c(0.01, 0.99)</code>, terms that are either below
+1% of the total tokens or above 99% of the total tokens will be removed. If
+integers are provided then terms will be removed by total count. For example
+<code>c(100, 9000)</code>, occurring less than 100 or more than 9000 times in the
+corpus will be removed. This also means that if <code>c(0, 1)</code> is provided, then
+the will only <em>keep</em> terms occurring once.
+</p>
+<p>The <code>stop_termrank</code> argument provides the upper threshold for a terms' rank
+in the corpus. For example, <code>5L</code> will remove the five most frequent terms.
+</p>
+<p>The <code>stop_docfreq</code> argument provides rules based on a term's document
+frequency – i.e. the number of documents within which it occurs, regardless
+of how many times it occurs. If real numbers between 0 and 1 are provided
+then terms will be removed by corpus proportion. For example <code>c(0.01, 0.99)</code>,
+terms in more than 99% of all documents or terms that are in less than 1% of
+all documents. For example <code>c(100, 9000)</code>, then words occurring in less than
+100 documents or more than 9000 documents will be removed. This means that if
+<code>c(0, 1)</code> is provided, then the function will only <em>keep</em> terms occurring in
+exactly one document, and remove terms in more than one.
+</p>
+<p>The <code>stop_hapax</code> argument is a shortcut for removing terms occurring just one
+time in the corpus – called hapax legomena. Typically, a size-able portion
+of the corpus tends to be hapax terms, and removing them is a quick solution
+to reducing the dimensions of a DTM. The DTM must be frequency counts (not
+relative frequencies).
+</p>
+<p>The <code>stop_null</code> argument removes terms that do not occur at all.
+In other words, there is a column for the term, but the entire column
+is zero. This can occur for a variety of reasons, such as starting with
+a predefined vocabulary (e.g., using dtm_builder's <code>vocab</code> argument) or
+through some cleaning processes.
+</p>
+<p>The <code>omit_empty</code> argument will remove documents that are empty
+</p>
+
+
+<h3>Value</h3>
+
+<p>returns a document-term matrix of class "dgCMatrix"
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Dustin Stoltz
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# create corpus and DTM
+my_corpus &lt;- data.frame(
+  text = c(
+    "I hear babies crying I watch them grow",
+    "They'll learn much more than I'll ever know",
+    "And I think to myself",
+    "What a wonderful world",
+    "Yes I think to myself",
+    "What a wonderful world"
+  ),
+  line_id = paste0("line", seq_len(6))
+)
+## some text preprocessing
+my_corpus$clean_text &lt;- tolower(gsub("'", "", my_corpus$text))
+
+dtm &lt;- dtm_builder(
+  data = my_corpus,
+  text = clean_text,
+  doc_id = line_id
+)
+
+## example 1 with R 4.1 pipe
+
+dtm_st &lt;- dtm |&gt;
+  dtm_stopper(stop_list = c("world", "babies"))
+
+
+## example 2 without pipe
+dtm_st &lt;- dtm_stopper(
+  dtm,
+  stop_list = c("world", "babies")
+)
+
+## example 3 precompiled stoplist
+dtm_st &lt;- dtm_stopper(
+  dtm,
+  stop_list = get_stoplist("snowball2014")
+)
+
+## example 4, stop top 2
+dtm_st &lt;- dtm_stopper(
+  dtm,
+  stop_termrank = 2L
+)
+
+## example 5, stop docfreq
+dtm_st &lt;- dtm_stopper(
+  dtm,
+  stop_docfreq = c(2, 5)
+)
+
+</code></pre>
+
+
+</div>

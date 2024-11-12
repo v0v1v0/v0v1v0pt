@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tabgee</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create Summary Table for Fitted Generalized Estimating Equation Model</h2>
+
+<h3>Description</h3>
+
+<p>Creates a table summarizing a GEE fit using the <code>gee</code>
+function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tabgee(
+  fit,
+  data = NULL,
+  columns = NULL,
+  robust = TRUE,
+  var.labels = NULL,
+  factor.compression = 1,
+  sep.char = ", ",
+  decimals = 2,
+  formatp.list = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fit</code></td>
+<td>
+<p>Fitted <code>gee</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data frame that served as 'data' in function call to
+<code>gee</code>. Only needs to be specified if one or more of the
+predictors is a factor and <code>factor.compression</code> is 1, 2, 3, or 4.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>Character vector specifying what columns to include. Choices
+for each element are <code>"beta"</code>, <code>"se"</code>, <code>"betaci"</code> for 95% CI
+for Beta, <code>"beta.se"</code> for Beta (SE), <code>"beta.ci"</code> for Beta
+(95% CI), <code>"or"</code>, <code>"orci"</code> for 95% CI for OR, <code>"or.ci"</code> for
+OR (95% CI), <code>"hr"</code>, <code>"hrci"</code> for 95% CI for HR, <code>"hr.ci"</code>
+for HR (95% CI), <code>"z"</code> for z statistic, and <code>"p"</code>. If OR's or HR's
+are requested, the function will trust that exponentiated betas correspond to
+these quantities.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robust</code></td>
+<td>
+<p>Logical value for whether to use robust standard errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.labels</code></td>
+<td>
+<p>Named list specifying labels to use for certain predictors.
+For example, if <code>fit</code> includes a predictor named "race"
+that you want to label "Race/ethnicity" and a predictor named "age_yrs" that
+you want to label "Age (years)", use
+<code>var.labels = list(race = "Race/ethnicity", age_yrs = "Age (years)"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factor.compression</code></td>
+<td>
+<p>Integer value from 1 to 5 controlling how much
+compression is applied to factor predictors (higher value = more
+compression). If 1, rows are Variable, Level 1 (ref), Level 2, ...; if 2,
+rows are Variable (ref = Level 1), Level 2, ...; if 3, rows are Level 1
+(ref), Level 2, ...; if 4, rows are Level 2 (ref = Level 1), ...; if 5, rows
+are Level 2, ...</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep.char</code></td>
+<td>
+<p>Character string with separator to place between lower and
+upper bound of confidence intervals. Typically <code>"-"</code> or <code>", "</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decimals</code></td>
+<td>
+<p>Numeric value specifying number of decimal places for numbers
+other than p-values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formatp.list</code></td>
+<td>
+<p>List of arguments to pass to <code>formatp</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>kable</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Load in sample dataset and convert to long format
+tabdata2 &lt;- reshape(data = tabdata,
+                    varying = c("bp.1", "bp.2", "bp.3", "highbp.1",
+                                "highbp.2", "highbp.3"),
+                    timevar = "bp.visit", direction = "long")
+tabdata2 &lt;- tabdata2[order(tabdata2$id), ]
+
+# Blood pressure at 1, 2, and 3 months vs. age, sex, race, and treatment
+library("gee")
+fit &lt;- gee(bp ~ Age + Sex + Race + Group, id = id, data = tabdata2,
+           corstr = "unstructured")
+tabgee(fit)
+
+# Can also use piping
+fit %&gt;% tabgee(data = tabdata2)
+
+# Same as previous, but with custom labels for Age and Race and factors
+# displayed in slightly more compressed format
+fit %&gt;%
+  tabgee(
+    data = tabdata2,
+    var.labels = list(Age = "Age (years)", Race = "Race/ethnicity"),
+    factor.compression = 2
+  )
+
+# GEE with some higher-order terms
+# higher-order terms
+fit &lt;- gee(
+  highbp ~ poly(Age, 2, raw = TRUE) + Sex + Race + Group + Race*Group,
+  id = id,
+  data = tabdata2,
+  family = "binomial",
+  corstr = "unstructured"
+)
+fit %&gt;% tabgee(data = tabdata2)
+
+
+</code></pre>
+
+
+</div>

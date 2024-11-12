@@ -1,0 +1,329 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_accepted_names</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>get_accepted_names</h2>
+
+<h3>Description</h3>
+
+<p>Match namelist with master and fetch the accepted names
+using the linkages provided within the data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_accepted_names(
+  namelist,
+  master,
+  gen_syn = NA,
+  namelookup = NA,
+  mastersource = NA,
+  match_higher = FALSE,
+  fuzzymatch = TRUE,
+  fuzzydist = 2,
+  canonical = NA,
+  genus = NA,
+  species = NA,
+  subspecies = NA,
+  prefix = "",
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>namelist</code></td>
+<td>
+<p>data frame of the list of names to be resolved. Must
+contain either column canonical containing binomial or trinomial name
+without spp. and var. etc. or may contain columns for genus, species
+and subspecies (any sub-specific unit) and the names of the columns are
+passed as subsequent parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>master</code></td>
+<td>
+<p>data frame with required columns id, canonical and accid.
+Other columns like order, family are optional. Column id is typically
+running ids for each record and accid will contain 0 if the name is
+currently accepted name and id number of accepted name in case the name
+is a synonym. Column canonical contains binomial or trinomial without
+spp. var. etc.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gen_syn</code></td>
+<td>
+<p>data frame with columns Original_Genus and Valid_Genus
+where Original_genus is synonym and valid_genus is one present in the
+master. Default: NA when gen_syn is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>namelookup</code></td>
+<td>
+<p>Lookup data frame for names where some names might
+need manual lookup. The columns required are binomial and validname
+where binomial is new name and validname is present in the master.
+Default: NA when namelookup is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mastersource</code></td>
+<td>
+<p>vector of sources to be used for assignment with
+priority</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match_higher</code></td>
+<td>
+<p>match genus and family names present in canonical
+field</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fuzzymatch</code></td>
+<td>
+<p>attempt fuzzy matching or not. Default: TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fuzzydist</code></td>
+<td>
+<p>fuzzy distance while matching. Default : 2</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>canonical</code></td>
+<td>
+<p>column containing names to be resolved to accepted names
+, Default: NA when columns for genus and species are specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>genus</code></td>
+<td>
+<p>column containing genus names to be resolved to accepted
+names and typically accompanied by species and subspecies columns, Default: NA
+when canonical parameter is supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>species</code></td>
+<td>
+<p>column containing species names to be resolved to accepted
+names and is accompanied by genus, Default: NA</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subspecies</code></td>
+<td>
+<p>column containing species names to be resolved to accepted
+names and is accompanied by genus and species, Default: NA</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>to be added to all the return fields</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>display process messages, Default: TRUE</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Name resolution methods:</p>
+
+<dl>
+<dt>direct - </dt>
+<dd>
+<p>was a direct match with name or a synonym</p>
+</dd>
+<dt>direct2 - </dt>
+<dd>
+<p>was a direct match with name or a synonym in non mastersource</p>
+</dd>
+<dt>fuzzy - </dt>
+<dd>
+<p>used fuzzy matching</p>
+</dd>
+<dt>gensyn - </dt>
+<dd>
+<p>genus substitution with known genus level synonyms</p>
+</dd>
+<dt>lookup - </dt>
+<dd>
+<p>Manual lookup in earlier processing</p>
+</dd>
+<dt>sppdrop - </dt>
+<dd>
+<p>subspecies was dropped</p>
+</dd>
+<dt>sub2sp - </dt>
+<dd>
+<p>subspecies elevated to species</p>
+</dd>
+<dt>genus - </dt>
+<dd>
+<p>genus was matched</p>
+</dd>
+<dt>family - </dt>
+<dd>
+<p>family was matched</p>
+</dd>
+<dt>NA - </dt>
+<dd>
+<p>could not be resolved</p>
+</dd>
+</dl>
+<p>Note: Make sure all the data frames have same character encoding to prevent
+errors.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data frame containing all the original columns with following
+additional columns:</p>
+
+<dl>
+<dt>accepted_name - </dt>
+<dd>
+<p>Accepted name present in the master. NA is not resolved</p>
+</dd>
+<dt>method - </dt>
+<dd>
+<p>method used to resolve the name. See details for explanation
+of each method</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p>Other Name functions: 
+<code>build_gen_syn()</code>,
+<code>cast_canonical()</code>,
+<code>cast_scientificname()</code>,
+<code>check_scientific()</code>,
+<code>expand_name()</code>,
+<code>guess_taxo_rank()</code>,
+<code>list_higher_taxo()</code>,
+<code>melt_canonical()</code>,
+<code>melt_scientificname()</code>,
+<code>resolve_names()</code>,
+<code>taxo_fuzzy_match()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+master &lt;- data.frame("id" = c(1,2,3,4,5,6,7),
+                    "canonical" = c("Hypochlorosis ancharia",
+                                    "Hypochlorosis tenebrosa",
+                                    "Pseudonotis humboldti",
+                                    "Myrina ancharia",
+                                    "Hypochlorosis ancharia tenebrosa",
+                                    "Hypochlorosis ancharia obiana",
+                                    "Hypochlorosis lorquinii"),
+                     "family" = c("Lycaenidae", "Lycaenidae", "Lycaenidae",
+                                  "Lycaenidae", "Lycaenidae", "Lycaenidae",
+                                  "Lycaenidae"),
+                    "accid" = c(0,1,1,1,0,0,0),
+                    "source" = c("itis","itis","wiki","wiki","itis",
+                                 "itis","itis"),
+                    stringsAsFactors = FALSE)
+
+mylist &lt;- data.frame("id"= c(11,12,13,14,15,16,17,18,19),
+                    "scname" = c("Hypochlorosis ancharia",
+                                 "Hypochlorosis ancharii",
+                                 "Hypochlorosis tenebrosa",
+                                 "Pseudonotis humboldtii",
+                                 "Abrothrix longipilis",
+                                 "Myrinana anchariana",
+                                 "Hypochlorosis ancharia ancharia",
+                                 "Myrina lorquinii",
+                                 "Sithon lorquinii"),
+                    stringsAsFactors = FALSE)
+
+res &lt;- get_accepted_names(namelist = mylist,
+                         master=master,
+                         canonical = "scname")
+
+gen_syn_list &lt;- data.frame("Original_Genus"=c("Pseudonotis",
+                                             "Myrina"),
+                          "Valid_Genus"=c("Hypochlorosis",
+                                          "Hypochlorosis"),
+                          stringsAsFactors = FALSE)
+
+res &lt;- get_accepted_names(namelist = mylist,
+                         master=master,
+                         gen_syn = gen_syn_list,
+                         canonical = "scname")
+
+lookup_list &lt;- data.frame("binomial"=c("Sithon lorquinii",
+                                      "Hypochlorosis humboldti"),
+                         "validname"=c("Hypochlorosis lorquinii",
+                                       "Hypochlorosis lorquinii"),
+                         stringsAsFactors = FALSE)
+
+res &lt;- get_accepted_names(namelist = mylist,
+                         master=master,
+                         gen_syn = gen_syn_list,
+                         namelookup = lookup_list,
+                         canonical = "scname")
+
+mylist_s &lt;- melt_canonical(mylist,canonical = "scname",
+                          genus = "genus",
+                          species = "species",
+                          subspecies = "subspecies")
+
+res &lt;- get_accepted_names(namelist = mylist_s,
+                         master=master,
+                         gen_syn = gen_syn_list,
+                         namelookup = lookup_list,
+                         genus = "genus",
+                         species = "species",
+                         subspecies = "subspecies")
+
+res &lt;- get_accepted_names(namelist = mylist_s,
+                         master=master,
+                         gen_syn = gen_syn_list,
+                         namelookup = lookup_list,
+                         mastersource = c("itis"),
+                         genus = "genus",
+                         species = "species",
+                         subspecies = "subspecies")
+
+mylist &lt;- data.frame("id"= c(11,12,13,14,15,16,17,18),
+                    "scname" = c("Hypochlorosis ancharia",
+                                 "Hypochlorosis ancharii",
+                                 "Hypochlorosis",
+                                 "Pseudonotis",
+                                 "Lycaenidae",
+                                 "Pseudonotis humboldtii",
+                                 "Abrothrix longipilis",
+                                 "Myrinana anchariana"),
+                    stringsAsFactors = FALSE)
+
+res &lt;- get_accepted_names(namelist = mylist,
+                         master=master,
+                         match_higher = TRUE,
+                         canonical = "scname")
+
+</code></pre>
+
+
+</div>

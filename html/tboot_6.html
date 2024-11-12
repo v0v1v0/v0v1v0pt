@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tweights_bmr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function tweights_bmr</h2>
+
+<h3>Description</h3>
+
+<p>Set up the needed prerequisites in order to prepare for Bayesian marginal reconstruction (including a call to tweights). Takes as input simulations from the posterior marginal distribution of variables in a dataset.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tweights_bmr(dataset, marginal, distance = "klqp", maxit = 1000,
+  tol = 1e-08, warningcut = 0.05, silent = FALSE, Nindependent = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>Data frame or matrix to use to find row weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>marginal</code></td>
+<td>
+<p>Must be a named list with each element a vector of simulations of the marginal distribution of the posterior mean of data in the dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>The distance to minimize. Must be either 'euchlidean,' 'klqp' or 'klpq' (i.e. Kullback-Leibler). 'klqp' which is exponential tilting is recommended.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>Defines the maximum number of iterations for optimizing 'kl' distance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>Tolerance. If the achieved mean is too far from the target (i.e. as defined by tol) an error will be thrown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warningcut</code></td>
+<td>
+<p>Sets the cutoff for determining when a large weight will trigger a warning.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Allows silencing of some messages.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nindependent</code></td>
+<td>
+<p>Assumes the input also includes 'Nindependent' samples with independent columns. See details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Reconstructs a correlated joint posterior from simulations from a marginal posterior.
+The algorithm is summarized more fully in the vignettes.
+The 'Nindependent' option augments the dataset by assuming some additional specified
+number of patients. These patients are assumed to made up of a random bootstrapped sample
+from the dataset for each variable marginally leading to independent variables.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of type <code>tweights</code>. This object conains the following components:
+</p>
+
+<dl>
+<dt>Csqrt</dt>
+<dd>
+<p>Matrix square root of the covariance.</p>
+</dd>
+<dt>tweights</dt>
+<dd>
+<p>Result from the call to tweigths.</p>
+</dd>
+<dt>marginal</dt>
+<dd>
+<p>Input marginal simulations.</p>
+</dd>
+<dt>dataset</dt>
+<dd>
+<p>Formatted dataset.</p>
+</dd>
+<dt>target</dt>
+<dd>
+<p>Attempted target.</p>
+</dd>
+<dt>distance,maxit,tol, Nindependent, warningcut</dt>
+<dd>
+<p>Inputed values to 'tweights_bmr'.</p>
+</dd>
+<dt>Nindependent</dt>
+<dd>
+<p>Inputed 'Nindependent' option.</p>
+</dd>
+<dt>augmentWeights</dt>
+<dd>
+<p>Used for 'Nindependent' option weights for each variable.</p>
+</dd>
+<dt>weights</dt>
+<dd>
+<p>Tilted weights for resampling</p>
+</dd>
+<dt>originalTarget</dt>
+<dd>
+<p>Will be null if target was not changed.</p>
+</dd>
+<dt>marginal_sd</dt>
+<dd>
+<p>Standard deviation of the marginals.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>tweights</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Use winsorized marginal to keep marginal simulation within feasible bootstrap region
+winsor=function(marginalSims,y)  {
+  l=min(y)
+  u=max(y)
+  ifelse(marginalSims&lt;l,l,ifelse(marginalSims&gt;u,u, marginalSims))
+}
+#Create an example marginal posterior
+marginal = list(Sepal.Length=winsor(rnorm(10000,mean=5.8, sd=.2),iris$Sepal.Length),
+               Sepal.Width=winsor(rnorm(10000,mean=3,sd=.2), iris$Sepal.Width),
+               Petal.Length=winsor(rnorm(10000,mean=3.7,sd=.2), iris$Petal.Length)
+)
+
+#simulate
+w = tweights_bmr(dataset = iris, marginal = marginal, silent = TRUE)
+post1 = post_bmr(1000, weights = w)
+</code></pre>
+
+
+</div>

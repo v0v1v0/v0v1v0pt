@@ -1,0 +1,331 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>joins</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Joining verbs</h2>
+
+<h3>Description</h3>
+
+<p>Two-table joins. Check the
+<a href="https://asardaes.github.io/table.express/articles/joins.html">"Joining verbs" vignette</a> for more
+information.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'ExprBuilder'
+anti_join(x, y, ...)
+
+## S3 method for class 'data.table'
+anti_join(x, ..., .expr = FALSE)
+
+## S3 method for class 'ExprBuilder'
+full_join(x, y, ..., sort = TRUE, allow = TRUE, .parent_env)
+
+## S3 method for class 'data.table'
+full_join(x, ...)
+
+## S3 method for class 'ExprBuilder'
+inner_join(x, y, ...)
+
+## S3 method for class 'data.table'
+inner_join(x, ..., .expr = FALSE)
+
+## S3 method for class 'ExprBuilder'
+left_join(
+  x,
+  y,
+  ...,
+  nomatch,
+  mult,
+  roll,
+  rollends,
+  .parent_env,
+  .to_eager = FALSE
+)
+
+## S3 method for class 'data.table'
+left_join(x, y, ..., allow = FALSE, .expr = FALSE)
+
+mutate_join(x, y, ...)
+
+## S3 method for class 'ExprBuilder'
+mutate_join(
+  x,
+  y,
+  ...,
+  .SDcols,
+  mult,
+  roll,
+  rollends,
+  allow = FALSE,
+  .by_each = NULL,
+  .parent_env
+)
+
+## S3 method for class 'EagerExprBuilder'
+mutate_join(x, ..., .parent_env = rlang::caller_env())
+
+## S3 method for class 'data.table'
+mutate_join(x, y, ...)
+
+## S3 method for class 'ExprBuilder'
+right_join(
+  x,
+  y,
+  ...,
+  allow = FALSE,
+  which,
+  nomatch,
+  mult,
+  roll,
+  rollends,
+  .selecting,
+  .framing
+)
+
+## S3 method for class 'data.table'
+right_join(x, y, ..., allow = FALSE, .expr = FALSE, .selecting, .framing)
+
+## S3 method for class 'ExprBuilder'
+semi_join(x, y, ..., allow = FALSE, .eager = FALSE)
+
+## S3 method for class 'data.table'
+semi_join(x, y, ..., allow = FALSE, .eager = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An ExprBuilder instance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A data.table::data.table or, for some verbs (see details), a call to
+<code>nest_expr()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Expressions for the <code>on</code> part of the join.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.expr</code></td>
+<td>
+<p>If the input is a <code>data.table</code> and <code>.expr</code> is <code>TRUE</code>, an instance of
+EagerExprBuilder will be returned. Useful if you want to add clauses to <code>j</code>, e.g. with
+mutate-table.express.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>Passed to data.table::merge.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow</code></td>
+<td>
+<p>Passed as <code>data.table</code>'s <code>allow.cartesian</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.parent_env</code></td>
+<td>
+<p>See <code>end_expr()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nomatch, mult, roll, rollends</code></td>
+<td>
+<p>See data.table::data.table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.to_eager</code></td>
+<td>
+<p>Internal, should be left as <code>FALSE</code> in all external calls.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.SDcols</code></td>
+<td>
+<p>For <code>mutate_join</code>. See the details below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by_each</code></td>
+<td>
+<p>For <code>mutate_join</code>. See the details below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>If <code>TRUE</code>, return the row numbers that matched in <code>x</code> instead of the result of the
+join.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.selecting</code></td>
+<td>
+<p>One or more expressions, possibly contained in a call to <code>list</code> or <code>.</code>, that
+will be added to <code>j</code> in the same frame as the join.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.framing</code></td>
+<td>
+<p>Similar to <code>.selecting</code>, but added to the frame with <code>frame_append()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.eager</code></td>
+<td>
+<p>For <code>semi_join</code>. If <code>TRUE</code>, it uses <code>nest_expr()</code> to build an expression like
+<a href="https://stackoverflow.com/a/18971223/5793905">this</a> instead of the default one. This uses the
+captured <code>data.table</code> eagerly, so use <code>chain()</code> when needed. The default is lazy.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The following joins support <code>nest_expr()</code> in <code>y</code>:
+</p>
+
+<ul>
+<li> <p><code>anti_join</code>
+</p>
+</li>
+<li> <p><code>inner_join</code>
+</p>
+</li>
+<li> <p><code>right_join</code>
+</p>
+</li>
+</ul>
+<p>The <code>full_join</code> method is really a wrapper for <code>data.table::merge</code> that specifies <code>all = TRUE</code>.
+The expression in <code>x</code> gets evaluated, merged with <code>y</code>, and the result is captured in a new
+ExprBuilder. Useful in case you want to keep building expressions after the merge.
+</p>
+
+
+<h3>Mutating join</h3>
+
+<p>The ExprBuilder method for <code>mutate_join</code> implements the idiom described in <a href="https://stackoverflow.com/a/54313203/5793905">this link</a>. The columns specified in <code>.SDcols</code> are
+those that will be added to <code>x</code> from <code>y</code>. The specification can be done by:
+</p>
+
+<ul>
+<li>
+<p> Using tidyselect::select_helpers.
+</p>
+</li>
+<li>
+<p> Passing a character vector. If the character is named, the names are taken as the new column
+names for the values added to <code>x</code>.
+</p>
+</li>
+<li>
+<p> A list, using <code>base::list()</code> or <code>.()</code>, containing:
+</p>
+
+<ul>
+<li>
+<p> Column names, either as characters or symbols.
+</p>
+</li>
+<li>
+<p> Named calls expressing how the column should be summarized/modified before adding it to
+<code>x</code>.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>The last case mentioned above is useful when the join returns many rows from <code>y</code> for each row
+in <code>x</code>, so they can be summarized while joining. The value of <code>by</code> in the join depends on what
+is passed to <code>.by_each</code>:
+</p>
+
+<ul>
+<li>
+<p> If <code>NULL</code> (the default), <code>by</code> is set to <code>.EACHI</code> if a call is detected in any of the
+expressions from the list in <code>.SDcols</code>
+</p>
+</li>
+<li>
+<p> If <code>TRUE</code>, <code>by</code> is always set to <code>.EACHI</code>
+</p>
+</li>
+<li>
+<p> If <code>FALSE</code>, <code>by</code> is never set to <code>.EACHI</code>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>data.table::data.table, dplyr::join
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+lhs &lt;- data.table::data.table(x = rep(c("b", "a", "c"), each = 3),
+                              y = c(1, 3, 6),
+                              v = 1:9)
+
+rhs &lt;- data.table::data.table(x = c("c", "b"),
+                              v = 8:7,
+                              foo = c(4, 2))
+
+
+rhs %&gt;%
+    anti_join(lhs, x, v)
+
+
+lhs %&gt;%
+    inner_join(rhs, x)
+
+
+# creates new data.table
+lhs %&gt;%
+    left_join(rhs, x)
+
+
+# would modify lhs by reference
+lhs %&gt;%
+    start_expr %&gt;%
+    mutate_join(rhs, x, .SDcols = c("foo", rhs.v = "v"))
+
+# would modify rhs by reference, summarizing 'y' before adding it.
+rhs %&gt;%
+    start_expr %&gt;%
+    mutate_join(lhs, x, .SDcols = .(y = mean(y)))
+
+
+# creates new data.table
+lhs %&gt;%
+    right_join(rhs, x)
+
+
+# keep only columns from lhs
+lhs %&gt;%
+    semi_join(rhs, x)
+
+</code></pre>
+
+
+</div>

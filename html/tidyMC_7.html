@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidy_mc_latex</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a 'LaTeX' table with the summarized results of a Monte Carlo Simulation</h2>
+
+<h3>Description</h3>
+
+<p>Create a 'LaTeX' table containing the
+summarized results of a Monte Carlo simulation run
+by <code>future_mc()</code> and summarized by <code>summary.mc()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tidy_mc_latex(
+  x,
+  repetitions_set = NULL,
+  which_setup = NULL,
+  parameter_comb = NULL,
+  which_out = NULL,
+  kable_options = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An object of class <code>summary.mc</code>. For restrictions see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>repetitions_set</code></td>
+<td>
+<p>A vector of integers specifying
+at which repetitions the summarized
+results should be displayed in the table.
+Default: The argument <code>repetitions</code> in <code>future_mc()</code>,
+which means that the summarized results after
+the last repetition are displayed in the table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which_setup</code></td>
+<td>
+<p>A character vector containing the <code>nice_names</code>
+for the different parameter
+combinations (returned by <code>future_mc()</code>),
+which should be presented in the table.
+Default: All parameter combinations are presented.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameter_comb</code></td>
+<td>
+<p>Alternative to <code>which_setup</code>.
+A named list whose components are named after
+(some of) the parameters in <code>param_list</code> in <code>future_mc()</code>.
+Each component is a vector containing
+the values for the parameters to be filtered by.
+Default: All parameter combinations are presented.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which_out</code></td>
+<td>
+<p>A character vector containing
+the names of (some of) the named outputs
+(the names of the returned list of <code>fun</code> in <code>future_mc()</code>),
+which should be displayed in the table.
+Default: All outputs are displayed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kable_options</code></td>
+<td>
+<p>A list whose components are named
+after possible parameters
+of <code>kableExtra::kbl()</code> customizing the generated table.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Only one of the arguments <code>which_setup</code> and <code>parameter_comb</code>
+can be specified at one time.
+</p>
+<p>Only (output - parameter combination)-pairs
+for which the summary function specified
+in the <code>sum_funs</code> argument of <code>summary.mc()</code>
+returns a single scalar value appear as
+non-<code>NA</code> values in the 'LaTeX' table.
+If a specific output is summarized with functions
+that do not return a single numeric value over all parameter combinations,
+then this output is discarded from the table.
+Similarly, if for a specific parameter combination all <code>fun</code> outputs are
+summarized with functions which do not return a single numeric value,
+then this parameter combination is discarded as well.
+In summary, all outputs must be summarized with functions
+which return just one numeric value.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>knitr_kable</code>
+which can be modified by the functions
+in the kableExtra package is returned.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">test_func &lt;- function(param = 0.1, n = 100, x1 = 1, x2 = 2) {
+  data &lt;- rnorm(n, mean = param) + x1 + x2
+  stat &lt;- mean(data)
+  stat_2 &lt;- var(data)
+
+  if (x2 == 5) {
+    stop("x2 can't be 5!")
+  }
+
+  return(list(mean = stat, var = stat_2))
+}
+
+param_list &lt;- list(
+  param = seq(from = 0, to = 1, by = 0.5),
+  x1 = 1:2
+)
+
+test_mc &lt;- future_mc(
+  fun = test_func,
+  repetitions = 1000,
+  param_list = param_list,
+  n = 10,
+  x2 = 2
+)
+
+tidy_mc_latex(summary(test_mc))
+
+set.seed(101)
+tidy_mc_latex(
+  summary(test_mc),
+  repetitions_set = c(10, 1000),
+  which_out = "mean",
+  kable_options = list(caption = "Mean MCS results")
+)
+
+</code></pre>
+
+
+</div>

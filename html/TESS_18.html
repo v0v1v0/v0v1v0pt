@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tess.PosteriorPredictiveTest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tess.PosteriorPredictiveTest: Approximation of the posterior predictive distribution.</h2>
+
+<h3>Description</h3>
+
+<p>tess.PosteriorPredictiveTest computes the values of the statistic for the posterior predictive simulations and computes the p-value for the observed statistic.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tess.PosteriorPredictiveTest(samples,observation,statistic)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>samples</code></td>
+<td>
+<p>Samples from the posterior predictive distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation</code></td>
+<td>
+<p>The observed value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statistic</code></td>
+<td>
+<p>The function that computes the statistic.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a list of the statistic for each sample.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sebastian Hoehna</p>
+
+
+<h3>References</h3>
+
+<p>S. Hoehna: Fast simulation of reconstructed phylogenies under global, time-dependent birth-death processes. 2013, Bioinformatics, 29:1367-1374 </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># We first run an MCMC to obtain samples from the posterior distribution
+# and then simulate the posterior predictive distribution.
+
+# The bird phylogeny as the test data set
+data(cettiidae)
+times &lt;- as.numeric( branching.times(cettiidae) )
+
+# The log-likelihood function
+likelihood &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  lnl &lt;- tess.likelihood(times,b,d,samplingProbability=1.0,log=TRUE)
+  return (lnl)
+}
+
+prior_diversification &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+prior_turnover &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+priors &lt;- c(prior_diversification,prior_turnover)
+
+# Note, the number of iterations and the burnin is too small here
+# and should be adapted for real analyses
+samples &lt;- tess.mcmc(likelihood,priors,c(1,0.1),c(TRUE,TRUE),c(0.1,0.1),10,10)
+
+tmrca &lt;- max(branching.times(cettiidae))
+# The simulation function
+sim &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  # We need trees with at least three tips for the gamma-statistics
+  repeat {
+    tree &lt;- tess.sim.age(n=1,age=tmrca,b,d,samplingProbability=1.0,MRCA=TRUE)[[1]]
+    if (tree$Nnode &gt; 1) break
+  }
+  return (tree)
+}
+
+# simulate trees from the posterior predictive distribution
+trees &lt;- tess.PosteriorPrediction(sim,samples)
+
+# compute the posterior predictive test statistic
+ppt &lt;- tess.PosteriorPredictiveTest(trees,cettiidae,gammaStat)
+# get the p-value of the observed test-statistic
+ppt[[2]]
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,350 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tram</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Stratified Linear Transformation Models
+</h2>
+
+<h3>Description</h3>
+
+<p>Likelihood-inference for stratified linear transformation models, including
+linear shift-scale transformation models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tram(formula, data, subset, weights, offset, cluster, na.action = na.omit, 
+     distribution = c("Normal", "Logistic", "MinExtrVal", "MaxExtrVal",
+                      "Exponential", "Cauchy", "Laplace"), 
+     frailty = c("None", "Gamma", "InvGauss", "PositiveStable"),
+     transformation = c("discrete", "linear", "logarithmic", "smooth"), 
+     LRtest = TRUE, prob = c(0.1, 0.9), support = NULL, 
+     bounds = NULL, add = c(0, 0), order = 6, 
+     negative = TRUE, remove_intercept = TRUE, 
+     scale = TRUE, scale_shift = FALSE, extrapolate = FALSE, 
+     log_first = FALSE, sparse_nlevels = Inf,
+     model_only = FALSE, constraints = NULL, ...)
+tram_data(formula, data, subset, weights, offset, cluster, na.action = na.omit) 
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>an object of class <code>"formula"</code>: a symbolic description 
+of the model structure to be
+fitted.  The details of model specification are given under
+Details and in the package vignette.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an optional data frame, list or environment (or object
+coercible by <code>as.data.frame</code> to a data frame) containing the
+variables in the model.  If not found in <code>data</code>, the
+variables are taken from <code>environment(formula)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>an optional vector specifying a subset of observations to be
+used in the fitting process.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>an optional vector of case weights to be used in the fitting
+process.  Should be <code>NULL</code> or a numeric vector. If present,
+the weighted log-likelihood is maximised.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>this can be used to specify an _a priori_ known component to
+be included in the linear predictor during fitting.  This
+should be <code>NULL</code> or a numeric vector of length equal to the
+number of cases.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cluster</code></td>
+<td>
+<p>optional factor with a cluster ID employed for computing
+clustered covariances.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>a function which indicates what should happen when the data
+contain <code>NA</code>s.  The default is set to <code>na.omit</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distribution</code></td>
+<td>
+<p>character specifying how the transformation function
+is mapped into probabilities. Available choices
+include the cumulative distribution functions of the standard normal, the
+standard logistic and the standard minimum extreme value distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frailty</code></td>
+<td>
+<p>character specifying the addition of a frailty term, that
+is, a random component added to the linear predictor of the
+model, with specific distribution (Gamma, inverse Gaussian,
+positive stable).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transformation</code></td>
+<td>
+<p>character specifying the complexity of the
+response-transformation. For discrete responses, one parameter is assigned
+to each level (except the last one), for continuous responses linear,
+log-linear and smooth (parameterised as a Bernstein polynomial) function
+are implemented.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>LRtest</code></td>
+<td>
+<p>logical specifying if a likelihood-ratio test for the null
+of all coefficients in the linear predictor being zero shall be performed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prob</code></td>
+<td>
+<p>two probabilities giving quantiles of the response defining the support of a smooth
+Bernstein polynomial (if <code>transformation = "smooth"</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>support</code></td>
+<td>
+<p>a vector of two elements; the support of a smooth
+Bernstein polynomial (if <code>transformation = "smooth"</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bounds</code></td>
+<td>
+<p>an interval defining the bounds of a real sample space.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+<p>add these values to the support before generating a grid via
+<code>mkgrid</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>integer &gt;= 1 defining the order of the Bernstein polynomial 
+(if <code>transformation = "smooth"</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>negative</code></td>
+<td>
+<p>logical defining the sign of the linear predictor.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove_intercept</code></td>
+<td>
+<p>logical defining if the intercept shall be removed
+from the linear shift predictor in favour of an (typically implicit) intercept
+in the baseline transformation. If <code>FALSE</code>, the linear shift predictor has
+an intercept (unless <code>-1</code> is added to the formula) but the baseline
+transformation is centered. For linear transformation models, this does
+not change the in-sample log-likelihood. For shift-scale transformation
+models, using <code>FALSE</code> ensures that centering of variables in the
+linear shift predictor does not affect the corresponding estimates and
+standard errors. Note that linear scale predictors are always fitted
+without intercept.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>logical defining if variables in the linear predictor shall
+be scaled. Scaling is internally used for model estimation,
+rescaled coefficients are reported in model output.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_shift</code></td>
+<td>
+<p>a logical choosing between two different model types in
+the presence of a <code>scaling</code> term, see <code>ctm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extrapolate</code></td>
+<td>
+<p>logical defining the behaviour of the Bernstein transformation
+function outside <code>support</code>. The default
+<code>FALSE</code> is to extrapolate linearily without requiring the second
+derivative of the transformation function to be zero at <code>support</code>.
+If <code>TRUE</code>, this additional constraint is respected.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sparse_nlevels</code></td>
+<td>
+<p>integer; use a sparse model matrix if the number
+of levels of an ordered factor is at least as large as
+<code>sparse_nlevels</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log_first</code></td>
+<td>
+<p>logical; if <code>TRUE</code>, a Bernstein polynomial is
+defined on the log-scale.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_only</code></td>
+<td>
+<p>logical, if <code>TRUE</code> the unfitted model is returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constraints</code></td>
+<td>
+<p>additional constraints on regression coefficients in
+the linear predictor of the form <code>lhs %*% coef(object) &gt;= rhs</code>,
+where <code>lhs</code> and <code>rhs</code> can be specified as a character (as in
+<code>glht</code>) or by a matrix <code>lhs</code> (assuming
+<code>rhs = 0</code>), or as a list containing the two elements <code>lhs</code> and
+<code>rhs</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The model formula is of the form <code>y | s ~ x | z</code> where <code>y</code> is an at
+least ordered response variable, <code>s</code> are the variables defining strata
+and <code>x</code> defines the linear predictor. Optionally, <code>z</code> defines a
+scaling term (see <code>ctm</code>). <code>y ~ x</code> defines a model
+without strata (but response-varying intercept function) and <code>y | s ~
+0</code> sets-up response-varying coefficients for all variables in <code>s</code>.
+</p>
+<p>The two functions <code>tram</code> and <code>tram_data</code> are not intended 
+to be called directly by users. Instead,
+functions <code>Coxph</code> (Cox proportional hazards models), 
+<code>Survreg</code> (parametric survival models), 
+<code>Polr</code> (models for ordered categorical responses), 
+<code>Lm</code> (normal linear models),
+<code>BoxCox</code> (non-normal linear models) or 
+<code>Colr</code> (continuous outcome logistic regression) allow
+direct access to the corresponding models.
+</p>
+<p>The model class and the specific models implemented in <span class="pkg">tram</span> are 
+explained in the package vignette of package <span class="pkg">tram</span>.
+The underlying theory of most likely transformations 
+is presented in Hothorn et al. (2018), computational
+and modelling aspects in more complex situations 
+are discussed by Hothorn (2018).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>tram</code> inheriting from <code>mlt</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Torsten Hothorn, Lisa Moest, Peter Buehlmann (2018), Most Likely
+Transformations, <em>Scandinavian Journal of Statistics</em>, <b>45</b>(1),
+110–134, <a href="https://doi.org/10.1111/sjos.12291">doi:10.1111/sjos.12291</a>.
+</p>
+<p>Torsten Hothorn (2020), Most Likely Transformations: The mlt Package,
+<em>Journal of Statistical Software</em>, <b>92</b>(1), <a href="https://doi.org/10.18637/jss.v092.i01">doi:10.18637/jss.v092.i01</a>.
+</p>
+<p>Sandra Siegfried, Lucas Kook, Torsten Hothorn (2023),
+Distribution-Free Location-Scale Regression, <em>The American Statistician</em>,
+<a href="https://doi.org/10.1080/00031305.2023.2203177">doi:10.1080/00031305.2023.2203177</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  data("BostonHousing2", package = "mlbench")
+
+  ### unconstrained regression coefficients
+  ### BoxCox calls tram internally
+  m1 &lt;- BoxCox(cmedv ~ chas + crim + zn + indus + nox + 
+               rm + age + dis + rad + tax + ptratio + b + lstat, 
+               data = BostonHousing2)
+
+  ### now with two constraints on regression coefficients
+  m2 &lt;- BoxCox(cmedv ~ chas + crim + zn + indus + nox + 
+               rm + age + dis + rad + tax + ptratio + b + lstat, 
+               data = BostonHousing2, 
+               constraints = c("crim &gt;= 0", "chas1 + rm &gt;= 1.5"))
+  coef(m1)
+  coef(m2)
+
+  K &lt;- matrix(0, nrow = 2, ncol = length(coef(m2)))
+  colnames(K) &lt;- names(coef(m2))
+  K[1, "crim"] &lt;- 1
+  K[2, c("chas1", "rm")] &lt;- 1
+  m3 &lt;- BoxCox(cmedv ~ chas + crim + zn + indus + nox + 
+               rm + age + dis + rad + tax + ptratio + b + lstat, 
+               data = BostonHousing2, 
+               constraints = list(K, c(0, 1.5)))
+  all.equal(coef(m2), coef(m3))
+
+</code></pre>
+
+
+</div>

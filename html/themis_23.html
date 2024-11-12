@@ -1,0 +1,257 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_rose</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply ROSE Algorithm</h2>
+
+<h3>Description</h3>
+
+<p><code>step_rose()</code> creates a <em>specification</em> of a recipe step that generates
+sample of synthetic data by enlarging the features space of minority and
+majority class example. Using <code>ROSE::ROSE()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_rose(
+  recipe,
+  ...,
+  role = NA,
+  trained = FALSE,
+  column = NULL,
+  over_ratio = 1,
+  minority_prop = 0.5,
+  minority_smoothness = 1,
+  majority_smoothness = 1,
+  skip = TRUE,
+  seed = sample.int(10^5, 1),
+  id = rand_id("rose")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variable is used to sample the data. See <code>selections()</code>
+for more details. The selection should result in <em>single
+factor variable</em>. For the <code>tidy</code> method, these are not
+currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>Not used by this step since no new variables are
+created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column</code></td>
+<td>
+<p>A character string of the variable name that will
+be populated (eventually) by the <code>...</code> selectors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>over_ratio</code></td>
+<td>
+<p>A numeric value for the ratio of the
+majority-to-minority frequencies. The default value (1) means
+that all other levels are sampled up to have the same
+frequency as the most occurring level. A value of 0.5 would mean
+that the minority levels will have (at most) (approximately)
+half as many rows than the majority level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minority_prop</code></td>
+<td>
+<p>A numeric. Determines the of over-sampling of the
+minority class. Defaults to 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minority_smoothness</code></td>
+<td>
+<p>A numeric. Shrink factor to be multiplied by the
+smoothing parameters to estimate the conditional kernel density of the
+minority class. Defaults to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>majority_smoothness</code></td>
+<td>
+<p>A numeric. Shrink factor to be multiplied by the
+smoothing parameters to estimate the conditional kernel density of the
+majority class. Defaults to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>bake()</code>? While all operations are baked
+when <code>prep()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = TRUE</code> as it may affect
+the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>An integer that will be used as the seed when
+rose-ing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The factor variable used to balance around must only have 2 levels.
+</p>
+<p>The ROSE algorithm works by selecting an observation belonging to class k
+and generates new examples  in its neighborhood is determined by some matrix
+H_k. Smaller values of these arguments have the effect of shrinking the
+entries of the corresponding smoothing matrix H_k, Shrinking would be a
+cautious choice if there is a concern that excessively large neighborhoods
+could lead to blur the boundaries between the regions of the feature space
+associated with each class.
+</p>
+<p>All columns in the data are sampled and returned by <code>juice()</code>
+and <code>bake()</code>.
+</p>
+<p>When used in modeling, users should strongly consider using the
+option <code>skip = TRUE</code> so that the extra sampling is <em>not</em>
+conducted outside of the training set.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step
+added to the sequence of existing steps (if any). For the
+<code>tidy</code> method, a tibble with columns <code>terms</code> which is
+the variable used to sample.
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) will be returned.
+</p>
+
+
+<h3>Tuning Parameters</h3>
+
+<p>This step has 1 tuning parameters:
+</p>
+
+<ul><li> <p><code>over_ratio</code>: Over-Sampling Ratio (type: double, default: 1)
+</p>
+</li></ul>
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>References</h3>
+
+<p>Lunardon, N., Menardi, G., and Torelli, N. (2014). ROSE: a
+Package for Binary Imbalanced Learning. R Jorunal, 6:82–92.
+</p>
+<p>Menardi, G. and Torelli, N. (2014). Training and assessing
+classification rules with imbalanced data. Data Mining and Knowledge
+Discovery, 28:92–122.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Steps for over-sampling: 
+<code>step_adasyn()</code>,
+<code>step_bsmote()</code>,
+<code>step_smotenc()</code>,
+<code>step_smote()</code>,
+<code>step_upsample()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(modeldata)
+data(hpc_data)
+
+hpc_data0 &lt;- hpc_data %&gt;%
+  mutate(class = factor(class == "VF", labels = c("not VF", "VF"))) %&gt;%
+  select(-protocol, -day)
+
+orig &lt;- count(hpc_data0, class, name = "orig")
+orig
+
+up_rec &lt;- recipe(class ~ ., data = hpc_data0) %&gt;%
+  step_rose(class) %&gt;%
+  prep()
+
+training &lt;- up_rec %&gt;%
+  bake(new_data = NULL) %&gt;%
+  count(class, name = "training")
+training
+
+# Since `skip` defaults to TRUE, baking the step has no effect
+baked &lt;- up_rec %&gt;%
+  bake(new_data = hpc_data0) %&gt;%
+  count(class, name = "baked")
+baked
+
+orig %&gt;%
+  left_join(training, by = "class") %&gt;%
+  left_join(baked, by = "class")
+
+library(ggplot2)
+
+ggplot(circle_example, aes(x, y, color = class)) +
+  geom_point() +
+  labs(title = "Without ROSE")
+
+recipe(class ~ x + y, data = circle_example) %&gt;%
+  step_rose(class) %&gt;%
+  prep() %&gt;%
+  bake(new_data = NULL) %&gt;%
+  ggplot(aes(x, y, color = class)) +
+  geom_point() +
+  labs(title = "With ROSE")
+</code></pre>
+
+
+</div>

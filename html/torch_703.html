@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>torch_svd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Svd</h2>
+
+<h3>Description</h3>
+
+<p>Svd
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">torch_svd(self, some = TRUE, compute_uv = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>self</code></td>
+<td>
+<p>(Tensor) the input tensor of size <code class="reqn">(*, m, n)</code> where <code>*</code> is zero or more                    batch dimensions consisting of <code class="reqn">m \times n</code> matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>some</code></td>
+<td>
+<p>(bool, optional) controls the shape of returned <code>U</code> and <code>V</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>compute_uv</code></td>
+<td>
+<p>(bool, optional) option whether to compute <code>U</code> and <code>V</code> or not</p>
+</td>
+</tr>
+</table>
+<h3>svd(input, some=TRUE, compute_uv=TRUE) -&gt; (Tensor, Tensor, Tensor) </h3>
+
+<p>This function returns a namedtuple <code style="white-space: pre;">⁠(U, S, V)⁠</code> which is the singular value
+decomposition of a input real matrix or batches of real matrices <code>input</code> such that
+<code class="reqn">input = U \times diag(S) \times V^T</code>.
+</p>
+<p>If <code>some</code> is <code>TRUE</code> (default), the method returns the reduced singular value decomposition
+i.e., if the last two dimensions of <code>input</code> are <code>m</code> and <code>n</code>, then the returned
+<code>U</code> and <code>V</code> matrices will contain only <code class="reqn">min(n, m)</code> orthonormal columns.
+</p>
+<p>If <code>compute_uv</code> is <code>FALSE</code>, the returned <code>U</code> and <code>V</code> matrices will be zero matrices
+of shape <code class="reqn">(m \times m)</code> and <code class="reqn">(n \times n)</code> respectively. <code>some</code> will be ignored here.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The singular values are returned in descending order. If <code>input</code> is a batch of matrices,
+then the singular values of each matrix in the batch is returned in descending order.
+</p>
+<p>The implementation of SVD on CPU uses the LAPACK routine <code>?gesdd</code> (a divide-and-conquer
+algorithm) instead of <code>?gesvd</code> for speed. Analogously, the SVD on GPU uses the MAGMA routine
+<code>gesdd</code> as well.
+</p>
+<p>Irrespective of the original strides, the returned matrix <code>U</code>
+will be transposed, i.e. with strides <code style="white-space: pre;">⁠U.contiguous().transpose(-2, -1).stride()⁠</code>
+</p>
+<p>Extra care needs to be taken when backward through <code>U</code> and <code>V</code>
+outputs. Such operation is really only stable when <code>input</code> is
+full rank with all distinct singular values. Otherwise, <code>NaN</code> can
+appear as the gradients are not properly defined. Also, notice that
+double backward will usually do an additional backward through <code>U</code> and
+<code>V</code> even if the original backward is only on <code>S</code>.
+</p>
+<p>When <code>some</code> = <code>FALSE</code>, the gradients on <code style="white-space: pre;">⁠U[..., :, min(m, n):]⁠</code>
+and <code style="white-space: pre;">⁠V[..., :, min(m, n):]⁠</code> will be ignored in backward as those vectors
+can be arbitrary bases of the subspaces.
+</p>
+<p>When <code>compute_uv</code> = <code>FALSE</code>, backward cannot be performed since <code>U</code> and <code>V</code>
+from the forward pass is required for the backward operation.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+a = torch_randn(c(5, 3))
+a
+out = torch_svd(a)
+u = out[[1]]
+s = out[[2]]
+v = out[[3]]
+torch_dist(a, torch_mm(torch_mm(u, torch_diag(s)), v$t()))
+a_big = torch_randn(c(7, 5, 3))
+out = torch_svd(a_big)
+u = out[[1]]
+s = out[[2]]
+v = out[[3]]
+torch_dist(a_big, torch_matmul(torch_matmul(u, torch_diag_embed(s)), v$transpose(-2, -1)))
+}
+</code></pre>
+
+
+</div>

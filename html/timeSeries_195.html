@@ -1,0 +1,218 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>na</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Handle missing values in 'timeSeries' objects</h2>
+
+<h3>Description</h3>
+
+<p>Functions for handling missing values in <code>"timeSeries"</code> objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'timeSeries'
+na.omit(object, method = c("r", "s", "z", "ir", "iz", "ie"), 
+    interp = c("before", "linear", "after"), FUN, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+ 
+<p>an object of class <code>"timeSeries"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>the method of handling NAs, see section ‘Details’. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interp</code></td>
+<td>
+
+<p>Three alternative methods are provided to remove NAs from the
+data: 
+<code>type="zeros"</code> replaces the missing values with zeros,
+<code>type="mean"</code> replaces the missing values with the column mean,
+<code>type="median"</code> replaces the missing values with the column
+median.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+
+<p>a function or a name of a function, such as <code>"mean"</code> or
+<code>median</code>. <code>FUN</code> is applied to the non-NA values in each
+column to determine the replacement value. The call looks like
+<code>FUN(coli, na.rm = TRUE)</code>, so <code>FUN</code> should have argument
+<code>na.rm</code>. All arguments except <code>object</code> are ignored if
+<code>FUN</code> is specified.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>arguments to be passed to the function <code>as.matrix</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Functions for handling missing values in <code>"timeSeries"</code> objects 
+and in objects which can be transformed into a vector or a two 
+dimensional matrix.
+</p>
+<p>For <code>na.omit</code> argument <code>method</code> specifies how to handle
+<code>NA</code>s.  Can be one of the following strings:
+</p>
+
+<dl>
+<dt>method = "s"</dt>
+<dd>
+<p><code>na.rm = FALSE</code>, skip, i.e. do nothing, </p>
+</dd>
+<dt>method = "r"</dt>
+<dd>
+<p>remove NAs,</p>
+</dd>
+<dt>method = "z"</dt>
+<dd>
+<p>substitute NAs by zeros,</p>
+</dd> 
+<dt>method = "ir"</dt>
+<dd>
+<p>interpolate NAs and remove NAs at the
+beginning and end of the series,</p>
+</dd>
+<dt>method = "iz"</dt>
+<dd>
+<p>interpolate NAs and substitute NAs at the
+beginning and end of the series,</p>
+</dd>
+<dt>method = "ie"</dt>
+<dd>
+<p>interpolate NAs and extrapolate NAs at the
+beginning and end of theseries.</p>
+</dd>
+</dl>
+<h3>Note</h3>
+
+<p>When dealing with daily data sets, there exists another function
+<code>alignDailySeries</code> which can handle missing data in un-aligned
+calendrical <code>"timeSeries"</code> objects.
+</p>
+
+
+
+<p><strong>Additional remarks by GNB:</strong>
+</p>
+<p><code>removeNA(x)</code> is equivalent to <code>na.omit(x)</code> or
+<code>na.omit(x), methods = "r"</code>.
+</p>
+<p><code>interpNA</code> can be replaced by a call to <code>na.omit</code> with
+argument method equal to <code>ir</code>, <code>iz</code>, or <code>ie</code>, and
+argument <code>"interp"</code> equal to the <code>"method"</code> argument for
+<code>interpNA</code> (note that the defaults are not the same).
+</p>
+<p><code>substituteNA(x, type = "zeros")</code> is equivalent to
+<code>na.omit(x, method = "z")</code>. For other values of <code>type</code> one
+can use argument <code>FUN</code>, as in <code>na.omit(x, FUN = "mean")</code>.
+</p>
+<p>A final remark: the three deprecated functions are non-generic.
+<code>removeNA(x)</code> is completely redundant as it simply calls
+<code>na.omit</code>. The other two however may be useful for matrix-like
+objects. Please inform the maintainer of the package if you use them
+on objects other than from class <code>"timeSeries"</code> and wish them
+kept in the future.
+</p>
+
+
+<h3>References</h3>
+
+<p>Troyanskaya O., Cantor M., Sherlock G., Brown P., Hastie T., 
+Tibshirani R., Botstein D., Altman R.B., (2001); 
+<em>Missing Value Estimation Methods for DNA microarrays</em>
+Bioinformatics 17, 520–525.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>alignDailySeries</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">X &lt;- matrix(rnorm(100), ncol = 5)  # Create a Matrix X
+X[3, 5] &lt;- NA                      # Replace a Single NA Inside
+X[17, 2:4] &lt;- c(NA, NA, NA)        # Replace Three in a Row Inside
+X[13:15, 4] &lt;- c(NA, NA, NA)       # Replace Three in a Column Inside
+X[11:12, 5] &lt;- c(NA, NA)           # Replace Two at the Right Border
+X[20, 1] &lt;- NA                     # Replace One in the Lower Left Corner
+X
+Xts &lt;- timeSeries(X)  # convert X to timeSeries Xts
+
+## remove rows with NAs
+na.omit(Xts)
+
+## Subsitute NA's with zeros or column means (formerly substituteNA())
+na.omit(Xts, method = "z")
+na.omit(Xts, FUN = "mean")
+na.omit(Xts, FUN = "median")
+
+## Subsitute NA's with a trimmed mean
+na.omit(Xts, FUN = function(x, na.rm) mean(x, trim = 0.10, na.rm = na.rm))
+
+## interpolate NA's linearily (formerly interpNA())
+na.omit(X, method = "ir", interp = "linear")
+na.omit(X, method = "iz", interp = "linear")
+na.omit(X, method = "ie", interp = "linear")
+   
+## take previous values in a column
+na.omit(X, method = "ir", interp = "before")
+na.omit(X, method = "iz", interp = "before")
+na.omit(X, method = "ie", interp = "before")
+
+
+## examples with X (which is a matrix, not "timeSeries")
+## (these examples are not run automatically as these functions are
+## deprecated.) 
+if(FALSE){
+## Remove Rows with NAs
+removeNA(X)
+   
+## subsitute NA's by zeros or column means
+substituteNA(X, type = "zeros")
+substituteNA(X, type = "mean")
+   
+## interpolate NA's linearily
+interpNA(X, method = "linear")
+# Note the corner missing value cannot be interpolated!
+   
+## take previous values in a column
+interpNA(X, method = "before")
+# Also here, the corner value is excluded
+}
+</code></pre>
+
+
+</div>

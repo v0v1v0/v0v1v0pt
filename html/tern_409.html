@@ -1,0 +1,672 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>analyze_variables</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Analyze variables</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>analyze_vars()</code> creates a layout element to summarize one or more variables, using the S3
+generic function <code>s_summary()</code> to calculate a list of summary statistics. A list of all available statistics for
+numeric variables can be viewed by running <code>get_stats("analyze_vars_numeric")</code> and for non-numeric variables by
+running <code>get_stats("analyze_vars_counts")</code>. Use the <code>.stats</code> parameter to specify the statistics to include in your
+output summary table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">analyze_vars(
+  lyt,
+  vars,
+  var_labels = vars,
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  na.rm = TRUE,
+  show_labels = "default",
+  table_names = vars,
+  section_div = NA_character_,
+  .stats = c("n", "mean_sd", "median", "range", "count_fraction"),
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_summary(x, na.rm = TRUE, denom, .N_row, .N_col, .var, ...)
+
+## S3 method for class 'numeric'
+s_summary(
+  x,
+  na.rm = TRUE,
+  denom,
+  .N_row,
+  .N_col,
+  .var,
+  control = control_analyze_vars(),
+  ...
+)
+
+## S3 method for class 'factor'
+s_summary(
+  x,
+  na.rm = TRUE,
+  denom = c("n", "N_row", "N_col"),
+  .N_row,
+  .N_col,
+  ...
+)
+
+## S3 method for class 'character'
+s_summary(
+  x,
+  na.rm = TRUE,
+  denom = c("n", "N_row", "N_col"),
+  .N_row,
+  .N_col,
+  .var,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'logical'
+s_summary(
+  x,
+  na.rm = TRUE,
+  denom = c("n", "N_row", "N_col"),
+  .N_row,
+  .N_col,
+  ...
+)
+
+a_summary(
+  x,
+  .N_col,
+  .N_row,
+  .var = NULL,
+  .df_row = NULL,
+  .ref_group = NULL,
+  .in_ref_col = FALSE,
+  compare = FALSE,
+  .stats = NULL,
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL,
+  na.rm = TRUE,
+  na_str = default_na_str(),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names for the primary analysis variable to be iterated over.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var_labels</code></td>
+<td>
+<p>(<code>character</code>)<br> variable labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>s_summary()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether <code>NA</code> values should be removed from <code>x</code> prior to analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_labels</code></td>
+<td>
+<p>(<code>string</code>)<br> label visibility: one of "default", "visible" and "hidden".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>section_div</code></td>
+<td>
+<p>(<code>string</code>)<br> string which should be repeated as a section divider after each group
+defined by this split instruction, or <code>NA_character_</code> (the default) for no section divider.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run <code>get_stats("analyze_vars_numeric")</code> to see
+statistics available for numeric variables, and <code>get_stats("analyze_vars_counts")</code> for statistics available
+for non-numeric variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Each element of the vector
+should be a name-value pair with name corresponding to a statistic specified in <code>.stats</code> and value the indentation
+for that statistic's row label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>numeric</code>)<br> vector of numbers we want to analyze.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>denom</code></td>
+<td>
+<p>(<code>string</code>)<br> choice of denominator for proportion. Options are:
+</p>
+
+<ul>
+<li> <p><code>n</code>: number of values in this row and column intersection.
+</p>
+</li>
+<li> <p><code>N_row</code>: total number of values in this row across columns.
+</p>
+</li>
+<li> <p><code>N_col</code>: total number of values in this column across rows.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.N_row</code></td>
+<td>
+<p>(<code>integer(1)</code>)<br> row-wise N (row group count) for the group of observations being analyzed
+(i.e. with no column-based subsetting) that is typically passed by <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.N_col</code></td>
+<td>
+<p>(<code>integer(1)</code>)<br> column-wise N (column count) for the full column being analyzed that is typically
+passed by <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var</code></td>
+<td>
+<p>(<code>string</code>)<br> single variable name that is passed by <code>rtables</code> when requested
+by a statistics function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> parameters for descriptive statistics details, specified by using
+the helper function <code>control_analyze_vars()</code>. Some possible parameter options are:
+</p>
+
+<ul>
+<li> <p><code>conf_level</code> (<code>proportion</code>)<br> confidence level of the interval for mean and median.
+</p>
+</li>
+<li> <p><code>quantiles</code> (<code>numeric(2)</code>)<br> vector of length two to specify the quantiles.
+</p>
+</li>
+<li> <p><code>quantile_type</code> (<code>numeric(1)</code>)<br> between 1 and 9 selecting quantile algorithms to be used.
+See more about <code>type</code> in <code>stats::quantile()</code>.
+</p>
+</li>
+<li> <p><code>test_mean</code> (<code>numeric(1)</code>)<br> value to test against the mean under the null hypothesis when calculating p-value.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>(<code>flag</code>)<br> defaults to <code>TRUE</code>, which prints out warnings and messages. It is mainly used
+to print out information about factor casting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.df_row</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data frame across all of the columns for the given row split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.ref_group</code></td>
+<td>
+<p>(<code>data.frame</code> or <code>vector</code>)<br> the data corresponding to the reference group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.in_ref_col</code></td>
+<td>
+<p>(<code>flag</code>)<br><code>TRUE</code> when working with the reference level, <code>FALSE</code> otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>compare</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether comparison statistics should be analyzed instead of summary statistics
+(<code>compare = TRUE</code> adds <code>pval</code> statistic comparing against reference group).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Automatic digit formatting:</strong> The number of digits to display can be automatically determined from the analyzed
+variable(s) (<code>vars</code>) for certain statistics by setting the statistic format to <code>"auto"</code> in <code>.formats</code>.
+This utilizes the <code>format_auto()</code> formatting function. Note that only data for the current row &amp; variable (for all
+columns) will be considered (<code>.df_row[[.var]]</code>, see <code>rtables::additional_fun_params</code>) and not the whole dataset.
+</p>
+
+
+<h3>Value</h3>
+
+
+<ul><li> <p><code>analyze_vars()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_summary()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_summary()</code> returns different statistics depending on the class of <code>x</code>.
+</p>
+</li></ul>
+<ul><li>
+<p> If <code>x</code> is of class <code>numeric</code>, returns a <code>list</code> with the following named <code>numeric</code> items:
+</p>
+
+<ul>
+<li> <p><code>n</code>: The <code>length()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>sum</code>: The <code>sum()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>mean</code>: The <code>mean()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>sd</code>: The <code>stats::sd()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>se</code>: The standard error of <code>x</code> mean, i.e.: (<code>sd(x) / sqrt(length(x))</code>).
+</p>
+</li>
+<li> <p><code>mean_sd</code>: The <code>mean()</code> and <code>stats::sd()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>mean_se</code>: The <code>mean()</code> of <code>x</code> and its standard error (see above).
+</p>
+</li>
+<li> <p><code>mean_ci</code>: The CI for the mean of <code>x</code> (from <code>stat_mean_ci()</code>).
+</p>
+</li>
+<li> <p><code>mean_sei</code>: The SE interval for the mean of <code>x</code>, i.e.: (<code>mean()</code> -/+ <code>stats::sd()</code> / <code>sqrt()</code>).
+</p>
+</li>
+<li> <p><code>mean_sdi</code>: The SD interval for the mean of <code>x</code>, i.e.: (<code>mean()</code> -/+ <code>stats::sd()</code>).
+</p>
+</li>
+<li> <p><code>mean_pval</code>: The two-sided p-value of the mean of <code>x</code> (from <code>stat_mean_pval()</code>).
+</p>
+</li>
+<li> <p><code>median</code>: The <code>stats::median()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>mad</code>: The median absolute deviation of <code>x</code>, i.e.: (<code>stats::median()</code> of <code>xc</code>,
+where <code>xc</code> = <code>x</code> - <code>stats::median()</code>).
+</p>
+</li>
+<li> <p><code>median_ci</code>: The CI for the median of <code>x</code> (from <code>stat_median_ci()</code>).
+</p>
+</li>
+<li> <p><code>quantiles</code>: Two sample quantiles of <code>x</code> (from <code>stats::quantile()</code>).
+</p>
+</li>
+<li> <p><code>iqr</code>: The <code>stats::IQR()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>range</code>: The <code>range_noinf()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>min</code>: The <code>max()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>max</code>: The <code>min()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>median_range</code>: The <code>median()</code> and <code>range_noinf()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>cv</code>: The coefficient of variation of <code>x</code>, i.e.: (<code>stats::sd()</code> / <code>mean()</code> * 100).
+</p>
+</li>
+<li> <p><code>geom_mean</code>: The geometric mean of <code>x</code>, i.e.: (<code>exp(mean(log(x)))</code>).
+</p>
+</li>
+<li> <p><code>geom_cv</code>: The geometric coefficient of variation of <code>x</code>, i.e.: (<code>sqrt(exp(sd(log(x)) ^ 2) - 1) * 100</code>).
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li>
+<p> If <code>x</code> is of class <code>factor</code> or converted from <code>character</code>, returns a <code>list</code> with named <code>numeric</code> items:
+</p>
+
+<ul>
+<li> <p><code>n</code>: The <code>length()</code> of <code>x</code>.
+</p>
+</li>
+<li> <p><code>count</code>: A list with the number of cases for each level of the factor <code>x</code>.
+</p>
+</li>
+<li> <p><code>count_fraction</code>: Similar to <code>count</code> but also includes the proportion of cases for each level of the
+factor <code>x</code> relative to the denominator, or <code>NA</code> if the denominator is zero.
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li>
+<p> If <code>x</code> is of class <code>logical</code>, returns a <code>list</code> with named <code>numeric</code> items:
+</p>
+
+<ul>
+<li> <p><code>n</code>: The <code>length()</code> of <code>x</code> (possibly after removing <code>NA</code>s).
+</p>
+</li>
+<li> <p><code>count</code>: Count of <code>TRUE</code> in <code>x</code>.
+</p>
+</li>
+<li> <p><code>count_fraction</code>: Count and proportion of <code>TRUE</code> in <code>x</code> relative to the denominator, or <code>NA</code> if the
+denominator is zero. Note that <code>NA</code>s in <code>x</code> are never counted or leading to <code>NA</code> here.
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li> <p><code>a_summary()</code> returns the corresponding list with formatted <code>rtables::CellValue()</code>.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>analyze_vars()</code>: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_summary()</code>: S3 generic function to produces a variable summary.
+</p>
+</li>
+<li> <p><code>s_summary(numeric)</code>: Method for <code>numeric</code> class.
+</p>
+</li>
+<li> <p><code>s_summary(factor)</code>: Method for <code>factor</code> class.
+</p>
+</li>
+<li> <p><code>s_summary(character)</code>: Method for <code>character</code> class. This makes an automatic
+conversion to factor (with a warning) and then forwards to the method for factors.
+</p>
+</li>
+<li> <p><code>s_summary(logical)</code>: Method for <code>logical</code> class.
+</p>
+</li>
+<li> <p><code>a_summary()</code>: Formatted analysis function which is used as <code>afun</code> in <code>analyze_vars()</code> and
+<code>compare_vars()</code> and as <code>cfun</code> in <code>summarize_colvars()</code>.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+
+<ul>
+<li>
+<p> If <code>x</code> is an empty vector, <code>NA</code> is returned. This is the expected feature so as to return <code>rcell</code> content in
+<code>rtables</code> when the intersection of a column and a row delimits an empty data selection.
+</p>
+</li>
+<li>
+<p> When the <code>mean</code> function is applied to an empty vector, <code>NA</code> will be returned instead of <code>NaN</code>, the latter
+being standard behavior in R.
+</p>
+</li>
+</ul>
+<ul>
+<li>
+<p> If <code>x</code> is an empty <code>factor</code>, a list is still returned for <code>counts</code> with one element
+per factor level. If there are no levels in <code>x</code>, the function fails.
+</p>
+</li>
+<li>
+<p> If factor variables contain <code>NA</code>, these <code>NA</code> values are excluded by default. To include <code>NA</code> values
+set <code>na.rm = FALSE</code> and missing values will be displayed as an <code>NA</code> level. Alternatively, an explicit
+factor level can be defined for <code>NA</code> values during pre-processing via <code>df_explicit_na()</code> - the
+default <code>na_level</code> (<code>"&lt;Missing&gt;"</code>) will also be excluded when <code>na.rm</code> is set to <code>TRUE</code>.
+</p>
+</li>
+</ul>
+<ul><li>
+<p> Automatic conversion of character to factor does not guarantee that the table
+can be generated correctly. In particular for sparse tables this very likely can fail.
+It is therefore better to always pre-process the dataset such that factors are manually
+created from character variables before passing the dataset to <code>rtables::build_table()</code>.
+</p>
+</li></ul>
+<ul>
+<li>
+<p> To use for comparison (with additional p-value statistic), parameter <code>compare</code> must be set to <code>TRUE</code>.
+</p>
+</li>
+<li>
+<p> Ensure that either all <code>NA</code> values are converted to an explicit <code>NA</code> level or all <code>NA</code> values are left as is.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Fabricated dataset.
+dta_test &lt;- data.frame(
+  USUBJID = rep(1:6, each = 3),
+  PARAMCD = rep("lab", 6 * 3),
+  AVISIT  = rep(paste0("V", 1:3), 6),
+  ARM     = rep(LETTERS[1:3], rep(6, 3)),
+  AVAL    = c(9:1, rep(NA, 9))
+)
+
+# `analyze_vars()` in `rtables` pipelines
+## Default output within a `rtables` pipeline.
+l &lt;- basic_table() %&gt;%
+  split_cols_by(var = "ARM") %&gt;%
+  split_rows_by(var = "AVISIT") %&gt;%
+  analyze_vars(vars = "AVAL")
+
+build_table(l, df = dta_test)
+
+## Select and format statistics output.
+l &lt;- basic_table() %&gt;%
+  split_cols_by(var = "ARM") %&gt;%
+  split_rows_by(var = "AVISIT") %&gt;%
+  analyze_vars(
+    vars = "AVAL",
+    .stats = c("n", "mean_sd", "quantiles"),
+    .formats = c("mean_sd" = "xx.x, xx.x"),
+    .labels = c(n = "n", mean_sd = "Mean, SD", quantiles = c("Q1 - Q3"))
+  )
+
+build_table(l, df = dta_test)
+
+## Use arguments interpreted by `s_summary`.
+l &lt;- basic_table() %&gt;%
+  split_cols_by(var = "ARM") %&gt;%
+  split_rows_by(var = "AVISIT") %&gt;%
+  analyze_vars(vars = "AVAL", na.rm = FALSE)
+
+build_table(l, df = dta_test)
+
+## Handle `NA` levels first when summarizing factors.
+dta_test$AVISIT &lt;- NA_character_
+dta_test &lt;- df_explicit_na(dta_test)
+l &lt;- basic_table() %&gt;%
+  split_cols_by(var = "ARM") %&gt;%
+  analyze_vars(vars = "AVISIT", na.rm = FALSE)
+
+build_table(l, df = dta_test)
+
+# auto format
+dt &lt;- data.frame("VAR" = c(0.001, 0.2, 0.0011000, 3, 4))
+basic_table() %&gt;%
+  analyze_vars(
+    vars = "VAR",
+    .stats = c("n", "mean", "mean_sd", "range"),
+    .formats = c("mean_sd" = "auto", "range" = "auto")
+  ) %&gt;%
+  build_table(dt)
+
+# `s_summary.numeric`
+
+## Basic usage: empty numeric returns NA-filled items.
+s_summary(numeric())
+
+## Management of NA values.
+x &lt;- c(NA_real_, 1)
+s_summary(x, na.rm = TRUE)
+s_summary(x, na.rm = FALSE)
+
+x &lt;- c(NA_real_, 1, 2)
+s_summary(x, stats = NULL)
+
+## Benefits in `rtables` contructions:
+dta_test &lt;- data.frame(
+  Group = rep(LETTERS[1:3], each = 2),
+  sub_group = rep(letters[1:2], each = 3),
+  x = 1:6
+)
+
+## The summary obtained in with `rtables`:
+basic_table() %&gt;%
+  split_cols_by(var = "Group") %&gt;%
+  split_rows_by(var = "sub_group") %&gt;%
+  analyze(vars = "x", afun = s_summary) %&gt;%
+  build_table(df = dta_test)
+
+## By comparison with `lapply`:
+X &lt;- split(dta_test, f = with(dta_test, interaction(Group, sub_group)))
+lapply(X, function(x) s_summary(x$x))
+
+# `s_summary.factor`
+
+## Basic usage:
+s_summary(factor(c("a", "a", "b", "c", "a")))
+
+# Empty factor returns zero-filled items.
+s_summary(factor(levels = c("a", "b", "c")))
+
+## Management of NA values.
+x &lt;- factor(c(NA, "Female"))
+x &lt;- explicit_na(x)
+s_summary(x, na.rm = TRUE)
+s_summary(x, na.rm = FALSE)
+
+## Different denominators.
+x &lt;- factor(c("a", "a", "b", "c", "a"))
+s_summary(x, denom = "N_row", .N_row = 10L)
+s_summary(x, denom = "N_col", .N_col = 20L)
+
+# `s_summary.character`
+
+## Basic usage:
+s_summary(c("a", "a", "b", "c", "a"), .var = "x", verbose = FALSE)
+s_summary(c("a", "a", "b", "c", "a", ""), .var = "x", na.rm = FALSE, verbose = FALSE)
+
+# `s_summary.logical`
+
+## Basic usage:
+s_summary(c(TRUE, FALSE, TRUE, TRUE))
+
+# Empty factor returns zero-filled items.
+s_summary(as.logical(c()))
+
+## Management of NA values.
+x &lt;- c(NA, TRUE, FALSE)
+s_summary(x, na.rm = TRUE)
+s_summary(x, na.rm = FALSE)
+
+## Different denominators.
+x &lt;- c(TRUE, FALSE, TRUE, TRUE)
+s_summary(x, denom = "N_row", .N_row = 10L)
+s_summary(x, denom = "N_col", .N_col = 20L)
+
+a_summary(factor(c("a", "a", "b", "c", "a")), .N_row = 10, .N_col = 10)
+a_summary(
+  factor(c("a", "a", "b", "c", "a")),
+  .ref_group = factor(c("a", "a", "b", "c")), compare = TRUE
+)
+
+a_summary(c("A", "B", "A", "C"), .var = "x", .N_col = 10, .N_row = 10, verbose = FALSE)
+a_summary(
+  c("A", "B", "A", "C"),
+  .ref_group = c("B", "A", "C"), .var = "x", compare = TRUE, verbose = FALSE
+)
+
+a_summary(c(TRUE, FALSE, FALSE, TRUE, TRUE), .N_row = 10, .N_col = 10)
+a_summary(
+  c(TRUE, FALSE, FALSE, TRUE, TRUE),
+  .ref_group = c(TRUE, FALSE), .in_ref_col = TRUE, compare = TRUE
+)
+
+a_summary(rnorm(10), .N_col = 10, .N_row = 20, .var = "bla")
+a_summary(rnorm(10, 5, 1), .ref_group = rnorm(20, -5, 1), .var = "bla", compare = TRUE)
+
+</code></pre>
+
+
+</div>

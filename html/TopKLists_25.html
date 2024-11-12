@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TopKListsGUI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+TopKListsGUI for inference and visualization
+</h2>
+
+<h3>Description</h3>
+
+<p>This function opens a RGUI window and allows the user to select the parameters for the distance <code class="reqn">\delta</code>, for the pilot sample size <code class="reqn">\nu</code>, and the threshold for the <code>aggmap</code> presentation. Based on the selected parameters, a pairwise estimation of the top-<em>k</em> lists overlap is performed with switching reference lists (e.g. L1 with L2 and L2 with L1). Based on these estimates, all involved lists are truncated and the maximum of the <code class="reqn">\hat{k}_i</code> estimates is selected by default. The individual results of each combination of ranked lists are displayed automatically in the RGUI window and saved to a prespecified folder. After the maximal truncation point is estimated, <code>CEMC</code> algorithm is applied to generate the final list of top-<em>k</em> objects.
+</p>
+<p>The consolidated top-<em>k</em> list results can be displayed in three different formats controlled by tabs: 
+</p>
+<p>(1)'Aggregation map': It is a special type of heatmap, where the truncated lists are ordered from left to right, from the one with the largest overlap with all the others to the one with the lowest overlap. For details see the description of the <code>aggmap</code>.
+(2) 'Summary table': An interactive table that displays the set of overlapping objects in dependence of the selected parameters. 
+(3) 'Venn-diagram &amp; Venn-table': A Venn-diagram and a Venn-table of the overlapping objects based on all truncated input lists. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TopKListsGUI(lists, autorange.delta = FALSE, override.errors = TRUE,
+venndiag.pdf.size = c(7, 7), venndiag.size = c(380, 420),
+gui.size = c(900, 810), directory = NULL, venndiag.res = 70, aggmap.res = 100)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lists</code></td>
+<td>
+<p>A data frame of ordered lists of objects - rows represent the objects, columns represent the individual input lists
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>autorange.delta</code></td>
+<td>
+<p>If TRUE, results for all <code class="reqn">\delta</code> values leading to the  <code class="reqn">\hat{k}_i</code> estimates (as function of the parameters specified by the user) will be displayed (note, for a large list length <em>N</em> this can take quite some time, because the <code class="reqn">\delta</code> range examined is from 0 to <code>nrow(lists)</code> by steps of 1). If FALSE, then the user defines the <code class="reqn">\delta</code> range (min and max) in the RGUI window 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>override.errors</code></td>
+<td>
+<p>If TRUE, errors due to an inappropriate value selection are overridden and the calculation continues for all other <code class="reqn">\delta</code> values, but there is no output for viewing in the GUI corresponding to that combination of values which has caused the error; defaults to TRUE 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>venndiag.pdf.size</code></td>
+<td>
+<p>A numeric vector defining the width and height of the Venn-diagram plot - it is passed to the <code>pdf()</code> function that saves the plot; defaults to c(7, 7)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>venndiag.size</code></td>
+<td>
+<p>A numeric vector defining the width and height of the Venn-diagram plot - it is passed to the <code>png()</code> function that saves the plot; defaults to c(380, 420)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gui.size</code></td>
+<td>
+<p>A numeric vector defining the width and height of the RGUI to be displayed; defaults to c(900, 810)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>directory</code></td>
+<td>
+<p>Specification of the name of the directory where the results and plots should be saved (including some temporary files required for the calculations). If kept <code>NULL</code> a directory called "TopKLists-temp" will be created in <code>getwd()</code>. In that case a write permission is needed for <code>getwd()</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>venndiag.res</code></td>
+<td>
+<p>A number defining the resolution of the Venn-diagram plot - this argument is passed to the <code>res = argument</code> of the <code>png()</code> function saving the diagram, but affects also the RGUI display; defaults to 70
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggmap.res</code></td>
+<td>
+<p>A number defining the resolution of the <code>aggmap</code> plot - this argument is passed to the <code>res = argument</code> of the <code>png()</code> function saving the plot, but affects also the RGUI display; defaults to 100
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>RGUI window with three tabs:
+</p>
+<p>'Aggregation map':  For an index <code class="reqn">p=1,2,\ldots,L-1</code> aggregation levels (groupings of top lists) are combined in one display. For each group of <em>L-p</em> truncated lists down to the smallest group consisting of just one pair of lists, (1) an arbitrary reference list ("ground truth") is selected under the condition that it comprises <code class="reqn">\max_i(\hat{k}_i)</code> items among all pairwise comparisons in the group of rankings, (2) symbols of its <code class="reqn">\max_i(\hat{k}_i)</code> items are printed vertically from the highest to the lowest rank position, and (3) the aggregation information for all remaining <em>L-p</em> rankings in the group is added, ordered according to descending list length. 
+</p>
+<p>'Summary table': An interactive table that displays all overlapping (grey) objects based on the truncated list comparison. Rank sum per object and frequency of each object in the input lists or truncated lists are calculated over all compared lists. The first column denotes if an object was selected by the CEMC algorithm for the final set of common objects. The table can be ordered according to any of the displayed columns. 
+</p>
+<p>'Venn-diagram &amp; Venn-table': The Venn-diagram and the Venn-table display the rank intersection of the identified top-<em>k</em> objects in two different formats. 
+</p>
+<p>These tabs automatically save all plots and tables into the specified directory.
+</p>
+<p>The following additional exploratory features are implemented:
+</p>
+<p>'Deltaplot' (see <code>deltaplot</code>): For a preselected range of <code class="reqn">\delta</code>'s and all list pairs, an exploratory plot of rank discordance is created and saved (function not part of the RGUI window).
+</p>
+<p>'Mdelta' (see <code>deltaplot</code>): For a preselected range of <code class="reqn">\delta</code>'s and all list pairs, Delta-matrices are created and saved (function not part of the RGUI window) in one <code>rdata</code> object (<code>Mdelta.rdata</code>). Each delta-matrix is saved individually in a tab delimited <code>.txt</code>-file.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Eva Budinska &lt;budinska@iba.muni.cz&gt;, Karl G. Kugler &lt;kg.kugler@gmail.com&gt;, Michael G. Schimek &lt;michael.schimek@medunigraz.at&gt;
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>CEMC</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data(breast)
+TopKListsGUI(breast)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

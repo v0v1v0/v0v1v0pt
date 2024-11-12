@@ -1,0 +1,203 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_fpc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Functional data in FPC-basis representation</h2>
+
+<h3>Description</h3>
+
+<p>These functions perform a (functional) principal component analysis (FPCA) of
+the input data and return an <code>tfb_fpc</code> <code>tf</code>-object that uses the empirical
+eigenfunctions as basis functions for representing the data. The default
+("<code>method = fpc_wsvd</code>") uses a (truncated) weighted SVD for complete
+data on a common grid and a nuclear-norm regularized (truncated) weighted SVD
+for partially missing data on a common grid, see <code>fpc_wsvd()</code>.
+The latter is likely to break down for high PVE and/or high amounts of
+missingness.<br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_fpc(data, ...)
+
+## S3 method for class 'data.frame'
+tfb_fpc(
+  data,
+  id = 1,
+  arg = 2,
+  value = 3,
+  domain = NULL,
+  method = fpc_wsvd,
+  ...
+)
+
+## S3 method for class 'matrix'
+tfb_fpc(data, arg = NULL, domain = NULL, method = fpc_wsvd, ...)
+
+## S3 method for class 'numeric'
+tfb_fpc(data, arg = NULL, domain = NULL, method = fpc_wsvd, ...)
+
+## S3 method for class 'tf'
+tfb_fpc(data, arg = NULL, method = fpc_wsvd, ...)
+
+## Default S3 method:
+tfb_fpc(data, arg = NULL, domain = NULL, method = fpc_wsvd, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>matrix</code>, <code>data.frame</code> or <code>list</code> of suitable shape, or another
+<code>tf</code>-object containing functional data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments to the <code>method</code> which computes the
+(regularized/smoothed) FPCA - see e.g. <code>fpc_wsvd()</code>.
+Unless set by the user, uses proportion of variance explained
+<code>pve = 0.995</code> to determine the truncation levels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>The name or number of the column defining which data belong to
+which function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arg</code></td>
+<td>
+<p><code>numeric</code>, or list of <code>numeric</code>s. The evaluation grid.
+For the <code>data.frame</code>-method: the
+name/number of the column defining the evaluation grid. The <code>matrix</code> method
+will try to guess suitable <code>arg</code>-values from the column names of <code>data</code> if
+<code>arg</code> is not supplied. Other methods fall back on integer sequences
+(<code style="white-space: pre;">⁠1:&lt;length of data&gt;⁠</code>) as the default if not provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The name or number of the column containing the function
+evaluations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>domain</code></td>
+<td>
+<p>range of the <code>arg</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>the function to use that computes eigenfunctions and scores.
+Defaults to <code>fpc_wsvd()</code>, which is quick and easy but returns completely
+unsmoothed eigenfunctions unlikely to be suited for noisy data. See Details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For the FPC basis, any factorization method that accepts a <code>data.frame</code> with
+columns <code>id</code>, <code>arg</code>, <code>value</code> containing the functional data and returns a
+list with eigenfunctions and FPC scores structured like the return object
+of <code>fpc_wsvd()</code> can be used for the 'method“ argument, see example below.
+Note that the mean function, with a fixed "score" of 1 for all functions,
+is used as the first basis function for all FPC bases.
+</p>
+
+
+<h3>Value</h3>
+
+<p>an object of class <code>tfb_fpc</code>, inheriting from <code>tfb</code>.
+The basis used by <code>tfb_fpc</code> is a <code>tfd</code>-vector containing the estimated
+mean and eigenfunctions.
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul><li> <p><code>tfb_fpc(default)</code>: convert <code>tfb</code>: default method, returning prototype when
+data is NULL
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p><code>fpc_wsvd()</code> for FPCA options.
+</p>
+<p>Other tfb-class: 
+<code>fpc_wsvd()</code>,
+<code>tfb</code>,
+<code>tfb_spline()</code>
+</p>
+<p>Other tfb_fpc-class: 
+<code>fpc_wsvd()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(13121)
+x &lt;- tf_rgp(25, nugget = .02)
+x_pc &lt;- tfb_fpc(x, pve = .9)
+x_pc
+plot(x, lwd = 3)
+lines(x_pc, col = 2, lty = 2)
+x_pc_full &lt;- tfb_fpc(x, pve = .995)
+x_pc_full
+lines(x_pc_full, col = 3, lty = 2)
+# partially missing data on common grid:
+x_mis &lt;- x |&gt; tf_sparsify(dropout = .05)
+x_pc_mis &lt;- tfb_fpc(x_mis, pve = .9)
+x_pc_mis
+plot(x_mis, lwd = 3)
+lines(x_pc_mis, col = 4, lty = 2)
+# extract FPC basis --
+# first "eigenvector" in black is (always) the mean function
+x_pc |&gt; tf_basis(as_tfd = TRUE) |&gt; plot(col = 1:5)
+
+# Apply FPCA for sparse, irregular data using refund::fpca.sc:
+set.seed(99290)
+# create small, sparse, irregular data:
+x_irreg &lt;- x[1:8] |&gt;
+  tf_jiggle() |&gt; tf_sparsify(dropout = 0.3)
+plot(x_irreg)
+x_df &lt;- x_irreg |&gt;
+  as.data.frame(unnest = TRUE)
+# wrap refund::fpca_sc for use as FPCA method in tfb_fpc --
+# 1. define scoring function (simple weighted LS fit)
+fpca_scores &lt;- function(data_matrix, efunctions, mean, weights) {
+  w_mat &lt;- matrix(weights, ncol = length(weights), nrow = nrow(data_matrix),
+                  byrow = TRUE)
+  w_mat[is.na(data_matrix)] &lt;- 0
+  data_matrix[is.na(data_matrix)] &lt;- 0
+  data_wc &lt;- t((t(data_matrix) - mean) * sqrt(t(w_mat)))
+  t(qr.coef(qr(efunctions), t(data_wc) / sqrt(weights)))
+}
+# 2. define wrapper for fpca_sc:
+fpca_sc_wrapper &lt;- function(data, arg, pve = 0.995, ...) {
+  data_mat &lt;- tfd(data) |&gt; as.matrix(interpolate = TRUE)
+  fpca &lt;- refund::fpca.sc(
+    Y = data_mat, argvals = attr(data_mat, "arg"), pve = pve, ...
+  )
+  c(fpca[c("mu", "efunctions", "scores", "npc")],
+    scoring_function = fpca_scores)
+}
+x_pc &lt;- tfb_fpc(x_df, method = fpca_sc_wrapper)
+lines(x_pc, col = 2, lty = 2)
+
+</code></pre>
+
+
+</div>

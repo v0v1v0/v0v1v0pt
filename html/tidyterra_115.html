@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pull_crs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract CRS on WKT format</h2>
+
+<h3>Description</h3>
+
+<p>Extract the WKT version of the CRS associated to a string, number of
+sf/Spat* object.
+</p>
+<p>The
+<a href="https://en.wikipedia.org/wiki/Well-known_text_representation_of_coordinate_reference_systems">Well-known text (WKT)</a>
+representation of coordinate reference systems (CRS) is a character string
+that identifies precisely the parameters of each CRS. This is the current
+standard used on <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> and <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> packages.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pull_crs(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>Input potentially including or representing a CRS. It could be
+a <code>sf/sfc</code> object, a <code>SpatRaster/SpatVector</code> object, a <code>crs</code> object from
+<code>sf::st_crs()</code>, a character (for example a <a href="https://proj.org/en/9.3/operations/projections/index.html">proj4 string</a>) or a
+integer (representing an <a href="https://epsg.io/">EPSG</a> code).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>ignored</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Although the WKT representation is the same, <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> and <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a>
+API slightly differs. For example, <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> can do:
+</p>
+<p><code>sf::st_transform(x, 25830)</code>
+</p>
+<p>While <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> equivalent is:
+</p>
+<p><code>terra::project(bb, "epsg:25830")</code>
+</p>
+<p>Knowing the WKT would help to smooth workflows when working with different
+packages and object types.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A WKT representation of the corresponding CRS.
+</p>
+
+
+<h3>Internals</h3>
+
+<p>This is a thin wrapper of <code>sf::st_crs()</code> and <code>terra::crs()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>terra::crs()</code>, <code>sf::st_crs()</code> for knowing how these packages handle
+CRS definitions.
+</p>
+<p>Other helpers: 
+<code>compare_spatrasters()</code>,
+<code>is_grouped_spatvector()</code>,
+<code>is_regular_grid()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# sf objects
+
+sfobj &lt;- sf::st_as_sfc("MULTIPOINT ((0 0), (1 1))", crs = 4326)
+
+fromsf1 &lt;- pull_crs(sfobj)
+fromsf2 &lt;- pull_crs(sf::st_crs(sfobj))
+
+# terra
+
+v &lt;- terra::vect(sfobj)
+r &lt;- terra::rast(v)
+
+fromterra1 &lt;- pull_crs(v)
+fromterra2 &lt;- pull_crs(r)
+
+# integers
+fromint &lt;- pull_crs(4326)
+
+# Characters
+fromchar &lt;- pull_crs("epsg:4326")
+
+
+all(
+  fromsf1 == fromsf2,
+  fromsf2 == fromterra1,
+  fromterra1 == fromterra2,
+  fromterra2 == fromint,
+  fromint == fromchar
+)
+
+cat(fromsf1)
+</code></pre>
+
+
+</div>

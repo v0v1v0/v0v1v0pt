@@ -1,0 +1,369 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>templateICA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Template ICA</h2>
+
+<h3>Description</h3>
+
+<p>Perform template independent component analysis (ICA) using variational Bayes
+(VB) or expectation-maximization (EM).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">templateICA(
+  BOLD,
+  template,
+  tvar_method = c("non-negative", "unbiased"),
+  scale = c("template", "global", "local", "none"),
+  scale_sm_surfL = NULL,
+  scale_sm_surfR = NULL,
+  scale_sm_FWHM = "template",
+  nuisance = NULL,
+  scrub = NULL,
+  TR = NULL,
+  hpf = "template",
+  GSR = "template",
+  Q2 = "template",
+  Q2_max = "template",
+  brainstructures = "template",
+  mask = NULL,
+  time_inds = NULL,
+  varTol = "template",
+  spatial_model = NULL,
+  resamp_res = NULL,
+  rm_mwall = TRUE,
+  reduce_dim = FALSE,
+  method_FC = c("VB1", "VB2", "none"),
+  maxiter = 100,
+  miniter = 3,
+  epsilon = 0.001,
+  kappa_init = 0.2,
+  usePar = TRUE,
+  PW = FALSE,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>BOLD</code></td>
+<td>
+<p>Vector of subject-level fMRI data in one of the following
+formats: CIFTI file paths, <code>"xifti"</code> objects, NIFTI file paths,
+<code>"nifti"</code> objects, or <code class="reqn">V \times T</code> numeric matrices, where <code class="reqn">V</code>
+is the number of data locations and <code class="reqn">T</code> is the number of timepoints.
+</p>
+<p>If multiple BOLD data are provided, they will be independently centered,
+scaled, detrended (if applicable), and denoised (if applicable). Then they
+will be concatenated together followed by computing the initial dual
+regression estimate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>template</code></td>
+<td>
+<p>Template estimates in a format compatible with <code>BOLD</code>,
+from <code>estimate_template</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tvar_method</code></td>
+<td>
+<p>Which calculation of the template variance to use:
+<code>"non-negative"</code> (default) or <code>"unbiased"</code>. The unbiased template
+variance is based on the assumed mixed effects/ANOVA model, whereas the
+non-negative template variance adds to it to account for greater potential
+between-subjects variation. (The template mean is the same for either choice
+of <code>tvar_method</code>.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p><code>"global"</code>, <code>"local"</code>, or <code>"none"</code>.
+Global scaling will divide the entire data matrix by the mean image standard
+deviation (<code>mean(sqrt(rowVars(BOLD)))</code>). Local scaling will divide each
+data location's time series by its estimated standard deviation. Default:
+<code>"template"</code>, to use the same option used for estimation of the
+<code>template</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_sm_surfL, scale_sm_surfR, scale_sm_FWHM</code></td>
+<td>
+<p>Only applies if
+<code>scale=="local"</code> and <code>BOLD</code> represents CIFTI-format data. To
+smooth the standard deviation estimates used for local scaling, provide the
+surface geometries along which to smooth as GIFTI geometry files or
+<code>"surf"</code> objects, as well as the smoothing FWHM (default:
+<code>"template"</code> to use the same option used for estimation of the
+<code>template</code>).
+</p>
+<p>If <code>scale_sm_FWHM==0</code>, no smoothing of the local standard deviation
+estimates will be performed.
+</p>
+<p>If <code>scale_sm_FWHM&gt;0</code> but <code>scale_sm_surfL</code> and
+<code>scale_sm_surfR</code> are not provided, the default inflated surfaces from
+the HCP will be used.
+</p>
+<p>To create a <code>"surf"</code> object from data, see
+<code>make_surf</code>. The surfaces must be in the same
+resolution as the <code>BOLD</code> data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nuisance</code></td>
+<td>
+<p>(Optional) Signals to regress from the data, given as a
+numeric matrix with the same number of rows as there are volumes in the
+<code>BOLD</code> data. If multiple <code>BOLD</code> sessions are provided,
+this argument can be a list to use different nuisance regressors for
+different sessions. Nuisance regression is performed as a first step, before
+centering, scaling, and denoising. An intercept column will automatically be
+added to <code>nuisance</code>. If <code>NULL</code>, no extra nuisance signals will be
+regressed from the data, but a nuisance regression will still be used if
+warranted by <code>scrub</code> or <code>hpf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scrub</code></td>
+<td>
+<p>(Optional) A numeric vector of integers indicating the indices
+of volumes to scrub from the BOLD data. (List the volumes to remove, not the
+ones to keep.) If multiple <code>BOLD</code> sessions are provided, this
+argument can be a list to remove different volumes for different sessions.
+Scrubbing is performed within nuisance regression by adding a spike
+regressor to the nuisance design matrix for each volume to scrub. If
+<code>NULL</code>, do not scrub.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TR, hpf</code></td>
+<td>
+<p>These arguments control detrending. <code>TR</code> is the temporal
+resolution of the data, i.e. the time between volumes, in seconds;
+<code>hpf</code> is the frequency of the high-pass filter, in Hertz. Detrending
+is performed via nuisance regression of DCT bases. Default:
+<code>"template"</code> to use the values from the template. Be sure to set the
+correct <code>TR</code> if it's different for the new data compared to the data
+used in <code>estimate_template</code>.
+</p>
+<p>Note that if multiple <code>BOLD</code> sessions are provided, their
+<code>TR</code> and <code>hpf</code> must be the same; both arguments accept only one
+value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GSR</code></td>
+<td>
+<p>Center BOLD across columns (each image)? This
+is equivalent to performing global signal regression. Default:
+<code>"template"</code>, to use the same option used for estimation of the
+<code>template</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q2, Q2_max</code></td>
+<td>
+<p>Denoise the BOLD data? Denoising is based on modeling and
+removing nuisance ICs. It may result in a cleaner estimate for smaller
+datasets, but it may be unnecessary (and time-consuming) for larger datasets.
+</p>
+<p>Set <code>Q2</code> to control denoising: use a positive integer to specify the
+number of nuisance ICs, <code>NULL</code> to have the number of nuisance ICs
+estimated by PESEL, or zero to skip denoising.
+</p>
+<p>If <code>is.null(Q2)</code>, use <code>Q2_max</code> to specify the maximum number of
+nuisance ICs that should be estimated by PESEL. <code>Q2_max</code> must be less
+than <code class="reqn">T * .75 - Q</code> where <code class="reqn">T</code> is the number of timepoints in BOLD
+and <code class="reqn">Q</code> is the number of group ICs. If <code>NULL</code>, <code>Q2_max</code> will
+be set to <code class="reqn">T * .50 - Q</code>, rounded.
+</p>
+<p>The defaults for both arguments is <code>"template"</code>, to use the same option
+used for estimation of the <code>template</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>brainstructures</code></td>
+<td>
+<p>Only applies if the entries of <code>BOLD</code> are CIFTI
+file paths. This is a character vector indicating which brain structure(s)
+to obtain: <code>"left"</code> (left cortical surface), <code>"right"</code> (right
+cortical surface) and/or <code>"subcortical"</code> (subcortical and cerebellar
+gray matter). Can also be <code>"all"</code> (obtain all three brain structures).
+Default: <code>"template"</code> to use the same brainstructures present in the
+<code>template</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask</code></td>
+<td>
+<p>Required if and only if the entries of <code>BOLD</code> are NIFTI
+file paths or <code>"nifti"</code> objects. This is a brain map formatted as a
+binary array of the same spatial dimensions as the fMRI data, with
+<code>TRUE</code> corresponding to in-mask voxels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_inds</code></td>
+<td>
+<p>Subset of fMRI BOLD volumes to include in analysis, as a
+vector of numeric integers. If <code>NULL</code> (default), use all volumes.
+Subsetting is performed before any centering, scaling, detrending, and
+denoising. If multiple <code>BOLD</code> are provided, <code>time_inds</code> can be a
+list of the same length, with each element being a vector of numeric
+integers indicating the timepoints to include for each BOLD.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varTol</code></td>
+<td>
+<p>Tolerance for variance of each data location. For each scan,
+locations which do not meet this threshold are masked out of the analysis.
+Default: <code>"template"</code> to use the same brainstructures present in the
+<code>template</code>). Variance is calculated on the original data, before
+any normalization. Set to <code>0</code> to avoid removing locations due to
+low variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spatial_model</code></td>
+<td>
+<p>Should spatial modeling be performed? If <code>NULL</code>, assume
+spatial independence. Otherwise, provide meshes specifying the spatial priors assumed on
+each independent component. Each should represent a brain structure, between which
+spatial independence can be assumed.
+</p>
+<p>If <code>BOLD</code> represents CIFTI-format data, <code>spatial_model</code> should give the left and
+right cortex surface geometries (whichever one(s) are being used) as <code>"surf"</code>
+objects or GIFTI surface geometry file paths. Spatial modeling is not yet available for
+the subcortex. This argument can also be <code>TRUE</code>, in which case spatial modeling
+will be performed with the surfaces included in the first entry of <code>BOLD</code> if it is a
+<code>"xifti"</code> object, or if those are not present available, the default inflated
+surfaces from <code>ciftiTools</code>.
+</p>
+<p>If <code>BOLD</code> represents NIFTI-format data, spatial modeling is not yet available.
+</p>
+<p>If <code>BOLD</code> is a numeric matrix, <code>spatial_model</code> should be a list of meshes
+(see <code>make_mesh</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resamp_res</code></td>
+<td>
+<p>Only applies if <code>BOLD</code> represents CIFTI-format data.
+The target resolution for resampling (number of cortical surface vertices
+per hemisphere). For spatial modelling, a value less than 10000 is
+recommended for computational feasibility. If <code>NULL</code> (default), do not
+perform resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rm_mwall</code></td>
+<td>
+<p>Only applies if <code>BOLD</code> represents CIFTI-format data.
+Should medial wall (missing data) locations be removed from the mesh?
+If <code>TRUE</code>, faster computation but less accurate estimates at the
+boundary of wall.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reduce_dim</code></td>
+<td>
+<p>Reduce the temporal dimension of the data using PCA?
+Default: <code>TRUE</code>. Skipping dimension reduction will slow the model
+estimation, but may result in more accurate results. Ignored for FC template
+ICA</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method_FC</code></td>
+<td>
+<p>Variational Bayes (VB) method for FC template ICA model:
+<code>"VB1"</code> (default) uses a conjugate Inverse-Wishart prior for the cor(A);
+<code>"VB2"</code> draws samples from p(cor(A)) to emulate the population distribution
+using a combination of Cholesky, SVD, and random pivoting.
+<code>"none"</code> Uses standard template ICA without FC prior</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>Maximum number of EM or VB iterations. Default: <code>100</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miniter</code></td>
+<td>
+<p>Minimum number of EM or VB iterations. Default: <code>3</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>epsilon</code></td>
+<td>
+<p>Smallest proportion change between iterations. Default:
+<code>.001</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kappa_init</code></td>
+<td>
+<p>Starting value for kappa. Default: <code>0.2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usePar</code></td>
+<td>
+<p>Parallelize the computation? Default: <code>TRUE</code>. Can be the
+number of cores to use or <code>TRUE</code>, which will use the number available minus two.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PW</code></td>
+<td>
+<p>Prewhiten to account for residual autocorrelation? Default: <code>FALSE</code>.
+Only affects FC template ICA models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>If <code>TRUE</code>, display progress of algorithm</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A (spatial) template ICA object, which is a list containing:
+<code>subjICmean</code>, the <code class="reqn">V \times L</code> estimated independent components
+<strong>S</strong>; <code>subjICse</code>, the standard errors of <strong>S</strong>; the
+<code>mask</code> of locations without template values due to too many low
+variance or missing values; the <code>nuisance</code> design matrix or matrices if
+applicable; and the function <code>params</code> such as the type of scaling and
+detrending performed.
+</p>
+<p>If <code>BOLD</code> represented CIFTI or NIFTI data, <code>subjICmean</code> and
+<code>subjICse</code> will be formatted as <code>"xifti"</code> or <code>"nifti"</code>
+objects, respectively.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+ tm &lt;- estimate_template(cii1_fnames, cii2_fnames, gICA_fname)
+ templateICA(newcii_fname, tm, spatial_model=TRUE, resamp_res=2000)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

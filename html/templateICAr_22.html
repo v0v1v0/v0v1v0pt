@@ -1,0 +1,418 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimate_template</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate template</h2>
+
+<h3>Description</h3>
+
+<p>Estimate template for Template ICA based on fMRI data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_template(
+  BOLD,
+  BOLD2 = NULL,
+  GICA,
+  mask = NULL,
+  inds = NULL,
+  scale = c("local", "global", "none"),
+  scale_sm_surfL = NULL,
+  scale_sm_surfR = NULL,
+  scale_sm_FWHM = 2,
+  TR = NULL,
+  hpf = 0.01,
+  GSR = FALSE,
+  Q2 = 0,
+  Q2_max = NULL,
+  brainstructures = "all",
+  resamp_res = NULL,
+  keep_S = FALSE,
+  keep_FC = FALSE,
+  FC = TRUE,
+  FC_nPivots = 100,
+  FC_nSamp = 50000,
+  varTol = 1e-06,
+  maskTol = 0.1,
+  missingTol = 0.1,
+  usePar = FALSE,
+  wb_path = NULL,
+  verbose = TRUE
+)
+
+estimate_template.cifti(
+  BOLD,
+  BOLD2 = NULL,
+  GICA,
+  inds = NULL,
+  scale = c("local", "global", "none"),
+  scale_sm_surfL = NULL,
+  scale_sm_surfR = NULL,
+  scale_sm_FWHM = 2,
+  TR = NULL,
+  hpf = 0.01,
+  GSR = FALSE,
+  Q2 = 0,
+  Q2_max = NULL,
+  brainstructures = "all",
+  resamp_res = resamp_res,
+  keep_S = FALSE,
+  keep_FC = FALSE,
+  FC = FALSE,
+  varTol = 1e-06,
+  maskTol = 0.1,
+  missingTol = 0.1,
+  usePar = FALSE,
+  wb_path = NULL,
+  verbose = TRUE
+)
+
+estimate_template.gifti(
+  BOLD,
+  BOLD2 = NULL,
+  GICA,
+  inds = NULL,
+  scale = c("local", "global", "none"),
+  scale_sm_surfL = NULL,
+  scale_sm_surfR = NULL,
+  scale_sm_FWHM = 2,
+  TR = NULL,
+  hpf = 0.01,
+  GSR = FALSE,
+  Q2 = 0,
+  Q2_max = NULL,
+  brainstructures = "all",
+  keep_S = FALSE,
+  keep_FC = FALSE,
+  FC = FALSE,
+  varTol = 1e-06,
+  maskTol = 0.1,
+  missingTol = 0.1,
+  usePar = FALSE,
+  wb_path = NULL,
+  verbose = TRUE
+)
+
+estimate_template.nifti(
+  BOLD,
+  BOLD2 = NULL,
+  GICA,
+  inds = NULL,
+  scale = c("local", "global", "none"),
+  TR = NULL,
+  hpf = 0.01,
+  GSR = FALSE,
+  Q2 = 0,
+  Q2_max = NULL,
+  mask = NULL,
+  keep_S = FALSE,
+  keep_FC = FALSE,
+  FC = FALSE,
+  varTol = 1e-06,
+  maskTol = 0.1,
+  missingTol = 0.1,
+  usePar = FALSE,
+  wb_path = NULL,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>BOLD, BOLD2</code></td>
+<td>
+<p>Vector of subject-level fMRI data in one of the following
+formats: CIFTI file paths, <code>"xifti"</code> objects, GIFTI file paths,
+<code>"gifti"</code> objects, NIFTI file paths, <code>"nifti"</code> objects,
+or <code class="reqn">V \times T</code> numeric matrices, where <code class="reqn">V</code> is the number of data
+locations and <code class="reqn">T</code> is the number of timepoints.
+</p>
+<p>If <code>BOLD2</code> is provided it must be in the same format as <code>BOLD</code>;
+<code>BOLD</code> will be the test data and <code>BOLD2</code> will be the retest data.
+<code>BOLD2</code> should be the same length as <code>BOLD</code> and have the same
+subjects in the same order. If <code>BOLD2</code> is not provided, <code>BOLD</code>
+will be split in half; the first half will be the test data and the second
+half will be the retest data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GICA</code></td>
+<td>
+<p>Group ICA maps in a format compatible with <code>BOLD</code>. Can also
+be a (vectorized) numeric matrix (<code class="reqn">V \times Q</code>) no matter the format of
+<code>BOLD</code>. Its columns will be centered.
+</p>
+<p>New: can also be a parcellation in CIFTI format (other formats to be
+implemented in the future). The parcellation should have the same locations
+and one column, with integer values indicating the parcel to which each
+location belongs to. Each parcel is modeled as a brain map; instead of the
+first step of dual regression, the medial timecourse of each parcel is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask</code></td>
+<td>
+<p>Required if <code>BOLD</code> are NIFTI file paths or <code>"nifti"</code>
+objects, and optional for other formats. For NIFTI data, this is a brain map
+formatted as a logical array of the same spatial dimensions as the fMRI
+data, with <code>TRUE</code> corresponding to in-mask voxels. For other data, this
+is a logical vector with the same length as the number of locations in
+<code>GICA</code>, with <code>TRUE</code> corresponding to in-mask locations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inds</code></td>
+<td>
+<p>Numeric indices of the group ICs to include in the template. If
+<code>NULL</code>, use all group ICs (default).
+</p>
+<p>If <code>inds</code> is provided, the ICs not included will be removed after
+calculating dual regression, not before. This is because removing the ICs
+prior to dual regression would leave unmodelled signals in the data, which
+could bias the templates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p><code>"local"</code> (default), <code>"global"</code>, or <code>"none"</code>.
+Local scaling will divide each data location's time series by its estimated
+standard deviation. Global scaling will divide the entire data matrix by the
+mean image standard deviation (<code>mean(sqrt(rowVars(BOLD)))</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_sm_surfL, scale_sm_surfR, scale_sm_FWHM</code></td>
+<td>
+<p>Only applies if
+<code>scale=="local"</code> and <code>BOLD</code> represents surface data (CIFTI or
+GIFTI). To smooth the standard deviation estimates used for local scaling,
+provide the surface geometries along which to smooth as GIFTI geometry files
+or <code>"surf"</code> objects, as well as the smoothing FWHM (default: <code>2</code>).
+</p>
+<p>If <code>scale_sm_FWHM==0</code>, no smoothing of the local standard deviation
+estimates will be performed.
+</p>
+<p>If <code>scale_sm_FWHM&gt;0</code> but <code>scale_sm_surfL</code> and
+<code>scale_sm_surfR</code> are not provided, the default inflated surfaces from
+the HCP will be used.
+</p>
+<p>To create a <code>"surf"</code> object from data, see
+<code>make_surf</code>. The surfaces must be in the same
+resolution as the <code>BOLD</code> data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TR</code></td>
+<td>
+<p>The temporal resolution of the data, i.e. the time between volumes,
+in seconds. <code>TR</code> is required for detrending with <code>hpf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hpf</code></td>
+<td>
+<p>The frequency at which to apply a highpass filter to the data
+during pre-processing, in Hertz. Default: <code>0.01</code> Hertz. Set to <code>0</code>
+to disable the highpass filter.
+</p>
+<p>The highpass filter serves to detrend the data, since low-frequency
+variance is associated with noise. Highpass filtering is accomplished by
+nuisance regression of discrete cosine transform (DCT) bases.
+</p>
+<p>Note the <code>TR</code> argument is required for highpass filtering. If
+<code>TR</code> is not provided, <code>hpf</code> will be ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GSR</code></td>
+<td>
+<p>Center BOLD across columns (each image)? This
+is equivalent to performing global signal regression. Default:
+<code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q2, Q2_max</code></td>
+<td>
+<p>Obtain dual regression estimates after denoising? Denoising is
+based on modeling and removing nuisance ICs. It may result in a cleaner
+estimate for smaller datasets, but it may be unnecessary (and time-consuming)
+for larger datasets.
+</p>
+<p>Set <code>Q2</code> to control denoising: use a positive integer to specify the
+number of nuisance ICs, <code>NULL</code> to have the number of nuisance ICs
+estimated by PESEL, or zero (default) to skip denoising.
+</p>
+<p>If <code>is.null(Q2)</code>, use <code>Q2_max</code> to specify the maximum number of
+nuisance ICs that should be estimated by PESEL. <code>Q2_max</code> must be less
+than <code class="reqn">T * .75 - Q</code> where <code class="reqn">T</code> is the minimum number of timepoints in
+each fMRI scan and <code class="reqn">Q</code> is the number of group ICs. If <code>NULL</code>
+(default), <code>Q2_max</code> will be set to <code class="reqn">T * .50 - Q</code>, rounded.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>brainstructures</code></td>
+<td>
+<p>Only applies if the entries of <code>BOLD</code> are CIFTI
+file paths. This is a character vector indicating which brain structure(s)
+to obtain: <code>"left"</code> (left cortical surface), <code>"right"</code> (right
+cortical surface) and/or <code>"subcortical"</code> (subcortical and cerebellar
+gray matter). Can also be <code>"all"</code> (obtain all three brain structures).
+Default: <code>c("all")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resamp_res</code></td>
+<td>
+<p>Only applies if the entries of <code>BOLD</code> are CIFTI file paths.
+Resample the data upon reading it in? Default: <code>NULL</code> (no resampling).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_S</code></td>
+<td>
+<p>Keep the DR estimates of S? If <code>FALSE</code> (default), do not save
+the DR estimates and only return the templates. If <code>TRUE</code>, the DR
+estimates of S are returned too. If a single file path, save the DR estimates as
+an RDS file at that location rather than returning them.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_FC</code></td>
+<td>
+<p>Keep the DR estimates of the FC cor(A)? If <code>FALSE</code> (default), do not save
+the DR estimates and only return the templates. If <code>TRUE</code>, the DR
+estimates of cor(A) and its Cholesky factor are returned too.
+If a single file path, save the DR estimates as
+an RDS file at that location rather than returning them.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FC</code></td>
+<td>
+<p>Include the functional connectivity template? Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FC_nPivots</code></td>
+<td>
+<p>Number of pivots to use in Cholesky-based FC template
+estimation.  Set to zero to skip Cholesky-based FC template estimation. Default: 100.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FC_nSamp</code></td>
+<td>
+<p>Number of FC matrix samples to generate across all pivots. This
+should be a multiple of FC_nPivots.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varTol</code></td>
+<td>
+<p>Tolerance for variance of each data location. For each scan,
+locations which do not meet this threshold are masked out of the analysis.
+Default: <code>1e-6</code>. Variance is calculated on the original data, before
+any normalization.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maskTol</code></td>
+<td>
+<p>For computing the dual regression results for each subject:
+tolerance for number of locations masked out due to low
+variance or missing values. If more than this many locations are masked out,
+a subject is skipped without calculating dual regression. <code>maskTol</code>
+can be specified either as a proportion of the number of locations (between
+zero and one), or as a number of locations (integers greater than one).
+Default: <code>.1</code>, i.e. up to 10 percent of locations can be masked out.
+</p>
+<p>If <code>BOLD2</code> is provided, masks are calculated for both scans and then
+the intersection of the masks is used, for each subject.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>missingTol</code></td>
+<td>
+<p>For computing the variance decomposition across all subjects:
+tolerance for number of subjects masked out due to low variance or missing
+values at a given location. If more than this many subjects are masked out,
+the location's value will be <code>NA</code> in the templates. <code>missingTol</code>
+can be specified either as a proportion of the number of locations (between
+zero and one), or as a number of locations (integers greater than one).
+Default: <code>.1</code>, i.e. up to 10 percent of subjects can be masked out
+at a given location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usePar, wb_path</code></td>
+<td>
+<p>Parallelize the DR computations over subjects? Default:
+<code>FALSE</code>. Can be the number of cores to use or <code>TRUE</code>, which will
+use the number on the PC minus two. If the input data is in CIFTI format, the
+<code>wb_path</code> must also be provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Display progress updates? Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>All fMRI data (entries in <code>BOLD</code> and <code>BOLD2</code>, and <code>GICA</code>) must
+be in the same spatial resolution.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list: the <code>template</code> and <code>var_decomp</code> with entries in
+matrix format; the <code>mask</code> of locations without template values due to
+too many low variance or missing values; the function <code>params</code> such as
+the type of scaling and detrending performed; the <code>dat_struct</code> which can be
+used to convert <code>template</code> and <code>var_decomp</code> to <code>"xifti"</code> or
+<code>"nifti"</code> objects if the <code>BOLD</code> format was CIFTI or NIFTI data;
+and DR results if <code>isTRUE(keep_S)</code> and/or <code>isTRUE(keep_FC)</code>.
+</p>
+<p>Use <code>summary</code> to print a description of the template results, and
+for CIFTI-format data use <code>plot</code> to plot the template mean and variance
+estimates. Use <code>export_template</code> to save the templates to
+individual RDS, CIFTI, or NIFTI files (depending on the <code>BOLD</code> format).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">nT &lt;- 21
+nV &lt;- 140
+nQ &lt;- 6
+mU &lt;- matrix(rnorm(nV*nQ), nrow=nV)
+mS &lt;- mU %*% diag(seq(nQ, 1)) %*% matrix(rnorm(nQ*nT), nrow=nQ)
+BOLD &lt;- list(B1=mS, B2=mS, B3=mS)
+BOLD &lt;- lapply(BOLD, function(x){x + rnorm(nV*nT, sd=.05)})
+GICA &lt;- mU
+estimate_template(BOLD=BOLD, GICA=mU, FC_nSamp=2000)
+
+## Not run: 
+ estimate_template(
+   run1_cifti_fnames, run2_cifti_fnames,
+   gICA_cifti_fname, brainstructures="all",
+   scale="global", TR=0.71, Q2=NULL, varTol=10
+ )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

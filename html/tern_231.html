@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_grob_tbl_at_risk</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to create patient-at-risk grobs</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a>
+</p>
+<p>Two graphical objects are obtained, one corresponding to row labeling and the second to the table of
+numbers of patients at risk. If <code>title = TRUE</code>, a third object corresponding to the table title is
+also obtained.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_grob_tbl_at_risk(data, annot_tbl, xlim, title = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> survival data as pre-processed by <code>h_data_plot</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>annot_tbl</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> annotation as prepared by <code>survival::summary.survfit()</code> which
+includes the number of patients at risk at given time points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlim</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> the maximum value on the x-axis (used to ensure the at risk table aligns with the KM
+graph).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether the "Patients at Risk" title should be added above the <code>annot_at_risk</code>
+table. Has no effect if <code>annot_at_risk</code> is <code>FALSE</code>. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named <code>list</code> of two <code>gTree</code> objects if <code>title = FALSE</code>: <code>at_risk</code> and <code>label</code>, or three
+<code>gTree</code> objects if <code>title = TRUE</code>: <code>at_risk</code>, <code>label</code>, and <code>title</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(survival)
+library(grid)
+
+fit_km &lt;- tern_ex_adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  survfit(formula = Surv(AVAL, 1 - CNSR) ~ ARMCD, data = .)
+
+data_plot &lt;- h_data_plot(fit_km = fit_km)
+
+xticks &lt;- h_xticks(data = data_plot)
+
+gg &lt;- h_ggkm(
+  data = data_plot,
+  censor_show = TRUE,
+  xticks = xticks, xlab = "Days", ylab = "Survival Probability",
+  title = "tt", footnotes = "ff", yval = "Survival"
+)
+
+# The annotation table reports the patient at risk for a given strata and
+# times (`xticks`).
+annot_tbl &lt;- summary(fit_km, times = xticks)
+if (is.null(fit_km$strata)) {
+  annot_tbl &lt;- with(annot_tbl, data.frame(n.risk = n.risk, time = time, strata = "All"))
+} else {
+  strata_lst &lt;- strsplit(sub("=", "equals", levels(annot_tbl$strata)), "equals")
+  levels(annot_tbl$strata) &lt;- matrix(unlist(strata_lst), ncol = 2, byrow = TRUE)[, 2]
+  annot_tbl &lt;- data.frame(
+    n.risk = annot_tbl$n.risk,
+    time = annot_tbl$time,
+    strata = annot_tbl$strata
+  )
+}
+
+# The annotation table is transformed into a grob.
+tbl &lt;- h_grob_tbl_at_risk(data = data_plot, annot_tbl = annot_tbl, xlim = max(xticks))
+
+# For the representation, the layout is estimated for which the decomposition
+# of the graphic element is necessary.
+g_el &lt;- h_decompose_gg(gg)
+lyt &lt;- h_km_layout(data = data_plot, g_el = g_el, title = "t", footnotes = "f")
+
+grid::grid.newpage()
+pushViewport(viewport(layout = lyt, height = .95, width = .95))
+grid.rect(gp = grid::gpar(lty = 1, col = "purple", fill = "gray85", lwd = 1))
+pushViewport(viewport(layout.pos.row = 3:4, layout.pos.col = 2))
+grid.rect(gp = grid::gpar(lty = 1, col = "orange", fill = "gray85", lwd = 1))
+grid::grid.draw(tbl$at_risk)
+popViewport()
+pushViewport(viewport(layout.pos.row = 3:4, layout.pos.col = 1))
+grid.rect(gp = grid::gpar(lty = 1, col = "green3", fill = "gray85", lwd = 1))
+grid::grid.draw(tbl$label)
+
+
+</code></pre>
+
+
+</div>

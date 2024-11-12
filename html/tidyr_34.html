@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gather</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Gather columns into key-value pairs</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#superseded"><img src="../help/figures/lifecycle-superseded.svg" alt="[Superseded]"></a>
+</p>
+<p>Development on <code>gather()</code> is complete, and for new code we recommend
+switching to <code>pivot_longer()</code>, which is easier to use, more featureful, and
+still under active development.
+<code>df %&gt;% gather("key", "value", x, y, z)</code> is equivalent to
+<code>df %&gt;% pivot_longer(c(x, y, z), names_to = "key", values_to = "value")</code>
+</p>
+<p>See more details in <code>vignette("pivot")</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gather(
+  data,
+  key = "key",
+  value = "value",
+  ...,
+  na.rm = FALSE,
+  convert = FALSE,
+  factor_key = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key, value</code></td>
+<td>
+<p>Names of new key and value columns, as strings or
+symbols.
+</p>
+<p>This argument is passed by expression and supports
+quasiquotation (you can unquote strings
+and symbols). The name is captured from the expression with
+<code>rlang::ensym()</code> (note that this kind of interface where
+symbols do not represent actual objects is now discouraged in the
+tidyverse; we support it here for backward compatibility).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>A selection of columns. If empty, all variables are
+selected. You can supply bare variable names, select all
+variables between x and z with <code>x:z</code>, exclude y with <code>-y</code>. For
+more options, see the <code>dplyr::select()</code> documentation. See also
+the section on selection rules below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>If <code>TRUE</code>, will remove rows from output where the
+value column is <code>NA</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>convert</code></td>
+<td>
+<p>If <code>TRUE</code> will automatically run
+<code>type.convert()</code> on the key column. This is useful if the column
+types are actually numeric, integer, or logical.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factor_key</code></td>
+<td>
+<p>If <code>FALSE</code>, the default, the key values will be
+stored as a character vector. If <code>TRUE</code>, will be stored as a factor,
+which preserves the original ordering of the columns.</p>
+</td>
+</tr>
+</table>
+<h3>Rules for selection</h3>
+
+<p>Arguments for selecting columns are passed to <code>tidyselect::vars_select()</code>
+and are treated specially. Unlike other verbs, selecting functions make a
+strict distinction between data expressions and context expressions.
+</p>
+
+<ul>
+<li>
+<p> A data expression is either a bare name like <code>x</code> or an expression
+like <code>x:y</code> or <code>c(x, y)</code>. In a data expression, you can only refer
+to columns from the data frame.
+</p>
+</li>
+<li>
+<p> Everything else is a context expression in which you can only
+refer to objects that you have defined with <code style="white-space: pre;">⁠&lt;-⁠</code>.
+</p>
+</li>
+</ul>
+<p>For instance, <code>col1:col3</code> is a data expression that refers to data
+columns, while <code>seq(start, end)</code> is a context expression that
+refers to objects from the contexts.
+</p>
+<p>If you need to refer to contextual objects from a data expression, you can
+use <code>all_of()</code> or <code>any_of()</code>. These functions are used to select
+data-variables whose names are stored in a env-variable. For instance,
+<code>all_of(a)</code> selects the variables listed in the character vector <code>a</code>.
+For more details, see the <code>tidyselect::select_helpers()</code> documentation.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># From https://stackoverflow.com/questions/1181060
+stocks &lt;- tibble(
+  time = as.Date("2009-01-01") + 0:9,
+  X = rnorm(10, 0, 1),
+  Y = rnorm(10, 0, 2),
+  Z = rnorm(10, 0, 4)
+)
+
+gather(stocks, "stock", "price", -time)
+stocks %&gt;% gather("stock", "price", -time)
+
+# get first observation for each Species in iris data -- base R
+mini_iris &lt;- iris[c(1, 51, 101), ]
+# gather Sepal.Length, Sepal.Width, Petal.Length, Petal.Width
+gather(mini_iris, key = "flower_att", value = "measurement",
+       Sepal.Length, Sepal.Width, Petal.Length, Petal.Width)
+# same result but less verbose
+gather(mini_iris, key = "flower_att", value = "measurement", -Species)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>triplesIP</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Integer program for finding optimal triples match</h2>
+
+<h3>Description</h3>
+
+<p>This finds the optimal triples match using a quadratic program. The 'gurobi'
+package should be installed if using this function. This function should not be
+used for large problems. Note that this solver may find a good solution even if not
+optimal; setting 'time_limit' is recommended. For most problems, [triples()] should
+be used instead to find a good approximate solution very quickly.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">triplesIP(z, cost, mt, mc, time_limit = Inf, threads = 1, verbose = 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>Treatment indicator vector. 0 for control, 1 for treated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cost</code></td>
+<td>
+<p>Matrix of costs. Rows correspond to treated units; columns to controls</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mt</code></td>
+<td>
+<p>The number of treated units to be used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mc</code></td>
+<td>
+<p>The number of control units to be used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_limit</code></td>
+<td>
+<p>The amount of time in seconds before the solver should abort</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>The number of threads that should be allocated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Whether the output of the 'gurobi' solver should be printed. 0 if not, 1 if so</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named list with two elements: 'match' and 'opt_info'. 'match' contains the triples match.
+Similarly to the [triples()] function, this is in the form of a
+data.frame with number of rows equal to the number of triples and 8 columns specifying the
+match number, the names of the three units within the match, the costs of the two
+treated-control pairs within the match, the number of treated units, and the stratum.
+'opt_info' contains technical output from the optimization solver.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>triples for an approximate solution
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Generate some data
+set.seed(1)
+n &lt;- 40
+x &lt;- rnorm(n, 0, 1)
+nt &lt;- floor(n * 0.4)
+nc &lt;- n - nt
+z &lt;- c(rep(1, nt), rep(0, nc))
+# Create some strata
+ps &lt;- glm(z ~ x, family = binomial)$fitted.values
+ps_st &lt;- cut(ps, c(0, quantile(ps, 1/3 * 1:2), 1), labels = 1:3)
+# Create a distance matrix
+dist &lt;- dist_mahal(data.frame(x = x), z, ps_st)
+# Construct the triples match using integer program for stratum 1
+mIP &lt;- triplesIP(z = z[ps_st == 1], cost = dist[[1]],
+                 mt = 5, mc = 7, time_limit = 30, threads = 1, verbose = 0)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,209 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compute_portfolio_returns</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute Portfolio Returns</h2>
+
+<h3>Description</h3>
+
+<p>This function computes individual portfolio returns based on specified
+sorting variables and sorting methods. The portfolios can be rebalanced every
+period or on an annual frequency by specifying a rebalancing month, which is
+only applicable at a monthly return frequency. The function supports
+univariate and bivariate sorts, with the latter supporting dependent and
+independent sorting methods.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compute_portfolio_returns(
+  sorting_data,
+  sorting_variables,
+  sorting_method,
+  rebalancing_month = NULL,
+  breakpoint_options_main,
+  breakpoint_options_secondary = NULL,
+  breakpoint_function_main = compute_breakpoints,
+  breakpoint_function_secondary = compute_breakpoints,
+  min_portfolio_size = 0,
+  data_options = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sorting_data</code></td>
+<td>
+<p>A data frame containing the dataset for portfolio
+assignment and return computation. Following CRSP naming conventions, the
+panel data must identify individual stocks with <code>permno</code> and the time point
+with <code>date</code>. It must contain columns for the sorting variables and
+<code>ret_excess</code>. Additionally, <code>mktcap_lag</code> is needed for value-weighted
+returns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sorting_variables</code></td>
+<td>
+<p>A character vector specifying the column names in
+<code>sorting_data</code> to be used for sorting and determining portfolio
+assignments. For univariate sorts, provide a single variable. For bivariate
+sorts, provide two variables, where the first string refers to the main
+variable and the second string refers to the secondary ("control")
+variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sorting_method</code></td>
+<td>
+<p>A string specifying the sorting method to be used.
+Possible values are:
+</p>
+
+<ul>
+<li> <p><code>"univariate"</code>: For a single sorting variable.
+</p>
+</li>
+<li> <p><code>"bivariate-dependent"</code>: For two sorting variables, where the main
+sort depends on the secondary variable.
+</p>
+</li>
+<li> <p><code>"bivariate-independent"</code>: For two independent sorting variables.
+</p>
+</li>
+</ul>
+<p>For bivariate sorts, the portfolio returns are averaged over the
+controlling sorting variable (i.e., the second sorting variable) and only
+portfolio returns for the main sorting variable (given as the first element
+of <code>sorting_variable</code>) are returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rebalancing_month</code></td>
+<td>
+<p>An integer between 1 and 12 specifying the month in
+which to form portfolios that are held constant for one year. For example,
+setting it to <code>7</code> creates portfolios in July that are held constant until
+June of the following year. The default <code>NULL</code> corresponds to periodic
+rebalancing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakpoint_options_main</code></td>
+<td>
+<p>A named list of breakpoint_options passed to
+<code>breakpoint_function</code> for the main sorting variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakpoint_options_secondary</code></td>
+<td>
+<p>An optional named list of breakpoint_options
+passed to <code>breakpoint_function</code> for the secondary sorting variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakpoint_function_main</code></td>
+<td>
+<p>A function to compute the main sorting
+variable. The default is set to compute_breakpoints.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakpoint_function_secondary</code></td>
+<td>
+<p>A function to compute the secondary
+sorting variable. The default is set to compute_breakpoints.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_portfolio_size</code></td>
+<td>
+<p>An integer specifying the minimum number of
+portfolio constituents (default is set to <code>0</code>, effectively deactivating the
+check). Small portfolios' returns are set to zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_options</code></td>
+<td>
+<p>A named list of data_options with characters, indicating
+the column names required to run this function.  The required column names identify dates,
+the stocks, and returns. Defaults to <code>date=date</code>, <code>id=permno</code>, and <code>ret_excess = ret_excess</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function checks for consistency in the provided arguments. For
+univariate sorts, a single sorting variable and a corresponding number of
+portfolios must be provided. For bivariate sorts, two sorting variables and
+two corresponding numbers of portfolios (or percentiles) are required. The
+sorting method determines how portfolios are assigned and returns are
+computed. The function handles missing and extreme values appropriately
+based on the specified sorting method and rebalancing frequency.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame with computed portfolio returns, containing the
+following columns:
+</p>
+
+<ul>
+<li> <p><code>portfolio</code>: The portfolio identifier.
+</p>
+</li>
+<li> <p><code>date</code>: The date of the portfolio return.
+</p>
+</li>
+<li> <p><code>ret_excess_vw</code>: The value-weighted excess return of the portfolio
+(only computed if the <code>sorting_data</code> contains <code>mktcap_lag</code>)
+</p>
+</li>
+<li> <p><code>ret_excess_ew</code>: The equal-weighted excess return of the portfolio.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>Ensure that the <code>sorting_data</code> contains all the required columns: The
+specified sorting variables and <code>ret_excess</code>. The function will stop and
+throw an error if any required columns are missing.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Univariate sorting with periodic rebalancing
+data &lt;- data.frame(
+  permno = 1:500,
+  date = rep(seq.Date(from = as.Date("2020-01-01"), by = "month", length.out = 100), each = 10),
+  mktcap_lag = runif(500, 100, 1000),
+  ret_excess = rnorm(500),
+  size = runif(500, 50, 150)
+)
+
+compute_portfolio_returns(
+  data, "size", "univariate",
+  breakpoint_options_main = breakpoint_options(n_portfolios = 5)
+)
+
+# Bivariate dependent sorting with annual rebalancing
+compute_portfolio_returns(
+  data, c("size", "mktcap_lag"), "bivariate-independent", 7,
+  breakpoint_options_main = breakpoint_options(n_portfolios = 5),
+  breakpoint_options_secondary = breakpoint_options(n_portfolios = 3),
+)
+
+</code></pre>
+
+
+</div>

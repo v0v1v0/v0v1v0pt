@@ -1,0 +1,178 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fitting Trimmed Mean Linear Models:</h2>
+
+<h3>Description</h3>
+
+<p><code>tm</code> performs a trimmed means analysis for data with a continuous outcome/response and a binary
+treatment/exposure variable. Outcomes are sorted and trimmed per treatment group, and a linear
+regression is fitted using <code>lm</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm(
+  formula,
+  GR,
+  trF = NULL,
+  side = c("LOW", "HIGH"),
+  n_perm = 1000,
+  adj_est = FALSE,
+  data
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>an object of class <code>formula</code>, specifying the model, of the form
+<code>outcome ~ terms</code>, where <code>terms</code> must include the binary treatment variable, with additional
+variables optional.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GR</code></td>
+<td>
+<p>a string denoting the name of the binary treatment variable. This function assumes the
+lowest value to be the comparator/reference group</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trF</code></td>
+<td>
+<p>a number between 0 and 1, specifying the trimming fraction: the proportion of the data that is trimmed away
+for each treatment group. <code>trF</code> should be equal to or greater than the largest observed
+dropout proportion. If left unspecified, a default trimming fraction of 0.5 is assumed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>side</code></td>
+<td>
+<p>specifies if higher value trimming (<code>"HIGH"</code>) or lower value trimming (<code>"LOW"</code>) should be performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_perm</code></td>
+<td>
+<p>the number of permutations performed to obtain the p-value and 95% confidence intervals
+for the estimates. Default is 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj_est</code></td>
+<td>
+<p>logical. If <code>TRUE</code> the adjusted trimmed means estimate is computed. The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data frame containing the variables in the model. <code>data</code> should contain at least the following:
+a numeric outcome variable and a binary treatment variable (numeric, character or factor).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>tm</code> returns an object of class <code>tm</code>.
+The function <code>summary</code> is used to obtain a summary of the results. The generic accessor function
+<code>coefficients</code> extracts the regression coefficients with corresponding p-values and 95% confidence intervals.
+</p>
+<p>An object of class "<code>tm</code>" is a list containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>the matched call</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>the number of observations per treatment group</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dropout</code></td>
+<td>
+<p>the proportion of dropout per treatment group</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trimfrac</code></td>
+<td>
+<p>the proportion of data that was trimmed away per treatment group</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trimside</code></td>
+<td>
+<p>specifies if lower or higher value trimming was performed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_after_trimming</code></td>
+<td>
+<p>the number of observations per treatment group after trimming</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefficients</code></td>
+<td>
+<p>an array of coefficients with corresponding p-values and 95% confidence intervals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Analysis_details</code></td>
+<td>
+<p>reiterates trimming fraction and side, and, for adjest=TRUE specifies if the adjustment was performed on the comparator or treatment group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SD_outcome</code></td>
+<td>
+<p>an array of the standard deviation per treatment group, for the observed outcomes and for the trimmed outcomes</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The trimmed means estimate is subject to two assumptions: the strong MNAR assumption requires
+that all dropouts (unobserved outcome values) are located in the fraction of the distribution
+that is trimmed away; the location shift assumption requires the group variances of the full sample
+to be equal. The adjusted trimmed means estimator relaxes the latter, but assumes normally
+distributed outcomes. The adjustment is performed on the group with the smallest dropout proportion.
+</p>
+<p>The p-value and 95% confidence intervals for the trimmed means estimate and the adjusted trimmed means
+estimate are obtained in a permutation approach.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(123456)
+test_dat &lt;- as.data.frame(cbind(c(rep(0, 500), rep(1, 500)),
+                          c(sort(rnorm(500, 0, 1)), sort(rnorm(500, 1, 1.5))),
+                          rbinom(1000, 2, 0.4), rnorm(1000, 0, 1)))
+colnames(test_dat) &lt;- c("TR", "Y", "U", "U2")
+test_dat$Y[1:200] &lt;- NA
+# Note that we usually recommend setting n_perm to a larger value, e.g., 1000
+tm_obj &lt;- tm(formula= Y ~ TR + U + U2,
+             GR = "TR", trF = 0.5, side = "LOW",
+             n_perm = 100, adj_est = TRUE, data = test_dat)
+print(tm_obj)
+summary(tm_obj)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,360 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>MorphyBootstrap</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Parsimony Ratchet</h2>
+
+<h3>Description</h3>
+
+<p><code>Ratchet()</code> uses the parsimony ratchet (Nixon 1999)
+to search for a more parsimonious tree using custom optimality criteria.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">MorphyBootstrap(
+  edgeList,
+  morphyObj,
+  EdgeSwapper = NNISwap,
+  maxIter,
+  maxHits,
+  verbosity = 1L,
+  stopAtPeak = FALSE,
+  stopAtPlateau = 0L,
+  ...
+)
+
+Ratchet(
+  tree,
+  dataset,
+  InitializeData = PhyDat2Morphy,
+  CleanUpData = UnloadMorphy,
+  TreeScorer = MorphyLength,
+  Bootstrapper = MorphyBootstrap,
+  swappers = list(TBRSwap, SPRSwap, NNISwap),
+  BootstrapSwapper = if (is.list(swappers)) swappers[[length(swappers)]] else swappers,
+  returnAll = FALSE,
+  stopAtScore = NULL,
+  stopAtPeak = FALSE,
+  stopAtPlateau = 0L,
+  ratchIter = 100,
+  ratchHits = 10,
+  searchIter = 4000,
+  searchHits = 42,
+  bootstrapIter = searchIter,
+  bootstrapHits = searchHits,
+  verbosity = 1L,
+  suboptimal = sqrt(.Machine[["double.eps"]]),
+  ...
+)
+
+MultiRatchet(
+  tree,
+  dataset,
+  ratchHits = 10,
+  searchIter = 500,
+  searchHits = 20,
+  verbosity = 0L,
+  swappers = list(RootedNNISwap),
+  nSearch = 10,
+  stopAtScore = NULL,
+  ...
+)
+
+RatchetConsensus(
+  tree,
+  dataset,
+  ratchHits = 10,
+  searchIter = 500,
+  searchHits = 20,
+  verbosity = 0L,
+  swappers = list(RootedNNISwap),
+  nSearch = 10,
+  stopAtScore = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>edgeList</code></td>
+<td>
+<p>a list containing the following:
+- vector of integers corresponding to the parent of each edge in turn
+- vector of integers corresponding to the child of each edge in turn
+- (optionally) score of the tree
+- (optionally, if score provided) number of times this score has been hit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>morphyObj</code></td>
+<td>
+<p>Object of class <code>morphy</code>, perhaps created with
+<code>PhyDat2Morphy()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>EdgeSwapper</code></td>
+<td>
+<p>a function that rearranges a parent and child vector,
+and returns a list with modified vectors; for example <code>SPRSwap()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxIter</code></td>
+<td>
+<p>Numeric specifying maximum number of iterations to perform in
+tree search.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxHits</code></td>
+<td>
+<p>Numeric specifying maximum number of hits to accomplish in
+tree search.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbosity</code></td>
+<td>
+<p>Numeric specifying level of detail to display in console:
+larger numbers provide more verbose feedback to the user.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopAtPeak</code></td>
+<td>
+<p>Logical specifying whether to terminate search once a
+subsequent iteration recovers a sub-optimal score.
+Will be overridden if a passed function has an attribute <code>stopAtPeak</code> set by
+<code>attr(FunctionName, "stopAtPeak") &lt;- TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopAtPlateau</code></td>
+<td>
+<p>Integer. If &gt; 0, tree search will terminate if the score
+has not improved after <code>stopAtPlateau</code> iterations.
+Will be overridden if a passed function has an attribute <code>stopAtPlateau</code> set
+by <code>attr(FunctionName, "stopAtPlateau") &lt;- TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments to pass to <code>TreeScorer()</code>, e.g. <code style="white-space: pre;">⁠dataset = ⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A tree of class <code>phylo</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>a dataset in the format required by <code>TreeScorer()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>InitializeData</code></td>
+<td>
+<p>Function that sets up data object to prepare for tree search.
+The function will be passed the <code>dataset</code> parameter.
+Its return value will be passed to <code>TreeScorer()</code> and <code>CleanUpData()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CleanUpData</code></td>
+<td>
+<p>Function to destroy data object on function exit.
+The function will be passed the value returned by <code>InitializeData()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TreeScorer</code></td>
+<td>
+<p>function to score a given tree.
+The function will be passed three parameters, corresponding to the
+<code>parent</code> and <code>child</code> entries of a tree's edge list, and a dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Bootstrapper</code></td>
+<td>
+<p>Function to perform bootstrapped rearrangements of tree.
+First arguments will be an <code>edgeList</code> and a dataset, initialized using
+<code>InitializeData()</code>. Should return a rearranged <code>edgeList</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>swappers</code></td>
+<td>
+<p>A list of functions to use to conduct edge rearrangement during tree search.
+Provide functions like <code>NNISwap</code> to shuffle root position,
+or <code>RootedTBRSwap</code> if the position of the root should be retained.
+You may wish to use extreme swappers (such as <abbr><span class="acronym">TBR</span></abbr>) early in the list,
+and a more subtle rearranger (such as <abbr><span class="acronym">NNI</span></abbr>) later in the list to make
+incremental tinkerings once an almost-optimal tree has been found.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BootstrapSwapper</code></td>
+<td>
+<p>Function such as <code>RootedNNISwap</code> to use
+to rearrange trees within <code>Bootstrapper()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returnAll</code></td>
+<td>
+<p>Set to <code>TRUE</code> to report all MPTs encountered during the
+search, perhaps to analyse consensus.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopAtScore</code></td>
+<td>
+<p>stop search as soon as this score is hit or beaten.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ratchIter</code></td>
+<td>
+<p>Stop when this many ratchet iterations have been performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ratchHits</code></td>
+<td>
+<p>Stop when this many ratchet iterations have found the same
+best score.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>searchIter</code></td>
+<td>
+<p>Integer specifying maximum rearrangements to perform on each bootstrap or
+ratchet iteration.
+To override this value for a single swapper function, set e.g.
+<code>attr(SwapperFunction, "searchIter") &lt;- 99</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>searchHits</code></td>
+<td>
+<p>Integer specifying maximum times to hit best score before terminating a tree
+search within a ratchet iteration.
+To override this value for a single swapper function, set e.g.
+<code>attr(SwapperFunction, "searchHits") &lt;- 99</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bootstrapIter</code></td>
+<td>
+<p>Integer specifying maximum rearrangements to perform on each bootstrap
+iteration (default: <code>searchIter</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bootstrapHits</code></td>
+<td>
+<p>Integer specifying maximum times to hit best score on each bootstrap
+iteration (default: <code>searchHits</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>suboptimal</code></td>
+<td>
+<p>retain trees that are suboptimal by this score.
+Defaults to a small value that will counter rounding errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nSearch</code></td>
+<td>
+<p>Number of Ratchet searches to conduct
+(for <code>RatchetConsensus()</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For usage pointers, see the
+<a href="https://ms609.github.io/TreeSearch/articles/custom.html">vignette</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>MorphyBootstrap()</code> returns a tree that is optimal under a random
+sampling of the original characters.
+</p>
+<p><code>Ratchet()</code> returns a tree modified by parsimony ratchet iterations.
+</p>
+<p><code>MultiRatchet()</code> returns a list of optimal trees
+produced by <code>nSearch</code>
+ratchet searches, from which a consensus tree can be generated using
+<code>ape::consensus()</code> or <code>TreeTools::ConsensusWithout()</code>.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul><li> <p><code>RatchetConsensus()</code>: deprecated alias for <code>MultiRatchet()</code>
+</p>
+</li></ul>
+<h3>Author(s)</h3>
+
+<p><a href="https://smithlabdurham.github.io/">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Nixon KC (1999).
+“The Parsimony Ratchet, a new method for rapid parsimony analysis.”
+<em>Cladistics</em>, <b>15</b>(4), 407–414.
+ISSN 0748-3007, <a href="https://doi.org/10.1111/j.1096-0031.1999.tb00277.x">doi:10.1111/j.1096-0031.1999.tb00277.x</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul><li>
+<p> Adapted from <code>pratchet()</code> in the
+<span class="pkg">phangorn</span> package.
+</p>
+</li></ul>
+<p>Other custom search functions: 
+<code>EdgeListSearch()</code>,
+<code>Jackknife()</code>,
+<code>SuccessiveApproximations()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("Lobo", package = "TreeTools")
+njtree &lt;- TreeTools::NJTree(Lobo.phy)
+# Increase value of ratchIter and searchHits to do a proper search
+quickResult &lt;- Ratchet(njtree, Lobo.phy, ratchIter = 2, searchHits = 3)
+
+# Plot result (legibly)
+oldPar &lt;- par(mar = rep(0, 4), cex = 0.75)
+plot(quickResult)
+par(oldPar)
+</code></pre>
+
+
+</div>

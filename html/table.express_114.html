@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>transmute_sd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transmute subset of data</h2>
+
+<h3>Description</h3>
+
+<p>Like transmute-table.express but for a single call and maybe specifying <code>.SDcols</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">transmute_sd(.data, .SDcols = everything(), .how = identity, ...)
+
+## S3 method for class 'ExprBuilder'
+transmute_sd(
+  .data,
+  .SDcols = everything(),
+  .how = identity,
+  ...,
+  .parse = getOption("table.express.parse", FALSE),
+  .chain = getOption("table.express.chain", TRUE)
+)
+
+## S3 method for class 'EagerExprBuilder'
+transmute_sd(.data, ..., .parent_env = rlang::caller_env())
+
+## S3 method for class 'data.table'
+transmute_sd(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>An instance of ExprBuilder.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.SDcols</code></td>
+<td>
+<p>See data.table::data.table and the details here.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.how</code></td>
+<td>
+<p>The function(s) or function call(s) that will perform the transformation. If many,
+a list should be used, either with <code>list()</code> or <code>.()</code>. If the list is named, the names will be
+used for the new columns' names. Lambdas specified as formulas are supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Possibly more arguments for <em>all</em> functions/calls in <code>.how</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.parse</code></td>
+<td>
+<p>Logical. Whether to apply <code>rlang::parse_expr()</code> to obtain the expressions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.chain</code></td>
+<td>
+<p>Logical. Should a new frame be automatically chained to the expression if the
+clause being set already exists?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.parent_env</code></td>
+<td>
+<p>See <code>end_expr()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Like transmute-table.express, this function never modifies the input by reference. This
+function adds/chains a <code>select</code> expression that will be evaluated by data.table::data.table,
+possibly specifying the helper function <code>.transmute_matching</code>, which is assigned to the final
+expression's evaluation environment when calling <code>end_expr()</code> (i.e., ExprBuilder's <code>eval</code>
+method).
+</p>
+<p>Said function supports two pronouns that can be used by <code>.how</code> and <code>.SDcols</code>:
+</p>
+
+<ul>
+<li> <p><code>.COL</code>: the actual values of the column.
+</p>
+</li>
+<li> <p><code>.COLNAME</code>: the name of the column currently being evaluated.
+</p>
+</li>
+</ul>
+<p>Additionally, lambdas specified as formulas are also supported. In those cases, <code>.x</code> is
+equivalent to <code>.COL</code> and <code>.y</code> to <code>.COLNAME</code>.
+</p>
+<p>Unlike a call like <code>DT[, (vars) := expr]</code>, <code>.SDcols</code> can be created dynamically with an
+expression that evaluates to something that would be used in place of <code>vars</code> <em>without</em> eagerly
+using the captured <code>data.table</code>. See the examples here or in table.express-package.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data("mtcars")
+
+data.table::as.data.table(mtcars) %&gt;%
+    transmute_sd(~ grepl("^d", .y), ~ .x * 2)
+
+data.table::as.data.table(mtcars) %&gt;%
+    transmute_sd(~ is.numeric(.x), ~ .x * 2)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>grid-editor</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Grid editor for columns</h2>
+
+<h3>Description</h3>
+
+<p>Allow to edit content of columns with different inputs,
+then retrieve value server-side in shiny application with <code style="white-space: pre;">⁠input$&lt;outputId&gt;_data⁠</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">grid_editor(
+  grid,
+  column,
+  type = c("text", "number", "checkbox", "select", "radio", "password"),
+  choices = NULL,
+  validation = validateOpts(),
+  useListItemText = FALSE
+)
+
+grid_editor_opts(
+  grid,
+  editingEvent = c("dblclick", "click"),
+  actionButtonId = NULL,
+  session = shiny::getDefaultReactiveDomain()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>A table created with <code>datagrid()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column</code></td>
+<td>
+<p>Column for which to activate the editable content.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Type of editor: <code>"text"</code>, <code>"number"</code>, <code>"checkbox"</code>,
+<code>"select"</code>, <code>"radio"</code> or <code>"password"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choices</code></td>
+<td>
+<p>Vector of choices, required for <code>"checkbox"</code>,
+<code>"select"</code> and <code>"radio"</code> type.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validation</code></td>
+<td>
+<p>Rules to validate content edited, see <code>validateOpts()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>useListItemText</code></td>
+<td>
+<p>If <code>choices</code> contains special characters (spaces, punctuation, ...)
+set this option to <code>TRUE</code>, you'll have to encode data in <code>column</code> to numeric as character (e.g. <code>"1"</code>, <code>"2"</code>, ...).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>editingEvent</code></td>
+<td>
+<p>If set to <code>"click"</code>, editable cell in
+the view-mode will be changed to edit-mode by a single click.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>actionButtonId</code></td>
+<td>
+<p>Use an <code>actionButton</code> inputId to send
+edited data to the server only when this button is clicked.
+This allows not to send all the changes made by the user to the server.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>session</code></td>
+<td>
+<p>Shiny session.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>datagrid</code> htmlwidget.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>grid_editor_date</code> for a date picker.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(toastui)
+library(shiny)
+
+ui &lt;- fluidPage(
+  tags$h2("Edit grid demo"),
+  fluidRow(
+    column(
+      width = 6,
+      tags$p(
+        "Each time you modify the grid, data is send to server"
+      ),
+      datagridOutput("grid1"),
+      verbatimTextOutput("edited1")
+    ),
+    column(
+      width = 6,
+      tags$p(
+        "Modify the grid, then click button to send data to server"
+      ),
+      datagridOutput("grid2"),
+      actionButton(
+        inputId = "update2", 
+        label = "Update edited data", 
+        class = "btn-block"
+      ),
+      verbatimTextOutput("edited2")
+    )
+  )
+)
+
+server &lt;- function(input, output, session) {
+  
+  # Use same grid twice
+  editdata &lt;- data.frame(
+    character = month.name,
+    select = month.name,
+    checkbox = month.abb,
+    radio = month.name
+  )
+  editgrid &lt;- datagrid(editdata) %&gt;% 
+    grid_editor(
+      column = "character",
+      type = "text"
+    ) %&gt;% 
+    grid_editor(
+      column = "select",
+      type = "select",
+      choices = month.name
+    ) %&gt;% 
+    grid_editor(
+      column = "checkbox",
+      type = "checkbox",
+      choices = month.abb
+    ) %&gt;% 
+    grid_editor(
+      column = "radio",
+      type = "radio",
+      choices = month.name
+    )
+  
+  output$grid1 &lt;- renderDatagrid({
+    editgrid
+  })
+  
+  output$edited1 &lt;- renderPrint({
+    input$grid1_data
+  })
+  
+  output$grid2 &lt;- renderDatagrid({
+    editgrid %&gt;%
+      grid_editor_opts(
+        actionButtonId = "update2"
+      )
+  })
+  
+  output$edited2 &lt;- renderPrint({
+    input$grid2_data
+  })
+  
+}
+
+if (interactive())
+  shinyApp(ui, server)
+</code></pre>
+
+
+</div>

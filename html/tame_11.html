@@ -1,0 +1,331 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>medic</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Medication clustering (based on ATC and timing)</h2>
+
+<h3>Description</h3>
+
+<p>The <code>medic</code> method uses agglomerative hierarchical clustering with a
+bespoke distance measure based on medication ATC codes similarities,
+medication timing and medication amount or dosage.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">medic(
+  data,
+  k = 5,
+  id,
+  atc,
+  timing,
+  base_clustering,
+  linkage = "complete",
+  summation_method = "sum_of_minima",
+  alpha = 1,
+  beta = 1,
+  gamma = 1,
+  p = 1,
+  theta = (5:0)/5,
+  parallel = FALSE,
+  return_distance_matrix = FALSE,
+  set_seed = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame containing all the variables for the clustering.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>a vector specifying the number of clusters to identify.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; An unquoted
+expression naming the variable in <code>data</code> describing person id.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>atc</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; An unquoted
+expression naming the variable in <code>data</code> containing ATC codes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timing</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; An unquoted
+expression naming the variable or variables in <code>data</code> describing
+medication timing. Variable names can be used as if they were positions in
+the data frame, so expressions like x:y can be used to select a range of
+variables. Moreover, pattern matching selection helpers such as
+<code>starts_with</code> or
+<code>num_range</code> may also be used to select timing
+variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base_clustering</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; An
+unquoted expression naming the variable in <code>data</code> that gives an initial
+clustering to start the <code>medic</code> from or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linkage</code></td>
+<td>
+<p>The agglomeration method to be used in the clustering. This
+should be (an unambiguous abbreviation of) one of "ward.D", "ward.D2",
+"single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median"
+(= WPGMC) or "centroid" (= UPGMC). See stats::hclust for more
+information. For a discussion of linkage criterion choice see
+<em>details</em> below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summation_method</code></td>
+<td>
+<p>The summation method used in the distance measure.
+This  should be either "double_sum" or "sum_of_minima". See
+<em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>A number giving the tuning of the normalization. See
+<em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>A number giving the power of the individual medication
+combinations. See <em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>A number giving the weight of the timing terms. See
+<em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>The power of the Minkowski distance used in the timing-specific
+distance. See <em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>A vector of length 6 specifying the tuning of the ATC measure.
+See <em>details</em> below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>A logical or an integer. If <code>FALSE</code>, the default, no
+parallelization is done.
+</p>
+<p>If <code>TRUE</code> or an integer larger than 2L parallelization is implemented via
+parLapply from the <strong>parallel</strong> package. When
+<code>parallel</code> is <code>TRUE</code> the number of clusters
+is set to detectCores - 1, and when <code>parallel</code> is
+an integer then the number of clusters is set to
+<code>parallel</code>. For more details on the parallelization method see
+parallel::parLapply.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_distance_matrix</code></td>
+<td>
+<p>A logical.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>set_seed</code></td>
+<td>
+<p>A logical or an integer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments not currently in use.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>medic</code> method uses agglomerative hierarchical
+clustering with a bespoke distance measure based on medication ATC codes and
+timing similarities to assign medication pattern clusters to people.
+</p>
+<p>Two versions of the distance measure are available:
+</p>
+<p>The <em>double sum</em>:
+</p>
+<p style="text-align: center;"><code class="reqn">%
+  d(p_i, p_j) = N_{\alpha}(M_i \times M_j) \sum_{m\in M_i}\sum_{n \in M_j}%
+  ((1 + D_{\theta}(m,n)) (1 + \gamma T_p(t_{im},t_{jn})) - 1)^{\beta}.%
+</code>
+</p>
+
+<p>and the <em>sum of minima</em>:
+</p>
+<p style="text-align: center;"><code class="reqn">%
+  d(p_i, p_j) = \frac{1}{2}(N_{\alpha}(M_i)\sum_{m\in M_i}\min_{n \in M_j}%
+  ((1 + D_{\theta}(m,n)) (1 + \gamma T_p(t_{im},t_{jn})) - 1)^{\beta} +
+  N_{\alpha}(M_j) \sum_{n\in M_j}\min_{m \in M_i}%
+  ((1 + D_{\theta}(m,n)) (1 + \gamma T_p(t_{im},t_{jn})) - 1)^{\beta}).%
+</code>
+</p>
+
+
+
+<h4>Normalization</h4>
+
+<p style="text-align: center;"><code class="reqn">%
+  N_{\alpha}(x) = |x|^{-\alpha}%
+</code>
+</p>
+
+<p>If the normalization tuning, <code>alpha</code>, is 0, then no normalization is
+preformed and the distance measure becomes highly dependent on the number of
+distinct medications given. That is, people using more medication will have
+larger distances to others. If the normalization tuning, <code>alpha</code>, is 1 -
+the default - then the summation is normalized with the number of terms in
+the sum, in other words, the average is calculated.
+</p>
+
+
+
+<h4>ATC distance</h4>
+
+<p>The central idea of this method, namely the ATC distance, is given as
+</p>
+<p style="text-align: center;"><code class="reqn">%
+  D_{\theta}(x, y) = \sum_{i=1,...,5}1\{x and y match on level i, but not level i + 1\}\theta_i%
+</code>
+</p>
+
+<p>The ATC distance is tuned using the vector <code>theta</code>.
+</p>
+<p>Note that two ATC codes are said to match at level i when they are identical
+at level i. E.g. the two codes N06AB01 and N06AA01 match on level 1, 2, and 3
+as they are both "N" at level 1, "N06" at level 2, and "N06A" at level 3,
+but at level 4 they differ ("N06AB" and "N06AA" are not the same).
+</p>
+
+
+
+<h4>Timing distance</h4>
+
+<p>The timing distance is a simple Minkowski distance:
+</p>
+<p style="text-align: center;"><code class="reqn">%
+  T(x,y) =(\sum_{t \in T} |x_t - y_t|^p)^{1/p}.%
+</code>
+</p>
+
+<p>When <code>p</code> is 1, the default, the Manhattan distance is used.
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>An object of class <em>medic</em> which describes the clusters produced
+the hierarchical clustering process. The object is a list with components:
+</p>
+
+<dl>
+<dt>data</dt>
+<dd>
+<p>the inputted data frame <code>data</code> with the cluster
+assignments appended at the end.</p>
+</dd>
+<dt>clustering</dt>
+<dd>
+<p>a data frame with the person id as given by <code>id</code>,
+the <code>.analysis_order</code> and the clusters found.</p>
+</dd>
+<dt>variables</dt>
+<dd>
+<p>a list of the variables used in the clustering.</p>
+</dd>
+<dt>parameters</dt>
+<dd>
+<p>a data frame with all the inputted clustering
+parameters and the corresponding method names. These method names
+correspond to the column names for each cluster in the <code>clustering</code>
+data frame described right above.</p>
+</dd>
+<dt>key</dt>
+<dd>
+<p>a list of keys used internally in the function to keep track of
+simplified versions of the data.</p>
+</dd>
+<dt>distance_matrix</dt>
+<dd>
+<p>the distance matrices for each method if
+<code>return_distance_matrix</code> is <code>TRUE</code> otherwise <code>NULL</code>.</p>
+</dd>
+<dt>call</dt>
+<dd>
+<p>the matched call.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p>summary.medic for summaries and plots.
+</p>
+<p>employ for employing an existing clustering to new data.
+</p>
+<p>enrich for enriching the meta data in the <code>medic</code> object with additional
+data.
+</p>
+<p>bind for binding together two comparable lists of clusterings.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># A simple clustering based only on ATC
+clust &lt;- medic(complications, id = id, atc = atc, k = 3)
+
+# A simple clustering with both ATC and timing
+clust &lt;- medic(
+  complications,
+  id = id,
+  atc = atc,
+  timing = first_trimester:third_trimester,
+  k = 3
+)
+
+
+</code></pre>
+
+
+</div>

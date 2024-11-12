@@ -1,0 +1,233 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>calc_rcsize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Constrained Display Sizes of Each Table Row, Column and Entry </h2>
+
+<h3>Description</h3>
+
+<p>Calculate the display widths (in mm) of each table column, heights of each
+table row, and horizontal and vertical dimensions of each table entry.
+Calculations may use the constraints imposed by <code>minwidth</code> and
+<code>maxwidth</code> for each entry.  This is an internal utility function, not
+intended to be called by package users.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">calc_rcsize(entryInfo, vrule_hsize, hrule_vsize, sizeAdjust, 
+    nominal_rcmin, method)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>entryInfo</code></td>
+<td>
+<p>A <code>prEntries</code> data frame with one row per table entry.  (Currently
+disabled entries are not allowed.)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vrule_hsize</code></td>
+<td>
+<p>Numeric vector with length (# table columns) + 1, giving the horizontal
+dimensions, in mm, of vertical rules in the table.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hrule_vsize</code></td>
+<td>
+<p>Numeric vector with length (# table rows) + 1, giving the vertical
+dimensions, in mm, of horizontal rules in the table.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sizeAdjust</code></td>
+<td>
+<p>Two-element numeric vector containing multipliers to adjust the calculated
+absolute size of table text, when determining row and column sizes.
+Essentially fudge factors.  The first element is applied to the horizontal
+dimension and the second to the vertical dimension.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nominal_rcmin</code></td>
+<td>
+<p>A nominal minimum size for any row or column, in mm.  It is used to avoid
+division by 0 when calculating the proportional change in size due to
+constraints, when <code>method</code> is 2-5.  Large size adjustments are
+disfavored for rows or columns whose actual size is less than this value.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Which algorithm/objective function is used for the constrained
+optimization problem. </p>
+ <ul>
+<li>
+<p> 0 : <code>minwidth</code>, <code>maxwidth</code>
+constraints on entries are ignored; no wrapping. </p>
+</li>
+<li>
+<p> 1 : <code>minwidth</code>
+constraints are respected but <code>maxwidth</code> is ignored; no wrapping.
+</p>
+</li>
+<li>
+<p> 2 : Proportional size changes are calculated with <code>max(&lt;natural
+width&gt;, nominal_rcmin)</code> replacing <code>&lt;natural width&gt;</code> in the
+denominator. </p>
+</li>
+<li>
+<p> 3 : Proportional size changes are calculated with
+<code>max(&lt;natural width&gt;, nominal_rcmin)</code> replacing <code>&lt;natural
+width&gt;</code> in both the numerator and denominator. </p>
+</li>
+<li>
+<p> 4 or 5 : Same as 2 or
+3 but with the sum <code>&lt;natural width&gt; + nominal_rcmin</code> instead of their
+max. </p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Entries can span multiple columns and rows, and can have constraints on
+their minimum and maximum widths.  This function calculates row and column
+dimensions that satisfy the constraints while minimizing an objective
+function that measures deviations from their natural sizes.  They are the
+solution to a quadratic programming problem.  An error will be raised if
+the QP has no solution (e.g., if <code>minwidth</code> and <code>maxwidth</code>
+collectively, over all entries, are inconsistent).
+</p>
+<p><code>minwidth</code> and <code>maxwidth</code> are in the text's frame of reference,
+and may be expressed in two forms.  Positive values are interpreted as
+absolute widths in millimeters, and *should* include the amount of any
+padding specified by <code>hpad</code> (when <code>angle</code> is 0 or 180 degrees)
+or <code>vpad</code> (when <code>angle</code> is 90 or 270 degrees), as well as
+scaling by <code>sizeAdjust</code>.  Negative values are interpreted as
+multiples of the natural text width without wrapping and *without*
+including padding or <code>sizeAdjust</code>.  Thus setting <code>minwidth</code> for
+an entry to -1 will guarantee that the width of the spanned cell(s) will
+be at least enough to contain it without wrapping. </p>
+ <ul>
+<li>
+<p> An NA
+value for <code>minwidth</code> means there is no constraint on minimum width,
+and is equivalent to 0.  An <code>Inf</code> value for <code>maxwidth</code> means
+there is no constraint on maximum width.  In the absence of constraints,
+the internal algorithm favors widths as close as possible to the natural
+width of the entry text, without wrapping. </p>
+</li>
+<li>
+<p> An NA value for
+<code>maxwidth</code> means the maximum width will be determined passively from
+the <code>maxwidth</code> values of other entries in the same table column(s)
+(if <code>angle</code> is 0 or 180) or row(s) (if <code>angle</code> is 90 or 270).
+(It will never be less than <code>minwidth</code>.) This may be useful for table
+titles and footnotes, where long text should be wrapped to fit widths
+implied by the other table entries. </p>
+</li>
+<li>
+<p> Setting <code>maxwidth</code> to NA or
+to a finite value <code>&gt; -1</code> and <code>&lt; Inf</code> means the spanned cell(s)
+may not be wide enough to hold the text without wrapping it into multiple
+lines. </p>
+</li>
+<li>
+<p> The general effect of setting <code>minwidth</code> to a non-zero
+value is to reduce or prevent text wrapping, while the general effect of
+setting <code>maxwidth</code> to NA or a finite value is to encourage wrapping.
+Settings for one entry may affect the width and wrapping of other entries,
+because column widths and row heights for the table as a whole must
+satisfy the constraints for all their entries. </p>
+</li>
+<li>
+<p> Text representing
+<code>plotmath</code> expressions cannot be wrapped, so <code>maxwidth</code> should
+be <code>Inf</code> or <code>&lt;= -1</code> for such entries. </p>
+</li>
+</ul>
+<p><code>method=0</code> ignores <code>minwidth</code> and <code>maxwidth</code> when
+determining row and column sizes.  However a warning will be raised if the
+resulting sizes violate the constraints for any enabled entries.
+</p>
+
+
+<h3>Value</h3>
+
+<p>List with components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>hsizeCol</code></td>
+<td>
+<p>Numeric vector of display widths for each table column, in mm.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vsizeRow</code></td>
+<td>
+<p>Numeric vector of display heights for each table row, in mm.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sizeInfo</code></td>
+<td>
+<p>Data frame with one row per table entry.  Columns are <code>hsize</code> and
+<code>vsize</code> (the horizontal and vertical dimensions of entry text, as it
+would be displayed by <code>geom_text</code>, <code>geom_richtext</code>, or
+<code>geom_textbox</code> after applying any min or max contraints);
+<code>horiz</code> (logical, TRUE if entry angle is 0 or 180 degrees);
+<code>descender</code> (amount of space included in <code>vsize</code> (if
+<code>horiz</code> is TRUE) or <code>hsize</code> (if <code>horiz</code> is FALSE) to allow
+for descenders); and <code>wrap</code> (logical; TRUE if text wrapping is needed
+to fit the text into a box with dimensions <code>hsize</code> and <code>vsize</code>).
+Row names will be the entry ID's.  <code>hsize</code>, <code>vsize</code>, and
+<code>descender</code> do not include the effect of <code>sizeAdjust</code>, and do
+not include any padding specified by <code>hpad</code> or <code>vpad</code>.  All
+columns will contain NA for disabled entries.  (Not
+implemented–currently, disabled entries are not allowed.)
+</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Operation of this function is controlled by parameters in internal object
+<code>internalOpt</code>, specifically those with prefix <code>rcsize_</code>.  Values
+of option <code>rcsize_verbose</code> greater than 2 will cause a data frame of
+calculated entry widths to be written to the global environment for each
+iteration.
+</p>
+<p>Among methods 2-5, 2 and 4 seem best because they do not alter the target
+size in the numerator; method 5 encourages expanding row *and* column
+sizes by <code>rcsize_rcmin</code> even when no wrapping is required in a given
+direction.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>entrySize_mm</code>, called by this function to calculate the sizes
+in <code>sizeInfo</code>.
+</p>
+
+
+</div>

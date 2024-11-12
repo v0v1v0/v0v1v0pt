@@ -1,0 +1,95 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tensorStandardize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Standardize an Observation Array</h2>
+
+<h3>Description</h3>
+
+<p>Standardizes an array of array-valued observations simultaneously from each mode. The method can be seen as a higher-order analogy for the regular multivariate standardization of random vectors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tensorStandardize(x, location = NULL, scatter = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Array of an order higher than two with the last dimension corresponding to the sampling units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>location</code></td>
+<td>
+<p>The location to be used in the standardizing. Either <code>NULL</code>, defaulting to the mean array, or a user-specified <code class="reqn">p_1 \times p_2 \times \ldots \times p_r</code>-dimensional array.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scatter</code></td>
+<td>
+<p>The scatter matrices to be used in the standardizing. Either <code>NULL</code>, defaulting to the m-mode covariance matrices, or a user-specified list of length <code>r</code> of <code class="reqn">p_1 \times p_1, \ldots , p_r \times p_r</code>-dimensional symmetric positive definite matrices.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The algorithm first centers the <code class="reqn">n</code> observed tensors <code class="reqn">X_i</code> using <code>location</code> (either the sample mean, or a user-specified location). Then, if <code>scatter = NULL</code>, it estimates the <code class="reqn">m</code>th mode covariance matrix <code class="reqn">Cov_m(X) = E(X^{(m)} X^{(m)T})/(p_1 \ldots p_{m-1} p_{m+1} \ldots p_r)</code>, where <code class="reqn">X^{(m)}</code> is the centered <code class="reqn">m</code>-flattening of <code class="reqn">X</code>, for each mode, and transforms the observations with the inverse square roots of the covariance matrices from the corresponding modes. If, instead, the user has specified a non-<code>NULL</code> value for <code>scatter</code>, the inverse square roots of those matrices are used to transform the centered data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x </code></td>
+<td>
+<p>Array of the same size as <code>x</code> containing the standardized observations. The used location and scatters are returned as attributes <code>"location"</code> and <code>"scatter"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>List containing inverse square roots of the covariance matrices of different modes.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Joni Virta
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate sample data.
+n &lt;- 100
+x &lt;- t(cbind(rnorm(n, mean = 0),
+             rnorm(n, mean = 1),
+             rnorm(n, mean = 2),
+             rnorm(n, mean = 3),
+             rnorm(n, mean = 4),
+             rnorm(n, mean = 5)))
+             
+dim(x) &lt;- c(3, 2, n)
+
+# Standardize
+z &lt;- tensorStandardize(x)$x
+
+# The m-mode covariance matrices of the standardized tensors
+mModeCovariance(z, 1)
+mModeCovariance(z, 2)
+</code></pre>
+
+
+</div>

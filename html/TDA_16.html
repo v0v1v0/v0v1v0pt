@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dtm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Distance to Measure Function
+</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>dtm</code> computes the "distance to measure function" on a set of points <code>Grid</code>, using the uniform empirical measure on a set of points <code>X</code>. Given a probability measure <code class="reqn">P</code>, The distance to measure function, for each <code class="reqn">y \in R^d</code>, is defined by
+</p>
+<p style="text-align: center;"><code class="reqn">
+    d_{m0}(y) = \left(\frac{1}{m0}\int_0^{m0} ( G_y^{-1}(u))^{r} du\right)^{1/r},
+  </code>
+</p>
+
+<p>where <code class="reqn">G_y(t) = P( \Vert X-y \Vert \le t)</code>, and <code class="reqn">m0 \in (0,1)</code> and <code class="reqn">r \in [1,\infty)</code> are tuning parameters. As <code>m0</code> increases, DTM function becomes smoother, so <code>m0</code> can be understood as a smoothing parameter. <code>r</code> affects less but also changes DTM function as well. The DTM can be seen as a smoothed version of the distance function. See Details and References.
+</p>
+<p>Given <code class="reqn">X=\{x_1, \dots, x_n\}</code>, the empirical version of the distance to measure is
+</p>
+<p style="text-align: center;"><code class="reqn">
+    \hat d_{m0}(y) = \left(\frac{1}{k} \sum_{x_i \in N_k(y)} \Vert x_i-y \Vert^{r}\right)^{1/r},
+  </code>
+</p>
+
+<p>where <code class="reqn">k= \lceil m0 * n \rceil</code> and <code class="reqn">N_k(y)</code> is the set containing the <code class="reqn">k</code> nearest neighbors of <code class="reqn">y</code> among <code class="reqn">x_1, \ldots, x_n</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dtm(X, Grid, m0, r = 2, weight = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+
+<p>an <code class="reqn">n</code> by <code class="reqn">d</code> matrix of coordinates of points used to construct the uniform empirical measure for the distance to measure, where <code class="reqn">n</code> is the number of points and <code class="reqn">d</code> is the dimension.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Grid</code></td>
+<td>
+
+<p>an <code class="reqn">m</code> by <code class="reqn">d</code> matrix of coordinates of points where the distance to measure is computed, where <code class="reqn">m</code> is the number of points in <code>Grid</code> and <code class="reqn">d</code> is the dimension.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m0</code></td>
+<td>
+
+<p>a numeric variable for the smoothing parameter of the distance to measure. Roughly, <code>m0</code> is the the percentage of points of <code>X</code> that are considered when the distance to measure is computed for each point of <code>Grid</code>. The value of <code>m0</code> should be in <code class="reqn">(0,1)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+
+<p>a numeric variable for the tuning parameter of the distance to measure. The value of <code>r</code> should be in <code class="reqn">[1,\infty)</code>, and the default value is <code>2</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+
+<p>either a number, or a vector of length <code class="reqn">n</code>. If it is a number, then same weight is applied to each points of <code>X</code>. If it is a vector, <code>weight</code> represents weights of each points of <code>X</code>. The default value is <code>1</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See (Chazal, Cohen-Steiner, and Merigot, 2011, Definition 3.2) and (Chazal, Massart, and Michel, 2015, Equation (2)) for a formal definition of the "distance to measure" function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function <code>dtm</code> returns a vector of length <code class="reqn">m</code> (the number of points stored in <code>Grid</code>) containing the value of the distance to measure function evaluated at each point of <code>Grid</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Jisu Kim and Fabrizio Lecci
+</p>
+
+
+<h3>References</h3>
+
+<p>Chazal F, Cohen-Steiner D, Merigot Q (2011). "Geometric inference for probability measures." Foundations of Computational Mathematics 11.6, 733-751.
+</p>
+<p>Chazal F, Massart P, Michel B (2015). "Rates of convergence for robust geometric inference."
+</p>
+<p>Chazal F, Fasy BT, Lecci F, Michel B, Rinaldo A, Wasserman L (2014). "Robust Topological Inference: Distance-To-a-Measure and Kernel Distance." Technical Report. 
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>kde</code>, <code>kernelDist</code>, <code>distFct</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Generate Data from the unit circle
+n &lt;- 300
+X &lt;- circleUnif(n)
+
+## Construct a grid of points over which we evaluate the function
+by &lt;- 0.065
+Xseq &lt;- seq(-1.6, 1.6, by = by)
+Yseq &lt;- seq(-1.7, 1.7, by = by)
+Grid &lt;- expand.grid(Xseq, Yseq)
+
+## distance to measure
+m0 &lt;- 0.1
+DTM &lt;- dtm(X, Grid, m0)
+</code></pre>
+
+
+</div>

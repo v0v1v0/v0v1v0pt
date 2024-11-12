@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_autoregressive</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Formal representation of an autoregressive model.</h2>
+
+<h3>Description</h3>
+
+<p>An autoregressive (AR) model posits a latent <code>level</code> whose value at each step
+is a noisy linear combination of previous steps:
+</p>
+<div class="sourceCode"><pre>level[t+1] = (sum(coefficients * levels[t:t-order:-1]) + Normal(0., level_scale))
+</pre></div>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_autoregressive(
+  observed_time_series = NULL,
+  order,
+  coefficients_prior = NULL,
+  level_scale_prior = NULL,
+  initial_state_prior = NULL,
+  coefficient_constraining_bijector = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>observed_time_series</code></td>
+<td>
+<p>optional <code>float</code> <code>tensor</code> of shape
+<code style="white-space: pre;">⁠batch_shape + [T, 1]⁠</code> (omitting the trailing unit dimension is also
+supported when <code>T &gt; 1</code>), specifying an observed time series.
+Any priors not explicitly set will be given default values according to
+the scale of the observed time series (or batch of time series). May
+optionally be an instance of <code>sts_masked_time_series</code>, which includes
+a mask <code>tensor</code> to specify timesteps with missing observations.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>scalar positive <code>integer</code> specifying the number of past
+timesteps to regress on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefficients_prior</code></td>
+<td>
+<p>optional <code>Distribution</code> instance specifying a
+prior on the <code>coefficients</code> parameter. If <code>NULL</code>, a default standard
+normal (<code>tfd_multivariate_normal_diag(scale_diag = tf$ones(list(order)))</code>) prior
+is used. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level_scale_prior</code></td>
+<td>
+<p>optional <code>Distribution</code> instance specifying a prior
+on the <code>level_scale</code> parameter. If <code>NULL</code>, a heuristic default prior is
+constructed based on the provided <code>observed_time_series</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>optional <code>Distribution</code> instance specifying a
+prior on the initial state, corresponding to the values of the process
+at a set of size <code>order</code> of imagined timesteps before the initial step.
+If <code>NULL</code>, a heuristic default prior is constructed based on the
+provided <code>observed_time_series</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefficient_constraining_bijector</code></td>
+<td>
+<p>optional <code>Bijector</code> instance
+representing a constraining mapping for the autoregressive coefficients.
+For example, <code>tfb_tanh()</code> constrains the coefficients to lie in
+<code style="white-space: pre;">⁠(-1, 1)⁠</code>, while <code>tfb_softplus()</code> constrains them to be positive, and
+<code>tfb_identity()</code> implies no constraint. If <code>NULL</code>, the default behavior
+constrains the coefficients to lie in <code style="white-space: pre;">⁠(-1, 1)⁠</code> using a <code>tanh</code> bijector.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>the name of this model component. Default value: 'Autoregressive'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The latent state is <code>levels[t:t-order:-1]</code>. We observe a noisy realization of
+the current level: <code>f[t] = level[t] + Normal(0., observation_noise_scale)</code> at
+each timestep.
+</p>
+<p>If <code style="white-space: pre;">⁠coefficients=[1.]⁠</code>, the AR process is a simple random walk, equivalent to
+a <code>LocalLevel</code> model. However, a random walk's variance increases with time,
+while many AR processes (in particular, any first-order process with
+<code>abs(coefficient) &lt; 1</code>) are <em>stationary</em>, i.e., they maintain a constant
+variance over time. This makes AR processes useful models of uncertainty.
+</p>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>StructuralTimeSeries</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see <code>sts_fit_with_hmc()</code>, <code>sts_forecast()</code>, <code>sts_decompose_by_component()</code>.
+</p>
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

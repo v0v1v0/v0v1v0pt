@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>hpc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Parallelized ‘lapply’</h2>
+
+<h3>Description</h3>
+
+<p>Parallelize applying a function over a list or vector according to the
+registered parallelization engine.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_parLapply(X, FUN, ...)
+tm_parLapply_engine(new)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A vector (atomic or list), or other objects suitable for the
+engine in use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+<p>the function to be applied to each element of <code>X</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>optional arguments to <code>FUN</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>new</code></td>
+<td>
+<p>an object inheriting from class <code>cluster</code> as created
+by <code>makeCluster()</code> from package
+<span class="pkg">parallel</span>, or a function with formals <code>X</code>, <code>FUN</code> and
+<code>...</code>, or <code>NULL</code> corresponding to the default of using no
+parallelization engine.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Parallelization can be employed to speed up some of the embarrassingly
+parallel computations performed in package <span class="pkg">tm</span>, specifically
+<code>tm_index()</code>, <code>tm_map()</code> on a non-lazy-mapped
+<code>VCorpus</code>, and <code>TermDocumentMatrix()</code> on a
+<code>VCorpus</code> or <code>PCorpus</code>.
+</p>
+<p>Functions <code>tm_parLapply()</code> and <code>tm_parLapply_engine()</code> can
+be used to customize parallelization according to the available
+resources.
+</p>
+<p><code>tm_parLapply_engine()</code> is used for getting (with no arguments)
+or setting (with argument <code>new</code>) the parallelization engine
+employed (see below for examples).
+</p>
+<p>If an engine is set to an object inheriting from class <code>cluster</code>,
+<code>tm_parLapply()</code> calls
+<code>parLapply()</code> with this cluster and 
+the given arguments.  If set to a function, <code>tm_parLapply()</code>
+calls the function with the given arguments.  Otherwise, it simply
+calls <code>lapply()</code>.
+</p>
+<p>Hence, parallelization via
+<code>parLapply()</code>
+and a default cluster registered via
+<code>setDefaultCluster()</code> can be
+achieved via </p>
+<pre>  tm_parLapply_engine(function(X, FUN, ...)
+      parallel::parLapply(NULL, X, FUN, ...))</pre>
+<p>or re-registering the cluster, say <code>cl</code>, using </p>
+<pre>  tm_parLapply_engine(cl)</pre>
+<p>(note that since <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> version 3.5.0, one can use
+<code>getDefaultCluster()</code> to get
+the registered default cluster).  Using </p>
+<pre>  tm_parLapply_engine(function(X, FUN, ...)
+      parallel::parLapplyLB(NULL, X, FUN, ...))</pre>
+<p>or </p>
+<pre>  tm_parLapply_engine(function(X, FUN, ...)
+      parallel::parLapplyLB(cl, X, FUN, ...))</pre>
+<p>gives load-balancing parallelization with the registered default or
+given cluster, respectively.  To achieve parallelization via forking
+(on Unix-alike platforms), one can use the above with clusters created
+by <code>makeForkCluster()</code>, or use </p>
+<pre>  tm_parLapply_engine(parallel::mclapply)</pre>
+<p>or </p>
+<pre>  tm_parLapply_engine(function(X, FUN, ...)
+      parallel::mclapply(X, FUN, ..., mc.cores = n))</pre>
+<p>to use <code>mclapply()</code> with the default or
+given number <code>n</code> of cores.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list the length of <code>X</code>, with the result of applying <code>FUN</code>
+together with the <code>...</code> arguments to each element of <code>X</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>makeCluster()</code>,
+<code>parLapply()</code>,
+<code>parLapplyLB()</code>, and
+<code>mclapply()</code>.
+</p>
+
+
+</div>

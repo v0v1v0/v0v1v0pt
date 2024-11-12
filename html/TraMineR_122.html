@@ -1,0 +1,287 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqprecarity</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Degradation, Precarity, and Insecurity indexes</h2>
+
+<h3>Description</h3>
+
+<p>The degradation index returned by <code>seqidegrad</code> is a normalized transformation of the difference between the proportion of downward and upward state changes (transitions).
+The precarity and insecurity indexes are composite measures of complexity, degradation tendency, and undesirableness of the first state in the sequence.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqidegrad(seqdata, state.order=alphabet(seqdata, with.missing), state.equiv=NULL,
+    stprec=NULL, with.missing=FALSE,
+    penalized="BOTH", method="RANK", weight.type="ADD",
+    pow=1, border.effect=10)
+
+seqprecarity(seqdata, correction=NULL,
+    state.order=alphabet(seqdata, with.missing), state.equiv=NULL,
+    stprec=NULL, with.missing=FALSE,
+    otto=.2, a=1, b=1.2, method = "TRATEDSS",
+    ...)
+
+seqinsecurity(seqdata, correction=NULL,
+    state.order=alphabet(seqdata, with.missing), state.equiv=NULL,
+    stprec=NULL, with.missing=FALSE,
+    pow = 1, spow=pow, bound=FALSE, method = "RANK",
+    ...)
+
+seqprecorr(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>a state sequence object (class <code>stslist</code>) as returned by the <code>seqdef</code> function.</p>
+</td>
+</tr></table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>correction</code></td>
+<td>
+<p>Vector of non-negative correction factor values. If <code>NULL</code> (default), the correction factor is set as the degradation value returned by <code>seqidegrad</code>. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state.order</code></td>
+<td>
+<p>Vector of short state labels defining the order of the states. First the less precarious (most positive) state and then the other states in increasing precariousness order. States of the alphabet that are not included here (and are not equivalent to one of the listed state) define the non-comparable states.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state.equiv</code></td>
+<td>
+<p>List of state equivalence classes. Each class in the list is given as the vector of the short labels of the states forming the class. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stprec</code></td>
+<td>
+<p>Vector of state undesirableness degrees. If <code>NULL</code> the values are derived from the state order using <code>seqprecstart</code>. If not <code>NULL</code>, the values in <code>stprec</code> should conform the order of the alphabet.
+Use negative values to indicate non-comparable states. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should the missing state be considered as an element of the alphabet?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>otto</code></td>
+<td>
+<p>Scalar in the range [0,1]. Trade-off weight between the precarity degree of the initial state and the corrected complexity. Default is <code>otto=.2</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>Non-negative real value. Exponent weight of the complexity. Default is 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>Non-negative real value. Exponent weight of the correction factor. Default is 1.2. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalized</code></td>
+<td>
+<p>One of <code>'BOTH'</code> (default), <code>'NEG'</code>, <code>'POS'</code>, or <code>'NO'</code>. What should be penalized or rewarded? <code>'NEG'</code> only negative transitions, <code>POS</code> only positive transitions (with negative penalization), <code>'BOTH'</code> penalize negative transitions and reward positive ones, <code>NO</code> no penalization. Can also be logical with <code>TRUE</code> equivalent to <code>'BOTH'</code> and <code>FALSE</code> equivalent to <code>'NO'</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>One of <code>'FREQ'</code>, <code>'FREQ+'</code>, <code>'TRATE'</code>, <code>'TRATE+'</code>, <code>'TRATEDSS'</code> (default for <code>seqprecarity</code> for backward compatibility), <code>'TRATEDSS+'</code>, <code>'RANK'</code> (default for <code>seqinsecurity</code> and <code>seqidegrad</code>), <code>'RANK+'</code>, or <code>'ONE'</code>. Method for determining transition weights. Weights based on transition probabilities: <code>'FREQ'</code> overall frequency of the transitions, <code>'TRATE'</code> transition probabilities, and <code>'TRATEDSS'</code> transition probabilites in the DSS sequences. <code>'RANK'</code> differences between state undesirableness degrees. <code>'ONE'</code> no weight. With the <code>+</code> form the returned penalty is adjusted by the mean transition weight in the sequence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight.type</code></td>
+<td>
+<p>One of <code>'ADD'</code> (default), <code>'INV'</code>, or <code>'LOGINV'</code>. When <code>method</code> is one of <code>'FREQ'</code>, <code>'TRATE'</code> or <code>'TRATEDSS'</code>, how weights are derived from the transition probabilities: <code>'ADD'</code> additive (1-p), <code>'INV'</code> inverse (1/p), and <code>'LOGINV'</code> log of inverse. Ignored when any other <code>method</code> is selected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pow</code></td>
+<td>
+<p>Real or logical. Recency weight exponent for potential to integrate the next spell. If real, transition weights are  adjusted by the potential to integrate the next state using the <code>pow</code> value. <code>pow=TRUE</code> is equivalent to <code>pow=1</code>. (See details.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spow</code></td>
+<td>
+<p>Real. Recency weight exponent for potential to integrate the first spell.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bound</code></td>
+<td>
+<p>Logical. Should the insecurity index be bounded by undesirableness degrees of best and worst states in the sequence?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>border.effect</code></td>
+<td>
+<p>Real. Value (strictly greater than 1) used to adjust estimated transition probabilities to avoid border effect. Default is 10. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>seqidegrad</code> when <code>correction=NULL</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>seqidegrad</code> function returns for each sequence <code class="reqn">x</code> the difference <code class="reqn">q(x)</code> between the proportions of downward and upward transitions (state changes).
+</p>
+<p>The argument <code>penalized</code> allows to chose between three strategies for computing <code class="reqn">q(x)</code>: only penalizing negative weights (in which case <code class="reqn">q(x)</code> is the proportion of negative transitions), only rewarding (with negative penalties) positive transitions, and applying both positive and negative penalties. The transitions can be weighted and the type of transition weights used is selected with the <code>method</code> argument. For weights based on transition probabilities, the way how theses probabilites are transformed into weights is controlled with <code>weight.type</code>. To avoid a border effect, when any computed transition probability <code class="reqn">p</code> is close from 1 (<code class="reqn">p &gt; 1 - .1/d</code>), all <code class="reqn">p</code>'s are adjusted as <code class="reqn">p - p/d</code>, where <code class="reqn">d</code> is the <code>border.effect</code> parameter. With <code>method="RANK"</code>, the weights are set as the differences between the to and from state undesirableness.
+When <code>pow</code> is not <code>FALSE</code>, the weight of each transition is multiplied by the potential to integrate the next spell using the provided <code>pow</code> value.
+</p>
+<p>The precarity and insecurity indexes of a sequence <code class="reqn">x</code> are both based on the complexity index (<cite>Gabadinho et al., 2010</cite>) <code class="reqn">c(x)</code> (See the <code>seqici</code> function) and the undesirableness degree <code class="reqn">\pi(x_1)</code> of the starting state.
+</p>
+<p>The precarity applies a multiplicative correction to the complexity. It is defined as
+</p>
+<p style="text-align: center;"><code class="reqn">prec(x) = \lambda \pi(x_1) + (1-\lambda)(1 + r(x))^\beta c(x)^\alpha</code>
+</p>
+
+<p>where <code class="reqn">r(x)</code> is the correction factor (argument <code>correction</code>) for the sequence. The <code class="reqn">\lambda</code> parameter (argument <code>otto</code>) determines the trade-off between the importance of the undesirableness of the starting state and of the corrected complexity index. Parameters <code class="reqn">\alpha</code> and <code class="reqn">\beta</code> (arguments <code>a</code> and <code>b</code>) are exponent weights of respectively the complexity and the correction factor.
+</p>
+<p>The insecurity index applies an additive correction of the complexity:
+</p>
+<p style="text-align: center;"><code class="reqn">insec(x) = \pi(x_1) integr(x,sp1) + r(x) + c(x)</code>
+</p>
+
+<p>where <code class="reqn">integr(x,sp1)</code> is the potential to integrate the first spell (proportion of sequence length covered by first spell when <code>spow=0</code>).
+</p>
+<p>When <code>correction = NULL</code> (default), <code class="reqn">r(x)</code> is set as the degradation index <code class="reqn">q(x)</code> provided by <code>seqidegrad</code>. The degradation is computed with <code>pow=FALSE</code> for the precarity and using the provided <code>pow</code> value for the insecurity.
+</p>
+<p>When <code>stprec</code> is a vector, negative values indicate non-comparable sates that receive each the mean positive undesirableness value. After this transformation, the vector is normalized such that the minimum is 0 and the maximum 1.
+</p>
+<p>When equivalent classes are provided, the class mean undesirableness degree is assigned to each state of the class (see <code>seqprecstart</code>). For the count of transitions a same state value is assigned to all equivalent states.
+</p>
+<p>Non-comparable states (those not listed on the <code>state.order</code> argument and not equivalent to a listed state) all receive the mean undesirableness value. For the count of transitions, transitions from and to non-comparable states are ignored and replaced by a transition between the states that immediately precede and follow a spell in non-comparable states.
+</p>
+<p>When there are missing states in the sequences, set <code>with.missing = TRUE</code> to treat the missing state as an additional state. In that case the missing state will be considered as non-comparable unless you include the <code>nr</code> attribute of <code>seqdata</code> in <code>state.order</code> or <code>state.equiv</code>. With <code>with.missing = FALSE</code>, transitions to and from the missing state will just be ignored and the undesirableness value of the first valid state will be used as starting undesirableness.
+
+</p>
+<p>The earlier <code>seqprecorr</code> function is obsolete, use <code>seqidegrad</code> with <code>pow=FALSE</code> and <code>method='TRATEDSS'</code> instead.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>seqprecarity</code> and <code>seqinsecurity</code>, an object of class <code>seqprec</code> with the value of the precarity or insecurity index for each sequence. The returned object has an attribute <code>stprec</code> that contains the state precarity degree used at the starting position. The associated print method (<code>print.seqprec</code>) prints the state precarity values without the additional attribute.
+</p>
+<p>For <code>seqidegrad</code> 
+an object of class <code>seqidegrad</code> with the degradation index <code class="reqn">q(x)</code>
+
+and as additional attributes: <code>tr</code> the used transition weights; <code>signs</code> the transitions signs; <code>state.noncomp</code> the non-comparable states; and <code>state.order</code> the used state order. The associated print method (<code>print.seqidegrad</code>) prints the outcome values without the additional attributes.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard</p>
+
+
+<h3>References</h3>
+
+<p>Ritschard, G. (2023), "Measuring the nature of individual sequences", <em>Sociological Methods and Research</em>, 52(4), 2016-2049. <a href="https://doi.org/10.1177/00491241211036156">doi:10.1177/00491241211036156</a>.
+</p>
+<p>Ritschard, G., Bussi, M., and O'Reilly, J. (2018), "An index of precarity for
+measuring early employment insecurity", in G. Ritschard, and M. Studer, <em>Sequence Analysis and Related Approaches: Innovative Methods and Applications</em>, Series Life Course Research and Social
+Policies, Vol. 10, pp 279-295. Cham: Springer, <a href="https://doi.org/10.1007/978-3-319-95420-2_16">doi:10.1007/978-3-319-95420-2_16</a>.
+</p>
+<p>Gabadinho, A., Ritschard, G., Studer, M. and Müller, N.S. (2010), "Indice de complexité pour le tri et la comparaison de séquences catégorielles", In Extraction et gestion des connaissances (EGC 2010), <em>Revue des nouvelles technologies de l'information RNTI</em>. Vol. E-19, pp. 61-66.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqici</code>, <code>seqibad</code>, <code>seqprecstart</code>, <code>seqindic</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Defining a sequence object with columns 13 to 24
+## in the 'actcal' example data set
+data(actcal)
+actcal &lt;- actcal[1:20,] ## Here, only a subset
+actcal.seq &lt;- seqdef(actcal[,13:24], alphabet=c('A','B','C','D'))
+
+## insecurity and precarity using the original state order
+insec &lt;- seqinsecurity(actcal.seq)
+prec &lt;- seqprecarity(actcal.seq)
+ici &lt;- seqici(actcal.seq) ## complexity
+
+seqn &lt;- seqformat(actcal.seq, to="SPS", compress=TRUE)
+tab &lt;- data.frame(seqn,ici,insec,prec)
+names(tab) &lt;- c("seq","ici","insec","prec")
+tab
+
+## Assuming A and B as equivalent regarding insecurity
+insec2 &lt;- seqinsecurity(actcal.seq, state.equiv=list(c('A','B')))
+tab &lt;- cbind(tab,insec2)
+names(tab)[ncol(tab)] &lt;- "insec2"
+
+## and letting C be non-comparable
+insec3 &lt;- seqinsecurity(actcal.seq, state.order=c("A","B","D"),
+  state.equiv=list(c('A','B')))
+tab &lt;- cbind(tab,insec3)
+names(tab)[ncol(tab)] &lt;- "insec3"
+
+## bounding insecurity with undesirableness of best and worst state in sequence
+insec4 &lt;- seqinsecurity(actcal.seq, state.order=c("A","B","D"),
+  state.equiv=list(c('A','B')), bound=TRUE)
+tab &lt;- cbind(tab,insec4)
+names(tab)[ncol(tab)] &lt;- "insec4"
+
+## degrading index
+degr &lt;- seqidegrad(actcal.seq, state.order=c("A","B","D"),
+                  state.equiv=list(c('A','B')))
+tab &lt;- cbind(tab,degr)
+names(tab)[ncol(tab)] &lt;- "degr"
+tab
+
+## Precarity with transition weights based on differences in state undesirableness
+prec.rank &lt;- seqprecarity(actcal.seq, method='RANK')
+
+###############
+## Indexes in presence of missing values:
+##  missing state treated as an additional state
+data(ex1)
+## by default right missings are dropped from the sequences
+s.ex1 &lt;- seqdef(ex1[,1:13])
+state.order=c("A","B","C","D") ## missing left as non-comparable
+seqprecarity(s.ex1, state.order=state.order, with.missing=TRUE)
+seqinsecurity(s.ex1, state.order=state.order, with.missing=TRUE)
+
+## same result using the correction argument
+dgp &lt;- seqidegrad(s.ex1, with.missing=TRUE, state.order=state.order, method='TRATEDSS')
+seqprecarity(s.ex1, state.order=state.order, with.missing=TRUE, correction=dgp)
+
+dg &lt;- seqidegrad(s.ex1, with.missing=TRUE, state.order=state.order)
+seqinsecurity(s.ex1, state.order=state.order, with.missing=TRUE, correction=dg)
+
+## bounding insecurity with undesirableness of best and worst state in sequence
+seqinsecurity(s.ex1, state.order=state.order, with.missing=TRUE, bound=TRUE)
+
+
+</code></pre>
+
+
+</div>

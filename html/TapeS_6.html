@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data_coercion</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>coerce different data sources into class 'tprTrees'</h2>
+
+<h3>Description</h3>
+
+<p>coercion functions to make NFI, segment and 'BDAT' data
+available as 'tprTrees' objects
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nfi_as_tprtrees(nfi, mapping = NULL)
+
+seg_as_tprtrees(seg, mapping = NULL)
+
+bdat_as_tprtrees(bdat)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nfi</code></td>
+<td>
+<p>data.frame with tree measurements as provided by german NFI</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mapping</code></td>
+<td>
+<p>mapping of column names</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seg</code></td>
+<td>
+<p>data.frame with measured tree segments, see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bdat</code></td>
+<td>
+<p>data.frame holding data to process with rBDAT</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The coerced data is automatically checked for validity by the class
+constructor. For available species codes see <code>tprSpeciesCode</code>.
+</p>
+<p>When coercing NFI (National forest inventory, BWI) data, one need
+to provide the columns <code>BaTpr</code> (species code), <code>Bhd</code> (Dbh, [mm]),
+<code>D03, [mm]</code> (diameter in 30% of tree height) and <code>Hoehe</code> (tree
+height, [dm]). Optionally, one can provide <code>H1</code> (measurement height of
+<code>Bhd</code>, [dm]), <code>H2</code> (measurement height of <code>D03</code>, [dm]) as well
+as <code>sHt</code> (measurement error of tree height, i.e. standard deviation [dm]);
+otherwise these are assumed to be 1.3m, 30% of tree height and 0 (zero),
+respectively.
+</p>
+<p>Additionally, the NFI database stores diameter as [mm] and height as [dm]; it
+is *not* necessary to transform to [cm] and [m], as the function does this.
+Equally, <code>sHt</code> [dm] is transformed to <code>sHt</code> [m].
+</p>
+<p>Keep in mind that species codes of NFI are different from the taper models
+for historical reasons (c.f. BDAT). Use the NFI table  ('x_Ba') to map
+species codes beforehand (see examples).
+</p>
+<p>Sectional measurements provide more information about the trunk of
+a tree and are usually stored in a different way. They exhibit an arbitrary
+amount of diameter measurements which also might vary from tree to tree.
+Hence, <code>seg_as_tprtrees</code> expects a data.frame with columns
+<code>Id</code>, <code>BaTpr</code> (species code), <code>Dm</code> (diameter measured, [cm]),
+<code>Hm</code> (height of <code>Dm</code>, [m]) and optionally <code>Ht</code> (height of
+tree, [m]). Tree height <code>Ht</code> can be included to
+<code>Dm</code>-<code>Hm</code>-pairs with <code>Dm</code> being zero
+(e.g. <code>Dm</code>=0, <code>Hm</code>=25). If <code>Ht</code> is given, it gains priority.
+</p>
+<p>coercing object of class 'datBDAT' from R-Package "rBDAT" into
+class 'tprTrees'
+</p>
+
+
+<h3>Value</h3>
+
+<p>an object of class 'tprTrees', see <code>tprTrees-class</code>
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>nfi_as_tprtrees()</code>: coercion of German NFI data
+</p>
+</li>
+<li> <p><code>seg_as_tprtrees()</code>: coercion of segmented data to class 'tprTrees'
+</p>
+</li>
+<li> <p><code>bdat_as_tprtrees()</code>: coercion of bdat data
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>tprTrees-class</code>, <code>tprTrees</code>,
+<code>tprSpeciesCode</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># NFI data usually stored as integer and units: diameter=[mm] and height=[dm]
+nfi &lt;- data.frame(BaTpr=1L, Bhd=300L, D03=270L, Hoehe=250L)
+tpr &lt;- nfi_as_tprtrees(nfi)
+tpr
+tpr@sHt # defaults to 0
+
+# one can provide measurement heights explicitly
+nfi &lt;- data.frame(spp=1, Bhd=300, H1=12, D03=270, H=250)
+nfi_as_tprtrees(nfi, mapping=c(spp="BaTpr", H="Hoehe"))
+
+# measurement error in height
+nfi &lt;- data.frame(BaTpr=1L, Bhd=300L, D03=270L, Hoehe=250L, sHt=15)
+tpr &lt;- nfi_as_tprtrees(nfi)
+tpr@sHt
+## coercing sectional measurements
+data(DxHx.df, package = "TapeR")
+DxHx.df$BaTpr &lt;- 1 # Norway spruce
+segtprtrees &lt;- seg_as_tprtrees(DxHx.df, mapping=c(Dx="Dm", Hx="Hm"))
+
+## extract tree height from Dm-Hm measurements if not given explicitly
+DxHx.df$Ht &lt;- NULL # remove height, as already included with Dm=0
+segtprtrees &lt;- seg_as_tprtrees(DxHx.df, mapping=c(Dx="Dm", Hx="Hm"))
+segtprtrees
+if(require(rBDAT)){
+  bdt &lt;- buildTree(list(spp=1, D1=30, D2=28, H2=7, H=25))
+  bdat_as_tprtrees(bdt)
+}
+
+
+</code></pre>
+
+
+</div>

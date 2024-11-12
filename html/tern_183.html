@@ -1,0 +1,386 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>g_lineplot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Line plot with optional table</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Line plot with the optional table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">g_lineplot(
+  df,
+  alt_counts_df = NULL,
+  variables = control_lineplot_vars(),
+  mid = "mean",
+  interval = "mean_ci",
+  whiskers = c("mean_ci_lwr", "mean_ci_upr"),
+  table = NULL,
+  sfun = s_summary,
+  ...,
+  mid_type = "pl",
+  mid_point_size = 2,
+  position = ggplot2::position_dodge(width = 0.4),
+  legend_title = NULL,
+  legend_position = "bottom",
+  ggtheme = nestcolor::theme_nest(),
+  xticks = NULL,
+  xlim = NULL,
+  ylim = NULL,
+  x_lab = obj_label(df[[variables[["x"]]]]),
+  y_lab = NULL,
+  y_lab_add_paramcd = TRUE,
+  y_lab_add_unit = TRUE,
+  title = "Plot of Mean and 95% Confidence Limits by Visit",
+  subtitle = "",
+  subtitle_add_paramcd = TRUE,
+  subtitle_add_unit = TRUE,
+  caption = NULL,
+  table_format = NULL,
+  table_labels = NULL,
+  table_font_size = 3,
+  errorbar_width = 0.45,
+  newpage = lifecycle::deprecated(),
+  col = NULL,
+  linetype = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alt_counts_df</code></td>
+<td>
+<p>(<code>data.frame</code> or <code>NULL</code>)<br> data set that will be used (only)
+to counts objects in groups for stratification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>character</code>) vector of variable names in <code>df</code> which should include:
+</p>
+
+<ul>
+<li> <p><code>x</code> (<code>string</code>)<br> name of x-axis variable.
+</p>
+</li>
+<li> <p><code>y</code> (<code>string</code>)<br> name of y-axis variable.
+</p>
+</li>
+<li> <p><code>group_var</code> (<code>string</code> or <code>NULL</code>)<br> name of grouping variable (or strata), i.e. treatment arm.
+Can be <code>NA</code> to indicate lack of groups.
+</p>
+</li>
+<li> <p><code>subject_var</code> (<code>string</code> or <code>NULL</code>)<br> name of subject variable. Only applies if <code>group_var</code> is
+not NULL.
+</p>
+</li>
+<li> <p><code>paramcd</code> (<code>string</code> or <code>NA</code>)<br> name of the variable for parameter's code. Used for y-axis label and plot's
+subtitle. Can be <code>NA</code> if <code>paramcd</code> is not to be added to the y-axis label or subtitle.
+</p>
+</li>
+<li> <p><code>y_unit</code> (<code>string</code> or <code>NA</code>)<br> name of variable with units of <code>y</code>. Used for y-axis label and plot's subtitle.
+Can be <code>NA</code> if y unit is not to be added to the y-axis label or subtitle.
+</p>
+</li>
+<li> <p><code>facet_var</code> (<code>string</code> or <code>NA</code>)<br> name of the secondary grouping variable used for plot faceting, i.e. treatment
+arm. Can be <code>NA</code> to indicate lack of groups.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mid</code></td>
+<td>
+<p>(<code>character</code> or <code>NULL</code>)<br> names of the statistics that will be plotted as midpoints.
+All the statistics indicated in <code>mid</code> variable must be present in the object returned by <code>sfun</code>,
+and be of a <code>double</code> or <code>numeric</code> type vector of length one.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interval</code></td>
+<td>
+<p>(<code>character</code> or <code>NULL</code>)<br> names of the statistics that will be plotted as intervals.
+All the statistics indicated in <code>interval</code> variable must be present in the object returned by <code>sfun</code>,
+and be of a <code>double</code> or <code>numeric</code> type vector of length two. Set <code>interval = NULL</code> if intervals should not be
+added to the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>whiskers</code></td>
+<td>
+<p>(<code>character</code>)<br> names of the interval whiskers that will be plotted. Names must match names
+of the list element <code>interval</code> that will be returned by <code>sfun</code> (e.g. <code>mean_ci_lwr</code> element of
+<code>sfun(x)[["mean_ci"]]</code>). It is possible to specify one whisker only, or to suppress all whiskers by setting
+<code>interval = NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table</code></td>
+<td>
+<p>(<code>character</code> or <code>NULL</code>)<br> names of the statistics that will be displayed in the table below the plot.
+All the statistics indicated in <code>table</code> variable must be present in the object returned by <code>sfun</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sfun</code></td>
+<td>
+<p>(<code>function</code>)<br> the function to compute the values of required statistics. It must return a named <code>list</code>
+with atomic vectors. The names of the <code>list</code> elements refer to the names of the statistics and are used by <code>mid</code>,
+<code>interval</code>, <code>table</code>. It must be able to accept as input a vector with data for which statistics are computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>optional arguments to <code>sfun</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mid_type</code></td>
+<td>
+<p>(<code>string</code>)<br> controls the type of the <code>mid</code> plot, it can be point (<code>"p"</code>), line (<code>"l"</code>),
+or point and line (<code>"pl"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mid_point_size</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> font size of the <code>mid</code> plot points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>position</code></td>
+<td>
+<p>(<code>character</code> or <code>call</code>)<br> geom element position adjustment, either as a string, or the result of
+a call to a position adjustment function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>legend_title</code></td>
+<td>
+<p>(<code>string</code>)<br> legend title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>legend_position</code></td>
+<td>
+<p>(<code>string</code>)<br> the position of the plot legend (<code>"none"</code>, <code>"left"</code>, <code>"right"</code>, <code>"bottom"</code>,
+<code>"top"</code>, or a two-element numeric vector).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggtheme</code></td>
+<td>
+<p>(<code>theme</code>)<br> a graphical theme as provided by <code>ggplot2</code> to control styling of the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xticks</code></td>
+<td>
+<p>(<code>numeric</code> or <code>NULL</code>)<br> numeric vector of tick positions or a single number with spacing
+between ticks on the x-axis, for use when <code>variables$x</code> is numeric. If <code>NULL</code> (default), <code>labeling::extended()</code> is
+used to determine optimal tick positions on the x-axis. If <code>variables$x</code> is not numeric, this argument is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlim</code></td>
+<td>
+<p>(<code>numeric(2)</code>)<br> vector containing lower and upper limits for the x-axis, respectively.
+If <code>NULL</code> (default), the default scale range is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylim</code></td>
+<td>
+<p>(<code>numeric(2)</code>)<br> vector containing lower and upper limits for the y-axis, respectively.
+If <code>NULL</code> (default), the default scale range is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_lab</code></td>
+<td>
+<p>(<code>string</code> or <code>NULL</code>)<br> x-axis label. If <code>NULL</code> then no label will be added.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_lab</code></td>
+<td>
+<p>(<code>string</code> or <code>NULL</code>)<br> y-axis label. If <code>NULL</code> then no label will be added.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_lab_add_paramcd</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether <code>paramcd</code>, i.e. <code>unique(df[[variables["paramcd"]]])</code> should be added
+to the y-axis label (<code>y_lab</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_lab_add_unit</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether y-axis unit, i.e. <code>unique(df[[variables["y_unit"]]])</code> should be added
+to the y-axis label (<code>y_lab</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>string</code>)<br> plot title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle</code></td>
+<td>
+<p>(<code>string</code>)<br> plot subtitle.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle_add_paramcd</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether <code>paramcd</code>, i.e. <code>unique(df[[variables["paramcd"]]])</code> should be
+added to the plot's subtitle (<code>subtitle</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle_add_unit</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether the y-axis unit, i.e. <code>unique(df[[variables["y_unit"]]])</code> should be
+added to the plot's subtitle (<code>subtitle</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>caption</code></td>
+<td>
+<p>(<code>string</code>)<br> optional caption below the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_format</code></td>
+<td>
+<p>(named <code>character</code> or <code>NULL</code>)<br> format patterns for descriptive statistics used in the
+(optional) table appended to the plot. It is passed directly to the <code>h_format_row</code> function through the <code>format</code>
+parameter. Names of <code>table_format</code> must match the names of statistics returned by <code>sfun</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_labels</code></td>
+<td>
+<p>(named <code>character</code> or <code>NULL</code>)<br> labels for descriptive statistics used in the (optional) table
+appended to the plot. Names of <code>table_labels</code> must match the names of statistics returned by <code>sfun</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_font_size</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> font size of the text in the table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errorbar_width</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> width of the error bars.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newpage</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>(<code>character</code>)<br> color(s). See <code>?ggplot2::aes_colour_fill_alpha</code> for example values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linetype</code></td>
+<td>
+<p>(<code>character</code>)<br> line type(s). See <code>?ggplot2::aes_linetype_size_shape</code> for example values.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>ggplot</code> line plot (and statistics table if applicable).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(nestcolor)
+
+adsl &lt;- tern_ex_adsl
+adlb &lt;- tern_ex_adlb %&gt;% dplyr::filter(ANL01FL == "Y", PARAMCD == "ALT", AVISIT != "SCREENING")
+adlb$AVISIT &lt;- droplevels(adlb$AVISIT)
+adlb &lt;- dplyr::mutate(adlb, AVISIT = forcats::fct_reorder(AVISIT, AVISITN, min))
+
+# Mean with CI
+g_lineplot(adlb, adsl, subtitle = "Laboratory Test:")
+
+# Mean with CI, no stratification with group_var
+g_lineplot(adlb, variables = control_lineplot_vars(group_var = NA))
+
+# Mean, upper whisker of CI, no group_var(strata) counts N
+g_lineplot(
+  adlb,
+  whiskers = "mean_ci_upr",
+  title = "Plot of Mean and Upper 95% Confidence Limit by Visit"
+)
+
+# Median with CI
+g_lineplot(
+  adlb,
+  adsl,
+  mid = "median",
+  interval = "median_ci",
+  whiskers = c("median_ci_lwr", "median_ci_upr"),
+  title = "Plot of Median and 95% Confidence Limits by Visit"
+)
+
+# Mean, +/- SD
+g_lineplot(adlb, adsl,
+  interval = "mean_sdi",
+  whiskers = c("mean_sdi_lwr", "mean_sdi_upr"),
+  title = "Plot of Median +/- SD by Visit"
+)
+
+# Mean with CI plot with stats table
+g_lineplot(adlb, adsl, table = c("n", "mean", "mean_ci"))
+
+# Mean with CI, table and customized confidence level
+g_lineplot(
+  adlb,
+  adsl,
+  table = c("n", "mean", "mean_ci"),
+  control = control_analyze_vars(conf_level = 0.80),
+  title = "Plot of Mean and 80% Confidence Limits by Visit"
+)
+
+# Mean with CI, table, filtered data
+adlb_f &lt;- dplyr::filter(adlb, ARMCD != "ARM A" | AVISIT == "BASELINE")
+g_lineplot(adlb_f, table = c("n", "mean"))
+
+</code></pre>
+
+
+</div>

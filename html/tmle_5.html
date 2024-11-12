@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimateQ</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Initial Estimation of Q portion of the Likelihood</h2>
+
+<h3>Description</h3>
+
+<p>An internal function called by the <code>tmle</code> function to obtain an initial estimate of the <code class="reqn">Q</code> portion of the likelihood based on user-supplied matrix values for predicted values of (counterfactual outcomes) <code>Q(0,W),Q(1,W)</code>, or a user-supplied regression formula, or based on a data-adaptively selected  <code>SuperLearner</code> fit.  In the absence of user-supplied values, a user-supplied regression formula takes precedence over data-adaptive super-learning. The default is to return cross-validated predictions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimateQ(Y, Z, A, W, Delta, Q, Qbounds, Qform, maptoYstar, SL.library, cvQinit, 
+    family, id, V, verbose, discreteSL, obsWeights)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>continuous or binary outcome variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>optional binary indicator for intermediate covariate for conrolled direct effect estimation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>binary treatment indicator, <code>1</code> - treatment, <code>0</code> - control</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>vector, matrix, or dataframe containing baseline covariates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Delta</code></td>
+<td>
+<p>indicator of missing outcome. <code>1</code> - observed, <code>0</code> - missing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q</code></td>
+<td>
+<p>3-column matrix <code>(Q(A,W), Q(0,W), Q(1,W))</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qbounds</code></td>
+<td>
+<p>Bounds on predicted values for <code>Q</code>, set to <code>alpha</code> for logistic fluctuation, or <code>range(Y)</code> if not user-supplied</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qform</code></td>
+<td>
+<p>regression formula of the form <code>Y~A+W</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maptoYstar</code></td>
+<td>
+<p>if <code>TRUE</code> indicates continuous <code>Y</code> values should be shifted and scaled to fall between (0,1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SL.library</code></td>
+<td>
+<p>specification of prediction algorithms, default is (‘SL.glm’, ‘SL.glmnet’, ‘tmle.SL.dbarts2’). In practice, including more prediction algorithms in the library improves results.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvQinit</code></td>
+<td>
+<p>logical, whether or not to estimate cross-validated values for initial <code>Q</code>, default=<code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>family specification for regressions, generally ‘gaussian’ for continuous oucomes, ‘binomial’ for binary outcomes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>subject identifier</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+<p>Number of cross-validation folds for Super Learning</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>status message printed if set to <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discreteSL</code></td>
+<td>
+<p>If true, returns discrete SL estimates, otherwise ensemble estimates. Ignored when SL is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obsWeights</code></td>
+<td>
+<p>sampling weights</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Q</code></td>
+<td>
+<p><code class="reqn">nx3</code> matrix, columns contain the initial estimate of <code class="reqn">[Q(A,W)=E(Y|A=a,W), Q(0,W)=E(Y|A=0,W), Q(1,W)=E(Y|A=1,W)]</code>. For controlled direct estimation, <code class="reqn">nx5</code> matrix, <code class="reqn">E(Y|Z,A,W)</code>, evaluated at <code class="reqn">(z,a), (0,0), (0,1), (1,0), (1,1)</code> on scale of linear predictors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qfamily</code></td>
+<td>
+<p>‘binomial’ for targeting with logistic fluctuation, ‘gaussian’ for linear fluctuation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>coefficients for each term in working model used for initial estimation of <code>Q</code> if <code>glm</code> used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>type of estimation procedure</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Susan Gruber</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tmle</code>,
+<code>estimateG</code>,
+<code>calcParameters</code>,
+<code>tmleMSM</code>,
+<code>calcSigma</code>
+</p>
+
+
+</div>

@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gmm_test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>GMM Orthogonality Test</h2>
+
+<h3>Description</h3>
+
+<p>The GMM orthogonality test of Hansen (1982).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gmm_test(x, lags = 1, skewness = 0, kurtosis = 3, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a series representing the standardized residuals of some estimated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lags</code></td>
+<td>
+<p>the lags for the co-moment test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skewness</code></td>
+<td>
+<p>the skewness of the estimated model residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kurtosis</code></td>
+<td>
+<p>the kurtosis of the estimated model residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not currently used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For parametric models estimated with a particular distribution, the
+skewness and kurtosis should flow from the distributional model. See for example
+<code>dskewness</code> and
+<code>dkurtosis</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class “tstest.gmm” which has a print and
+as_flextable method.
+</p>
+
+
+<h3>References</h3>
+
+<p>Hansen,L.P. (1982).
+“Large sample properties of generalized method of moments estimators.”
+<em>Econometrica</em>, <b>50</b>(4), 1029–1054.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tsgarch)
+library(tsdistributions)
+library(data.table)
+library(xts)
+data("spy")
+spyr &lt;- na.omit(diff(log(spy)))
+spec &lt;- garch_modelspec(spyr, model = "egarch", order = c(2,1), constant = TRUE,
+distribution = "jsu")
+mod &lt;- estimate(spec)
+skewness &lt;- dskewness("jsu", skew = coef(mod)["skew"], shape = coef(mod)["shape"])
+# kurtosis is dkurtosis is the excess over the Normal (3) so we add back 3
+# since the test takes the actual not excess kurtosis.
+kurtosis &lt;- dkurtosis("jsu", skew = coef(mod)["skew"], shape = coef(mod)["shape"]) + 3
+test &lt;- gmm_test(residuals(mod, standardize = TRUE), lags = 2, skewness = skewness,
+kurtosis = kurtosis)
+print(test, collapse = TRUE, include.decision = TRUE)
+
+</code></pre>
+
+
+</div>

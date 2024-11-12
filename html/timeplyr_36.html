@@ -1,0 +1,231 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fslice</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Faster <code>dplyr::slice()</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>When there are lots of groups, the <code>fslice()</code> functions are much faster.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fslice(data, ..., .by = NULL, keep_order = FALSE, sort_groups = TRUE)
+
+fslice_head(
+  data,
+  ...,
+  n,
+  prop,
+  .by = NULL,
+  keep_order = FALSE,
+  sort_groups = TRUE
+)
+
+fslice_tail(
+  data,
+  ...,
+  n,
+  prop,
+  .by = NULL,
+  keep_order = FALSE,
+  sort_groups = TRUE
+)
+
+fslice_min(
+  data,
+  order_by,
+  ...,
+  n,
+  prop,
+  .by = NULL,
+  with_ties = TRUE,
+  na_rm = FALSE,
+  keep_order = FALSE,
+  sort_groups = TRUE
+)
+
+fslice_max(
+  data,
+  order_by,
+  ...,
+  n,
+  prop,
+  .by = NULL,
+  with_ties = TRUE,
+  na_rm = FALSE,
+  keep_order = FALSE,
+  sort_groups = TRUE
+)
+
+fslice_sample(
+  data,
+  n,
+  replace = FALSE,
+  prop,
+  .by = NULL,
+  keep_order = FALSE,
+  sort_groups = TRUE,
+  weights = NULL,
+  seed = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>See <code>?dplyr::slice</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using tidy-select.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_order</code></td>
+<td>
+<p>Should the sliced data frame be returned in its original order?
+The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort_groups</code></td>
+<td>
+<p>If <code>TRUE</code> (the default) the by-group slices will be
+done in order of the sorted groups.
+If <code>FALSE</code> the group order is determined by first-appearance in the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prop</code></td>
+<td>
+<p>Proportion of rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order_by</code></td>
+<td>
+<p>Variables to order by.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with_ties</code></td>
+<td>
+<p>Should ties be kept together? The default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_rm</code></td>
+<td>
+<p>Should missing values in <code>fslice_max()</code> and <code>fslice_min()</code> be removed?
+The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replace</code></td>
+<td>
+<p>Should <code>fslice_sample()</code> sample with or without replacement?
+Default is <code>FALSE</code>, without replacement.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Probability weights used in <code>fslice_sample()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Seed number defining RNG state.
+If supplied, this is only applied <b>locally</b> within the function
+and the seed state isn't retained after sampling.
+To clarify, whatever seed state was in place before the function call,
+is restored to ensure seed continuity.
+If left <code>NULL</code> (the default), then the seed is never modified.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>fslice()</code> and friends allow for more flexibility in how you order the by-group slicing. <br>
+Furthermore, you can control whether the returned data frame is sliced in
+the order of the supplied row indices, or whether the
+original order is retained (like <code>dplyr::filter()</code>).
+</p>
+<p>In <code>fslice()</code>, when <code>length(n) == 1</code>, an optimised method is implemented
+that internally uses <code>list_subset()</code>, a fast function for extracting
+single elements from single-level lists that contain vectors of the same
+type, e.g. integer.
+</p>
+<p><code>fslice_head()</code> and <code>fslice_tail()</code> are very fast with large numbers of groups.
+</p>
+<p><code>fslice_sample()</code> is arguably more intuitive as it by default
+resamples each entire group without replacement, without having to specify a
+maximum group size like in <code>dplyr::slice_sample()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> of specified rows.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(nycflights13)
+
+flights &lt;- flights %&gt;%
+  group_by(origin, dest)
+
+# First row repeated for each group
+flights %&gt;%
+  fslice(1, 1)
+# First row per group
+flights %&gt;%
+  fslice_head(n = 1)
+# Last row per group
+flights %&gt;%
+  fslice_tail(n = 1)
+# Earliest flight per group
+flights %&gt;%
+  fslice_min(time_hour, with_ties = FALSE)
+# Last flight per group
+flights %&gt;%
+  fslice_max(time_hour, with_ties = FALSE)
+# Random sample without replacement by group
+# (or stratified random sampling)
+flights %&gt;%
+  fslice_sample()
+
+</code></pre>
+
+
+</div>

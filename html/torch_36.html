@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to create an function that generates R6 instances of class <code>dataset</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>All datasets that represent a map from keys to data samples should subclass this
+class. All subclasses should overwrite the <code>.getitem()</code> method, which supports
+fetching a data sample for a given key. Subclasses could also optionally
+overwrite <code>.length()</code>, which is expected to return the size of the dataset
+(e.g. number of samples) used by many sampler implementations
+and the default options of <code>dataloader()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset(
+  name = NULL,
+  inherit = Dataset,
+  ...,
+  private = NULL,
+  active = NULL,
+  parent_env = parent.frame()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>a name for the dataset. It it's also used as the class
+for it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inherit</code></td>
+<td>
+<p>you can optionally inherit from a dataset when creating a
+new dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>public methods for the dataset class</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>private</code></td>
+<td>
+<p>passed to <code>R6::R6Class()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>active</code></td>
+<td>
+<p>passed to <code>R6::R6Class()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parent_env</code></td>
+<td>
+<p>An environment to use as the parent of newly-created
+objects.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The output is a function <code>f</code> with class <code>dataset_generator</code>. Calling <code>f()</code>
+creates a new instance of the R6 class <code>dataset</code>. The R6 class is stored in the
+enclosing environment of <code>f</code> and can also be accessed through <code>f</code>s attribute
+<code>Dataset</code>.
+</p>
+
+
+<h3>Get a batch of observations</h3>
+
+<p>By default datasets are iterated by returning each observation/item individually.
+Often it's possible to have an optimized implementation to take a batch
+of observations (eg, subsetting a tensor by multiple indexes at once is faster than
+subsetting once for each index), in this case you can implement a <code>.getbatch</code> method
+that will be used instead of <code>.getitem</code> when getting a batch of observations within
+the dataloader. <code>.getbatch</code> must work for batches of size larger or equal to 1 and
+care must be taken so it doesn't drop the batch dimension when it's queried with
+a length 1 batch index - for instance by using <code>drop=FALSE</code>. <code>.getitem()</code> is expected
+to not include the batch dimension as it's added by the datalaoder.
+For more on this see the the <code>vignette("loading-data")</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p><code>dataloader()</code>  by default constructs a index
+sampler that yields integral indices.  To make it work with a map-style
+dataset with non-integral indices/keys, a custom sampler must be provided.
+</p>
+
+
+</div>

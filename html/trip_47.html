@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>readArgos</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read Argos "DAT" or "DIAG" files</h2>
+
+<h3>Description</h3>
+
+<p>Return a (Spatial) data frame of location records from raw Argos files.
+Multiple files may be read, and each set of records is appended to the data
+frame in turn.  Basic validation of the data is enforced by default.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">readArgos(
+  x,
+  correct.all = TRUE,
+  dtFormat = "%Y-%m-%d %H:%M:%S",
+  tz = "GMT",
+  duplicateTimes.eps = 0.01,
+  p4 = "+proj=longlat +ellps=WGS84",
+  verbose = FALSE,
+  read_alt = NULL,
+  ...
+)
+
+readDiag(x, return_trip = FALSE, read_alt = 1L, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>vector of file names of Argos "DAT" or "DIAG" files.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correct.all</code></td>
+<td>
+<p>logical - enforce validity of data as much as possible?
+(see Details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtFormat</code></td>
+<td>
+<p>the DateTime format used by the Argos data "date" and "time"
+pasted together</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tz</code></td>
+<td>
+<p>timezone - GMT/UTC is assumed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>duplicateTimes.eps</code></td>
+<td>
+<p>what is the tolerance for times being duplicate?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p4</code></td>
+<td>
+<p>PROJ.4 projection string, "+proj=longlat +ellps=WGS84" is assumed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>if TRUE, details on date-time adjustment is reported</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>read_alt</code></td>
+<td>
+<p>is <code>NULL</code> by default, with longitude and latitude read from the PRV message, if <code>1</code> or <code>2</code>
+then attempt is made to read the alternative locations (but these are not always present)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>reserved for future use</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_trip</code></td>
+<td>
+<p>for <code>readDiag()</code> if <code>TRUE</code> will return a trip object, use <code>read_alt</code> to control the location</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>readArgos</code> performs basic validation checks for class <code>trip</code> are
+made, and enforced based on <code>correct.all</code>:
+</p>
+<p>No duplicate records in the data, these are simply removed.  Records are
+ordered by DateTime ("date", "time", "gmt") within ID ("ptt").  No duplicate
+DateTime values within ID are allowed: to enforce this the time values are
+moved forward by one second - this is done recursively and is not robust.
+</p>
+<p>If validation fails the function will return a
+<code>SpatialPointsDataFrame-class</code>.  Files that are not obviously of
+the required format are skipped.
+</p>
+<p>Argos location quality data "class" are ordered, assuming that the available
+levels is <code>levels=c("Z", "B", "A", "0", "1", "2", "3")</code>.
+</p>
+<p>A projection string is added to the data, assuming the PROJ.4 longlat - if
+any longitudes are greater than 360 the PROJ.4 argument "+over" is added.
+</p>
+<p><code>readDiag</code> simply builds a <code>data.frame</code>.
+</p>
+<p>With <code>read_alt</code> the default value <code>NULL</code> returns the PRV location as-is. Some files may have
+a standardized location, and a dummy. If <code>read_alt</code> is set to 1 or 2 the corresponding "alternative"
+location is returned. 1 is a standardized location corresponding to the original PRV message, and 2 is a
+"dummy" location.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>readArgos</code> returns a <code>trip</code> object, if all goes well, or simply a
+<code>SpatialPointsDataFrame-class</code>.
+</p>
+<p><code>readDiag</code> returns a <code>data.frame</code> with 8 columns:
+</p>
+
+<ul>
+<li> <p><code>lon1</code>,<code>lat1</code> first pair of coordinates
+</p>
+</li>
+<li> <p><code>lon1</code>,<code>lat1</code> second pair of coordinates
+</p>
+</li>
+<li> <p>gmt DateTimes as POSIXct
+</p>
+</li>
+<li> <p>id Platform Transmitting Terminal (PTT) ID
+</p>
+</li>
+<li> <p>lq Argos location quality class
+</p>
+</li>
+<li> <p>iq some other thing
+</p>
+</li>
+</ul>
+<h3>Warning </h3>
+
+<p>This works on some Argos files I have seen.
+</p>
+
+
+<h3>References</h3>
+
+<p>The Argos data documentation was (ca. 2003) at
+http://www.argos-system.org/manual.  Specific details on the PRV
+("provide data") format were found in Chapter 4_4_8, originally at
+'http://www.cls.fr/manuel/html/chap4/chap4_4_8.htm'.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>trip</code>, <code>SpatialPointsDataFrame-class</code>,
+<code>adjust.duplicateTimes</code>, for manipulating these data, and
+<code>argos.sigma</code> for relating a numeric value to Argos quality
+"classes".
+</p>
+<p><code>sepIdGaps</code> for splitting the IDs in these data on some minimum
+gap.
+</p>
+<p><code>order</code>, <code>duplicated</code>, , <code>ordered</code> for
+general manipulation of this type.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">argosfile &lt;-
+  system.file("extdata/argos/98feb.dat", package = "trip", mustWork = TRUE)
+argos &lt;- readArgos(argosfile)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,198 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Tapkee</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tapkee wrapper</h2>
+
+<h3>Description</h3>
+
+<p>R wrapper for the 'tapkee' dimension reduction library</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Tapkee(data, method="pca", td=2, verbose=FALSE, add="", prefix="Dim", rm=TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>R numerical matrix or data frame (will be converted into matrix)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>'tapkee' method, run "system('tapkee -h')" for the list, default is "pca"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>td</code></td>
+<td>
+<p>Number of dimensions to output, default is 2</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>If TRUE, 'tapkee' is verbose, defalut is FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+<p>'tapkee' additional arguments as character string: see "system('tapkee -h')"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>Variable name prefix in the resulted data frame, default is "Dim"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rm</code></td>
+<td>
+<p>Remove temp files (but temp folder will be removed anyway in the end of R session), default is TRUE</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Interface (wrapper) for the 'tapkee', flexible and efficient C++ template library for dimension reduction.
+'tapkee' is extremely fast comparing with other DR tools.
+</p>
+<p>For methods used in 'tapkee', run 'vignette(tapkee_methods)'.
+</p>
+<p>Users should install 'tapkee' independently from author Web site (https://github.com/lisitsyn/tapkee)
+or associated GitHub (https://github.com/lisitsyn/tapkee). Run 'package?tapkee' or help("tapkee-package")
+for details related with your operation system. If 'tapkee' is not installed, Tapkee() will fail gracefully
+and output the input data with warning.
+</p>
+<p>Please note that "[warning] The neighborhood graph is not connected" message in most cases means that
+'tapkee' run was unsuccessful. As a result, Tapkee() might return the matrix of NaN's.
+One of possible workarounds is to specify the higher number of neigbors ('-k' option, default is 10).
+See below for the example.
+</p>
+<p>Note that the wrapper catches only one (main) type of 'tapkee' utility outputs. For other possible output
+types (see 'tapkee -h' for explanation), run 'tapkee' without wrapper.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Data frame with number of columns equal to number of dimensions given and "prefix" column names prefixes.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Alexey Shipunov</p>
+
+
+<h3>References</h3>
+
+<p>Sergey Lisitsyn and Christian Widmer and Fernando J. Iglesias Garcia. Tapkee: An Efficient Dimension Reduction Library. Journal of Machine Learning Research, 14: 2355-2359, 2013.</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tapkee-package</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## 'tapkee' vs. R base functions
+system.time(Tapkee(iris[, -5], method="mds"))
+system.time(cmdscale(dist(iris[, -5])))
+
+## How to use 'add' option
+plot(Tapkee(iris[, -5], "isomap", add="-k 47"), col=iris[, 5])
+
+## 'tapkee' methods as of March 2019:
+TM &lt;- c(
+"lle", # 1) locally_linear_embedding (lle),
+"npe", # 2) neighborhood_preserving_embedding (npe),
+"ltsa", # 3) local_tangent_space_alignment (ltsa),
+"lltsa", # 4) linear_local_tangent_space_alignment (lltsa), 
+"hlle", # 5) hessian_locally_linear_embedding (hlle),
+"la", # 6) laplacian_eigenmaps (la),
+"lpp", # 7) locality_preserving_projections (lpp),
+"dm", # 8) diffusion_map (dm),
+"isomap", # 9) isomap (isomap),
+"l-isomap", # 10) landmark_isomap (l-isomap),
+"mds", # 11) multidimensional_scaling (mds),
+"l-mds", # 12) landmark_multidimensional_scaling (l-mds),
+"spe", # 13) stochastic_proximity_embedding (spe),
+"kpca", # 14) kernel_pca (kpca),
+"pca", # 15) pca (pca),
+"ra", # 16) random_projection (ra),
+"fa", # 17) factor_analysis (fa),
+"t-sne", # 18) t-stochastic_neighborhood_embedding (t-sne),
+"ms") # 19) manifold_sculpting (ms)
+
+## Iris example
+oldpar &lt;- par(mfrow=c(4, 5), mar=c(1, 1, 3, 1), xaxt="n", yaxt="n")
+for (n in c(1:18)) {
+plot(Tapkee(iris[, -5], method=TM[n], add="-k 50"),
+ col=iris[, 5], pch=20, main=TM[n], xlab="", ylab="")
+}
+plot(iris[, 1:2], col=iris[, 5], pch=20, main="iris[, 1:2]", xlab="", ylab="")
+par(oldpar)
+
+## Generate typical 3D data
+SR &lt;- Gen.dr.data("swissroll")
+SC &lt;- Gen.dr.data("scurve")
+HX &lt;- Gen.dr.data("helix")
+SS &lt;- Gen.dr.data("ssphere")
+
+## This will separate colors better
+COL &lt;- rainbow(1100)[1:1000]
+
+## 3D plot (if no 'scatterplot3d' package, plots XY axes)
+T3D &lt;- function(dat, title, col=COL) {
+ if (requireNamespace("scatterplot3d", quietly = TRUE)) {
+ scatterplot3d::scatterplot3d(dat, color=col, main=title, pch=20, xlab="", ylab="", zlab="",
+  axis=FALSE, tick.marks=FALSE, label.tick.marks=FALSE, mar=c(1, 1, 3, 1))
+} else {
+ plot(dat[, 1:2], col=col, main=paste(title, "(2D projection)"), pch=20)
+ warning("Please install 'scatterplot3d' package to see the 3D plot")
+}}
+
+## Swiss Roll
+oldpar &lt;- par(mfrow=c(4, 5))
+T3D(SR, title="Swiss Roll")
+for (n in 1:18) plot(Tapkee(SR, method=TM[n]), col=COL, pch=20, main=TM[n],
+ xlab="", ylab="", xaxt="n", yaxt="n")
+par(oldpar)
+
+## S-Curve
+oldpar &lt;- par(mfrow=c(4, 5))
+T3D(SC, title="S-Curve")
+for (n in 1:18) plot(Tapkee(SC, method=TM[n]), col=COL, pch=20, main=TM[n],
+ xlab="", ylab="", xaxt="n", yaxt="n")
+par(oldpar)
+
+## Helix
+oldpar &lt;- par(mfrow=c(4, 5))
+T3D(HX, title="Helix")
+for (n in 1:18) plot(Tapkee(HX, method=TM[n]), col=COL, pch=20,
+ main=TM[n], xlab="", ylab="", xaxt="n", yaxt="n")
+par(oldpar)
+
+## Severed Sphere
+oldpar &lt;- par(mfrow=c(4, 5))
+T3D(SS, title="Severed Sphere", col=rainbow(nrow(SS)))
+for (n in 1:18) plot(Tapkee(SS, method=TM[n]), col=rainbow(nrow(SS)), pch=20,
+ main=TM[n], xlab="", ylab="", xaxt="n", yaxt="n")
+par(oldpar)
+
+</code></pre>
+
+
+</div>

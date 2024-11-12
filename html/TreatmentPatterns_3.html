@@ -1,0 +1,266 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>computePathways</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>computePathways</h2>
+
+<h3>Description</h3>
+
+<p>Compute treatment patterns according to the specified parameters within
+specified cohorts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">computePathways(
+  cohorts,
+  cohortTableName,
+  cdm = NULL,
+  connectionDetails = NULL,
+  cdmSchema = NULL,
+  resultSchema = NULL,
+  tempEmulationSchema = NULL,
+  includeTreatments = "startDate",
+  periodPriorToIndex = 0,
+  minEraDuration = 0,
+  splitEventCohorts = NULL,
+  splitTime = NULL,
+  eraCollapseSize = 30,
+  combinationWindow = 30,
+  minPostCombinationDuration = 30,
+  filterTreatments = "First",
+  maxPathLength = 5
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>cohorts</code></td>
+<td>
+<p>(<code>data.frame()</code>)<br>
+Data frame containing the following columns and data types:
+</p>
+
+<dl>
+<dt>cohortId <code>numeric(1)</code>
+</dt>
+<dd>
+<p>Cohort ID's of the cohorts to be used in the cohort table.</p>
+</dd>
+<dt>cohortName <code>character(1)</code>
+</dt>
+<dd>
+<p>Cohort names of the cohorts to be used in the cohort table.</p>
+</dd>
+<dt>type <code>character(1)</code> ["target", "event', "exit"]</dt>
+<dd>
+<p>Cohort type, describing if the cohort is a target, event, or exit cohort</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cohortTableName</code></td>
+<td>
+<p>(<code>character(1)</code>)<br>
+Cohort table name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cdm</code></td>
+<td>
+<p>(<code>CDMConnector::cdm_from_con()</code>: <code>NULL</code>)<br>
+Optional; Ignores <code>connectionDetails</code>, <code>cdmSchema</code>, and <code>resultSchema</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>connectionDetails</code></td>
+<td>
+<p>(<code>DatabaseConnector::createConnectionDetails()</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>cdmSchema</code> and <code>resultSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cdmSchema</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>connectionDetails</code> and <code>resultSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resultSchema</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>connectionDetails</code> and <code>cdmSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tempEmulationSchema</code></td>
+<td>
+<p>Schema used to emulate temp tables</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>includeTreatments</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>"startDate"</code>)<br></p>
+
+<dl>
+<dt><code>"startDate"</code></dt>
+<dd>
+<p>Include treatments after the target cohort start date and onwards.</p>
+</dd>
+<dt><code>"endDate"</code></dt>
+<dd>
+<p>Include treatments before target cohort end date and before.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>periodPriorToIndex</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>0</code>)<br>
+Number of days prior to the index date of the target cohort | that event
+cohorts are allowed to start</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minEraDuration</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>0</code>)<br>
+Minimum time an event era should last to be included in analysis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splitEventCohorts</code></td>
+<td>
+<p>(<code>character(n)</code>: <code>""</code>)<br>
+Specify event cohort to split in acute (&lt; X days) and therapy (&gt;= X days)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splitTime</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Specify number of days (X) at which each of the split event cohorts should
+be split in acute and therapy</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eraCollapseSize</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Window of time between which two eras of the same event cohort are collapsed
+into one era</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>combinationWindow</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Window of time two event cohorts need to overlap to be considered a
+combination treatment</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minPostCombinationDuration</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Minimum time an event era before or after a generated combination treatment
+should last to be included in analysis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filterTreatments</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>"First"</code> ["first", "Changes", "all"])<br>
+Select first occurrence of (‘First’); changes between (‘Changes’); or all
+event cohorts (‘All’).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxPathLength</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>5</code>)<br>
+Maximum number of steps included in treatment pathway</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>(<code>Andromeda::andromeda()</code>)
+andromeda object containing non-sharable patient level
+data outcomes.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ableToRun &lt;- all(
+  require("CirceR", character.only = TRUE, quietly = TRUE),
+  require("CDMConnector", character.only = TRUE, quietly = TRUE),
+  require("TreatmentPatterns", character.only = TRUE, quietly = TRUE),
+  require("dplyr", character.only = TRUE, quietly = TRUE)
+)
+
+if (ableToRun) {
+  library(TreatmentPatterns)
+  library(CDMConnector)
+  library(dplyr)
+
+  withr::local_envvar(
+    R_USER_CACHE_DIR = tempfile(),
+    EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
+  )
+
+  tryCatch({
+    if (Sys.getenv("skip_eunomia_download_test") != "TRUE") {
+      CDMConnector::downloadEunomiaData(overwrite = TRUE)
+    }
+  }, error = function(e) NA)
+
+  con &lt;- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  cdm &lt;- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
+
+  cohortSet &lt;- readCohortSet(
+    path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+  )
+
+  cdm &lt;- generateCohortSet(
+    cdm = cdm,
+    cohortSet = cohortSet,
+    name = "cohort_table"
+  )
+
+  cohorts &lt;- cohortSet %&gt;%
+    # Remove 'cohort' and 'json' columns
+    select(-"cohort", -"json") %&gt;%
+    mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %&gt;%
+    rename(
+      cohortId = "cohort_definition_id",
+      cohortName = "cohort_name",
+    ) %&gt;%
+    select("cohortId", "cohortName", "type")
+
+  outputEnv &lt;- computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm
+  )
+
+  Andromeda::close(outputEnv)
+  DBI::dbDisconnect(con, shutdown = TRUE)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimate_betas</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate Rolling Betas</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates rolling betas for a given model using the provided data.
+It supports parallel processing for faster computation using the <code>furrr</code> package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_betas(
+  data,
+  model,
+  lookback,
+  min_obs = NULL,
+  use_furrr = FALSE,
+  data_options = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A tibble containing the data with a date identifier (defaults to <code>date</code>), a stock
+identifier (defaults to <code>permno</code>), and other variables used in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A formula representing the model to be estimated (e.g.,
+<code>ret_excess ~ mkt_excess + smb + hml</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lookback</code></td>
+<td>
+<p>A Period object specifying the number of months, days, hours, minutes, or
+seconds to look back when estimating the rolling model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_obs</code></td>
+<td>
+<p>An integer specifying the minimum number of observations required to estimate
+the model. Defaults to 80% of <code>lookback</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_furrr</code></td>
+<td>
+<p>A logical indicating whether to use the <code>furrr</code> package and its paralellization
+capabilities. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_options</code></td>
+<td>
+<p>A named list of data_options with characters, indicating the column
+names required to run this function. The required column names identify dates and the stocks.
+Defaults to <code>date = date</code> and <code>id = permno</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A tibble with the estimated betas for each time period.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Estimate monthly betas using monthly return data
+set.seed(1234)
+data_monthly &lt;- tibble::tibble(
+  date = rep(seq.Date(from = as.Date("2020-01-01"),
+                      to = as.Date("2020-12-01"), by = "month"), each = 50),
+  permno = rep(1:50, times = 12),
+  ret_excess = rnorm(600, 0, 0.1),
+  mkt_excess = rnorm(600, 0, 0.1),
+  smb = rnorm(600, 0, 0.1),
+  hml = rnorm(600, 0, 0.1),
+)
+
+estimate_betas(data_monthly,  "ret_excess ~ mkt_excess", months(3))
+estimate_betas(data_monthly,  "ret_excess ~ mkt_excess + smb + hml", months(6))
+
+data_monthly |&gt;
+  dplyr::rename(id = permno) |&gt;
+  estimate_betas("ret_excess ~ mkt_excess", months(3),
+                 data_options = data_options(id = "id"))
+
+# Estimate monthly betas using daily return data and parallelization
+data_daily &lt;- tibble::tibble(
+  date = rep(seq.Date(from = as.Date("2020-01-01"),
+                      to = as.Date("2020-12-31"), by = "day"), each = 50),
+  permno = rep(1:50, times = 366),
+  ret_excess = rnorm(18300, 0, 0.02),
+  mkt_excess = rnorm(18300, 0, 0.02),
+  smb = rnorm(18300, 0, 0.02),
+  hml = rnorm(18300, 0, 0.02),
+)
+
+data_daily &lt;- data_daily |&gt;
+  dplyr::mutate(date = lubridate::floor_date(date, "month"))
+
+# Change settings via future::plan(strategy = "multisession", workers = 4)
+estimate_betas(data_daily, "ret_excess ~ mkt_excess", lubridate::days(90), use_furrr = TRUE)
+
+</code></pre>
+
+
+</div>

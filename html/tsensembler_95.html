@@ -1,0 +1,93 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update_ade</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Updating an ADE model</h2>
+
+<h3>Description</h3>
+
+<p><strong>update_ade</strong> is a generic function that combines
+<code>update_base_models</code>, <code>update_ade_meta</code>,
+and <code>update_weights</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">update_ade(object, newdata, num_cores = 1)
+
+## S4 method for signature 'ADE'
+update_ade(object, newdata, num_cores = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>a <code>ADE-class</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>data used to update the ADE model. This should be
+the data used to initially train the models (training set), together
+with new observations (for example, validation set). Each model
+is retrained using <code>newdata</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_cores</code></td>
+<td>
+<p>A numeric value to specify the number of cores used to
+train base and meta models. num_cores = 1
+leads to sequential training of models. num_cores &gt; 1
+splits the training of the base models across num_cores cores.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>ADE-class</code> for building an ADE model;
+<code>update_weights</code> for updating the weights of the ensemble (without
+retraining the models); <code>update_base_models</code> for updating the
+base models of an ensemble; and <code>update_ade_meta</code> for
+updating the meta-models of an ADE model.
+</p>
+<p>Other updating models: 
+<code>update_ade_meta()</code>,
+<code>update_weights()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">specs &lt;- model_specs(
+ learner = c("bm_svr", "bm_glm", "bm_mars"),
+ learner_pars = NULL
+)
+
+data("water_consumption")
+dataset &lt;- embed_timeseries(water_consumption, 5)
+# toy size for checks
+train &lt;- dataset[1:300, ]
+validation &lt;- dataset[301:400, ]
+test &lt;- dataset[401:500, ]
+
+model &lt;- ADE(target ~., train, specs)
+
+preds_val &lt;- predict(model, validation)
+model &lt;- update_ade(model, rbind.data.frame(train, validation))
+
+preds_test &lt;- predict(model, test)
+
+
+</code></pre>
+
+
+</div>

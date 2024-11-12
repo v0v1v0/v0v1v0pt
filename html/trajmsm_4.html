@@ -1,0 +1,96 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ggtraj</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ggplot Trajectory</h2>
+
+<h3>Description</h3>
+
+<p>Use <code>"ggplot2"</code> to plot trajectory groups produced by the function <code>"build_traj"</code> using the observed treatment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ggtraj(traj_data, treatment, time, identifier, class, FUN = mean, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>traj_data</code></td>
+<td>
+<p>Merged datasets containing observed data in long format and trajectory groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment</code></td>
+<td>
+<p>Name of the time-varying treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Name of the time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>identifier</code></td>
+<td>
+<p>Name of the identifier variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>class</code></td>
+<td>
+<p>Name of the trajectory groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+<p>Specify which statistics to display, by default calculate the mean.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments to be passed to ggplot functions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A ggplot object representing the trajectory groups using the observed treatment.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+obsdata_long = gendata(n = 1000, format = "long", total_followup = 12, seed = 945)
+restraj = build_traj(obsdata = obsdata_long, number_traj = 3,
+formula = as.formula(cbind(statins, 1 - statins) ~ time), identifier = "id")
+datapost = restraj$data_post
+head(datapost)
+traj_data_long &lt;- merge(obsdata_long, datapost, by = "id")
+    AggFormula &lt;- as.formula(paste("statins", "~", "time", "+", "class"))
+    Aggtraj_data &lt;- aggregate(AggFormula, data = traj_data_long, FUN = mean)
+    Aggtraj_data
+#Aggtraj_data with labels
+traj_data_long[ , "traj_group"] &lt;- factor(ifelse(traj_data_long[ , "class"] == "3" ,"Group1" ,
+ifelse (traj_data_long[ , "class"]== "1" , "Group2" ,"Group3")))
+AggFormula &lt;- as.formula(paste("statins", "~", "time", "+", "traj_group"))
+Aggtraj_data &lt;- aggregate(AggFormula, data = traj_data_long, FUN = mean)
+ggtraj(traj_data =  Aggtraj_data,
+treatment = "statins",time= "time",identifier="id",class = "traj_group", FUN = mean)
+
+</code></pre>
+
+
+</div>

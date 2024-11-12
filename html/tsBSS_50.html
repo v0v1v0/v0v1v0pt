@@ -1,0 +1,228 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>PVC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+A Modified Algorithm for Principal Volatility Component Estimator
+</h2>
+
+<h3>Description</h3>
+
+<p>PVC (Principal Volatility Component) estimator for the blind source separation (BSS) problem. This method is a modified version of PVC by Hu and Tsay (2014).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">PVC(X, ...)
+
+## Default S3 method:
+PVC(X, k = 1:12, ordered = FALSE, acfk = NULL, original = TRUE, alpha = 0.05, ...)
+## S3 method for class 'ts'
+PVC(X, ...)
+## S3 method for class 'xts'
+PVC(X, ...)
+## S3 method for class 'zoo'
+PVC(X, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A numeric matrix or a multivariate time series object of class <code>ts</code>, <code>xts</code> or <code>zoo</code>. Missing values are not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>A vector of lags. It can be any non-zero positive integer, or a vector consisting of them. Default is <code>1:12</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ordered</code></td>
+<td>
+<p>Whether to order components according to their volatility. Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>acfk</code></td>
+<td>
+<p>A vector of lags to be used in testing the presence of serial autocorrelation. Applicable only if <code>ordered = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>original</code></td>
+<td>
+<p>Whether to return the original components or their residuals based on ARMA fit. Default is <code>TRUE</code>, i.e. the original components are returned. Applicable only if <code>ordered = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Alpha level for linear correlation detection. Default is 0.05.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to or from methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume that a <code class="reqn">p</code>-variate <code class="reqn">{\bf Y}</code> with <code class="reqn">T</code> observations is whitened, i.e. <code class="reqn">{\bf Y}={\bf S}^{-1/2}({\bf X}_t - \frac{1}{T}\sum_{t=1}^T {\bf X}_{t})</code>, for <code class="reqn">t = 1, \ldots, T</code>,
+where <code class="reqn">\bf S</code> is the sample covariance matrix of <code class="reqn">\bf X</code>.
+Then for each lag <code class="reqn">k</code> we calculate
+</p>
+<p style="text-align: center;"><code class="reqn">\widehat{Cov}({\bf Y}_t {\bf Y}_t', Y_{ij, t-k}) = \frac{1}{T}\sum_{t = k + 1}^T \left({\bf Y}_t {\bf Y}_t' - \frac{1}{T-k}\sum_{t = k+1}^T {\bf Y}_t {\bf Y}_t' \right)\left(Y_{ij, t-k} - \frac{1}{T-k}\sum_{t = k+1}^T {Y}_{ij, t-k}\right),</code>
+</p>
+
+<p>where <code class="reqn">t = k + 1, \ldots, T</code> and <code class="reqn">Y_{ij, t-k} = Y_{i, t-k} Y_{j, t-k}, i, j = 1, \ldots, p</code>.
+Then 
+</p>
+<p style="text-align: center;"><code class="reqn">{\bf g}_k({\bf Y}) = \sum_{i = 1}^p \sum_{j=1}^p (\widehat{Cov}({\bf Y}_t {\bf Y}_t', Y_{ij, t-k}))^2.</code>
+</p>
+
+<p>where <code class="reqn">i,j = 1, \ldots, p.</code>
+Thus the generalized kurtosis matrix is 
+</p>
+<p style="text-align: center;"><code class="reqn">{\bf G}_K({\bf Y}) = \sum_{k = 1}^K {\bf g}_k({\bf Y}),</code>
+</p>
+
+<p>where <code class="reqn">k = 1, \ldots, K</code> is the set of chosen lags.
+Then <code class="reqn">\bf U</code> is the matrix with eigenvectors of <code class="reqn">{\bf G}_K({\bf Y})</code> as its rows.
+The final unmixing matrix is then <code class="reqn">{\bf W} = {\bf US}^{-1/2}</code>, where the average value of each row is set to be positive.
+</p>
+<p>For <code>ordered = TRUE</code> the function orders the sources according to their volatility. First a possible linear autocorrelation is removed using <code>auto.arima</code>. Then a squared autocorrelation test is performed for the sources (or for their residuals, when linear correlation is present). The sources are then put in a decreasing order according to the value of the test statistic of the squared autocorrelation test. For more information, see <code>lbtest</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class 'bssvol', inheriting from class 'bss', containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>W </code></td>
+<td>
+<p>The estimated unmixing matrix. If <code>ordered = TRUE</code>, the rows are ordered according to the order of the components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k </code></td>
+<td>
+<p>The vector of the used lags.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>The estimated sources as time series object standardized to have mean 0 and unit variances. If <code>ordered = TRUE</code>, then components are ordered according to their volatility. If <code>original = FALSE</code>, the sources with linear autocorrelation are replaced by their ARMA residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MU </code></td>
+<td>
+<p>The mean vector of <code>X</code>.</p>
+</td>
+</tr>
+</table>
+<p>If <code>ordered = TRUE</code>, then also the following components included in the list:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>Sraw </code></td>
+<td>
+<p>The ordered original estimated sources as time series object standardized to have mean 0 and unit variances. Returned only if <code>original = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fits </code></td>
+<td>
+<p>The ARMA fits for the components with linear autocorrelation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>armaeff </code></td>
+<td>
+<p>A logical vector. Is TRUE if ARMA fit was done to the corresponding component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linTS </code></td>
+<td>
+<p>The value of the modified Ljung-Box test statistic for each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linP </code></td>
+<td>
+<p>p-value based on the modified Ljung-Box test statistic for each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>volTS </code></td>
+<td>
+<p>The value of the volatility clustering test statistic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>volP </code></td>
+<td>
+<p>p-value based on the volatility clustering test statistic.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Jari Miettinen, Markus Matilainen
+</p>
+
+
+<h3>References</h3>
+
+<p>Miettinen, M., Matilainen, M., Nordhausen, K. and Taskinen, S. (2020), <em>Extracting Conditionally Heteroskedastic Components Using Independent Component Analysis</em>, Journal of Time Series Analysis,41, 293–311.
+</p>
+<p>Hu, Y.-P. and Tsay, R. S. (2014), <em>Principal Volatility Component Analysis</em>, Journal of Business &amp; Economic Statistics, 32(2), 153–164.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>comVol</code>, <code>gSOBI</code>, <code>lbtest</code>, <code>auto.arima</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if(require("stochvol")) {
+n &lt;- 10000
+A &lt;- matrix(rnorm(9), 3, 3)
+
+# Simulate SV models
+s1 &lt;- svsim(n, mu = -10, phi = 0.8, sigma = 0.1)$y
+s2 &lt;- svsim(n, mu = -10, phi = 0.9, sigma = 0.2)$y
+s3 &lt;- svsim(n, mu = -10, phi = 0.95, sigma = 0.4)$y
+
+# Create a daily time series
+X &lt;- ts(cbind(s1, s2, s3) %*% t(A), end = c(2015, 338), frequency = 365.25)
+
+res &lt;- PVC(X)
+res
+coef(res)
+plot(res)
+head(bss.components(res))
+
+MD(res$W, A) # Minimum Distance Index, should be close to zero
+}
+</code></pre>
+
+
+</div>

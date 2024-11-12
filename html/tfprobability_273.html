@@ -1,0 +1,302 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd_vector_sinh_arcsinh_diag</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The (diagonal) SinhArcsinh transformation of a distribution on <code>R^k</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>This distribution models a random vector <code style="white-space: pre;">⁠Y = (Y1,...,Yk)⁠</code>, making use of
+a SinhArcsinh transformation (which has adjustable tailweight and skew),
+a rescaling, and a shift.
+The SinhArcsinh transformation of the Normal is described in great depth in
+<a href="https://oro.open.ac.uk/22510/">Sinh-arcsinh distributions</a>.
+Here we use a slightly different parameterization, in terms of tailweight
+and skewness.  Additionally we allow for distributions other than Normal,
+and control over scale as well as a "shift" parameter loc.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd_vector_sinh_arcsinh_diag(
+  loc = NULL,
+  scale_diag = NULL,
+  scale_identity_multiplier = NULL,
+  skewness = NULL,
+  tailweight = NULL,
+  distribution = NULL,
+  validate_args = FALSE,
+  allow_nan_stats = TRUE,
+  name = "VectorSinhArcsinhDiag"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>loc</code></td>
+<td>
+<p>Floating-point Tensor. If this is set to NULL, loc is
+implicitly 0. When specified, may have shape <code style="white-space: pre;">⁠[B1, ..., Bb, k]⁠</code> where
+b &gt;= 0 and k is the event size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_diag</code></td>
+<td>
+<p>Non-zero, floating-point Tensor representing a diagonal
+matrix added to scale. May have shape <code style="white-space: pre;">⁠[B1, ..., Bb, k]⁠</code>, b &gt;= 0,
+and characterizes b-batches of k x k diagonal matrices added to
+scale. When both scale_identity_multiplier and scale_diag are
+NULL then scale is the Identity.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_identity_multiplier</code></td>
+<td>
+<p>Non-zero, floating-point Tensor representing
+a scale-identity-matrix added to scale. May have shape
+<code style="white-space: pre;">⁠[B1, ..., Bb]⁠</code>, b &gt;= 0, and characterizes b-batches of scale
+k x k identity matrices added to scale. When both
+scale_identity_multiplier and scale_diag are NULL then scale
+is the Identity.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skewness</code></td>
+<td>
+<p>Skewness parameter.  floating-point Tensor with shape
+broadcastable with event_shape.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tailweight</code></td>
+<td>
+<p>Tailweight parameter.  floating-point Tensor with shape
+broadcastable with event_shape.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distribution</code></td>
+<td>
+<p><code>tf$distributions$Distribution</code>-like instance. Distribution from which k
+iid samples are used as input to transformation F.  Default is
+tfd_normal(loc = 0, scale = 1).
+Must be a scalar-batch, scalar-event distribution.  Typically
+distribution$reparameterization_type = FULLY_REPARAMETERIZED or it is
+a function of non-trainable parameters. WARNING: If you backprop through
+a VectorSinhArcsinhDiag sample and distribution is not
+FULLY_REPARAMETERIZED yet is a function of trainable variables, then
+the gradient will be incorrect!</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. When TRUE distribution parameters are checked
+for validity despite possibly degrading runtime performance. When FALSE invalid inputs may
+silently render incorrect outputs. Default value: FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p>Logical, default TRUE. When TRUE, statistics (e.g., mean, mode, variance)
+use the value NaN to indicate the result is undefined. When FALSE, an exception is raised if
+one or more of the statistic's batch members are undefined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Mathematical Details
+</p>
+<p>Given iid random vector <code style="white-space: pre;">⁠Z = (Z1,...,Zk)⁠</code>, we define the VectorSinhArcsinhDiag
+transformation of <code>Z</code>, <code>Y</code>, parameterized by
+<code style="white-space: pre;">⁠(loc, scale, skewness, tailweight)⁠</code>, via the relation (with <code>@</code> denoting matrix multiplication):
+</p>
+<div class="sourceCode"><pre>Y := loc + scale @ F(Z) * (2 / F_0(2))
+F(Z) := Sinh( (Arcsinh(Z) + skewness) * tailweight )
+F_0(Z) := Sinh( Arcsinh(Z) * tailweight )
+</pre></div>
+<p>This distribution is similar to the location-scale transformation
+<code>L(Z) := loc + scale @ Z</code> in the following ways:
+</p>
+
+<ul>
+<li>
+<p> If <code>skewness = 0</code> and <code>tailweight = 1</code> (the defaults), <code>F(Z) = Z</code>, and then
+<code>Y = L(Z)</code> exactly.
+</p>
+</li>
+<li> <p><code>loc</code> is used in both to shift the result by a constant factor.
+</p>
+</li>
+<li>
+<p> The multiplication of <code>scale</code> by <code>2 / F_0(2)</code> ensures that if <code>skewness = 0</code>
+<code>P[Y - loc &lt;= 2 * scale] = P[L(Z) - loc &lt;= 2 * scale]</code>.
+Thus it can be said that the weights in the tails of <code>Y</code> and <code>L(Z)</code> beyond
+<code>loc + 2 * scale</code> are the same.
+This distribution is different than <code>loc + scale @ Z</code> due to the
+reshaping done by <code>F</code>:
+</p>
+
+<ul>
+<li>
+<p> Positive (negative) <code>skewness</code> leads to positive (negative) skew.
+</p>
+</li>
+<li>
+<p> positive skew means, the mode of <code>F(Z)</code> is "tilted" to the right.
+</p>
+</li>
+<li>
+<p> positive skew means positive values of <code>F(Z)</code> become more likely, and
+negative values become less likely.
+</p>
+</li>
+<li>
+<p> Larger (smaller) <code>tailweight</code> leads to fatter (thinner) tails.
+</p>
+</li>
+<li>
+<p> Fatter tails mean larger values of <code style="white-space: pre;">⁠|F(Z)|⁠</code> become more likely.
+</p>
+</li>
+<li> <p><code>tailweight &lt; 1</code> leads to a distribution that is "flat" around <code>Y = loc</code>,
+and a very steep drop-off in the tails.
+</p>
+</li>
+<li> <p><code>tailweight &gt; 1</code> leads to a distribution more peaked at the mode with
+heavier tails.
+To see the argument about the tails, note that for <code style="white-space: pre;">⁠|Z| &gt;&gt; 1⁠</code> and
+<code style="white-space: pre;">⁠|Z| &gt;&gt; (|skewness| * tailweight)**tailweight⁠</code>, we have
+<code style="white-space: pre;">⁠Y approx 0.5 Z**tailweight e**(sign(Z) skewness * tailweight)⁠</code>.
+To see the argument regarding multiplying <code>scale</code> by <code>2 / F_0(2)</code>,
+</p>
+</li>
+</ul>
+<div class="sourceCode"><pre>P[(Y - loc) / scale &lt;= 2] = P[F(Z) * (2 / F_0(2)) &lt;= 2]
+= P[F(Z) &lt;= F_0(2)]
+= P[Z &lt;= 2]  (if F = F_0).
+</pre></div>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a distribution instance.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see e.g. <code>tfd_sample()</code>, <code>tfd_log_prob()</code>, <code>tfd_mean()</code>.
+</p>
+<p>Other distributions: 
+<code>tfd_autoregressive()</code>,
+<code>tfd_batch_reshape()</code>,
+<code>tfd_bates()</code>,
+<code>tfd_bernoulli()</code>,
+<code>tfd_beta_binomial()</code>,
+<code>tfd_beta()</code>,
+<code>tfd_binomial()</code>,
+<code>tfd_categorical()</code>,
+<code>tfd_cauchy()</code>,
+<code>tfd_chi2()</code>,
+<code>tfd_chi()</code>,
+<code>tfd_cholesky_lkj()</code>,
+<code>tfd_continuous_bernoulli()</code>,
+<code>tfd_deterministic()</code>,
+<code>tfd_dirichlet_multinomial()</code>,
+<code>tfd_dirichlet()</code>,
+<code>tfd_empirical()</code>,
+<code>tfd_exp_gamma()</code>,
+<code>tfd_exp_inverse_gamma()</code>,
+<code>tfd_exponential()</code>,
+<code>tfd_gamma_gamma()</code>,
+<code>tfd_gamma()</code>,
+<code>tfd_gaussian_process_regression_model()</code>,
+<code>tfd_gaussian_process()</code>,
+<code>tfd_generalized_normal()</code>,
+<code>tfd_geometric()</code>,
+<code>tfd_gumbel()</code>,
+<code>tfd_half_cauchy()</code>,
+<code>tfd_half_normal()</code>,
+<code>tfd_hidden_markov_model()</code>,
+<code>tfd_horseshoe()</code>,
+<code>tfd_independent()</code>,
+<code>tfd_inverse_gamma()</code>,
+<code>tfd_inverse_gaussian()</code>,
+<code>tfd_johnson_s_u()</code>,
+<code>tfd_joint_distribution_named_auto_batched()</code>,
+<code>tfd_joint_distribution_named()</code>,
+<code>tfd_joint_distribution_sequential_auto_batched()</code>,
+<code>tfd_joint_distribution_sequential()</code>,
+<code>tfd_kumaraswamy()</code>,
+<code>tfd_laplace()</code>,
+<code>tfd_linear_gaussian_state_space_model()</code>,
+<code>tfd_lkj()</code>,
+<code>tfd_log_logistic()</code>,
+<code>tfd_log_normal()</code>,
+<code>tfd_logistic()</code>,
+<code>tfd_mixture_same_family()</code>,
+<code>tfd_mixture()</code>,
+<code>tfd_multinomial()</code>,
+<code>tfd_multivariate_normal_diag_plus_low_rank()</code>,
+<code>tfd_multivariate_normal_diag()</code>,
+<code>tfd_multivariate_normal_full_covariance()</code>,
+<code>tfd_multivariate_normal_linear_operator()</code>,
+<code>tfd_multivariate_normal_tri_l()</code>,
+<code>tfd_multivariate_student_t_linear_operator()</code>,
+<code>tfd_negative_binomial()</code>,
+<code>tfd_normal()</code>,
+<code>tfd_one_hot_categorical()</code>,
+<code>tfd_pareto()</code>,
+<code>tfd_pixel_cnn()</code>,
+<code>tfd_poisson_log_normal_quadrature_compound()</code>,
+<code>tfd_poisson()</code>,
+<code>tfd_power_spherical()</code>,
+<code>tfd_probit_bernoulli()</code>,
+<code>tfd_quantized()</code>,
+<code>tfd_relaxed_bernoulli()</code>,
+<code>tfd_relaxed_one_hot_categorical()</code>,
+<code>tfd_sample_distribution()</code>,
+<code>tfd_sinh_arcsinh()</code>,
+<code>tfd_skellam()</code>,
+<code>tfd_spherical_uniform()</code>,
+<code>tfd_student_t_process()</code>,
+<code>tfd_student_t()</code>,
+<code>tfd_transformed_distribution()</code>,
+<code>tfd_triangular()</code>,
+<code>tfd_truncated_cauchy()</code>,
+<code>tfd_truncated_normal()</code>,
+<code>tfd_uniform()</code>,
+<code>tfd_variational_gaussian_process()</code>,
+<code>tfd_vector_diffeomixture()</code>,
+<code>tfd_vector_exponential_diag()</code>,
+<code>tfd_vector_exponential_linear_operator()</code>,
+<code>tfd_vector_laplace_diag()</code>,
+<code>tfd_vector_laplace_linear_operator()</code>,
+<code>tfd_von_mises_fisher()</code>,
+<code>tfd_von_mises()</code>,
+<code>tfd_weibull()</code>,
+<code>tfd_wishart_linear_operator()</code>,
+<code>tfd_wishart_tri_l()</code>,
+<code>tfd_wishart()</code>,
+<code>tfd_zipf()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,322 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dissrf</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Relative Frequency Groups.
+</h2>
+
+<h3>Description</h3>
+
+<p>Relative Frequency (RF) groups are equally sized groups obtained by partitioning sorted cases into <code class="reqn">k</code> consecutive groups. Function <code>dissrf</code> returns the medoid indexes of the RF groups and related statistics. Function <code>seqrf</code> is for sequence data and returns in addition the RF medoid sequences.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dissrf(diss,
+       k=NULL,
+       sortv="mds",
+       weights=NULL,
+       grp.meth = "prop",
+       squared = FALSE,
+       pow = NULL)
+
+seqrf(seqdata,
+       diss,
+       k=NULL,
+       sortv="mds",
+       weights=NULL,
+       weighted=TRUE,
+       grp.meth = "prop",
+       squared = FALSE,
+       pow = NULL)
+
+## S3 method for class 'dissrf'
+summary(object, dist.idx = 1:10, ...)
+
+## S3 method for class 'seqrf'
+summary(object, format="SPS", dist.idx = 1:10, ...)
+
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diss</code></td>
+<td>
+<p>Matrix or distance object. Pairwise dissimilarities between analyzed cases.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>State sequence <code>stslist</code> object as produced by <code>seqdef</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>Integer: Number of groupings (RF groups). When <code>NULL</code>, <code>k</code> is set as the minimum between 100 and the sum of weights over 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sortv</code></td>
+<td>
+<p>Real vector (of length <code>nrow(diss)</code>), character string, or <code>NULL</code>. Sorting variable used to compute the frequency groups.  If <code>NULL</code>, the original data order is used. If <code>"mds"</code> (default), the first MDS factor of <code>diss</code> (<code>diss^2</code> when <code>squared=TRUE</code>) is used. Ties are randomly ordered. For <code>seqrf</code> only, can also be one of <code>"from.start"</code> and <code>"from.end"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Vector  (of length <code>nrow(diss)</code>) of non-negative weights. If <code>NULL</code> (default), equal weights except when <code>weighted</code> is set as <code>TRUE</code> in <code>seqrf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. Should weights be used when there are weights in <code>seqdata</code>? (default is <code>TRUE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grp.meth</code></td>
+<td>
+<p>Character string. One of <code>"prop"</code>, <code>"first"</code>, and <code>"random"</code>. Grouping method. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>squared</code></td>
+<td>
+<p>Logical. Should medoids (and computation of <code>sortv</code> when applicable) be based on squared dissimilarities? (default is <code>FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pow</code></td>
+<td>
+<p>Double. Dissimilarity power exponent (typically 1 or 2) for computation of pseudo R2 and F. When <code>NULL</code>, <code>pow</code> is set as 1 when <code>squared = FALSE</code>, and as 2 otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods such as <code>print.stslist</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class <code>dissrf</code> or <code>seqrf</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>String. One of <code>"SPS"</code> (default) or <code>"STS"</code>. Display format of the medoid sequences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist.idx</code></td>
+<td>
+<p>Indexes of RF groups for which summary statistics of distances to the medoids are displayed. Default is <code>1:10</code>. Set as 0 to plot statistics for all RF groups.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Function <code>dissrf</code> partitions the <code class="reqn">n</code> cases (rows of the <code>diss</code> matrix) into <code class="reqn">k</code> equally sized groups (RF groups). First, the cases are sorted according to the <code>sortv</code> variable.  Then the groups are built by consecutively grouping the first <code class="reqn">n/k</code> cases, then the next <code class="reqn">n/k</code> cases, and so on. In <code>seqrf</code>, one of sort methods <code>"from.start"</code> and <code>"from.end"</code> can be specified as <code>sortv</code> argument.
+</p>
+<p>Ties in the <code>sortv</code> variable are handled by <code>order</code> using the default method, which produces stable outcome. To use a different method, compute a suited variable without ties (e.g. using <code>order</code> with the wanted method for ties) and pass it as <code>sortv</code> argument.
+</p>
+<p>The <code>grp.meth</code> argument applies when the group size (<code class="reqn">n/k</code>) is not integer. With <code>grp.meth="first"</code>, the integer part of <code class="reqn">n/k</code> is used as basic group size and the size of the first groups is augmented by one unit so that the sum of the group sizes equals <code class="reqn">n</code>. With <code>grp.meth="random"</code>, randomly selected groups have their size augmented by one unit, and with <code>grp.meth="prop"</code> (default), cases at the limit between groups are proportionally assigned to each of the two groups.
+</p>
+<p>For <code>seqrf</code>, when <code>weights=NULL</code> and <code>weighted=TRUE</code>, <code>weights</code> is set as the <code>weights</code> attribute of <code>seqdata</code>.
+</p>
+<p>When <code>weights</code> is non-null (<code>dissrf</code>) or when <code>wheighted=TRUE</code> and there are weights in <code>seqdata</code> (<code>seqrf</code>), only <code>grp.meth="prop"</code> applies.
+</p>
+<p>The function computes indicative statistics of the resulting partition, namely a pseudo R2 and a pseudo F statistics. These statistics compare the mean distance to the group medoid with the mean distance to the overall medoid. When <code>pow</code> is <code>2</code>, mean squared dissimilarities are used and when <code>pow</code> is 1 the R2 and F ratios are based on mean of non-squared dissimilarities. An indicative p-value of the F statistics is computed using the F distribution. This p-value should be interpreted with caution since F is not a true F value.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>dissrf</code> returns a list of class <code>dissrfprop</code> when <code>grp.meth="prop"</code> and of class <code>dissrfcrisp</code> otherwise. In both cases the list also receives class <code>"dissrf"</code>. The elements of the list are:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>medoids</code></td>
+<td>
+<p>index of the group medoids</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>med.names</code></td>
+<td>
+<p>names (diss colnames) of the group medoids</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wg</code></td>
+<td>
+<p>working matrix used by the <code>"prop"</code> procedure (class <code>dissrfprop</code> only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist.list</code></td>
+<td>
+<p>list with for each successive group the distances from its elements to the group medoid</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index.list</code></td>
+<td>
+<p>list with for each successive group the index of its elements</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights.list</code></td>
+<td>
+<p>list with for each successive group the weights of its elements in the group</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>heights</code></td>
+<td>
+<p>relative group size, which may be different when <code>grp.meth</code> is <code>"first"</code> or <code>"random"</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kmedoid.index</code></td>
+<td>
+<p>vector with for each case the index of its group medoid (class <code>dissrfcrisp</code> only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kmedoid.dist</code></td>
+<td>
+<p>vector with for each case the distance to its group medoid (class <code>dissrfcrisp</code> only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mdsk</code></td>
+<td>
+<p>vector of group membership (class <code>dissrfcrisp</code> only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>at</code></td>
+<td>
+<p>positions for the boxplots of distances to group medoids</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R2</code></td>
+<td>
+<p>Pseudo R2: Mean distance to the group medoids over mean distance to the overall medoid</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Fstat</code></td>
+<td>
+<p>Pseudo F statistics</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalue</code></td>
+<td>
+<p>p-value of the pseudo F (to be used with caution since F is not a true F value)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sizes</code></td>
+<td>
+<p><code>ncase</code> (number of cases), <code>wsum</code> (sum of weights), <code>k</code> (number of groups), <code>gsize</code> (group size)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grp.meth</code></td>
+<td>
+<p>grouping method used</p>
+</td>
+</tr>
+</table>
+<p><code>seqrf</code> returns a list of class <code>seqrfprop</code> when <code>grp.meth="prop"</code> and of class <code>seqrfcrisp</code> otherwise. In both cases the list also receives class <code>"seqrf"</code>. The elements of the list are:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqtoplot</code></td>
+<td>
+<p>RF medoid sequences as a state sequence <code>stslist</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rf</code></td>
+<td>
+<p>the associated <code>dissrf</code> object</p>
+</td>
+</tr>
+</table>
+<p>There are print and summary methods for objects of class <code>dissrf</code> and <code>seqrf</code>, and a plot method for objects of class <code>seqrf</code>
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Fasang, Anette Eva and Tim F. Liao. 2014. "Visualizing Sequences in the Social Sciences: Relative Frequency Sequence Plots." Sociological Methods &amp; Research 43(4):643-676.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.seqrf</code>, <code>seqrfplot</code>, <code>dissrep</code>, and <code>seqrep</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Defining a sequence object with the data in columns 10 to 25
+## (family status from age 15 to 30) in the biofam data set
+data(biofam)
+biofam.lab &lt;- c("Parent", "Left", "Married", "Left+Marr",
+"Child", "Left+Child", "Left+Marr+Child", "Divorced")
+
+## Here, we use only 100 cases selected such that all elements
+## of the alphabet be present.
+## (More cases and a larger k would be necessary to get a meaningful example.)
+biofam.seq &lt;- seqdef(biofam[501:600, 10:25], labels=biofam.lab,
+                    weights=biofam[501:600,"wp00tbgs"])
+diss &lt;- seqdist(biofam.seq, method="LCS")
+
+## Using 12 groups, default MDS sorting,
+##  and original method by Fasang and Liao (2014)
+dissrf(diss=diss, k=12, grp.meth="first")
+
+## Using 12 groups, weights, default MDS sorting,
+##  and default "prop" method
+w &lt;- attr(biofam.seq, "weights")
+dissrf(diss=diss, k=12, weights=w)
+
+## With a user specified sorting variable
+## Here time spent in parental home, which has ties
+parentTime &lt;- seqistatd(biofam.seq)[, 1]
+b.srf &lt;- seqrf(biofam.seq, diss=diss, k=12, sortv=parentTime)
+
+## print, summary, and plot methods
+b.srf
+summary(b.srf)
+plot(b.srf)
+plot(b.srf, which.plot="both")
+
+</code></pre>
+
+
+</div>

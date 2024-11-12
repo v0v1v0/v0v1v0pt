@@ -1,0 +1,131 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>polygon2mask</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert Polygon to a Raster Mask</h2>
+
+<h3>Description</h3>
+
+<p>Takes a polygon and returns a matrix with a mask that can be input
+into a raster.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">polygon2mask(XY, extent = NULL, k = 360,
+             value = 1L, backgrd = 0L)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>XY</code></td>
+<td>
+<p>A two-column matrix giving the coordinates of a polygon.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extent</code></td>
+<td>
+<p>a vector with four numeric values giving the extent of
+the raster. By default, values are determined to minimally cover the
+polygon.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>an integer value giving the number of pixels per unit (i.e.,
+the inverse of the resolution of the raster). The resolution is the
+same in both directions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>the value given to the pixels inside the polygon
+(converted to integer).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>backgrd</code></td>
+<td>
+<p>idem for the pixels outside the polygon.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The mask is returned as a matrix which is filled rowwise (in agreement
+with the convention used in rasters) and can be input into functions
+in <span class="pkg">terra</span> (e.g., <code>rast()</code>).
+</p>
+<p><code>polygon2mask</code> does basically the same operation than
+<code>terra::rasterize()</code> but is faster and can produce a vector for
+masking raster data.
+</p>
+<p>The output matrix is actually row-filled (unlike most matrices in R
+which are column-filled). It should be transposed before passed to
+<code>terra::rast()</code>, or its <code>dim</code> attribute can be ignored if
+used as a mask to a rasted (which is also usually row-filled).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a matrix stored as integers; the dimensions of this matrix give the
+size of the raster.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The code is still in development.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Emmanuel Paradis</p>
+
+
+<h3>References</h3>
+
+<p>Nievergelt, J. and Preparata, F. P. (1982) Plane-sweep algorithms for
+intersecting geometric figures. <em>Communications of the ACM</em>,
+<b>25</b>, 739–747. &lt;doi:10.1145/358656.358681&gt;.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## from ?chullPolygon:
+XY &lt;- rbind(c(0, 0),
+            c(1, 0),
+            c(.25, .25),
+            c(.5, .5),
+            c(1.2, .8),
+            c(1, .78),
+            c(0, 1))
+
+layout(matrix(1:9, 3, 3, TRUE))
+k &lt;- 2
+for (i in 1:9) {
+    msk &lt;- polygon2mask(XY, k = k)
+    d &lt;- dim(msk)
+    image(1:d[1], 1:d[2], msk)
+    dm &lt;- paste(d, collapse = "x")
+    title(paste("k =", k, ", dim =", dm))
+    k &lt;- k * 2
+}
+
+layout(1)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.ETM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Predict functionality for an ETM object.</h2>
+
+<h3>Description</h3>
+
+<p>Predict to which ETM topic a text belongs or extract which words are emitted for each topic.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'ETM'
+predict(
+  object,
+  newdata,
+  type = c("topics", "terms"),
+  batch_size = nrow(newdata),
+  normalize = TRUE,
+  top_n = 10,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an object of class <code>ETM</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>bag of words document term matrix in <code>dgCMatrix</code> format. Only used in case type = 'topics'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>a character string with either 'topics' or 'terms' indicating to either predict to which
+topic a document encoded as a set of bag of words belongs to or to extract the most emitted terms for each topic</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_size</code></td>
+<td>
+<p>integer with the size of the batch in order to do chunkwise predictions in chunks of <code>batch_size</code> rows. Defaults to the whole dataset provided in <code>newdata</code>.
+Only used in case type = 'topics'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>logical indicating to normalize the bag of words data. Defaults to <code>TRUE</code> similar as the default when building the <code>ETM</code> model. 
+Only used in case type = 'topics'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>top_n</code></td>
+<td>
+<p>integer with the number of most relevant words for each topic to extract. Only used in case type = 'terms'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not used</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns for
+</p>
+
+<ul>
+<li>
+<p>type 'topics': a matrix with topic probabilities of dimension nrow(newdata) x the number of topics
+</p>
+</li>
+<li>
+<p>type 'terms': a list of data.frame's where each data.frame has columns term, beta and rank indicating the
+top_n most emitted terms for that topic. List element 1 corresponds to the top terms emitted by topic 1, element 2 to topic 2 ...
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>ETM</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(torch)
+library(topicmodels.etm)
+path  &lt;- system.file(package = "topicmodels.etm", "example", "example_etm.ckpt")
+model &lt;- torch_load(path)
+
+# Get most emitted words for each topic
+terminology  &lt;- predict(model, type = "terms", top_n = 5)
+terminology
+
+# Get topics probabilities for each document
+path   &lt;- system.file(package = "topicmodels.etm", "example", "example_dtm.rds")
+dtm    &lt;- readRDS(path)
+dtm    &lt;- head(dtm, n = 5)
+scores &lt;- predict(model, newdata = dtm, type = "topics")
+scores
+
+</code></pre>
+
+
+</div>

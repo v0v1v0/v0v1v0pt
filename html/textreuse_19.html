@@ -1,0 +1,115 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lsh</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Locality sensitive hashing for minhash</h2>
+
+<h3>Description</h3>
+
+<p>Locality sensitive hashing (LSH) discovers potential matches among a corpus of
+documents quickly, so that only likely pairs can be compared.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lsh(x, bands, progress = interactive())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>TextReuseCorpus</code> or
+<code>TextReuseTextDocument</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bands</code></td>
+<td>
+<p>The number of bands to use for locality sensitive hashing. The
+number of hashes in the documents in the corpus must be evenly divisible by
+the number of bands. See <code>lsh_threshold</code> and
+<code>lsh_probability</code> for guidance in selecting the number of bands
+and hashes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+<p>Display a progress bar while comparing documents.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Locality sensitive hashing is a technique for detecting document
+similarity that does not require pairwise comparisons. When comparing pairs
+of documents, the number of pairs grows rapidly, so that only the smallest
+corpora can be compared pairwise in a reasonable amount of computation time.
+Locality sensitive hashing, on the other hand, takes a document which has
+been tokenized and hashed using a minhash algorithm. (See
+<code>minhash_generator</code>.) Each set of minhash signatures is then
+broken into bands comprised of a certain number of rows. (For example, 200
+minhash signatures might be broken down into 20 bands each containing 10
+rows.) Each band is then hashed to a bucket. Documents with identical rows
+in a band will be hashed to the same bucket. The likelihood that a document
+will be marked as a potential duplicate is proportional to the number of
+bands and inversely proportional to the number of rows in each band.
+</p>
+<p>This function returns a data frame with the additional class
+<code>lsh_buckets</code>. The LSH technique only requires that the signatures for
+each document be calculated once. So it is possible, as long as one uses the
+same minhash function and the same number of bands, to combine the outputs
+from this function at different times. The output can thus be treated as a
+kind of cache of LSH signatures.
+</p>
+<p>To extract pairs of documents from the output of this function, see
+<code>lsh_candidates</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame (with the additional class <code>lsh_buckets</code>),
+containing a column with the document IDs and a column with their LSH
+signatures, or buckets.
+</p>
+
+
+<h3>References</h3>
+
+<p>Jure Leskovec, Anand Rajaraman, and Jeff Ullman,
+<a href="http://www.mmds.org/#book"><em>Mining of Massive Datasets</em></a>
+(Cambridge University Press, 2011), ch. 3. See also Matthew Casperson,
+"<a href="http://matthewcasperson.blogspot.com/2013/11/minhash-for-dummies.html">Minhash
+for Dummies</a>" (November 14, 2013).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>minhash_generator</code>, <code>lsh_candidates</code>,
+<code>lsh_query</code>, <code>lsh_probability</code>,
+<code>lsh_threshold</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">dir &lt;- system.file("extdata/legal", package = "textreuse")
+minhash &lt;- minhash_generator(200, seed = 235)
+corpus &lt;- TextReuseCorpus(dir = dir,
+                          tokenizer = tokenize_ngrams, n = 5,
+                          minhash_func = minhash)
+buckets &lt;- lsh(corpus, bands = 50)
+buckets
+</code></pre>
+
+
+</div>

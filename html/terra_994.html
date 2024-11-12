@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tapp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply a function to subsets of layers of a SpatRaster</h2>
+
+<h3>Description</h3>
+
+<p>Apply a function to subsets of layers of a SpatRaster (similar to <code>tapply</code> and <code>aggregate</code>). The layers are combined based on the <code>index</code>.
+</p>
+<p>The number of layers in the output SpatRaster equals the number of unique values in <code>index</code> times the number of values that the supplied function returns for a single vector of numbers.
+</p>
+<p>For example, if you have a SpatRaster with 6 layers, you can use <code>index=c(1,1,1,2,2,2)</code> and <code>fun=sum</code>. This will return a SpatRaster with two layers. The first layer is the sum of the first three layers in the input SpatRaster, and the second layer is the sum of the last three layers in the input SpatRaster. Indices are recycled such that <code>index=c(1,2)</code> would also return a SpatRaster with two layers (one based on the odd layers (1,3,5), the other based on the even layers (2,4,6)). 
+</p>
+<p>The index can also be one of the following values to group by time period (if <code>x</code> has the appropriate <code>time</code> values): "years", "months", "yearmonths", "week" (the ISO 8601 week number, see Details), "yearweeks", "days", "doy" (day of the year), "7days" (seven-day periods starting at Jan 1 of each year), "10days", or "15days". It can also be a function that makes groups from time values.
+</p>
+<p>See <code>app</code> or <code>Summary-methods</code> if you want to use a more efficient function that returns multiple layers based on <b>all</b> layers in the SpatRaster.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+tapp(x, index, fun, ..., cores=1, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index</code></td>
+<td>
+<p>factor or numeric (integer). Vector of length <code>nlyr(x)</code> (shorter vectors are recycled) grouping the input layers. It can also be one of the following values: "years", "months", "yearmonths", "days", "week" (ISO 8601 week number), or "doy" (day of the year)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function to be applied. The following functions have been re-implemented in C++ for speed: "sum", "mean", "median", "modal", "which", "which.min", "which.max", "min", "max", "prod", "any", "all", "sd", "std", "first". To use the base-R function for say, "min", you could use something like <code>fun = \(i) min(i)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>positive integer. If <code>cores &gt; 1</code>, a 'parallel' package cluster with that many cores is created and used. You can also supply a cluster object. Ignored for functions that are implemented by terra in C++ (see under fun)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>"week" follows the ISO 8601 definition. Weeks start on Monday. If the week containing 1 January has four or more days in the new year, then it is considered week "01". Otherwise, it is the last week of the previous year (week "52" or "53", and the next week is week 1.
+</p>
+
+
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>app</code>, <code>Summary-methods</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(ncols=10, nrows=10)
+values(r) &lt;- 1:ncell(r)
+s &lt;- c(r, r, r, r, r, r)
+s &lt;- s * 1:6
+b1 &lt;- tapp(s, index=c(1,1,1,2,2,2), fun=sum)
+b1
+b2 &lt;- tapp(s, c(1,2,3,1,2,3), fun=sum)
+b2
+</code></pre>
+
+
+</div>

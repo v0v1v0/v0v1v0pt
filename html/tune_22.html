@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>example_ames_knn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Example Analysis of Ames Housing Data</h2>
+
+<h3>Description</h3>
+
+<p>Example Analysis of Ames Housing Data
+</p>
+
+
+<h3>Details</h3>
+
+<p>These objects are the results of an analysis of the Ames
+housing data. A K-nearest neighbors model was used with a small
+predictor set that included natural spline transformations of
+the <code>Longitude</code> and <code>Latitude</code> predictors. The code used to
+generate these examples was:
+</p>
+<div class="sourceCode"><pre>library(tidymodels)
+library(tune)
+library(AmesHousing)
+
+# ------------------------------------------------------------------------------
+
+ames &lt;- make_ames()
+
+set.seed(4595)
+data_split &lt;- initial_split(ames, strata = "Sale_Price")
+
+ames_train &lt;- training(data_split)
+
+set.seed(2453)
+rs_splits &lt;- vfold_cv(ames_train, strata = "Sale_Price")
+
+# ------------------------------------------------------------------------------
+
+ames_rec &lt;-
+  recipe(Sale_Price ~ ., data = ames_train) %&gt;%
+  step_log(Sale_Price, base = 10) %&gt;%
+  step_YeoJohnson(Lot_Area, Gr_Liv_Area) %&gt;%
+  step_other(Neighborhood, threshold = .1)  %&gt;%
+  step_dummy(all_nominal()) %&gt;%
+  step_zv(all_predictors()) %&gt;%
+  step_ns(Longitude, deg_free = tune("lon")) %&gt;%
+  step_ns(Latitude, deg_free = tune("lat"))
+
+knn_model &lt;-
+  nearest_neighbor(
+    mode = "regression",
+    neighbors = tune("K"),
+    weight_func = tune(),
+    dist_power = tune()
+  ) %&gt;%
+  set_engine("kknn")
+
+ames_wflow &lt;-
+  workflow() %&gt;%
+  add_recipe(ames_rec) %&gt;%
+  add_model(knn_model)
+
+ames_set &lt;-
+  extract_parameter_set_dials(ames_wflow) %&gt;%
+  update(K = neighbors(c(1, 50)))
+
+set.seed(7014)
+ames_grid &lt;-
+  ames_set %&gt;%
+  grid_max_entropy(size = 10)
+
+ames_grid_search &lt;-
+  tune_grid(
+    ames_wflow,
+    resamples = rs_splits,
+    grid = ames_grid
+  )
+
+set.seed(2082)
+ames_iter_search &lt;-
+  tune_bayes(
+    ames_wflow,
+    resamples = rs_splits,
+    param_info = ames_set,
+    initial = ames_grid_search,
+    iter = 15
+  )
+</pre></div>
+<p><strong>important note</strong>: Since the <code>rsample</code> split columns contain a reference
+to the same data, saving them to disk can results in large object sizes when
+the object is later used. In essence, R replaces all of those references with
+the actual data. For this reason, we saved zero-row tibbles in their place.
+This doesn't affect how we use these objects in examples but be advised that
+using some <code>rsample</code> functions on them will cause issues.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ames_wflow</code></td>
+<td>
+<p>A workflow object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ames_grid_search,ames_iter_search</code></td>
+<td>
+<p>Results of model tuning. </p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tune)
+
+ames_grid_search
+ames_iter_search
+</code></pre>
+
+
+</div>

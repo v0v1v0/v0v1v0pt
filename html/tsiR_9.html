@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmctsir</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>mcmctsir</h2>
+
+<h3>Description</h3>
+
+<p>This function runs the TSIR model using a MCMC estimation. The susceptibles are still reconstructed in the same way as the regular tsir model, however beta, alpha, and sbar (or whatever combination you enter) are estimated using rjargs.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmctsir(
+  data,
+  xreg = "cumcases",
+  IP = 2,
+  nsim = 100,
+  regtype = "gaussian",
+  sigmamax = 3,
+  userYhat = numeric(),
+  update.iter = 10000,
+  n.iter = 30000,
+  n.chains = 3,
+  n.adapt = 1000,
+  burn.in = 100,
+  method = "deterministic",
+  epidemics = "cont",
+  pred = "forward",
+  seasonality = "standard",
+  inits.fit = FALSE,
+  threshold = 1,
+  sbar = NULL,
+  alpha = NULL,
+  add.noise.sd = 0,
+  mul.noise.sd = 0,
+  printon = F
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The data frame containing cases and interpolated births and populations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+<p>The x-axis for the regression. Options are 'cumcases' and 'cumbirths'. Defaults to 'cumcases'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IP</code></td>
+<td>
+<p>The infectious period in weeks. Defaults to 2 weeks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>The number of simulations to do. Defaults to 100.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regtype</code></td>
+<td>
+<p>The type of regression used in susceptible reconstruction.
+Options are 'gaussian', 'lm' (linear model), 'spline' (smooth.spline with 2.5 degrees freedom),
+'lowess' (with f = 2/3, iter = 1), 'loess' (degree 1), and 'user' which is just a user inputed vector.
+Defaults to 'gaussian' and if that fails then defaults to loess.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigmamax</code></td>
+<td>
+<p>The inverse kernal width for the gaussian regression. Default is 3.
+Smaller, stochastic outbreaks tend to need a lower sigma.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>userYhat</code></td>
+<td>
+<p>The inputed regression vector if regtype='user'. Defaults to NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>update.iter</code></td>
+<td>
+<p>Number of MCMC iterations to use in the update aspect. Default is 10000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.iter</code></td>
+<td>
+<p>Number of MCMC iterations to use. Default is 30000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.chains</code></td>
+<td>
+<p>Number of MCMC chains to use. Default is 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.adapt</code></td>
+<td>
+<p>Adaptive number for MCMC. Default is 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burn.in</code></td>
+<td>
+<p>Burn in number. Default is 100.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The type of next step prediction used. Options are 'negbin' for negative binomial,
+'pois' for poisson distribution, and 'deterministic'. Defaults to 'deterministic'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>epidemics</code></td>
+<td>
+<p>The type of data splitting. Options are 'cont' which doesn't split the data up at all,
+and 'break' which breaks the epidemics up if there are a lot of zeros. Defaults to 'cont'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pred</code></td>
+<td>
+<p>The type of prediction used. Options are 'forward' and 'step-ahead'. Defaults to 'forward'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seasonality</code></td>
+<td>
+<p>The type of contact to use. Options are standard for 52/IP point contact or schoolterm for just a two point on off contact or none for a single contact parameter. Defaults to standard.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inits.fit</code></td>
+<td>
+<p>Whether or not to fit initial conditions using simple least squares as well. Defaults to FALSE. This parameter is more necessary in more chaotic locations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>The cut off for a new epidemic if epidemics = 'break'. Defaults to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sbar</code></td>
+<td>
+<p>The mean number of susceptibles. Defaults to NULL, i.e. the function estimates sbar.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The mixing parameter. Defaults to NULL, i.e. the function estimates alpha.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add.noise.sd</code></td>
+<td>
+<p>The sd for additive noise, defaults to zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mul.noise.sd</code></td>
+<td>
+<p>The sd for multiplicative noise, defaults to zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>printon</code></td>
+<td>
+<p>Whether to show diagnostic prints or not, defaults to FALSE.</p>
+</td>
+</tr>
+</table>
+</div>

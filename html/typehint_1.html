@@ -1,0 +1,285 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>check_types</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Type hints - Automatic checks of function arguments</h2>
+
+<h3>Description</h3>
+
+<p>The <code>check_types()</code> function is used within the body of a
+function to evaluate the parameters of a call to that function against the
+requirements defined in the type hint comments. See <em>Details</em> section
+for more information on type hint comments.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">check_types(show.msg = TRUE, abort = TRUE, messages = NULL, color = "#bd0245")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>show.msg</code></td>
+<td>
+<p>Indicates if a message is shown whenever a check fails
+(default is <code>TRUE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>abort</code></td>
+<td>
+<p>Indicates if checks are stopped after the first error occurred
+(default is <code>TRUE</code>), or if all checks are performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>messages</code></td>
+<td>
+<p>A vector with five message templates to be used as error
+messages. <code>NULL</code>, if the default templates shall be used. Templates can
+make use of predefined placeholders to convey information important for
+understanding the source of the problem. See below for a comprehensive
+discussion of error messages.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color</code></td>
+<td>
+<p>Standard hex RGB color code of the error messages (default is
+<code>"#bd0245"</code>).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>TRUE</code>, if <em>all</em> parameter values provided in the function
+call pass <em>all</em> tests / adhere to all restrictions defined in the type
+hint commments, <code>FALSE</code> otherwise.
+</p>
+
+
+<h3>How do type hints work? Overview.</h3>
+
+<p>Type hints are special comments with a leading <code>#|</code> within a function
+body indicating the intended nature of the function's arguments in terms of
+data types, dimensions and even permitted values. The actual parameters with
+which the function is called can be evaluated against these type hint
+comments using the <code>check_types()</code> function.
+</p>
+<p><code>check_types()</code> returns <code>FALSE</code> if any of the checks fails.
+Checking can be aborted after the first error occurs, or it can be continued
+until all checks have been performed. Optionally, the user is shown a
+message indicating the nature of the problem with the function arguments.
+The messages can be completely customized using placerholder variables for
+all kinds of relevant information.
+</p>
+
+
+<h3>Type hint comments</h3>
+
+
+
+<h4>Placement of comments</h4>
+
+<p>Type hint comments always need to be placed <em>inside</em> a function body
+and refer to the arguments of that function. They can be placed
+<em>anywhere</em> in the function body (even after the call of
+<code>check_types()</code>). Type hint comments are regular R comments but start
+with <code>#|</code> (hash plus pipe, without blanks in between). Each function
+argument will have its own type hint comment line. Type hint comments can
+cover a subset of all arguments, so there can be arguments without any type
+hint restrictions.
+</p>
+
+
+
+<h4>Comment syntax</h4>
+
+<p>Type hint comments consist of a data type check and (optionally) dimension
+and value checks: </p>
+
+<ul>
+<li> <p><b>Data type check</b>: The data type checks for the data type of the
+argument. At this point, the data type check needs to be the first check in
+a type hint comment and can only comprise one permitted data type. The
+syntax is <code>argument_name data_type</code>. A valid type hint comment
+consisting only of a data type check could thus look like this: <code>#|
+ degrees_celsius numeric</code>.
+</p>
+</li>
+<li> <p><b>Dimension check</b>: The dimension check checks for the number and
+size of the dimensions of the argument. It is constructed using the
+<code>dim()</code> function. <code>dim()</code> takes one parameter per dimension of the
+argument. The parameters specify the size of each of the dimensions of the
+argument either as specific values or as comparisons. So, the general syntax
+is: <code>dim([comparison_operator]dimsize [,[comparison_operator]#'
+ dim_size]*)</code>. For example, if the argument (called <code>unemployment</code>) is
+required to be a dataframe with exactly four columns and at least two rows
+then the type hint comment would look like this: <code>#| unemployment
+ data.frame dim(&gt;=2, 4)</code>. When <code>check_types()</code> evaluates the parameters
+supplied in the function call it looks for the number of dimensions of the
+parameter as well as the size of each dimension.
+</p>
+</li>
+<li> <p><b>Value check</b>: The value check evaluates the actual value of the
+parameter supplied in the function call and rejects the value if it is on an
+exclude list. Such exclude lists are constructed using the <code>not()</code>
+function. The <code>not()</code> function expects as its arguments the values that
+shall not be permitted as parameter values. These values can include
+<code>NA</code> and <code>NULL</code>. The general syntax of the  <code>not()</code> function
+is: <code>not(excludevalue[,excludevalue]*)</code>. If we had an argument called
+<code>surname</code> and this argument must not be <code>NA</code> or<code>""</code> (empty
+character) then the required type hint check would like this: <code>#|
+ surname character not("", NA)</code>. There can be multiple <code>not</code>-lists in
+each type hint comment. If the parameter supplied in the function call
+consists of, by its nature, multiple elements, like it is the case with
+dataframes, list, and matrices, then the value check fails if <em>any</em>
+element of the parameter provided in the function call is on the exclude
+list.</p>
+</li>
+</ul>
+<p>When formulating <code>dim</code> or <code>not</code> restrictions you can use the
+values of other parameters of the function call. So, if you have a function
+with two arguments, a number of children (<code>num.children</code>) and a numeric
+vector with the ages of these children (<code>age.children</code>) you can have a
+type hint comment for the latter which looks like this: <code>#|
+ age.children numeric dim(num.children)</code>.
+</p>
+
+
+
+<h3>If a type hint check fails</h3>
+
+<p>If any of the checks fails <code>check_types()</code> returns <code>FALSE</code>,
+otherwise it returns <code>TRUE</code>. If <code>show.msg=TRUE</code> then a message
+will be shown in the R console. The messages can be customized using
+templates (see next section). Depending on the value of <code>abort</code> the
+checking of parameters is continued (<code>abort=FALSE</code>) or stopped
+immediately (<code>abort=TRUE</code>), i.e. no further checks are performed after
+the first error.
+</p>
+
+
+<h3>Type hint output messages</h3>
+
+
+
+<h4>Message templates</h4>
+
+<p>The error messages that are shown (if <code>show.msg=TRUE</code>) when a check
+fails are based on templates. The templates are provided to the
+<code>check_types()</code> function via the <code>messages</code> argument.
+<code>messages</code> is a character vector with five elements, one for each
+possible kind of error message (or <code>NULL</code>, if the default error
+messages shall be used); the types of error messages are:
+</p>
+
+<ul>
+<li>
+<p> General intro message (default: <code>"Problem in function '#fun()'"</code>)
+</p>
+</li>
+<li>
+<p> Wrong parameter type (default: <code>"Argument '#arg' (#argval) is of
+ class #type_is but needs to be of class #type_req."</code>)
+</p>
+</li>
+<li>
+<p> Wrong dimension size of parameter (default: <code>"Size of dimension
+ #dimno of argument '#arg' must be #dimcomp#dim_req, but is actually
+ #dim_is."</code>)
+</p>
+</li>
+<li>
+<p> Wrong number of dimensions of parameter (default: <code>"Number of
+ dimensions of argument '#arg' must be #dimcnt_req but is actually
+ #dimcnt_is."</code>)
+</p>
+</li>
+<li>
+<p> Parameter value is not permitted (default: <code>"#argval is not a
+ valid value for argument #arg."</code>)
+</p>
+</li>
+</ul>
+<p>The messages provided via the <code>messages</code> argument are templates that
+can use predefined placeholders to convey information relevant for
+understanding the problem.
+</p>
+
+
+
+<h4>Placeholder that can be used in message templates</h4>
+
+
+<ul>
+<li> <p><em>#fun</em>: The name of the function of which the parameter values
+are to be checked (i.e. the function <code>check_types()</code> is applied to)
+</p>
+</li>
+<li> <p><em>#arg</em>: The name of the argument
+</p>
+</li>
+<li> <p><em>#argval</em>: The value of the parameter used in the function call
+</p>
+</li>
+<li> <p><em>#type_req</em>: The required type for the argument
+</p>
+</li>
+<li> <p><em>#type_is</em>: The actual type of the parameter used in the function
+call
+</p>
+</li>
+<li> <p><em>#dimcnt_req</em>: The required number of dimensions of the argument
+</p>
+</li>
+<li> <p><em>#dimcnt_is</em>: The actual number of dimensions of the parameter
+used in the function call
+</p>
+</li>
+<li> <p><em>#dim_req</em>: The required size of the dimension where a dimension
+size error occurred
+</p>
+</li>
+<li> <p><em>#dim_is</em>: The actual size of the dimension where a dimension
+size error occurred
+</p>
+</li>
+<li> <p><em>#dimcomp</em>: The comparison operator used in combination with
+<code>#dim_req</code>, the required size of the dimension (e.g. the <code>&gt;=</code> in
+<code>&gt;=2</code>, if this dimension of the argument is to be greater than 1)
+</p>
+</li>
+<li> <p><em>#dimno</em>: The index of the dimension where a dimension size error
+occurred
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other typehint: 
+<code>show_typehints()</code>,
+<code>typehint</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+celsius_to_fahrenheit &lt;- function(degrees_celsius) {
+ #| degrees_celsius numeric dim(1) not(NA, NULL)
+
+ if(check_types()) return(degrees_celsius * 9/5 + 32)
+ else return(NA)
+
+}
+</code></pre>
+
+
+</div>

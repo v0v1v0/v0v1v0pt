@@ -1,0 +1,139 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>exclusivity-expectations</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Expectations: exclusivity</h2>
+
+<h3>Description</h3>
+
+<p><code>expect_exclusive</code> tests that <code>vars</code> are exclusive - that, if any one of
+<code>vars</code> is set to <code>exc_val</code>, no other column in <code>vars</code> or <code>var_set</code> is also
+set to <code>exc_val</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">expect_exclusive(vars, var_set, exc_val = 1, flt = TRUE, data = get_testdata())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; A set of columns to
+test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var_set</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; The full set of
+columns to check against. This should include all columns specified in the
+<code>vars</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exc_val</code></td>
+<td>
+<p>The value that flags a variable as "selected" (default: <code>1</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flt</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; A filter specifying
+a subset of the data frame to test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame to test. The global test data is used
+by default.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This expectation is designed to check exclusivity in survey multiple response
+sets, where one response is only valid on its own.
+</p>
+<p>See the example data set below:
+</p>
+
+<ul>
+<li>
+<p> No record should have <code>q10_98</code>, "None of the above", selected while also
+having any other response selected, so we refer to this as an "exclusive"
+response.
+</p>
+</li>
+<li> <p><code>expect_exclusive()</code> checks whether <code>q10_98</code> "None of the above" or
+<code>q10_99</code> "Don't know", the exclusive responses, have been selected alongside
+any other <code style="white-space: pre;">⁠q10_*⁠</code> response.
+</p>
+</li>
+<li>
+<p> The expectation fails, since the first record has both <code>q10_1</code> and
+<code>q10_98</code> selected.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p><code style="white-space: pre;">⁠expect_*()⁠</code> functions are mainly called for their side effects. The
+expectation signals its result (e.g. "success", "failure"), which is logged
+by the current test reporter. In a non-testing
+context the expectation will raise an error with class
+<code>expectation_failure</code> if it fails.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other data expectations: 
+<code>conditional-expectations</code>,
+<code>datacomp-expectations</code>,
+<code>date-expectations</code>,
+<code>expect_depends()</code>,
+<code>generic-expectations</code>,
+<code>label-expectations</code>,
+<code>pattern-expectations</code>,
+<code>proportion-expectations</code>,
+<code>text-expectations</code>,
+<code>uniqueness-expectations</code>,
+<code>value-expectations</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+my_q_block &lt;- data.frame(
+  resp_id = 1:5, # Unique to respondent
+  q10_1  = c(1, 1, 0, 0, 0),
+  q10_2  = c(0, 1, 0, 0, 0),
+  q10_3  = c(0, 0, 1, 0, 0),
+  q10_98 = c(1, 0, 0, 1, 0), # None of the above
+  q10_99 = c(0, 0, 0, 0, 1)  # Item not answered
+)
+
+# Make sure that if "None of the above" and "Item skipped" are selected
+# none of the other question options are selected:
+try(
+expect_exclusive(
+  c(q10_98, q10_99),
+  starts_with("q10_"),
+  data = my_q_block
+)
+)
+</code></pre>
+
+
+</div>

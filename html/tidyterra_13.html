@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as_spatvector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Method for coercing objects to <code>SpatVector</code>
+</h2>
+
+<h3>Description</h3>
+
+<p><code>as_spatvector()</code> turns an existing  object into a <code>SpatVector</code>. This is a
+wrapper of <code>terra::vect()</code> S4 method for signature <code>data.frame</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">as_spatvector(x, ...)
+
+## S3 method for class 'data.frame'
+as_spatvector(x, ..., geom = c("lon", "lat"), crs = "")
+
+## S3 method for class 'sf'
+as_spatvector(x, ...)
+
+## S3 method for class 'sfc'
+as_spatvector(x, ...)
+
+## S3 method for class 'SpatVector'
+as_spatvector(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>tibble</code>, data frame or <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> object of
+class <code>sf</code> or <code>sfc</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed on to <code>terra::vect()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geom</code></td>
+<td>
+<p>character. The field name(s) with the geometry data. Either
+two names for x and y coordinates of points, or a single name for a single
+column with WKT geometries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crs</code></td>
+<td>
+<p>A crs on several formats (PROJ.4, WKT, EPSG code, ..) or
+and spatial object from <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> or <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> that includes the
+target coordinate reference system. See <code>pull_crs()</code> and <strong>Details</strong>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function differs from <code>terra::vect()</code> on the following:
+</p>
+
+<ul>
+<li>
+<p> geometries with <code>NA</code> or <code>""</code> values are removed prior to conversion
+</p>
+</li>
+<li>
+<p> If <code>x</code> is a grouped data frame (see <code>dplyr::group_by()</code>) the grouping
+vars are transferred and a "grouped" <code>SpatVector</code> is created (see
+<code>group_by.SpatVector()</code>).
+</p>
+</li>
+<li>
+<p> If no <code>crs</code> is provided and the tibble has been created with the method
+<code>as_tibble.SpatVector()</code>, the <code>crs</code> is inferred from
+<code>attr(x, "crs")</code>.
+</p>
+</li>
+<li>
+<p> Handles correctly the conversion of <code>EMPTY</code> geometries between
+<a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> and <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a>.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A <code>SpatVector</code>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>terra::vect()</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>pull_crs()</code> for retrieving crs, and the corresponding utils <code>sf::st_crs()</code>
+and <code>terra::crs()</code>.
+</p>
+<p>Coercing objects:
+<code>as_coordinates()</code>,
+<code>as_sf()</code>,
+<code>as_spatraster()</code>,
+<code>as_tibble.Spat</code>,
+<code>fortify.Spat</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(terra)
+
+v &lt;- vect(matrix(1:80, ncol = 2), crs = "EPSG:3857")
+
+v$cat &lt;- sample(LETTERS[1:4], size = nrow(v), replace = TRUE)
+
+v
+
+# Create tibble
+as_tbl &lt;- as_tibble(v, geom = "WKT")
+
+as_tbl
+
+# From tibble
+newvect &lt;- as_spatvector(as_tbl, geom = "geometry", crs = "EPSG:3857")
+newvect
+
+</code></pre>
+
+
+</div>

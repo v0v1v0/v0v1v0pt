@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>arimax</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fitting an ARIMA model with Exogeneous Variables</h2>
+
+<h3>Description</h3>
+
+<p>This function builds on and 
+extends the capability of the arima function in R stats  by allowing the
+incorporation of transfer functions, innovative and additive outliers.
+For backward compatitibility, the function is also named arima.
+Note in the computation of AIC, the number of parameters excludes the noise
+variance.  See the help page of arima in stats for details on arguments
+<code>x</code> to <code>kappa</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">arimax(x, order = c(0, 0, 0), seasonal = list(order = c(0, 0, 0), period = NA),
+ xreg = NULL, include.mean = TRUE, transform.pars = TRUE, fixed = NULL, 
+init = NULL, method = c("CSS-ML", "ML", "CSS"), n.cond, optim.control = list(),
+ kappa = 1e+06, io = NULL, xtransf, transfer = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>time series response</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>regular ARIMA order</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seasonal</code></td>
+<td>
+<p>seasonal ARIMA order</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+<p>a dataframe containing covariates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include.mean</code></td>
+<td>
+<p>if true, an intercept term is incorporated in the model;
+applicable only to stationary model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform.pars</code></td>
+<td>
+<p>if true, the AR parameters are transformed to 
+ensure stationarity</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed</code></td>
+<td>
+<p>a vector indicating which coefficients are fixed or free</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+<p>initial values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>estimation method</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.cond</code></td>
+<td>
+<p>number of initial values to be conditioned on a conditional
+analysis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optim.control</code></td>
+<td>
+<p>control parameters for the optimization procedure</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kappa</code></td>
+<td>
+<p>prior variance; used in dealing with initial values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>io</code></td>
+<td>
+<p>a list of time points at which the model may have an innovative outlier. The time point of the outlier can be given either as absolute time point
+or as c(a,b), i.e. at the b-th 'month' of the a-th 'year' where each 
+year has frequency(x) months, assuming x is a time series.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xtransf</code></td>
+<td>
+
+<p>xtranf is a matrix with each column containing a covariate that affects
+the time series response in terms of an ARMA filter of order (p,q), i.e.
+if Z is one such covariate, its effect on the time series is 
+<code class="reqn">(theta_0+theta_1B+...+theta_{q-1}B^{q-1})/(1-phi_1 B -...-phi_p B^p) Z_t</code>
+In particular, if <code class="reqn">p=0</code> and <code class="reqn">q=1</code>, this specifies a simple regression 
+relationship, which should be included in xreg and not here.
+Note that the filter starts with zero initial values. Hence, it is pertinent
+to mean-delete each distributed-lag covariate, which is not done automatically.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transfer</code></td>
+<td>
+<p>a list consisting of the ARMA orders for each transfer (distributed lag) covariate.  
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An Arimax object containing the model fit.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Original author of the arima function in R stats: Brian Ripley. The arimax function is based on the stats:::arima function, with modifications by Kung-Sik Chan.</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>arima</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(airmiles)
+plot(log(airmiles),ylab='Log(airmiles)',xlab='Year', main='')
+acf(diff(diff(window(log(airmiles),end=c(2001,8)),12)),lag.max=48,main='')
+air.m1=arimax(log(airmiles),order=c(0,1,1),seasonal=list(order=c(0,1,1),
+period=12),xtransf=data.frame(I911=1*(seq(airmiles)==69),
+I911=1*(seq(airmiles)==69)),
+transfer=list(c(0,0),c(1,0)),xreg=data.frame(Dec96=1*(seq(airmiles)==12),
+Jan97=1*(seq(airmiles)==13),Dec02=1*(seq(airmiles)==84)),method='ML')
+
+
+</code></pre>
+
+
+</div>

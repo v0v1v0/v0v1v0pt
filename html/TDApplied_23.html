@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict_diagram_ksvm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Predict the outcome labels for a list of persistence diagrams using a pre-trained diagram ksvm model.</h2>
+
+<h3>Description</h3>
+
+<p>Returns the predicted response vector of the model on the new diagrams.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">predict_diagram_ksvm(
+  new_diagrams,
+  model,
+  K = NULL,
+  num_workers = parallelly::availableCores(omit = 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>new_diagrams</code></td>
+<td>
+<p>a list of persistence diagrams which are either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>. Only one of 'new_diagrams' and 'K' need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>the output of a <code>diagram_ksvm</code> function call, of class 'diagram_ksvm'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>an optional cross-Gram matrix of the new diagrams and the diagrams in 'model', default NULL. If not NULL then 'new_diagrams' does not need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is a wrapper of the kernlab <code>predict</code> function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a vector containing the output of <code>predict.ksvm</code> on the cross Gram matrix of the new diagrams and the support vector diagrams stored in the model.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>diagram_ksvm</code> for training a SVM model on a training set of persistence diagrams and labels.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create four diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D3 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D4 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D2,D3,D4)
+
+  # create response vector
+  y &lt;- as.factor(c("circle","circle","sphere","sphere"))
+
+  # fit model without cross validation
+  model_svm &lt;- diagram_ksvm(diagrams = g,cv = 1,dim = c(0),
+                            y = y,sigma = c(1),t = c(1),
+                            num_workers = 2)
+
+  # create two new diagrams
+  D5 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D6 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g_new &lt;- list(D5,D6)
+
+  # predict with precomputed Gram matrix
+  K &lt;- gram_matrix(diagrams = g_new,other_diagrams = model_svm$diagrams,
+                   dim = model_svm$best_model$dim,sigma = model_svm$best_model$sigma,
+                   t = model_svm$best_model$t,num_workers = 2)
+  predict_diagram_ksvm(K = K,model = model_svm,num_workers = 2)
+}
+</code></pre>
+
+
+</div>

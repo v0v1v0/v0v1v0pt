@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rtables_access</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper functions for accessing information from <code>rtables</code>
+</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>These are a couple of functions that help with accessing the data in <code>rtables</code> objects.
+Currently these work for occurrence tables, which are defined as having a count as the first
+element and a fraction as the second element in each cell.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_row_first_values(table_row, col_names = NULL, col_indices = NULL)
+
+h_row_counts(table_row, col_names = NULL, col_indices = NULL)
+
+h_row_fractions(table_row, col_names = NULL, col_indices = NULL)
+
+h_col_counts(table, col_names = NULL, col_indices = NULL)
+
+h_content_first_row(table)
+
+is_leaf_table(table)
+
+check_names_indices(table_row, col_names = NULL, col_indices = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>table_row</code></td>
+<td>
+<p>(<code>TableRow</code>)<br> an analysis row in a occurrence table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col_names</code></td>
+<td>
+<p>(<code>character</code>)<br> the names of the columns to extract from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col_indices</code></td>
+<td>
+<p>(<code>integer</code>)<br> the indices of the columns to extract from. If <code>col_names</code> are provided,
+then these are inferred from the names of <code>table_row</code>. Note that this currently only works well with a single
+column split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table</code></td>
+<td>
+<p>(<code>VTableNodeInfo</code>)<br> an occurrence table or row.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>h_row_first_values()</code> returns a <code>vector</code> of numeric values.
+</p>
+</li></ul>
+<ul><li> <p><code>h_row_counts()</code> returns a <code>vector</code> of numeric values.
+</p>
+</li></ul>
+<ul><li> <p><code>h_row_fractions()</code> returns a <code>vector</code> of proportions.
+</p>
+</li></ul>
+<ul><li> <p><code>h_col_counts()</code> returns a <code>vector</code> of column counts.
+</p>
+</li></ul>
+<ul><li> <p><code>h_content_first_row()</code> returns a row from an <code>rtables</code> table.
+</p>
+</li></ul>
+<ul><li> <p><code>is_leaf_table()</code> returns a <code>logical</code> value indicating whether current table is a leaf.
+</p>
+</li></ul>
+<ul><li> <p><code>check_names_indices</code> returns column indices.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>h_row_first_values()</code>: Helper function to extract the first values from each content
+cell and from specified columns in a <code>TableRow</code>. Defaults to all columns.
+</p>
+</li>
+<li> <p><code>h_row_counts()</code>: Helper function that extracts row values and checks if they are
+convertible to integers (<code>integerish</code> values).
+</p>
+</li>
+<li> <p><code>h_row_fractions()</code>: Helper function to extract fractions from specified columns in a <code>TableRow</code>.
+More specifically it extracts the second values from each content cell and checks it is a fraction.
+</p>
+</li>
+<li> <p><code>h_col_counts()</code>: Helper function to extract column counts from specified columns in a table.
+</p>
+</li>
+<li> <p><code>h_content_first_row()</code>: Helper function to get first row of content table of current table.
+</p>
+</li>
+<li> <p><code>is_leaf_table()</code>: Helper function which says whether current table is a leaf in the tree.
+</p>
+</li>
+<li> <p><code>check_names_indices()</code>: Internal helper function that tests standard inputs for column indices.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>prune_occurrences for usage of these functions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tbl &lt;- basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  split_rows_by("RACE") %&gt;%
+  analyze("AGE", function(x) {
+    list(
+      "mean (sd)" = rcell(c(mean(x), sd(x)), format = "xx.x (xx.x)"),
+      "n" = length(x),
+      "frac" = rcell(c(0.1, 0.1), format = "xx (xx)")
+    )
+  }) %&gt;%
+  build_table(tern_ex_adsl) %&gt;%
+  prune_table()
+tree_row_elem &lt;- collect_leaves(tbl[2, ])[[1]]
+result &lt;- max(h_row_first_values(tree_row_elem))
+result
+
+# Row counts (integer values)
+# h_row_counts(tree_row_elem) # Fails because there are no integers
+# Using values with integers
+tree_row_elem &lt;- collect_leaves(tbl[3, ])[[1]]
+result &lt;- h_row_counts(tree_row_elem)
+# result
+
+# Row fractions
+tree_row_elem &lt;- collect_leaves(tbl[4, ])[[1]]
+h_row_fractions(tree_row_elem)
+
+</code></pre>
+
+
+</div>

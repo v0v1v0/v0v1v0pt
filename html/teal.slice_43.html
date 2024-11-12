@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>init_filter_state</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Initialize <code>FilterState</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Initializes a <code>FilterState</code> object corresponding to the class of the filtered variable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">init_filter_state(
+  x,
+  x_reactive = reactive(NULL),
+  slice,
+  extract_type = character(0)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>vector</code>)
+variable to be filtered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_reactive</code></td>
+<td>
+<p>(<code>reactive</code>)
+returning vector of the same type as <code>x</code>. Is used to update
+counts following the change in values of the filtered dataset.
+If it is set to <code>reactive(NULL)</code> then counts based on filtered
+dataset are not shown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>slice</code></td>
+<td>
+<p>(<code>teal_slice</code>)
+specification of this filter state.
+<code>teal_slice</code> is stored in the object and <code>set_state</code> directly manipulates values within <code>teal_slice</code>.
+<code>get_state</code> returns <code>teal_slice</code> object which can be reused in other places.
+Note that <code>teal_slice</code> is a <code>reactiveValues</code>, which means it has reference semantics, i.e.
+changes made to an object are automatically reflected in all places that refer to the same <code>teal_slice</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extract_type</code></td>
+<td>
+<p>(<code>character</code>)
+specifying whether condition calls should be prefixed by <code>dataname</code>. Possible values:
+</p>
+
+<ul>
+<li> <p><code>character(0)</code> (default) <code>varname</code> in the condition call will not be prefixed
+</p>
+</li>
+<li> <p><code>"list"</code> <code>varname</code> in the condition call will be returned as <code style="white-space: pre;">⁠&lt;dataname&gt;$&lt;varname&gt;⁠</code>
+</p>
+</li>
+<li> <p><code>"matrix"</code> <code>varname</code> in the condition call will be returned as <code style="white-space: pre;">⁠&lt;dataname&gt;[, &lt;varname&gt;]⁠</code>
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>FilterState</code> object
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># use non-exported function from teal.slice
+init_filter_state &lt;- getFromNamespace("init_filter_state", "teal.slice")
+
+library(shiny)
+
+filter_state &lt;- init_filter_state(
+  x = c(1:10, NA, Inf),
+  x_reactive = reactive(c(1:10, NA, Inf)),
+  slice = teal_slice(
+    varname = "varname",
+    dataname = "dataname"
+  ),
+  extract_type = "matrix"
+)
+
+isolate(filter_state$get_call())
+
+# working filter in an app
+
+ui &lt;- fluidPage(
+  filter_state$ui(id = "app"),
+  verbatimTextOutput("call")
+)
+server &lt;- function(input, output, session) {
+  filter_state$server("app")
+
+  output$call &lt;- renderText(
+    deparse1(filter_state$get_call(), collapse = "\n")
+  )
+}
+
+if (interactive()) {
+  shinyApp(ui, server)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,169 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_described_as</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Select targets using their descriptions.</h2>
+
+<h3>Description</h3>
+
+<p>Select a subset of targets in the <code style="white-space: pre;">⁠_targets.R⁠</code> file
+based on their custom descriptions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_described_as(
+  described_as = NULL,
+  tidyselect = TRUE,
+  callr_function = callr::r,
+  callr_arguments = targets::tar_callr_args_default(callr_function),
+  envir = parent.frame(),
+  script = targets::tar_config_get("script")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>described_as</code></td>
+<td>
+<p>A <code>tidyselect</code> expression to select targets
+based on their descriptions. For example,
+<code>described_as = starts_with("survival model")</code> matches all
+targets in the pipeline whose <code>description</code> arguments
+of <code>tar_target()</code> start with the text string <code>"survival model"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tidyselect</code></td>
+<td>
+<p>If <code>TRUE</code>, return a call to <code>tidyselect::all_of()</code>
+identifying the selected targets, which can then be supplied to any
+<code>tidyselect</code>-compatible names<code style="white-space: pre;">⁠argument of downstream functions like [tar_make()] and [tar_manifest()]. If⁠</code>FALSE', return a simple character vector of target names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_function</code></td>
+<td>
+<p>A function from <code>callr</code> to start a fresh clean R
+process to do the work. Set to <code>NULL</code> to run in the current session
+instead of an external process (but restart your R session just before
+you do in order to clear debris out of the global environment).
+<code>callr_function</code> needs to be <code>NULL</code> for interactive debugging,
+e.g. <code>tar_option_set(debug = "your_target")</code>.
+However, <code>callr_function</code> should not be <code>NULL</code> for serious
+reproducible work.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_arguments</code></td>
+<td>
+<p>A list of arguments to <code>callr_function</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>An environment, where to run the target R script
+(default: <code style="white-space: pre;">⁠_targets.R⁠</code>) if <code>callr_function</code> is <code>NULL</code>.
+Ignored if <code>callr_function</code> is anything other than <code>NULL</code>.
+<code>callr_function</code> should only be <code>NULL</code> for debugging and
+testing purposes, not for serious runs of a pipeline, etc.
+</p>
+<p>The <code>envir</code> argument of <code>tar_make()</code> and related
+functions always overrides
+the current value of <code>tar_option_get("envir")</code> in the current R session
+just before running the target script file,
+so whenever you need to set an alternative <code>envir</code>, you should always set
+it with <code>tar_option_set()</code> from within the target script file.
+In other words, if you call <code>tar_option_set(envir = envir1)</code> in an
+interactive session and then
+<code>tar_make(envir = envir2, callr_function = NULL)</code>,
+then <code>envir2</code> will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. When you set
+this argument, the value of <code>tar_config_get("script")</code>
+is temporarily changed for the current function call.
+See <code>tar_script()</code>,
+<code>tar_config_get()</code>, and <code>tar_config_set()</code> for details
+about the target script file and how to set it
+persistently for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Targets with empty descriptions are ignored.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>tidyselect</code> is <code>TRUE</code>, then <code>tar_described_as()</code> returns
+a call to <code>tidyselect::all_of()</code> which can be supplied to the <code>names</code>
+argument of functions like <code>tar_manifest()</code> and <code>tar_make()</code>.
+This allows functions like <code>tar_manifest()</code> and <code>tar_make()</code>
+to focus on only the targets with the matching descriptions.
+If <code>tidyselect</code> is <code>FALSE</code>, then <code>tar_described_as()</code> returns
+a simple character vector of the names of all the targets in the
+pipeline with matching descriptions.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other utilities: 
+<code>tar_active()</code>,
+<code>tar_backoff()</code>,
+<code>tar_call()</code>,
+<code>tar_cancel()</code>,
+<code>tar_definition()</code>,
+<code>tar_envir()</code>,
+<code>tar_format_get()</code>,
+<code>tar_group()</code>,
+<code>tar_name()</code>,
+<code>tar_path()</code>,
+<code>tar_path_script()</code>,
+<code>tar_path_script_support()</code>,
+<code>tar_path_store()</code>,
+<code>tar_path_target()</code>,
+<code>tar_source()</code>,
+<code>tar_store()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(b2, TRUE, description = "blue two"),
+    tar_target(b3, TRUE, description = "blue three"),
+    tar_target(g2, TRUE, description = "green two"),
+    tar_target(g3, TRUE, description = "green three"),
+    tar_target(g4, TRUE, description = "green three")
+  )
+}, ask = FALSE)
+tar_described_as(starts_with("green"), tidyselect = FALSE)
+tar_make(names = tar_described_as(starts_with("green")))
+tar_progress() # Only `g2`, `g3`, and `g4` ran.
+})
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TCHazaRdsWindProfile</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute the Wind and Pressure Spatial Hazards Profile Associated with TCs Single Time Step.</h2>
+
+<h3>Description</h3>
+
+<p>Compute the Wind and Pressure Spatial Hazards Profile Associated with TCs Single Time Step.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TCHazaRdsWindProfile(GEO_land, TC, paramsTable)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>GEO_land</code></td>
+<td>
+<p>SpatVector or dataframe hazard geometry generated with land_geometry</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TC</code></td>
+<td>
+<p>SpatVector or data.frame of Tropical cyclone track parameters for a single time step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramsTable</code></td>
+<td>
+<p>Global parameters to compute TC Hazards.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster with the following attributes</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   abbreviated attribute </td>
+<td style="text-align: left;"> description </td>
+<td style="text-align: left;"> units </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   P </td>
+<td style="text-align: left;"> Atmospheric pressure </td>
+<td style="text-align: left;"> hPa </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Uw </td>
+<td style="text-align: left;"> Meridional  wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Vw </td>
+<td style="text-align: left;"> Zonal wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Sw </td>
+<td style="text-align: left;"> Wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Dw </td>
+<td style="text-align: left;"> Wind direction </td>
+<td style="text-align: left;"> deg clockwise from true north </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">require(terra)
+dem &lt;- rast(system.file("extdata/DEMs/YASI_dem.tif", package="TCHazaRds"))
+land &lt;- dem; land[land &gt; 0] = 0
+inland_proximity = distance(land,target = 0)
+GEO_land = land_geometry(dem,inland_proximity)
+
+TCi = vect(cbind(c(154,154),c(-26.1,-26)),"lines",crs="epsg:4283") #track line segment
+TCi$PRES = 950
+TCi$RMAX = 40
+TCi$VMAX = 60
+TCi$B = 1.4
+TCi$ISO_TIME = "2022-10-04 20:00:00"
+TCi$LON = geom(TCi)[1,3]
+TCi$LAT = geom(TCi)[1,4]
+TCi$STORM_SPD = perim(TCi)/(3*3600) #m/s
+TCi$thetaFm = 90-returnBearing(TCi)
+#OR
+TC &lt;- vect(system.file("extdata/YASI/YASI.shp", package="TCHazaRds"))
+TC$PRES &lt;- TC$BOM_PRES
+TCi = TC[47]
+TCi$thetaFm = 90-returnBearing(TCi)
+
+#extract a profile/transect at right angles (90 degrees) from the TC heading/bearing direction
+pp &lt;- TCProfilePts(TC_line = TCi,bear=TCi$thetaFm+90,length =100,step=1)
+#plot(dem);lines(TCi,lwd = 4,col=2)
+#points(pp)
+GEO_land_v = extract(GEO_land,pp,bind=TRUE,method = "bilinear")
+
+paramsTable = read.csv(system.file("extdata/tuningParams/defult_params.csv",package = "TCHazaRds"))
+#calculate the wind hazard
+HAZ = TCHazaRdsWindProfile(GEO_land_v,TCi,paramsTable)
+#plot(HAZ$radialdist,HAZ$Sw,type="l",xlab = "Radial distance [km]",ylab = "Wind speed [m/s]");grid()
+#plot(HAZ,"Sw",type="continuous")
+
+</code></pre>
+
+
+</div>

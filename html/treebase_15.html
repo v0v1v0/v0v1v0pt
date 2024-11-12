@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>search_treebase</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A function to pull in the phyologeny/phylogenies matching a search query</h2>
+
+<h3>Description</h3>
+
+<p>A function to pull in the phyologeny/phylogenies matching a search query
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">search_treebase(
+  input,
+  by,
+  returns = c("tree", "matrix"),
+  exact_match = FALSE,
+  max_trees = Inf,
+  branch_lengths = FALSE,
+  curl = getCurlHandle(),
+  verbose = TRUE,
+  pause1 = 0,
+  pause2 = 0,
+  attempts = 3,
+  only_metadata = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input</code></td>
+<td>
+<p>a search query (character string)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>the kind of search; author, taxon, subject, study, etc
+(see list of possible search terms, details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returns</code></td>
+<td>
+<p>should the fn return the tree or the character matrix?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exact_match</code></td>
+<td>
+<p>force exact matching for author name, taxon, etc.
+Otherwise does partial matching</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_trees</code></td>
+<td>
+<p>Upper bound for the number of trees returned, good for
+keeping possibly large initial queries fast</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>branch_lengths</code></td>
+<td>
+<p>logical indicating whether should only return
+trees that have branch lengths.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>curl</code></td>
+<td>
+<p>the handle to the curl web utility for repeated calls, see
+the getCurlHandle() function in RCurl package for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical indicating level of progress reporting</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pause1</code></td>
+<td>
+<p>number of seconds to hesitate between requests</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pause2</code></td>
+<td>
+<p>number of seconds to hesitate between individual files</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>attempts</code></td>
+<td>
+<p>number of attempts to access a particular resource</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>only_metadata</code></td>
+<td>
+<p>option to only return metadata about matching trees
+which lists study.id, tree.id, kind (gene,species,barcode) type (single, consensus)
+number of taxa, and possible quality score.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>either a list of trees (multiphylo) or a list of character matrices
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+## defaults to return phylogeny
+Huelsenbeck &lt;- search_treebase("Huelsenbeck", by="author")
+
+## can ask for character matrices:
+wingless &lt;- search_treebase("2907", by="id.matrix", returns="matrix")
+
+## Some nexus matrices don't meet read.nexus.data's strict requirements,
+## these aren't returned
+H_matrices &lt;- search_treebase("Huelsenbeck", by="author", returns="matrix")
+
+## Use Booleans in search: and, or, not
+## Note that by must identify each entry type if a Boolean is given
+HR_trees &lt;- search_treebase("Ronquist or Hulesenbeck", by=c("author", "author"))
+
+## We'll often use max_trees in the example so that they run quickly,
+## notice the quotes for species.
+dolphins &lt;- search_treebase('"Delphinus"', by="taxon", max_trees=5)
+## can do exact matches
+humans &lt;- search_treebase('"Homo sapiens"', by="taxon", exact_match=TRUE, max_trees=10)
+## all trees with 5 taxa
+five &lt;- search_treebase(5, by="ntax", max_trees = 10)
+## These are different, a tree id isn't a Study id.  we report both
+studies &lt;- search_treebase("2377", by="id.study")
+tree &lt;- search_treebase("2377", by="id.tree")
+c("TreeID" = tree$Tr.id, "StudyID" = tree$S.id)
+## Only results with branch lengths
+## Has to grab all the trees first, then toss out ones without branch_lengths
+Near &lt;- search_treebase("Near", "author", branch_lengths=TRUE)
+ 
+## End(Not run)
+</code></pre>
+
+
+</div>

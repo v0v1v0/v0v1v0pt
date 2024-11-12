@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_numeric_column</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates a numeric column specification</h2>
+
+<h3>Description</h3>
+
+<p><code>step_numeric_column</code> creates a numeric column specification. It can also be
+used to normalize numeric columns.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_numeric_column(
+  spec,
+  ...,
+  shape = 1L,
+  default_value = NULL,
+  dtype = tf$float32,
+  normalizer_fn = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>spec</code></td>
+<td>
+<p>A feature specification created with <code>feature_spec()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Comma separated list of variable names to apply the step. selectors can also be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shape</code></td>
+<td>
+<p>An iterable of integers specifies the shape of the Tensor. An integer can be given
+which means a single dimension Tensor with given width. The Tensor representing the column will
+have the shape of <code>batch_size</code> + <code>shape</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_value</code></td>
+<td>
+<p>A single value compatible with <code>dtype</code> or an iterable of values compatible
+with <code>dtype</code> which the column takes on during <code>tf.Example</code> parsing if data is missing. A
+default value of <code>NULL</code> will cause <code>tf.parse_example</code> to fail if an example does not contain
+this column. If a single value is provided, the same value will be applied as
+the default value for every item. If an iterable of values is provided, the shape
+of the default_value should be equal to the given shape.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtype</code></td>
+<td>
+<p>defines the type of values. Default value is <code>tf$float32</code>. Must be a non-quantized,
+real integer or floating point type.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalizer_fn</code></td>
+<td>
+<p>If not <code>NULL</code>, a function that can be used to normalize the value
+of the tensor after default_value is applied for parsing. Normalizer function takes the
+input Tensor as its argument, and returns the output Tensor. (e.g. <code style="white-space: pre;">⁠function(x) (x - 3.0) / 4.2)⁠</code>.
+Please note that even though the most common use case of this function is normalization, it
+can be used for any kind of Tensorflow transformations. You can also a pre-made scaler, in
+this case a function will be created after fit.FeatureSpec is called on the feature specification.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>FeatureSpec</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>steps for a complete list of allowed steps.
+</p>
+<p>Other Feature Spec Functions: 
+<code>dataset_use_spec()</code>,
+<code>feature_spec()</code>,
+<code>fit.FeatureSpec()</code>,
+<code>step_bucketized_column()</code>,
+<code>step_categorical_column_with_hash_bucket()</code>,
+<code>step_categorical_column_with_identity()</code>,
+<code>step_categorical_column_with_vocabulary_file()</code>,
+<code>step_categorical_column_with_vocabulary_list()</code>,
+<code>step_crossed_column()</code>,
+<code>step_embedding_column()</code>,
+<code>step_indicator_column()</code>,
+<code>step_remove_column()</code>,
+<code>step_shared_embeddings_column()</code>,
+<code>steps</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(tfdatasets)
+data(hearts)
+hearts &lt;- tensor_slices_dataset(hearts) %&gt;% dataset_batch(32)
+
+# use the formula interface
+spec &lt;- feature_spec(hearts, target ~ age) %&gt;%
+  step_numeric_column(age, normalizer_fn = standard_scaler())
+
+spec_fit &lt;- fit(spec)
+final_dataset &lt;- hearts %&gt;% dataset_use_spec(spec_fit)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

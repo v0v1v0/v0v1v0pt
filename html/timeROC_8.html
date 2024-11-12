@@ -1,0 +1,169 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotAUCcurve</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Plot time-dependent AUC curve
+</h2>
+
+<h3>Description</h3>
+
+<p>This function plots the curve of time-dependent-AUC: AUC(t) versus t.
+Pointwise and simultaneous confidence bands for this curve can also be plotted
+when inverse probability of censoring weights are computed from a Kaplan-Meier estimator. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotAUCcurve(object, FP = 2, add = FALSE, conf.int = FALSE,
+             conf.band = FALSE, col = "black")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>An object of class "ipcwsurvivalROC" or "ipcwcompetingrisksROC"
+previously estimated from the <code>timeROC</code> function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FP</code></td>
+<td>
+
+<p>In the competing risks setting, a numeric value that indicates which
+definition of AUC is plotted. <code>1</code> for definition <b>(i)</b> and
+<code>2</code>  for definition <b>(ii)</b>. 
+(See details of <code>timeROC</code> function for definitions <b>(i)</b> and <b>(ii)</b>). Default is <code>FP = 2</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+
+<p>A logical value that indicates if  you want to  add the AUC curve to a pre-existing plot. Default is <code>add = FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.int</code></td>
+<td>
+
+<p>A logical value that indicates whether or not you want to plot the bands
+of pointwise confidence intervals. Default is  <code>conf.int = FALSE</code>.
+For choosing <code>conf.int = TRUE</code>, the object <code>object</code> must have been estimated by the <code>timeROC</code> function with arguments <code>weighting="marginal"</code> and <code>iid = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.band</code></td>
+<td>
+
+<p>A logical value that indicates whether or not you want to plot the simultaneous confidence bands. Default is  <code>conf.band = FALSE</code>.
+For choosing <code>conf.band = TRUE</code>, the object <code>object</code> must have been estimated by the <code>timeROC</code> function with arguments <code>weighting="marginal"</code> and <code>iid = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+
+<p>The color to plot the AUC curve. Default is <code>col = "black"</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Paul Blanche <a href="mailto:pabl@sund.ku.dk">pabl@sund.ku.dk</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Blanche, P., Dartigues, J. F., &amp; Jacqmin-Gadda,	H. (2013). Estimating and comparing time-dependent areas under
+receiver operating characteristic curves for censored event times with competing risks. 
+Statistics in medicine, 32(30), 5381-5397.
+</p>
+<p>Hung, H. and Chiang, C. (2010). Estimation methods for time-dependent AUC with survival data.
+Canadian Journal of Statistics, 38(1):8-26
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>confint</code> for confidence intervals and confidence bands computation of time-dependentAUC.
+</p>
+</li>
+<li> <p><code>plotAUCcurveDiff</code> for plotting  the curve of the
+difference of two time-dependent AUCs over time 
+with eventually confidence intervals and
+simultaneous confidence bands.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+## computation times is roughly 10 seconds
+
+##-------------Without competing risks-------------------
+library(survival)
+data(pbc)
+head(pbc)
+pbc&lt;-pbc[!is.na(pbc$trt),] # select only randomised subjects
+pbc$status&lt;-as.numeric(pbc$status==2) # create event indicator: 1 for death, 0 for censored     
+# we evaluate bilirubin as a prognostic biomarker for death.
+ROC.bili&lt;-timeROC(T=pbc$time,
+                  delta=pbc$status,marker=pbc$bili,
+                  cause=1,weighting="marginal",
+                  times=quantile(pbc$time,probs=seq(0.2,0.8,0.02)),
+                  iid=TRUE)
+ROC.bili    
+# we evaluate bilirubin as a prognostic biomarker for death.
+ROC.albumin&lt;-timeROC(T=pbc$time,
+                     delta=pbc$status,marker=-pbc$albumin,
+                     cause=1,weighting="marginal",
+                     times=quantile(pbc$time,probs=seq(0.2,0.8,0.02)),
+                     iid=TRUE)
+ROC.albumin
+# plot AUC curve for albumin only with pointwise confidence intervals
+# and simultaneous confidence bands
+plotAUCcurve(ROC.albumin,conf.int=TRUE,conf.band=TRUE)
+# plot AUC curve for albumin and bilirunbin  with pointwise confidence intervals
+plotAUCcurve(ROC.albumin,conf.int=TRUE,col="red")
+plotAUCcurve(ROC.bili,conf.int=TRUE,col="blue",add=TRUE)
+legend("bottomright",c("albumin","bilirunbin"),col=c("red","blue"),lty=1,lwd=2)
+
+
+##-------------With competing risks-------------------     
+data(Melano)
+head(Melano)     
+# Evaluate tumor thickness as a prognostic biomarker for
+# death from malignant melanoma.
+ROC.thick&lt;-timeROC(T=Melano$time,delta=Melano$status,
+                   marker=Melano$thick,cause=1,
+                   times=quantile(Melano$time,probs=seq(0.2,0.8,0.01)),
+                   iid=TRUE)
+ROC.thick
+# plot AUC curve for tumor thickness with pointwise confidence intervals
+# and simultaneous confidence bands
+plotAUCcurve(ROC.thick,FP=2,conf.int=TRUE,conf.band=TRUE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

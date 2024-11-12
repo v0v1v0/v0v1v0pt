@@ -1,0 +1,136 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summary.tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarizing Second-order Tensor Generalized Regression Fits</h2>
+
+<h3>Description</h3>
+
+<p><kbd>summary</kbd> method for self-defined class <kbd>"tsglm"</kbd>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+summary(object, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an object of class <kbd>"tsglm"</kbd>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><kbd>summary.tsglm</kbd> is combined with <code>print</code> to provide
+formatting the coefficients, standard errors, etc. and additionally gives 'significance stars'
+</p>
+
+
+<h3>Value</h3>
+
+<p><kbd>summary.tsglm</kbd> returns a printout similar to <code>summary.glm</code>.
+</p>
+<p>The printout contains the following components:
+</p>
+<p><kbd>Call</kbd>: The formula for fitted model.
+</p>
+<p><kbd>Deviance Residuals</kbd>: The summary statistics of deviance residuals. Provide for model
+except <kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>Residuals</kbd>: The summary statistics of residuals. Provide for <kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>Coefficients</kbd>: The coefficient table includes estimation, standard deviation,
+test statistics, and p-value of parameters and significance stars.
+</p>
+<p><kbd>Deviance</kbd>: The deviance of a fitted model. Provide for model except <kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>AIC</kbd>: Akaike information criterion.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Mark Chen
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary, predict.tsglm</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Simulation data
+n &lt;- 500 # number of observations
+n_P &lt;- 3; n_G &lt;- 64 # dimension of 3-D tensor variables.
+n_d &lt;- 2 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
+beta_True &lt;- rep(1, n_d)
+B_True &lt;- c(1,1,1)%*%t(rnorm(n_G)) + c(0, .5, .5)%*%t(rnorm(n_G))
+B_True &lt;- B_True / 10
+W &lt;- matrix(rnorm(n*n_d), n, n_d); W[,1] &lt;- 1
+W_named &lt;- W
+colnames(W_named) &lt;- paste0("w", 1:ncol(W_named))
+X &lt;- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
+X_named &lt;- X
+dimnames(X_named) &lt;- list(paste0("R", 1:nrow(X_named)),paste0("C", 1:ncol(X_named)))
+## Regression
+y_R &lt;- as.vector(W%*%beta_True + X%hp%B_True + rnorm(n))
+DATA_R &lt;- list(y = y_R, X = X, W = W)
+y_R_named &lt;- as.vector(W_named%*%beta_True + X_named%hp%B_True + rnorm(n))
+DATA_R_named &lt;- list(y = y_R_named, X = X_named, W = W_named)
+## Binomial
+p_B &lt;- exp(W%*%beta_True + X%hp%B_True); p_B &lt;- p_B/(1+p_B)
+y_B &lt;- rbinom(n, 1, p_B)
+DATA_B &lt;- list(y = y_B, W = W, X = X)
+## Poisson
+p_P &lt;- exp(W%*%beta_True + X%hp%B_True)
+y_P &lt;- rpois(n, p_P)
+y_P[which(y_P &gt; 170)] &lt;- 170 # If y_P &gt; 170, factorial(y_P) == inf.
+DATA_P &lt;- list(y = y_P, W = W, X = X)
+
+# Execution
+## Regression
+result_R &lt;- tensorReg2D(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+summary(result_R)
+head(predict(result_R, DATA_R$X))
+
+## Regression with specified names
+result_R_named &lt;- tensorReg2D(y = DATA_R_named$y, X = DATA_R_named$X, W=DATA_R_named$W,
+n_R = 1, family = "gaussian", opt = 1, max_ite = 100, tol = 10^(-7) )
+summary(result_R_named)
+
+## Binomial
+result_B &lt;- tensorReg2D(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+summary(result_B)
+head(predict(result_B, DATA_B$X))
+
+## Poisson
+result_P &lt;- tensorReg2D(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+summary(result_P)
+head(predict(result_P, DATA_P$X))
+
+</code></pre>
+
+
+</div>

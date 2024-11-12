@@ -1,0 +1,335 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_make</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Run a pipeline of targets.</h2>
+
+<h3>Description</h3>
+
+<p>Run the pipeline you defined in the targets
+script file (default: <code style="white-space: pre;">⁠_targets.R⁠</code>). <code>tar_make()</code>
+runs the correct targets in the correct order and stores the return
+values in <code style="white-space: pre;">⁠_targets/objects/⁠</code>. Use <code>tar_read()</code> to read a target
+back into R, and see
+<a href="https://docs.ropensci.org/targets/reference/index.html#clean">https://docs.ropensci.org/targets/reference/index.html#clean</a>
+to manage output files.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_make(
+  names = NULL,
+  shortcut = targets::tar_config_get("shortcut"),
+  reporter = targets::tar_config_get("reporter_make"),
+  seconds_meta_append = targets::tar_config_get("seconds_meta_append"),
+  seconds_meta_upload = targets::tar_config_get("seconds_meta_upload"),
+  seconds_reporter = targets::tar_config_get("seconds_reporter"),
+  seconds_interval = targets::tar_config_get("seconds_interval"),
+  callr_function = callr::r,
+  callr_arguments = targets::tar_callr_args_default(callr_function, reporter),
+  envir = parent.frame(),
+  script = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store"),
+  garbage_collection = targets::tar_config_get("garbage_collection"),
+  use_crew = targets::tar_config_get("use_crew"),
+  terminate_controller = TRUE,
+  as_job = targets::tar_config_get("as_job")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>Names of the targets to run or check. Set to <code>NULL</code> to
+check/run all the targets (default).
+The object supplied to <code>names</code> should be a
+<code>tidyselect</code> expression like <code>any_of()</code> or <code>starts_with()</code>
+from <code>tidyselect</code> itself, or <code>tar_described_as()</code> to select target names
+based on their descriptions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shortcut</code></td>
+<td>
+<p>Logical of length 1, how to interpret the <code>names</code> argument.
+If <code>shortcut</code> is <code>FALSE</code> (default) then the function checks
+all targets upstream of <code>names</code> as far back as the dependency graph goes.
+<code>shortcut = TRUE</code> increases speed if there are a lot of
+up-to-date targets, but it assumes all the dependencies
+are up to date, so please use with caution.
+It relies on stored metadata for information about upstream dependencies.
+<code>shortcut = TRUE</code> only works if you set <code>names</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reporter</code></td>
+<td>
+<p>Character of length 1, name of the reporter to user.
+Controls how messages are printed as targets run in the pipeline.
+Defaults to <code>tar_config_get("reporter_make")</code>. Choices:
+</p>
+
+<ul>
+<li> <p><code>"silent"</code>: print nothing.
+</p>
+</li>
+<li> <p><code>"summary"</code>: print a running total of the number of each targets in
+each status category (queued, dispatched, skipped, completed, canceled,
+or errored). Also show a timestamp (<code>"%H:%M %OS2"</code> <code>strptime()</code> format)
+of the last time the progress changed and printed to the screen.
+</p>
+</li>
+<li> <p><code>"timestamp"</code>: same as the <code>"verbose"</code> reporter except that each
+.message begins with a time stamp.
+</p>
+</li>
+<li> <p><code>"timestamp_positives"</code>: same as the <code>"timestamp"</code> reporter
+except without messages for skipped targets.
+</p>
+</li>
+<li> <p><code>"verbose"</code>: print messages for individual targets
+as they start, finish, or are skipped. Each individual
+target-specific time (e.g. "3.487 seconds") is strictly the
+elapsed runtime of the target and does not include
+steps like data retrieval and output storage.
+</p>
+</li>
+<li> <p><code>"verbose_positives"</code>: same as the <code>"verbose"</code> reporter
+except without messages for skipped targets.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_meta_append</code></td>
+<td>
+<p>Positive numeric of length 1 with the minimum
+number of seconds between saves to the local metadata and progress files
+in the data store.
+Higher values generally make the pipeline run faster, but unsaved
+work (in the event of a crash) is not up to date.
+When the pipeline ends,
+all the metadata and progress data is saved immediately,
+regardless of <code>seconds_meta_append</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_meta_upload</code></td>
+<td>
+<p>Positive numeric of length 1 with the minimum
+number of seconds between uploads of the metadata and progress data
+to the cloud
+(see <a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>).
+Higher values generally make the pipeline run faster, but unsaved
+work (in the event of a crash) may not be backed up to the cloud.
+When the pipeline ends,
+all the metadata and progress data is uploaded immediately,
+regardless of <code>seconds_meta_upload</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_reporter</code></td>
+<td>
+<p>Positive numeric of length 1 with the minimum
+number of seconds between times when the reporter prints progress
+messages to the R console.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_interval</code></td>
+<td>
+<p>Deprecated on 2023-08-24 (version 1.2.2.9001).
+Use <code>seconds_meta_append</code>, <code>seconds_meta_upload</code>,
+and <code>seconds_reporter</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_function</code></td>
+<td>
+<p>A function from <code>callr</code> to start a fresh clean R
+process to do the work. Set to <code>NULL</code> to run in the current session
+instead of an external process (but restart your R session just before
+you do in order to clear debris out of the global environment).
+<code>callr_function</code> needs to be <code>NULL</code> for interactive debugging,
+e.g. <code>tar_option_set(debug = "your_target")</code>.
+However, <code>callr_function</code> should not be <code>NULL</code> for serious
+reproducible work.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_arguments</code></td>
+<td>
+<p>A list of arguments to <code>callr_function</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>An environment, where to run the target R script
+(default: <code style="white-space: pre;">⁠_targets.R⁠</code>) if <code>callr_function</code> is <code>NULL</code>.
+Ignored if <code>callr_function</code> is anything other than <code>NULL</code>.
+<code>callr_function</code> should only be <code>NULL</code> for debugging and
+testing purposes, not for serious runs of a pipeline, etc.
+</p>
+<p>The <code>envir</code> argument of <code>tar_make()</code> and related
+functions always overrides
+the current value of <code>tar_option_get("envir")</code> in the current R session
+just before running the target script file,
+so whenever you need to set an alternative <code>envir</code>, you should always set
+it with <code>tar_option_set()</code> from within the target script file.
+In other words, if you call <code>tar_option_set(envir = envir1)</code> in an
+interactive session and then
+<code>tar_make(envir = envir2, callr_function = NULL)</code>,
+then <code>envir2</code> will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. When you set
+this argument, the value of <code>tar_config_get("script")</code>
+is temporarily changed for the current function call.
+See <code>tar_script()</code>,
+<code>tar_config_get()</code>, and <code>tar_config_set()</code> for details
+about the target script file and how to set it
+persistently for a project.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical of length 1. For a <code>crew</code>-integrated
+pipeline, whether to run garbage collection on the main process
+before sending a target
+to a worker. Ignored if <code>tar_option_get("controller")</code> is <code>NULL</code>.
+Independent from the <code>garbage_collection</code> argument of <code>tar_target()</code>,
+which controls garbage collection on the worker.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_crew</code></td>
+<td>
+<p>Logical of length 1, whether to use <code>crew</code> if the
+<code>controller</code> option is set in <code>tar_option_set()</code> in the target script
+(<code style="white-space: pre;">⁠_targets.R⁠</code>). See <a href="https://books.ropensci.org/targets/crew.html">https://books.ropensci.org/targets/crew.html</a>
+for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>terminate_controller</code></td>
+<td>
+<p>Logical of length 1. For a <code>crew</code>-integrated
+pipeline, whether to terminate the controller after stopping
+or finishing the pipeline. This should almost always be set to <code>TRUE</code>,
+but <code>FALSE</code> combined with <code>callr_function = NULL</code>
+will allow you to get the running controller using
+<code>tar_option_get("controller")</code> for debugging purposes.
+For example, <code>tar_option_get("controller")$summary()</code> produces a
+worker-by-worker summary of the work assigned and completed,
+<code>tar_option_get("controller")$queue</code> is the list of unresolved tasks,
+and <code>tar_option_get("controller")$results</code> is the list of
+tasks that completed but were not collected with <code>pop()</code>.
+You can manually terminate the controller with
+<code>tar_option_get("controller")$summary()</code> to close down the dispatcher
+and worker processes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as_job</code></td>
+<td>
+<p><code>TRUE</code> to run as an RStudio IDE / Posit Workbench job,
+if running on RStudio IDE / Posit Workbench.
+<code>FALSE</code> to run as a <code>callr</code> process in the main R session
+(depending on the <code>callr_function</code> argument).
+If <code>as_job</code> is <code>TRUE</code>, then the <code>rstudioapi</code> package must be installed.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>NULL</code> except if <code>callr_function = callr::r_bg()</code>, in which case
+a handle to the <code>callr</code> background process is returned. Either way,
+the value is invisibly returned.
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other pipeline: 
+<code>tar_make_clustermq()</code>,
+<code>tar_make_future()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(y1, 1 + 1),
+    tar_target(y2, 1 + 1),
+    tar_target(z, y1 + y2)
+  )
+}, ask = FALSE)
+tar_make(starts_with("y")) # Only processes y1 and y2.
+# Distributed computing with crew:
+if (requireNamespace("crew", quietly = TRUE)) {
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  tar_option_set(controller = crew::controller_local())
+  list(
+    tar_target(y1, 1 + 1),
+    tar_target(y2, 1 + 1),
+    tar_target(z, y1 + y2)
+  )
+}, ask = FALSE)
+tar_make()
+}
+})
+}
+</code></pre>
+
+
+</div>

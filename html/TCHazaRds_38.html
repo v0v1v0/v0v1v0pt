@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update_Track</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate Additional TC Parameters, and temporally Interpolate Along a Tropical Cyclone Track</h2>
+
+<h3>Description</h3>
+
+<p>Calculate Additional TC Parameters, and temporally Interpolate Along a Tropical Cyclone Track
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">update_Track(
+  outdate = NULL,
+  indate,
+  TClons,
+  TClats,
+  vFms,
+  thetaFms,
+  cPs,
+  rMaxModel,
+  vMaxModel,
+  betaModel,
+  rMax2Model,
+  eP,
+  rho = NULL,
+  RMAX,
+  VMAX,
+  B,
+  RMAX2
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>outdate</code></td>
+<td>
+<p>POSIX times to be interpolated to</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indate</code></td>
+<td>
+<p>POSIX input times</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TClons</code></td>
+<td>
+<p>input central TC longitude</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TClats</code></td>
+<td>
+<p>input central TC latitude</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vFms</code></td>
+<td>
+<p>input forward velocity of TC</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thetaFms</code></td>
+<td>
+<p>input forward direction</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cPs</code></td>
+<td>
+<p>central pressure</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rMaxModel</code></td>
+<td>
+<p>empirical model for radius of maximum wind calculation (rMax in km)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vMaxModel</code></td>
+<td>
+<p>empirical model for maximum wind velocity calculation (vMax in m/s)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>betaModel</code></td>
+<td>
+<p>empirical model for TC shape parameter beta (dimensionless Beta)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rMax2Model</code></td>
+<td>
+<p>empirical model for radius of outer 17.5ms wind calculation (rMax2 in km)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eP</code></td>
+<td>
+<p>background environmental pressure (hPa)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>air density</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RMAX</code></td>
+<td>
+<p>If params rMaxModel value is NA, use input TC$RMAX</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>VMAX</code></td>
+<td>
+<p>If params rMaxModel value is NA, use input TC$VMAX</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>If params rMaxModel value is NA, use input TC$B</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RMAX2</code></td>
+<td>
+<p>If params rMax2Model value is NA, use input TC$RMAX2</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>list of track data inclining the rMax vMax and Beta.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">paramsTable &lt;- read.csv(system.file("extdata/tuningParams/defult_params.csv",package = "TCHazaRds"))
+params &lt;- array(paramsTable$value,dim = c(1,length(paramsTable$value)))
+colnames(params) &lt;- paramsTable$param
+params &lt;- data.frame(params)
+require(terra)
+TCi &lt;- vect(system.file("extdata/YASI/YASI.shp", package="TCHazaRds"))
+TCi$PRES &lt;- TCi$BOM_PRES
+TCi$RMAX &lt;- TCi$BOM_RMW*1.852 #convert from nautical miles to km
+TCi$VMAX &lt;- TCi$BOM_WIND*1.94 #convert from knots to m/s
+TCi$B &lt;- 1.4
+TCi$RMAX2 &lt;- 150 
+t1 &lt;- strptime("2011-02-01 09:00:00","%Y-%m-%d %H:%M:%S", tz = "UTC") #first date in POSIX format
+t2 &lt;- strptime(rev(TCi$ISO_TIME)[1],"%Y-%m-%d %H:%M:%S", tz = "UTC") #last date in POSIX format
+outdate &lt;- seq(t1,t2,"hour") #array sequence from t1 to t2 stepping by “hour”
+# defult along track parameters are calculated
+TCil = update_Track(outdate = outdate,
+                   indate = strptime(TCi$ISO_TIME,"%Y-%m-%d %H:%M:%S", tz = "UTC"),
+                   TClons = TCi$LON,
+                   TClats = TCi$LAT,
+                   vFms=TCi$STORM_SPD,
+                   thetaFms=TCi$thetaFm,
+                   cPs=TCi$PRES,
+                   rMaxModel=params$rMaxModel,
+                   vMaxModel=params$vMaxModel,
+                   betaModel=params$betaModel,
+                   rMax2Model = params$rMaxModel,
+                   eP = params$eP,
+                   rho = params$rhoa,
+                   RMAX = TCi$RMAX,
+                   VMAX = TCi$VMAX,
+                   B = TCi$B,
+                   RMAX2 = TCi$RMAX2
+                   )
+# 'observed' along tack parameters are calculated (#Model = NA)                   
+TCil = update_Track(outdate = outdate,
+                   indate = strptime(TCi$ISO_TIME,"%Y-%m-%d %H:%M:%S", tz = "UTC"),
+                   TClons = TCi$LON,
+                   TClats = TCi$LAT,
+                   vFms=TCi$STORM_SPD,
+                   thetaFms=TCi$thetaFm,
+                   cPs=TCi$PRES,
+                   rMaxModel=NA,
+                   vMaxModel=NA,
+                   betaModel=NA,
+                   rMax2Model = NA,
+                   eP = params$eP,
+                   rho = params$rhoa,
+                   RMAX = TCi$RMAX,
+                   VMAX = TCi$VMAX,
+                   B = TCi$B,
+                   RMAX2 = TCi$RMAX2
+                   )
+</code></pre>
+
+
+</div>

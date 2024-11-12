@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrajsMergeStats</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merge trajectory characteristics</h2>
+
+<h3>Description</h3>
+
+<p>Builds a data frame by combining rows of statistical values for multiple
+trajectories. The statistics for each trajectory are defined by the caller in
+a user defined function - see the example for one way to achieve this.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TrajsMergeStats(
+  trjs,
+  statsFn,
+  progressBar = c("none", "text", "win", "tk"),
+  check.names = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>trjs</code></td>
+<td>
+<p>List of trajectories to be characterised.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statsFn</code></td>
+<td>
+<p>Function to calculate statistics of interest for a single
+trajectory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progressBar</code></td>
+<td>
+<p>Displays an optional progressbar, which may be helpful if
+processing is very slow. The progressbar is displayed by printing to the
+console, by using <code>winProgressBar</code> or
+<code>tkProgressBar</code>, if <code>progressBar</code> is <code>"text"</code>,
+<code>"win"</code> or <code>"tk"</code> respectively. The default is no progressbar
+(value <code>"none"</code>). The <code>"win"</code> progressbar is only available on
+Windows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check.names</code></td>
+<td>
+<p>Passed to <code>as.data.frame</code>. Set to <code>FALSE</code> if
+statistic names are not syntactically valid variable names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>statsFn</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Any NULL valued statistics are converted to NAs.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+# Define a function which calculates some statistics
+# of interest for a single trajectory
+characteriseTrajectory &lt;- function(trj) {
+  # Measures of speed
+  derivs &lt;- TrajDerivatives(trj)
+  mean_speed &lt;- mean(derivs$speed)
+  sd_speed &lt;- sd(derivs$speed)
+
+  # Resample to constant step length.
+  # Step length must be appropriate for the trajectory
+  resampled &lt;- TrajRediscretize(trj, 2)
+
+  # Measures of straightness
+  sinuosity &lt;- TrajSinuosity2(resampled)
+  Emax &lt;- TrajEmax(resampled)
+
+  # Periodicity
+  resampled &lt;- TrajRediscretize(trj, .001)
+  corr &lt;- TrajDirectionAutocorrelations(resampled, round(nrow(resampled) / 4))
+  first_min &lt;- TrajDAFindFirstMinimum(corr)
+
+  # Return a list with all of the statistics for this trajectory
+  list(mean_speed = mean_speed,
+       sd_speed = sd_speed,
+       sinuosity = sinuosity,
+       Emax = Emax,
+       first_min_deltaS = first_min[1],
+       first_min_C = first_min[2])
+}
+
+trjs &lt;- TrajsBuild(filenames)
+stats &lt;- TrajsMergeStats(trjs, characteriseTrajectory)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>map_local</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Map a function over a graph representing the neighborhood of each node</h2>
+
+<h3>Description</h3>
+
+<p>This function extracts the neighborhood of each node as a graph and maps over
+each of these neighborhood graphs. Conceptually it is similar to
+<code>igraph::local_scan()</code>, but it borrows the type safe versions available in
+<code>map_bfs()</code> and <code>map_dfs()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">map_local(order = 1, mode = "all", mindist = 0, .f, ...)
+
+map_local_lgl(order = 1, mode = "all", mindist = 0, .f, ...)
+
+map_local_chr(order = 1, mode = "all", mindist = 0, .f, ...)
+
+map_local_int(order = 1, mode = "all", mindist = 0, .f, ...)
+
+map_local_dbl(order = 1, mode = "all", mindist = 0, .f, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>Integer giving the order of the neighborhood.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode</code></td>
+<td>
+<p>Character constant, it specifies how to use the direction of
+the edges if a directed graph is analyzed. For ‘out’ only the
+outgoing edges are followed, so all vertices reachable from the source
+vertex in at most <code>order</code> steps are counted. For ‘"in"’ all
+vertices from which the source vertex is reachable in at most <code>order</code>
+steps are counted. ‘"all"’ ignores the direction of the edges. This
+argument is ignored for undirected graphs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mindist</code></td>
+<td>
+<p>The minimum distance to include the vertex in the result.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A function to map over all nodes. See Details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters to pass to <code>.f</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function provided to <code>.f</code> will be called with the following arguments in
+addition to those supplied through <code>...</code>:
+</p>
+
+<ul>
+<li> <p><code>neighborhood</code>: The neighborhood graph of the node
+</p>
+</li>
+<li> <p><code>graph</code>: The full <code>tbl_graph</code> object
+</p>
+</li>
+<li> <p><code>node</code>: The index of the node currently mapped over
+</p>
+</li>
+</ul>
+<p>The <code>neighborhood</code> graph will contain an extra node attribute called
+<code>.central_node</code>, which will be <code>TRUE</code> for the node that the neighborhood is
+expanded from and <code>FALSE</code> for everything else.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>map_local()</code> returns a list of the same length as the number of
+nodes in the graph, in the order matching the node order in the graph.
+<code style="white-space: pre;">⁠map_local_*()⁠</code> tries to coerce its result into a vector of the classes
+<code>logical</code> (<code>map_local_lgl</code>), <code>character</code> (<code>map_local_chr</code>), <code>integer</code>
+(<code>map_local_int</code>), or <code>double</code> (<code>map_local_dbl</code>). These functions will throw
+an error if they are unsuccesful, so they are type safe.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Smooth out values over a neighborhood
+create_notable('meredith') %&gt;%
+  mutate(value = rpois(graph_order(), 5)) %&gt;%
+  mutate(value_smooth = map_local_dbl(order = 2, .f = function(neighborhood, ...) {
+    mean(as_tibble(neighborhood, active = 'nodes')$value)
+  }))
+</code></pre>
+
+
+</div>

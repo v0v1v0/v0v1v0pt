@@ -1,0 +1,497 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>FilterState</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>FilterState</code> abstract class</h2>
+
+<h3>Description</h3>
+
+<p>Abstract class to encapsulate single filter state.
+</p>
+
+
+<h3>Details</h3>
+
+<p>This class is responsible for managing a single filter item within a <code>FilteredData</code> object
+and outputs a condition call (logical predicate) for subsetting one variable.
+Filter states depend on the variable type:
+(<code>logical</code>, <code>integer</code>, <code>numeric</code>, <code>character</code>, <code>factor</code>, <code>Date</code>, <code>POSIXct</code>, <code>POSIXlt</code>)
+and <code>FilterState</code> subclasses exist that correspond to those types.
+</p>
+
+<ul>
+<li> <p><code>logical</code>: <code>class = LogicalFilterState</code>
+</p>
+</li>
+<li> <p><code>integer</code>: <code>class = RangeFilterState</code>
+</p>
+</li>
+<li> <p><code>numeric</code>: <code>class = RangeFilterState</code>
+</p>
+</li>
+<li> <p><code>character</code>: <code>class = ChoicesFilterState</code>
+</p>
+</li>
+<li> <p><code>factor</code>: <code>class = ChoicesFilterState</code>
+</p>
+</li>
+<li> <p><code>Date</code>: <code>class = DateFilterState</code>
+</p>
+</li>
+<li> <p><code>POSIXct</code>, <code>POSIXlt</code>: <code>class = DatetimeFilterState</code>
+</p>
+</li>
+<li>
+<p> all <code>NA</code> entries: <code>class: FilterState</code>, cannot be filtered
+</p>
+</li>
+<li>
+<p> default: <code>FilterState</code>, cannot be filtered
+</p>
+</li>
+</ul>
+<p>Each variable's filter state is an <code>R6</code> object keeps the variable that is filtered,
+a <code>teal_slice</code> object that describes the filter state, as well as a <code>shiny</code> module (UI and server)
+that allows the user to alter the filter state.
+Changes to the filter state that cause some observations to be omitted
+trigger the <code>get_call</code> method and every <code>R</code> function call up in the reactive chain.
+</p>
+
+
+<h3>Modifying state</h3>
+
+<p>Modifying a <code>FilterState</code> object is possible in three scenarios:
+</p>
+
+<ul>
+<li>
+<p> In an interactive session, by passing an appropriate <code>teal_slice</code> to the <code>set_state</code> method.
+</p>
+</li>
+<li>
+<p> In a running application, by changing appropriate inputs.
+</p>
+</li>
+<li>
+<p> In a running application, by using filter_state_api which directly uses
+<code>set_state</code> method of the <code>FilterState</code> object.
+</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-FilterState-new"><code>FilterState$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-format"><code>FilterState$format()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-print"><code>FilterState$print()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-set_state"><code>FilterState$set_state()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-get_state"><code>FilterState$get_state()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-get_call"><code>FilterState$get_call()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-server"><code>FilterState$server()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-ui"><code>FilterState$ui()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-destroy_observers"><code>FilterState$destroy_observers()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-FilterState-clone"><code>FilterState$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-FilterState-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Initialize a <code>FilterState</code> object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$new(
+  x,
+  x_reactive = reactive(NULL),
+  slice,
+  extract_type = character(0)
+)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>x</code></dt>
+<dd>
+<p>(<code>vector</code>)
+variable to be filtered.</p>
+</dd>
+<dt><code>x_reactive</code></dt>
+<dd>
+<p>(<code>reactive</code>)
+returning vector of the same type as <code>x</code>. Is used to update
+counts following the change in values of the filtered dataset.
+If it is set to <code>reactive(NULL)</code> then counts based on filtered
+dataset are not shown.</p>
+</dd>
+<dt><code>slice</code></dt>
+<dd>
+<p>(<code>teal_slice</code>)
+specification of this filter state.
+<code>teal_slice</code> is stored in the object and <code>set_state</code> directly manipulates values within <code>teal_slice</code>.
+<code>get_state</code> returns <code>teal_slice</code> object which can be reused in other places.
+Note that <code>teal_slice</code> is a <code>reactiveValues</code>, which means it has reference semantics, i.e.
+changes made to an object are automatically reflected in all places that refer to the same <code>teal_slice</code>.</p>
+</dd>
+<dt><code>extract_type</code></dt>
+<dd>
+<p>(<code>character</code>)
+specifying whether condition calls should be prefixed by <code>dataname</code>. Possible values:
+</p>
+
+<ul>
+<li> <p><code>character(0)</code> (default) <code>varname</code> in the condition call will not be prefixed
+</p>
+</li>
+<li> <p><code>"list"</code> <code>varname</code> in the condition call will be returned as <code style="white-space: pre;">⁠&lt;dataname&gt;$&lt;varname&gt;⁠</code>
+</p>
+</li>
+<li> <p><code>"matrix"</code> <code>varname</code> in the condition call will be returned as <code style="white-space: pre;">⁠&lt;dataname&gt;[, &lt;varname&gt;]⁠</code>
+</p>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>Object of class <code>FilterState</code>, invisibly.
+</p>
+
+
+<hr>
+<a id="method-FilterState-format"></a>
+
+
+
+<h4>Method <code>format()</code>
+</h4>
+
+<p>Returns a formatted string representing this <code>FilterState</code> object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$format(show_all = FALSE, trim_lines = TRUE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>show_all</code></dt>
+<dd>
+<p>(<code>logical(1)</code>) passed to <code>format.teal_slice</code></p>
+</dd>
+<dt><code>trim_lines</code></dt>
+<dd>
+<p>(<code>logical(1)</code>) passed to <code>format.teal_slice</code></p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p><code>character(1)</code> the formatted string
+</p>
+
+
+<hr>
+<a id="method-FilterState-print"></a>
+
+
+
+<h4>Method <code>print()</code>
+</h4>
+
+<p>Prints this <code>FilterState</code> object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$print(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>additional arguments</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-FilterState-set_state"></a>
+
+
+
+<h4>Method <code>set_state()</code>
+</h4>
+
+<p>Sets mutable parameters of the filter state.
+</p>
+
+<ul>
+<li> <p><code>fixed</code> state is prevented from changing state
+</p>
+</li>
+<li> <p><code>anchored</code> state is prevented from removing state
+</p>
+</li>
+</ul>
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$set_state(state)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>state</code></dt>
+<dd>
+<p>(<code>teal_slice</code>)</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p><code>self</code> invisibly
+</p>
+
+
+<hr>
+<a id="method-FilterState-get_state"></a>
+
+
+
+<h4>Method <code>get_state()</code>
+</h4>
+
+<p>Returns a complete description of the filter state.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$get_state()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p>A <code>teal_slice</code> object.
+</p>
+
+
+<hr>
+<a id="method-FilterState-get_call"></a>
+
+
+
+<h4>Method <code>get_call()</code>
+</h4>
+
+<p>Returns reproducible condition call for current selection relevant
+for selected variable type.
+Method is using internal reactive values which makes it reactive
+and must be executed in reactive or isolated context.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$get_call()</pre></div>
+
+
+<hr>
+<a id="method-FilterState-server"></a>
+
+
+
+<h4>Method <code>server()</code>
+</h4>
+
+<p><code>shiny</code> module server.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$server(id)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>id</code></dt>
+<dd>
+<p>(<code>character(1)</code>)
+<code>shiny</code> module instance id.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>Reactive expression signaling that remove button has been clicked.
+</p>
+
+
+<hr>
+<a id="method-FilterState-ui"></a>
+
+
+
+<h4>Method <code>ui()</code>
+</h4>
+
+<p><code>shiny</code> UI module.
+The UI for this class contains simple message stating that it is not supported.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$ui(id, parent_id = "cards")</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>id</code></dt>
+<dd>
+<p>(<code>character(1)</code>)
+<code>shiny</code> module instance id.</p>
+</dd>
+<dt><code>parent_id</code></dt>
+<dd>
+<p>(<code>character(1)</code>) id of the <code>FilterStates</code> card container</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-FilterState-destroy_observers"></a>
+
+
+
+<h4>Method <code>destroy_observers()</code>
+</h4>
+
+<p>Destroy observers stored in <code>private$observers</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$destroy_observers()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p><code>NULL</code>, invisibly.
+</p>
+
+
+<hr>
+<a id="method-FilterState-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>FilterState$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+</div>

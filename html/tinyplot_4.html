@@ -1,0 +1,889 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tinyplot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Lightweight extension of the base R plotting function</h2>
+
+<h3>Description</h3>
+
+<p>Enhances the base <code>plot</code> function. Supported features
+include automatic legends and facets for grouped data, additional plot types,
+theme customization, and so on. Users can call either <code>tinyplot()</code>, or its
+shorthand alias <code>plt()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tinyplot(x, ...)
+
+## Default S3 method:
+tinyplot(
+  x = NULL,
+  y = NULL,
+  by = NULL,
+  facet = NULL,
+  facet.args = NULL,
+  data = NULL,
+  type = NULL,
+  xlim = NULL,
+  ylim = NULL,
+  log = "",
+  main = NULL,
+  sub = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  ann = par("ann"),
+  axes = TRUE,
+  frame.plot = NULL,
+  asp = NA,
+  grid = NULL,
+  palette = NULL,
+  legend = NULL,
+  pch = NULL,
+  lty = NULL,
+  lwd = NULL,
+  col = NULL,
+  bg = NULL,
+  fill = NULL,
+  alpha = NULL,
+  cex = 1,
+  restore.par = FALSE,
+  xmin = NULL,
+  xmax = NULL,
+  ymin = NULL,
+  ymax = NULL,
+  ribbon.alpha = NULL,
+  add = FALSE,
+  file = NULL,
+  width = NULL,
+  height = NULL,
+  empty = FALSE,
+  xaxt = NULL,
+  yaxt = NULL,
+  ...
+)
+
+## S3 method for class 'formula'
+tinyplot(
+  x = NULL,
+  data = parent.frame(),
+  facet = NULL,
+  facet.args = NULL,
+  type = NULL,
+  xlim = NULL,
+  ylim = NULL,
+  main = NULL,
+  sub = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  ann = par("ann"),
+  axes = TRUE,
+  frame.plot = NULL,
+  asp = NA,
+  grid = NULL,
+  pch = NULL,
+  col = NULL,
+  lty = NULL,
+  lwd = NULL,
+  restore.par = FALSE,
+  formula = NULL,
+  subset = NULL,
+  na.action = NULL,
+  drop.unused.levels = TRUE,
+  ...
+)
+
+plt(x, ...)
+
+## S3 method for class 'density'
+tinyplot(
+  x = NULL,
+  by = NULL,
+  facet = NULL,
+  facet.args = NULL,
+  type = c("l", "area"),
+  xlim = NULL,
+  ylim = NULL,
+  main = NULL,
+  sub = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  ann = par("ann"),
+  axes = TRUE,
+  frame.plot = axes,
+  asp = NA,
+  grid = NULL,
+  pch = NULL,
+  col = NULL,
+  lty = NULL,
+  lwd = NULL,
+  bg = NULL,
+  fill = NULL,
+  restore.par = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x, y</code></td>
+<td>
+<p>the x and y arguments provide the x and y coordinates for the
+plot. Any reasonable way of defining the coordinates is acceptable; most
+likely the names of existing vectors or columns of data frames. See the
+'Examples' section below, or the function
+<code>xy.coords</code> for details. If supplied separately, <code>x</code>
+and <code>y</code> must be of the same length.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other graphical parameters (see <code>par</code>), or
+arguments passed to the relevant plot type (e.g., <code>breaks</code> for
+<code>type = "histogram"</code>, or <code>varwidth</code> for <code>type = "boxplot"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>grouping variable(s). The default behaviour is for groups to be
+represented in the form of distinct colours, which will also trigger an
+automatic legend. (See <code>legend</code> below for customization options.) However,
+groups can also be presented through other plot parameters (e.g., <code>pch</code> or
+<code>lty</code>) by passing an appropriate "by" keyword; see Examples. Note that
+continuous (i.e., gradient) colour legends are also supported if the user
+passes a numeric or integer to <code>by</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>facet</code></td>
+<td>
+<p>the faceting variable(s) that you want arrange separate plot
+windows by. Can be specified in various ways:
+</p>
+
+<ul>
+<li>
+<p> In "atomic" form, e.g. <code>facet = fvar</code>. To facet by multiple variables in
+atomic form, simply interact them, e.g.
+<code>interaction(fvar1, fvar2)</code> or <code>factor(fvar1):factor(fvar2)</code>.
+</p>
+</li>
+<li>
+<p> As a one-sided formula, e.g. <code>facet = ~fvar</code>. Multiple variables can be
+specified in the formula RHS, e.g. <code>~fvar1 + fvar2</code> or <code>~fvar1:fvar2</code>. Note
+that these multi-variable cases are <em>all</em> treated equivalently and
+converted to <code>interaction(fvar1, fvar2, ...)</code> internally. (No distinction
+is made between different types of binary operators, for example, and so
+<code>f1+f2</code> is treated the same as <code>f1:f2</code>, is treated the same as <code>f1*f2</code>,
+etc.)
+</p>
+</li>
+<li>
+<p> As a two-side formula, e.g. <code>facet = fvar1 ~ fvar2</code>. In this case, the
+facet windows are arranged in a fixed grid layout, with the formula LHS
+defining the facet rows and the RHS defining the facet columns. At present
+only single variables on each side of the formula are well supported. (We
+don't recommend trying to use multiple variables on either the LHS or RHS
+of the two-sided formula case.)
+</p>
+</li>
+<li>
+<p> As a special <code>"by"</code> convenience keyword, in which case facets will match
+the grouping variable(s) passed to <code>by</code> above.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>facet.args</code></td>
+<td>
+<p>an optional list of arguments for controlling faceting
+behaviour. (Ignored if <code>facet</code> is NULL.) Supported arguments are as
+follows:
+</p>
+
+<ul>
+<li> <p><code>nrow</code>, <code>ncol</code> for overriding the default "square" facet window
+arrangement. Only one of these should be specified, but <code>nrow</code> will take
+precedence if both are specified together. Ignored if a two-sided formula
+is passed to the main <code>facet</code> argument, since the layout is arranged in a
+fixed grid.
+</p>
+</li>
+<li> <p><code>fmar</code> a vector of form <code>c(b,l,t,r)</code> for controlling the base margin
+between facets in terms of lines. Defaults to the value of <code>tpar("fmar")</code>,
+which should be <code>c(1,1,1,1)</code>, i.e. a single line of padding around each
+individual facet, assuming it hasn't been overridden by the user as part
+their global <code>tpar</code> settings. Note some automatic
+adjustments are made for certain layouts, and depending on whether the plot
+is framed or not, to reduce excess whitespace. See
+<code>tpar</code> for more details.
+</p>
+</li>
+<li> <p><code>cex</code>, <code>font</code>, <code>col</code>, <code>bg</code>, <code>border</code> for adjusting the facet title text
+and background. Default values for these arguments are inherited from
+<code>tpar</code> (where they take a "facet." prefix, e.g.
+<code>tpar("facet.cex")</code>). The latter function can also be used to set these
+features globally for all <code>tinyplot</code> plots.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame (or list) from which the variables in formula
+should be taken. A matrix is converted to a data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>character string giving the type of plot desired. If no argument
+is provided, then the plot type will default to something sensible for the
+type of <code>x</code> and <code>y</code> inputs (i.e., usually <code>"p"</code>). Options are:
+</p>
+
+<ul>
+<li>
+<p> The same set of 1-character values supported by
+<code>plot</code>: <code>"p"</code> for points, <code>"l"</code> for lines, <code>"b"</code> for
+both points and lines, <code>"c"</code> for empty points joined by lines, <code>"o"</code> for
+overplotted points and lines, <code>"s"</code> and <code>"S"</code> for stair steps, and <code>"h"</code>
+for histogram-like vertical lines. Specifying <code>"n"</code> produces an empty plot
+over the extent of the data, but with no internal elements (see also the
+<code>empty</code> argument below).
+</p>
+</li>
+<li>
+<p> Additional tinyplot types:
+</p>
+
+<ul>
+<li> <p><code>"jitter"</code> (alias <code>"j"</code>) for jittered points.
+</p>
+</li>
+<li> <p><code>"rect"</code>, <code>"segments"</code>, <code>"polygon"</code>, or <code>"polypath"</code>, which are all
+equivalent to their base counterparts, but don't require an existing
+plot window.
+</p>
+</li>
+<li> <p><code>"boxplot"</code>, <code>"histogram"</code> (alias <code>"hist"</code>), or <code>"density"</code> for
+distribution plots.
+</p>
+</li>
+<li> <p><code>"pointrange"</code> or <code>"errorbar"</code> for segment intervals, and <code>"ribbon"</code>
+or <code>"area"</code> for polygon intervals (where area plots are a special case
+of ribbon plots with <code>ymin</code> set to 0 and <code>ymax</code> set to <code>y</code>; see below).
+</p>
+</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlim</code></td>
+<td>
+<p>the x limits (x1, x2) of the plot. Note that x1 &gt; x2 is allowed
+and leads to a ‘reversed axis’. The default value, NULL, indicates that
+the range of the <code>finite</code> values to be plotted should be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylim</code></td>
+<td>
+<p>the y limits of the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>a character string which contains "x" if the x axis is to be
+logarithmic, "y" if the y axis is to be logarithmic and "xy" or "yx" if
+both axes are to be logarithmic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>a main title for the plot, see also <code>title</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sub</code></td>
+<td>
+<p>a subtitle for the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab</code></td>
+<td>
+<p>a label for the x axis, defaults to a description of x.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylab</code></td>
+<td>
+<p>a label for the y axis, defaults to a description of y.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ann</code></td>
+<td>
+<p>a logical value indicating whether the default annotation (title
+and x and y axis labels) should appear on the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>axes</code></td>
+<td>
+<p>logical or character. Should axes be drawn (<code>TRUE</code> or <code>FALSE</code>)?
+Or alternatively what type of axes should be drawn: <code>"standard"</code> (with
+axis, ticks, and labels; equivalent to <code>TRUE</code>), <code>"none"</code> (no axes;
+equivalent to <code>FALSE</code>), <code>"ticks"</code> (only ticks and labels without axis line),
+<code>"labels"</code> (only labels without ticks and axis line), <code>"axis"</code> (only axis
+line and labels but no ticks). To control this separately for the two
+axes, use the character specifications for <code>xaxt</code> and/or <code>yaxt</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frame.plot</code></td>
+<td>
+<p>a logical indicating whether a box should be drawn around
+the plot. Can also use <code>frame</code> as an acceptable argument alias.
+The default is to draw a frame if both axis types (set via <code>axes</code>, <code>xaxt</code>,
+or <code>yaxt</code>) include axis lines.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>asp</code></td>
+<td>
+<p>the y/xy/x aspect ratio, see <code>plot.window</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>argument for plotting a background panel grid, one of either:
+</p>
+
+<ul>
+<li>
+<p> a logical (i.e., <code>TRUE</code> to draw the grid), or
+</p>
+</li>
+<li>
+<p> a panel grid plotting function like <code>grid()</code>.
+Note that this argument replaces the <code>panel.first</code> and <code>panel.last</code>
+arguments from base <code>plot()</code> and tries to make the process more seamless
+with better default behaviour. The default behaviour is determined by (and
+can be set globally through) the value of <code>tpar("grid")</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>palette</code></td>
+<td>
+<p>one of the following options:
+</p>
+
+<ul>
+<li>
+<p> NULL (default), in which case the palette will be chosen according to
+the class and cardinality of the "by" grouping variable. For non-ordered
+factors or strings with a reasonable number of groups, this will inherit
+directly from the user's default <code>palette</code> (e.g.,
+"R4"). In other cases, including ordered factors and high cardinality, the
+"Viridis" palette will be used instead. Note that a slightly restricted
+version of the "Viridis" palette—where extreme color values have been
+trimmed to improve visual perception—will be used for ordered factors
+and continuous variables. In the latter case of a continuous grouping
+variable, we also generate a gradient legend swatch.
+</p>
+</li>
+<li>
+<p> A convenience string corresponding to one of the many palettes listed by
+either <code>palette.pals()</code> or <code>hcl.pals()</code>. Note that the string can be
+case-insensitive (e.g., "Okabe-Ito" and "okabe-ito" are both valid).
+</p>
+</li>
+<li>
+<p> A palette-generating function. This can be "bare" (e.g.,
+<code>palette.colors</code>) or "closed" with a set of named arguments (e.g.,
+<code>palette.colors(palette = "Okabe-Ito", alpha = 0.5)</code>). Note that any
+unnamed arguments will be ignored and the key <code>n</code> argument, denoting the
+number of colours, will automatically be spliced in as the number of
+groups.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>legend</code></td>
+<td>
+<p>one of the following options:
+</p>
+
+<ul>
+<li>
+<p> NULL (default), in which case the legend will be determined by the
+grouping variable. If there is no group variable (i.e., <code>by</code> is NULL) then
+no legend is drawn. If a grouping variable is detected, then an automatic
+legend is drawn to the <em>outer</em> right of the plotting area. Note that the
+legend title and categories will automatically be inferred from the <code>by</code>
+argument and underlying data.
+</p>
+</li>
+<li>
+<p> A convenience string indicating the legend position. The string should
+correspond to one of the position keywords supported by the base <code>legend</code>
+function, e.g. "right", "topleft", "bottom", etc. In addition, <code>tinyplot</code>
+supports adding a trailing exclamation point to these keywords, e.g.
+"right!", "topleft!", or "bottom!". This will place the legend <em>outside</em>
+the plotting area and adjust the margins of the plot accordingly. Finally,
+users can also turn off any legend printing by specifying "none".
+</p>
+</li>
+<li>
+<p> Logical value, where TRUE corresponds to the default case above (same
+effect as specifying NULL) and FALSE turns the legend off (same effect as
+specifying "none").
+</p>
+</li>
+<li>
+<p> A list or, equivalently, a dedicated <code>legend()</code> function with supported
+legend arguments, e.g. "bty", "horiz", and so forth.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pch</code></td>
+<td>
+<p>plotting "character", i.e., symbol to use. Character, integer, or
+vector of length equal to the number of categories in the <code>by</code> variable.
+See <code>pch</code>. In addition, users can supply a special <code>pch = "by"</code> convenience
+argument, in which case the characters will automatically loop over the
+number groups. This automatic looping will begin at the global character
+value (i.e., <code>par("pch")</code>) and recycle as necessary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lty</code></td>
+<td>
+<p>line type. Character, integer, or vector of length equal to the
+number of categories in the <code>by</code> variable. See <code>lty</code>. In addition, users
+can supply a special <code>lty = "by"</code> convenience argument, in which case the
+line type will automatically loop over the number groups. This automatic
+looping will begin at the global line type value (i.e., <code>par("lty")</code>) and
+recycle as necessary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lwd</code></td>
+<td>
+<p>line width. Numeric scalar or vector of length equal to the
+number of categories in the <code>by</code> variable. See <code>lwd</code>. In addition, users
+can supply a special <code>lwd = "by"</code> convenience argument, in which case the
+line width will automatically loop over the number of groups. This
+automatic looping will be centered at the global line width value (i.e.,</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>plotting color. Character, integer, or vector of length equal to
+the number of categories in the <code>by</code> variable. See <code>col</code>. Note that the
+default behaviour in <code>tinyplot</code> is to vary group colors along any variables
+declared in the <code>by</code> argument. Thus, specifying colors manually should not
+be necessary unless users wish to override the automatic colors produced by
+this grouping process. Typically, this would only be done if grouping
+features are deferred to some other graphical parameter (i.e., passing the
+"by" keyword to one of <code>pch</code>, <code>lty</code>, <code>lwd</code>, or <code>bg</code>; see below.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bg</code></td>
+<td>
+<p>background fill color for the open plot symbols 21:25 (see
+<code>points.default</code>), as well as ribbon and area plot types. For the latter
+group—including filled density plots—an automatic alpha transparency
+adjustment will be applied (see the <code>ribbon.alpha</code> argument further below).
+Users can also supply either one of two special convenience arguments that
+will cause the background fill to inherit the automatic grouped coloring
+behaviour of <code>col</code>:
+</p>
+
+<ul>
+<li> <p><code>bg = "by"</code> will insert a background fill that inherits the main color
+mappings from <code>col</code>.
+</p>
+</li>
+<li> <p><code style="white-space: pre;">⁠by = &lt;numeric[0,1]&gt;⁠</code> (i.e., a numeric in the range <code style="white-space: pre;">⁠[0,1]⁠</code>) will insert
+a background fill that inherits the main color mapping(s) from <code>col</code>, but
+with added alpha-transparency.
+</p>
+</li>
+</ul>
+<p>For both of these convenience arguments, note that the (grouped) <code>bg</code>
+mappings will persist even if the (grouped) <code>col</code> defaults are themselves
+overridden. This can be useful if you want to preserve the grouped palette
+mappings by background fill but not boundary color, e.g. filled points. See
+examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>alias for <code>bg</code>. If non-NULL values for both <code>bg</code> and <code>fill</code> are
+provided, then the latter will be ignored in favour of the former.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>a numeric in the range <code style="white-space: pre;">⁠[0,1]⁠</code> for adjusting the alpha channel
+of the color palette, where 0 means transparent and 1 means opaque. Use
+fractional values, e.g. <code>0.5</code> for semi-transparency.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cex</code></td>
+<td>
+<p>character expansion. A numerical vector (can be a single value)
+giving the amount by which plotting characters and symbols should be scaled
+relative to the default. Note that NULL is equivalent to 1.0, while NA
+renders the characters invisible.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restore.par</code></td>
+<td>
+<p>a logical value indicating whether the
+<code>par</code> settings prior to calling <code>tinyplot</code> should be
+restored on exit. Defaults to FALSE, which makes it possible to add
+elements to the plot after it has been drawn. However, note the the outer
+margins of the graphics device may have been altered to make space for the
+<code>tinyplot</code> legend. Users can opt out of this persistent behaviour by
+setting to TRUE instead. See also get_saved_par for another option to
+recover the original <code>par</code> settings, as well as
+longer discussion about the trade-offs involved.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xmin, xmax, ymin, ymax</code></td>
+<td>
+<p>minimum and maximum coordinates of relevant area
+or interval plot types. Only used when the <code>type</code> argument is one of
+<code>"rect"</code> or <code>"segments"</code> (where all four min-max coordinates are required),
+or <code>"pointrange"</code>, <code>"errorbar"</code>, or <code>"ribbon"</code> (where only <code>ymin</code> and
+<code>ymax</code> required alongside <code>x</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ribbon.alpha</code></td>
+<td>
+<p>numeric factor modifying the opacity alpha of any ribbon
+shading; typically in <code style="white-space: pre;">⁠[0, 1]⁠</code>. Only used when <code>type = "ribbon"</code>, or when
+the <code>bg</code> fill argument is specified in a density plot (since filled density
+plots are converted to ribbon plots internally). If an an applicable plot
+type is called but no explicit value is provided, then will default to
+<code>tpar("ribbon.alpha")</code> (i.e., probably <code>0.2</code> unless this has been
+overridden by the user in their global settings.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+<p>logical. If TRUE, then elements are added to the current plot rather
+than drawing a new plot window. Note that the automatic legend for the
+added elements will be turned off.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>character string giving the file path for writing a plot to disk.
+If specified, the plot will not be displayed interactively, but rather sent
+to the appropriate external graphics device (i.e.,
+<code>png</code>, <code>jpeg</code>,
+<code>pdf</code>, or <code>svg</code>). As a point
+of convenience, note that any global parameters held in <code style="white-space: pre;">⁠(t)par⁠</code> are
+automatically carried over to the external device and don't need to be
+reset (in contrast to the conventional base R approach that requires
+manually opening and closing the device). The device type is determined by
+the file extension at the end of the provided path, and must be one of
+".png", ".jpg" (".jpeg"), ".pdf", or ".svg". (Other file types may be
+supported in the future.) The file dimensions can be controlled by the
+corresponding <code>width</code> and <code>height</code> arguments below, otherwise will fall
+back to the <code>"file.width"</code> and <code>"file.height"</code> values held in
+<code>tpar</code> (i.e., both defaulting to 7 inches, and where
+the default resolution for bitmap files is also specified as 300
+DPI).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>numeric giving the plot width in inches. Together with <code>height</code>,
+typically used in conjunction with the <code>file</code> argument above, overriding the
+default values held in <code>tpar("file.width", "file.height")</code>. If either <code>width</code>
+or <code>height</code> is specified, but a corresponding <code>file</code> argument is not
+provided as well, then a new interactive graphics device dimensions will be
+opened along the given dimensions. Note that this interactive resizing may
+not work consistently from within an IDE like RStudio that has an integrated
+graphics windows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>height</code></td>
+<td>
+<p>numeric giving the plot height in inches. Same considerations as
+<code>width</code> (above) apply, e.g. will default to <code>tpar("file.height")</code> if not
+specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>empty</code></td>
+<td>
+<p>logical indicating whether the interior plot region should be
+left empty. The default is <code>FALSE</code>. Setting to <code>TRUE</code> has a similar effect
+to invoking <code>type = "n"</code> above, except that any legend artifacts owing to a
+particular plot type (e.g., lines for <code>type = "l"</code> or squares for
+<code>type = "area"</code>) will still be drawn correctly alongside the empty plot. In
+contrast,<code>type = "n"</code> implicitly assumes a scatterplot and so any legend
+will only depict points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xaxt, yaxt</code></td>
+<td>
+<p>character specifying the type of x-axis and y-axis, respectively.
+See <code>axes</code> for the possible values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a <code>formula</code> that optionally includes grouping variable(s)
+after a vertical bar, e.g. <code>y ~ x | z</code>. One-sided formulae are also
+permitted, e.g. <code>~ y | z</code>. Note that the <code>formula</code> and <code>x</code> arguments
+should not be specified in the same call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset, na.action, drop.unused.levels</code></td>
+<td>
+<p>arguments passed to <code>model.frame</code>
+when extracting the data from <code>formula</code> and <code>data</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Disregarding the enhancements that it supports, <code>tinyplot</code> tries as far as
+possible to mimic the behaviour and syntax logic of the original base
+<code>plot</code> function. Users should therefore be able to swap
+out existing <code>plot</code> calls for <code>tinyplot</code> (or its shorthand alias <code>plt</code>),
+without causing unexpected changes to the output.
+</p>
+
+
+<h3>Value</h3>
+
+<p>No return value, called for side effect of producing a plot.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#' 
+aq = transform(
+  airquality,
+  Month = factor(Month, labels = month.abb[unique(Month)])
+)
+
+# In most cases, `tinyplot` should be a drop-in replacement for regular
+# `plot` calls. For example:
+
+op = tpar(mfrow = c(1, 2))
+plot(0:10, main = "plot")
+tinyplot(0:10, main = "tinyplot")
+tpar(op) # restore original layout
+
+# Aside: `tinyplot::tpar()` is a (near) drop-in replacement for `par()`
+
+# Unlike vanilla plot, however, tinyplot allows you to characterize groups 
+# using either the `by` argument or equivalent `|` formula syntax.
+
+with(aq, tinyplot(Day, Temp, by = Month)) ## atomic method
+tinyplot(Temp ~ Day | Month, data = aq)   ## formula method
+
+# (Notice that we also get an automatic legend.)
+
+# You can also use the equivalent shorthand `plt()` alias if you'd like to
+# save on a few keystrokes
+
+plt(Temp ~ Day | Month, data = aq) ## shorthand alias
+
+# Use standard base plotting arguments to adjust features of your plot.
+# For example, change `pch` (plot character) to get filled points and `cex`
+# (character expansion) to increase their size.
+
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  pch = 16,
+  cex = 2
+)
+
+# We can add alpha transparency for overlapping points
+
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  pch = 16,
+  cex = 2,
+  alpha = 0.3
+)
+
+# To get filled points with a common solid background color, use an 
+# appropriate plotting character (21:25) and combine with one of the special
+# `bg` convenience arguments.
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  pch = 21,     # use filled circles
+  cex = 2,
+  bg = 0.3,     # numeric in [0,1] adds a grouped background fill with transparency
+  col = "black" # override default color mapping; give all points a black border
+)
+
+# Converting to a grouped line plot is a simple matter of adjusting the
+# `type` argument.
+
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  type = "l"
+)
+
+# Similarly for other plot types, including some additional ones provided
+# directly by tinyplot, e.g. density plots or internal plots (ribbons, 
+# pointranges, etc.)
+
+tinyplot(
+  ~ Temp | Month,
+  data = aq,
+  type = "density",
+  fill = "by"
+)
+
+# Facet plots are supported too. Facets can be drawn on their own...
+
+tinyplot(
+  Temp ~ Day,
+  facet = ~ Month, 
+  data = aq,
+  type = "area",
+  main = "Temperatures by month"
+)
+
+# ... or combined/contrasted with the by (colour) grouping.
+
+aq = transform(aq, Summer = Month %in% c("Jun", "Jul", "Aug"))
+tinyplot(
+  Temp ~ Day | Summer,
+  facet = ~ Month, 
+  data = aq,
+  type = "area",
+  palette = "dark2",
+  main = "Temperatures by month and season"
+)
+
+# Users can override the default square window arrangement by passing `nrow`
+# or `ncol` to the helper facet.args argument. Note that we can also reduce
+# axis label repetition across facets by turning the plot frame off.
+
+tinyplot(
+  Temp ~ Day | Summer,
+  facet = ~ Month, facet.args = list(nrow = 1),
+  data = aq,
+  type = "area",
+  palette = "dark2",
+  frame = FALSE,
+  main = "Temperatures by month and season"
+)
+
+# Use a two-sided formula to arrange the facet windows in a fixed grid.
+# LHS -&gt; facet rows; RHS -&gt; facet columns
+
+aq$hot = ifelse(aq$Temp&gt;=75, "hot", "cold")
+aq$windy = ifelse(aq$Wind&gt;=15, "windy", "calm")
+tinyplot(
+ Temp ~ Day,
+ facet = windy ~ hot,
+ data = aq
+)
+
+# The (automatic) legend position and look can be customized using
+# appropriate arguments. Note the trailing "!" in the `legend` position
+# argument below. This tells `tinyplot` to place the legend _outside_ the plot
+# area.
+
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  type = "l",
+  legend = legend("bottom!", title = "Month of the year", bty = "o")
+)
+
+# The default group colours are inherited from either the "R4" or "Viridis"
+# palettes, depending on the number of groups. However, all palettes listed
+# by `palette.pals()` and `hcl.pals()` are supported as convenience strings,
+# or users can supply a valid palette-generating function for finer control
+
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  type = "l",
+  palette = "tableau"
+)
+
+# It's possible to further customize the look of you plots using familiar
+# arguments and base plotting theme settings (e.g., via `(t)par`).
+
+op = tpar(family = "HersheySans", las = 1)
+tinyplot(
+  Temp ~ Day | Month,
+  data = aq,
+  type = "b", pch = 16,
+  palette = "tableau", alpha = 0.5,
+  main = "Daily temperatures by month",
+  frame = FALSE, grid = TRUE
+)
+tpar(op) # restore original graphics parameters
+
+# Note: For more examples and a detailed walkthrough, please see the
+# introductory tinyplot tutorial available online:
+# https://grantmcdermott.com/tinyplot/vignettes/intro_tutorial.html
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fMonteCarlo</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Monte Carlo Simulations.</h2>
+
+<h3>Description</h3>
+
+<p>Function to estimate the total losses via the Monte Carlo simulations.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fMonteCarlo(ELT, s, t = 1, theta = 0, cap = Inf, nsim = 10000,
+  verbose = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ELT</code></td>
+<td>
+<p>Data frame containing two numeric columns. The column <code>Loss</code> contains the expected losses from each single occurrence of event. The column <code>Rate</code> contains the arrival rates of a single occurrence of event.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s</code></td>
+<td>
+<p>Scalar or numeric vector containing the total losses of interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>Scalar representing the time period of interest. The default value is <code>t</code> = 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Scalar containing information about the variance of the Gamma distribution: <code class="reqn">sd[X] = x * </code><code>theta</code>. The default value is <code>theta</code> = 0: the loss associated to an event is considered as a constant.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cap</code></td>
+<td>
+<p>Scalar representing the financial cap on losses for a single event, i.e. the maximum possible loss caused by a single event. The default value is <code>cap</code> = Inf.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>Integer representing the number of Monte Carlo simulations. The default value is <code>nsim</code> = 10e3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical, if <code>TRUE</code> returns 95% CB and raw sample. The default is <code>verbose = FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>If <code>verbose = FALSE</code> the function returns a numeric matrix, containing in the first column the pre-specified losses <code>s</code>, and the estimated exceedance probabilities in the second column.
+If <code>verbose = TRUE</code> the function returns a numeric matrix  containing four columns. The first column contains the losses <code>s</code>, the second column contains the estimated exceedance probabilities, the other columns contain the 95% confidence bands. The attributes of this matrix are a vector <code>simS</code> containing the simulated losses.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(UShurricane)
+
+# Compress the table to millions of dollars
+
+USh.m &lt;- compressELT(ELT(UShurricane), digits = -6)
+EPC.MonteCarlo &lt;- fMonteCarlo(USh.m, s = 1:40, verbose = TRUE)
+EPC.MonteCarlo
+par(mfrow = c(1, 2))
+plot(EPC.MonteCarlo[, 1:2], type = "l", ylim = c(0, 1))
+matlines(EPC.MonteCarlo[, -2], ylim = c(0, 1), lty = 2, col = 1)
+# Assuming the losses follow a Gamma with E[X] = x, and Var[X] = 2 * x and cap = 5m
+EPC.MonteCarlo.Gamma &lt;- fMonteCarlo(USh.m, s = 1:40, theta = 2, cap = 5, verbose = TRUE)
+EPC.MonteCarlo.Gamma
+plot(EPC.MonteCarlo.Gamma[, 1:2], type = "l", ylim = c(0, 1))
+matlines(EPC.MonteCarlo.Gamma[, -2], ylim = c(0,1), lty = 2, col = 1)
+# Compare the two results:
+par(mfrow = c(1, 1))
+plot(EPC.MonteCarlo[, 1:2], type = "l", main = "Exceedance Probability Curve",
+ylim = c(0, 1))
+lines(EPC.MonteCarlo.Gamma[, 1:2], col = 2, lty = 2)
+legend("topright", c("Dirac Delta", expression(paste("Gamma(",
+alpha[i] == 1 / theta^2, ", ", beta[i] ==1 / (x[i] * theta^2), ")", " cap =", 5))),
+lwd = 2, lty = 1:2, col = 1:2)
+</code></pre>
+
+
+</div>

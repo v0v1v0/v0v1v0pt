@@ -1,0 +1,97 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>edf</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Grouped empirical cumulative distribution function applied to data</h2>
+
+<h3>Description</h3>
+
+<p>Like <code>dplyr::cume_dist(x)</code> and <code>ecdf(x)(x)</code>
+but with added grouping and weighting functionality.<br>
+You can calculate the empirical distribution of x using
+aggregated data by supplying frequency weights.
+No expansion occurs which makes this function extremely efficient
+for this type of data, of which plotting is a common application.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">edf(x, g = NULL, wt = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Numeric vector of group IDs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wt</code></td>
+<td>
+<p>Frequency weights.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A numeric vector the same length as <code>x</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(ggplot2)
+
+set.seed(9123812)
+x &lt;- sample(seq(-10, 10, 0.5), size = 10^2, replace = TRUE)
+plot(sort(edf(x)))
+all.equal(edf(x), ecdf(x)(x))
+all.equal(edf(x), cume_dist(x))
+
+# Manual ECDF plot using only aggregate data
+y &lt;- rnorm(100, 10)
+start &lt;- floor(min(y) / 0.1) * 0.1
+grid &lt;- time_span(y, time_by = 0.1, from = start)
+counts &lt;- time_countv(y, time_by = 0.1, from = start, complete = TRUE)$n
+edf &lt;- edf(grid, wt = counts)
+# Trivial here as this is the same
+all.equal(unname(cumsum(counts)/sum(counts)), edf)
+
+# Full ecdf
+tibble(x) %&gt;%
+  ggplot(aes(x = y)) +
+  stat_ecdf()
+# Approximation using aggregate only data
+tibble(grid, edf) %&gt;%
+  ggplot(aes(x = grid, y = edf)) +
+  geom_step()
+
+# Grouped example
+g &lt;- sample(letters[1:3], size = 10^2, replace = TRUE)
+
+edf1 &lt;- tibble(x, g) %&gt;%
+  mutate(edf = cume_dist(x),
+         .by = g) %&gt;%
+  pull(edf)
+edf2 &lt;- edf(x, g = g)
+all.equal(edf1, edf2)
+
+</code></pre>
+
+
+</div>

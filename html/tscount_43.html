@@ -1,0 +1,212 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>scoring</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Predictive Model Assessment with Proper Scoring Rules
+</h2>
+
+<h3>Description</h3>
+
+<p>Computes scores for the assessment of sharpness of a fitted model for time series of counts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+scoring(object, individual=FALSE, cutoff=1000, ...)
+## Default S3 method:
+scoring(response, pred, distr=c("poisson", "nbinom"), distrcoefs,
+          individual=FALSE, cutoff=1000, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>an object of class <code>"tsglm"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>individual</code></td>
+<td>
+
+<p>logical. If <code>FALSE</code> (the default) the average scores are returned. Otherwise a matrix with the individual scores for each observation is returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff</code></td>
+<td>
+
+<p>positive integer. Summation over the infinite sample space {0,1,2,...} of a distribution is cut off at this value. This affects the quadratic, spherical and ranked probability score.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response</code></td>
+<td>
+
+<p>integer vector. Vector of observed values <code class="reqn">Y_1,...,Y_n</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pred</code></td>
+<td>
+
+<p>numeric vector. Vector of predicted values <code class="reqn">\mu_{P_1},...,\mu_{P_n}</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+
+<p>character giving the conditional distribution. Currently implemented are the Poisson (<code>"poisson"</code>)and the Negative Binomial (<code>"nbinom"</code>) distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distrcoefs</code></td>
+<td>
+
+<p>numeric vector of additional coefficients specifying the conditional distribution. For <code>distr="poisson"</code> no additional parameters need to be provided. For <code>distr="nbinom"</code> the additional parameter <code>size</code> needs to be specified (e.g. by <code>distrcoefs=2</code>), see <code>tsglm</code> for details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>further arguments are currently ignored. Only for compatibility with generic function.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The scoring rules are penalties that should be minimised for a better forecast, so a smaller scoring value means better sharpness. 
+Different competing forecast models can be ranked via these scoring rules. 
+They are computed as follows:
+For each score <code class="reqn">s</code> and time <code class="reqn">t</code> the value <code class="reqn">s(P_{t},Y_{t})</code> is computed, where <code class="reqn">P_t</code> is the predictive 
+c.d.f. and <code class="reqn">Y_t</code> is the observation at time <code class="reqn">t</code>. To obtain the overall score for one model the average of the score of all observations
+<code class="reqn">(1/n) \sum_{t=1}^{n}s(P_{t},Y_{t})</code>
+is calculated. 
+</p>
+<p>For all <code class="reqn">t \geq 1</code>, let <code class="reqn">p_{y} = P(Y_{t}=y | {\cal{F}}_{t-1} )</code> be the density function of the predictive distribution at <code class="reqn">y</code> and 
+<code class="reqn">||p||^2=\sum_{y=0}^{\infty} p_y^2</code> be a quadratic sum over the whole sample space <code class="reqn">y=0,1,2,...</code> of the predictive distribution.
+<code class="reqn">\mu_{P_t}</code> and <code class="reqn">\sigma_{P_t}</code> are the mean and the standard deviation of the predictive distribution, respectively.
+</p>
+<p>Then the scores are defined as follows:
+</p>
+<p>Logarithmic score: <code class="reqn">logs(P_{t},Y_{t})= -log p_{y}</code>
+</p>
+<p>Quadratic or Brier score: <code class="reqn">qs(P_{t},Y_{t}) = -2p_{y} + ||p||^2 </code>
+</p>
+<p>Spherical score: <code class="reqn">sphs(P_{t},Y_{t})=\frac{-p_{y}}{||p||}</code>
+</p>
+<p>Ranked probability score:  <code class="reqn">rps(P_{t},Y_{t})=\sum_{x=0}^{\infty}(P_{t}(x) - 1(Y_t\leq x))^2</code> (sum over the whole sample space <code class="reqn">x=0,1,2,...</code>)
+</p>
+<p>Dawid-Sebastiani score: <code class="reqn">dss(P_{t},Y_{t})=\left(\frac{Y_t-\mu_{P_t}}{\sigma_{P_t}}\right)^2 + 2log\sigma_{P_t}</code>
+</p>
+<p>Normalized squared error score: <code class="reqn">nses(P_{t},Y_{t})=\left(\frac{Y_t-\mu_{P_t}}{\sigma_{P_t}}\right)^2</code>
+</p>
+<p>Squared error score: <code class="reqn">ses(P_{t},Y_{t})=(Y_t-\mu_{P_t})^2</code>
+</p>
+<p>For more information on scoring rules see the references listed below.
+</p>
+
+
+<h3>Value</h3>
+
+ 
+<p>Returns a named vector of the mean scores (if argument <code>individual=FALSE</code>, the default) or a data frame of the individual scores for each observation (if argument <code>individual=TRUE</code>). The scoring rules are named as follows:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>logarithmic</code></td>
+<td>
+<p>Logarithmic score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quadratic</code></td>
+<td>
+<p>Quadratic or Brier score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spherical</code></td>
+<td>
+<p>Spherical score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rankprob</code></td>
+<td>
+<p>Ranked probability score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dawseb</code></td>
+<td>
+<p>Dawid-Sebastiani score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normsq</code></td>
+<td>
+<p>Normalized squared error score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sqerror</code></td>
+<td>
+<p>Squared error score</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Philipp Probst and Tobias Liboschik
+</p>
+
+
+<h3>References</h3>
+
+<p>Christou, V. and Fokianos, K. (2013) On count time series prediction. <em>Journal of Statistical Computation and Simulation</em> (published online), <a href="http://dx.doi.org/10.1080/00949655.2013.823612">http://dx.doi.org/10.1080/00949655.2013.823612</a>.
+</p>
+<p>Czado, C., Gneiting, T. and Held, L. (2009) Predictive model assessment for count data. <em>Biometrics</em> <b>65</b>, 1254–1261, <a href="http://dx.doi.org/10.1111/j.1541-0420.2009.01191.x">http://dx.doi.org/10.1111/j.1541-0420.2009.01191.x</a>.
+</p>
+<p>Gneiting, T., Balabdaoui, F. and Raftery, A.E. (2007) Probabilistic forecasts, calibration and sharpness. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> <b>69</b>, 243–268, <a href="http://dx.doi.org/10.1111/j.1467-9868.2007.00587.x">http://dx.doi.org/10.1111/j.1467-9868.2007.00587.x</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tsglm</code> for fitting a GLM for time series of counts.
+</p>
+<p><code>pit</code> and <code>marcal</code> for other predictive model assessment tools.
+</p>
+<p><code>permutationTest</code> in package <code>surveillance</code> for the Monte Carlo permutation test for paired individual scores by Paul and Held (2011, <em>Statistics in Medicine</em> <b>30</b>, 1118–1136, <a href="http://dx.doi.org/10.1002/sim.4177">http://dx.doi.org/10.1002/sim.4177</a>).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###Campylobacter infections in Canada (see help("campy"))
+campyfit &lt;- tsglm(ts=campy, model=list(past_obs=1, past_mean=c(7,13)))
+scoring(campyfit)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,236 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tensor.GGM.trans</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transfer learning for tensor graphical models.</h2>
+
+<h3>Description</h3>
+
+<p>The main function for Transfer learning for tensor graphical models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tensor.GGM.trans(t.data, A.data, A.lambda, A.orac = NULL, c=0.6,
+                        t.lambda.int.trans=NULL, t.lambda.int.aggr=NULL,
+                        theta.algm="cd", cov.select="inverse",
+                        cov.select.agg.size = "inverse",
+                        cov.select.agg.diff = "tensor.prod",
+                        symmetric = TRUE, init.method="Tlasso",
+                        init.method.aux="Tlasso", mode.set = NULL,
+                        init.iter.Tlasso=2, cn.lam2=seq(0.1,2,length.out =10),
+                        c.lam.Tlasso=20, c.lam.sepa=20, adjust.BIC=FALSE,
+                        normalize = TRUE, inti.the=TRUE, sel.ind="fit")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>t.data</code></td>
+<td>
+<p>The tensor data in the target domain, a p1 * p2 * ... * pM * n array, where n is the sample size and pm is dimension of the m-th tensor mode. M should be larger than 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.data</code></td>
+<td>
+<p>The tensor data in auxiliary domains, a list with K elements, each of which is a p1 * p2 * ... * pM * nk array, where nk is the sample size of the k-th auxiliary domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.lambda</code></td>
+<td>
+<p>The tuning parameters used for initialization in auxiliary domains, a list with K elements, each of which is a M-dimensional vector corresponding to M modes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.orac</code></td>
+<td>
+<p>The set of informative auxiliary domains, and the default setting is NULL, which means that no set is specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>c</code></td>
+<td>
+<p>The c of subjects in the target domain are used for initialization of the transfer learning, and the remaining 1-c of subjects are used for the model selection step. The default setting is 0.8.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t.lambda.int.trans</code></td>
+<td>
+<p>The tuning parameters used for initialization in the target domain (based on c subjects used for transfer learning), that is, the tuning lambda for Tlasso (PAMI, 2020) &amp; Separable method (JCGS, 2022)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t.lambda.int.aggr</code></td>
+<td>
+<p>The tuning parameters used for initialization in the target domain (based on 1-c subjects used for the model selection step).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.algm</code></td>
+<td>
+<p>The optimization algorithm used to solve <code class="reqn">\widehat{\Omega}</code> in step 2(b), which can be selected as "admm" (ADMM algorithm) or "cd" (coordinate descent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov.select</code></td>
+<td>
+<p>Methods used to calculate covariance matrices for initialization in both target and auxiliary domains, which can be selected as "tensor.prod" (tensor product based on tensor subject and the initial estimate of the precision matrix, TPAMI, 2020) and "inverse" (direct inversion of the initial estimate of the precision matrix)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov.select.agg.size</code></td>
+<td>
+<p>Methods used to calculate covariance matrices for model selection step in the target domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov.select.agg.diff</code></td>
+<td>
+<p>Methods used to calculate covariance matrices for model selection step in the target domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>symmetric</code></td>
+<td>
+<p>Whether to symmetrize the final estimated precision matrices, and the default is True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.method</code></td>
+<td>
+<p>The initialization method for tensor precision matrices in the target domain, which can be selected as "Tlasso" (PAMI, 2020) &amp; "sepa" (Separable method, JCGS, 2022). Note that the "sepa" method has not been included in the current version of this R package to circumvent code ownership issues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.method.aux</code></td>
+<td>
+<p>The initialization method for tensor precision matrices in auxiliary domains.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode.set</code></td>
+<td>
+<p>Whether to estimate only the specified mode, and the default setting is NULL, which means estimating all mode.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.iter.Tlasso</code></td>
+<td>
+<p>The number of maximal iteration when using Tlasso for initialization, default is 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cn.lam2</code></td>
+<td>
+<p>The coefficient set in tuning parameters used to solve <code class="reqn">\widehat{\Omega}</code> in step 2(b), default is seq(0.1,1,length.out =10).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>c.lam.Tlasso</code></td>
+<td>
+<p>The coefficient in tuning parameters for initialization (when using Tlasso): <code class="reqn">c.lam.Tlasso * \sqrt( pm * \log(pm)/( n*p1*...*pM ))</code>, default is 20 suggested in (PAMI, 2020).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>c.lam.sepa</code></td>
+<td>
+<p>The coefficient in tuning parameters for initialization (when using sepa): <code class="reqn">c.lam.sepa * \sqrt( pm * \log(pm)/( n*p1*...*pM ))</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adjust.BIC</code></td>
+<td>
+<p>Whether to use the adjusted BIC to select lambda2, the default setting is F.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>The normalization method of precision matrix. When using Tlasso, <code class="reqn">\Omega_{11} = 1</code> if normalize = F and <code class="reqn">\| \Omega_{11} \|_{F} = 1</code> if normalize = T. Default value is T.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inti.the</code></td>
+<td>
+<p>T: the initial values in Step 2(b) is Omega0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sel.ind</code></td>
+<td>
+<p>The approach to model selection, which can be selected from c("fit", "predict").</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A result list including:
+Omega.list: the final estimation result of the target precision matrices after the model selection of transfer learning-based estimation and initial estimation (in which the initial covariance matrices of auxiliary domains is weighted by sample sizes);
+Omega.sym.list: the symmetrized final estimation result in Omega.list;
+Omega.list.diff: the final estimation result of the target precision matrices after the model selection of transfer learning-based estimation and initial estimation (in which the initial covariance matrices of auxiliary domains is weighted by the differences with the target domain);
+Omega.sym.list.diff: the symmetrized final estimation result in Omega.list.diff;
+res.trans.list: transfer learning-based estimation results.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Mingyang Ren, Yaoming Zhen, Junhui Wang. Maintainer: Mingyang Ren <a href="mailto:renmingyang17@mails.ucas.ac.cn">renmingyang17@mails.ucas.ac.cn</a>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Ren, M., Zhen Y., and Wang J. (2022). Transfer learning for tensor graphical models.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(TransTGGM)
+library(Tlasso)
+data(example.data)
+t.data = example.data$t.data
+A.data = example.data$A.data
+t.Omega.true.list = example.data$t.Omega.true.list
+normalize = TRUE
+
+K = length(A.data)
+p.vec = dim(t.data)
+M = length(p.vec) - 1
+n = p.vec[M+1]
+p.vec = p.vec[1:M]
+tla.lambda = 20*sqrt( p.vec*log(p.vec) / ( n * prod(p.vec) ))
+A.lambda = list()
+for (k in 1:K) {
+  A.lambda[[k]] = 20*sqrt( log(p.vec) / ( dim(A.data[[k]])[M+1] * prod(p.vec) ))
+}
+
+res.final = tensor.GGM.trans(t.data, A.data, A.lambda, normalize = normalize)
+Tlasso.Omega.list = Tlasso.fit(t.data, lambda.vec = tla.lambda,
+                    norm.type = 1+as.numeric(normalize))
+
+i.Omega = as.data.frame(t(unlist(est.analysis(res.final$Omega.list, t.Omega.true.list))))
+i.Omega.diff = t(unlist(est.analysis(res.final$Omega.list.diff, t.Omega.true.list)))
+i.Omega.diff = as.data.frame(i.Omega.diff)
+i.Tlasso = as.data.frame(t(unlist(est.analysis(Tlasso.Omega.list, t.Omega.true.list))))
+i.Omega.diff     # proposed.v
+i.Omega          # proposed
+i.Tlasso         # Tlasso
+
+
+
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,283 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ggplot.migpd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit multiple independent generalized Pareto models</h2>
+
+<h3>Description</h3>
+
+<p>Fit multiple independent generalized Pareto models as the first step of
+conditional multivariate extreme values modelling following the approach of
+Heffernan and Tawn, 2004.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'migpd'
+ggplot(
+  data,
+  mapping = NULL,
+  main = c("Probability plot", "Quantile plot", "Return level plot",
+    "Histogram and density"),
+  xlab = rep(NULL, 4),
+  nsim = 1000,
+  alpha = 0.05,
+  ...,
+  environment
+)
+
+migpd(
+  data,
+  mth,
+  mqu,
+  penalty = "gaussian",
+  maxit = 10000,
+  trace = 0,
+  verbose = FALSE,
+  priorParameters = NULL,
+  cov = "observed",
+  family = gpd
+)
+
+## S3 method for class 'migpd'
+plot(
+  x,
+  main = c("Probability plot", "Quantile plot", "Return level plot",
+    "Histogram and density"),
+  xlab = rep(NULL, 4),
+  nsim = 1000,
+  alpha = 0.05,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A matrix or data.frame, each column of which is to be modelled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mapping, environment</code></td>
+<td>
+<p>Further arguments to ggplot method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>Character vector of length four: titles for plots produced by
+<code>plot</code> and <code>ggplot</code> methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab</code></td>
+<td>
+<p>As <code>main</code> but for x-axes labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>Number of simulations on which to base tolerance envelopes in
+<code>plot</code> and <code>ggplot</code> methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Significance level for tolerance and confidence intervals in
+<code>plot</code> and <code>ggplot</code> methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mth</code></td>
+<td>
+<p>Marginal thresholds. Thresholds above which to fit the models.
+Only one of <code>mth</code> and <code>mqu</code> should be supplied. Length one (in
+which case a common threshold is used) or length equal to the number of
+columns of <code>data</code> (in which case values correspond to thresholds for
+each of the columns respectively).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mqu</code></td>
+<td>
+<p>Marginal quantiles. Quantiles above which to fit the models. Only
+one of <code>mth</code> and <code>mqu</code> should be supplied. Length as for
+<code>mth</code> above.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalty</code></td>
+<td>
+<p>How the likelihood should be penalized. Defaults to
+"gaussian". See documentation for <code>evm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>The maximum number of iterations to be used by the optimizer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>Whether or not to tell the user how the optimizer is getting
+on. The argument is passed into <code>optim</code> – see the help for that
+function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Controls whether or not the function prints to screen every
+time it fits a model. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorParameters</code></td>
+<td>
+<p>Only used if <code>penalty = 'gaussian'</code>. A named
+list, each element of which contains two components: the first should be a
+vector of length 2 corresponding to the location of the Gaussian
+distribution; the second should be 2x2 matrix corresponding to the
+covariance matrix of the distribution. The names should match the names of
+the columns of <code>data</code>. If not provided, it defaults to independent
+priors being centred at zero, with variance 10000 for log(sigma) and 0.25
+for xi. See the details section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov</code></td>
+<td>
+<p>String, passed through to <code>evm</code>: how to estimate the covariance.
+Defaults to <code>cov = "observed"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>An object of class "texmexFamily". Should be either
+<code>family = gpd</code> or <code>family = cgpd</code> and defaults to the first of those.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Object of class <code>migpd</code> as returned by function <code>migpd</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The parameters in the generalized Pareto distribution are estimated for each
+column of the data in turn, independently of all other columns. Note,
+covariate modelling of GPD parameters is not supported.
+</p>
+<p>Maximum likelihood estimation often fails with generalized Pareto
+distributions because of the likelihood becoming flat (see, for example,
+Hosking et al, 1985).  Therefore the function allows penalized likelihood
+estimation, which is the same as maximum a posteriori estimation from a
+Bayesian point of view.
+</p>
+<p>By default quadratic penalization is used, corresponding to using a Gaussian
+prior. If no genuine prior information is available, the following argument
+can be used. If xi = -1, the generalized Pareto distribution corresponds to
+the uniform distribution, and if xi is 1 or greater, the expectation is
+infinite. Thefore, xi is likely to fall in the region (-1, 1). A Gaussian
+distribution centred at zero and with standard deviation 0.5 will have
+little mass outside of (-1, 1) and so will often be a reasonable prior for
+xi. For log(sigma) a Gaussian distribution, centred at zero and with
+standard deviation 100 will often be vague.  If a Gaussian penalty is
+specified but no parameters are given, the function will assume such
+indpendent priors.
+</p>
+<p>Note that internally the function works with log(sigma), not sigma. The
+reasons are that quadratic penalization makes more sense for phi=log(sigma)
+than for sigma (because the distribution of log(sigma) will be more nearly
+symmetric), and because it was found to stabilize computations.
+</p>
+<p>The associated <code>coef</code>, <code>print</code> and <code>summary</code> functions
+exponentiate the log(sigma) parameter to return results on the expected
+scale. If you are accessesing the parameters directly, however, take care to
+be sure what scale the results are on.
+</p>
+<p>Threshold selection can be carried out with the help of functions
+<code>mrl</code> and <code>gpdRangeFit</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class "migpd". There are <code>coef</code>, <code>print</code>,
+<code>plot</code>, <code>ggplot</code> and <code>summary</code> functions available.
+</p>
+
+
+<h3>Note</h3>
+
+<p>You are encourage to use the <code>mqu</code> argument and not <code>mth</code>.
+If you use <code>mth</code>, the quantiles then need to be estimated. There
+are, at the time of writing, 9 methods of estimating quantiles build into
+the <code>quantile</code> function. Tiny differences can cause problems in
+later stages of the analysis if functions try to simulate in an area
+that is legitimate according to the numerical value of the threshold, but
+not according to the estimated quantile.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Harry Southworth
+</p>
+
+
+<h3>References</h3>
+
+<p>J. E. Heffernan and J. A. Tawn, A conditional approach for
+multivariate extreme values, Journal of the Royal Statistical society B, 66,
+497 – 546, 2004
+</p>
+<p>J. R. M. Hosking and J. R. Wallis, Parameter and quantile estimation for the
+generalized Pareto distribution, Technometrics, 29, 339 – 349, 1987
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>mex</code>, <code>mexDependence</code>,
+<code>bootmex</code>, <code>predict.mex</code>, <code>gpdRangeFit</code>,
+<code>mrl</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+mygpd &lt;- migpd(winter, mqu=.7, penalty = "none")
+mygpd
+summary(mygpd)
+plot(mygpd)
+g &lt;- ggplot(mygpd)
+
+
+</code></pre>
+
+
+</div>

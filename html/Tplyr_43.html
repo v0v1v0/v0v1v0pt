@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>group_count</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a <code>count</code>, <code>desc</code>, or <code>shift</code> layer for discrete count
+based summaries, descriptive statistics summaries, or shift count summaries</h2>
+
+<h3>Description</h3>
+
+<p>This family of functions specifies the type of summary that is
+to be performed within a layer. <code>count</code> layers are used to create
+summary counts of some discrete variable. <code>desc</code> layers create summary
+statistics, and <code>shift</code> layers summaries the counts of different
+changes in states. See the "details" section below for more information.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">group_count(parent, target_var, by = vars(), where = TRUE, ...)
+
+group_desc(parent, target_var, by = vars(), where = TRUE, ...)
+
+group_shift(parent, target_var, by = vars(), where = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>parent</code></td>
+<td>
+<p>Required. The parent environment of the layer. This must be the
+<code>tplyr_table</code> object that the layer is contained within.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target_var</code></td>
+<td>
+<p>Symbol. Required, The variable name(s) on which the summary
+is to be performed. Must be a variable within the target dataset. Enter
+unquoted - i.e. target_var = AEBODSYS. You may also provide multiple
+variables with <code>vars</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>A string, a variable name, or a list of variable names supplied
+using <code>vars</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>where</code></td>
+<td>
+<p>Call. Filter logic used to subset the target data when
+performing a summary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments to pass forward</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+ <dl>
+<dt>Count Layers</dt>
+<dd>
+<p>Count layers allow you to create
+summaries based on counting values with a variable. Additionally, this
+layer allows you to create n (%) summaries where you're also summarizing
+the proportion of instances a value occurs compared to some denominator.
+Count layers are also capable of producing counts of nested relationships.
+For example, if you want to produce counts of an overall outside group, and
+then the subgroup counts within that group, you can specify the target
+variable as vars(OutsideVariable, InsideVariable). This allows you to do
+tables like Adverse Events where you want to see the Preferred Terms within
+Body Systems, all in one layer. Further control over denominators is
+available using the function <code>set_denoms_by</code> and distinct
+counts can be set using <code>set_distinct_by</code></p>
+</dd> <dt>Descriptive
+Statistics Layers</dt>
+<dd>
+<p>Descriptive statistics layers perform summaries on
+continuous variables. There are a number of summaries built into Tplyr
+already that you can perform, including n, mean, median, standard
+deviation, variance, min, max, inter-quartile range, Q1, Q3, and missing
+value counts. From these available summaries, the default presentation of a
+descriptive statistic layer will output 'n', 'Mean (SD)', 'Median', 'Q1, Q3',
+'Min, Max', and 'Missing'. You can change these summaries using
+<code>set_format_strings</code>, and you can also add your own summaries
+using <code>set_custom_summaries</code>. This allows you to implement any
+additional summary statistics you want presented.</p>
+</dd> <dt>Shift Layers</dt>
+<dd>
+<p>A
+shift layer displays an endpoint's 'shift' throughout the duration of the
+study. It is an abstraction over the count layer, however we have provided
+an interface that is more efficient and intuitive. Targets are passed as
+named symbols using <code>dplyr::vars</code>. Generally the baseline is passed
+with the name 'row' and the shift is passed with the name 'column'. Both
+counts (n) and percentages (pct) are supported and can be specified with
+the <code>set_format_strings</code> function. To allow for flexibility
+when defining percentages, you can define the denominator using the
+<code>set_denoms_by</code> function. This function takes variable names and
+uses those to determine the denominator for the counts.</p>
+</dd> </dl>
+<h3>Value</h3>
+
+<p>An <code>tplyr_layer</code> environment that is a child of the specified
+parent. The environment contains the object as listed below.
+</p>
+<p>A <code>tplyr_layer</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p>[add_layer, add_layers, tplyr_table, tplyr_layer]
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Load in pipe
+library(magrittr)
+
+t &lt;- tplyr_table(iris, Species) %&gt;%
+  add_layer(
+    group_desc(target_var=Sepal.Width)
+  )
+
+t &lt;- tplyr_table(iris, Species) %&gt;%
+  add_layer(
+    group_desc(target_var=Sepal.Width)
+  )
+
+t &lt;- tplyr_table(mtcars, am) %&gt;%
+  add_layer(
+    group_shift(vars(row=gear, column=carb), by=cyl)
+  )
+</code></pre>
+
+
+</div>

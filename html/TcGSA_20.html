@@ -1,0 +1,610 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotPat.TcGSA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot a Gene Set Trends Heatmap for each Patient.</h2>
+
+<h3>Description</h3>
+
+<p>This function plots a series of gene sets dynamic trends heatmaps.  One
+heatmap is drawn for each patient. NOT IMPLEMENTED YET (TODO)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotPat.TcGSA(
+  x,
+  threshold = 0.05,
+  myproc = "BY",
+  nbsimu_pval = 1e+06,
+  expr,
+  Subject_ID,
+  TimePoint,
+  baseline = NULL,
+  only.signif = TRUE,
+  group.var = NULL,
+  Group_ID_paired = NULL,
+  ref = NULL,
+  group_of_interest = NULL,
+  FUNcluster = NULL,
+  clustering_metric = "euclidian",
+  clustering_method = "ward",
+  B = 500,
+  max_trends = 4,
+  aggreg.fun = "median",
+  na.rm.aggreg = TRUE,
+  methodOptiClust = "firstSEmax",
+  verbose = TRUE,
+  clust_trends = NULL,
+  N_clusters = NULL,
+  myclusters = NULL,
+  label.clusters = NULL,
+  prev_rowCL = NULL,
+  descript = TRUE,
+  plotAll = TRUE,
+  color.vec = c("darkred", "#D73027", "#FC8D59", "snow", "#91BFDB", "#4575B4",
+    "darkblue"),
+  legend.breaks = NULL,
+  label.column = NULL,
+  time_unit = "",
+  cex.label.row = 1,
+  cex.label.column = 1,
+  margins = c(5, 25),
+  heatKey.size = 1,
+  dendrogram.size = 1,
+  heatmap.height = 1,
+  heatmap.width = 1,
+  cex.clusterKey = 1,
+  cex.main = 1,
+  horiz.clusterKey = TRUE,
+  main = NULL,
+  subtitle = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a <b>tcgsa</b> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>the threshold at which the FDR or the FWER should be controlled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>myproc</code></td>
+<td>
+<p>a vector of character strings containing the names of the
+multiple testing procedures for which adjusted p-values are to be computed.
+This vector should include any of the following: "<code>Bonferroni</code>",
+"<code>Holm</code>", "<code>Hochberg</code>", "<code>SidakSS</code>", "<code>SidakSD</code>",
+"<code>BH</code>", "<code>BY</code>", "<code>ABH</code>", "<code>TSBH</code>" or "<code>none</code>".  
+"<code>none</code>" indicates no adjustment for multiple testing. See
+<code>mt.rawp2adjp</code> for details.  Default is
+"<code>BY</code>", the Benjamini &amp; Yekutieli (2001) step-up FDR-controlling
+procedure (general dependency structures).  In order to control the FWER(in
+case of an analysis that is more a hypothesis confirmation than an
+exploration of the expression data), we recommend to use "<code>Holm</code>", the
+Holm (1979) step-down adjusted p-values for strong control of the FWER.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbsimu_pval</code></td>
+<td>
+<p>the number of observations under the null distribution to
+be generated in order to compute the p-values. Default is <code>1e+06</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>either a matrix or dataframe of gene expression upon which
+dynamics are to be calculated, or a list of gene sets estimation of gene
+expression.  In the case of a matrix or dataframe, its dimension are <code class="reqn">n</code>
+x <code class="reqn">p</code>, with the <code class="reqn">p</code> sample in column and the <code class="reqn">n</code> genes in row.
+In the case of a list, its length should correspond to the number of gene
+sets under scrutiny and each element should be an 3 dimension array of
+estimated gene expression, such as for the list returned in the
+<code>'Estimations'</code> element of <code>TcGSA.LR</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Subject_ID</code></td>
+<td>
+<p>a factor of length <code class="reqn">p</code> that is in the same order as the
+columns of <code>expr</code> (when it is a dataframe) and that contains the patient
+identifier of each sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TimePoint</code></td>
+<td>
+<p>a numeric vector or a factor of length <code class="reqn">p</code> that is in
+the same order as <code>Subject_ID</code> and the columns of <code>expr</code> (when it
+is a dataframe), and that contains the time points at which gene expression
+was measured.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline</code></td>
+<td>
+<p>a character string which is the value of <code>TimePoint</code>
+used as baseline.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>only.signif</code></td>
+<td>
+<p>logical flag for plotting only the significant gene sets.
+If <code>FALSE</code>, all the gene sets from the <b>gmt</b> object contained in
+<code>x</code> are plotted.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group.var</code></td>
+<td>
+<p>in the case of several treatment groups, this is a factor of
+length <code class="reqn">p</code> that is in the same order as <code>Timepoint</code>,
+<code>Subject_ID</code>, <code>sample_name</code> and the columns of <code>expr</code>.  It
+indicates to which treatment group each sample belongs to.  Default is
+<code>NULL</code>, which means that there is only one treatment group.  See
+Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Group_ID_paired</code></td>
+<td>
+<p>a character vector of length <code class="reqn">p</code> that is in the
+same order as <code>Timepoint</code>, <code>Subject_ID</code>, <code>sample_name</code>,
+<code>group.var</code> and the columns of <code>expr</code>.  This argument must not be
+<code>NULL</code> in the case of a paired analysis, and must be <code>NULL</code>
+otherwise.  Default is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>the group which is used as reference in the case of several
+treatment groups.  Default is <code>NULL</code>, which means that reference is the
+first group in alphabetical order of the labels of <code>group.var</code>.  See
+Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_of_interest</code></td>
+<td>
+<p>the group of interest, for which dynamics are to be
+computed in the case of several treatment groups.  Default is <code>NULL</code>,
+which means that group of interest is the second group in alphabetical order
+of the labels of <code>group.var</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUNcluster</code></td>
+<td>
+<p>the clustering function used to agglomerate genes in
+trends.  Default is <code>NULL</code>, in which a hierarchical clustering is
+performed via the function <code>agnes</code>, using the
+metric <code>clustering_metric</code> and the method <code>clustering_method</code>.  See
+<code>clusGap</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_metric</code></td>
+<td>
+<p>character string specifying the metric to be used
+for calculating dissimilarities between observations in the hierarchical
+clustering when <code>FUNcluster</code> is <code>NULL</code>.  The currently available
+options are <code>"euclidean"</code> and <code>"manhattan"</code>.  Default is
+<code>"euclidean"</code>.  See <code>agnes</code>.  Also, a <code>"sts"</code> option 
+is available in TcGSA.  It implements the 'Short Time Series' distance 
+[Moller-Levet et al., Fuzzy Clustering of short time series and unevenly distributed 
+sampling points, <em>Advances in Intelligent Data Analysis V</em>:330-340 Springer, 2003]
+designed specifically for clustering time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_method</code></td>
+<td>
+<p>character string defining the agglomerative method
+to be used in the hierarchical clustering when <code>FUNcluster</code> is
+<code>NULL</code>.  The six methods implemented are <code>"average"</code> ([unweighted
+pair-]group average method, UPGMA), <code>"single"</code> (single linkage),
+<code>"complete"</code> (complete linkage), <code>"ward"</code> (Ward's method),
+<code>"weighted"</code> (weighted average linkage).  Default is <code>"ward"</code>.  See
+<code>agnes</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>integer specifying the number of Monte Carlo ("bootstrap") samples
+used to compute the gap statistics.  Default is <code>500</code>.  See
+<code>clusGap</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_trends</code></td>
+<td>
+<p>integer specifying the maximum number of different clusters
+to be tested.  Default is <code>4</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggreg.fun</code></td>
+<td>
+<p>a character string such as <code>"mean"</code>, <code>"median"</code>
+or the name of any other statistics function defined that returns a single
+numeric value.  It specifies the function used to aggregate the observations
+before the clustering.  Default is to <code>median</code>.  Default is
+<code>"median"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm.aggreg</code></td>
+<td>
+<p>a logical flag indicating whether <code>NA</code> should be remove to prevent 
+propagation through <code>aggreg.fun</code>. Can be useful to set to TRUE with 
+unbalanced design as those will generate structural <code>NA</code>s in 
+<code>$Estimations</code>. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>methodOptiClust</code></td>
+<td>
+<p>character string indicating how the "optimal"" number
+of clusters is computed from the gap statistics and their standard
+deviations. Possible values are <code>"globalmax"</code>, <code>"firstmax"</code>,
+<code>"Tibs2001SEmax"</code>, <code>"firstSEmax"</code> and <code>"globalSEmax"</code>.
+Default is <code>"firstSEmax"</code>.  See <code>'method'</code> in
+<code>clusGap</code>, Details and <em>Tibshirani et al.,
+2001</em> in References.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical flag enabling verbose messages to track the computing
+status of the function.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clust_trends</code></td>
+<td>
+<p>object of class <b>ClusteredTrends</b> containing
+already computed trends for the plotted gene sets.  Default is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N_clusters</code></td>
+<td>
+<p>an integer that is the number of clusters in which the
+dynamics should be regrouped. The cutoff of the clustering tree is
+automatically calculated accordingly.  Default is <code>NULL</code>, in which case
+the dendrogram is not cut and no clusters are identified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>myclusters</code></td>
+<td>
+<p>a character vector of colors for predefined clusters of the
+represented gene sets, with as many levels as the value of <code>N_clusters</code>.
+Default is <code>NULL</code>, in which case the clusters are automatically
+identified and colored via the <code>cutree</code> function and the
+<code>N_clusters</code> argument only.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label.clusters</code></td>
+<td>
+<p>if <code>N_clusters</code> is not <code>NULL</code>, a character
+vector of length <code>N_clusterss</code>.  Default is <code>NULL</code>, in which case
+if <code>N_clusters</code> is not <code>NULL</code>, clusters are simply labeled with
+numbers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prev_rowCL</code></td>
+<td>
+<p>a <b>hclust</b> object, such as the one return by the
+present plotting function (see Value) for instance.  If not <code>NULL</code>, no
+clustering is calculated by the present plotting function and this tree is
+used to represent the gene sets dynamics.  Default is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>descript</code></td>
+<td>
+<p>logical flag indicating that the description of the gene sets
+should appear after their name on the right side of the plot if <code>TRUE</code>.
+Default is <code>TRUE</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plotAll</code></td>
+<td>
+<p>logical flag indicating whether a first heatmap with the median
+over all the patients should be plotted, or not.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color.vec</code></td>
+<td>
+<p>a character strings vector used to define the color
+palette used in the plot.  Default is
+<code>c("#D73027", "#FC8D59","lightyellow", "#91BFDB", "#4575B4")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>legend.breaks</code></td>
+<td>
+<p>a numeric vector indicating the splitting points for
+coloring.  Default is <code>NULL</code>, in which case the break points will be
+spaced equally and symmetrically about 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label.column</code></td>
+<td>
+<p>a vector of character strings with the labels to be
+displayed for the columns (i.e. the time points).  Default is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_unit</code></td>
+<td>
+<p>the time unit to be displayed (such as <code>"Y"</code>,
+<code>"M"</code>, <code>"W"</code>, <code>"D"</code>, <code>"H"</code>, etc) next to the values of
+<code>TimePoint</code> in the columns labels when <code>label.column</code> is
+<code>NULL</code>.  Default is <code>""</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cex.label.row</code></td>
+<td>
+<p>a numerical value giving the amount by which row labels
+text should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cex.label.column</code></td>
+<td>
+<p>a numerical value giving the amount by which column
+labels text should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>margins</code></td>
+<td>
+<p>numeric vector of length 2 containing the margins (see
+<code>par(mar= *))</code> for column and row names, respectively.  Default
+is <code>c(15, 100)</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>heatKey.size</code></td>
+<td>
+<p>the size of the color key for the heatmap fill.  Default
+is <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dendrogram.size</code></td>
+<td>
+<p>the horizontal size of the dendrogram.  Default is
+<code>1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>heatmap.height</code></td>
+<td>
+<p>the height of the heatmap.  Default is <code>1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>heatmap.width</code></td>
+<td>
+<p>the width of the heatmap.  Default is <code>1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cex.clusterKey</code></td>
+<td>
+<p>a numerical value giving the amount by which the
+clusters legend text should be magnified relative to the default <code>1</code>,
+when <code>N_clusters</code> is not <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cex.main</code></td>
+<td>
+<p>a numerical value giving the amount by which title text
+should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>horiz.clusterKey</code></td>
+<td>
+<p>a logical flag; if <code>TRUE</code>, set the legend for
+clusters horizontally rather than vertically.  Only used if the
+<code>N_clusters</code> argument is not <code>NULL</code>.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>a character string for an optional title.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle</code></td>
+<td>
+<p>a character string for an optional subtitle.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other parameters to be passed through to plotting functions.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>On the heatmap, each line corresponds to a gene set, and each column to a
+time point.
+</p>
+<p>First a heatmap is computed on all the patients (see <code>plot.TcGSA</code>
+and <code>clustTrend</code>) to define the clustering. Then, the clustering
+and coloring thus defined on all the patients are consistently used in the
+separate heatmaps that are plotted by patient.
+</p>
+<p>If <code>expr</code> is a matrix or a dataframe, then the "original" data are
+plotted.  On the other hand, if <code>expr</code> is a list returned in the
+<code>'Estimations'</code> element of <code>TcGSA.LR</code>, then it is those
+"estimations" made by the <code>TcGSA.LR</code> function that are plotted.
+</p>
+<p>If <code>descript</code> is <code>FALSE</code>, the second element of <code>margins</code> can
+be reduced (for instance use <code>margins = c(5, 10)</code>), as there is not so
+much need for space in order to display only the gene set names, without
+their description.
+</p>
+<p>The median shown in the heatmap uses the respectively standardized (reduced
+and centered) expression of the genes over the patients.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <b>hclust</b> which describes the tree
+produced by the clustering process.  The object is a list with components:
+</p>
+
+<ul>
+<li> <p><code>merge</code> an <code class="reqn">n-1</code> by <code class="reqn">2</code> matrix.  Row <code class="reqn">i</code> of
+<code>merge</code> describes the merging of clusters at step i of the clustering.
+If an element <code class="reqn">j</code> in the row is negative, then observation -<code class="reqn">j</code> was
+merged at this stage.  If <code class="reqn">j</code> is positive then the merge was with the
+cluster formed at the (earlier) stage <code class="reqn">j</code> of the algorithm.  Thus
+negative entries in merge indicate agglomerations of singletons, and positive
+entries indicate agglomerations of non-singletons.
+</p>
+</li>
+<li> <p><code>height</code> a set of <code class="reqn">n-1</code> real values (non-decreasing for
+ultrametric trees).  The clustering height: that is, the value of the
+criterion associated with the Ward clustering method.
+</p>
+</li>
+<li> <p><code>order</code> a vector giving the permutation of the original
+observations suitable for plotting, in the sense that a cluster plot using
+this ordering and matrix merge will not have crossings of the branches.
+</p>
+</li>
+<li> <p><code>labels</code> the gene sets name.
+</p>
+</li>
+<li> <p><code>call</code> the call which produced the result clustering:
+<br><code>hclust(d = dist(map2heat, method = "euclidean"), method = "ward.D2")</code>
+</p>
+</li>
+<li>
+<p> method "ward.D2", as it is the clustering method that has been used
+for clustering the gene set trends.
+</p>
+</li>
+<li> <p><code>dist.method</code> "euclidean", as it is the distance that has been used
+for clustering the gene set trends.
+</p>
+</li>
+<li> <p><code>legend.breaks</code> a numeric vector giving the splitting points used
+for coloring the heatmap.  If <code>plot</code> is <code>FALSE</code>, then it is
+<code>NULL</code>.
+</p>
+</li>
+<li> <p><code>myclusters</code> a character vector of colors for clusters of the
+represented gene sets, with as many levels as the value of <code>N_clusters</code>.
+If no clusters were represented, than this is <code>NULL</code>.
+</p>
+</li>
+<li> <p><code>ddr</code> a <b>dendrogram</b> object with the reordering used for the
+heatmap.  See <code>heatmap.2</code> function from package 
+<code>gplots</code>.
+</p>
+</li>
+<li> <p><code>clustersExport</code> a data frame with 2 variables containing the two
+following variables : </p>
+ <ul>
+<li> <p><code>GeneSet</code>: the gene sets
+clustered.  </p>
+</li>
+<li> <p><code>Cluster</code>: the cluster they belong to.  </p>
+</li>
+</ul>
+<p> The data
+frame is order by the variable <code>Cluster</code>.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Boris P. Hejblum
+</p>
+
+
+<h3>References</h3>
+
+<p>Hejblum BP, Skinner J, Thiebaut R, (2015) 
+Time-Course Gene Set Analysis for Longitudinal Gene Expression Data. 
+<em>PLOS Comput. Biol.</em> 11(6):e1004310.
+doi: 10.1371/journal.pcbi.1004310
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.TcGSA</code>,
+<code>TcGSA.LR</code>, <code>hclust</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(interactive()){
+data(data_simu_TcGSA)
+
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE)
+
+plotPat.TcGSA(x=tcgsa_sim_1grp, expr=expr_1grp, 
+    Subject_ID=design$Patient_ID, TimePoint=design$TimePoint,
+    B=100,
+    time_unit="H"
+    )
+
+plotPat.TcGSA(x=tcgsa_sim_1grp, expr=tcgsa_sim_1grp$Estimations, 
+    Subject_ID=design$Patient_ID, TimePoint=design$TimePoint,
+    baseline=1, 
+    B=100,
+    time_unit="H"
+    )
+}
+
+</code></pre>
+
+
+</div>

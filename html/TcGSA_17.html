@@ -1,0 +1,183 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotFit.GS</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plotting function for exploring the fitness of the mixed modeling used in TcGSA</h2>
+
+<h3>Description</h3>
+
+<p>This function plots graphs informing on the fit of the mixed modeling
+of the gene expression performed in TcGSA, for 1 or several gene sets.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotFit.GS(
+  x,
+  expr,
+  design,
+  subject_name = "Patient_ID",
+  time_name = "TimePoint",
+  colnames_ID,
+  plot_type = c("Fit", "Residuals Obs", "Residuals Est", "Histogram Obs"),
+  GeneSetsList,
+  color = c("genes", "time", "subjects"),
+  marginal_hist = TRUE,
+  gg.add = list(theme())
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a <b>tcgsa</b> object for <code>clustTrend</code>, or a
+<b>ClusteredTrends</b> object for <code>print.ClusteredTrends</code> and
+<code>plot.ClusteredTrends</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>a matrix or dataframe of gene expression.  Its dimension are
+<code class="reqn">n</code>x<code class="reqn">p</code>, with the <code class="reqn">p</code> samples in column and the <code class="reqn">n</code> genes in
+row.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>design</code></td>
+<td>
+<p>a matrix or dataframe containing the experimental variables that used in the model,
+namely <code>subject_name</code>, <code>time_name</code>, and <code>covariates_fixed</code> 
+and <code>time_covariates</code> if applicable.  Its dimension are <code class="reqn">p</code>x<code class="reqn">m</code> 
+and its row are is in the same order as the columns of <code>expr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subject_name</code></td>
+<td>
+<p>the name of the factor variable from <code>design</code> that contains the information on 
+the repetition units used in the mixed model, such as the patient identifiers for instance.  
+Default is <code>'Patient_ID'</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_name</code></td>
+<td>
+<p>the name of a numeric variable from <code>design</code> that contains 
+the information on the time replicates (the time points at which gene 
+expression was measured).  Default is <code>'TimePoint'</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colnames_ID</code></td>
+<td>
+<p>the name of the variable from <code>design</code> that contains the column names of the <code>expr</code>
+expression data matrix.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_type</code></td>
+<td>
+<p>a character string indicating the type of plot to be drawn.  The options are 
+<code>'Fit'</code>, <code>'Residuals Obs'</code>, <code>'Residuals Est'</code> or <code>'Histogram Obs'</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GeneSetsList</code></td>
+<td>
+<p>a character string containing the names of the gene set whose fit is being checked. 
+If several gene sets are being checked, can be a character list or vector of the 
+names of those gene sets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color</code></td>
+<td>
+<p>a character string indicating which color scale should be used. One of the 3 : 
+<code>'genes'</code>, <code>'time'</code>, <code>'subjects'</code>, otherwise, no coloring is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>marginal_hist</code></td>
+<td>
+<p>a logical flag indicating whether marginal histograms should be drawn. 
+Only used for <code>'Fit'</code> plot type. Default is <code>'TRUE'</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gg.add</code></td>
+<td>
+<p>A list of instructions to add to the <code>ggplot2</code> instructions.
+See <code>+.gg</code>.  Default is <code>list(theme())</code>, which adds nothing
+to the plot.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Boris P. Hejblum
+</p>
+
+
+<h3>References</h3>
+
+<p>Hejblum BP, Skinner J, Thiebaut R, (2015) 
+Time-Course Gene Set Analysis for Longitudinal Gene Expression Data. 
+<em>PLOS Comput. Biol.</em> 11(6):e1004310.
+doi: 10.1371/journal.pcbi.1004310
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot1GS</code>, <code>plotSelect.GS</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(interactive()){
+
+data(data_simu_TcGSA)
+
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE)
+plotFit.GS(x=tcgsa_sim_1grp, expr=expr_1grp, design=design,
+				 subject_name="Patient_ID", time_name="TimePoint",
+				 colnames_ID="Sample_name", 
+				 plot_type="Residuals Obs", 
+				 GeneSetsList=c("Gene set 1", "Gene set 2", "Gene set 3",
+				                "Gene set 4", "Gene set 5"),
+				 color="genes", gg.add=list(guides(color=FALSE))
+)
+
+plotFit.GS(x=tcgsa_sim_1grp, expr=expr_1grp, design=design,
+          subject_name="Patient_ID", time_name="TimePoint",
+          colnames_ID="Sample_name", 
+          plot_type="Histogram Obs", 
+          GeneSetsList=c("Gene set 1", "Gene set 5"),
+          color="genes", gg.add=list(guides(fill=FALSE))
+          )
+          
+plotFit.GS(x=tcgsa_sim_1grp, expr=expr_1grp, design=design,
+          subject_name="Patient_ID", time_name="TimePoint",
+          colnames_ID="Sample_name", 
+          plot_type="Histogram Obs", 
+          GeneSetsList=c("Gene set 1", "Gene set 2", "Gene set 3",
+		                "Gene set 4", "Gene set 5"),
+          color="genes")
+}
+
+</code></pre>
+
+
+</div>

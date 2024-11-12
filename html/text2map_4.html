@@ -1,0 +1,252 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CMDist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate Concept Mover's Distance</h2>
+
+<h3>Description</h3>
+
+<p>Concept Mover's Distance classifies documents of any length along a
+continuous measure of engagement with a given concept of interest
+using word embeddings.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CMDist(
+  dtm,
+  cw = NULL,
+  cv = NULL,
+  wv,
+  missing = "stop",
+  scale = TRUE,
+  sens_interval = FALSE,
+  alpha = 1,
+  n_iters = 20L,
+  parallel = FALSE,
+  threads = 2L,
+  setup_timeout = 120L
+)
+
+cmdist(
+  dtm,
+  cw = NULL,
+  cv = NULL,
+  wv,
+  missing = "stop",
+  scale = TRUE,
+  sens_interval = FALSE,
+  alpha = 1,
+  n_iters = 20L,
+  parallel = FALSE,
+  threads = 2L,
+  setup_timeout = 120L
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>Document-term matrix with words as columns. Works with DTMs
+produced by any popular text analysis package, or using the
+<code>dtm_builder()</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cw</code></td>
+<td>
+<p>Vector with concept word(s) (e.g., <code>c("love", "money")</code>,
+<code>c("critical thinking")</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cv</code></td>
+<td>
+<p>Concept vector(s) as output from <code>get_direction()</code>,
+<code>get_centroid()</code>, or <code>get_regions()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wv</code></td>
+<td>
+<p>Matrix of word embedding vectors (a.k.a embedding model)
+with rows as words.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>missing</code></td>
+<td>
+<p>Indicates what action to take if words are not in embeddings.
+If <code>action = "stop"</code> (default), the function is stopped
+and an error messages states which words are missing.
+If <code>action = "remove"</code>,  output is the same as terms but
+missing words or rows with missing words are removed.
+Missing words will be printed as a message.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>Logical (default = <code>FALSE</code>) uses <code>scale()</code> on output. This will
+set zero to the mean of the estimates, and scale by the
+standard deviation of the estimates. Document estimates will,
+therefore, be relative to other documents within that specific
+run, but not necessarily across discrete runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sens_interval</code></td>
+<td>
+<p>logical (default = <code>FALSE</code>), if <code>TRUE</code> several CMDs
+will be estimate on N resampled DTMs, sensitivity
+intervals are produced by returning the 2.5 and 97.5
+percentiles of estimated CMDs for a given concept word
+or concept vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>If <code>sens_interval = TRUE</code>, a number indicating the proportion
+of the document length to be resampled for sensitivity intervals.
+Default is 1 or 100 percent of each documents' length.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_iters</code></td>
+<td>
+<p>If <code>sens_interval = TRUE</code>, integer (default = 20L) indicates
+the number of resampled DTMs to produced for
+sensitivity intervals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>Logical (default = <code>FALSE</code>), whether to parallelize estimate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>If <code>parallel = TRUE</code>, an integer indicating
+attempts to connect to master before failing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>setup_timeout</code></td>
+<td>
+<p>If <code>parallel = TRUE</code>, maximum number of seconds a worker
+attempts to connect to master before failing.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>CMDist()</code> requires three things: a (1) document-term matrix (DTM), a (2)
+matrix of word embedding vectors, and (3) concept words or concept vectors.
+The function uses <em>word counts</em> from the DTM and  <em>word similarities</em>
+from the cosine similarity of their respective word vectors in a
+word embedding model. The "cost" of transporting all the words in a
+document to a single vector or a few vectors (denoting a
+concept of interest) is the measure of engagement, with higher costs
+indicating less engagement. For intuitiveness the output of <code>CMDist()</code>
+is inverted such that higher numbers will indicate <em>more engagement</em>
+with a concept of interest.
+</p>
+<p>The vector, or vectors, of the concept are specified in several ways.
+The simplest involves selecting a single word from the word embeddings, the
+analyst can also specify the concept by indicating a few words. The algorithm
+then splits the overall flow between each concept word (roughly) depending on
+which word in the document is nearest. The words need not be in the DTM, but
+they must be in the word embeddings (the function will either stop or remove
+words not in the embeddings).
+</p>
+<p>Instead of selecting a word already in the embedding space, the function can
+also take a vector extracted from the embedding space in the form of a
+centroid (which averages the vectors of several words) ,a direction (which
+uses the offset of several juxtaposing words), or a region (which is built
+by clustering words into $k$ regions). The <code>get_centroid()</code>,
+<code>get_direction()</code>, and <code>get_regions()</code> functions will extract these.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a data frame with the first column as document ids and each
+subsequent column as the CMD engagement corresponding to each
+concept word or concept vector. The upper and lower bound
+estimates will follow each unique CMD if <code>sens_interval = TRUE</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Dustin Stoltz and Marshall Taylor
+</p>
+
+
+<h3>References</h3>
+
+<p>Stoltz, Dustin S., and Marshall A. Taylor. (2019)
+'Concept Mover's Distance' <em>Journal of Computational
+Social Science</em> 2(2):293-313.
+<a href="https://doi.org/10.1007/s42001-019-00048-6">doi:10.1007/s42001-019-00048-6</a>.<br>
+Taylor, Marshall A., and Dustin S. Stoltz. (2020) 'Integrating semantic
+directions with concept mover's distance to measure binary concept
+engagement.' <em>Journal of Computational Social Science</em> 1-12.
+<a href="https://doi.org/10.1007/s42001-020-00075-8">doi:10.1007/s42001-020-00075-8</a>.<br>
+Taylor, Marshall A., and Dustin S. Stoltz.
+(2020) 'Concept Class Analysis: A Method for Identifying Cultural
+Schemas in Texts.' <em>Sociological Science</em> 7:544-569.
+<a href="https://doi.org/10.15195/v7.a23">doi:10.15195/v7.a23</a>.<br></p>
+
+
+<h3>See Also</h3>
+
+<p>CoCA, get_direction, get_centroid
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+# load example word embeddings
+data(ft_wv_sample)
+
+# load example text
+data(jfk_speech)
+
+# minimal preprocessing
+jfk_speech$sentence &lt;- tolower(jfk_speech$sentence)
+jfk_speech$sentence &lt;- gsub("[[:punct:]]+", " ", jfk_speech$sentence)
+
+# create DTM
+dtm &lt;- dtm_builder(jfk_speech, sentence, sentence_id)
+
+# example 1
+cm.dists &lt;- CMDist(dtm,
+  cw = "space",
+  wv = ft_wv_sample
+)
+
+# example 2
+space &lt;- c("spacecraft", "rocket", "moon")
+cen &lt;- get_centroid(anchors = space, wv = ft_wv_sample)
+
+cm.dists &lt;- CMDist(dtm,
+  cv = cen,
+  wv = ft_wv_sample
+)
+</code></pre>
+
+
+</div>

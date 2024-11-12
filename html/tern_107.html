@@ -1,0 +1,265 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cox_regression_inter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cox regression helper function for interactions</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Test and estimate the effect of a treatment in interaction with a covariate.
+The effect is estimated as the HR of the tested treatment for a given level
+of the covariate, in comparison to the treatment control.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_coxreg_inter_effect(x, effect, covar, mod, label, control, ...)
+
+## S3 method for class 'numeric'
+h_coxreg_inter_effect(x, effect, covar, mod, label, control, at, ...)
+
+## S3 method for class 'factor'
+h_coxreg_inter_effect(x, effect, covar, mod, label, control, data, ...)
+
+## S3 method for class 'character'
+h_coxreg_inter_effect(x, effect, covar, mod, label, control, data, ...)
+
+h_coxreg_extract_interaction(effect, covar, mod, data, at, control)
+
+h_coxreg_inter_estimations(
+  variable,
+  given,
+  lvl_var,
+  lvl_given,
+  mod,
+  conf_level = 0.95
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>numeric</code> or <code>factor</code>)<br> the values of the covariate to be tested.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>effect</code></td>
+<td>
+<p>(<code>string</code>)<br> the name of the effect to be tested and estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covar</code></td>
+<td>
+<p>(<code>string</code>)<br> the name of the covariate in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mod</code></td>
+<td>
+<p>(<code>coxph</code>)<br> a fitted Cox regression model (see <code>survival::coxph()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>string</code>)<br> the label to be returned as <code>term_label</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> a list of controls as returned by <code>control_coxreg()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>see methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>at</code></td>
+<td>
+<p>(<code>list</code>)<br> a list with items named after the covariate, every
+item is a vector of levels at which the interaction should be estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the data frame on which the model was fit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variable, given</code></td>
+<td>
+<p>(<code>string</code>)<br> the name of variables in interaction. We seek the estimation
+of the levels of <code>variable</code> given the levels of <code>given</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lvl_var, lvl_given</code></td>
+<td>
+<p>(<code>character</code>)<br> corresponding levels as given by <code>levels()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>proportion</code>)<br> confidence level of the interval.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given the cox regression investigating the effect of Arm (A, B, C; reference A)
+and Sex (F, M; reference Female) and the model being abbreviated: y ~ Arm + Sex + Arm:Sex.
+The cox regression estimates the coefficients along with a variance-covariance matrix for:
+</p>
+
+<ul>
+<li>
+<p> b1 (arm b), b2 (arm c)
+</p>
+</li>
+<li>
+<p> b3 (sex m)
+</p>
+</li>
+<li>
+<p> b4 (arm b: sex m), b5 (arm c: sex m)
+</p>
+</li>
+</ul>
+<p>The estimation of the Hazard Ratio for arm C/sex M is given in reference
+to arm A/Sex M by exp(b2 + b3 + b5)/ exp(b3) = exp(b2 + b5).
+The interaction coefficient is deduced by b2 + b5 while the standard error
+is obtained as $sqrt(Var b2 + Var b5 + 2 * covariance (b2,b5))$.
+</p>
+
+
+<h3>Value</h3>
+
+
+<ul><li> <p><code>h_coxreg_inter_effect()</code> returns a <code>data.frame</code> of covariate interaction effects consisting of the following
+variables: <code>effect</code>, <code>term</code>, <code>term_label</code>, <code>level</code>, <code>n</code>, <code>hr</code>, <code>lcl</code>, <code>ucl</code>, <code>pval</code>, and <code>pval_inter</code>.
+</p>
+</li></ul>
+<ul><li> <p><code>h_coxreg_extract_interaction()</code> returns the result of an interaction test and the estimated values. If
+no interaction, <code>h_coxreg_univar_extract()</code> is applied instead.
+</p>
+</li></ul>
+<ul><li> <p><code>h_coxreg_inter_estimations()</code> returns a list of matrices (one per level of variable) with rows corresponding
+to the combinations of <code>variable</code> and <code>given</code>, with columns:
+</p>
+
+<ul>
+<li> <p><code>coef_hat</code>: Estimation of the coefficient.
+</p>
+</li>
+<li> <p><code>coef_se</code>: Standard error of the estimation.
+</p>
+</li>
+<li> <p><code>hr</code>: Hazard ratio.
+</p>
+</li>
+<li> <p><code style="white-space: pre;">⁠lcl, ucl⁠</code>: Lower/upper confidence limit of the hazard ratio.
+</p>
+</li>
+</ul>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>h_coxreg_inter_effect()</code>: S3 generic helper function to determine interaction effect.
+</p>
+</li>
+<li> <p><code>h_coxreg_inter_effect(numeric)</code>: Method for <code>numeric</code> class. Estimates the interaction with a <code>numeric</code> covariate.
+</p>
+</li>
+<li> <p><code>h_coxreg_inter_effect(factor)</code>: Method for <code>factor</code> class. Estimate the interaction with a <code>factor</code> covariate.
+</p>
+</li>
+<li> <p><code>h_coxreg_inter_effect(character)</code>: Method for <code>character</code> class. Estimate the interaction with a <code>character</code> covariate.
+This makes an automatic conversion to <code>factor</code> and then forwards to the method for factors.
+</p>
+</li>
+<li> <p><code>h_coxreg_extract_interaction()</code>: A higher level function to get
+the results of the interaction test and the estimated values.
+</p>
+</li>
+<li> <p><code>h_coxreg_inter_estimations()</code>: Hazard ratio estimation in interactions.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+
+<ul><li>
+<p> Automatic conversion of character to factor does not guarantee results can be generated correctly. It is
+therefore better to always pre-process the dataset such that factors are manually created from character
+variables before passing the dataset to <code>rtables::build_table()</code>.
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(survival)
+
+set.seed(1, kind = "Mersenne-Twister")
+
+# Testing dataset [survival::bladder].
+dta_bladder &lt;- with(
+  data = bladder[bladder$enum &lt; 5, ],
+  data.frame(
+    time = stop,
+    status = event,
+    armcd = as.factor(rx),
+    covar1 = as.factor(enum),
+    covar2 = factor(
+      sample(as.factor(enum)),
+      levels = 1:4,
+      labels = c("F", "F", "M", "M")
+    )
+  )
+)
+labels &lt;- c("armcd" = "ARM", "covar1" = "A Covariate Label", "covar2" = "Sex (F/M)")
+formatters::var_labels(dta_bladder)[names(labels)] &lt;- labels
+dta_bladder$age &lt;- sample(20:60, size = nrow(dta_bladder), replace = TRUE)
+
+plot(
+  survfit(Surv(time, status) ~ armcd + covar1, data = dta_bladder),
+  lty = 2:4,
+  xlab = "Months",
+  col = c("blue1", "blue2", "blue3", "blue4", "red1", "red2", "red3", "red4")
+)
+
+mod &lt;- coxph(Surv(time, status) ~ armcd * covar1, data = dta_bladder)
+h_coxreg_extract_interaction(
+  mod = mod, effect = "armcd", covar = "covar1", data = dta_bladder,
+  control = control_coxreg()
+)
+
+mod &lt;- coxph(Surv(time, status) ~ armcd * covar1, data = dta_bladder)
+result &lt;- h_coxreg_inter_estimations(
+  variable = "armcd", given = "covar1",
+  lvl_var = levels(dta_bladder$armcd),
+  lvl_given = levels(dta_bladder$covar1),
+  mod = mod, conf_level = .95
+)
+result
+
+</code></pre>
+
+
+</div>

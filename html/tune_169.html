@@ -1,0 +1,442 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tune_grid</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Model tuning via grid search</h2>
+
+<h3>Description</h3>
+
+<p><code>tune_grid()</code> computes a set of performance metrics (e.g. accuracy or RMSE)
+for a pre-defined set of tuning parameters that correspond to a model or
+recipe across one or more resamples of the data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tune_grid(object, ...)
+
+## S3 method for class 'model_spec'
+tune_grid(
+  object,
+  preprocessor,
+  resamples,
+  ...,
+  param_info = NULL,
+  grid = 10,
+  metrics = NULL,
+  eval_time = NULL,
+  control = control_grid()
+)
+
+## S3 method for class 'workflow'
+tune_grid(
+  object,
+  resamples,
+  ...,
+  param_info = NULL,
+  grid = 10,
+  metrics = NULL,
+  eval_time = NULL,
+  control = control_grid()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>A <code>parsnip</code> model specification or an unfitted
+workflow(). No tuning parameters are allowed; if arguments
+have been marked with tune(), their values must be
+finalized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preprocessor</code></td>
+<td>
+<p>A traditional model formula or a recipe created using
+<code>recipes::recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resamples</code></td>
+<td>
+<p>An <code>rset</code> resampling object created from an <code>rsample</code>
+function, such as <code>rsample::vfold_cv()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>param_info</code></td>
+<td>
+<p>A <code>dials::parameters()</code> object or <code>NULL</code>. If none is given,
+a parameters set is derived from other arguments. Passing this argument can
+be useful when parameter ranges need to be customized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>A data frame of tuning combinations or a positive integer. The
+data frame should have columns for each parameter being tuned and rows for
+tuning parameter candidates. An integer denotes the number of candidate
+parameter sets to be created automatically.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics</code></td>
+<td>
+<p>A <code>yardstick::metric_set()</code>, or <code>NULL</code> to compute a standard
+set of metrics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eval_time</code></td>
+<td>
+<p>A numeric vector of time points where dynamic event time
+metrics should be computed (e.g. the time-dependent ROC curve, etc). The
+values must be non-negative and should probably be no greater than the
+largest event time in the training set (See Details below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>An object used to modify the tuning process, likely created
+by <code>control_grid()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Suppose there are <em>m</em> tuning parameter combinations. <code>tune_grid()</code> may not
+require all <em>m</em> model/recipe fits across each resample. For example:
+</p>
+
+<ul>
+<li>
+<p> In cases where a single model fit can be used to make predictions
+for different parameter values in the grid, only one fit is used.
+For example, for some boosted trees, if 100 iterations of boosting
+are requested, the model object for 100 iterations can be used to
+make predictions on iterations less than 100 (if all other
+parameters are equal).
+</p>
+</li>
+<li>
+<p> When the model is being tuned in conjunction with pre-processing
+and/or post-processing parameters, the minimum number of fits are
+used. For example, if the number of PCA components in a recipe step
+are being tuned over three values (along with model tuning
+parameters), only three recipes are trained. The alternative
+would be to re-train the same recipe multiple times for each model
+tuning parameter.
+</p>
+</li>
+</ul>
+<p>tune supports parallel processing with the <span class="pkg">future</span> package. To execute
+the resampling iterations in parallel, specify a plan with
+future first. The <code>allow_par</code> argument can be used to avoid parallelism.
+</p>
+<p>For the most part, warnings generated during training are shown as they occur
+and are associated with a specific resample when
+<code>control_grid(verbose = TRUE)</code>. They are (usually) not aggregated until the
+end of processing.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>resamples</code> with extra list columns for <code>.metrics</code> and
+<code>.notes</code> (optional columns are <code>.predictions</code> and <code>.extracts</code>). <code>.notes</code>
+contains warnings and errors that occur during execution.
+</p>
+
+
+<h3>Parameter Grids</h3>
+
+<p>If no tuning grid is provided, a semi-random grid (via
+<code>dials::grid_latin_hypercube()</code>) is created with 10 candidate parameter
+combinations.
+</p>
+<p>When provided, the grid should have column names for each parameter and
+these should be named by the parameter name or <code>id</code>. For example, if a
+parameter is marked for optimization using <code>penalty = tune()</code>, there should
+be a column named <code>penalty</code>. If the optional identifier is used, such as
+<code>penalty = tune(id = 'lambda')</code>, then the corresponding column name should
+be <code>lambda</code>.
+</p>
+<p>In some cases, the tuning parameter values depend on the dimensions of the
+data. For example, <code>mtry</code> in random forest models depends on the number of
+predictors. In this case, the default tuning parameter object requires an
+upper range. <code>dials::finalize()</code> can be used to derive the data-dependent
+parameters. Otherwise, a parameter set can be created (via
+<code>dials::parameters()</code>) and the <code>dials</code> <code>update()</code> function can be used to
+change the values. This updated parameter set can be passed to the function
+via the <code>param_info</code> argument.
+</p>
+
+
+<h3>Performance Metrics</h3>
+
+<p>To use your own performance metrics, the <code>yardstick::metric_set()</code> function
+can be used to pick what should be measured for each model. If multiple
+metrics are desired, they can be bundled. For example, to estimate the area
+under the ROC curve as well as the sensitivity and specificity (under the
+typical probability cutoff of 0.50), the <code>metrics</code> argument could be given:
+</p>
+<pre>
+  metrics = metric_set(roc_auc, sens, spec)
+</pre>
+<p>Each metric is calculated for each candidate model.
+</p>
+<p>If no metric set is provided, one is created:
+</p>
+
+<ul>
+<li>
+<p> For regression models, the root mean squared error and coefficient
+of determination are computed.
+</p>
+</li>
+<li>
+<p> For classification, the area under the ROC curve and overall accuracy
+are computed.
+</p>
+</li>
+</ul>
+<p>Note that the metrics also determine what type of predictions are estimated
+during tuning. For example, in a classification problem, if metrics are used
+that are all associated with hard class predictions, the classification
+probabilities are not created.
+</p>
+<p>The out-of-sample estimates of these metrics are contained in a list column
+called <code>.metrics</code>. This tibble contains a row for each metric and columns
+for the value, the estimator type, and so on.
+</p>
+<p><code>collect_metrics()</code> can be used for these objects to collapse the results
+over the resampled (to obtain the final resampling estimates per tuning
+parameter combination).
+</p>
+
+
+<h3>Obtaining Predictions</h3>
+
+<p>When <code>control_grid(save_pred = TRUE)</code>, the output tibble contains a list
+column called <code>.predictions</code> that has the out-of-sample predictions for each
+parameter combination in the grid and each fold (which can be very large).
+</p>
+<p>The elements of the tibble are tibbles with columns for the tuning
+parameters, the row number from the original data object (<code>.row</code>), the
+outcome data (with the same name(s) of the original data), and any columns
+created by the predictions. For example, for simple regression problems, this
+function generates a column called <code>.pred</code> and so on. As noted above, the
+prediction columns that are returned are determined by the type of metric(s)
+requested.
+</p>
+<p>This list column can be <code>unnested</code> using <code>tidyr::unnest()</code> or using the
+convenience function <code>collect_predictions()</code>.
+</p>
+
+
+<h3>Extracting Information</h3>
+
+<p>The <code>extract</code> control option will result in an additional function to be
+returned called <code>.extracts</code>. This is a list column that has tibbles
+containing the results of the user's function for each tuning parameter
+combination. This can enable returning each model and/or recipe object that
+is created during resampling. Note that this could result in a large return
+object, depending on what is returned.
+</p>
+<p>The control function contains an option (<code>extract</code>) that can be used to
+retain any model or recipe that was created within the resamples. This
+argument should be a function with a single argument. The value of the
+argument that is given to the function in each resample is a workflow
+object (see <code>workflows::workflow()</code> for more information). Several
+helper functions can be used to easily pull out the preprocessing
+and/or model information from the workflow, such as
+<code>extract_preprocessor()</code> and
+<code>extract_fit_parsnip()</code>.
+</p>
+<p>As an example, if there is interest in getting each parsnip model fit back,
+one could use:
+</p>
+<pre>
+  extract = function (x) extract_fit_parsnip(x)
+</pre>
+<p>Note that the function given to the <code>extract</code> argument is evaluated on
+every model that is <em>fit</em> (as opposed to every model that is <em>evaluated</em>).
+As noted above, in some cases, model predictions can be derived for
+sub-models so that, in these cases, not every row in the tuning parameter
+grid has a separate R object associated with it.
+</p>
+
+
+<h3>Case Weights</h3>
+
+<p>Some models can utilize case weights during training. tidymodels currently
+supports two types of case weights: importance weights (doubles) and
+frequency weights (integers). Frequency weights are used during model
+fitting and evaluation, whereas importance weights are only used during
+fitting.
+</p>
+<p>To know if your model is capable of using case weights, create a model spec
+and test it using <code>parsnip::case_weights_allowed()</code>.
+</p>
+<p>To use them, you will need a numeric column in your data set that has been
+passed through either <code>hardhat:: importance_weights()</code> or
+<code>hardhat::frequency_weights()</code>.
+</p>
+<p>For functions such as <code>fit_resamples()</code> and the <code style="white-space: pre;">⁠tune_*()⁠</code> functions, the
+model must be contained inside of a <code>workflows::workflow()</code>. To declare that
+case weights are used, invoke <code>workflows::add_case_weights()</code> with the
+corresponding (unquoted) column name.
+</p>
+<p>From there, the packages will appropriately handle the weights during model
+fitting and (if appropriate) performance estimation.
+</p>
+
+
+<h3>Censored Regression Models</h3>
+
+<p>Three types of metrics can be used to assess the quality of censored
+regression models:
+</p>
+
+<ul>
+<li>
+<p> static: the prediction is independent of time.
+</p>
+</li>
+<li>
+<p> dynamic: the prediction is a time-specific probability (e.g., survival
+probability) and is measured at one or more particular times.
+</p>
+</li>
+<li>
+<p> integrated: same as the dynamic metric but returns the integral of the
+different metrics from each time point.
+</p>
+</li>
+</ul>
+<p>Which metrics are chosen by the user affects how many evaluation times
+should be specified. For example:
+</p>
+<div class="sourceCode"><pre># Needs no `eval_time` value
+metric_set(concordance_survival)
+
+# Needs at least one `eval_time`
+metric_set(brier_survival)
+metric_set(brier_survival, concordance_survival)
+
+# Needs at least two eval_time` values
+metric_set(brier_survival_integrated, concordance_survival)
+metric_set(brier_survival_integrated, concordance_survival)
+metric_set(brier_survival_integrated, concordance_survival, brier_survival)
+</pre></div>
+<p>Values of <code>eval_time</code> should be less than the largest observed event
+time in the training data. For many non-parametric models, the results beyond
+the largest time corresponding to an event are constant (or <code>NA</code>).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>control_grid()</code>, <code>tune()</code>, <code>fit_resamples()</code>,
+<code>autoplot.tune_results()</code>, <code>show_best()</code>, <code>select_best()</code>,
+<code>collect_predictions()</code>, <code>collect_metrics()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(recipes)
+library(rsample)
+library(parsnip)
+library(workflows)
+library(ggplot2)
+
+# ---------------------------------------------------------------------------
+
+set.seed(6735)
+folds &lt;- vfold_cv(mtcars, v = 5)
+
+# ---------------------------------------------------------------------------
+
+# tuning recipe parameters:
+
+spline_rec &lt;-
+  recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_ns(disp, deg_free = tune("disp")) %&gt;%
+  step_ns(wt, deg_free = tune("wt"))
+
+lin_mod &lt;-
+  linear_reg() %&gt;%
+  set_engine("lm")
+
+# manually create a grid
+spline_grid &lt;- expand.grid(disp = 2:5, wt = 2:5)
+
+# Warnings will occur from making spline terms on the holdout data that are
+# extrapolations.
+spline_res &lt;-
+  tune_grid(lin_mod, spline_rec, resamples = folds, grid = spline_grid)
+spline_res
+
+
+show_best(spline_res, metric = "rmse")
+
+# ---------------------------------------------------------------------------
+
+# tune model parameters only (example requires the `kernlab` package)
+
+car_rec &lt;-
+  recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_normalize(all_predictors())
+
+svm_mod &lt;-
+  svm_rbf(cost = tune(), rbf_sigma = tune()) %&gt;%
+  set_engine("kernlab") %&gt;%
+  set_mode("regression")
+
+# Use a space-filling design with 7 points
+set.seed(3254)
+svm_res &lt;- tune_grid(svm_mod, car_rec, resamples = folds, grid = 7)
+svm_res
+
+show_best(svm_res, metric = "rmse")
+
+autoplot(svm_res, metric = "rmse") +
+  scale_x_log10()
+
+# ---------------------------------------------------------------------------
+
+# Using a variables preprocessor with a workflow
+
+# Rather than supplying a preprocessor (like a recipe) and a model directly
+# to `tune_grid()`, you can also wrap them up in a workflow and pass
+# that along instead (note that this doesn't do any preprocessing to
+# the variables, it passes them along as-is).
+wf &lt;- workflow() %&gt;%
+  add_variables(outcomes = mpg, predictors = everything()) %&gt;%
+  add_model(svm_mod)
+
+set.seed(3254)
+svm_res_wf &lt;- tune_grid(wf, resamples = folds, grid = 7)
+
+</code></pre>
+
+
+</div>

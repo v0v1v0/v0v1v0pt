@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>oc_pos</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Assessing probability of success</h2>
+
+<h3>Description</h3>
+
+<p>Assessment of the probability of truly or falsely (depending on simulated scenario) rejecting the null hypothesis of interest for a given weight and evidence level, using simulated data as input.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">oc_pos(
+  m,
+  se,
+  probs,
+  weights = seq(0, 1, by = 0.01),
+  map_prior,
+  sigma,
+  null_effect = 0,
+  direction_pos = T,
+  n_cores = 1,
+  eval_strategy = "sequential"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>Numerical vector of simulated effect estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>se</code></td>
+<td>
+<p>Numerical vector of simulated standard errors (<code>m</code> and <code>se</code> need to have the same length).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs</code></td>
+<td>
+<p>Vector of quantiles q, with 1 minus q representing an evidence level of interest (where positive effect estimate indicate a beneficial treatment).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Vector of weights of the informative component of the MAP prior (defaults to <code>seq(0, 1, by = 0.01)</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>map_prior</code></td>
+<td>
+<p>A MAP prior containing information about the trials in the source population, created using <code>RBesT</code>; a mixture of normal distributions is required.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>Standard deviation of the weakly informative component of the MAP prior, recommended to be the unit-information standard deviation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>null_effect</code></td>
+<td>
+<p>Numerical value, representing the null effect (defaults to 0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction_pos</code></td>
+<td>
+<p>Logical value, <code>TRUE</code> (default) if effects greater that the <code>null_effect</code> indicate a beneficial treatment and <code>FALSE</code> otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_cores</code></td>
+<td>
+<p>Integer value, representing the number of cores to be used (defaults to 1); only applies if <code>eval_strategy</code> is not "sequential".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eval_strategy</code></td>
+<td>
+<p>Character variable, representing the evaluation strategy, either "sequential", "multisession", or "multicore" (see documentation of <code>future::plan</code>, defaults to "sequential").</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A 2-dimensional array containing probabilities, either of truly (probability of success) or falsely rejecting the null hypothesis of interest for a given weight and evidence level.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>oc_bias</code> and <code>oc_coverage</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(123)
+n_sims &lt;- 5 # small number for exemplary application
+sim_dat &lt;- list(
+  "m" = rnorm(n = n_sims, mean = 1.15, sd = 0.1),
+  "se" = rnorm(n = n_sims, mean = 1.8, sd = 0.3)
+)
+results &lt;- oc_pos(
+  m = sim_dat[["m"]],
+  se = sim_dat[["se"]],
+  probs = c(0.025, 0.05, 0.1, 0.2), 
+  weights = seq(0, 1, by = 0.01), 
+  map_prior = load_tipmap_data("tipmapPrior.rds"), 
+  sigma = 16.23,
+  null_effect = 0,
+  direction_pos = TRUE, 
+  eval_strategy = "sequential",
+  n_cores = 1
+) 
+print(results)
+</code></pre>
+
+
+</div>

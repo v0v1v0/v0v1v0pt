@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>maxnet_fit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wrapper to fit maxnet models with formulae</h2>
+
+<h3>Description</h3>
+
+<p>This function is a wrapper around maxnet::maxnet, which takes a formula with data
+as well exposing parameters for normalisation in a manner compatible with
+<code>parsnip</code>. Users are unlikely to use this function directly.  For the
+<code>parsnip</code> model specification for MaxEnt, see <code>maxent()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">maxnet_fit(
+  formula,
+  data,
+  regmult = 1,
+  classes = "default",
+  regfun = maxnet::maxnet.default.regularization,
+  addsamplestobackground = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula defining the outcome and the predictors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with the outcomes and predictors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regmult</code></td>
+<td>
+<p>numeric, a constant to adjust regularization</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classes</code></td>
+<td>
+<p>character, continuous feature classes desired, either
+"default" or any subset of "lqpht" (for example, "lh")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regfun</code></td>
+<td>
+<p>function, computes regularization constant for each feature</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>addsamplestobackground</code></td>
+<td>
+<p>logical, if TRUE then add to the background any
+presence sample that is not already there</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>currently not used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The response needs to be a factor with the class representing presences
+as the reference level of the factor (as expected by other
+classification models).
+A good guide to how options of a Maxent model work can be found in
+https://onlinelibrary.wiley.com/doi/full/10.1111/j.1600-0587.2013.07872.x
+</p>
+
+
+<h3>Value</h3>
+
+<p>Maxnet returns an object of class <code>maxnet</code>, which is a list
+consisting of a glmnet model with the following elements added:
+</p>
+
+<dl>
+<dt>betas</dt>
+<dd>
+<p> nonzero coefficients of the fitted model </p>
+</dd>
+<dt>alpha</dt>
+<dd>
+<p> constant offset making the exponential model sum to one
+over the background data </p>
+</dd>
+<dt>entropy</dt>
+<dd>
+<p> entropy of the exponential model </p>
+</dd>
+<dt>penalty.factor</dt>
+<dd>
+<p> the regularization constants used for each feature </p>
+</dd>
+<dt>featuremins</dt>
+<dd>
+<p> minimum of each feature, to be used for clamping </p>
+</dd>
+<dt>featuremaxs</dt>
+<dd>
+<p> maximum of each feature, to be used for clamping </p>
+</dd>
+<dt>varmin</dt>
+<dd>
+<p> minimum of each predictor, to be used for clamping </p>
+</dd>
+<dt>varmax</dt>
+<dd>
+<p> maximum of each predictor, to be used for clamping </p>
+</dd>
+<dt>samplemeans</dt>
+<dd>
+<p> mean of each predictor over samples (majority for factors) </p>
+</dd>
+<dt>levels</dt>
+<dd>
+<p> levels of each predictor that is a factor </p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# we repeat the example in the `maxnet` package
+data("bradypus", package = "maxnet")
+bradypus_tb &lt;- tibble::as_tibble(bradypus) %&gt;%
+  dplyr::mutate(presence = relevel(
+    factor(
+      dplyr::case_match(presence, 1 ~ "presence", 0 ~ "absence")
+    ),
+    ref = "presence"
+  ))
+mod &lt;- maxnet_fit(presence ~ ., data = bradypus_tb, classes = "lq")
+plot(mod, "tmp6190_ann")
+
+</code></pre>
+
+
+</div>

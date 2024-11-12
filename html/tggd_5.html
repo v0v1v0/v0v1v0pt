@@ -1,0 +1,182 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tggd_ln</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+The Truncated Generalised Gamma Distribution
+</h2>
+
+<h3>Description</h3>
+
+<p>Density, distribution function, quantile function and random generation for the Truncated Generalised Gamma Distribution in natural log (ln) space. Specifically, if exp(x) is drawn from a TGGD distribution (in real space), these functions give the distribution of x, using the same parameter values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dtggd_ln(x, scale=log(1e14), a=-1, b=1, xmin=log(1e10), log = FALSE)
+ptggd_ln(q, scale=log(1e14), a=-1, b=1, xmin=log(1e10), lower.tail = TRUE, log.p = FALSE)
+qtggd_ln(p, scale=log(1e14), a=-1, b=1, xmin=log(1e10), lower.tail = TRUE, log.p = FALSE,
+res.approx=1e-2)
+rtggd_ln(n, scale=log(1e14), a=-1, b=1, xmin=log(1e10), res.approx=1e-2)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x,q</code></td>
+<td>
+
+<p>Vector of quantiles.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+
+<p>Vector of probabilities.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+
+<p>Number of observations. If length(n) &gt; 1, the length is taken to be the number required.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+
+<p>Vector of values for scale, which controls the transition regime between the power law slope and the exponential cut-off of the TGGD. This is analogous to the scale parameter for the standard Gamma distribution (see <code>GammaDist</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+
+<p>Vector of values for a, which controls the power law slope of the TGGD.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+
+<p>Vector of values for b, which controls the exponential cutoff of the TGGD.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xmin</code></td>
+<td>
+
+<p>Vector of values for xmin, which controls the lower limit at which to trancate the TGGD.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res.approx</code></td>
+<td>
+
+<p>The resolution used to create the inverted CDF required to map probability integrals back onto quantiles.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log, log.p</code></td>
+<td>
+
+<p>Logical; if TRUE, probabilities/densities p are returned as log(p).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower.tail</code></td>
+<td>
+
+<p>Logical; if TRUE (default), probabilities are P[X &lt;= x], otherwise, P[X &gt; x].
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This distribution function is described in detail in Murray, Robotham and Power 2016.
+</p>
+<p style="text-align: center;"><code class="reqn">f(x;a,b,s,m) = \frac{b \exp((x-s)^{(a+1)}) \exp(-\exp(b(x-s)))}{s \Gamma(\frac{a+1}{b},\exp(m-s)^b)}</code>
+</p>
+
+<p>where, from the argument list above, we use x=x, a=a, b=b, s=scale and m=xmin. <code class="reqn">\Gamma</code> is the upper incomplete Gamma function as defined by the gsl <code>gamma_inc</code> function, using the same argument ordering, where <code>gamma_inc(a,x)==pgamma(x,a,lower=FALSE)*gamma(x)</code> for a&gt;0. <code>gamma_inc</code> is used because it allows for the computation of upper incomplete integrals in cases where a&lt;=0.
+</p>
+
+
+<h3>Value</h3>
+
+<p>dtggd_ln gives the density, ptggd_ln gives the distribution function, qtggd_ln gives the quantile function, and rtggd_ln generates random deviates.
+</p>
+<p>Invalid arguments will result in return value NaN, with a warning.
+</p>
+<p>The length of the result is determined by n for rtggd_ln, and is the maximum of the lengths of the numerical arguments for the other functions.
+</p>
+<p>The numerical arguments other than n are recycled to the length of the result. Only the first elements of the logical arguments are used.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The intended application of the log-space version of the TGGD is to provide the correct distribution when variates are drawn from a real-space TGGD, but there are priors on their uncertainty which operate in logspace (eg. a lognormal distribution). The likelihood of a given set of parameters is incorrect in such a case if the real-space version is used without an adjustment to the Jacobian.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Aaron Robotham, Steven Murray
+</p>
+
+
+<h3>References</h3>
+
+<p>Murray, Robotham and Power (2016)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>GammaDist</code> regarding the Gamma distribution.
+<code>RNG</code> about random number generation in R.
+<code>Distributions</code> for other standard distributions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rtggd_ln(100,a=-2)
+hist(r)
+
+##Ideally the output below should equal 0, in practice it will be very close:
+qtggd_ln(ptggd_ln(r))-r
+
+#These should be the same:
+integrate(dtggd_ln,lower=log(1e10),upper=log(1e11),a=-1.5,b=0.7,xmin=log(1e10))
+ptggd_ln(log(1e11),a=-1.5,b=0.7,xmin=log(1e10))
+
+#This should be very close to 1 (for a true PDF):
+ptggd_ln(log(1e18),a=-1.5,b=0.7,xmin=log(1e10))
+
+#To show the link to the linear and log10 (called log) variants (and the slight
+#inaccuracies) these outputs should be a sequence from 0 to 1 (by=0.1):
+ptggd_log(log10(qtggd(seq(0,1,by=0.1))))
+ptggd_log(qtggd_ln(seq(0,1,by=0.1))/log(10))
+</code></pre>
+
+
+</div>

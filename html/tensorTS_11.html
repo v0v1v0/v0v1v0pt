@@ -1,0 +1,225 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tenFM.rank</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Rank Determination for Tensor Factor Models with Tucker Structure</h2>
+
+<h3>Description</h3>
+
+<p>Function for rank determination of tensor factor models with Tucker Structure.
+Two unfolding methods of the auto-covariance tensor, Time series Outer-Product Unfolding Procedure (TOPUP), Time series Inner-Product Unfolding Procedure (TIPUP),
+are included, as determined by the value of <code>method</code>.
+Different penalty functions for the information criterion (IC) and the eigen ratio criterion (ER) can be used,
+which should be specified by the value of <code>rank</code> and <code>penalty</code>. The information criterion resembles BIC in the vector factor model literature.
+And the eigen ratio criterion is similar to the eigenvalue ratio based methods in the vector factor model literature.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tenFM.rank(x,r=NULL,h0=1,rank='IC',method='TIPUP',inputr=FALSE,iter=TRUE,penalty=1,
+delta1=0,tol=1e-4,maxiter=100)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p><code class="reqn">T \times d_1 \times \cdots \times d_K</code> tensor-valued time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>initial guess of the rank of factor tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h0</code></td>
+<td>
+<p>the number of lags used in auto-covariance tensor. If h0=0, covariance tensor is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank</code></td>
+<td>
+<p>character string, specifying the type of the rank determination method to be used. </p>
+
+<dl>
+<dt><code>"IC",</code></dt>
+<dd>
+<p>information criterion.</p>
+</dd>
+<dt><code>"ER",</code></dt>
+<dd>
+<p>eigen ratio criterion.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>character string, specifying the type of the factor estimation method to be used. </p>
+
+<dl>
+<dt><code>"TIPUP",</code></dt>
+<dd>
+<p>TIPUP method.</p>
+</dd>
+<dt><code>"TOPUP",</code></dt>
+<dd>
+<p>TOPUP method.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inputr</code></td>
+<td>
+<p>boolean, if TRUE, always use initial guess rank r in each iteration; if FLASE, the rank will be updated in each iteration.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter</code></td>
+<td>
+<p>boolean, specifying using an iterative approach or a non-iterative approach.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalty</code></td>
+<td>
+<p>takes value in <code class="reqn">1,2,3,4,5</code>, decides which penalty function to use for each tensor mode <code class="reqn">k</code>. Here <code class="reqn">\nu</code> is a tuning parameter defined in the argument "<code>delta1</code>", and <code class="reqn">d=\prod_{i=1}^{K} d_k </code>.
+</p>
+
+<dl>
+<dt>When</dt>
+<dd>
+<p><code>rank</code>= '<code>IC</code>':</p>
+</dd>
+<dt>if <code>penalty</code>=1,</dt>
+<dd>
+<p><code class="reqn">g_1= \frac{h_0 d^{2-2\nu}}{T}\log(\frac{dT}{d+T})</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=2,</dt>
+<dd>
+<p><code class="reqn">g_2= h_0 d^{2-2\nu}(\frac{1}{T}+\frac{1}{d})\log(\frac{dT}{d+T})</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=3,</dt>
+<dd>
+<p><code class="reqn">g_3= \frac{h_0 d^{2-2\nu}}{T} \log(\min{(d,T)})</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=4,</dt>
+<dd>
+<p><code class="reqn">g_4= h_0 d^{2-2\nu}(\frac{1}{T}+\frac{1}{d})\log(\min{(d,T)})</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=5,</dt>
+<dd>
+<p><code class="reqn">g_5= h_0 d^{2-2\nu}(\frac{1}{T}+\frac{1}{d})\log(\min{(d_k,T)})</code>.</p>
+</dd>
+<dt>When</dt>
+<dd>
+<p><code>rank</code>= '<code>ER</code>':</p>
+</dd>
+<dt>if <code>penalty</code>=1,</dt>
+<dd>
+<p><code class="reqn">h_1= c_0 h_0</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=2,</dt>
+<dd>
+<p><code class="reqn">h_2= \frac{h_0 d^2}{T^2}</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=3,</dt>
+<dd>
+<p><code class="reqn">h_3= \frac{h_0 d^2}{T^2 d_k^2}</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=4,</dt>
+<dd>
+<p><code class="reqn">h_4= \frac{h_0 d^2}{T^2 d_k^2} + \frac{h_0 d_k^2}{T^2}</code>;</p>
+</dd>
+<dt>if <code>penalty</code>=5,</dt>
+<dd>
+<p><code class="reqn">h_5= \frac{h_0 d^2}{T^2 d_k^2} + \frac{h_0 dd_k^2}{T^2}</code>.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta1</code></td>
+<td>
+<p>weakest factor strength, a tuning parameter used for IC method only</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>tolerance in terms of the Frobenius norm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>maximum number of iterations if error stays above <code>tol</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Let <code class="reqn">W</code> be a <code class="reqn">p\times p</code> symmetric and non-negative definite matrix and <code class="reqn">\widehat{W}</code> be its sample version, <code class="reqn">{\hat\lambda}_j</code> be the eigenvalues of <code class="reqn">\widehat{W}</code>
+such that <code class="reqn">{\hat\lambda}_1\geq {\hat\lambda}_2 \geq \cdots \hat{\lambda}_p</code>.
+The rank determination methods using the information criterion ("IC") and the eigen ratio criterion ("ER") are defined as follows:
+</p>
+<p style="text-align: center;"><code class="reqn">IC(\widehat{W}) = \mathrm{argmin}_{0\leq m \leq m^{*}} \left\{ \sum_{j=m+1}^{p} {\hat\lambda}_j + mg(\widehat{W}) \right\},</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">ER(\widehat{W}) = \mathrm{argmin}_{0\leq m \leq m^{*}} \left\{ \frac{{\hat\lambda}_{m+1}+h(\widehat{W})}{ {\hat\lambda}_m +h(\widehat{W})} \right\},</code>
+</p>
+
+<p>where <code class="reqn">m^{*}</code> is a predefined upper bound, <code class="reqn">g</code> and <code class="reqn">h</code> are some appropriate positive penalty functions. We have provided 5 choices for <code class="reqn">g</code> and <code class="reqn">h</code>;
+see more details in the argument "<code>penalty</code>".
+For non-iterative TOPUP and TIPUP methods, <code class="reqn">\widehat{W}</code> is
+<code class="reqn"> {\rm mat}_1({\rm{TOPUP}}_{k}(X_{1:T})) {\rm mat}_1({\rm{TOPUP}}_{k}(X_{1:T}))^\top </code> or
+<code class="reqn"> ({\rm{TIPUP}}_{k}(X_{1:T})) ({\rm{TIPUP}}_{k}(X_{1:T}))^\top </code>, for each tensor mode <code class="reqn">k</code>, <code class="reqn">1\leq k \leq K</code>,
+where <code class="reqn">{\rm{TOPUP}}_{k}(X_{1:T})</code> and <code class="reqn">{\rm{TIPUP}}_{k}(X_{1:T})</code> are defined in the Details section of the function <code>tenFM.est</code>.
+For iterative TOPUP and TIPUP methods, we refer to the literature in the References section for more information.
+</p>
+
+
+<h3>Value</h3>
+
+<p>return a list containing the following:</p>
+
+<dl>
+<dt><code>path</code></dt>
+<dd>
+<p>a <code class="reqn">K \times (\rm{niter}+1)</code> matrix of the estimated Tucker rank of the factor process as a path of the maximum number of iteration (<code class="reqn">\rm{niter}</code>) used. The first row is the estimated rank under non-iterative approach, the <code class="reqn">i+1</code>-th row is the estimated rank <code class="reqn">\hat r_1, \hat r_2, \cdots, \hat r_K</code> at <code class="reqn">(i)</code>-th iteration.</p>
+</dd>
+<dt><code>factor.num</code></dt>
+<dd>
+<p>final solution of the estimated Tucker rank of the factor process <code class="reqn">\hat r_1, \hat r_2, \cdots, \hat r_K</code>.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Han, Yuefeng, Cun-Hui Zhang, and Rong Chen. "Rank Determination in Tensor Factor Model." Available at SSRN 3730305 (2020).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(333)
+dims &lt;- c(16,18,20) # dimensions of tensor time series
+r &lt;- c(3,3,3)  # dimensions of factor series
+Ft &lt;- tenAR.sim(t=100, dim=r, R=1, P=1, rho=0.9, cov='iid')
+lambda &lt;- sqrt(prod(dims))
+x &lt;- tenFM.sim(Ft,dims=dims,lambda=lambda,A=NULL,cov='iid') # generate t*dims tensor time series
+rank &lt;- tenFM.rank(x,r=c(4,4,4),h0=1,rank='IC',iter=TRUE,method='TIPUP')  # Estimate the rank
+</code></pre>
+
+
+</div>

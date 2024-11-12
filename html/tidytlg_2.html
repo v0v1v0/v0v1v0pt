@@ -1,0 +1,293 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>add_bottom_borders</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adds bottom borders to a huxtable</h2>
+
+<h3>Description</h3>
+
+<p>Adds bottom borders to a huxtable
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">add_bottom_borders(ht, border_matrix = no_borders(ht), transform_fns = list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ht</code></td>
+<td>
+<p><code>huxtable</code> A huxtable object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>border_matrix</code></td>
+<td>
+<p>(optional) <code>matrix</code> A matrix indicating where to add the bottom
+borders. If <code>NULL</code>, then no borders are added.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform_fns</code></td>
+<td>
+<p>(optional) <code>list</code> of <code>function</code> A list of functions applied to the
+<code>border_matrix</code>. The functions have to accept two arguments:
+</p>
+
+<ol>
+<li>
+<p> The <code>huxtable</code>.
+</p>
+</li>
+<li>
+<p> The <code>border_matrix</code> with dimentions matching <code>huxtable</code>.
+</p>
+</li>
+</ol>
+<p>The functions in the list are applied sequentially to <code>border_matrix</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Adds bottom borders to a huxtable based on
+a matrix indicating where the borders should be put.
+</p>
+<p>This function is responsible for adding bottom borders to a <code>huxtable</code> object.
+It supports borders spanning multiple columns and borders that are under neighbouring,
+single cells (or merged cells), but separate (see examples).
+</p>
+<p>This feature has limitations. Mainly, it does not support both versions of the borders
+(continuous and separate) on the same line. In such a case, the borders in the resulting
+RTF look misaligned.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A huxtable with added borders.
+</p>
+
+
+<h3>
+<code>border_matrix</code> details</h3>
+
+<p>You mark where the bottom borders should go in the table by passing a matrix.
+The matrix has to have the same number of columns as the passed <code>huxtable</code>
+and the number of rows lower by one than the passed <code>huxtable</code>. Each cell
+in <code>border_matrix</code> corresponds to a cell in <code>huxtable</code> (starting from the first row).
+</p>
+<p>Internally, the function adds the first row of 0s to <code>border_matrix</code> before the execution.
+At that point, <code>border_matrix</code>'s dimensions match <code>ht</code>'s dimensions.
+</p>
+<p>Table:</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   foo </td>
+<td style="text-align: left;"> bar </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   baz </td>
+<td style="text-align: left;"> bim </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<p>A border matrix:</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   1 </td>
+<td style="text-align: left;"> 1 </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   0 </td>
+<td style="text-align: left;"> 0 </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<p>The above border matrix puts a bottom border across the entire first row
+and no borders in the second row.
+</p>
+<p>A border matrix:</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   1 </td>
+<td style="text-align: left;"> 2 </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   0 </td>
+<td style="text-align: left;"> 0 </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<p>The above border matrix puts one border under the first cell in the first row;
+and another border (separate from the first one) under the second cell
+in the first row. The second row stays without any borders.
+</p>
+
+
+<h3>Functions transforming the border matrix</h3>
+
+<p>The below functions can be passed to <code>gentlg()</code>'s
+<code>border_fns</code> argument to modify how <code>gentlg</code> renders
+the borders under the cells.
+</p>
+<p>Border functions:
+</p>
+
+<ul>
+<li> <p><code>no_borders()</code>
+</p>
+</li>
+<li> <p><code>spanning_borders()</code>
+</p>
+</li>
+<li> <p><code>col_borders()</code>
+</p>
+</li>
+<li> <p><code>single_border()</code>
+</p>
+</li>
+<li> <p><code>row_border()</code>
+</p>
+</li>
+</ul>
+<p><code>border_fns</code> will accept your own, custom functions as long as
+they adhere to the format.
+All the functions passed to <code>border_fns</code> need to accept two arguments:
+</p>
+
+<ul>
+<li>
+<p> the first - the printed huxtable object,
+</p>
+</li>
+<li>
+<p> the second - a border matrix.
+</p>
+</li>
+</ul>
+<p>They also must return a matrix interpreted the same way as <code>border_matrix</code>
+passed to <code>add_bottom_borders</code> or <code>gentlg()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">border_matrix &lt;- matrix(c(1, 1, 2, 0, 1, 1, 0, 0, 0), nrow = 3, ncol = 3)
+ht &lt;- huxtable::as_huxtable(
+  data.frame(a = c(1, 2, 3), b = c("a", "b", "c"), c = c(TRUE, FALSE, TRUE))
+)
+# By default adds no borders
+add_bottom_borders(ht, border_matrix)
+# Adds spanning borders under cells with text in the second row
+add_bottom_borders(ht, transform_fns = list(spanning_borders(2)))
+# Adds spanning borders under cells with text in the second row and a border
+# under a cell in row 3 and column 3
+add_bottom_borders(ht, transform_fns = list(spanning_borders(2), single_border(3, 3)))
+
+final &lt;- data.frame(
+  label = c(
+    "Overall", "Safety Analysis Set",
+    "Any Adverse event{\\super a}", "- Serious Adverse Event"
+  ),
+  Drug_A = c("", "40", "10 (25%)", "0"),
+  Drug_B = c("", "40", "10 (25%)", "0"),
+  anbr = c(1, 2, 3, 4),
+  roworder = c(1, 1, 1, 1),
+  boldme = c(1, 0, 0, 0),
+  newrows = c(0, 0, 1, 0),
+  indentme = c(0, 0, 0, 1),
+  newpage = c(0, 0, 0, 0)
+)
+# Add spanning bottom borders under the cells in the first row
+gentlg(
+  huxme = final,
+  wcol = c(0.70, 0.15, 0.15),
+  file = "TSFAEX",
+  colheader = c("", "Drug A", "Drug B"),
+  title = "This is Amazing Demonstration 1",
+  footers = c(
+    "Note: For demonstrative purposes only",
+    "{\\super a} Subjects are counted once for any given event."
+  ),
+  border_fns = list(no_borders, spanning_borders(1))
+)
+
+# Tables with no bottom borders
+gentlg(
+  huxme = final,
+  wcol = c(0.70, 0.15, 0.15),
+  file = "TSFAEX",
+  colheader = c("", "Drug A", "Drug B"),
+  title = "This is Amazing Demonstration 1",
+  footers = c(
+    "Note: For demonstrative purposes only",
+    "{\\super a} Subjects are counted once for any given event."
+  ),
+  border_fns = list(no_borders)
+)
+
+# Tables with a border under cell in the 3nd row and 3rd column,
+# and borders under cells in the first row
+gentlg(
+  huxme = final,
+  wcol = c(0.70, 0.15, 0.15),
+  file = "TSFAEX",
+  colheader = c("", "Drug A", "Drug B"),
+  title = "This is Amazing Demonstration 1",
+  footers = c(
+    "Note: For demonstrative purposes only",
+    "{\\super a} Subjects are counted once for any given event."
+  ),
+  border_fns = list(no_borders, spanning_borders(1), single_border(3, 3))
+)
+
+# We discourage, but you can pass the border matrix directly
+mat &lt;- matrix(rep(0, 8 * 3), ncol = 3, nrow = 8)
+mat[3, 3] &lt;- 1
+gentlg(
+  huxme = final,
+  wcol = c(0.70, 0.15, 0.15),
+  file = "TSFAEX",
+  colheader = c("", "Drug A", "Drug B"),
+  title = "This is Amazing Demonstration 1",
+  footers = c(
+    "Note: For demonstrative purposes only",
+    "{\\super a} Subjects are counted once for any given event."
+  ),
+  bottom_borders = mat, # The same as a single border under 3nd row and 3rd column
+  border_fns = list()
+)
+
+# clean up.
+file.remove("tsfaex.rtf")
+
+</code></pre>
+
+
+</div>

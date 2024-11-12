@@ -1,0 +1,95 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>make_splits</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Define splits for cross-fitting</h2>
+
+<h3>Description</h3>
+
+<p>This takes a dataset, a column with a unique identifier and an
+arbitrary number of covariates on which to stratify the splits.
+It returns the original dataset with an additional column <code>.split_id</code>
+corresponding to an identifier for the split.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">make_splits(data, identifier, ..., .num_splits)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>dataframe</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>identifier</code></td>
+<td>
+<p>Unquoted name of unique identifier column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>variables on which to stratify (requires that <code>quickblock</code> be installed.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.num_splits</code></td>
+<td>
+<p>number of splits to create. If VIMP is requested in <code>QoI_cfg</code>, this
+must be an even number.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>To see an example analysis, read <code>vignette("experimental_analysis")</code> in the context
+of an experiment, <code>vignette("experimental_analysis")</code> for an observational study, or
+<code>vignette("methodological_details")</code> for a deeper dive under the hood.
+</p>
+
+
+<h3>Value</h3>
+
+<p>original dataframe with additional <code>.split_id</code> column
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>attach_config()</code>, <code>produce_plugin_estimates()</code>, <code>construct_pseudo_outcomes()</code>,
+<code>estimate_QoI()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("dplyr")
+if(require("palmerpenguins")) {
+data(package = 'palmerpenguins')
+penguins$unitid = seq_len(nrow(penguins))
+penguins$propensity = rep(0.5, nrow(penguins))
+penguins$treatment = rbinom(nrow(penguins), 1, penguins$propensity)
+cfg &lt;- basic_config() %&gt;% 
+add_known_propensity_score("propensity") %&gt;%
+add_outcome_model("SL.glm.interaction") %&gt;%
+remove_vimp()
+attach_config(penguins, cfg) %&gt;%
+make_splits(unitid, .num_splits = 4) %&gt;%
+produce_plugin_estimates(outcome = body_mass_g, treatment = treatment, species, sex) %&gt;%
+construct_pseudo_outcomes(body_mass_g, treatment) %&gt;%
+estimate_QoI(species, sex)
+}
+</code></pre>
+
+
+</div>

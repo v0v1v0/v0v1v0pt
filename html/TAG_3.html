@@ -1,0 +1,169 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>initial.TAG</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Initial Values of TAG Process</h2>
+
+<h3>Description</h3>
+
+<p>This function generates good initial values for the parameters in a TAG process.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">initial.TAG(y, X, Candi.lambda = seq(from=-2, to=2,by=0.5),
+            Adj.omega = TRUE, nug=0.001, nbasis=10, rannum=20, big=FALSE, nsub=31,
+            method.1d = "DiceKriging")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>a response vector of size n, where n is the sample size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>an n by p design matrix, where n is the sample size, and p is the number of input variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Candi.lambda</code></td>
+<td>
+<p>a vector containing the candidate values of the Box-Cox transformation parameter. Default is seq(from=-2, to=2,by=0.5).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Adj.omega</code></td>
+<td>
+<p>logical. If TRUE, the initial estimates for weight parameters are adjusted to avoid 0. Default is TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nug</code></td>
+<td>
+<p>a nonnegative value used as the nugget term for fitting the 1-dim GP models. Default is 0.001.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbasis</code></td>
+<td>
+<p>a positive integer specifying the basis dimension used in mgcv. Default is 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rannum</code></td>
+<td>
+<p>a positive integer specifying the number of starting values in DiceKriging. Default is 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>big</code></td>
+<td>
+<p>logical. If TRUE, the bam function in the mgcv package is used; otherwise, the gam function is used. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsub</code></td>
+<td>
+<p>a positive integer specifying the number of design points used for obtaining the initial estimates of the length scale parameters. Default is 31.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method.1d</code></td>
+<td>
+<p>the method used for fitting the 1-dimensional GPs. Currently, the method can be DiceKriging or mlegp.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The values returned from the function is a list containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>omega</code></td>
+<td>
+<p>The initial estimates of the weight parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s</code></td>
+<td>
+<p>The initial estimates of the length scale parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>The initial estimate of the Box-Cox transformation parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>The initial estimate of the nugget parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbases</code></td>
+<td>
+<p>The number of bases used in each dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>The response vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>The n by p input design matrix.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Lin, L.-H. and Joseph,  V. R. (2020) "Transformation and Additivity in Gaussian Processes",<em>Technometrics</em>, 62, 525-535.  DOI:10.1080/00401706.2019.1665592.
+</p>
+<p>Olivier Roustant, David Ginsbourger, Yves Deville (2012). DiceKriging, DiceOptim: Two R Packages for the Analysis of Computer Experiments by Kriging-Based Metamodeling and Optimization. Journal of Statistical Software, 51, 1-55.
+</p>
+<p>Dancik, GM and Dorman, KS (2008). mlegp: Statistical analysis for computer models of biological systems using R. Bioinformatics 24, 1966-1967
+</p>
+<p>Wood, S.N. (2017) Generalized Additive Models: An Introduction with R (2nd edition). New York: CRC press.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 20
+p &lt;- 2
+library(randtoolbox)
+X &lt;-  sobol(n, dim = p, init = TRUE, scrambling = 2, seed = 20, normal = FALSE)
+y &lt;- exp(2*sin(0.5*pi*X[,1]) + 0.5*cos(2.5*pi*X[,2]))
+ini.TAG &lt;- initial.TAG(y, X)
+
+
+#An example for some inputs with fewer levels
+n &lt;- 18
+p &lt;- 2
+X1 &lt;- rep(c(0,1,2)/3, 6) # A factor with fewer levels
+library(randtoolbox)
+X2 &lt;-  sobol(n, dim = 1, init = TRUE, scrambling = 2, seed = 20, normal = FALSE)
+X &lt;- cbind(X1, X2)
+y &lt;- exp(2*sin(0.5*pi*X[,1]) + 0.5*cos(2.5*pi*X[,2]))
+ini.TAG &lt;- initial.TAG(y, X)
+</code></pre>
+
+
+</div>

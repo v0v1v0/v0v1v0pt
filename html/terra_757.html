@@ -1,0 +1,139 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rasterizeWin</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Rasterize points with a moving window</h2>
+
+<h3>Description</h3>
+
+<p>Rasterize points using a circle (or ellipse) as moving window. For each raster cell, the points (<code>x, y</code>) that fall within the window centered on that cell are considered. A function is used to compute a summary value (e.g. "mean") for the values (<code>z</code>) associated with these points.
+</p>
+<p>This can result in much smoother results compared to the standard <code>rasterize</code> method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatVector,SpatRaster'
+rasterizeWin(x, y, field, win="circle", pars, fun, ..., cvars=FALSE, 
+			  minPoints=1, fill=NA, filename="", wopt=list())
+
+## S4 method for signature 'data.frame,SpatRaster'
+rasterizeWin(x, y, win="circle", pars, fun, ..., cvars=FALSE, 
+		      minPoints=1, fill=NA, filename="", wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatVector or matrix with at least three columns ((x, y) coordinates and a variable to be rasterized)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>field</code></td>
+<td>
+<p>character. field name in SpatVector <code>x</code> with the values to rasterize</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>win</code></td>
+<td>
+<p>character to choose the window type. Can be "circle", "ellipse", "rectangle", or "buffer"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>parameters to define the window. If <code>win="circle"</code> or <code>win="buffer"</code>, a single number to set the radius of the circle or the width of the buffer. If <code>win="ellipse"</code>, either two numbers (the x and y-axis) or three numbers the axes and a rotation (in degrees). If <code>win="rectangle"</code>, either two (width, height) or three (width, height) and the rotation in degrees. The unit of the radius/width/height/axis parameters is that of the coordinate reference system (it is not expressed as cells). That is, if you have a lon/lat crs, there is no conversion of degrees to meters or vice-versa.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function to summarize the values for each cell. If <code>cvars=FALSE</code>, functions must take a numeric vector and return (in all cases) one or more numbers. If <code>cvars=TRUE</code>, and multiple variables are used, the function must take a single argument (a data.frame with the names variables).   
+For <code>win="circle"</code> and <code>win="ellipse"</code> there are two additional character values that can be used: <code>"distto"</code> (average distance to the points from the center of the cell) and <code>"distbetween"</code> (average distance between the points inside the window)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional named arguments passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minPoints</code></td>
+<td>
+<p>numeric. The minimum number of points to use. If fewer points are found in a search ellipse it is considered empty and the fill value is returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>numeric. value to use to fill cells with empty search areas</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvars</code></td>
+<td>
+<p>logical. When using multiple fields, should <code>fun</code> operate on all of them at once? If not, <code>fun</code> is applied to each variable separately</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with additional arguments for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>rasterize</code>, <code>rasterizeGeom</code>, <code>interpNear</code>, <code>interpIDW</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+r &lt;- rast(ncol=100, nrow=100, crs="local", xmin=0, xmax=50, ymin=0, ymax=50)
+set.seed(100)
+x &lt;- runif(50, 5, 45)
+y &lt;- runif(50, 5, 45)
+z &lt;- sample(50)
+xyz &lt;- data.frame(x,y,z)
+
+r &lt;- rasterizeWin(xyz, r, fun="count", pars=5)
+
+rfuns &lt;- c("count", "min", "max", "mean")
+x &lt;- lapply(rfuns, function(f) rasterizeWin(xyz, r, fun=f, pars=5))
+names(x) &lt;- rfuns 
+x &lt;- rast(x)
+#plot(x)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gather_array</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Gather a JSON array into index-value pairs</h2>
+
+<h3>Description</h3>
+
+<p><code>gather_array</code> collapses a JSON array into index-value pairs, creating
+a new column <code>'array.index'</code> to store the index of the array, and
+storing values in the <code>'JSON'</code> attribute for further tidyjson
+manipulation. All other columns are duplicated as necessary. This allows you
+to access the values of the array just like <code>gather_object</code> lets
+you access the values of an object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gather_array(.x, column.name = default.column.name)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a json string or tbl_json object whose JSON attribute should always
+be an array</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column.name</code></td>
+<td>
+<p>the name to give to the array index column created</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>JSON arrays can be simple vectors (fixed or varying length number, string
+or logical vectors with or without null values). But they also often contain
+lists of other objects (like a list of purchases for a user). Thus, the
+best analogy in R for a JSON array is an unnamed list.
+</p>
+<p><code>gather_array</code> is often preceded by <code>enter_object</code> when the
+array is nested under a JSON object, and is often followed by
+<code>gather_object</code> or <code>enter_object</code> if the array values
+are objects, or by <code>append_values</code> to append all scalar values
+as a new column or <code>json_types</code> to determine the types of the
+array elements (JSON does not guarantee they are the same type).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_json</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gather_object</code> to gather a JSON object,
+<code>enter_object</code> to enter into an object,
+<code>gather</code> to gather name-value pairs in a data
+frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# A simple character array example
+json &lt;- '["a", "b", "c"]'
+
+# Check that this is an array
+json %&gt;% json_types
+
+# Gather array and check types
+json %&gt;% gather_array %&gt;% json_types
+
+# Extract string values
+json %&gt;% gather_array %&gt;% append_values_string
+
+# A more complex mixed type example
+json &lt;- '["a", 1, true, null, {"name": "value"}]'
+
+# Then we can use the column.name argument to change the name column
+json %&gt;% gather_array %&gt;% json_types
+
+# A nested array
+json &lt;- '[["a", "b", "c"], ["a", "d"], ["b", "c"]]'
+
+# Extract both levels
+json %&gt;% gather_array("index.1") %&gt;% gather_array("index.2") %&gt;%
+  append_values_string
+
+# Some JSON begins as an array
+commits %&gt;% gather_array
+
+# We can use spread_all to capture all values
+# (recursive = FALSE to limit to the top level object)
+library(dplyr)
+commits %&gt;% gather_array %&gt;% spread_all(recursive = FALSE) %&gt;% glimpse
+</code></pre>
+
+
+</div>

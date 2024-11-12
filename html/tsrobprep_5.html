@@ -1,0 +1,285 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>model_missing_data</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Model missing time series data</h2>
+
+<h3>Description</h3>
+
+<p>Returns an object of class "tsrobprep" which contains the original data and
+the modelled missing values to be imputed. The function model_missing_data
+models missing values in a time series data using a robust time series
+decomposition with the weighted lasso or the quantile regression. The model
+uses autoregression on the time series as explanatory variables as well as
+the provided external variables. The function is designed for numerical data
+only.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">model_missing_data(
+  data,
+  S,
+  tau = NULL,
+  no.of.last.indices.to.fix = S[1],
+  indices.to.fix = NULL,
+  replace.recursively = TRUE,
+  p = NULL,
+  mirror = FALSE,
+  lags = NULL,
+  extreg = NULL,
+  n.best.extreg = NULL,
+  use.data.as.ext = FALSE,
+  lag.externals = FALSE,
+  consider.as.missing = NULL,
+  whole.period.missing.only = FALSE,
+  debias = FALSE,
+  min.val = -Inf,
+  max.val = Inf,
+  Cor_thres = 0.5,
+  digits = 3,
+  ICpen = "BIC",
+  decompose.pars = list(),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an input vector, matrix or data frame of dimension nobs x nvars
+containing missing values; each column is a variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>a number or vector describing the seasonalities (S_1, ..., S_K) in
+the data, e.g. c(24, 168) if the data consists of 24 observations per day
+and there is a weekly seasonality in the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>the quantile(s) of the missing values to be estimated in the
+quantile regression. Tau accepts all values in (0,1). If NULL, then the
+weighted lasso regression is performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>no.of.last.indices.to.fix</code></td>
+<td>
+<p>a number of observations in the tail of
+the data to be fixed, by default set to first element of S.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indices.to.fix</code></td>
+<td>
+<p>indices of the data to be fixed. If NULL, then it is
+calculated based on the no.of.last.indices.to.fix parameter. Otherwise, the
+no.of.last.indices.to.fix parameter is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replace.recursively</code></td>
+<td>
+<p>if TRUE then the algorithm uses replaced values
+to model the remaining missings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>a number or vector of length(S) = K indicating the order of a
+K-seasonal autoregressive process to be estimated. If NULL, chosen
+data-based.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mirror</code></td>
+<td>
+<p>if TRUE then autoregressive lags up to order p are not only
+added to the seasonalities but also subtracted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lags</code></td>
+<td>
+<p>a numeric vector with the lags to use in the autoregression.
+Negative values are accepted and then also the "future" observations are
+used for modelling. If not NULL, p and mirror are ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extreg</code></td>
+<td>
+<p>a vector, matrix or data frame of data containing external
+regressors; each column is a variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.best.extreg</code></td>
+<td>
+<p>a numeric value specifying the maximal number of
+considered best correlated external regressors (selected in decreasing
+order). If NULL, then all variables in extreg are used for modelling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use.data.as.ext</code></td>
+<td>
+<p>logical specifying whether to use the remaining
+variables in the data as external regressors or not.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag.externals</code></td>
+<td>
+<p>logical specifying whether to lag the external
+regressors or not. If TRUE, then the algorithm uses the lags specified in
+parameter lags.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>consider.as.missing</code></td>
+<td>
+<p>a vector of numerical values which are considered
+as missing in the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>whole.period.missing.only</code></td>
+<td>
+<p>if FALSE, then all observations which
+correspond to the values of consider.as.missing are treated as missings. If
+TRUE, then only consecutive observations of specified length are considered
+(length is defined by first element of S).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debias</code></td>
+<td>
+<p>if TRUE, the recursive replacement is additionally debiased.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.val</code></td>
+<td>
+<p>a single value or a vector of length nvars providing the
+minimum possible value of each variable in the data. If a single value, then
+it applies to all variables. By default set to -Inf.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.val</code></td>
+<td>
+<p>a single value or a vector of length nvars providing the
+maximum possible value of each variable in the data. If a single value, then
+it applies to all variables. By default set to Inf.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Cor_thres</code></td>
+<td>
+<p>a single value providing the correlation threshold from
+which external regressors are considered in the quantile regression.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>integer indicating the number of decimal places allowed
+in the data, by default set to 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ICpen</code></td>
+<td>
+<p>is the information criterion penalty for lambda choice in the
+glmnet algorithm. It can be a string: "BIC", "HQC" or "AIC",
+or a fixed number.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decompose.pars</code></td>
+<td>
+<p>named list containing additional arguments for the
+robust_decompose function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the glmnet or
+rq.fit.fnb algorithms.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function uses robust time series decomposition with weighted
+lasso or quantile regression in order to model missing values and prepare it
+for imputation. In this purpose the robust_decompose
+function together with the glmnet are used in case of mean
+regression, i.e. tau = NULL. In case of quantile regression, i.e.
+tau != NULL the robust_decompose function is used together
+with the rq.fit.fnb function. The modelled values can be
+imputed using impute_modelled_data function.
+<code style="white-space: pre;">⁠
+
+⁠</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class "tsrobprep" which contains the original data, the
+indices of the data that were modelled, the given quantile values, a list of
+sparse matrices with the modelled data to be imputed and a list of the
+numbers of models estimated for every variable.
+</p>
+
+
+<h3>References</h3>
+
+<p>Narajewski M, Kley-Holsteg J, Ziel F (2021).
+“tsrobprep — an R package for robust preprocessing of time series data.”
+<em>SoftwareX</em>, <b>16</b>, 100809.
+doi: <a href="https://doi.org/10.1016/j.softx.2021.100809">10.1016/j.softx.2021.100809</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>robust_decompose,
+impute_modelled_data, detect_outliers,
+auto_data_cleaning
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+model.miss &lt;- model_missing_data(
+    data = GBload[,-1], S = c(48,7*48),
+    no.of.last.indices.to.fix = dim(GBload)[1], consider.as.missing = 0,
+    min.val = 0
+)
+model.miss$estimated.models
+model.miss$replaced.indices
+new.GBload &lt;- impute_modelled_data(model.miss)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

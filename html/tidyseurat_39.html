@@ -1,0 +1,259 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>inner_join</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Mutating joins</h2>
+
+<h3>Description</h3>
+
+<p>Mutating joins add columns from <code>y</code> to <code>x</code>, matching observations based on
+the keys. There are four mutating joins: the inner join, and the three outer
+joins.
+</p>
+
+
+<h4>Inner join</h4>
+
+<p>An <code>inner_join()</code> only keeps observations from <code>x</code> that have a matching key
+in <code>y</code>.
+</p>
+<p>The most important property of an inner join is that unmatched rows in either
+input are not included in the result. This means that generally inner joins
+are not appropriate in most analyses, because it is too easy to lose
+observations.
+</p>
+
+
+
+<h4>Outer joins</h4>
+
+<p>The three outer joins keep observations that appear in at least one of the
+data frames:
+</p>
+
+<ul>
+<li>
+<p> A <code>left_join()</code> keeps all observations in <code>x</code>.
+</p>
+</li>
+<li>
+<p> A <code>right_join()</code> keeps all observations in <code>y</code>.
+</p>
+</li>
+<li>
+<p> A <code>full_join()</code> keeps all observations in <code>x</code> and <code>y</code>.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'Seurat'
+inner_join(x, y, by = NULL, copy = FALSE, suffix = c(".x", ".y"), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x, y</code></td>
+<td>
+<p>A pair of data frames, data frame extensions (e.g. a tibble), or
+lazy data frames (e.g. from dbplyr or dtplyr). See <em>Methods</em>, below, for
+more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>A join specification created with <code>join_by()</code>, or a character
+vector of variables to join by.
+</p>
+<p>If <code>NULL</code>, the default, <code style="white-space: pre;">⁠*_join()⁠</code> will perform a natural join, using all
+variables in common across <code>x</code> and <code>y</code>. A message lists the variables so
+that you can check they're correct; suppress the message by supplying <code>by</code>
+explicitly.
+</p>
+<p>To join on different variables between <code>x</code> and <code>y</code>, use a <code>join_by()</code>
+specification. For example, <code>join_by(a == b)</code> will match <code>x$a</code> to <code>y$b</code>.
+</p>
+<p>To join by multiple variables, use a <code>join_by()</code> specification with
+multiple expressions. For example, <code>join_by(a == b, c == d)</code> will match
+<code>x$a</code> to <code>y$b</code> and <code>x$c</code> to <code>y$d</code>. If the column names are the same between
+<code>x</code> and <code>y</code>, you can shorten this by listing only the variable names, like
+<code>join_by(a, c)</code>.
+</p>
+<p><code>join_by()</code> can also be used to perform inequality, rolling, and overlap
+joins. See the documentation at ?join_by for details on
+these types of joins.
+</p>
+<p>For simple equality joins, you can alternatively specify a character vector
+of variable names to join by. For example, <code>by = c("a", "b")</code> joins <code>x$a</code>
+to <code>y$a</code> and <code>x$b</code> to <code>y$b</code>. If variable names differ between <code>x</code> and <code>y</code>,
+use a named character vector like <code>by = c("x_a" = "y_a", "x_b" = "y_b")</code>.
+</p>
+<p>To perform a cross-join, generating all combinations of <code>x</code> and <code>y</code>, see
+<code>cross_join()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>copy</code></td>
+<td>
+<p>If <code>x</code> and <code>y</code> are not from the same data source,
+and <code>copy</code> is <code>TRUE</code>, then <code>y</code> will be copied into the
+same src as <code>x</code>.  This allows you to join tables across srcs, but
+it is a potentially expensive operation so you must opt into it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>suffix</code></td>
+<td>
+<p>If there are non-joined duplicate variables in <code>x</code> and
+<code>y</code>, these suffixes will be added to the output to disambiguate them.
+Should be a character vector of length 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed onto methods.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of the same type as <code>x</code> (including the same groups). The order of
+the rows and columns of <code>x</code> is preserved as much as possible. The output has
+the following properties:
+</p>
+
+<ul>
+<li>
+<p> The rows are affect by the join type.
+</p>
+
+<ul>
+<li> <p><code>inner_join()</code> returns matched <code>x</code> rows.
+</p>
+</li>
+<li> <p><code>left_join()</code> returns all <code>x</code> rows.
+</p>
+</li>
+<li> <p><code>right_join()</code>  returns matched of <code>x</code> rows, followed by unmatched <code>y</code> rows.
+</p>
+</li>
+<li> <p><code>full_join()</code>  returns all <code>x</code> rows, followed by unmatched <code>y</code> rows.
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p> Output columns include all columns from <code>x</code> and all non-key columns from
+<code>y</code>. If <code>keep = TRUE</code>, the key columns from <code>y</code> are included as well.
+</p>
+</li>
+<li>
+<p> If non-key columns in <code>x</code> and <code>y</code> have the same name, <code>suffix</code>es are added
+to disambiguate. If <code>keep = TRUE</code> and key columns in <code>x</code> and <code>y</code> have
+the same name, <code>suffix</code>es are added to disambiguate these as well.
+</p>
+</li>
+<li>
+<p> If <code>keep = FALSE</code>, output columns included in <code>by</code> are coerced to their
+common type between <code>x</code> and <code>y</code>.
+</p>
+</li>
+</ul>
+<h3>Many-to-many relationships</h3>
+
+<p>By default, dplyr guards against many-to-many relationships in equality joins
+by throwing a warning. These occur when both of the following are true:
+</p>
+
+<ul>
+<li>
+<p> A row in <code>x</code> matches multiple rows in <code>y</code>.
+</p>
+</li>
+<li>
+<p> A row in <code>y</code> matches multiple rows in <code>x</code>.
+</p>
+</li>
+</ul>
+<p>This is typically surprising, as most joins involve a relationship of
+one-to-one, one-to-many, or many-to-one, and is often the result of an
+improperly specified join. Many-to-many relationships are particularly
+problematic because they can result in a Cartesian explosion of the number of
+rows returned from the join.
+</p>
+<p>If a many-to-many relationship is expected, silence this warning by
+explicitly setting <code>relationship = "many-to-many"</code>.
+</p>
+<p>In production code, it is best to preemptively set <code>relationship</code> to whatever
+relationship you expect to exist between the keys of <code>x</code> and <code>y</code>, as this
+forces an error to occur immediately if the data doesn't align with your
+expectations.
+</p>
+<p>Inequality joins typically result in many-to-many relationships by nature, so
+they don't warn on them by default, but you should still take extra care when
+specifying an inequality join, because they also have the capability to
+return a large number of rows.
+</p>
+<p>Rolling joins don't warn on many-to-many relationships either, but many
+rolling joins follow a many-to-one relationship, so it is often useful to
+set <code>relationship = "many-to-one"</code> to enforce this.
+</p>
+<p>Note that in SQL, most database providers won't let you specify a
+many-to-many relationship between two tables, instead requiring that you
+create a third <em>junction table</em> that results in two one-to-many relationships
+instead.
+</p>
+
+
+<h3>Methods</h3>
+
+<p>These functions are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>inner_join()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>left_join()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>right_join()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>full_join()</code>: no methods found.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other joins: 
+<code>cross_join()</code>,
+<code>filter-joins</code>,
+<code>nest_join()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(pbmc_small)
+tt &lt;- pbmc_small
+tt |&gt; inner_join(tt |&gt; 
+  distinct(groups) |&gt;  
+  mutate(new_column=1:2) |&gt; 
+  slice(1))
+
+</code></pre>
+
+
+</div>

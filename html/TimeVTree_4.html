@@ -1,0 +1,225 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>coxph.tree</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Function to Grow the Tree Using the Score Statistic
+</h2>
+
+<h3>Description</h3>
+
+<p>This funtion finds the optimal cutpoints for the time-varying regression effects and grows the 'full tree' using the score statistic.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">coxph.tree(survtime, survstatus, x, D = 3, method = "breslow", minfail = 10, 
+            iter.max = 20, eps = 1e-06, type = 'mod')
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>survtime</code></td>
+<td>
+
+<p>survival time/ follow up time of subjects
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survstatus</code></td>
+<td>
+
+<p>survival status of subjects. 0 for censored and 1 for event
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>a data frame of covariates. In case of single covariate, use <code>[,,drop =F]</code> to keep the data frame structure
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+
+<p>maximum depth the tree will grow. Default depth is 3.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>argument for coxph function. Default is 'breslow'. See  <code>coxph</code> for more details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minfail</code></td>
+<td>
+
+<p>minimum number of unique events required in each block. Default is 10	
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter.max</code></td>
+<td>
+
+<p>the maximum number of iteration in coxph; default is 20. See  <code>coxph</code> for more details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+
+<p>argument for coxph function; default is 0.000001. See  <code>coxph</code> for more details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+
+<p>method to calculate the score statistic. Two options are available: 'mod' for the modified score statistic and 'ori' for the original score statistic.
+Default value is 'mod.' Modified score statistic is used in the bootstrap part
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>coxph.tree</code> takes in survival time, survival status, and covariates to grow the full tree. 
+It follows one of the stopping rules: 1) when the pre-specified depth is reached, or 2) the number of events in a node is less than a prespecified number, or 3) the maximized score statistic is less than a default value (0.0001).
+</p>
+<p>Currently, data need to be arranged in descending order of time and with no missing. 
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>coxph.tree</code> returns an object of class 'coxphtree.'
+</p>
+<p>The function <code>output.coxphout</code> is used to obtain and print a summary of the result.
+</p>
+<p>An object of class 'coxphtree' is a list containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+<p>Depth value specified in the argument</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>coefficient values of predictors. First number represents depth and second number represents block number</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lkl</code></td>
+<td>
+<p>Likelihood ratio value of each node</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakpt</code></td>
+<td>
+<p>Starting point of each node. Starting point of node at Depth= 0 to maximum Depth = D+1 is shown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ntree</code></td>
+<td>
+<p>Number of cases in each node</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nevent</code></td>
+<td>
+<p>Number of events in each node</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nblocks</code></td>
+<td>
+<p>Number of blocks in each depth</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodes</code></td>
+<td>
+<p>Indicator that indicates whether the block was eligible for further split</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodetree</code></td>
+<td>
+<p>A table with depth, block, node, left right, maximum score, start time, end time, # of cases, and # of events</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scoretest</code></td>
+<td>
+<p>Maximum score at each block</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xnames</code></td>
+<td>
+<p>Name of predictors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>failtime</code></td>
+<td>
+<p>The time when events occurred without duplicates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summary</code></td>
+<td>
+<p><code>coxph</code> output of each block</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalue</code></td>
+<td>
+<p>p-value to test validity of a change point against none</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Xu, R. and Adak, S. (2002), Survival Analysis with Time-Varying Regression Effects Using a Tree-Based Approach. Biometrics, 58: 305-315.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">##Call in alcohol data set
+data('alcohol')
+require(survival)
+
+coxtree &lt;- coxph.tree(alcohol[,'time'], alcohol[,'event'], 
+                      x = alcohol[,'alc', drop = FALSE], D = 4)
+
+nodetree &lt;- output.coxphout(coxtree)
+
+subtrees &lt;- prune(nodetree)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotAUCcurveDiff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Plot the curve of the difference of two time-dependent AUCs over time
+</h2>
+
+<h3>Description</h3>
+
+<p>This function plots the curve of the difference of two time-dependent
+AUCs over time.  Pointwise and simultaneous confidence bands for this curve can also be plotted
+when inverse probability of censoring weights are computed from a Kaplan-Meier estimator. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotAUCcurveDiff(object1, object2, FP = 2, add = FALSE, conf.int = FALSE,
+                 conf.band = FALSE, col = "black", ylim = c(-0.5, 0.5))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object1</code></td>
+<td>
+
+<p>An object of class "ipcwsurvivalROC" or "ipcwcompetingrisksROC"
+previously estimated from the <code>timeROC</code> function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object2</code></td>
+<td>
+
+<p>An object of class "ipcwsurvivalROC" or "ipcwcompetingrisksROC"
+previously estimated from the <code>timeROC</code> function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FP</code></td>
+<td>
+
+<p>In the competing risks setting, a numeric value that indicates which
+definition of AUC is plotted. <code>1</code> for definition <b>(i)</b> and
+<code>2</code>  for definition <b>(ii)</b>. 
+(See details of <code>timeROC</code> function for definitions <b>(i)</b> and <b>(ii)</b>). Default is <code>FP = 2</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+
+<p>A logical value that indicates if  you want to  add the AUC curve to a pre-existing plot. Default is <code>add = FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.int</code></td>
+<td>
+
+<p>A logical value that indicates whether or not you want to plot the bands
+of pointwise confidence intervals. Default is  <code>conf.int = FALSE</code>.
+For choosing <code>conf.int = TRUE</code>, the objects <code>object1</code> and
+<code>object2</code> must have been estimated by 
+the <code>timeROC</code> function with arguments <code>weighting="marginal"</code> and <code>iid = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.band</code></td>
+<td>
+
+<p>A logical value that indicates whether or not you want to plot the simultaneous confidence bands. Default is  <code>conf.band = FALSE</code>.
+For choosing <code>conf.band = TRUE</code>, the objects <code>object1</code> and
+<code>object2</code> must have been estimated by the <code>timeROC</code> function with arguments <code>weighting="marginal"</code> and <code>iid = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+
+<p>The color to plot the AUC curve. Default is <code>col = "black"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylim</code></td>
+<td>
+
+<p>The range of the y-axis.  Default is <code>ylim = c(-0.5,0.5)</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Simultaneous confidence bands can be of particular interest for testing
+null hypotheses such as "for all time t within an interval, AUC(t) for
+both markers are equal", by observing whether or not the zero line is contained within the band.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The two markers evluated in objects <code>object1</code> and
+<code>object2</code> must have been measured on the same subjects.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Paul Blanche <a href="mailto:pabl@sund.ku.dk">pabl@sund.ku.dk</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Blanche, P., Dartigues, J. F., &amp; Jacqmin-Gadda,	H. (2013). Estimating and comparing time-dependent areas under
+receiver operating characteristic curves for censored event times with competing risks. 
+Statistics in medicine, 32(30), 5381-5397.
+</p>
+<p>Hung, H. and Chiang, C. (2010). Estimation methods for time-dependent AUC with survival data.
+Canadian Journal of Statistics, 38(1):8-26
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>confint</code> for confidence intervals  and confidence bands computation  of  time-dependentAUC.
+</p>
+</li>
+<li> <p><code>plotAUCcurve</code> for plotting  the curve of time-dependent-AUC: AUC(t) versus t.  Confidence intervals and simultaneous confidence bands can also be plotted.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+## computation times is roughly 10 seconds
+
+##-------------Without competing risks-------------------
+library(survival)
+data(pbc)
+head(pbc)
+pbc&lt;-pbc[!is.na(pbc$trt),] # select only randomised subjects
+pbc$status&lt;-as.numeric(pbc$status==2) # create event indicator: 1 for death, 0 for censored     
+# we evaluate bilirubin as a prognostic biomarker for death.
+ROC.bili&lt;-timeROC(T=pbc$time,
+                  delta=pbc$status,marker=pbc$bili,
+                  cause=1,weighting="marginal",
+                  times=quantile(pbc$time,probs=seq(0.2,0.8,0.02)),
+                  iid=TRUE)
+ROC.bili    
+# we evaluate bilirubin as a prognostic biomarker for death.
+ROC.albumin&lt;-timeROC(T=pbc$time,
+                     delta=pbc$status,marker=-pbc$albumin,
+                     cause=1,weighting="marginal",
+                     times=quantile(pbc$time,probs=seq(0.2,0.8,0.02)),
+                     iid=TRUE)
+ROC.albumin
+# plot AUC curve for albumin and bilirunbin  with pointwise confidence interval
+plotAUCcurve(ROC.albumin,conf.int=TRUE,col="red")
+plotAUCcurve(ROC.bili,conf.int=TRUE,col="blue",add=TRUE)
+legend("bottomright",c("albumin","bilirunbin"),col=c("red","blue"),lty=1,lwd=2)
+#plot the curve of the difference of the two time-dependent AUCs over time
+plotAUCcurveDiff(ROC.bili,ROC.albumin,conf.int=TRUE,conf.band=TRUE,ylim=c(-0.2,0.5))
+
+##-------------With competing risks-------------------     
+data(Melano)
+head(Melano)     
+# Evaluate tumor thickness as a prognostic biomarker for
+# death from malignant melanoma.
+ROC.thick&lt;-timeROC(T=Melano$time,delta=Melano$status,
+                   marker=Melano$thick,cause=1,
+                   times=quantile(Melano$time,probs=seq(0.2,0.8,0.01)),
+                   iid=TRUE)
+ROC.thick
+ROC.age&lt;-timeROC(T=Melano$time,delta=Melano$status,
+                   marker=Melano$age,cause=1,
+                   times=quantile(Melano$time,probs=seq(0.2,0.8,0.01)),
+                   iid=TRUE)
+ROC.age
+# plot the two AUC curves on the same plot
+plotAUCcurve(ROC.thick,FP=2,conf.int=TRUE,col="blue")
+plotAUCcurve(ROC.age,FP=2,conf.int=TRUE,col="red",add=TRUE)
+legend("bottomright",c("thickness","age"),col=c("blue","red"),lty=1,lwd=2)
+# plot the curve of the difference of the two time-dependent AUCs over time
+plotAUCcurveDiff(ROC.thick,ROC.age,FP=2,conf.int=TRUE,conf.band=TRUE,col="red")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

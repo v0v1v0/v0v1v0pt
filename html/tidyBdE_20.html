@@ -1,0 +1,207 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bde_series_load</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Load a single BdE time-series</h2>
+
+<h3>Description</h3>
+
+<p>The series alias is a positional code showing the location (column and/or
+row) of the series in the table. However, although it is unique, it is not
+a good candidate to be used as the series ID, as it is subject to change.
+If a series changes position in the table, its alias will also change.
+</p>
+<p>To ensure series can still be identified, even after these changes, they
+are assigned a sequential number (<code>series_code</code> on this function) which
+will remain unchanged throughout the series' lifetime.
+</p>
+<p>Note that a single series could be used on different tables, so it can have
+several aliases. If you need to search by alias it is recommended to use
+<code>bde_series_full_load()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bde_series_load(
+  series_code,
+  series_label = NULL,
+  out_format = "wide",
+  parse_dates = TRUE,
+  parse_numeric = TRUE,
+  cache_dir = NULL,
+  update_cache = FALSE,
+  verbose = FALSE,
+  extract_metadata = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>series_code</code></td>
+<td>
+<p>a numeric (or coercible with <code>base::as.double()</code> value
+or vector with time-series code(s), as defined in the field
+<code style="white-space: pre;">⁠Número secuencial⁠</code> of the corresponding series. See <code>bde_catalog_load()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>series_label</code></td>
+<td>
+<p>Optional. Character vector or value. Allows to specify a
+custom label for the series extracted. It should have the same length than
+<code>series_code</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out_format</code></td>
+<td>
+<p>Defines if the format must be returned as a "long" dataset
+or a "wide" dataset. Possible values are <code>"wide"</code> or <code>"long"</code>. See
+<strong>Value</strong> for Details and Section <strong>Examples</strong>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parse_dates</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> the dates would be parsed using
+<code>bde_parse_dates()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parse_numeric</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> the columns would be parsed to
+double (numeric) values. See <strong>Note</strong>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache_dir</code></td>
+<td>
+<p>A path to a cache directory. The directory can also be set
+via options with <code>options(bde_cache_dir = "path/to/dir")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>update_cache</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> the requested file would be updated on
+the <code>cache_dir</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical <code>TRUE</code> or <code>FALSE</code>, display information useful for
+debugging.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extract_metadata</code></td>
+<td>
+<p>Logical <code>TRUE/FALSE</code>. On <code>TRUE</code> the output is the
+metadata of the requested series.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Load a single time-series provided by BdE.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tibble</code> with a field <code>Date</code> and :
+</p>
+
+<ul>
+<li>
+<p> With <code>out_format = "wide"</code> each series is presented in a separate
+column with the name defined by <code>series_label</code>.
+</p>
+</li>
+<li>
+<p> With <code>out_format = "long"</code> the <code>tibble</code> would have two more columns,
+<code>serie_name</code> with the labels of each series and <code>serie_value</code> with the
+value of the series.
+</p>
+</li>
+</ul>
+<p><code>"wide"</code> format is more suitable for exporting to a <code>.csv</code> file while
+<code>"long"</code> format is more suitable for producing plots with
+<code>ggplot2::ggplot()</code>. See also <code>tidyr::pivot_longer()</code> and
+<code>tidyr::pivot_wider()</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function tries to coerce the columns to numbers. For some series a
+warning may be displayed if the parser fails. You can override the default
+behavior with <code>parse_numeric = FALSE</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>bde_catalog_load()</code>,
+<code>bde_catalog_search()</code>, <code>bde_indicators()</code>
+</p>
+<p>Other series: 
+<code>bde_series_full_load()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+# Metadata
+bde_series_load(573234, verbose = TRUE, extract_metadata = TRUE)
+
+# Data
+bde_series_load(573234, extract_metadata = FALSE)
+
+# Vectorized
+bde_series_load(c(573234, 573214),
+  series_label = c("US/EUR", "GBP/EUR"),
+  extract_metadata = TRUE
+)
+
+wide &lt;- bde_series_load(c(573234, 573214),
+  series_label = c("US/EUR", "GBP/EUR")
+)
+
+# Wide format
+wide
+
+
+# Long format
+long &lt;- bde_series_load(c(573234, 573214),
+  series_label = c("US/EUR", "GBP/EUR"),
+  out_format = "long"
+)
+
+long
+
+
+# Use with ggplot
+library(ggplot2)
+
+
+ggplot(long, aes(Date, serie_value)) +
+  geom_line(aes(group = serie_name, color = serie_name)) +
+  scale_color_bde_d() +
+  theme_tidybde()
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,276 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tssdr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Supervised Dimension Reduction for Multivariate Time Series
+</h2>
+
+<h3>Description</h3>
+
+<p>Supervised dimension reduction for multivariate time series data. There are three different algorithms to choose from. TSIR is a time series version of Sliced Inverse Regression (SIR), TSAVE is a time series version of Sliced Average Variance Estimate (TSAVE) and a hybrid of TSIR and TSAVE is TSSH (Time series SIR SAVE Hybrid). For summary of an object of class tssdr, see <code>summary.tssdr</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tssdr(y, X, ...)
+
+## Default S3 method:
+tssdr(y, X, algorithm = c("TSIR", "TSAVE", "TSSH"), k = 1:12, H = 10, weight = 0.5,
+      method = c("frjd", "rjd"), eps = 1e-06, maxiter = 1000, ...)
+## S3 method for class 'ts'
+tssdr(y, X, ...)
+## S3 method for class 'xts'
+tssdr(y, X, ...)
+## S3 method for class 'zoo'
+tssdr(y, X, ...)
+
+## S3 method for class 'tssdr'
+print(x, digits = 3, ...)
+## S3 method for class 'tssdr'
+components(x, ...)
+## S3 method for class 'tssdr'
+plot(x, main = "The response and the directions", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A numeric vector or a time series object of class <code>ts</code>, <code>xts</code> or <code>zoo</code> (same type as X). Missing values are not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A numeric matrix or a multivariate time series object of class <code>ts</code>, <code>xts</code> or <code>zoo</code> (same type as y). Missing values are not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>algorithm</code></td>
+<td>
+<p>Algorithm to be used. The options are <code>"TSIR"</code>, <code>"TSAVE"</code> and <code>"TSSH"</code>. Default is <code>"TSIR"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>A vector of lags. It can be any non-zero positive integer, or a vector consisting of them. Default is <code>1:12</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>H</code></td>
+<td>
+<p>The number of slices. If <code>"TSSH"</code> is used, <code class="reqn">H</code> is a 2-vector; the first element is used for TSIR part and the second for TSAVE part. Default is <code class="reqn">H = 10</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>Weight <code class="reqn">0 \le a \le 1</code> for the hybrid method <code>TSSH</code> only. With <code class="reqn">a = 1</code> it reduces to TSAVE and with <code class="reqn">a = 0</code> to TSIR. Default is <code class="reqn">a = 0.5</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The method to use for the joint diagonalization. The options are <code>"rjd"</code> and <code>"frjd"</code>. Default is <code>"frjd"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Convergence tolerance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>The maximum number of iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to or from methods.</p>
+</td>
+</tr>
+</table>
+<p><strong>In methods for class 'tssdr' only:</strong>
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An object of class tssdr</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>The number of digits when printing an object of class tssdr. Default is 3</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>A title for a plot when printing an object of class tssdr.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume that the <code class="reqn">p</code>-variate time series <code class="reqn">{\bf Z}</code> with <code class="reqn">T</code> observations is whitened, i.e. <code class="reqn">{\bf Z}={\bf S}^{-1/2}({\bf X}_t - \frac{1}{T}\sum_{t=1}^T {\bf X}_{t})</code>, for <code class="reqn">t = 1, \ldots, T</code>,
+where <code class="reqn">{\bf S}</code> is a sample covariance matrix of <code class="reqn">{\bf X}</code>.
+Divide <code class="reqn">y</code> into <code class="reqn">H</code> disjoint intervals (slices) by its empirical quantiles.
+</p>
+<p>For each lag <code class="reqn">j</code>, denote <code class="reqn">y_{j}</code> for a vector of the last <code class="reqn">n - j</code> values of the sliced <code class="reqn">y</code>. Also denote <code class="reqn">{\bf Z}_j</code> for the first <code class="reqn">n - j</code> observations of <code class="reqn">{\bf Z}</code>. Then <code class="reqn">{\bf Z}_{jh}</code> are the disjoint slices of <code class="reqn">{\bf Z}_j</code> according to the values of <code class="reqn">y_{j}</code>.
+</p>
+<p>Let <code class="reqn">T_{jh}</code> be the number of observations in <code class="reqn">{\bf Z}_{jh}</code>.
+Write <code class="reqn">\bf \widehat{A}_{jh} = \frac{1}{T_{jh}}\sum_{t = 1}^{T_{jh}}({\bf Z}_{jh})_{t}</code> for <code class="reqn">t = 1, \ldots, T_jh</code>,
+and <code class="reqn">{\bf \widehat A}_j = ({\bf \widehat{A}}_{j1}, \ldots, {\bf \widehat{A}}_{jH})'</code>.
+Then for algorithm <code>TSIR</code> matrix </p>
+<p style="text-align: center;"><code class="reqn">{\bf \widehat{M}}_{0j} = {\bf \widehat{Cov}}_{A_j}.</code>
+</p>
+
+<p>Denote <code class="reqn">\bf \widehat{Cov}_{jh}</code> for a sample covariance matrix of <code class="reqn">{\bf Z}_{jh}</code>. Then for algorithm <code>TSAVE</code> matrix </p>
+<p style="text-align: center;"><code class="reqn">{\bf \widehat{M}}_{0j} = \frac{1}{H}\sum_{h = 1}^H({\bf I}_p - {\bf \widehat{Cov}_{jh}})^2.</code>
+</p>
+
+<p><code class="reqn">h = 1, \ldots, H</code>.
+</p>
+<p>For <code>TSSH</code> then matrix </p>
+<p style="text-align: center;"><code class="reqn">{\bf \widehat{M}}_{2j} = a{\bf \widehat{M}_{1j}} + (1-a){\bf \widehat{M}_{0j}},</code>
+</p>
+<p> for a chosen <code class="reqn">0 \le a \le 1</code>. Note that the value of <code class="reqn">H</code> can be different for TSIR and TSAVE parts.
+</p>
+<p>The algorithms find an orthogonal matrix <code class="reqn">{\bf U} = (\bf u_1, \ldots, \bf u_p)'</code> by maximizing, for <code class="reqn">b = 0, 1</code> or <code class="reqn">2</code>, 
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_{i \in k} ||diag({\bf U} {\bf \widehat{M}}_{bj} {\bf U}')||^2 = \sum_{i \in 1}^p \sum_{j \in k} ({\bf u}_i' {\bf \widehat{M}}_{bj} {\bf u}_i)^2.</code>
+</p>
+
+<p>for <code class="reqn">i = 1, \ldots, p</code> and all lags <code class="reqn">j</code>.
+The final signal separation matrix is then <code class="reqn">{\bf W} = {\bf US}^{-1/2}</code>.
+</p>
+<p>Write <code class="reqn">\lambda_{ij} = c({\bf u}_i' {\bf \widehat{M}}_{bj} {\bf u}_i)^2</code>, where <code class="reqn">c</code> is chosen in such way that <code class="reqn">\sum_{i = 1}^p \sum_{j \in k} \lambda_{ij}= 1.</code> for <code class="reqn">i = 1, \ldots, p</code> and all lags <code class="reqn">j</code>.
+Then the <code class="reqn">(i, j)</code>:th element of the matrix <code class="reqn">\bf L</code> is <code class="reqn">\lambda_{ij}</code>.
+</p>
+<p>To make a choice on which lags and directions to keep, see <code>summary.tssdr</code>. Note that when printing a tssdr object, all elements are printed, except the directions S.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class 'tssdr' containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>W </code></td>
+<td>
+<p>The estimated signal separation matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k </code></td>
+<td>
+<p>The vector of the used lags.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>The estimated directions as time series object standardized to have mean 0 and unit variances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MU </code></td>
+<td>
+<p>The mean vector of <code>X</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>L </code></td>
+<td>
+<p>The Lambda matrix for choosing lags and directions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>H </code></td>
+<td>
+<p>The used number of slices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>yname </code></td>
+<td>
+<p>The name for the response time series <code class="reqn">y</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xname </code></td>
+<td>
+<p>The name for the predictor time series <code class="reqn">\bf X</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>algorithm </code></td>
+<td>
+<p>The used algorithm as a character string.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Markus Matilainen
+</p>
+
+
+<h3>References</h3>
+
+<p>Matilainen, M., Croux, C., Nordhausen, K. and Oja, H. (2017), <em>Supervised Dimension Reduction for Multivariate Time Series</em>, Econometrics and Statistics, 4, 57–69.
+</p>
+<p>Matilainen, M., Croux, C., Nordhausen, K. and Oja, H. (2019), <em>Sliced Average Variance Estimation for Multivariate Time Series</em>. Statistics: A Journal of Theoretical and Applied Statistics, 53, 630–655.
+</p>
+<p>Li, K.C. (1991), <em>Sliced Inverse Regression for Dimension Reduction</em>, Journal of the American Statistical Association, 86, 316–327.
+</p>
+<p>Cook, R. and Weisberg, S. (1991), <em>Sliced Inverse Regression for Dimension Reduction</em>, Comment. Journal of the American Statistical Association, 86, 328–332.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.tssdr</code>, <code>dr</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 10000
+A &lt;- matrix(rnorm(9), 3, 3)
+
+x1 &lt;- arima.sim(n = n, list(ar = 0.2))
+x2 &lt;- arima.sim(n = n, list(ar = 0.8))
+x3 &lt;- arima.sim(n = n, list(ar = 0.3, ma = -0.4))
+eps2 &lt;- rnorm(n - 1)
+y &lt;- 2*x1[1:(n - 1)] + eps2
+X &lt;- ((cbind(x1, x2, x3))[2:n, ]) %*% t(A)
+
+res1 &lt;- tssdr(y, X, algorithm = "TSAVE")
+res1
+summ1 &lt;- summary(res1, type = "alllag", thres = 0.8)
+summ1
+plot(summ1)
+head(components(summ1))
+coef(summ1)
+
+# Hybrid of TSIR and TSAVE. For TSIR part H = 10 and for TSAVE part H = 2.
+tssdr(y, X, algorithm = "TSSH", weight = 0.6, H = c(10, 2))
+</code></pre>
+
+
+</div>

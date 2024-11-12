@@ -1,0 +1,133 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bind_cols.SpatVector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Bind multiple <code>SpatVector</code> <code>sf</code> and data frames objects by column</h2>
+
+<h3>Description</h3>
+
+<p>Bind any number of <code>SpatVector</code>, data frames and <code>sf</code> object by column,
+making a wider result. This is similar to <code>do.call(cbind, dfs)</code>.
+</p>
+<p>Where possible prefer using a join to combine
+<code>SpatVector</code> and data frames objects. <code>bind_spat_cols()</code> binds the rows in
+order in which they appear so it is easy to create meaningless results
+without realizing it.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bind_spat_cols(
+  ...,
+  .name_repair = c("unique", "universal", "check_unique", "minimal")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Objects to combine. The first argument should be a <code>SpatVector</code>
+and each of the subsequent arguments can either be a <code>SpatVector</code>, a <code>sf</code>
+object or a data frame. Inputs are recycled to the
+same length, then matched by position.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name_repair</code></td>
+<td>
+<p>One of <code>"unique"</code>, <code>"universal"</code>, or <code>"check_unique"</code>.
+See <code>dplyr::bind_cols()</code> for <strong>Details</strong>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>SpatVector</code> with the corresponding columns. The geometry and CRS
+would correspond to the the first <code>SpatVector</code> of <code>...</code>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>cbind()</code> method
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <code>dplyr::bind_rows()</code> function for
+<code>SpatVector</code> objects. Note that for the second and subsequent arguments on
+<code>...</code> the geometry would not be <code>cbind</code>ed, and only the data frame (-ish)
+columns would be kept.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dplyr::bind_cols()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on pairs <code>Spat*</code>/data.frame:
+<code>bind_rows.SpatVector</code>,
+<code>filter-joins.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_rows.SpatVector</code>,
+<code>count.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>filter.Spat</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>rowwise.SpatVector()</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(terra)
+sv &lt;- vect(system.file("extdata/cyl.gpkg", package = "tidyterra"))
+df2 &lt;- data.frame(letters = letters[seq_len(nrow(sv))])
+
+# Data frame
+bind_spat_cols(sv, df2)
+
+
+# Another SpatVector
+bind_spat_cols(sv[1:2, ], sv[3:4, ])
+
+# sf objects
+sfobj &lt;- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+
+bind_spat_cols(sv[1:9, ], sfobj[1:9, ])
+
+# Mixed
+
+end &lt;- bind_spat_cols(sv, sfobj[seq_len(nrow(sv)), 1:2], df2)
+
+end
+glimpse(end)
+
+# Row sizes must be compatible when column-binding
+try(bind_spat_cols(sv, sfobj))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,207 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter_time</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Succinctly filter a <code>tbl_time</code> object by its index</h2>
+
+<h3>Description</h3>
+
+<p>Use a concise filtering method to filter a <code>tbl_time</code> object by its <code>index</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">filter_time(.tbl_time, time_formula)
+
+## S3 method for class 'tbl_time'
+x[i, j, drop = FALSE]
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.tbl_time</code></td>
+<td>
+<p>A <code>tbl_time</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_formula</code></td>
+<td>
+<p>A period to filter over.
+This is specified as a <code>formula</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Same as <code>.tbl_time</code> but consistent naming with base R.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>i</code></td>
+<td>
+<p>A period to filter over. This is specified the same as
+<code>time_formula</code> or can use the traditional row extraction method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>j</code></td>
+<td>
+<p>Optional argument to also specify column index to subset. Works
+exactly like the normal extraction operator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>Will always be coerced to <code>FALSE</code> by <code>tibble</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>time_formula</code> is specified using the format <code>from ~ to</code>.
+Each side of the <code>time_formula</code> is specified as the character
+<code>'YYYY-MM-DD HH:MM:SS'</code>, but powerful shorthand is available.
+Some examples are:
+</p>
+
+<ul>
+<li> <p><strong>Year:</strong> <code>'2013' ~ '2015'</code>
+</p>
+</li>
+<li> <p><strong>Month:</strong> <code>'2013-01' ~ '2016-06'</code>
+</p>
+</li>
+<li> <p><strong>Day:</strong> <code>'2013-01-05' ~ '2016-06-04'</code>
+</p>
+</li>
+<li> <p><strong>Second:</strong> <code>'2013-01-05 10:22:15' ~ '2018-06-03 12:14:22'</code>
+</p>
+</li>
+<li> <p><strong>Variations:</strong> <code>'2013' ~ '2016-06'</code>
+</p>
+</li>
+</ul>
+<p>The <code>time_formula</code> can also use a one sided formula.
+</p>
+
+<ul>
+<li> <p><strong>Only dates in 2015:</strong> <code>~'2015'</code>
+</p>
+</li>
+<li> <p><strong>Only dates March 2015:</strong> <code>~'2015-03'</code>
+</p>
+</li>
+</ul>
+<p>The <code>time_formula</code> can also use <code>'start'</code> and <code>'end'</code> as keywords for
+your filter.
+</p>
+
+<ul>
+<li> <p><strong>Start of the series to end of 2015:</strong> <code>'start' ~ '2015'</code>
+</p>
+</li>
+<li> <p><strong>Start of 2014 to end of series:</strong> <code>'2014' ~ 'end'</code>
+</p>
+</li>
+</ul>
+<p>All shorthand dates are expanded:
+</p>
+
+<ul>
+<li>
+<p> The <code>from</code> side is expanded to be the first date in that period
+</p>
+</li>
+<li>
+<p> The <code>to</code> side is expanded to be the last date in that period
+</p>
+</li>
+</ul>
+<p>This means that the following examples are equivalent (assuming your
+index is a POSIXct):
+</p>
+
+<ul>
+<li> <p><code>'2015' ~ '2016' == '2015-01-01 + 00:00:00' ~ '2016-12-31 + 23:59:59'</code>
+</p>
+</li>
+<li> <p><code>~'2015' == '2015-01-01 + 00:00:00' ~ '2015-12-31 + 23:59:59'</code>
+</p>
+</li>
+<li> <p><code>'2015-01-04 + 10:12' ~ '2015-01-05' == '2015-01-04 + 10:12:00' ~ '2015-01-05 + 23:59:59'</code>
+</p>
+</li>
+</ul>
+<p>Special parsing is done for indices of class <code>hms</code>. The <code>from ~ to</code> time
+formula is specified as only <code>HH:MM:SS</code>.
+</p>
+
+<ul>
+<li> <p><strong>Start to 5th second of the 12th hour:</strong> <code>'start' ~ '12:00:05'</code>
+</p>
+</li>
+<li> <p><strong>Every second in the 12th hour:</strong> <code>~'12'</code>
+</p>
+</li>
+</ul>
+<p>Subsecond resolution is also supported, however, R has a unique way of
+handling and printing subsecond dates and the user should be comfortable with
+this already. Specify subsecond resolution like so:
+<code>'2013-01-01 00:00:00.1' ~ '2013-01-01 00:00:00.2'</code>. Note that one sided
+expansion does not work with subsecond resolution due to seconds and subseconds
+being grouped together into 1 number (i.e. 1.2 seconds). This means <code>~'2013-01-01 00:00:00'</code> does
+not expand to something like <code>'2013-01-01 00:00:00.00' ~ '2013-01-01 00:00:00.99'</code>,
+but only expands to include whole seconds.
+</p>
+<p>This function respects <code>dplyr::group_by()</code> groups.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# FANG contains Facebook, Amazon, Netflix and Google stock prices
+data(FANG)
+FANG &lt;- as_tbl_time(FANG, date) %&gt;%
+  dplyr::group_by(symbol)
+
+# 2013-01-01 to 2014-12-31
+filter_time(FANG, '2013' ~ '2014')
+
+# 2013-05-25 to 2014-06-04
+filter_time(FANG, '2013-05-25' ~ '2014-06-04')
+
+# Using the `[` subset operator
+FANG['2014'~'2015']
+
+# Using `[` and one sided formula for only dates in 2014
+FANG[~'2014']
+
+# Using `[` and column selection
+FANG['2013'~'2016', c("date", "adjusted")]
+
+# Variables are unquoted using rlang
+lhs_date &lt;- "2013"
+rhs_date &lt;- as.Date("2014-01-01")
+filter_time(FANG, lhs_date ~ rhs_date)
+
+# Use the keywords 'start' and 'end' to conveniently access ends
+filter_time(FANG, 'start' ~ '2014')
+
+# hms (hour, minute, second) classes have special parsing
+hms_example &lt;- create_series(~'12:01', 'second', class = 'hms')
+filter_time(hms_example, 'start' ~ '12:01:30')
+
+
+</code></pre>
+
+
+</div>

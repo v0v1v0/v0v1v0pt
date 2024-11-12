@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>vi_csiszar_vimco</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use VIMCO to lower the variance of the gradient of csiszar_function(Avg(logu))</h2>
+
+<h3>Description</h3>
+
+<p>This function generalizes VIMCO (Mnih and Rezende, 2016) to Csiszar
+f-Divergences.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">vi_csiszar_vimco(
+  f,
+  p_log_prob,
+  q,
+  num_draws,
+  num_batch_draws = 1,
+  seed = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p>function representing a Csiszar-function in log-space.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p_log_prob</code></td>
+<td>
+<p>function representing the natural-log of the
+probability under distribution <code>p</code>. (In variational inference <code>p</code> is the
+joint distribution.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>q</code></td>
+<td>
+<p><code>tfd$Distribution</code>-like instance; must implement: <code>sample(n, seed)</code>, and
+<code>log_prob(x)</code>. (In variational inference <code>q</code> is the approximate posterior
+distribution.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_draws</code></td>
+<td>
+<p>Integer scalar number of draws used to approximate the
+f-Divergence expectation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_batch_draws</code></td>
+<td>
+<p>Integer scalar number of draws used to approximate the
+f-Divergence expectation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p><code>integer</code> seed for <code>q$sample</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>String prefixed to Ops created by this function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note: if <code>q.reparameterization_type = tfd.FULLY_REPARAMETERIZED</code>,
+consider using <code>monte_carlo_csiszar_f_divergence</code>.
+</p>
+<p>The VIMCO loss is:
+</p>
+<div class="sourceCode"><pre>vimco = f(Avg{logu[i] : i=0,...,m-1})
+where,
+logu[i] = log( p(x, h[i]) / q(h[i] | x) )
+h[i] iid~ q(H | x)
+</pre></div>
+<p>Interestingly, the VIMCO gradient is not the naive gradient of <code>vimco</code>.
+Rather, it is characterized by:
+</p>
+<div class="sourceCode"><pre>grad[vimco] - variance_reducing_term
+</pre></div>
+<p>where,
+</p>
+<div class="sourceCode"><pre>variance_reducing_term = Sum{ grad[log q(h[i] | x)] * (vimco - f(log Avg{h[j;i] : j=0,...,m-1})) #' : i=0, ..., m-1 }
+h[j;i] =  u[j]  for j!=i,  GeometricAverage{ u[k] : k!=i} for j==i
+</pre></div>
+<p>(We omitted <code>stop_gradient</code> for brevity. See implementation for more details.)
+The <code style="white-space: pre;">⁠Avg{h[j;i] : j}⁠</code> term is a kind of "swap-out average" where the <code>i</code>-th
+element has been replaced by the leave-<code>i</code>-out Geometric-average.
+</p>
+<p>This implementation prefers numerical precision over efficiency, i.e.,
+<code>O(num_draws * num_batch_draws * prod(batch_shape) * prod(event_shape))</code>.
+(The constant may be fairly large, perhaps around 12.)
+</p>
+
+
+<h3>Value</h3>
+
+<p>vimco The Csiszar f-Divergence generalized VIMCO objective
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li> <p><a href="https://arxiv.org/abs/1602.06725">Andriy Mnih and Danilo Rezende. Variational Inference for Monte Carlo objectives. In <em>International Conference on Machine Learning</em>, 2016.</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Other vi-functions: 
+<code>vi_amari_alpha()</code>,
+<code>vi_arithmetic_geometric()</code>,
+<code>vi_chi_square()</code>,
+<code>vi_dual_csiszar_function()</code>,
+<code>vi_fit_surrogate_posterior()</code>,
+<code>vi_jeffreys()</code>,
+<code>vi_jensen_shannon()</code>,
+<code>vi_kl_forward()</code>,
+<code>vi_kl_reverse()</code>,
+<code>vi_log1p_abs()</code>,
+<code>vi_modified_gan()</code>,
+<code>vi_monte_carlo_variational_loss()</code>,
+<code>vi_pearson()</code>,
+<code>vi_squared_hellinger()</code>,
+<code>vi_symmetrized_csiszar_function()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,98 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidy_dtm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert a 
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code>
+into Tidy Form</h2>
+
+<h3>Description</h3>
+
+<p>Converts non-zero elements of a
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code> 
+into a tidy data set.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tidy_dtm(x, ...)
+
+tidy_tdm(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A 
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>ignored.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a tidied data.frame.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(simple_dtm)
+
+tidy_dtm(simple_dtm)
+
+## Not run: 
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load_current_gh('trinker/gofastr')
+pacman::p_load(tidyverse, magrittr, ggstance)
+
+my_dtm &lt;- with(
+    presidential_debates_2012, 
+    q_dtm(dialogue, paste(time, tot, sep = "_"))
+)
+
+tidy_dtm(my_dtm) %&gt;%
+    tidyr::extract(
+        col = doc, 
+        into = c("time", "turn", "sentence"), 
+        regex = "(\\d)_(\\d+)\\.(\\d+)"
+    ) %&gt;%
+    mutate(
+        time = as.numeric(time),
+        turn = as.numeric(turn),
+        sentence = as.numeric(sentence)
+    ) %&gt;%
+    tbl_df() %T&gt;%
+    print() %&gt;%
+    group_by(time, term) %&gt;%
+    summarize(n = sum(n)) %&gt;%
+    group_by(time) %&gt;%
+    arrange(desc(n)) %&gt;%
+    slice(1:10) %&gt;%
+    ungroup() %&gt;%
+    mutate(
+        term = factor(paste(term, time, sep = "__"),
+            levels = rev(paste(term, time, sep = "__")))
+    ) %&gt;%
+    ggplot(aes(x = n, y = term)) +
+        geom_barh(stat='identity') +
+        facet_wrap(~time, ncol=2, scales = 'free_y') +
+        scale_y_discrete(labels = function(x) gsub("__.+$", "", x))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

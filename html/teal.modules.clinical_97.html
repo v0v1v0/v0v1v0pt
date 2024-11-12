@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_a_gee</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>teal Module: Generalized Estimating Equations (GEE) analysis</h2>
+
+<h3>Description</h3>
+
+<p>This module produces an analysis table using Generalized Estimating Equations (GEE).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_a_gee(
+  label,
+  dataname,
+  parentname = ifelse(inherits(arm_var, "data_extract_spec"),
+    teal.transform::datanames_input(arm_var), "ADSL"),
+  aval_var,
+  id_var,
+  arm_var,
+  visit_var,
+  cov_var,
+  arm_ref_comp = NULL,
+  paramcd,
+  conf_level = teal.transform::choices_selected(c(0.95, 0.9, 0.8), 0.95, keep_order =
+    TRUE),
+  pre_output = NULL,
+  post_output = NULL,
+  basic_table_args = teal.widgets::basic_table_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>)<br> menu item label of the module in the teal app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataname</code></td>
+<td>
+<p>(<code>character</code>)<br> analysis data used in teal module.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parentname</code></td>
+<td>
+<p>(<code>character</code>)<br> parent analysis data used in teal module, usually this refers to <code>ADSL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aval_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the analysis variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object specifying
+the variable name for subject id.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for variable names that can be used as <code>arm_var</code>.
+It defines the grouping variable(s) in the results table.
+If there are two elements selected for <code>arm_var</code>,
+second variable will be nested under the first variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>visit_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and preselected option for variable names that can be used as <code>visit</code> variable.
+Must be a factor in <code>dataname</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the covariates variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_ref_comp</code></td>
+<td>
+<p>(<code>list</code>) optional,<br> if specified it must be a named list with each element corresponding to
+an arm variable in <code>ADSL</code> and the element must be another list (possibly
+with delayed <code>teal.transform::variable_choices()</code> or delayed <code>teal.transform::value_choices()</code>
+with the elements named <code>ref</code> and <code>comp</code> that the defined the default
+reference and comparison arms when the arm variable is changed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramcd</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the parameter code variable from <code>dataname</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the confidence level, each within range of (0, 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed before the output to put the output into context.
+For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed after the output to put the output into context.
+For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basic_table_args</code></td>
+<td>
+<p>(<code>basic_table_args</code>) optional<br> object created by <code>teal.widgets::basic_table_args()</code>
+with settings for the module table. The argument is merged with option <code>teal.basic_table_args</code> and with default
+module arguments (hard coded in the module body).
+For more details, see the vignette: <code>vignette("custom-basic-table-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>teal_module</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>The <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a> where additional example
+apps implementing this module can be found.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+data &lt;- teal_data()
+data &lt;- within(data, {
+  ADSL &lt;- tmc_ex_adsl
+  ADQS &lt;- tmc_ex_adqs %&gt;%
+    filter(ABLFL != "Y" &amp; ABLFL2 != "Y") %&gt;%
+    mutate(
+      AVISIT = as.factor(AVISIT),
+      AVISITN = rank(AVISITN) %&gt;%
+        as.factor() %&gt;%
+        as.numeric() %&gt;%
+        as.factor(),
+      AVALBIN = AVAL &lt; 50 # Just as an example to get a binary endpoint.
+    ) %&gt;%
+    droplevels()
+})
+datanames &lt;- c("ADSL", "ADQS")
+datanames(data) &lt;- datanames
+join_keys(data) &lt;- default_cdisc_join_keys[datanames]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_a_gee(
+      label = "GEE",
+      dataname = "ADQS",
+      aval_var = choices_selected("AVALBIN", fixed = TRUE),
+      id_var = choices_selected(c("USUBJID", "SUBJID"), "USUBJID"),
+      arm_var = choices_selected(c("ARM", "ARMCD"), "ARM"),
+      visit_var = choices_selected(c("AVISIT", "AVISITN"), "AVISIT"),
+      paramcd = choices_selected(
+        choices = value_choices(data[["ADQS"]], "PARAMCD", "PARAM"),
+        selected = "FKSI-FWB"
+      ),
+      cov_var = choices_selected(c("BASE", "AGE", "SEX", "BASE:AVISIT"), NULL)
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,242 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_nearmiss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Remove Points Near Other Classes</h2>
+
+<h3>Description</h3>
+
+<p><code>step_nearmiss()</code> creates a <em>specification</em> of a recipe step that removes
+majority class instances by undersampling points in the majority class based
+on their distance to other points in the same class.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_nearmiss(
+  recipe,
+  ...,
+  role = NA,
+  trained = FALSE,
+  column = NULL,
+  under_ratio = 1,
+  neighbors = 5,
+  skip = TRUE,
+  seed = sample.int(10^5, 1),
+  id = rand_id("nearmiss")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variable is used to sample the data. See <code>selections()</code>
+for more details. The selection should result in <em>single
+factor variable</em>. For the <code>tidy</code> method, these are not
+currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>Not used by this step since no new variables are
+created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column</code></td>
+<td>
+<p>A character string of the variable name that will
+be populated (eventually) by the <code>...</code> selectors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>under_ratio</code></td>
+<td>
+<p>A numeric value for the ratio of the
+minority-to-majority frequencies. The default value (1) means
+that all other levels are sampled down to have the same
+frequency as the least occurring level. A value of 2 would mean
+that the majority levels will have (at most) (approximately)
+twice as many rows than the minority level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>neighbors</code></td>
+<td>
+<p>An integer. Number of nearest neighbor that are used
+to generate the new examples of the minority class.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>bake()</code>? While all operations are baked
+when <code>prep()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = TRUE</code> as it may affect
+the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>An integer that will be used as the seed when
+applied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This method retains the points from the majority class which have the
+smallest mean distance to the k nearest points in the minority class.
+</p>
+<p>All columns in the data are sampled and returned by <code>juice()</code>
+and <code>bake()</code>.
+</p>
+<p>All columns used in this step must be numeric with no missing data.
+</p>
+<p>When used in modeling, users should strongly consider using the
+option <code>skip = TRUE</code> so that the extra sampling is <em>not</em>
+conducted outside of the training set.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step
+added to the sequence of existing steps (if any). For the
+<code>tidy</code> method, a tibble with columns <code>terms</code> which is
+the variable used to sample.
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) will be returned.
+</p>
+
+
+<h3>Tuning Parameters</h3>
+
+<p>This step has 2 tuning parameters:
+</p>
+
+<ul>
+<li> <p><code>under_ratio</code>: Under-Sampling Ratio (type: double, default: 1)
+</p>
+</li>
+<li> <p><code>neighbors</code>: # Nearest Neighbors (type: integer, default: 5)
+</p>
+</li>
+</ul>
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>References</h3>
+
+<p>Inderjeet Mani and I Zhang. knn approach to unbalanced data
+distributions: a case study involving information extraction. In Proceedings
+of workshop on learning from imbalanced datasets, 2003.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>nearmiss()</code> for direct implementation
+</p>
+<p>Other Steps for under-sampling: 
+<code>step_downsample()</code>,
+<code>step_tomek()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(modeldata)
+data(hpc_data)
+
+hpc_data0 &lt;- hpc_data %&gt;%
+  select(-protocol, -day)
+
+orig &lt;- count(hpc_data0, class, name = "orig")
+orig
+
+up_rec &lt;- recipe(class ~ ., data = hpc_data0) %&gt;%
+  # Bring the majority levels down to about 1000 each
+  # 1000/259 is approx 3.862
+  step_nearmiss(class, under_ratio = 3.862) %&gt;%
+  prep()
+
+training &lt;- up_rec %&gt;%
+  bake(new_data = NULL) %&gt;%
+  count(class, name = "training")
+training
+
+# Since `skip` defaults to TRUE, baking the step has no effect
+baked &lt;- up_rec %&gt;%
+  bake(new_data = hpc_data0) %&gt;%
+  count(class, name = "baked")
+baked
+
+# Note that if the original data contained more rows than the
+# target n (= ratio * majority_n), the data are left alone:
+orig %&gt;%
+  left_join(training, by = "class") %&gt;%
+  left_join(baked, by = "class")
+
+library(ggplot2)
+
+ggplot(circle_example, aes(x, y, color = class)) +
+  geom_point() +
+  labs(title = "Without NEARMISS") +
+  xlim(c(1, 15)) +
+  ylim(c(1, 15))
+
+recipe(class ~ x + y, data = circle_example) %&gt;%
+  step_nearmiss(class) %&gt;%
+  prep() %&gt;%
+  bake(new_data = NULL) %&gt;%
+  ggplot(aes(x, y, color = class)) +
+  geom_point() +
+  labs(title = "With NEARMISS") +
+  xlim(c(1, 15)) +
+  ylim(c(1, 15))
+</code></pre>
+
+
+</div>

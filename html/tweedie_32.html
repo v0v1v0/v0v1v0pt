@@ -1,0 +1,418 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tweedie.profile</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tweedie Distributions: mle estimation of p</h2>
+
+<h3>Description</h3>
+
+<p>Maximum likelihood estimation of the Tweedie index parameter <code class="reqn">p</code>.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tweedie.profile(formula, p.vec=NULL, xi.vec=NULL, link.power=0, 
+      data, weights, offset, fit.glm=FALSE,
+      do.smooth=TRUE, do.plot=FALSE, do.ci=do.smooth,
+      eps=1/6, 
+      control=list( epsilon=1e-09, maxit=glm.control()$maxit, trace=glm.control()$trace ),
+      do.points=do.plot, method="inversion", conf.level=0.95, 
+      phi.method=ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
+      verbose=FALSE, add0=FALSE)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula expression as for other regression models and generalized linear models, 
+of the form <code>response ~ predictors</code>. 
+For details, 
+see the documentation for <code>lm</code>, 
+<code>glm</code> and <code>formula</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p.vec</code></td>
+<td>
+<p>a vector of <code>p</code> values for consideration.
+The values must all be larger than one
+(if the response variable has exact zeros,
+the values must all be between one and two).
+If <code>NULL</code> (the default),
+<code>p.vec</code> is set to 
+<code>seq(1.2, 1.8, by=0.1)</code> if the 
+response contains any zeros,
+or
+<code>seq(1.5, 5, by=0.5)</code> if the 
+response contains no zeros.
+See the DETAILS section below for further details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xi.vec</code></td>
+<td>
+<p>the same as <code>p.vec</code>;
+some authors use the <code class="reqn">p</code> notation for the index parameter,
+and some use <code class="reqn">\xi</code>;
+this function detects which is used and then uses that notation throughout</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link.power</code></td>
+<td>
+<p>the power link function to use.
+These link functions <code class="reqn">g(\cdot)</code> are of the form 
+<code class="reqn">g(\eta)=\eta^{\rm link.power}</code>,
+and the special case of <code>link.power=0</code> (the default)
+refers to the logarithm link function.
+See the documentation for 
+<code>tweedie</code> also.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an optional data frame, list or environment 
+(or object coercible by <code>as.data.frame</code> to a data frame) 
+containing the variables in the model.  
+If not found in <code>data</code>, 
+the variables are taken from <code>environment(formula)</code>, 
+typically the environment from which <code>glm</code> is called.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>an optional vector of weights to be used in the fitting
+process.  Should be <code>NULL</code> or a numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>this can be used to specify an <em>a priori</em>
+known component to be included in the linear predictor during fitting.  
+This should be <code>NULL</code> or a numeric vector of length either one or
+equal to the number of cases. 
+One or more <code>offset</code> terms can
+be included in the formula instead or as well, 
+and if both are specified their sum is used.  
+See <code>model.offset</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fit.glm</code></td>
+<td>
+<p>logical flag.
+If <code>TRUE</code>,
+the Tweedie generalized linear model is fitted using the value of <code class="reqn">p</code>
+found by the profiling function.
+If <code>FALSE</code> (the default),
+no model is fitted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.smooth</code></td>
+<td>
+<p>logical flag.
+If <code>TRUE</code> (the default),
+a spline is fitted to the data to smooth the profile likelihood plot.
+If <code>FALSE</code>,
+no smoothing is used 
+(and the function is quicker).
+<b>Note</b> that <code>p.vec</code> must contain <em>at least five points</em>
+for smoothing to be allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.plot</code></td>
+<td>
+<p>logical flag.
+If <code>TRUE</code>,
+a plot of the profile likelihood is produce.
+If <code>FALSE</code> (the default),
+no plot is produced.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.ci</code></td>
+<td>
+<p>logical flag.
+If <code>TRUE</code>,
+the nominal 100*<code>conf.level</code>
+is computed.
+If <code>FALSE</code>,
+no confidence interval is computed.
+By default,
+<code>do.ci</code> is the same value as <code>do.smooth</code>,
+since a confidence interval will only be accurate if
+smoothing has been performed.
+Indeed,
+if <code>do.smooth=FALSE</code>,
+confidence intervals are never computed and
+<code>do.ci</code> is forced to <code>FALSE</code> if it is given as <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>the offset in computing the variance function.
+The default is <code>eps=1/6</code>
+(as suggested by Nelder and Pregibon, 1987).
+Note <code>eps</code> is ignored unless the 
+<code>method="saddlepoint"</code>
+as it makes no sense otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>a list of parameters for controlling the fitting process;
+see <code>glm.control</code> and <code>glm</code>.
+The default is to use the maximum number of iterations <code>maxit</code> and the
+<code>trace</code> setting as given in <code>glm.control</code>,
+but to set <code>epsilon</code> to <code>1e-09</code> to ensure a smoother plot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.points</code></td>
+<td>
+<p>plot the points on the plot where the
+(log-) likelihood is computed for the given values of <code>p</code>;
+defaults to the same value as <code>do.plot</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>the method for computing the (log-) likelihood.
+One of
+<code>"series"</code>,
+<code>"inversion"</code> (the default),
+<code>"interpolation"</code>
+or
+<code>"saddlepoint"</code>.
+If there are any troubles using this function,
+sometimes a change of method will fix the problem.
+Note that <code>method="saddlepoint"</code>
+is only an approximate method for computing the (log-) likelihood.
+Using <code>method="interpolation"</code>
+may produce a jump in the profile likelihood as it changes computational regimes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.level</code></td>
+<td>
+<p>the confidence level for the computation of the nominal
+confidence interval.
+The default is <code>conf.level=0.95</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>phi.method</code></td>
+<td>
+<p>the method for estimating <code>phi</code>,
+one of
+<code>"saddlepoint"</code>
+or
+<code>"mle"</code>.
+A maximum likelihood estimate is used unless
+<code>method="saddlepoint"</code>,
+when the saddlepoint approximation method is used.
+Note that using 
+<code>phi.method="saddlepoint"</code>
+is equivalent to using the mean deviance estimator of <code>phi</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>the amount of feedback requested:
+<code>0</code> or <code>FALSE</code> means minimal feedback (the default), 
+<code>1</code> or <code>TRUE</code> means some feedback,
+or <code>2</code> means to show all feedback.
+Since the function can be slow and sometimes problematic,
+feedback can be good;
+but it can also be unnecessary when one knows all is well.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add0</code></td>
+<td>
+<p>if <code>TRUE</code>, the value <code>p=0</code> is used in forming the profile log-likelihood
+(corresponding to the normal distribution);
+the default value is <code>add0=FALSE</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each value in <code>p.vec</code>,
+the function computes an estimate of <code>phi</code>
+and then computes the value of the log-likelihood for these parameters.
+The plot of the log-likelihood against <code>p.vec</code> 
+allows the maximum likelihood value of <code>p</code>
+to be found.
+Once the value of <code>p</code> is found,
+the distribution within the class of Tweedie distribution is identified.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The main purpose of the function is to estimate the value
+of the Tweedie index parameter, <code class="reqn">p</code>,
+which is produced by the output list as <code>p.max</code>.
+Optionally (if <code>do.plot=TRUE</code>),
+a plot is produced that shows the profile log-likelihood
+computed at each value in <code>p.vec</code>
+(smoothed if <code>do.smooth=TRUE</code>).
+This function can be temperamental 
+(for theoretical reasons involved in numerically computing the density),
+and this plot shows the values of <code class="reqn">p</code> requested on the
+horizontal axis (using <code>rug</code>); 
+there may be fewer points on the plot,
+since the likelihood some values of <code class="reqn">p</code> requested
+may have returned <code>NaN</code>, <code>Inf</code> or <code>NA</code>.
+</p>
+<p>A list containing the components:
+<code>y</code> and <code>x</code>
+(such that <code>plot(x,y)</code> (partially)
+recreates the profile likelihood plot);
+<code>ht</code> (the height of the nominal confidence interval);
+<code>L</code> (the estimate of the (log-) likelihood at each given value of <code>p</code>);
+<code>p</code> (the <code>p</code>-values used);
+<code>phi</code> (the computed values of <code>phi</code> at the values in <code>p</code>);
+<code>p.max</code> (the estimate of the mle of <code>p</code>);
+<code>L.max</code> (the estimate of the (log-) likelihood at <code>p.max</code>);
+<code>phi.max</code> (the estimate of <code>phi</code> at <code>p.max</code>);
+<code>ci</code> (the lower and upper limits of the confidence interval for <code>p</code>);
+<code>method</code> (the method used for estimation: <code>series</code>, <code>inversion</code>, 
+<code>interpolation</code> or <code>saddlepoint</code>);
+<code>phi.method</code> (the method used for estimation of <code>phi</code>:
+<code>saddlepoint</code> or <code>phi</code>).
+</p>
+<p>If <code>glm.fit</code> is <code>TRUE</code>,
+the list also contains a component <code>glm.obj</code>,
+a <code>glm</code> object  for the fitted Tweedie generalized linear model.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The estimates of <code>p</code>
+and <code>phi</code> are printed.
+The result is printed invisibly.
+</p>
+<p>If the response variable has any exact zeros,
+the values in <code>p.vec</code>
+must all be between one and two.
+</p>
+<p>The function is sometimes unstable and may fail.
+It may also be very slow.
+One solution is to change the method.
+The default is <code>method="inversion"</code> (the default);
+then try <code>method="series"</code>,
+<code>method="interpolation"</code>
+and
+<code>method="saddlepoint"</code>
+in that order.
+Note that 
+<code>method="saddlepoint"</code>
+is an approximate method only.
+Also make sure the values in <code>p.vec</code>
+are suitable for the data  
+(see above paragraph).
+</p>
+<p>It is recommended that for the first use with a data set,
+use <code>p.vec</code> with only a small number of values
+and set
+<code>do.smooth=FALSE</code>,
+<code>do.ci=FALSE</code>.
+If this is successful,
+a larger vector <code>p.vec</code>
+and smoothing can be used.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Peter Dunn (<a href="mailto:pdunn2@usc.edu.au">pdunn2@usc.edu.au</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Dunn, P. K. and Smyth, G. K. (2008).
+Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+<em>Statistics and Computing</em>, 
+<b>18</b>, 73–86.
+doi: <a href="https://doi.org/10.1007/s11222-007-9039-6">10.1007/s11222-007-9039-6</a>
+</p>
+<p>Dunn, Peter K and Smyth, Gordon K (2005).
+Series evaluation of Tweedie exponential dispersion model densities
+<em>Statistics and Computing</em>,
+<b>15</b>(4). 267–280.
+doi: <a href="https://doi.org/10.1007/s11222-005-4070-y">10.1007/s11222-005-4070-y</a>
+</p>
+<p>Dunn, Peter K and Smyth, Gordon K (2001).
+Tweedie family densities: methods of evaluation.
+<em>Proceedings of the 16th International Workshop on Statistical Modelling</em>,
+Odense, Denmark, 2–6 July
+</p>
+<p>Jorgensen, B. (1987).
+Exponential dispersion models.
+<em>Journal of the Royal Statistical Society</em>, B,
+<b>49</b>, 127–162.
+</p>
+<p>Jorgensen, B. (1997).
+<em>Theory of Dispersion Models</em>.
+Chapman and Hall, London.
+</p>
+<p>Nelder, J. A. and Pregibon, D. (1987).
+An extended quasi-likelihood function.
+<em>Biometrika</em>
+<b>74</b>(2),
+221–232.
+doi: <a href="https://doi.org/10.1093/biomet/74.2.221">10.1093/biomet/74.2.221</a>
+</p>
+<p>Tweedie, M. C. K. (1984).
+An index which distinguishes between some important exponential families.
+<em>Statistics: Applications and New Directions.
+Proceedings of the Indian Statistical Institute Golden Jubilee International Conference</em>
+(Eds. J. K. Ghosh and J. Roy), pp. 579-604. Calcutta: Indian Statistical Institute.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dtweedie</code>,
+<code>dtweedie.saddle</code>,
+<code>tweedie</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(statmod) # Needed to use  tweedie.profile
+# Generate some fictitious data
+test.data &lt;- rgamma(n=200, scale=1, shape=1)
+# The gamma is a Tweedie distribution with power=2;
+# let's see if p=2 is suggested by  tweedie.profile:
+## Not run: 
+	out &lt;- tweedie.profile( test.data ~ 1, 
+		p.vec=seq(1.5, 2.5, by=0.2) )
+	out$p.max
+	out$ci
+
+## End(Not run)
+</code></pre>
+
+
+</div>

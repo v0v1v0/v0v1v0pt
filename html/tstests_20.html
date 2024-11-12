@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nyblom_test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nyblom-Hansen Parameter Constancy Test</h2>
+
+<h3>Description</h3>
+
+<p>The parameter constancy test of Nyblom (1989).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nyblom_test(
+  x,
+  scores = NULL,
+  parameter_names = colnames(scores),
+  parameter_symbols = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a series representing the standardized residuals of some estimated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scores</code></td>
+<td>
+<p>the log likelihood score matrix. The <code>estfun</code> method
+if exported by a package for a model will return this matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameter_names</code></td>
+<td>
+<p>optional character vector of the parameter names. Usually
+read off the column names of the score matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameter_symbols</code></td>
+<td>
+<p>an optional character vector of the latex names of the
+parameters which can be used when printing using the flextable format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not currently used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The p-values for the test statistic are based on a pre-computed density,
+by simulation using equation 3.3 of Nyblom (1989), with up to 40 parameters and
+saved as an internal data object within the package. A kernel density is used
+to fit the 10,000 samples of the distribution before extracting the p-values.
+The original simulation generated more than 100,000 data points but these
+were compressed to quantiles at intervals of 0.001 in order to keep the package
+size under 5MB.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class “tstest.nyblom” which has a print and
+as_flextable method.
+</p>
+
+
+<h3>References</h3>
+
+<p>Nyblom,J. (1989).
+“Testing for the constancy of parameters over time.”
+<em>Journal of the American Statistical Association</em>, <b>84</b>(405), 223–230.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tsgarch)
+library(xts)
+data("spy")
+spyr &lt;- na.omit(diff(log(spy)))
+spec &lt;- garch_modelspec(spyr[1:1200], model = "garch", order = c(1,1),
+constant = TRUE, distribution = "norm")
+mod &lt;- estimate(spec)
+test &lt;- nyblom_test(residuals(mod, standardize = TRUE), scores = estfun(mod),
+parameter_names = names(coef(mod)),
+parameter_symbols = mod$parmatrix[estimate == 1]$symbol)
+print(test)
+
+</code></pre>
+
+
+</div>

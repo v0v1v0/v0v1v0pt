@@ -1,0 +1,156 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>init_filtered_dataset</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Initialize <code>FilteredDataset</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Initializes a <code>FilteredDataset</code> object corresponding to the class of the filtered dataset.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">init_filtered_dataset(
+  dataset,
+  dataname,
+  keys = character(0),
+  parent_name = character(0),
+  parent = reactive(dataset),
+  join_keys = character(0),
+  label = attr(dataset, "label", exact = TRUE)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>any object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataname</code></td>
+<td>
+<p>(<code>character(1)</code>)
+syntactically valid name given to the dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keys</code></td>
+<td>
+<p>(<code>character</code>) optional
+vector of primary key column names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parent_name</code></td>
+<td>
+<p>(<code>character(1)</code>)
+name of the parent dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parent</code></td>
+<td>
+<p>(<code>reactive</code>)
+that returns a filtered <code>data.frame</code> from other <code>FilteredDataset</code> named <code>parent_name</code>.
+Passing <code>parent</code> results in a <code>reactive</code> link that causes re-filtering of this <code>dataset</code>
+based on the changes in <code>parent</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>join_keys</code></td>
+<td>
+<p>(<code>character</code>)
+vector of names of columns in this dataset to join with <code>parent</code> dataset.
+If column names in the parent do not match these, they should be given as the names of this vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>)
+label to describe the dataset.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>FilteredDataset</code>.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>This function is exported to allow other packages to extend <code>teal.slice</code> but it is treated as internal.
+Breaking changes may occur without warning.
+We recommend consulting the package maintainer before using it.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># DataframeFilteredDataset example
+library(shiny)
+
+iris_fd &lt;- init_filtered_dataset(iris, dataname = "iris")
+ui &lt;- fluidPage(
+  iris_fd$ui_add(id = "add"),
+  iris_fd$ui_active("dataset"),
+  verbatimTextOutput("call")
+)
+server &lt;- function(input, output, session) {
+  iris_fd$srv_add(id = "add")
+  iris_fd$srv_active(id = "dataset")
+
+  output$call &lt;- renderText({
+    paste(
+      vapply(iris_fd$get_call(), deparse1, character(1), collapse = "\n"),
+      collapse = "\n"
+    )
+  })
+}
+if (interactive()) {
+  shinyApp(ui, server)
+}
+
+
+if (requireNamespace("MultiAssayExperiment", quietly = TRUE)) {
+  # MAEFilteredDataset example
+  library(shiny)
+
+  data(miniACC, package = "MultiAssayExperiment")
+
+  MAE_fd &lt;- init_filtered_dataset(miniACC, "MAE")
+  ui &lt;- fluidPage(
+    MAE_fd$ui_add(id = "add"),
+    MAE_fd$ui_active("dataset"),
+    verbatimTextOutput("call")
+  )
+  server &lt;- function(input, output, session) {
+    MAE_fd$srv_add(id = "add")
+    MAE_fd$srv_active(id = "dataset")
+    output$call &lt;- renderText({
+      paste(
+        vapply(MAE_fd$get_call(), deparse1, character(1), collapse = "\n"),
+        collapse = "\n"
+      )
+    })
+  }
+  if (interactive()) {
+    shinyApp(ui, server)
+  }
+}
+
+</code></pre>
+
+
+</div>

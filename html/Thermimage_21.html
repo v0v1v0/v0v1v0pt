@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>getTimes</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Extracts time values from binary imported thermal video file
+</h2>
+
+<h3>Description</h3>
+
+<p>Extracts time values for each image frame from a thermal camera video file (.seq or with some .fcf).  For time lapse or video capture, computer time is stored for each image frame in 3 chunks, denoting msec, sec, and date information.  
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">getTimes(vidfile, headstarts, timestart = 900, byte.length = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vidfile</code></td>
+<td>
+
+<p>Filename or filepath (as character) of the thermal video.  Should end in .seq or .fcf.  Not tested comprehensively so it may only work for certain camera models, software packages, file type combinations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>headstarts</code></td>
+<td>
+
+<p>A vector of integers corresponding to the header read byte start positions in the thermal video file.  Acquired using the getFrames function.  The header information is where the magicbyte + width + height image information is located (ie. FLIR CameraInfo Tags from the Exiftool library), as well as information on the camera, calibration, time of image capture, etc...are stored.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timestart</code></td>
+<td>
+
+<p>Set to 900 by default.  Once the header start location has been determined with the frameLocates function, the frame times were stored in 900 bytes into the header.  The user should not need to set this.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>byte.length</code></td>
+<td>
+
+<p>Set to 1 by default. User does not need to set this.  Deprecated option from an older version of this function.s
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Somewhat empirically determined, but also information provided on the exiftool website below describes where time stamp information is stored in each file.  This function concatentates the 3 time stamps corresponding to msec, sec, and date into one variable that gives the actual time each image was captured.
+</p>
+<p>As written, this is a vectorised function, so to extract multiple frames of data (i.e. length(headstarts)&gt;1), use a loop or the apply function as shown in the example below. 
+</p>
+<p>Extracted times are used in sumamrising information about the temperature profiles of the thermal videos and can be passed to the cumulDiff function.  
+</p>
+<p>Extracted times can also be used to verify the frame rate of the image capture in the video.  
+</p>
+<p>Has not been fully tested on file types from all cameras or thermal imaging software.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a vector of times as characters corresponding to the frame capture times as extracted from the thermal video file.  Times should resemble those returned using Exiftool.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Glenn J Tattersall
+</p>
+
+
+<h3>References</h3>
+
+<p>1. http://www.sno.phy.queensu.ca/~phil/exiftool/
+</p>
+<p>2. http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/FLIR.html
+</p>
+<p>3. http://www.silisoftware.com/tools/date.php
+</p>
+<p>4. http://www.sandersonforensics.com/forum/content.php?131-A-brief-history-of-time-stamps
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>getFrames</code>,
+<code>frameLocates</code>,
+<code>cumulDiff</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">w=640
+h=480
+f&lt;-system.file("extdata", "SampleSEQ.seq", package = "Thermimage")
+x&lt;-frameLocates(f, w=w, h=h)
+getTimes(f, x$h.start)
+
+# only returns the first frame of data, must use lapply to get all frames
+
+# Using lapply
+extract.times&lt;-do.call("c", lapply(x$h.start, getTimes, vidfile=f))
+extract.times
+
+# Using parallel lapply (uncomment below):
+# library(parallel)
+## set mc.cores to higher number to use parallel processing:
+# extract.times&lt;-do.call("c", mclapply(x$h.start, getTimes, vidfile=f, mc.cores=1))
+# extract.times
+
+</code></pre>
+
+
+</div>

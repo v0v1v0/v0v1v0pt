@@ -1,0 +1,195 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_multihead_attention</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>MultiHead attention</h2>
+
+<h3>Description</h3>
+
+<p>Allows the model to jointly attend to information from different
+representation subspaces. See reference: Attention Is All You Need
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_multihead_attention(
+  embed_dim,
+  num_heads,
+  dropout = 0,
+  bias = TRUE,
+  add_bias_kv = FALSE,
+  add_zero_attn = FALSE,
+  kdim = NULL,
+  vdim = NULL,
+  batch_first = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>embed_dim</code></td>
+<td>
+<p>total dimension of the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_heads</code></td>
+<td>
+<p>parallel attention heads. Note that <code>embed_dim</code> will be split
+across <code>num_heads</code> (i.e. each head will have dimension <code>embed_dim %/% num_heads</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dropout</code></td>
+<td>
+<p>a Dropout layer on attn_output_weights. Default: 0.0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+<p>add bias as module parameter. Default: True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add_bias_kv</code></td>
+<td>
+<p>add bias to the key and value sequences at dim=0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add_zero_attn</code></td>
+<td>
+<p>add a new batch of zeros to the key and value sequences
+at dim=1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kdim</code></td>
+<td>
+<p>total number of features in key. Default: <code>NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vdim</code></td>
+<td>
+<p>total number of features in value. Default: <code>NULL</code>. Note: if kdim
+and vdim are <code>NULL</code>, they will be set to embed_dim such that query, key,
+and value have the same number of features.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_first</code></td>
+<td>
+<p>if <code>TRUE</code> then the input and output tensors are <code class="reqn">(N,
+  S, E)</code> instead of <code class="reqn">(S, N, E)</code>, where N is the batch size, S is the
+sequence length, and E is the embedding dimension.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn"> \mbox{MultiHead}(Q, K, V) = \mbox{Concat}(head_1,\dots,head_h)W^O
+\mbox{where} head_i = \mbox{Attention}(QW_i^Q, KW_i^K, VW_i^V) </code>
+</p>
+
+
+
+<h3>Shape</h3>
+
+<p>Inputs:
+</p>
+
+<ul>
+<li>
+<p> query: <code class="reqn">(L, N, E)</code> where L is the target sequence length, N is the
+batch size, E is the embedding dimension. (but see the <code>batch_first</code>
+argument)
+</p>
+</li>
+<li>
+<p> key: <code class="reqn">(S, N, E)</code>, where S is the source sequence length, N is the
+batch size, E is the embedding dimension. (but see the <code>batch_first</code>
+argument)
+</p>
+</li>
+<li>
+<p> value: <code class="reqn">(S, N, E)</code> where S is the source sequence length,
+N is the batch size, E is the embedding dimension. (but see the
+<code>batch_first</code> argument)
+</p>
+</li>
+<li>
+<p> key_padding_mask: <code class="reqn">(N, S)</code> where N is the batch size, S is the source
+sequence length. If a ByteTensor is provided, the non-zero positions will
+be ignored while the position with the zero positions will be unchanged. If
+a BoolTensor is provided, the positions with the value of <code>True</code> will be
+ignored while the position with the value of <code>False</code> will be unchanged.
+</p>
+</li>
+<li>
+<p> attn_mask: 2D mask <code class="reqn">(L, S)</code> where L is the target sequence length, S
+is the source sequence length. 3D mask <code class="reqn">(N*num_heads, L, S)</code> where N is
+the batch size, L is the target sequence length, S is the source sequence
+length. attn_mask ensure that position i is allowed to attend the unmasked
+positions. If a ByteTensor is provided, the non-zero positions are not
+allowed to attend while the zero positions will be unchanged. If a
+BoolTensor is provided, positions with <code>True</code> are not allowed to attend
+while <code>False</code> values will be unchanged. If a FloatTensor is provided, it
+will be added to the attention weight.
+</p>
+</li>
+</ul>
+<p>Outputs:
+</p>
+
+<ul>
+<li>
+<p> attn_output: <code class="reqn">(L, N, E)</code> where L is the target sequence length, N is
+the batch size, E is the embedding dimension. (but see the  <code>batch_first</code>
+argument)
+</p>
+</li>
+<li>
+<p> attn_output_weights:
+</p>
+
+<ul>
+<li>
+<p> if <code>avg_weights</code> is <code>TRUE</code> (the default), the output attention
+weights are averaged over the attention heads, giving a tensor of shape
+<code class="reqn">(N, L, S)</code> where N is the batch size, L is the target sequence
+length, S is the source sequence length.
+</p>
+</li>
+<li>
+<p> if <code>avg_weights</code> is <code>FALSE</code>, the attention weight tensor is output
+as-is, with shape <code class="reqn">(N, H, L, S)</code>, where H is the number of attention
+heads.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+## Not run: 
+multihead_attn &lt;- nn_multihead_attention(embed_dim, num_heads)
+out &lt;- multihead_attn(query, key, value)
+attn_output &lt;- out[[1]]
+attn_output_weights &lt;- out[[2]]
+
+## End(Not run)
+
+}
+</code></pre>
+
+
+</div>

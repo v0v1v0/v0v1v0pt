@@ -1,0 +1,230 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_g_distribution</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Distribution analysis</h2>
+
+<h3>Description</h3>
+
+<p>Module is designed to explore the distribution of a single variable within a given dataset.
+It offers several tools, such as histograms, Q-Q plots, and various statistical tests to
+visually and statistically analyze the variable's distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_g_distribution(
+  label = "Distribution Module",
+  dist_var,
+  strata_var = NULL,
+  group_var = NULL,
+  freq = FALSE,
+  ggtheme = c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void"),
+  ggplot2_args = teal.widgets::ggplot2_args(),
+  bins = c(30L, 1L, 100L),
+  plot_height = c(600, 200, 2000),
+  plot_width = NULL,
+  pre_output = NULL,
+  post_output = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist_var</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Variable(s) for which the distribution will be analyzed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata_var</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Categorical variable used to split the distribution analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_var</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Variable used for faceting plot into multiple panels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>freq</code></td>
+<td>
+<p>(<code>logical</code>) optional, whether to display frequency (<code>TRUE</code>) or density (<code>FALSE</code>).
+Defaults to density (<code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggtheme</code></td>
+<td>
+<p>(<code>character</code>) optional, <code>ggplot2</code> theme to be used by default. Defaults to <code>"gray"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional, object created by <code>teal.widgets::ggplot2_args()</code>
+with settings for all the plots or named list of <code>ggplot2_args</code> objects for plot-specific settings.
+The argument is merged with options variable <code>teal.ggplot2_args</code> and default module setup.
+</p>
+<p>List names should match the following: <code>c("default", "Histogram", "QQplot")</code>.
+</p>
+<p>For more details see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bins</code></td>
+<td>
+<p>(<code>integer(1)</code> or <code>integer(3)</code>) optional,  specifies the number of bins for the histogram.
+</p>
+
+<ul>
+<li>
+<p> When the length of <code>bins</code> is one: The histogram bins will have a fixed size based on the <code>bins</code> provided.
+</p>
+</li>
+<li>
+<p> When the length of <code>bins</code> is three: The histogram bins are dynamically adjusted based on vector of <code>value</code>, <code>min</code>,
+and <code>max</code>.
+Defaults to <code>c(30L, 1L, 100L)</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot height as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> intended for use with a slider UI element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot width as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> for a slider encoding the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>, optional)<br>
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>, optional) with text placed after the output to put the output
+into context. For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(teal.widgets)
+
+# general data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  iris &lt;- iris
+})
+datanames(data) &lt;- "iris"
+
+app &lt;- init(
+  data = data,
+  modules = list(
+    tm_g_distribution(
+      dist_var = data_extract_spec(
+        dataname = "iris",
+        select = select_spec(variable_choices("iris"), "Petal.Length")
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Distribution Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  ADSL &lt;- rADSL
+})
+datanames(data) &lt;- c("ADSL")
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+vars1 &lt;- choices_selected(
+  variable_choices(data[["ADSL"]], c("ARM", "COUNTRY", "SEX")),
+  selected = NULL
+)
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_g_distribution(
+      dist_var = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          choices = variable_choices(data[["ADSL"]], c("AGE", "BMRKR1")),
+          selected = "BMRKR1",
+          multiple = FALSE,
+          fixed = FALSE
+        )
+      ),
+      strata_var = data_extract_spec(
+        dataname = "ADSL",
+        filter = filter_spec(
+          vars = vars1,
+          multiple = TRUE
+        )
+      ),
+      group_var = data_extract_spec(
+        dataname = "ADSL",
+        filter = filter_spec(
+          vars = vars1,
+          multiple = TRUE
+        )
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Distribution Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

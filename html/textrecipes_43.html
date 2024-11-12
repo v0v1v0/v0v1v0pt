@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_textfeature</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate Set of Text Features</h2>
+
+<h3>Description</h3>
+
+<p><code>step_textfeature()</code> creates a <em>specification</em> of a recipe step that will
+extract a number of numeric features of a text column.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_textfeature(
+  recipe,
+  ...,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  extract_functions = count_functions,
+  prefix = "textfeature",
+  keep_original_cols = FALSE,
+  skip = FALSE,
+  id = rand_id("textfeature")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>recipes::selections()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new columns created by the original variables will be
+used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument. This is <code>NULL</code>
+until the step is trained by <code>recipes::prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extract_functions</code></td>
+<td>
+<p>A named list of feature extracting functions.
+default to <code>count_functions</code>. See details for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A prefix for generated column names, default to "textfeature".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_original_cols</code></td>
+<td>
+<p>A logical to keep the original variables in the
+output. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>recipes::bake.recipe()</code>? While all operations are baked
+when <code>recipes::prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This step will take a character column and returns a number of numeric
+columns equal to the number of functions in the list passed to the
+<code>extract_functions</code> argument.
+</p>
+<p>All the functions passed to <code>extract_functions</code> must take a character vector
+as input and return a numeric vector of the same length, otherwise an error
+will be thrown.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step added
+to the sequence of existing steps (if any).
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) and <code>functions</code> (name of feature
+functions).
+</p>
+
+
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Steps for Numeric Variables From Characters: 
+<code>step_dummy_hash()</code>,
+<code>step_sequence_onehot()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(modeldata)
+data(tate_text)
+
+tate_rec &lt;- recipe(~., data = tate_text) %&gt;%
+  step_textfeature(medium)
+
+tate_obj &lt;- tate_rec %&gt;%
+  prep()
+
+bake(tate_obj, new_data = NULL) %&gt;%
+  slice(1:2)
+
+bake(tate_obj, new_data = NULL) %&gt;%
+  pull(textfeature_medium_n_words)
+
+tidy(tate_rec, number = 1)
+tidy(tate_obj, number = 1)
+
+# Using custom extraction functions
+nchar_round_10 &lt;- function(x) round(nchar(x) / 10) * 10
+
+recipe(~., data = tate_text) %&gt;%
+  step_textfeature(medium,
+    extract_functions = list(nchar10 = nchar_round_10)
+  ) %&gt;%
+  prep() %&gt;%
+  bake(new_data = NULL)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,517 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Renderer</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2><code>Renderer</code></h2>
+
+<h3>Description</h3>
+
+<p>A class for rendering reports from <code>ContentBlock</code> into various formats using <code>rmarkdown</code>.
+It supports <code>TextBlock</code>, <code>PictureBlock</code>, <code>RcodeBlock</code>, <code>NewpageBlock</code>, and <code>TableBlock</code>.
+</p>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-Renderer-new"><code>Renderer$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-Renderer-finalize"><code>Renderer$finalize()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-Renderer-renderRmd"><code>Renderer$renderRmd()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-Renderer-render"><code>Renderer$render()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-Renderer-get_output_dir"><code>Renderer$get_output_dir()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-Renderer-clone"><code>Renderer$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-Renderer-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Initialize a <code>Renderer</code> object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$new()</pre></div>
+
+
+
+<h5>Details</h5>
+
+<p>Creates a new instance of <code>Renderer</code>
+with a temporary directory for storing report files.
+</p>
+
+
+
+<h5>Returns</h5>
+
+<p>Object of class <code>Renderer</code>, invisibly.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+Renderer$new()
+
+</pre>
+</div>
+
+
+<hr>
+<a id="method-Renderer-finalize"></a>
+
+
+
+<h4>Method <code>finalize()</code>
+</h4>
+
+<p>Finalizes a <code>Renderer</code> object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$finalize()</pre></div>
+
+
+<hr>
+<a id="method-Renderer-renderRmd"></a>
+
+
+
+<h4>Method <code>renderRmd()</code>
+</h4>
+
+<p>Getting the <code>Rmd</code> text which could be easily rendered later.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$renderRmd(
+  blocks,
+  yaml_header,
+  global_knitr = getOption("teal.reporter.global_knitr")
+)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>blocks</code></dt>
+<dd>
+<p>(<code>list</code>) of <code>TextBlock</code>, <code>PictureBlock</code> and <code>NewpageBlock</code> objects.</p>
+</dd>
+<dt><code>yaml_header</code></dt>
+<dd>
+<p>(<code>character</code>) an <code>rmarkdown</code> <code>yaml</code> header.</p>
+</dd>
+<dt><code>global_knitr</code></dt>
+<dd>
+<p>(<code>list</code>) of <code>knitr</code> parameters (passed to <code>knitr::opts_chunk$set</code>)
+for customizing the rendering process.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Details</h5>
+
+<p>To access the default values for the <code>global_knitr</code> parameter,
+use <code>getOption('teal.reporter.global_knitr')</code>. These defaults include:
+</p>
+
+<ul>
+<li> <p><code>echo = TRUE</code>
+</p>
+</li>
+<li> <p><code>tidy.opts = list(width.cutoff = 60)</code>
+</p>
+</li>
+<li> <p><code>tidy = TRUE</code>  if <code>formatR</code> package is installed, <code>FALSE</code> otherwise
+</p>
+</li>
+</ul>
+<h5>Returns</h5>
+
+<p>Character vector constituting <code>rmarkdown</code> text (<code>yaml</code> header + body), ready to be rendered.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>library(yaml)
+library(rtables)
+library(ggplot2)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card1 &lt;- ReportCard$new()
+
+card1$append_text("Header 2 text", "header2")
+card1$append_text("A paragraph of default text")
+card1$append_plot(
+ ggplot(iris, aes(x = Petal.Length)) + geom_histogram()
+)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card2 &lt;- ReportCard$new()
+
+card2$append_text("Header 2 text", "header2")
+card2$append_text("A paragraph of default text", "header2")
+lyt &lt;- analyze(split_rows_by(basic_table(), "Day"), "Ozone", afun = mean)
+table_res2 &lt;- build_table(lyt, airquality)
+card2$append_table(table_res2)
+card2$append_table(iris)
+card2$append_rcode("2+2", echo = FALSE)
+
+Reporter &lt;- getFromNamespace("Reporter", "teal.reporter")
+reporter &lt;- Reporter$new()
+reporter$append_cards(list(card1, card2))
+
+yaml_quoted &lt;- getFromNamespace("yaml_quoted", "teal.reporter")
+yaml_l &lt;- list(
+  author = yaml_quoted("NEST"),
+  title = yaml_quoted("Report"),
+  date = yaml_quoted("07/04/2019"),
+  output = list(html_document = list(toc = FALSE))
+)
+
+md_header &lt;- getFromNamespace("md_header", "teal.reporter")
+yaml_header &lt;- md_header(as.yaml(yaml_l))
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+result_path &lt;- Renderer$new()$renderRmd(reporter$get_blocks(), yaml_header)
+
+</pre>
+</div>
+
+
+<hr>
+<a id="method-Renderer-render"></a>
+
+
+
+<h4>Method <code>render()</code>
+</h4>
+
+<p>Renders the <code>Report</code> to the desired output format by compiling the <code>rmarkdown</code> file.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$render(
+  blocks,
+  yaml_header,
+  global_knitr = getOption("teal.reporter.global_knitr"),
+  ...
+)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>blocks</code></dt>
+<dd>
+<p>(<code>list</code>) of <code>TextBlock</code>, <code>PictureBlock</code> or <code>NewpageBlock</code> objects.</p>
+</dd>
+<dt><code>yaml_header</code></dt>
+<dd>
+<p>(<code>character</code>) an <code>rmarkdown</code> <code>yaml</code> header.</p>
+</dd>
+<dt><code>global_knitr</code></dt>
+<dd>
+<p>(<code>list</code>) of <code>knitr</code> parameters (passed to <code>knitr::opts_chunk$set</code>)
+for customizing the rendering process.</p>
+</dd>
+<dt><code>...</code></dt>
+<dd>
+<p><code>rmarkdown::render</code> arguments, <code>input</code> and <code>output_dir</code> should not be updated.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Details</h5>
+
+<p>To access the default values for the <code>global_knitr</code> parameter,
+use <code>getOption('teal.reporter.global_knitr')</code>. These defaults include:
+</p>
+
+<ul>
+<li> <p><code>echo = TRUE</code>
+</p>
+</li>
+<li> <p><code>tidy.opts = list(width.cutoff = 60)</code>
+</p>
+</li>
+<li> <p><code>tidy = TRUE</code>  if <code>formatR</code> package is installed, <code>FALSE</code> otherwise
+</p>
+</li>
+</ul>
+<h5>Returns</h5>
+
+<p><code>character</code> path to the output.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>library(yaml)
+library(ggplot2)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card1 &lt;- ReportCard$new()
+
+card1$append_text("Header 2 text", "header2")
+card1$append_text("A paragraph of default text")
+card1$append_plot(
+ ggplot(iris, aes(x = Petal.Length)) + geom_histogram()
+)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card2 &lt;- ReportCard$new()
+
+card2$append_text("Header 2 text", "header2")
+card2$append_text("A paragraph of default text", "header2")
+lyt &lt;- analyze(split_rows_by(basic_table(), "Day"), "Ozone", afun = mean)
+table_res2 &lt;- build_table(lyt, airquality)
+card2$append_table(table_res2)
+card2$append_table(iris)
+card2$append_rcode("2+2", echo = FALSE)
+Reporter &lt;- getFromNamespace("Reporter", "teal.reporter")$new()
+Reporter$append_cards(list(card1, card2))
+
+yaml_quoted &lt;- getFromNamespace("yaml_quoted", "teal.reporter")
+yaml_l &lt;- list(
+  author = yaml_quoted("NEST"),
+  title = yaml_quoted("Report"),
+  date = yaml_quoted("07/04/2019"),
+  output = list(html_document = list(toc = FALSE))
+)
+
+md_header &lt;- getFromNamespace("md_header", "teal.reporter")
+yaml_header &lt;- md_header(as.yaml(yaml_l))
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+result_path &lt;- Renderer$new()$render(Reporter$get_blocks(), yaml_header)
+
+</pre>
+</div>
+
+
+<hr>
+<a id="method-Renderer-get_output_dir"></a>
+
+
+
+<h4>Method <code>get_output_dir()</code>
+</h4>
+
+<p>Get <code>output_dir</code> field.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$get_output_dir()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p><code>character</code> a <code>output_dir</code> field path.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")$new()
+Renderer$get_output_dir()
+
+</pre>
+</div>
+
+
+<hr>
+<a id="method-Renderer-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Renderer$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## ------------------------------------------------
+## Method `Renderer$new`
+## ------------------------------------------------
+
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+Renderer$new()
+
+
+## ------------------------------------------------
+## Method `Renderer$renderRmd`
+## ------------------------------------------------
+
+library(yaml)
+library(rtables)
+library(ggplot2)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card1 &lt;- ReportCard$new()
+
+card1$append_text("Header 2 text", "header2")
+card1$append_text("A paragraph of default text")
+card1$append_plot(
+ ggplot(iris, aes(x = Petal.Length)) + geom_histogram()
+)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card2 &lt;- ReportCard$new()
+
+card2$append_text("Header 2 text", "header2")
+card2$append_text("A paragraph of default text", "header2")
+lyt &lt;- analyze(split_rows_by(basic_table(), "Day"), "Ozone", afun = mean)
+table_res2 &lt;- build_table(lyt, airquality)
+card2$append_table(table_res2)
+card2$append_table(iris)
+card2$append_rcode("2+2", echo = FALSE)
+
+Reporter &lt;- getFromNamespace("Reporter", "teal.reporter")
+reporter &lt;- Reporter$new()
+reporter$append_cards(list(card1, card2))
+
+yaml_quoted &lt;- getFromNamespace("yaml_quoted", "teal.reporter")
+yaml_l &lt;- list(
+  author = yaml_quoted("NEST"),
+  title = yaml_quoted("Report"),
+  date = yaml_quoted("07/04/2019"),
+  output = list(html_document = list(toc = FALSE))
+)
+
+md_header &lt;- getFromNamespace("md_header", "teal.reporter")
+yaml_header &lt;- md_header(as.yaml(yaml_l))
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+result_path &lt;- Renderer$new()$renderRmd(reporter$get_blocks(), yaml_header)
+
+
+## ------------------------------------------------
+## Method `Renderer$render`
+## ------------------------------------------------
+
+library(yaml)
+library(ggplot2)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card1 &lt;- ReportCard$new()
+
+card1$append_text("Header 2 text", "header2")
+card1$append_text("A paragraph of default text")
+card1$append_plot(
+ ggplot(iris, aes(x = Petal.Length)) + geom_histogram()
+)
+
+ReportCard &lt;- getFromNamespace("ReportCard", "teal.reporter")
+card2 &lt;- ReportCard$new()
+
+card2$append_text("Header 2 text", "header2")
+card2$append_text("A paragraph of default text", "header2")
+lyt &lt;- analyze(split_rows_by(basic_table(), "Day"), "Ozone", afun = mean)
+table_res2 &lt;- build_table(lyt, airquality)
+card2$append_table(table_res2)
+card2$append_table(iris)
+card2$append_rcode("2+2", echo = FALSE)
+Reporter &lt;- getFromNamespace("Reporter", "teal.reporter")$new()
+Reporter$append_cards(list(card1, card2))
+
+yaml_quoted &lt;- getFromNamespace("yaml_quoted", "teal.reporter")
+yaml_l &lt;- list(
+  author = yaml_quoted("NEST"),
+  title = yaml_quoted("Report"),
+  date = yaml_quoted("07/04/2019"),
+  output = list(html_document = list(toc = FALSE))
+)
+
+md_header &lt;- getFromNamespace("md_header", "teal.reporter")
+yaml_header &lt;- md_header(as.yaml(yaml_l))
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")
+result_path &lt;- Renderer$new()$render(Reporter$get_blocks(), yaml_header)
+
+
+## ------------------------------------------------
+## Method `Renderer$get_output_dir`
+## ------------------------------------------------
+
+Renderer &lt;- getFromNamespace("Renderer", "teal.reporter")$new()
+Renderer$get_output_dir()
+
+</code></pre>
+
+
+</div>

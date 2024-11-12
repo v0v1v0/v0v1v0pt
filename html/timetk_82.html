@@ -1,0 +1,301 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_slidify_augment</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Slidify Rolling Window Transformation (Augmented Version)</h2>
+
+<h3>Description</h3>
+
+<p><code>step_slidify_augment</code> creates a a <em>specification</em> of a recipe
+step that will "augment" (add multiple new columns) that have had a sliding function applied.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_slidify_augment(
+  recipe,
+  ...,
+  period,
+  .f,
+  align = c("center", "left", "right"),
+  partial = FALSE,
+  prefix = "slidify_",
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  f_name = NULL,
+  skip = FALSE,
+  id = rand_id("slidify_augment")
+)
+
+## S3 method for class 'step_slidify_augment'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more numeric columns to be smoothed.
+See <code>recipes::selections()</code> for more details.
+For the <code>tidy</code> method, these are not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>The number of periods to include in the local rolling window.
+This is effectively the "window size".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A summary <strong>formula</strong> in one of the following formats:
+</p>
+
+<ul>
+<li> <p><code>mean</code> with no arguments
+</p>
+</li>
+<li> <p><code>function(x) mean(x, na.rm = TRUE)</code>
+</p>
+</li>
+<li> <p><code>~ mean(.x, na.rm = TRUE)</code>, it is converted to a function.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>align</code></td>
+<td>
+<p>Rolling functions generate <code>period - 1</code> fewer values than the incoming vector.
+Thus, the vector needs to be aligned. Alignment of the vector follows 3 types:
+</p>
+
+<ul>
+<li> <p><strong>Center:</strong> <code>NA</code> or <code>.partial</code> values are divided and added to the beginning and
+end of the series to "Center" the moving average.
+This is common for de-noising operations. See also <code style="white-space: pre;">⁠[smooth_vec()]⁠</code> for LOESS without NA values.
+</p>
+</li>
+<li> <p><strong>Left:</strong> <code>NA</code> or <code>.partial</code> values are added to the end to shift the series to the Left.
+</p>
+</li>
+<li> <p><strong>Right:</strong> <code>NA</code> or <code>.partial</code> values are added to the beginning to shif the series to the Right. This is common in
+Financial Applications such as moving average cross-overs.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>partial</code></td>
+<td>
+<p>Should the moving window be allowed to return partial (incomplete) windows instead of NA values.
+Set to FALSE by default, but can be switched to TRUE to remove NA's.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A prefix for generated column names, default to "slidify_".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new variable columns created by the original variables
+will be used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>f_name</code></td>
+<td>
+<p>A character string for the function being applied.
+This field is a placeholder and will be populated during the <code>tidy()</code> step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>bake.recipe()</code>? While all operations are baked
+when <code>prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = TRUE</code> as it may affect
+the computations for subsequent operations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_slidify_augment</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Alignment</strong>
+</p>
+<p>Rolling functions generate <code>period - 1</code> fewer values than the incoming vector.
+Thus, the vector needs to be aligned. Alignment of the vector follows 3 types:
+</p>
+
+<ul>
+<li> <p><strong>Center:</strong> <code>NA</code> or <code>partial</code> values are divided and added to the beginning and
+end of the series to "Center" the moving average.
+This is common for de-noising operations. See also <code style="white-space: pre;">⁠[smooth_vec()]⁠</code> for LOESS without NA values.
+</p>
+</li>
+<li> <p><strong>Left:</strong> <code>NA</code> or <code>partial</code> values are added to the end to shift the series to the Left.
+</p>
+</li>
+<li> <p><strong>Right:</strong> <code>NA</code> or <code>partial</code> values are added to the beginning to shif the series to the Right. This is common in
+Financial Applications such as moving average cross-overs.
+</p>
+</li>
+</ul>
+<p><strong>Partial Values</strong>
+</p>
+
+<ul>
+<li>
+<p> The advantage to using <code>partial</code> values vs <code>NA</code> padding is that
+the series can be filled (good for time-series de-noising operations).
+</p>
+</li>
+<li>
+<p> The downside to partial values is that the partials can become less stable
+at the regions where incomplete windows are used.
+</p>
+</li>
+</ul>
+<p>If instability is not desirable for de-noising operations, a suitable alternative
+is <code>step_smooth()</code>, which implements local polynomial regression.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>step_slidify_augment</code>, an updated version of recipe with
+the new step added to the sequence of existing steps (if any).
+For the <code>tidy</code> method, a tibble with columns <code>terms</code>
+(the selectors or variables selected), <code>value</code> (the feature
+names).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Main Recipe Functions:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># library(tidymodels)
+library(dplyr)
+library(recipes)
+library(parsnip)
+
+m750 &lt;- m4_monthly %&gt;%
+    filter(id == "M750") %&gt;%
+    mutate(value_2 = value / 2)
+
+m750_splits &lt;- time_series_split(m750, assess = "2 years", cumulative = TRUE)
+
+# Make a recipe
+recipe_spec &lt;- recipe(value ~ date + value_2, rsample::training(m750_splits)) %&gt;%
+    step_slidify_augment(
+        value, value_2,
+        period = c(6, 12, 24),
+        .f = ~ mean(.x),
+        align = "center",
+        partial = FALSE
+    )
+
+recipe_spec %&gt;% prep() %&gt;% juice()
+
+bake(prep(recipe_spec), rsample::testing(m750_splits))
+
+
+</code></pre>
+
+
+</div>

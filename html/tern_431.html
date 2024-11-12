@@ -1,0 +1,156 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidy_coxreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Custom tidy methods for Cox regression</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'summary.coxph'
+tidy(x, ...)
+
+## S3 method for class 'coxreg.univar'
+tidy(x, ...)
+
+## S3 method for class 'coxreg.multivar'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>list</code>)<br> result of the Cox regression model fitted by <code>fit_coxreg_univar()</code> (for univariate models)
+or <code>fit_coxreg_multivar()</code> (for multivariate models).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>broom::tidy()</code> returns:
+</p>
+
+<ul>
+<li>
+<p> For <code>summary.coxph</code> objects,  a <code>data.frame</code> with columns: <code style="white-space: pre;">⁠Pr(&gt;|z|)⁠</code>, <code>exp(coef)</code>, <code>exp(-coef)</code>, <code style="white-space: pre;">⁠lower .95⁠</code>,
+<code style="white-space: pre;">⁠upper .95⁠</code>, <code>level</code>, and <code>n</code>.
+</p>
+</li>
+<li>
+<p> For <code>coxreg.univar</code> objects, a <code>data.frame</code> with columns: <code>effect</code>, <code>term</code>, <code>term_label</code>, <code>level</code>, <code>n</code>, <code>hr</code>,
+<code>lcl</code>, <code>ucl</code>, <code>pval</code>, and <code>ci</code>.
+</p>
+</li>
+<li>
+<p> For <code>coxreg.multivar</code> objects, a <code>data.frame</code> with columns: <code>term</code>, <code>pval</code>, <code>term_label</code>, <code>hr</code>, <code>lcl</code>, <code>ucl</code>,
+<code>level</code>, and <code>ci</code>.
+</p>
+</li>
+</ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>tidy(summary.coxph)</code>: Custom tidy method for <code>survival::coxph()</code> summary results.
+</p>
+<p>Tidy the <code>survival::coxph()</code> results into a <code>data.frame</code> to extract model results.
+</p>
+</li>
+<li> <p><code>tidy(coxreg.univar)</code>: Custom tidy method for a univariate Cox regression.
+</p>
+<p>Tidy up the result of a Cox regression model fitted by <code>fit_coxreg_univar()</code>.
+</p>
+</li>
+<li> <p><code>tidy(coxreg.multivar)</code>: Custom tidy method for a multivariate Cox regression.
+</p>
+<p>Tidy up the result of a Cox regression model fitted by <code>fit_coxreg_multivar()</code>.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>cox_regression
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(survival)
+library(broom)
+
+set.seed(1, kind = "Mersenne-Twister")
+
+dta_bladder &lt;- with(
+  data = bladder[bladder$enum &lt; 5, ],
+  data.frame(
+    time = stop,
+    status = event,
+    armcd = as.factor(rx),
+    covar1 = as.factor(enum),
+    covar2 = factor(
+      sample(as.factor(enum)),
+      levels = 1:4, labels = c("F", "F", "M", "M")
+    )
+  )
+)
+labels &lt;- c("armcd" = "ARM", "covar1" = "A Covariate Label", "covar2" = "Sex (F/M)")
+formatters::var_labels(dta_bladder)[names(labels)] &lt;- labels
+dta_bladder$age &lt;- sample(20:60, size = nrow(dta_bladder), replace = TRUE)
+
+formula &lt;- "survival::Surv(time, status) ~ armcd + covar1"
+msum &lt;- summary(coxph(stats::as.formula(formula), data = dta_bladder))
+tidy(msum)
+
+## Cox regression: arm + 1 covariate.
+mod1 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = "covar1"
+  ),
+  data = dta_bladder,
+  control = control_coxreg(conf_level = 0.91)
+)
+
+## Cox regression: arm + 1 covariate + interaction, 2 candidate covariates.
+mod2 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder,
+  control = control_coxreg(conf_level = 0.91, interaction = TRUE)
+)
+
+tidy(mod1)
+tidy(mod2)
+
+multivar_model &lt;- fit_coxreg_multivar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder
+)
+broom::tidy(multivar_model)
+
+</code></pre>
+
+
+</div>

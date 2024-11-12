@@ -1,0 +1,115 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trtsel_measures</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>a simple function to estimate performance measures for a  rule used to select treatment.</h2>
+
+<h3>Description</h3>
+
+<p>Provides point estimates for summary measures to evaluate a rule used to select treatment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trtsel_measures(event, trt, trt.rule, trt.effect, time,
+  default.trt = c("trt all", "trt none"), prediction.time = NULL,
+  silent = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>event</code></td>
+<td>
+<p>vector for adverse event. Can be binary (1 is bad, 0 is good) or continuous (large numbers are worse). If failure time variable 'time' is set, event is used as the adverse event status indicator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt</code></td>
+<td>
+<p>binary trt status 1 for "treated" and 0 for "un-treated."</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt.rule</code></td>
+<td>
+<p>a binary treatment rule used to recommend treatment where 1 means recommend treatment and 0 means recommend no treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt.effect</code></td>
+<td>
+<p>estimated treatment effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>the failure time for survival outcomes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default.trt</code></td>
+<td>
+<p>The default treatment assignment to compare with
+marker-based treatment. Can either be set at "trt all" (default) or "trt
+none". Use "trt all" if everyone is treated and the aim is to discover those
+who would benefit from no treatment, but use "trt none" if the common
+practice is to treat no-one and the goal is to discover those who would
+benefit from treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prediction.time</code></td>
+<td>
+<p>a landmark prediction time used only when the 'time' variable is set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>suppress messages</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(tsdata)
+#The user must specify a vector of clinical outcomes, 
+#a vector of treatment assigments, and a vector of 
+#marker-based treatment recommendations based on the pre-specified rule.
+
+#Here we let Y1_disc represent a user-specified treatment 
+#rule and evaluate its performance.
+
+trtsel_measures(event = tsdata$event, trt = tsdata$trt, trt.rule = 1- tsdata$Y1_disc )
+
+#We can also fit our own risk model using GLM, use this model
+#to develop a marker-based treatment recommendation, and evaluate its performance. 
+#This allows us to obtain model-based estimates of performance:
+
+mod &lt;- glm(event~trt*Y1_disc,  data = tsdata, family = binomial())
+
+tsdata.0 &lt;- tsdata; 
+tsdata.0$trt = 0 
+tsdata.1 &lt;- tsdata;
+tsdata.1$trt = 1
+delta.hat &lt;- predict(mod, 
+                    newdata= tsdata.0,
+                    type = "response") - 
+            predict(mod,
+                    newdata= tsdata.1, 
+                    type = "response")
+
+trtsel_measures(event = tsdata$event, trt = tsdata$trt, 
+               trt.rule = 1- tsdata$Y1_disc, trt.effect = delta.hat )
+
+</code></pre>
+
+
+</div>

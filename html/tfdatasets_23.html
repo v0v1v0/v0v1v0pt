@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset_group_by_window</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group windows of elements by key and reduce them</h2>
+
+<h3>Description</h3>
+
+<p>Group windows of elements by key and reduce them
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset_group_by_window(
+  dataset,
+  key_func,
+  reduce_func,
+  window_size = NULL,
+  window_size_func = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>a TF Dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key_func</code></td>
+<td>
+<p>A function mapping a nested structure of tensors (having
+shapes and types defined by <code>self$output_shapes</code> and <code>self$output_types</code>)
+to a scalar <code>tf.int64</code> tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reduce_func</code></td>
+<td>
+<p>A function mapping a key and a dataset of up to
+<code>window_size</code> consecutive elements matching that key to another dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window_size</code></td>
+<td>
+<p>A <code>tf.int64</code> scalar <code>tf.Tensor</code>, representing the number
+of consecutive elements matching the same key to combine in a single batch,
+which will be passed to <code>reduce_func</code>. Mutually exclusive with
+<code>window_size_func</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window_size_func</code></td>
+<td>
+<p>A function mapping a key to a <code>tf.int64</code> scalar
+<code>tf.Tensor</code>, representing the number of consecutive elements matching the
+same key to combine in a single batch, which will be passed to
+<code>reduce_func</code>. Mutually exclusive with <code>window_size</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>(Optional.) A name for the Tensorflow operation.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This transformation maps each consecutive element in a dataset to a
+key using <code>key_func()</code> and groups the elements by key. It then applies
+<code>reduce_func()</code> to at most <code>window_size_func(key)</code> elements matching the same
+key. All except the final window for each key will contain
+<code>window_size_func(key)</code> elements; the final window may be smaller.
+</p>
+<p>You may provide either a constant <code>window_size</code> or a window size determined
+by the key through <code>window_size_func</code>.
+</p>
+<div class="sourceCode r"><pre>window_size &lt;-  5
+dataset &lt;- range_dataset(to = 10) %&gt;%
+  dataset_group_by_window(
+    key_func = function(x) x %% 2,
+    reduce_func = function(key, ds) dataset_batch(ds, window_size),
+    window_size = window_size
+  )
+
+it &lt;- as_array_iterator(dataset)
+while (!is.null(elem &lt;- iter_next(it)))
+  print(elem)
+#&gt; tf.Tensor([0 2 4 6 8], shape=(5), dtype=int64)
+#&gt; tf.Tensor([1 3 5 7 9], shape=(5), dtype=int64)
+</pre></div>
+
+
+<h3>See Also</h3>
+
+
+<ul><li> <p><a href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset#group_by_window">https://www.tensorflow.org/api_docs/python/tf/data/Dataset#group_by_window</a>
+</p>
+</li></ul>
+</div>

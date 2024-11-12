@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mutate_</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Drop-in replacement for <code>mutate</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Provides supercharged version of <code>mutate</code>
+with <code>group_by</code>, <code>order_by</code> and aggregation over arbitrary window frame
+around a row for dataframes and lazy (remote) <code>tbl</code>s of class <code>tbl_lazy</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mutate_(
+  x,
+  ...,
+  .by,
+  .order_by,
+  .frame,
+  .index,
+  .desc = FALSE,
+  .complete = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>data.frame</code> or <code>tbl_lazy</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>expressions to be passed to <code>mutate</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(character vector, optional: Yes) Columns to group by</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.order_by</code></td>
+<td>
+<p>(string, optional: Yes) Columns to order by</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.frame</code></td>
+<td>
+<p>(vector, optional: Yes) Vector of length 2 indicating the
+number of rows to consider before and after the current row. When argument
+<code>.index</code> is provided (typically a column of type date or datetime), before
+and after can be
+<a href="https://lubridate.tidyverse.org/reference/interval.html">interval</a>
+objects. See examples. When input is <code>tbl_lazy</code>, only number of rows as
+vector of length 2 is supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.index</code></td>
+<td>
+<p>(string, optional: Yes, default: NULL) index column. This is
+supported when input is a dataframe only.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.desc</code></td>
+<td>
+<p>(flag, default: FALSE) Whether to order in descending order</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.complete</code></td>
+<td>
+<p>(flag, default: FALSE) This will be passed to
+<code>slider::slide</code> / <code>slider::slide_vec</code>. Should the function be evaluated on
+complete windows only? If FALSE or NULL, the default, then partial
+computations will be allowed. This is supported when input is a dataframe
+only.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A window function returns a value for every input row of a dataframe
+or <code>lazy_tbl</code> based on a group of rows (frame) in the neighborhood of the
+input row. This function implements computation over groups (<code>partition_by</code>
+in SQL) in a predefined order (<code>order_by</code> in SQL) across a neighborhood of
+rows (frame) defined by a (up, down) where
+</p>
+
+<ul>
+<li>
+<p> up/down are number of rows before and after the corresponding row
+</p>
+</li>
+<li>
+<p> up/down are interval objects (ex: <code>c(days(2), days(1))</code>).
+Interval objects are currently supported for dataframe only. (not
+<code>tbl_lazy</code>)
+</p>
+</li>
+</ul>
+<p>This implementation is inspired by spark's <a href="https://www.databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html">window API</a>.
+</p>
+<p><strong>Implementation Details</strong>:
+</p>
+<p>For dataframe input:
+</p>
+
+<ul>
+<li>
+<p> Iteration per row over the window is implemented using the versatile
+<a href="https://cran.r-project.org/package=slider"><code>slider</code></a>.
+</p>
+</li>
+<li>
+<p> Application of a window aggregation can be optionally run in parallel
+over multiple groups (see argument <code>.by</code>) by setting a
+<a href="https://cran.r-project.org/package=future">future</a> parallel backend. This
+is implemented using <a href="https://cran.r-project.org/package=furrr">furrr</a>
+package.
+</p>
+</li>
+<li>
+<p> function subsumes regular usecases of <code>mutate</code>
+</p>
+</li>
+</ul>
+<p>For <code>tbl_lazy</code> input:
+</p>
+
+<ul><li>
+<p> Uses <code>dbplyr::window_order</code> and <code>dbplyr::window_frame</code> to translate to
+<code>partition_by</code> and window frame specification.
+</p>
+</li></ul>
+<h3>Value</h3>
+
+<p><code>data.frame</code> or <code>tbl_lazy</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>mutate
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("magrittr")
+# example 1 (simple case with dataframe)
+# Using iris dataset,
+# compute cumulative mean of column `Sepal.Length`
+# ordered by `Petal.Width` and `Sepal.Width` columns
+# grouped by `Petal.Length` column
+
+iris %&gt;%
+  tidier::mutate_(sl_mean = mean(Sepal.Length),
+                  .order_by = c("Petal.Width", "Sepal.Width"),
+                  .by = "Petal.Length",
+                  .frame = c(Inf, 0),
+                  ) %&gt;%
+  dplyr::slice_min(n = 3, Petal.Width, by = Species)
+
+# example 2 (detailed case with dataframe)
+# Using a sample airquality dataset,
+# compute mean temp over last seven days in the same month for every row
+
+set.seed(101)
+airquality %&gt;%
+  # create date column
+  dplyr::mutate(date_col = lubridate::make_date(1973, Month, Day)) %&gt;%
+  # create gaps by removing some days
+  dplyr::slice_sample(prop = 0.8) %&gt;%
+  dplyr::arrange(date_col) %&gt;%
+  # compute mean temperature over last seven days in the same month
+  tidier::mutate_(avg_temp_over_last_week = mean(Temp, na.rm = TRUE),
+                  .order_by = "Day",
+                  .by = "Month",
+                  .frame = c(lubridate::days(7), # 7 days before current row
+                            lubridate::days(-1) # do not include current row
+                            ),
+                  .index = "date_col"
+                  )
+# example 3
+airquality %&gt;%
+   # create date column as character
+   dplyr::mutate(date_col =
+                   as.character(lubridate::make_date(1973, Month, Day))
+                 ) %&gt;%
+   tibble::as_tibble() %&gt;%
+   # as `tbl_lazy`
+   dbplyr::memdb_frame() %&gt;%
+   mutate_(avg_temp = mean(Temp),
+           .by = "Month",
+           .order_by = "date_col",
+           .frame = c(3, 3)
+           ) %&gt;%
+   dplyr::collect() %&gt;%
+   dplyr::select(Ozone, Solar.R, Wind, Temp, Month, Day, date_col, avg_temp)
+</code></pre>
+
+
+</div>

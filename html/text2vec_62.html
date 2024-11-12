@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>create_vocabulary</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates a vocabulary of unique terms</h2>
+
+<h3>Description</h3>
+
+<p>This function collects unique terms and corresponding statistics.
+See the below for details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">create_vocabulary(it, ngram = c(ngram_min = 1L, ngram_max = 1L),
+  stopwords = character(0), sep_ngram = "_", window_size = 0L, ...)
+
+vocabulary(it, ngram = c(ngram_min = 1L, ngram_max = 1L),
+  stopwords = character(0), sep_ngram = "_", window_size = 0L, ...)
+
+## S3 method for class 'character'
+create_vocabulary(it, ngram = c(ngram_min = 1L,
+  ngram_max = 1L), stopwords = character(0), sep_ngram = "_",
+  window_size = 0L, ...)
+
+## S3 method for class 'itoken'
+create_vocabulary(it, ngram = c(ngram_min = 1L,
+  ngram_max = 1L), stopwords = character(0), sep_ngram = "_",
+  window_size = 0L, ...)
+
+## S3 method for class 'itoken_parallel'
+create_vocabulary(it, ngram = c(ngram_min = 1L,
+  ngram_max = 1L), stopwords = character(0), sep_ngram = "_",
+  window_size = 0L, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>it</code></td>
+<td>
+<p>iterator over a <code>list</code> of <code>character</code> vectors,
+which are the documents from which the user wants to construct a vocabulary.
+See itoken.
+Alternatively, a <code>character</code> vector of user-defined vocabulary terms
+(which will be used "as is").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngram</code></td>
+<td>
+<p><code>integer</code> vector. The lower and upper boundary of the range
+of n-values for different n-grams to be extracted. All values of <code>n</code>
+such that ngram_min &lt;= n &lt;= ngram_max will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopwords</code></td>
+<td>
+<p><code>character</code> vector of stopwords to filter out. <b>NOTE</b> that
+stopwords will be used "as is". This means that if preprocessing function in itoken does some
+text modification (like stemming), then this preprocessing need to be applied to stopwords before passing them here.
+See <a href="https://github.com/dselivanov/text2vec/issues/228">https://github.com/dselivanov/text2vec/issues/228</a> for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep_ngram</code></td>
+<td>
+<p><code>character</code> a character string to concatenate words in ngrams</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window_size</code></td>
+<td>
+<p><code>integer</code> (0 by default). If <code>window_size &gt; 0</code> than vocabulary will
+be created from pseudo-documents which are obtained by virtually splitting each documents into
+chunks of the length <code>window_size</code> by going with sliding window through them.
+This is useful for creating special statistics which are used for coherence estimation in topic models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>placeholder for additional arguments (not used at the moment).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>text2vec_vocabulary</code> object, which is actually a <code>data.frame</code>
+with following columns:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td>
+<code>term</code>       </td>
+<td>
+ <p><code>character</code> vector of unique terms</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td>
+<code>term_count</code> </td>
+<td>
+ <p><code>integer</code> vector of term counts across all
+documents</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td>
+<code>doc_count</code>  </td>
+<td>
+ <p><code>integer</code> vector of document
+counts that contain corresponding term</p>
+</td>
+</tr>
+</table>
+<p>Also it contains metainformation in attributes:
+<code>ngram</code>: <code>integer</code> vector, the lower and upper boundary of the
+range of n-gram-values.
+<code>document_count</code>: <code>integer</code> number of documents vocabulary was
+built.
+<code>stopwords</code>: <code>character</code> vector of stopwords
+<code>sep_ngram</code>: <code>character</code> separator for ngrams
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul>
+<li> <p><code>character</code>: creates <code>text2vec_vocabulary</code> from predefined
+character vector. Terms will be inserted <b>as is</b>, without any checks
+(ngrams number, ngram delimiters, etc.).
+</p>
+</li>
+<li> <p><code>itoken</code>: collects unique terms and corresponding statistics from object.
+</p>
+</li>
+<li> <p><code>itoken_parallel</code>: collects unique terms and corresponding
+statistics from iterator.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("movie_review")
+txt = movie_review[['review']][1:100]
+it = itoken(txt, tolower, word_tokenizer, n_chunks = 10)
+vocab = create_vocabulary(it)
+pruned_vocab = prune_vocabulary(vocab, term_count_min = 10, doc_proportion_max = 0.8,
+doc_proportion_min = 0.001, vocab_term_max = 20000)
+</code></pre>
+
+
+</div>

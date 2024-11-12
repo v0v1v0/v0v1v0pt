@@ -1,0 +1,339 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_roll_sum</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fast time-based by-group rolling sum/mean - Currently experimental</h2>
+
+<h3>Description</h3>
+
+<p><code>time_roll_sum</code> and <code>time_roll_mean</code> are efficient
+methods for calculating a rolling sum and mean respectively given
+many groups and with respect to a date or datetime time index. <br>
+It is always aligned "right". <br><code>time_roll_window</code> splits <code>x</code> into windows based on the index. <br><code>time_roll_window_size</code> returns the window sizes for all indices of <code>x</code>. <br><code>time_roll_apply</code> is a generic function that applies any function
+on a rolling basis with respect to a time index. <br></p>
+<p><code>time_roll_growth_rate</code> can efficiently calculate by-group
+rolling growth rates with respect to a date/datetime index.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_roll_sum(
+  x,
+  window = Inf,
+  time = seq_along(x),
+  weights = NULL,
+  g = NULL,
+  partial = TRUE,
+  close_left_boundary = FALSE,
+  na.rm = TRUE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA"),
+  ...
+)
+
+time_roll_mean(
+  x,
+  window = Inf,
+  time = seq_along(x),
+  weights = NULL,
+  g = NULL,
+  partial = TRUE,
+  close_left_boundary = FALSE,
+  na.rm = TRUE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA"),
+  ...
+)
+
+time_roll_growth_rate(
+  x,
+  window = Inf,
+  time = seq_along(x),
+  time_step = NULL,
+  g = NULL,
+  partial = TRUE,
+  close_left_boundary = FALSE,
+  na.rm = TRUE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+
+time_roll_window_size(
+  time,
+  window = Inf,
+  g = NULL,
+  partial = TRUE,
+  close_left_boundary = FALSE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+
+time_roll_window(
+  x,
+  window = Inf,
+  time = seq_along(x),
+  g = NULL,
+  partial = TRUE,
+  close_left_boundary = FALSE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+
+time_roll_apply(
+  x,
+  window = Inf,
+  fun,
+  time = seq_along(x),
+  g = NULL,
+  partial = TRUE,
+  unlist = FALSE,
+  close_left_boundary = FALSE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window</code></td>
+<td>
+<p>Time window size (Default is <code>Inf</code>).
+Must be one of the following:
+</p>
+
+<ul>
+<li>
+<p> string, e.g <code>window = "day"</code> or <code>window = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> lubridate duration or period object, e.g. <code>days(1)</code> or <code>ddays(1)</code>.
+</p>
+</li>
+<li>
+<p> named list of length one, e.g. <code>list("days" = 7)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector, e.g. <code>window = 7</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>(Optional) time index. <br>
+Can be a <code>Date</code>, <code>POSIXt</code>, <code>numeric</code>, <code>integer</code>,
+<code>yearmon</code>, or <code>yearqtr</code> vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Importance weights. Must be the same length as x.
+Currently, no normalisation of weights occurs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Grouping object passed directly to <code>collapse::GRP()</code>.
+This can for example be a vector or data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>partial</code></td>
+<td>
+<p>Should calculations be done using partial windows?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>close_left_boundary</code></td>
+<td>
+<p>Should the left boundary be closed?
+For example, if you specify <code>window = "day"</code> and
+<code>time = c(today(), today() + 1)</code>, <br>
+a value of <code>FALSE</code> would result in the window vector <code>c(1, 1)</code> whereas
+a value of <code>TRUE</code> would result in the window vector <code>c(1, 2)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>Should missing values be removed for the calculation?
+The default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when lubridate periods are specified or when
+days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_month</code></td>
+<td>
+<p>Control how impossible dates are handled when
+month or year arithmetic is involved.
+Options are "preday", "boundary", "postday", "full" and "NA".
+See <code>?timechange::time_add</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_dst</code></td>
+<td>
+<p>See <code>?timechange::time_add</code> for the full list of details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>data.table::frollmean</code> and
+<code>data.table::frollsum</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_step</code></td>
+<td>
+<p>An optional but <b>important</b> argument
+that follows the same input rules as <code>window</code>. <br>
+It is currently only used only in <code>time_roll_growth_rate</code>. <br>
+If this is supplied, the time differences across
+gaps in time are incorporated into the growth
+rate calculation. See <b>details</b> for more info.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>A function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unlist</code></td>
+<td>
+<p>Should the output of <code>time_roll_apply</code> be unlisted with
+<code>unlist</code>? Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is much faster if your data are already sorted such that
+<code>!is.unsorted(order(g, x))</code> is <code>TRUE</code>.
+</p>
+
+
+<h4>Growth rates</h4>
+
+<p>For growth rates across time, one can use <code>time_step</code> to incorporate
+gaps in time into the calculation.
+</p>
+<p>For example: <br><code>x &lt;- c(10, 20)</code> <br><code>t &lt;- c(1, 10)</code> <br><code>k &lt;- Inf</code><br><code>time_roll_growth_rate(x, time = t, window = k)</code> = <code>c(1, 2)</code>
+whereas <br><code>time_roll_growth_rate(x, time = t, window = k, time_step = 1)</code> = <code>c(1, 1.08)</code> <br>
+The first is a doubling from 10 to 20, whereas the second implies a growth of
+8% for each time step from 1 to 10. <br>
+This allows us for example to calculate daily growth rates over the last x months,
+even with missing days.
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>A vector the same length as <code>time</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(lubridate)
+library(dplyr)
+
+time &lt;- time_seq(today(), today() + weeks(3),
+                 time_by = "3 days")
+set.seed(99)
+x &lt;- sample.int(length(time))
+
+roll_mean(x, window = 7)
+roll_sum(x, window = 7)
+
+time_roll_mean(x, window = ddays(7), time = time)
+time_roll_sum(x, window = days(7), time = time)
+
+# Alternatively and more verbosely
+x_chunks &lt;- time_roll_window(x, window = 7, time = time)
+x_chunks
+vapply(x_chunks, mean, 0)
+
+# Interval (x - 3 x]
+time_roll_sum(x, window = ddays(3), time = time)
+
+# An example with an irregular time series
+
+t &lt;- today() + days(sort(sample(1:30, 20, TRUE)))
+time_elapsed(t, days(1)) # See the irregular elapsed time
+x &lt;- rpois(length(t), 10)
+
+tibble(x, t) %&gt;%
+  mutate(sum = time_roll_sum(x, time = t, window = days(3))) %&gt;%
+  time_ggplot(t, sum)
+
+
+### Rolling mean example with many time series
+
+# Sparse time with duplicates
+index &lt;- sort(sample(seq(now(), now() + dyears(3), by = "333 hours"),
+                     250, TRUE))
+x &lt;- matrix(rnorm(length(index) * 10^3),
+            ncol = 10^3, nrow = length(index),
+            byrow = FALSE)
+
+zoo_ts &lt;- zoo::zoo(x, order.by = index)
+
+# Normally you might attempt something like this
+apply(x, 2,
+      function(x){
+        time_roll_mean(x, window = dmonths(1), time = index)
+      }
+)
+# Unfortunately this is too slow and inefficient
+
+
+# Instead we can pivot it longer and code each series as a separate group
+tbl &lt;- ts_as_tibble(zoo_ts)
+
+tbl %&gt;%
+  mutate(monthly_mean = time_roll_mean(value, window = dmonths(1),
+                                       time = time, g = group))
+
+
+</code></pre>
+
+
+</div>

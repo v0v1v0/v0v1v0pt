@@ -1,0 +1,196 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tile</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create map tiles</h2>
+
+<h3>Description</h3>
+
+<p>Create geographic and non-geographic map tiles from a file.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tile(
+  file,
+  tiles,
+  zoom,
+  crs = NULL,
+  resume = FALSE,
+  viewer = TRUE,
+  georef = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>character, input file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tiles</code></td>
+<td>
+<p>character, output directory for generated tiles.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zoom</code></td>
+<td>
+<p>character, zoom levels. Example format: <code>"3-7"</code>.
+See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crs</code></td>
+<td>
+<p>character, Proj4 string. Use this to force set the CRS of a loaded
+raster object from <code>file</code> in cases where the CRS is missing but known, to
+avoid defaulting to non-geographic tiling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resume</code></td>
+<td>
+<p>logical, only generate missing tiles.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>viewer</code></td>
+<td>
+<p>logical, also create <code>preview.html</code> adjacent to <code>tiles</code>
+directory for previewing tiles in the browser using Leaflet.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>georef</code></td>
+<td>
+<p>logical, for non-geographic tiles only. If <code>viewer = TRUE</code>,
+then the Leaflet widget in <code>preview.html</code> will add map markers with
+coordinate labels on mouse click to assist with georeferencing of
+non-geographic tiles.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for projected maps: reprojection method or
+any arguments to <code>raster::RGB()</code>, e.g. <code>col</code> and <code>colNA</code>. See details. Other
+additional arguments <code>lng</code> and <code>lat</code> can also be passed to the tile
+previewer. See <code>tile_viewer()</code> for details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function supports both geographic and non-geographic tile generation.
+When <code>file</code> is a simple image file such as <code>png</code>, <code>tile()</code> generates
+non-geographic, simple CRS tiles. Files that can be loaded by the <code>raster</code>
+package yield geographic tiles as long as <code>file</code> has projection information.
+If the raster object's Proj4 string is <code>NA</code>, it falls back on non-geographic
+tile generation and a warning is thrown.
+</p>
+<p>Choice of appropriate zoom levels for non-geographic image files may depend
+on the size of the image. A <code>zoom</code> value may be partially ignored for image
+files under certain conditions. For instance using the example <code>map.png</code>
+below, when passing strictly <code>zoom = n</code> where <code>n</code> is less than 3, this still
+generates tiles for zoom <code>n</code> up through 3.
+</p>
+
+
+<h4>Supported file types</h4>
+
+<p>Supported simple CRS/non-geographic image file types include <code>png</code>, <code>jpg</code> and
+<code>bmp</code>. For projected map data, supported file types include three types
+readable by the <code>raster</code> package: <code>grd</code>, <code>tif</code>, and <code>nc</code> (requires <code>ncdf4</code>).
+Other currently unsupported file types passed to <code>file</code> throw an error.
+</p>
+
+
+
+<h4>Raster file inputs</h4>
+
+<p>If a map file loadable by <code>raster</code> is a single-layer raster object, tile
+coloring is applied. To override default coloring of data and <code>noData</code>
+pixels, pass the additional arguments <code>col</code> and <code>colNA</code> to <code>...</code>.
+Multi-layer raster objects are rejected with an error message. The only
+exception is a three- or four-band raster, which is assumed to represent
+red, green, blue and alpha channels, respectively.
+In this case, processing will continue but coloring arguments are ignored as
+unnecessary.
+<br><br>
+Prior to tiling, a geographically-projected raster layer is reprojected to
+EPSG:4326 only if it has some other projection. The only reprojection
+argument available through <code>...</code> is <code>method</code>, which can be <code>"bilinear"</code>
+(default) or<code>"ngb"</code>. If complete control over reprojection is required, this
+should be done prior to passing the rasterized file to the <code>tile</code> function.
+Then no reprojection is performed by <code>tile()</code>. When <code>file</code> consists of RGB or
+RGBA bands, <code>method</code> is ignored if provided and reprojection uses nearest
+neighbor.
+<br><br>
+It is recommended to avoid using a projected 4-band RGBA raster file.
+However, the alpha channel appears to be ignored anyway. <code>gdal2tiles</code> gives
+an internal warning. Instead, create your RGBA raster file in unprojected
+form and it should pass through to <code>gdal2tiles</code> without any issues.
+Three-band RGB raster files are unaffected by reprojection.
+</p>
+
+
+
+<h4>Tiles and Leaflet</h4>
+
+<p><code>gdal2tiles</code> generates TMS tiles. If expecting XYZ, for example when using
+with Leaflet, you can change the end of the URL to your hosted tiles from
+<code style="white-space: pre;">⁠{z}/{x}/{y}.png⁠</code> to <code style="white-space: pre;">⁠{z}/{x}/{-y}.png⁠</code>.
+<br><br>
+This function is supported by two different versions of <code>gdal2tiles</code>. There
+is the standard version, which generates geospatial tiles in TMS format. The
+other version of <code style="white-space: pre;">⁠gdal2tiles} handles basic image files like a matrix of rows and columns, using a simple Cartesian coordinate system based on pixel dimensions of the image file. See the Leaflet JS library and ⁠</code>leaflet'
+package documentation for working with custom tiles in Leaflet.
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>nothing is returned but tiles are written to disk.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>view_tiles()</code>, <code>tile_viewer()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# non-geographic/simple CRS
+x &lt;- system.file("maps/map.png", package = "tiler")
+tiles &lt;- file.path(tempdir(), "tiles")
+tile(x, tiles, "2-3")
+
+## Not run: 
+# unprojected map
+x &lt;- system.file("maps/map_wgs84.tif", package = "tiler")
+tile(x, tiles, 0)
+
+# projected map
+x &lt;- system.file("maps/map_albers.tif", package = "tiler")
+tile(x, tiles, 0)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

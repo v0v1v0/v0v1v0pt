@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_rational_quadratic_spline</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A piecewise rational quadratic spline, as developed in Conor et al.(2019).</h2>
+
+<h3>Description</h3>
+
+<p>This transformation represents a monotonically increasing piecewise rational
+quadratic function. Outside of the bounds of <code>knot_x</code>/<code>knot_y</code>, the transform
+behaves as an identity function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_rational_quadratic_spline(
+  bin_widths,
+  bin_heights,
+  knot_slopes,
+  range_min = -1,
+  validate_args = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>bin_widths</code></td>
+<td>
+<p>The widths of the spans between subsequent knot <code>x</code> positions,
+a floating point <code>Tensor</code>. Must be positive, and at least 1-D. Innermost
+axis must sum to the same value as <code>bin_heights</code>. The knot <code>x</code> positions
+will be a first at <code>range_min</code>, followed by knots at <code>range_min + cumsum(bin_widths, axis=-1)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bin_heights</code></td>
+<td>
+<p>The heights of the spans between subsequent knot <code>y</code>
+positions, a floating point <code>Tensor</code>. Must be positive, and at least
+1-D. Innermost axis must sum to the same value as <code>bin_widths</code>. The knot
+<code>y</code> positions will be a first at <code>range_min</code>, followed by knots at
+<code>range_min + cumsum(bin_heights, axis=-1)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>knot_slopes</code></td>
+<td>
+<p>The slope of the spline at each knot, a floating point
+<code>Tensor</code>. Must be positive. <code>1</code>s are implicitly padded for the first and
+last implicit knots corresponding to <code>range_min</code> and <code>range_min + sum(bin_widths, axis=-1)</code>. Innermost axis size should be 1 less than
+that of <code>bin_widths</code>/<code>bin_heights</code>, or 1 for broadcasting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>range_min</code></td>
+<td>
+<p>The <code>x</code>/<code>y</code> position of the first knot, which has implicit
+slope <code>1</code>. <code>range_max</code> is implicit, and can be computed as <code>range_min + sum(bin_widths, axis=-1)</code>. Scalar floating point <code>Tensor</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. Whether to validate input with asserts. If validate_args is
+FALSE, and the inputs are invalid, correct behavior is not guaranteed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Typically this bijector will be used as part of a chain, with splines for
+trailing <code>x</code> dimensions conditioned on some of the earlier <code>x</code> dimensions, and
+with the inverse then solved first for unconditioned dimensions, then using
+conditioning derived from those inverses, and so forth.
+</p>
+<p>For each argument, the innermost axis indexes bins/knots and batch axes
+index axes of <code>x</code>/<code>y</code> spaces. A <code>RationalQuadraticSpline</code> with a separate
+transform for each of three dimensions might have <code>bin_widths</code> shaped
+<code style="white-space: pre;">⁠[3, 32]⁠</code>. To use the same spline for each of <code>x</code>'s three dimensions we may
+broadcast against <code>x</code> and use a <code>bin_widths</code> parameter shaped <code style="white-space: pre;">⁠[32]⁠</code>.
+</p>
+<p>Parameters will be broadcast against each other and against the input
+<code>x</code>/<code>y</code>s, so if we want fixed slopes, we can use kwarg <code>knot_slopes=1</code>.
+A typical recipe for acquiring compatible bin widths and heights would be:
+</p>
+<div class="sourceCode"><pre>nbins &lt;- unconstrained_vector$shape[-1]
+range_min &lt;- 1
+range_max &lt;- 1
+min_bin_size = 1e-2
+scale &lt;- range_max - range_min - nbins * min_bin_size
+bin_widths = tf$math$softmax(unconstrained_vector) * scale + min_bin_size
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p>a bijector instance.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li> <p><a href="https://arxiv.org/abs/1906.04032">Conor Durkan, Artur Bekasov, Iain Murray, George Papamakarios. Neural Spline Flows. <em>arXiv preprint arXiv:1906.04032</em>, 2019.</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>For usage examples see <code>tfb_forward()</code>, <code>tfb_inverse()</code>, <code>tfb_inverse_log_det_jacobian()</code>.
+</p>
+<p>Other bijectors: 
+<code>tfb_absolute_value()</code>,
+<code>tfb_affine_linear_operator()</code>,
+<code>tfb_affine_scalar()</code>,
+<code>tfb_affine()</code>,
+<code>tfb_ascending()</code>,
+<code>tfb_batch_normalization()</code>,
+<code>tfb_blockwise()</code>,
+<code>tfb_chain()</code>,
+<code>tfb_cholesky_outer_product()</code>,
+<code>tfb_cholesky_to_inv_cholesky()</code>,
+<code>tfb_correlation_cholesky()</code>,
+<code>tfb_cumsum()</code>,
+<code>tfb_discrete_cosine_transform()</code>,
+<code>tfb_expm1()</code>,
+<code>tfb_exp()</code>,
+<code>tfb_ffjord()</code>,
+<code>tfb_fill_scale_tri_l()</code>,
+<code>tfb_fill_triangular()</code>,
+<code>tfb_glow()</code>,
+<code>tfb_gompertz_cdf()</code>,
+<code>tfb_gumbel_cdf()</code>,
+<code>tfb_gumbel()</code>,
+<code>tfb_identity()</code>,
+<code>tfb_inline()</code>,
+<code>tfb_invert()</code>,
+<code>tfb_iterated_sigmoid_centered()</code>,
+<code>tfb_kumaraswamy_cdf()</code>,
+<code>tfb_kumaraswamy()</code>,
+<code>tfb_lambert_w_tail()</code>,
+<code>tfb_masked_autoregressive_default_template()</code>,
+<code>tfb_masked_autoregressive_flow()</code>,
+<code>tfb_masked_dense()</code>,
+<code>tfb_matrix_inverse_tri_l()</code>,
+<code>tfb_matvec_lu()</code>,
+<code>tfb_normal_cdf()</code>,
+<code>tfb_ordered()</code>,
+<code>tfb_pad()</code>,
+<code>tfb_permute()</code>,
+<code>tfb_power_transform()</code>,
+<code>tfb_rayleigh_cdf()</code>,
+<code>tfb_real_nvp_default_template()</code>,
+<code>tfb_real_nvp()</code>,
+<code>tfb_reciprocal()</code>,
+<code>tfb_reshape()</code>,
+<code>tfb_scale_matvec_diag()</code>,
+<code>tfb_scale_matvec_linear_operator()</code>,
+<code>tfb_scale_matvec_lu()</code>,
+<code>tfb_scale_matvec_tri_l()</code>,
+<code>tfb_scale_tri_l()</code>,
+<code>tfb_scale()</code>,
+<code>tfb_shifted_gompertz_cdf()</code>,
+<code>tfb_shift()</code>,
+<code>tfb_sigmoid()</code>,
+<code>tfb_sinh_arcsinh()</code>,
+<code>tfb_sinh()</code>,
+<code>tfb_softmax_centered()</code>,
+<code>tfb_softplus()</code>,
+<code>tfb_softsign()</code>,
+<code>tfb_split()</code>,
+<code>tfb_square()</code>,
+<code>tfb_tanh()</code>,
+<code>tfb_transform_diagonal()</code>,
+<code>tfb_transpose()</code>,
+<code>tfb_weibull_cdf()</code>,
+<code>tfb_weibull()</code>
+</p>
+
+
+</div>

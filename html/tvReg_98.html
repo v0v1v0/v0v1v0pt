@@ -1,0 +1,399 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tvSURE</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Time-Varying Seemingly Unrelated Regression Equations Model</h2>
+
+<h3>Description</h3>
+
+<p>Fits a set of balanced linear structural equations using Time-varying Ordinary Least 
+Squares (tvOLS), Time-varying Seemingly Unrelated Regression (tvGLS), when the error 
+variance-covariance matrix is known, or Time-varying Feasible Seemingly Unrelated 
+Regression (tvFGLS), when the error variance-covariance matrix is unknown.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tvSURE(
+  formula,
+  z = NULL,
+  ez = NULL,
+  bw = NULL,
+  cv.block = 0,
+  data,
+  method = c("tvOLS", "tvFGLS", "tvGLS"),
+  Sigma = NULL,
+  est = c("lc", "ll"),
+  tkernel = c("Triweight", "Epa", "Gaussian"),
+  bw.cov = NULL,
+  singular.ok = TRUE,
+  R = NULL,
+  r = NULL,
+  control = tvreg.control(...),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>A list of formulas, one for each equation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>A vector containing the smoothing variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ez</code></td>
+<td>
+<p>(optional) A scalar or vector with the smoothing values. If 
+values are not included then the vector <code>z</code> is used instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bw</code></td>
+<td>
+<p>An optional scalar or vector of length the number of equations. It represents the bandwidth in
+the estimation of trend coefficients. If NULL, it is selected by cross validation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cv.block</code></td>
+<td>
+<p>A positive scalar with the size of the block in leave one block out cross-validation.
+By default 'cv.block = 0' meaning leave one out cross-validation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A matrix or data frame containing variables in the formula.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>A character, a matrix of dimensions neq x neq or an array of dimensions obs x neq x neq, where
+<code>obs</code> is the number of observations and <code>neq</code> is the number of equations.
+If method = <code>identity</code> or <code>tvOLS</code> (default) then the method used is a time-varying OLS.
+If method is a matrix (constant over time) or an array, then the <code>tvGLS</code> is called.
+If method = <code>tvFGLS</code>, then the covariance matrix is estimated nonparametrically and the
+estimation of the system is done as a whole.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Sigma</code></td>
+<td>
+<p>A matrix of dimensions neq x neq or an array of dimensions neq x neq x obs
+(neq = number of equations, obs = number of observations). It represents
+the covariance matrix of the error term. Only necessary for method <code>tvGLS</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>est</code></td>
+<td>
+<p>The nonparametric estimation method, one of "lc" (default) for linear constant or "ll" for local linear.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tkernel</code></td>
+<td>
+<p>A character, either "Triweight" (default), "Epa" or "Gaussian" kernel function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bw.cov</code></td>
+<td>
+<p>An optional scalar. It represents the bandwidth in the nonparametric estimation of the
+varying covariance matrix. If NULL, it is selected by cross validation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>singular.ok</code></td>
+<td>
+<p>Logical. If FALSE, a singular model is an error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>An optional nrest x nvar x neq (nrest =  number of restrictions, nvar = number of variables in each equation,
+neq = number of equations).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>An optional vector of length the number of restrictions. By default it contains zeros.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>list of control parameters.  The default is constructed by
+the function <code>tvreg.control</code>.  See the documentation of
+<code>tvreg.control</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed to specific methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function wraps up the kernel smoothing "tvOLS" and "tvGLS" estimators. The former is used when
+equations are considered independent while the later assumes that the error term is correlated
+amongst equations. This relation is given in matrix "Sigma" which is used in the estimation. When
+"Sigma" is known, the estimates are calculated via the "tvGLS", and via the "tvFGLS" when "Sigma"
+is unknown and must be estimated.
+</p>
+<p>Bandwidth selection is of great importance in kernel smoothing methodologies and it is done
+automatically by cross-validation. One important aspect in the current packages is that the
+bandwidth is selected independently for each equation and then the average is taken to use the
+same bandwidth for each equation. It has been shown in Casas et al. (2017) that using
+different bandwidths for each equation is in general a bad practice, even for uncorrelated equations.
+Even though, the user may be able to use different bandwidths calling functions <code>bw</code> and
+<code>tvGLS</code> separatedly.
+</p>
+<p>A system consists of "neq" number of equations with "obs" number of observations each and a number of
+variables not necessarily equal for all equations. The matrix notation is:
+</p>
+<p style="text-align: center;"><code class="reqn">Y_{t} = X_t \beta_{t}+u_{t}</code>
+</p>
+
+<p>where <code class="reqn">Y_t  = (y_{1t}, y_{2t}, \ldots, y_{neq t})'</code>, <code class="reqn">X_t = diag (x_{1t}, x_{2t}, \ldots, x_{neq t})</code>
+and <code class="reqn">\beta_{t} = \left(\beta _{1t}', \ldots, \beta _{neq t}'\right)'</code> is a vector of order the
+total number of variables in the system. The error vector <code class="reqn">u_{t} = (u_{1t}, u_{2t}, \ldots, u_{neq t})'</code>
+has zero mean and  covariance matrix <code class="reqn">E(u_t u_t') = \Sigma_t</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>tvSURE</code> returns a list of the class <code>tvsure</code> containing the results of the whole system, results of the estimation
+and confidence instervals if chosen.
+The object of class <code>tvsure</code> have the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>coefficients</code></td>
+<td>
+<p>An array of dimension obs x nvar x neq (obs = number of observations, nvar = number of variables
+in each equation, neq = number of equations in the system) with the time-varying coefficients estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Lower</code></td>
+<td>
+<p>If <code>level</code> non equal zero, an array of dimension obs x nvar x neq containing the confidence 
+interval lower band.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Upper</code></td>
+<td>
+<p>If <code>level</code> non equal zero, an array of dimension obs x nvar x neq containing the confidence 
+interval upper band.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Sigma</code></td>
+<td>
+<p>An array of dimension obs x neq x neq with the estimates of the errors covariance matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fitted</code></td>
+<td>
+<p>The fitted values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>Estimation residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A list with the regressors data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A matrix with the dependent variable data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>A vector with the smoothing variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ez</code></td>
+<td>
+<p>A vector with the smoothing estimation values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bw</code></td>
+<td>
+<p>Bandwidth of mean estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs</code></td>
+<td>
+<p>Integer specifying the number of observations in each equation (balanced sample).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>neq</code></td>
+<td>
+<p>Integer specifying the number of equations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nvar</code></td>
+<td>
+<p>Vector of integers specifying the number of variables in each equation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Estimation method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>est</code></td>
+<td>
+<p>Nonparemtric estimation methodology.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tkernel</code></td>
+<td>
+<p>Kernel type.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bw.cov</code></td>
+<td>
+<p>Bandwidht of Sigma estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>Confidence interval range.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>runs</code></td>
+<td>
+<p>Number of bootstrap replications.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tboot</code></td>
+<td>
+<p>Type of bootstrap.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BOOT</code></td>
+<td>
+<p>List with all bootstrap replications of <code>coefficients</code>, if done.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>Restrictions matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>Restrictions vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>Initial formula.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Casas, I., Ferreira, E., and Orbe, S. (2017) Time-Varying Coefficient Estimation 
+in SURE Models: Application to Portfolio Management. Available at SSRN: 
+https://ssrn.com/abstract=3043137
+</p>
+<p>Chen, X. B., Gao, J., Li, D., and Silvapulle, P (2017) Nonparametric Estimation and 
+Forecasting for Time-Varying Coefficient Realized Volatility Models.
+<em>Journal of Business and Economic Statistics</em>, pp.1-13
+</p>
+<p>Granger, C. W (2008) Non-Linear Models: Where Do We Go Next - Time Varying
+Parameter Models? <em>Studies in Nonlinear Dynamics and Econometrics</em>, 12, pp. 1-11.
+</p>
+<p>Kristensen, D (2012) Non-parametric detection and estimation of structural change.
+<em>Econometrics Journal</em>, 15, pp. 420-461.
+</p>
+<p>Orbe, S., Ferreira, E., and Rodriguez-Poo, J (2004) On the estimation and testing of
+time varying constraints in econometric models, <em>Statistica Sinica</em>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>bw</code>, <code>tvCov</code>,  <code>tvVAR</code>, 
+<code>confint</code>, <code>plot</code>, <code>print</code> and <code>summary</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("Kmenta", package = "systemfit")
+eqDemand &lt;- consump ~ price + income
+eqSupply &lt;- consump ~ price + farmPrice + trend
+system &lt;- list(demand = eqDemand, supply = eqSupply)
+eqSupply2 &lt;- consump ~  price + farmPrice 
+system2 &lt;- list(demand = eqDemand, supply = eqSupply2)
+
+##OLS estimation of a system
+OLS &lt;- systemfit::systemfit(system, method = "OLS", data = Kmenta)
+##tvOLS estimation of a system with the local linear estimator
+##removing trend because it is included in the intercept changing over time
+TVOLS &lt;- tvSURE(system2, data = Kmenta,  est = "ll")
+
+##SUR/FGLS estimation
+FGLS &lt;- systemfit::systemfit(system, data = Kmenta, method = "SUR")
+##tvSURE estimation
+TVFGLS &lt;- tvSURE(system, data = Kmenta, method = "tvFGLS")
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

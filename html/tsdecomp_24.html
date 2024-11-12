@@ -1,0 +1,251 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>acgf2poly</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Change of Variable in the AutoCovariance Generating Function</h2>
+
+<h3>Description</h3>
+
+<p>Change of variable in the autocovariance generating function (ACGF). 
+This transformation allows the pseudo-spectrum to be represented as 
+a polynomial liable to be decomposed in partial fractions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">acgf2poly(x)
+poly2acgf(x, type=c("roots2poly", "acov2ma"), tol = 1e-16, maxiter = 100, 
+  init.tol=1e-05, init.maxiter=100)
+## S3 method for class 'tsdecMAroots'
+print(x, units = c("radians", "degrees", "pi"), digits = 4, echo = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>numeric vector of autocovariances;
+for <code>poly2acgf</code>, an object of class <code>tsdecMAroots</code> returned by <code>type="roots2poly"</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>character string selecting the method to undo the transformation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>convergence tolerance to be used by <code>acov2ma</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>maximum number of iterations allowed in <code>acov2ma</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.tol</code></td>
+<td>
+<p>convergence tolerance to be used by <code>acov2ma.init</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.maxiter</code></td>
+<td>
+<p>maximum number of iterations allowed in <code>acov2ma.init</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+<p>character, the units in which the argument of the roots are printed. <code>units="pi"</code> prints the 
+argument in radians as multiples of <code class="reqn">\pi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>numeric, the number of significant digits to be used by <code>print</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>echo</code></td>
+<td>
+<p>logical, if <code>TRUE</code> the output is printed, otherwise a <code>invisible</code> 
+copy of the matrix summarizing the results obtained by <code>poly2acgf</code> is returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments to be passed to <code>print</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The ACGF is defined as a power series where the coefficients are the autocovariances 
+<code class="reqn">\gamma_\tau</code>:
+
+
+
+
+
+
+
+</p>
+<p style="text-align: center;"><code class="reqn">
+\gamma(z) = \gamma_0 + \gamma_1(z+z^{-1}) + \gamma_2(z^2+z^{-2}) + \gamma_3(z^3+z^{-3}) + \cdots</code>
+</p>
+
+
+<p>where <code class="reqn">z</code> is a complex variable.
+</p>
+<p>Replacing <code class="reqn">z</code> by <code class="reqn">e^{-i\omega}</code> with <code class="reqn">\omega\in[0,2\pi]</code>
+yields the spectral density multiplied by <code class="reqn">2\pi</code>.
+This gives a power series in the variable <code class="reqn">2\cos(\omega j)</code>
+(note that for <code class="reqn">z=e^{-i\omega}</code>, which has unit modulus, 
+the inverse <code class="reqn">1/z</code> is the complex-conjugate of <code class="reqn">z</code>):
+
+</p>
+<p style="text-align: center;"><code class="reqn">z^j + z^{-j} = \cos(\omega j) + i\sin(\omega j) + \cos(\omega j) - i\sin(\omega j) = 
+2\cos(\omega j)\,.</code>
+</p>
+
+<p><code>acgf2poly</code> transforms the following expression in the variable <code class="reqn">2\cos(\omega j)</code>:
+
+</p>
+<p style="text-align: center;"><code class="reqn">A(2\cos(j\omega)) = a_0 + a_1 2\cos(\omega) + a_2 2\cos(2\omega) + \cdots + a_n 2\cos(n\omega)</code>
+</p>
+
+
+<p>into a polynomial in the variable <code class="reqn">x=2\cos(\omega)</code>:
+
+</p>
+<p style="text-align: center;"><code class="reqn">
+B(x) = b_0 + b_1 x + b_2 x^2 + \cdots + b_n x^n\,.</code>
+</p>
+
+<p><code>poly2acgf</code> recovers the vector of autocovariances by 
+undoing the above transformation and computes the coefficients 
+and the variance of the innovations of the moving average model 
+related to those autocovariances. 
+Two methods can be employed.
+1) <code>type="acov2ma"</code>: this method recovers the autocovariances 
+by undoing the change of variable; then, the the autocovariances 
+are converted to the coefficients of a moving average 
+by means of <code>acov2ma</code>. 
+In the presence of non-invertible roots, 
+this method may experience difficulties to converge.
+
+2) <code>type="roots2poly"</code>: this method does not explicitly undo 
+the change of variable <code>acgf2poly</code> (i.e., the vector of 
+autocovariances is not recovered). Instead, 
+the roots of the moving average polynomial <code class="reqn">\theta(L)</code>
+are obtained from the polynomial <code class="reqn">\theta(L)\theta(L^{-1})</code>, 
+where the coefficients are in terms of the polynomial <code class="reqn">B(x)</code> 
+defined above; then, the coefficients of the moving average model are 
+computed by means of <code>roots2poly</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>acgf2poly</code> returns the transformed vector of coefficients.
+</p>
+<p><code>poly2acgf</code> returns an object of class <code>tsdecMAroots</code>
+containing the coefficients and the variance of the 
+innovations in the moving average model related to the autocovariances 
+underlying the transformed coefficients.
+<code>print.tsdecMAroots</code> prints a summary of the results computed 
+by <code>poly2acgf</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Method <code>type="roots2poly"</code> in <code>poly2acgf</code> is based on 
+algorithm <code>pu2ma</code> in the software SSMMATLAB by Gómez, V. 
+URL 
+<a href="http://www.sepg.pap.minhap.gob.es/sitios/sepg/en-GB/Presupuestos/Documentacion/Paginas/SSMMATLAB.aspx">http://www.sepg.pap.minhap.gob.es/sitios/sepg/en-GB/Presupuestos/Documentacion/Paginas/SSMMATLAB.aspx</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>acov2ma</code>, <code>roots2poly</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># the matrix 'm' performs the mapping from the original 
+# to the transformed coefficients
+n &lt;- 30
+m &lt;- diag(1, n, n)
+n2 &lt;- n - 2
+j &lt;- -1
+tmp &lt;- seq.int(2, n-1)
+for (i in seq.int(3, n-2, 2))
+{
+  id &lt;- cbind(seq_len(n2),seq.int(i,n))
+  m[id] &lt;- j * tmp
+  n2 &lt;- n2 - 2
+  j &lt;- -1 * j
+  tmp &lt;- cumsum(tmp[seq_len(n2)])
+}
+if (2*floor(n/2) == n) {  # if (n %% 2 == 0)
+  m[cbind(seq_len(n2),seq.int(n-1,n))] &lt;- j * tmp 
+} else 
+  m[1,n] &lt;- j * tmp
+m[1:10,1:10]
+
+# equivalence of the original and transformed coefficients,
+# example with an ARMA(2,1) model
+#
+# method 1: compute the spectral density upon the 
+# the theoretical autocovariances ('gamma') of the ARMA model
+gamma &lt;- ARMAacov(ar=c(0.8,-0.6), ma=0.4, lag.max=n-1)
+w &lt;- seq(0, pi, len=length(gamma))
+spec1 &lt;- rep(gamma[1], length(w))
+for (i in seq_along(w))
+{
+  z &lt;- 2*cos(w[i] * seq_len(length(gamma)-1))
+  spec1[i] &lt;- spec1[i] + sum(gamma[seq.int(2, n)] * z)
+}
+spec1 &lt;- spec1/(2*pi)
+#plot(w, spec1)
+
+# method 2: compute the spectral density upon the 
+# transformed coefficients
+newcoefs &lt;- m 
+spec2 &lt;- rep(newcoefs[1], length(w))
+for (i in seq_along(w))
+{
+  x &lt;- (2*cos(w[i]))^seq_len(n-1)
+  spec2[i] &lt;- spec2[i] + sum(newcoefs[seq.int(2, n)] * x)
+}
+spec2 &lt;- spec2/(2*pi)
+
+# both representations are equivalent
+all.equal(spec1, spec2, check.names=FALSE)
+#[1] TRUE
+
+# the original coefficients (the autocovariances) 
+# can be recovered premultiplying by the inverse of the 
+# transformation matrix 'm'
+all.equal(c(solve(m) %*% newcoefs), gamma, check.names=FALSE)
+#[1] TRUE
+</code></pre>
+
+
+</div>

@@ -1,0 +1,75 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>path_curves</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Draw the path that the geodesics took.</h2>
+
+<h3>Description</h3>
+
+<p>This computes the projected values of each observation at each step, and
+allows you to recreate static views of the animated plots.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">path_curves(history, data = attr(history, "data"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>history</code></td>
+<td>
+<p>list of bases produced by <code>save_history</code>
+(or otherwise)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>dataset to be projected on to bases</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">path1d &lt;- save_history(flea[, 1:6], grand_tour(1), 3)
+path2d &lt;- save_history(flea[, 1:6], grand_tour(2), 3)
+
+if (require("ggplot2")) {
+  plot(path_curves(path1d))
+  plot(path_curves(interpolate(path1d)))
+
+  plot(path_curves(path2d))
+  plot(path_curves(interpolate(path2d)))
+
+  # Instead of relying on the built in plot method, you might want to
+  # generate your own.  Here are few examples of alternative displays:
+
+  df &lt;- path_curves(path2d)
+  ggplot(data = df, aes(x = step, y = value, group = obs:var, colour = var)) +
+    geom_line() +
+    facet_wrap(~obs)
+
+  library(tidyr)
+  ggplot(
+    data = pivot_wider(df,
+      id_cols = c(obs, step),
+      names_from = var, names_prefix = "Var",
+      values_from = value
+    ),
+    aes(x = Var1, y = Var2)
+  ) +
+    geom_point() +
+    facet_wrap(~step) +
+    coord_equal()
+}
+</code></pre>
+
+
+</div>

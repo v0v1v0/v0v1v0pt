@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mx_mixture</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate mixture models using OpenMx</h2>
+
+<h3>Description</h3>
+
+<p>Dynamically creates a batch of mixture models, with intelligent
+defaults. See Details for more information.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mx_mixture(model, classes = 1L, data = NULL, run = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Syntax for the model; either a character string, or a list of
+character strings, or a list of <code>mxModel</code> objects. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classes</code></td>
+<td>
+<p>A vector of integers, indicating which class solutions to
+generate. Defaults to 1L. E.g., <code>classes = 1:6</code>,
+<code>classes = c(1:4, 6:8)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The data.frame to be used for model fitting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>run</code></td>
+<td>
+<p>Logical, whether or not to run the model. If <code>run = TRUE</code>,
+the function calls <code>mixture_starts</code> and <code>run_mx</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments, passed to functions.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Model syntax can be specified in three ways, for ease of use and
+flexibility:
+</p>
+
+<ol>
+<li>
+<p> An atomic character string with lavaan syntax. Within this syntax,
+the character string <code>{C}</code> is dynamically substituted with the
+correct class number using <code>lsub</code>, for example to set unique
+parameter labels for each class, or to specify equality constraints. E.g.,
+<code>x ~ m{C}*1</code> will be expanded to <code>x ~ m1*1</code> and <code>x ~ m2*1</code>
+when <code>classes = 2</code>. The resulting syntax for each class will be
+converted to an <code>mxModel</code> using <code>as_ram</code>.
+</p>
+</li>
+<li>
+<p> A list of character strings with lavaan syntax. Each item of the list
+will be converted to a class-specific <code>mxModel</code> using
+<code>as_ram</code>.
+</p>
+</li>
+<li>
+<p> A list of <code>mxModel</code> objects, specified by the user.
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>Returns an <code>mxModel</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Van Lissa, C. J., Garnier-Villarreal, M., &amp; Anadria, D. (2023).
+Recommended Practices in Latent Class Analysis using the Open-Source
+R-Package tidySEM. Structural Equation Modeling.
+<a href="https://doi.org/10.1080/10705511.2023.2250920">doi:10.1080/10705511.2023.2250920</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Example 1: Dynamic model generation using {C}
+df &lt;- iris[, 1, drop = FALSE]
+names(df) &lt;- "x"
+mx_mixture(model = "x ~ m{C}*1
+                    x ~~ v{C}*x", classes = 1, data = df)
+# Example 2: Manually specified class-specific models
+df &lt;- iris[1:2]
+names(df) &lt;- c("x", "y")
+mx_mixture(model = list("y ~ a*x",
+                        "y ~ b*x"),
+                        meanstructure = TRUE,
+                        data = df) -&gt; res
+
+# Example 3: Latent growth model
+df &lt;- empathy[1:6]
+mx_mixture(model = "i =~ 1*ec1 + 1*ec2 + 1*ec3 +1*ec4 +1*ec5 +1*ec6
+                    s =~ 0*ec1 + 1*ec2 + 2*ec3 +3*ec4 +4*ec5 +5*ec6",
+                    classes = 2,
+                    data = df) -&gt; res
+
+## End(Not run)
+</code></pre>
+
+
+</div>

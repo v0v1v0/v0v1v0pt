@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data.fims.Aus.Jpn.scored</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Dataset FIMS Study with Responses of Australian and Japanese Students
+</h2>
+
+<h3>Description</h3>
+
+<p>Dataset FIMS study with raw responses (<code>data.fims.Aus.Jpn.raw</code>) or
+scored responses (<code>data.fims.Aus.Jpn.scored</code>) of Australian and
+Japanese Students.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data(data.fims.Aus.Jpn.raw)
+data(data.fims.Aus.Jpn.scored)
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>A data frame with 6371 observations on the following 16 variables.
+</p>
+
+<dl>
+<dt><code>SEX</code></dt>
+<dd>
+<p>Gender: 1 – male, 2 – female</p>
+</dd>
+<dt><code>M1PTI1</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI2</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI3</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI6</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI7</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI11</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI12</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI14</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI17</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI18</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI19</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI21</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI22</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>M1PTI23</code></dt>
+<dd>
+<p>A Mathematics item</p>
+</dd>
+<dt><code>country</code></dt>
+<dd>
+<p>Country: 1 – Australia, 2 – Japan</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><a href="http://www.edmeasurementsurveys.com/TAM/Tutorials/7DIF.htm">http://www.edmeasurementsurveys.com/TAM/Tutorials/7DIF.htm</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data(data.fims.Aus.Jpn.scored)
+#*****
+# Model 1: Differential Item Functioning Gender for Australian students
+
+# extract Australian students
+scored &lt;- data.fims.Aus.Jpn.scored[ data.fims.Aus.Jpn.scored$country==1, ]
+
+# select items
+items &lt;- grep("M1", colnames(data.fims.Aus.Jpn.scored), value=TRUE)
+##   &gt; items
+##    [1] "M1PTI1"  "M1PTI2"  "M1PTI3"  "M1PTI6"  "M1PTI7"  "M1PTI11" "M1PTI12"
+##    [8] "M1PTI14" "M1PTI17" "M1PTI18" "M1PTI19" "M1PTI21" "M1PTI22" "M1PTI23"
+
+# Run partial credit model
+mod1 &lt;- TAM::tam.mml(scored[,items])
+
+# extract values of the gender variable into a variable called "gender".
+gender &lt;- scored[,"SEX"]
+# computes the test score for each student by calculating the row sum
+# of each student's scored responses.
+raw_score &lt;- rowSums(scored[,items] )
+
+# compute the mean test score for each gender group: 1=male, and 2=female
+stats::aggregate(raw_score,by=list(gender),FUN=mean)
+# The mean test score is 6.12 for group 1 (males) and 6.27 for group 2 (females).
+# That is, the two groups performed similarly, with girls having a slightly
+# higher mean test score. The step of computing raw test scores is not necessary
+# for the IRT analyses. But it's always a good practice to explore the data
+# a little before delving into more complex analyses.
+
+# Facets analysis
+# To conduct a DIF analysis, we set up the variable "gender" as a facet and
+# re-run the IRT analysis.
+formulaA &lt;- ~item+gender+item*gender    # define facets analysis
+facets &lt;- as.data.frame(gender)         # data frame with student covariates
+# facets model for studying differential item functioning
+mod2 &lt;- TAM::tam.mml.mfr( resp=scored[,items], facets=facets, formulaA=formulaA )
+summary(mod2)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

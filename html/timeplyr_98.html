@@ -1,0 +1,283 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_episodes</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Episodic calculation of time-since-event data</h2>
+
+<h3>Description</h3>
+
+<p>This function assigns episodes to events
+based on a pre-defined threshold of a chosen time unit.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_episodes(
+  data,
+  time,
+  time_by = NULL,
+  window = 1,
+  roll_episode = TRUE,
+  switch_on_boundary = TRUE,
+  fill = 0,
+  .add = FALSE,
+  event = NULL,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  .by = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Date or datetime variable to use for the episode calculation.
+Supply the variable using <code>tidyselect</code> notation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time units used to calculate episode flags.
+If <code>time_by</code> is <code>NULL</code> then a heuristic will try and estimate the highest
+order time unit associated with the time variable.
+If specified, then by must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window</code></td>
+<td>
+<p>Single number defining the episode threshold.
+When <code>rolling = TRUE</code> events with a
+<code>t_elapsed &gt;= window</code> since the last event
+are defined as a new episode. <br>
+When <code>rolling = FALSE</code> events with a
+<code>t_elapsed &gt;= window</code> since the first event of the corresponding episode
+are defined as a new episode. <br>
+By default, <code>window = 1</code> which assigns every event to a new episode.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_episode</code></td>
+<td>
+<p>Logical.
+Should episodes be calculated using a rolling or fixed window?
+If <code>TRUE</code> (the default), an amount of time must have passed (<code style="white-space: pre;">⁠&gt;= window⁠</code>)
+since the last event, with each new event
+effectively resetting the time at which
+you start counting. <br>
+If <code>FALSE</code>, the elapsed time is fixed and
+new episodes are defined based on how much cumulative time has
+passed since the first event of each episode.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>switch_on_boundary</code></td>
+<td>
+<p>When an exact amount of time
+(specified in <code>time_by</code>) has passed, should there be an increment in ID? <br>
+The default is <code>TRUE</code>. <br>
+For example, if <code>time_by = "days"</code> and
+<code>switch_on_boundary = FALSE</code>, <code style="white-space: pre;">⁠&gt; 1⁠</code> day must have passed, otherwise
+<code style="white-space: pre;">⁠&gt;= 1⁠</code> day must have passed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>Value to fill first time elapsed value. Only applicable when
+<code>roll_episode = TRUE</code>. <br>
+Default is <code>0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.add</code></td>
+<td>
+<p>Should episodic variables be added to the data? <br>
+If <code>FALSE</code> (the default), then only the relevant variables are returned. <br>
+If <code>TRUE</code>, the episodic variables are added to the original data.
+In both cases, the order of the data is unchanged.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>event</code></td>
+<td>
+<p>(<b>Optional</b>) List that encodes which rows are events,
+and which aren't.
+By default <code>time_episodes()</code>
+assumes every observation (row) is an event
+but this need not be the case. <br><code>event</code> must be a named list of length 1 where the values of the
+list element represent the event. For example, if your events were coded as
+<code>0</code> and <code>1</code> in a variable named "evt" where <code>1</code> represents the event,
+you would supply <code>event = list(evt = 1)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>Time type, either "auto", "duration" or "period".
+With larger data, it is recommended to use <code>time_type = "duration"</code> for
+speed and efficiency.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using <code>tidyselect</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>time_episodes()</code> calculates the time elapsed (rolling or fixed) between
+successive events, and flags these events as episodes or not based on how much
+time has passed.
+</p>
+<p>An example of episodic analysis can include disease infections over time.
+</p>
+<p>In this example, a positive test result represents an <b>event</b> and <br>
+a new infection represents a new <b>episode</b>.
+</p>
+<p>It is assumed that after a pre-determined amount of time, a positive result
+represents a new episode of infection.
+</p>
+<p>To perform simple time-since-event analysis, which means one
+is not interested in episodes, simply use <code>time_elapsed()</code> instead.
+</p>
+<p>To find implicit missing gaps in time, set <code>window</code> to <code>1</code> and
+<code>switch_on_boundary</code> to <code>FALSE</code>. Any event classified as an
+episode in this scenario is an event following a gap in time.
+</p>
+<p>The data are always sorted before calculation and then
+sorted back to the input order.
+</p>
+<p>4 Key variables will be calculated:
+</p>
+
+<ul>
+<li> <p><b>ep_id</b> - An integer variable signifying
+which episode each event belongs to. <br>
+Non-events are assigned <code>NA</code>. <br><code>ep_id</code> is an increasing integer starting at 1.
+In the infections scenario, 1 are positives within the
+first episode of infection,
+2 are positives within the second episode of infection and so on.
+</p>
+</li>
+<li> <p><b>ep_id_new</b> - An integer variable signifying the first
+instance of each new episode.
+This is an increasing integer where
+0 signifies within-episode observations and &gt;= 1
+signifies the first instance of the respective episode.
+</p>
+</li>
+<li> <p><b>t_elapsed</b> - The time elapsed since the last event. <br>
+When <code>roll_episode = FALSE</code>, this becomes the time elapsed since the
+first event of the current episode.
+Time units are specified in the by argument.
+</p>
+</li>
+<li> <p><b>ep_start</b> - Start date/datetime of the episode.
+</p>
+</li>
+</ul>
+<p><code>data.table</code> and <code>collapse</code> are used for speed and efficiency.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> in the same order as it was given.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>time_elapsed time_seq_id
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(nycflights13)
+library(lubridate)
+library(ggplot2)
+
+# Say we want to flag origin-destination pairs
+# that haven't seen departures or arrivals for a week
+
+events &lt;- flights %&gt;%
+  mutate(date = as_date(time_hour)) %&gt;%
+  group_by(origin, dest) %&gt;%
+  time_episodes(date, time_by = "week", window = 1)
+
+# The pooled average time between flights of a specific origin and destination
+# is ~ 5.2 hours
+# This average is a weighted average of average time between events
+# Weighted by the frequency of origin-destination groups (pairs)
+
+# It can be calculated like so:
+# flights %&gt;%
+#   arrange(origin, dest, time_hour) %&gt;%
+#   group_by(origin, dest) %&gt;%
+#   mutate(time_diff = time_diff(lag(time_hour), time_hour, "hours")) %&gt;%
+#   summarise(n = n(),
+#             mean = mean(time_diff, na.rm = TRUE)) %&gt;%
+#   ungroup() %&gt;%
+#   summarise(pooled_mean = weighted.mean(mean, n, na.rm = TRUE))
+
+events
+
+episodes &lt;- events %&gt;%
+  filter(ep_id_new &gt; 1)
+nrow(fdistinct(episodes, origin, dest)) # 55 origin-destinations
+
+# As expected summer months saw the least number of
+# dry-periods
+episodes %&gt;%
+  ungroup() %&gt;%
+  time_by(ep_start, time_by = "week",
+          .name = "ep_start", as_interval = FALSE) %&gt;%
+  count() %&gt;%
+  ggplot(aes(x = ep_start, y = n)) +
+  geom_bar(stat = "identity")
+
+</code></pre>
+
+
+</div>

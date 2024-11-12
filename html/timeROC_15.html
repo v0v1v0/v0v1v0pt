@@ -1,0 +1,294 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>timeROC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Time-dependent ROC curve estimation
+</h2>
+
+<h3>Description</h3>
+
+<p>Inverse Probability of Censoring Weighting (IPCW) estimation of Cumulative/Dynamic time-dependent ROC curve. The function works in the usual survival setting as well as in the competing risks setting. Computation of the iid-representation of areas under time-dependent ROC curves is implemented. This enables computation of inference procedures: Confidence intervals and tests for comparing two AUCs of two different markers measured on the same subjects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">timeROC(T, delta, marker, other_markers = NULL, cause,
+	    weighting = "marginal", times, ROC = TRUE, iid = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>T</code></td>
+<td>
+
+<p>The vector of (censored) event-times.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+
+<p>The vector of event indicators at the corresponding value of the vector <code>T</code>. Censored observations must be denoted by the value <code>0</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>marker</code></td>
+<td>
+
+<p>The vector of the marker values for which we want to compute the time-dependent ROC curves. 
+Without loss of generality, the function assumes that larger values of the marker are associated with higher risks of events. If lower values of the marker are associated with higher risks of events, then reverse the association adding a minus to the marker values.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>other_markers</code></td>
+<td>
+
+<p>A matrix that contains values of other markers that we want to take into account for computing the inverse probability of censoring weights. The different columns represent the different markers. This argument is optional, and ignored if <code>method="marginal"</code>. Default value is <code>other_markers=NULL</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cause</code></td>
+<td>
+
+<p>The value of the event indicator that represents the event of interest for which we aim to compute the time-dependent ROC curve. Without competing risks, it must be the value that indicates a non-censored obsevation (usually <code>1</code>). With competing risks, subjects can undergo different type of events; then, it must be the value corresponding to the event of interest, for which we aim to compute the ROC curve (usually <code>1</code> or <code>2</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighting</code></td>
+<td>
+
+<p>The method used to compute the weights. <code>weighting="marginal"</code> uses the Kaplan-Meier estimator of the censoring distribution. <code>weighting="cox"</code> and <code>weighting="aalen"</code> model the censoring by the Cox model and the additive Aalen model respectively. Default value is <code>weighting="marginal"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+
+<p>The vector of times points "t" at which we want to compute the time-dependent ROC curve. If vector <code>times</code> contains only a single value, then value zero is added.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ROC</code></td>
+<td>
+
+<p>A logical value that indicates if we want to save the estimates of
+sensitivities and specificties. Default value is <code>ROC = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iid</code></td>
+<td>
+
+<p>A logical value that indicates if we want to compute the iid-representation of the area under time-dependent ROC curve estimator. <code>iid = TRUE</code> is required for computation of all inference procedures (Confidence intervals or test for comparing AUCs). For large sample size (greater than 2000, say) and/or large length of vector <code>times</code>, the computation of the iid representations might be time-consuming.  Default value is <code>iid = FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function computes Inverse Probability of Censoring Weighting (IPCW) estimates of Cumulative/Dynamic time-dependent ROC curve. 
+By definition, time-dependent ROC curve intrinsically depends on the definitions of time-dependent cases and controls.<br>
+Let <code class="reqn">T_i</code> denote the event time of the subject <code class="reqn">i</code>.
+</p>
+<p><b>Without competing risks :</b>  A case is defined as a subject <code class="reqn">i</code> with <code class="reqn">T_i \leq t</code>. A control is defined as a subject <code class="reqn">i</code> with <code class="reqn">T_i &gt; t</code>.
+</p>
+<p><b>With competing risks :</b> In this setting, subjects may undergo different type of events, denoted by <code class="reqn">\delta_i</code> in the following. Let suppose that we are interested in the event <code class="reqn">\delta_i=1</code>. Then, a case is defined as a subject <code class="reqn">i</code> with <code class="reqn">T_i \leq t</code> and <code class="reqn">\delta_i=1</code>.
+With competing risks, two definitions of controls were suggested: <b>(i)</b> a control is defined as a subject <code class="reqn">i</code> that is free of any event, i.e with   <code class="reqn">T_i &gt; t</code>, and <b>(ii)</b> a control is defined as a subject <code class="reqn">i</code> that is not a case, i.e with <code class="reqn">T_i &gt; t</code> or with <code class="reqn">T_i \leq t</code> and <code class="reqn">\delta_i \neq 1</code>.
+For all outputs of this package, objects named with <code>_1</code> refer to definition <b>(i)</b>. For instance <code>AUC_1</code> or <code>se_1</code> refer to time-dependent area under the ROC curve and its estimated standard error according to the definition <b>(i)</b>. Objects named with <code>_2</code> refer to definition <b>(ii)</b> .
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of class "ipcwsurvivalROC" or "ipcwcompetingrisksROC", depending on if there is competing risk or not, that is a list. For these classes, there are print, plot and confint methods. Most objects that they contain are similar, but some are specific to each class.
+</p>
+<p><b>Specific objects of class "ipcwsurvivalROC" :</b>
+</p>
+
+<ul>
+<li> <p><code>AUC</code> : vector of time-dependent AUC estimates at each time points.
+</p>
+</li>
+<li> <p><code>TP</code> : matrix of time-dependent True Positive fraction (sensitivity) estimates. 
+</p>
+</li>
+<li> <p><code>FP</code> : matrix of time-dependent False Positive fraction (1-specificity) estimates. 
+</p>
+</li>
+</ul>
+<p><b>Specific objects of class "ipcwcompetingrisksROC" :</b>
+</p>
+
+<ul>
+<li> <p><code>AUC_1</code> : vector of time-dependent AUC estimates at each time points with definition <b>(i)</b> of controls (see Details). 
+</p>
+</li>
+<li> <p><code>AUC_2</code> : vector of time-dependent AUC estimates at each time points with definition <b>(ii)</b>  of controls (see Details).  
+</p>
+</li>
+<li> <p><code>TP</code> : matrix of time-dependent True Positive fraction (sensitivity) estimates. 
+</p>
+</li>
+<li> <p><code>FP_1</code> : matrix of time-dependent False Positive fraction (1-specificity) estimates with definition <b>(i)</b> of controls (see Details). 
+</p>
+</li>
+<li> <p><code>FP_2</code> : matrix of time-dependent False Positive fraction (1-specificity) estimates with definition <b>(ii)</b>  of controls (see Details). 
+</p>
+</li>
+</ul>
+<p><b>Objects common to  both classes :</b>
+</p>
+  
+<ul>
+<li> <p><code>times</code> : the time points for which the time-dependent ROC curves were computed. 
+</p>
+</li>
+<li> <p><code>weights</code> : a object of class "IPCW", containing all informations about the weights. See <code>ipcw</code> function of <code>pec</code> package.
+</p>
+</li>
+<li> <p><code>computation_time</code> : the total computation time.  
+</p>
+</li>
+<li> <p><code>CumulativeIncidence</code> : the vector of estimated probabilities of being a case at each time points.
+</p>
+</li>
+<li> <p><code>survProb</code> : the vector of estimated probabilities of being event-free at each time points.
+</p>
+</li>
+<li> <p><code>Stats</code> : a matrix containing descriptive statistics at each time points (like numbers of observed cases or censored observations before each time points).
+</p>
+</li>
+<li> <p><code>iid</code> : the logical value of parameter <code>iid</code> used in argument.
+</p>
+</li>
+<li> <p><code>n</code> : the sample size, after having omitted missing vaues. 
+</p>
+</li>
+<li> <p><code>inference</code> : a list that contains, among other things, iid-representations and estimated standard errors of the estimators, and that is used for computation of comparison tests and confidence intervals.
+</p>
+</li>
+<li> <p><code>computation_time</code> : the computation time, in seconds.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Paul Blanche <a href="mailto:pabl@sund.ku.dk">pabl@sund.ku.dk</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Hung, H. and Chiang, C. (2010). Estimation methods for time-dependent AUC with survival data.
+Canadian Journal of Statistics, 38(1):8-26
+</p>
+<p>Uno, H., Cai, T., Tian, L. and Wei, L. (2007). Evaluating prediction rules for t-years survivors with censored regression models.
+Journal of the American Statistical Association, 102(478):527-537.
+</p>
+<p>Blanche, P., Dartigues, J. F., &amp; Jacqmin-Gadda,	H. (2013). Estimating and comparing time-dependent areas under
+receiver operating characteristic curves for censored event times with competing risks. 
+Statistics in medicine, 32(30), 5381-5397.
+</p>
+<p>P. Blanche, A. Latouche, V. Viallon (2013). Time-dependent AUC with right-censored data: A Survey.
+Risk Assessment and Evaluation of Predictions, 239-251,
+Springer, <a href="http://arxiv.org/abs/1210.6805">http://arxiv.org/abs/1210.6805</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>compare</code> for testing a difference of time-dependent AUCs.
+</p>
+</li>
+<li> <p><code>confint</code> for confidence intervals of  time-dependent AUC.
+</p>
+</li>
+<li> <p><code>SeSpPPVNPV</code> for estimating Sensitivity (Se), Specificity (Sp), Positive Predictive
+Value (PPV) and Negative Predictive Value (NPV) at a given cutpoint
+marker value.
+</p>
+</li>
+<li> <p><code>plot</code> for plotting  time-dependent ROC curves.
+</p>
+</li>
+<li> <p><code>plotAUCcurve</code> for plotting time-dependent AUC curve.
+</p>
+</li>
+<li> <p><code>plotAUCcurveDiff</code> for  plotting the curve of the
+difference of two time-dependent AUCs over time.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">##-------------Without competing risks-------------------
+library(survival)
+data(pbc)
+head(pbc)
+pbc&lt;-pbc[!is.na(pbc$trt),] # select only randomised subjects
+pbc$status&lt;-as.numeric(pbc$status==2) # create event indicator: 1 for death, 0 for censored
+
+# we evaluate bilirubin as a prognostic biomarker for death.
+
+# 1) with the Kaplan-Meier estimator for computing the weights (default).
+ROC.bili.marginal&lt;-timeROC(T=pbc$time,
+                  delta=pbc$status,marker=pbc$bili,
+                  cause=1,weighting="marginal",
+                  times=quantile(pbc$time,probs=seq(0.2,0.8,0.1)),
+                  iid=TRUE)
+ROC.bili.marginal
+
+# 2) with a Cox model (with covariates bili, chol and albumin) for computing the weights.
+ROC.bili.cox&lt;-timeROC(T=pbc$time,
+                      delta=pbc$status,marker=pbc$bili,
+                      other_markers=as.matrix(pbc[,c("chol","albumin")]),
+                      cause=1,weighting="cox",
+                      times=quantile(pbc$time,probs=seq(0.2,0.8,0.1)))
+ROC.bili.cox
+
+##-------------With competing risks-------------------
+
+
+#---------Example with Melano data-------
+data(Melano)
+
+# Evaluate tumor thickness as a prognostic biomarker for
+# death from malignant melanoma.
+ROC.thick&lt;-timeROC(T=Melano$time,delta=Melano$status,
+                   weighting="aalen",
+                   marker=Melano$thick,cause=1,
+                   times=c(1800,2000,2200))
+ROC.thick
+
+#---------Example with Paquid data--------
+data(Paquid)
+
+# evaluate DDST cognitive score as a prognostic tool for
+# dementia onset, accounting for death without dementia competing risk.
+ROC.DSST&lt;-timeROC(T=Paquid$time,delta=Paquid$status,
+                  marker=-Paquid$DSST,cause=1,
+                  weighting="cox",
+                  other_markers=as.matrix(Paquid$MMSE),
+                  times=c(3,5,10),ROC=TRUE)
+ROC.DSST 
+plot(ROC.DSST,time=5)        
+</code></pre>
+
+
+</div>

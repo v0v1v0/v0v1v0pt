@@ -1,0 +1,121 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>JarqueBera.test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Jarque-Bera Test for Normality</h2>
+
+<h3>Description</h3>
+
+<p>This function applies the test for normality proposed in Jarque and Bera (1980).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">JarqueBera.test(x, fc = 3.5, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a time series of residuals or an object of class <code>Arima</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fc</code></td>
+<td>
+<p>a numeric. Factor to asses whether the first residual observations 
+are to be omitted. Ignored if <code>x</code> is not an <code>Arima</code> object. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments. Currently omitted.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is based on function <code>jarque.bera.test</code> 
+available in package <span class="pkg">tseries</span>.
+Here, the results are split in a test for the null hypothesis that the 
+skewness is <code class="reqn">0</code>, the null that the kurtosis is <code class="reqn">3</code> and the overall 
+Jarque-Bera test.
+</p>
+<p>The input can be a time series of residuals, <code>jarque.bera.test.default</code>,
+or an <code>Arima</code> object, <code>jarque.bera.test.Arima</code> from which the residuals 
+are extracted.
+In the former case the whole input series of residuals is used. 
+In the latter case,
+the first <code class="reqn">n0</code> (defined below) residuals are omitted if they are are equal to zero
+or if any of them are in absolute value larger than <code>fc</code> times 
+the standard deviation of the remaining residuals.
+<code class="reqn">n0</code> is set equal to <code>x$arma[6] + x$arma[5] * x$arma[7]</code>, i.e. 
+the number of regular differences times the periodicity of the data times 
+the number of seasonal differences. If <code class="reqn">n0</code> happens to be equal to <code class="reqn">1</code> 
+it is set to <code class="reqn">2</code>.
+</p>
+<p>If the latter trimming operation is not desired, 
+the argument <code>fc</code> can be set to a high value to ensure the complete 
+series of residuals in considered; or the function can be called 
+as <code>jarque.bera.test(residuals(x))</code>.
+</p>
+<p>Missing observations are omitted.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing one <code>htest</code> object for the null hypothesis that 
+the kurtosis is <code class="reqn">3</code>, the skewness is <code class="reqn">0</code> and a test combining 
+both the kurtosis and the skewness to test for the normality of the input data.
+</p>
+
+
+<h3>References</h3>
+
+<p>Jarque, C. M. and Bera, A. K. (1980). 
+‘Efficient test for normality, homoscedasticity and 
+serial independence of residuals’.
+<em>Economic Letters</em>, <b>6</b>(3), pp. 255-259.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>print.mhtest</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># fit an ARIMA model to the HICP 011600 series
+# ARIMA(0,1,0)(2,0,1) was chosen by forecast::auto.arima(ic = "bic")
+# normality of the residuals is rejected at the 5% significance level
+# due to an excess of kurtosis
+data("hicp")
+y &lt;- log(hicp[["011600"]])
+fit1 &lt;- arima(y, order = c(0, 1, 0), seasonal = list(order = c(2, 0, 1)))
+JarqueBera.test(fit1)
+JarqueBera.test(residuals(fit1))
+
+# fit ARIMA model for the same series including outliers that were
+# detected by "tso" and for the model chosen by "auto.arima"
+# normality of the residuals is not rejected at the 5% significance level
+# after including the presence of outliers
+mo &lt;- outliers(c("AO", "AO", "LS", "LS"), c(79, 210, 85, 225))
+xreg &lt;- outliers.effects(mo, length(y))
+fit2 &lt;- arima(y, order = c(1, 1, 0), seasonal = list(order = c(2, 0, 2)), 
+  xreg = xreg)
+JarqueBera.test(fit2)
+</code></pre>
+
+
+</div>

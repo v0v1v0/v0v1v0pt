@@ -1,0 +1,284 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot_with_settings_ui</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot-with-settings module</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+Universal module for plots with settings for height, width, and download.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plot_with_settings_ui(id)
+
+plot_with_settings_srv(
+  id,
+  plot_r,
+  height = c(600, 200, 2000),
+  width = NULL,
+  show_hide_signal = reactive(TRUE),
+  brushing = FALSE,
+  clicking = FALSE,
+  dblclicking = FALSE,
+  hovering = FALSE,
+  graph_align = "left"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>(<code>character(1)</code>) <code>shiny</code> module id.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_r</code></td>
+<td>
+<p>(<code>reactive</code> or <code>function</code>)<br><code>reactive</code> expression or a simple <code>function</code> to draw a plot.
+A simple <code>function</code> is needed e.g. for base plots like <code>plot(1)</code> as the output can not be caught when downloading.
+Take into account that simple functions are less efficient than reactive, as not catching the result.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>height</code></td>
+<td>
+<p>(<code>numeric</code>, optional)<br>
+vector with three elements c(VAL, MIN, MAX), where VAL is the starting value of the slider in
+the main and modal plot display. The value in the modal display is taken from the value of the
+slider in the main plot display.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>(<code>numeric</code>, optional)<br>
+vector with three elements <code>c(VAL, MIN, MAX)</code>, where VAL is the starting value of the slider in
+the main and modal plot display; <code>NULL</code> for default display. The value in the modal
+display is taken from the value of the slider in the main plot display.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_hide_signal</code></td>
+<td>
+<p>optional, (<code>reactive logical</code> a mechanism to allow modules which call this
+module to show/hide the plot_with_settings UI)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>brushing</code></td>
+<td>
+<p>(<code>logical</code>, optional)<br>
+a mechanism to enable / disable brushing on the main plot (in particular: not the one displayed
+in modal). All the brushing data is stored as a reactive object in the <code>"brush"</code> element of
+returned list. See the example for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clicking</code></td>
+<td>
+<p>(<code>logical</code>)<br>
+a mechanism to enable / disable clicking on data points on the main plot (in particular: not the
+one displayed in modal). All the clicking data is stored as a reactive object in the <code>"click"</code>
+element of returned list. See the example for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dblclicking</code></td>
+<td>
+<p>(<code>logical</code>, optional)<br>
+a mechanism to enable / disable double-clicking on data points on the main plot (in particular:
+not the one displayed in modal). All the double clicking data is stored as a reactive object in
+the <code>"dblclick"</code> element of returned list. See the example for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hovering</code></td>
+<td>
+<p>(<code>logical(1)</code>, optional)<br>
+a mechanism to enable / disable hovering over data points on the main plot (in particular: not
+the one displayed in modal). All the hovering data is stored as a reactive object in the
+<code>"hover"</code> element of returned list. See the example for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>graph_align</code></td>
+<td>
+<p>(<code>character(1)</code>, optional)<br>
+one of <code>"left"</code> (default), <code>"center"</code>, <code>"right"</code> or <code>"justify"</code>. The alignment of the graph on
+the main page.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>By default the plot is rendered with <code style="white-space: pre;">⁠72 dpi⁠</code>. In order to change this, to for example 96 set
+<code>options(teal.plot_dpi = 96)</code>. The minimum allowed <code>dpi</code> value is <code>24</code> and it must be a whole number.
+If an invalid value is set then the default value is used and a warning is outputted to the console.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>shiny</code> module.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Example using a reactive as input to plot_r
+library(shiny)
+app1 &lt;- shinyApp(
+  ui = fluidPage(
+    plot_with_settings_ui(
+      id = "plot_with_settings"
+    )
+  ),
+  server = function(input, output, session) {
+    plot_r &lt;- reactive({
+      ggplot2::ggplot(faithful, ggplot2::aes(x = waiting, y = eruptions)) +
+        ggplot2::geom_point()
+    })
+
+    plot_with_settings_srv(
+      id = "plot_with_settings",
+      plot_r = plot_r,
+      height = c(400, 100, 1200),
+      width = c(500, 250, 750)
+    )
+  }
+)
+
+if (interactive()) {
+  shinyApp(app1$ui, app1$server)
+}
+
+# Example using a function as input to plot_r
+app2 &lt;- shinyApp(
+  ui = fluidPage(
+    radioButtons("download_option", "Select the Option", list("ggplot", "trellis", "grob", "base")),
+    plot_with_settings_ui(
+      id = "plot_with_settings"
+    ),
+    sliderInput("nums", "Value", 1, 10, 1)
+  ),
+  server = function(input, output, session) {
+    plot_r &lt;- function() {
+      numbers &lt;- seq_len(input$nums)
+      if (input$download_option == "ggplot") {
+        ggplot2::ggplot(data.frame(n = numbers), ggplot2::aes(n)) +
+          ggplot2::geom_bar()
+      } else if (input$download_option == "trellis") {
+        lattice::densityplot(numbers)
+      } else if (input$download_option == "grob") {
+        tr_plot &lt;- lattice::densityplot(numbers)
+        ggplot2::ggplotGrob(
+          ggplot2::ggplot(data.frame(n = numbers), ggplot2::aes(n)) +
+            ggplot2::geom_bar()
+        )
+      } else if (input$download_option == "base") {
+        plot(numbers)
+      }
+    }
+
+    plot_with_settings_srv(
+      id = "plot_with_settings",
+      plot_r = plot_r,
+      height = c(400, 100, 1200),
+      width = c(500, 250, 750)
+    )
+  }
+)
+
+if (interactive()) {
+  shinyApp(app2$ui, app2$server)
+}
+
+# Example with brushing/hovering/clicking/double-clicking
+app3 &lt;- shinyApp(
+  ui = fluidPage(
+    plot_with_settings_ui(
+      id = "plot_with_settings"
+    ),
+    fluidRow(
+      column(4, h3("Brush"), verbatimTextOutput("brushing_data")),
+      column(4, h3("Click"), verbatimTextOutput("clicking_data")),
+      column(4, h3("DblClick"), verbatimTextOutput("dblclicking_data")),
+      column(4, h3("Hover"), verbatimTextOutput("hovering_data"))
+    )
+  ),
+  server = function(input, output, session) {
+    plot_r &lt;- reactive({
+      ggplot2::ggplot(faithful, ggplot2::aes(x = waiting, y = eruptions)) +
+        ggplot2::geom_point()
+    })
+
+    plot_data &lt;- plot_with_settings_srv(
+      id = "plot_with_settings",
+      plot_r = plot_r,
+      height = c(400, 100, 1200),
+      brushing = TRUE,
+      clicking = TRUE,
+      dblclicking = TRUE,
+      hovering = TRUE
+    )
+
+    output$brushing_data &lt;- renderPrint(plot_data$brush())
+    output$clicking_data &lt;- renderPrint(plot_data$click())
+    output$dblclicking_data &lt;- renderPrint(plot_data$dblclick())
+    output$hovering_data &lt;- renderPrint(plot_data$hover())
+  }
+)
+
+if (interactive()) {
+  shinyApp(app3$ui, app3$server)
+}
+
+# Example which allows module to be hidden/shown
+library("shinyjs")
+
+app4 &lt;- shinyApp(
+  ui = fluidPage(
+    useShinyjs(),
+    actionButton("button", "Show/Hide"),
+    plot_with_settings_ui(
+      id = "plot_with_settings"
+    )
+  ),
+  server = function(input, output, session) {
+    plot_r &lt;- plot_r &lt;- reactive(
+      ggplot2::ggplot(faithful, ggplot2::aes(x = waiting, y = eruptions)) +
+        ggplot2::geom_point()
+    )
+
+    show_hide_signal_rv &lt;- reactiveVal(TRUE)
+
+    observeEvent(input$button, show_hide_signal_rv(!show_hide_signal_rv()))
+
+    plot_with_settings_srv(
+      id = "plot_with_settings",
+      plot_r = plot_r,
+      height = c(400, 100, 1200),
+      width = c(500, 250, 750),
+      show_hide_signal = reactive(show_hide_signal_rv())
+    )
+  }
+)
+
+if (interactive()) {
+  shinyApp(app4$ui, app4$server)
+}
+
+</code></pre>
+
+
+</div>

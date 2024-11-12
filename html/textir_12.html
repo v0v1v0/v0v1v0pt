@@ -1,0 +1,203 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pls</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Partial Least Squares </h2>
+
+<h3>Description</h3>
+
+<p> A simple partial least squares procedure. </p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pls(x, y, K=1, scale=TRUE, verb=TRUE) 
+
+## S3 method for class 'pls'
+predict( object, newdata, type="response", ... )
+
+## S3 method for class 'pls'
+summary( object, ... )
+
+## S3 method for class 'pls'
+print(x, ... )
+
+## S3 method for class 'pls'
+plot(x, K=NULL, xlab="response", ylab=NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p> The covariate matrix, in either <code>dgCMatrix</code> or <code>matrix</code> format.   For <code>plot</code> and <code>print</code>: a <code>pls</code> output object. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p> The response vector.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p> The number of desired PLS directions. In plotting, this can be a vector of directions to draw, otherwise directions <code>1:fit$K</code> are plotted.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p> An indicator for whether to scale <code>x</code>; usually a good idea. 
+If <code>scale=TRUE</code>, model is fit with x scaled to have variance-one columns.   </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verb</code></td>
+<td>
+<p> Whether or not to print a small progress script. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>  For <code>predict</code> and <code>summary</code>: a <code>pls</code> output object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>   For <code>predict</code>, an <code>ncol(x)</code>-column matrix of 
+new observations. Can be either a simple <code>matrix</code> or a <code>simple_triplet_matrix</code>.   </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>  For <code>predict</code>, a choice between output types: predictions scaled to the original response for <code>"response"</code>, fitted partial least squares directions for <code>"reduction"</code>. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab</code></td>
+<td>
+<p> For <code>plot</code>, the x-axis label. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylab</code></td>
+<td>
+<p> For <code>plot</code>, the y-axis label. If null, will be set to ‘pls(k) fitted values’ for each k.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+ <p><code>pls</code> fits the Partial Least Squares algorithm described in Taddy (2012; Appendix A.1). 
+In particular, 	we obtain loadings <code>loadings[,k]</code> as the correlation between
+<code>X</code> and factors <code>factors[,k]</code>, where <code>factors[,1]</code> is initialized      
+at <code>scale(as.numeric(y))</code> and subsequent factors are orthogonal to
+to the k'th pls direction, an ortho-normal transformation of <code>x%*%loadings[,k]</code>.
+</p>
+<p><code>predict.pls</code> returns predictions from the <code>object$fwdmod</code>
+forward regression <code class="reqn">\alpha + \beta*z</code> for projections <code>z = x*loadings -
+shift</code> derived from new covariates, or if <code>type="reduction"</code> it just returns these projections.
+<code>summary.pls</code> prints dimension details and a quick summary of the 
+corresponding forward regression. <code>plot.pls</code> draws response
+versus fitted values for least-squares fit onto the K pls directions. </p>
+
+
+<h3>Value</h3>
+
+<p> Output from <code>pls</code> is a list with the following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>The response vector. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The unchanged covariate matrix. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>directions</code></td>
+<td>
+<p>The pls directions: <code>x%*%loadings - shift</code>. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loadings</code></td>
+<td>
+<p>The pls loadings. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shift</code></td>
+<td>
+<p> Shift applied after projection to center the PLS directions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fitted</code></td>
+<td>
+<p><code>K</code> columns of fitted <code>y</code> values for each number of directions. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fwdmod</code></td>
+<td>
+<p> The <code>lm</code> object from forward regression <code>lm(as.numeric(y)~directions)</code>. </p>
+</td>
+</tr>
+</table>
+<p><code>predict.pls</code> outputs either a vector of predicted resonse or an <code>nrow(newcounts)</code> by <code>ncol(object$loadings)</code> matrix of pls directions for each new observation. Summary and plot produce return nothing.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p> Matt Taddy <a href="mailto:taddy@chicagobooth.edu">taddy@chicagobooth.edu</a> </p>
+
+
+<h3>References</h3>
+
+<p>Taddy (2013), <em>Multinomial Inverse Regression for Text Analysis</em>.
+Journal of the American Statistical Association 108.
+</p>
+<p>Wold, H. (1975), <em>Soft modeling by latent variables: The nonlinear iterative partial least squares approach</em>. 
+In Perspectives in Probability and Statistics, Papers in Honour of M.S. Bartlett.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>normalize, sdev, corr, congress109
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(congress109)
+x &lt;- t( t(congress109Counts)/rowSums(congress109Counts) )
+summary( fit &lt;- pls(x, congress109Ideology$repshare, K=3) )
+plot(fit, pch=21, bg=c(4,3,2)[congress109Ideology$party])
+predict(fit, newdata=x[c(68,388),])
+</code></pre>
+
+
+</div>

@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_eval</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Evaluate multiple expressions created with symbol substitution.</h2>
+
+<h3>Description</h3>
+
+<p>Loop over a grid of values, create an expression object
+from each one, and then evaluate that expression.
+Helps with general metaprogramming.
+</p>
+<p><code>tar_eval()</code> expects an unevaluated expression for
+the <code>expr</code> object, whereas <code>tar_eval_raw()</code> expects an
+evaluated expression object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_eval(expr, values, envir = parent.frame())
+
+tar_eval_raw(expr, values, envir = parent.frame())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>Starting expression. Values are iteratively substituted
+in place of symbols in <code>expr</code> to create each new expression,
+and then each new expression is evaluated.
+</p>
+<p><code>tar_eval()</code> expects an unevaluated expression for
+the <code>expr</code> object, whereas <code>tar_eval_raw()</code> expects an
+evaluated expression object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>values</code></td>
+<td>
+<p>List of values to substitute into <code>expr</code> to create
+the expressions. All elements of <code>values</code> must have the same length.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>Environment in which to evaluate the new expressions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of return values from the generated expression objects.
+Often, these values are target objects.
+See the "Target objects" section for background
+on target objects specifically.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Metaprogramming utilities: 
+<code>tar_sub()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># tar_map() is incompatible with tar_render() because the latter
+# operates on preexisting tar_target() objects. By contrast,
+# tar_eval() and tar_sub() iterate over the literal code
+# farther upstream.
+values &lt;- list(
+  name = lapply(c("name1", "name2"), as.symbol),
+  file = list("file1.Rmd", "file2.Rmd")
+)
+tar_sub(list(name, file), values = values)
+tar_sub(tar_render(name, file), values = values)
+path &lt;- tempfile()
+file.create(path)
+str(tar_eval(tar_render(name, path), values = values))
+str(tar_eval_raw(quote(tar_render(name, path)), values = values))
+# So in your _targets.R file, you can define a pipeline like as below.
+# Just make sure to set a unique name for each target
+# (which tar_map() does automatically).
+values &lt;- list(
+  name = lapply(c("name1", "name2"), as.symbol),
+  file = c(path, path)
+)
+list(
+  tar_eval(tar_render(name, file), values = values)
+)
+</code></pre>
+
+
+</div>

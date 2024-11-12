@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>NyeSimilarity</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nye <em>et al</em>. (2006) tree comparison</h2>
+
+<h3>Description</h3>
+
+<p><code>NyeSimilarity()</code> and <code>NyeSplitSimilarity()</code> implement the
+<a href="https://ms609.github.io/TreeDist/articles/Robinson-Foulds.html#generalized-robinson-foulds-distances">Generalized Robinson–Foulds</a>
+tree comparison metric of Nye et al. (2006).
+In short, this finds the optimal matching that pairs each branch from
+one tree with a branch in the second, where matchings are scored according to
+the size of the largest split that is consistent with both of them,
+normalized against the Jaccard index.
+A more detailed account is available in the
+<a href="https://ms609.github.io/TreeDist/articles/Generalized-RF.html#nye-et-al--tree-similarity-metric">vignettes</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">NyeSimilarity(
+  tree1,
+  tree2 = NULL,
+  similarity = TRUE,
+  normalize = FALSE,
+  normalizeMax = !is.logical(normalize),
+  reportMatching = FALSE,
+  diag = TRUE
+)
+
+NyeSplitSimilarity(
+  splits1,
+  splits2,
+  nTip = attr(splits1, "nTip"),
+  reportMatching = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Trees of class <code>phylo</code>, with leaves labelled identically,
+or lists of such trees to undergo pairwise comparison.  Where implemented,
+<code>tree2 = NULL</code> will compute distances between each pair of trees in the list
+<code>tree1</code> using a fast algorithm based on
+Day (1985).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>similarity</code></td>
+<td>
+<p>Logical specifying whether to report the result as a tree
+similarity, rather than a difference.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>If a numeric value is provided, this will be used as a
+maximum value against which to rescale results.
+If <code>TRUE</code>, results will be rescaled against a maximum value calculated from
+the specified tree sizes and topology, as specified in the "Normalization"
+section below.
+If <code>FALSE</code>, results will not be rescaled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalizeMax</code></td>
+<td>
+<p>When calculating similarity, normalize against the
+maximum number of splits that could have been present (<code>TRUE</code>),
+or the number of splits that were actually observed (<code>FALSE</code>)?
+Defaults to the number of splits in the better-resolved tree; set
+<code>normalize = pmin.int</code> to use the number of splits in the less resolved
+tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reportMatching</code></td>
+<td>
+<p>Logical specifying whether to return the clade
+matchings as an attribute of the score.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diag</code></td>
+<td>
+<p>Logical specifying whether to return similarities along the
+diagonal, i.e. of each tree with itself.  Applies only if <code>tree2</code> is
+a list identical to <code>tree1</code>, or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splits1, splits2</code></td>
+<td>
+<p>Logical matrices where each row corresponds to a leaf,
+either listed in the same order or bearing identical names (in any sequence),
+and each column corresponds to a split, such that each leaf is identified as
+a member of the ingroup (<code>TRUE</code>) or outgroup (<code>FALSE</code>) of the respective
+split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTip</code></td>
+<td>
+<p>(Optional) Integer specifying the number of leaves in each split.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The measure is defined as a similarity score.  If <code>similarity = FALSE</code>, the
+similarity score will be converted into a distance by doubling it and
+subtracting it from the number of splits present in both trees.
+This ensures consistency with <code>JaccardRobinsonFoulds</code>.
+</p>
+<p>Note that <code>NyeSimilarity(tree1, tree2)</code> is equivalent to, but
+slightly faster than, <code>JaccardRobinsonFoulds
+(tree1, tree2, k = 1, allowConflict = TRUE)</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NyeSimilarity()</code> returns an array of numerics providing the
+distances between each  pair of trees in <code>tree1</code> and <code>tree2</code>,
+or <code>splits1</code> and <code>splits2</code>.
+</p>
+
+
+<h3>Normalization</h3>
+
+<p>If <code>normalize = TRUE</code> and <code>similarity = TRUE</code>, then results will be rescaled
+from zero to one by dividing by the mean number of splits in the two trees
+being compared.
+</p>
+<p>You may wish to normalize instead against the number of splits present
+in the smaller tree, which represents the maximum value possible for a pair
+of trees with the specified topologies (<code>normalize = pmin.int</code>); the
+number of splits in the most resolved tree (<code>normalize = pmax.int</code>);
+or the maximum value possible for any pair of trees with  <em>n</em> leaves,
+<em>n</em> - 3 (<code>normalize = TreeTools::NTip(tree1) - 3L</code>).
+</p>
+<p>If <code>normalize = TRUE</code> and <code>similarity = FALSE</code>, then results will be rescaled
+from zero to one by dividing by the total number of splits in the pair
+of trees being considered.
+</p>
+<p>Trees need not contain identical leaves; scores are based on the leaves that
+trees hold in common.  Check for unexpected differences in tip labelling
+with <code>setdiff(TipLabels(tree1), TipLabels(tree2))</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Day WHE (1985).
+“Optimal algorithms for comparing trees with labeled leaves.”
+<em>Journal of Classification</em>, <b>2</b>(1), 7–28.
+<a href="https://doi.org/10.1007/BF01908061">doi:10.1007/BF01908061</a>.<br><br> Nye TMW, Liò P, Gilks WR (2006).
+“A novel algorithm and web-based tool for comparing two alternative phylogenetic trees.”
+<em>Bioinformatics</em>, <b>22</b>(1), 117–119.
+<a href="https://doi.org/10.1093/bioinformatics/bti720">doi:10.1093/bioinformatics/bti720</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree distances: 
+<code>JaccardRobinsonFoulds()</code>,
+<code>KendallColijn()</code>,
+<code>MASTSize()</code>,
+<code>MatchingSplitDistance()</code>,
+<code>NNIDist()</code>,
+<code>PathDist()</code>,
+<code>Robinson-Foulds</code>,
+<code>SPRDist()</code>,
+<code>TreeDistance()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("TreeTools")
+NyeSimilarity(BalancedTree(8), PectinateTree(8))
+VisualizeMatching(NyeSimilarity, BalancedTree(8), PectinateTree(8))
+NyeSimilarity(as.phylo(0:5, nTip = 8), PectinateTree(8))
+NyeSimilarity(as.phylo(0:5, nTip = 8), similarity = FALSE)
+</code></pre>
+
+
+</div>

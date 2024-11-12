@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>reconcilethief</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Reconcile temporal hierarchical forecasts</h2>
+
+<h3>Description</h3>
+
+<p>Takes forecasts of time series at all levels of temporal aggregation
+and combines them using the temporal hierarchical approach of Athanasopoulos et al (2016).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">reconcilethief(forecasts, comb = c("struc", "mse", "ols", "bu", "shr", "sam"),
+  mse = NULL, residuals = NULL, returnall = TRUE, aggregatelist = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>forecasts</code></td>
+<td>
+<p>List of forecasts. Each element must be a time series of forecasts,
+or a forecast object.
+The number of forecasts should be equal to k times the seasonal period for each series,
+where k is the same across all series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>comb</code></td>
+<td>
+<p>Combination method of temporal hierarchies, taking one of the following values:
+</p>
+
+<dl>
+<dt>"struc"</dt>
+<dd>
+<p>Structural scaling - weights from temporal hierarchy</p>
+</dd>
+<dt>"mse"</dt>
+<dd>
+<p>Variance scaling - weights from in-sample MSE</p>
+</dd>
+<dt>"ols"</dt>
+<dd>
+<p>Unscaled OLS combination weights</p>
+</dd>
+<dt>"bu"</dt>
+<dd>
+<p>Bottom-up combination – i.e., all aggregate forecasts are ignored.</p>
+</dd>
+<dt>"shr"</dt>
+<dd>
+<p>GLS using a shrinkage (to block diagonal) estimate of residuals</p>
+</dd>
+<dt>"sam"</dt>
+<dd>
+<p>GLS using sample covariance matrix of residuals</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mse</code></td>
+<td>
+<p>A vector of one-step MSE values corresponding to each of the forecast series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>List of residuals corresponding to each of the forecast models.
+Each element must be a time series of residuals. If <code>forecast</code> contains a list of
+forecast objects, then the residuals will be extracted automatically and this argument
+is not needed. However, it will be used if not <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returnall</code></td>
+<td>
+<p>If <code>TRUE</code>, a list of time series corresponding to the first argument
+is returned, but now reconciled. Otherwise, only the most disaggregated series is returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggregatelist</code></td>
+<td>
+<p>(optional) User-selected list of forecast aggregates to consider</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>List of reconciled forecasts in the same format as <code>forecast</code>.
+If <code>returnall==FALSE</code>, only the most disaggregated series is returned.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Rob J Hyndman
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>thief</code>, <code>tsaggregates</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Construct aggregates
+aggts &lt;- tsaggregates(USAccDeaths)
+
+# Compute forecasts
+fc &lt;- list()
+for(i in seq_along(aggts))
+  fc[[i]] &lt;- forecast(auto.arima(aggts[[i]]), h=2*frequency(aggts[[i]]))
+
+# Reconcile forecasts
+reconciled &lt;- reconcilethief(fc)
+
+# Plot forecasts before and after reconcilation
+par(mfrow=c(2,3))
+for(i in seq_along(fc))
+{
+  plot(reconciled[[i]], main=names(aggts)[i])
+  lines(fc[[i]]$mean, col='red')
+}
+
+</code></pre>
+
+
+</div>

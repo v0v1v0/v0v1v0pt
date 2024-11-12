@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>find_motifs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find given motifs</h2>
+
+<h3>Description</h3>
+
+<p>Finds all given motifs in sequences and returns their positions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">find_motifs(x, ...)
+
+## S3 method for class 'sq'
+find_motifs(x, name, motifs, ..., NA_letter = getOption("tidysq_NA_letter"))
+
+## S3 method for class 'data.frame'
+find_motifs(
+  x,
+  motifs,
+  ...,
+  .sq = "sq",
+  .name = "name",
+  NA_letter = getOption("tidysq_NA_letter")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>[<code>sq</code>]<br>
+An object this function is applied to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments to be passed from or to other methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>[<code>character</code>]<br>
+Vector of sequence names. Must be of the same length as <code>sq</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>motifs</code></td>
+<td>
+<p>[<code>character</code>]<br>
+Motifs to be searched for.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NA_letter</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+A string that is used to interpret and display <code>NA</code> value in the
+context of <code>sq class</code>. Default value equals to
+"<code>!</code>".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.sq</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Name of a column that stores sequences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Name of a column that stores names (unique identifiers).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function allows search of a given motif or motifs in the <code>sq</code>
+object. It returns all motifs found with their start and end positions within
+a sequence.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tibble</code> with following columns:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name of the sequence in which a motif was found</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sought</code></td>
+<td>
+<p>sought motif</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>found</code></td>
+<td>
+<p>found subsequence, may differ from sought if the motif
+contained ambiguous letters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>position of first element of found motif</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+<p>position of last element of found motif</p>
+</td>
+</tr>
+</table>
+<h3>Motif capabilities and restrictions</h3>
+
+<p>There are more options than to simply create a motif that is a string
+representation of searched subsequence. For example, when using this function
+with any of standard types, i.e. <strong>ami</strong>, <strong>dna</strong> or <strong>rna</strong>,
+the user can create a motif with ambiguous letters. In this case the engine
+will try to match any of possible meanings of this letter. For example, take
+"B" from extended DNA alphabet. It means "not A", so it can be matched with
+"C", "G" and "T", but also "B", "Y" (either "C" or "T"), "K" (either "G" or
+"T") and "S" (either "C" or "G").
+</p>
+<p>Full list of ambiguous letters with their meaning can be found on IUPAC site.
+</p>
+<p>Motifs are also restricted in that the alphabets of <code>sq</code> objects on
+which search operations are conducted cannot contain "^" and "$" symbols.
+These two have a special meaning - they are used to indicate beginning and
+end of sequence respectively and can be used to limit the position of matched
+subsequences.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Functions interpreting sq in biological context:
+<code>%has%()</code>,
+<code>complement()</code>,
+<code>translate()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Creating objects to work on:
+sq_dna &lt;- sq(c("ATGCAGGA", "GACCGNBAACGAN", "TGACGAGCTTAG"),
+             alphabet = "dna_bsc")
+sq_ami &lt;- sq(c("AGNTYIKFGGAYTI", "MATEGILIAADGYTWIL", "MIPADHICAANGIENAGIK"),
+             alphabet = "ami_bsc")
+sq_atp &lt;- sq(c("mAmYmY", "nbAnsAmA", ""),
+             alphabet = c("mA", "mY", "nbA", "nsA"))
+sq_names &lt;- c("sq1", "sq2", "sq3")
+
+# Finding motif of two alanines followed by aspartic acid or asparagine
+# ("AAB" motif matches "AAB", "AAD" and "AAN"):
+find_motifs(sq_ami, sq_names, "AAB")
+
+# Finding "C" at fourth position:
+find_motifs(sq_dna, sq_names, "^NNNC")
+
+# Finding motif "I" at second-to-last position:
+find_motifs(sq_ami, sq_names, "IX$")
+
+# Finding multiple motifs:
+find_motifs(sq_dna, sq_names, c("^ABN", "ANCBY", "BAN$"))
+
+# Finding multicharacter motifs:
+find_motifs(sq_atp, sq_names, c("nsA", "mYmY$"))
+
+# It can be a part of tidyverse pipeline:
+library(dplyr)
+fasta_file &lt;- system.file(package = "tidysq", "examples/example_aa.fasta")
+read_fasta(fasta_file) %&gt;%
+  mutate(name = toupper(name)) %&gt;%
+  find_motifs("TXG")
+
+</code></pre>
+
+
+</div>

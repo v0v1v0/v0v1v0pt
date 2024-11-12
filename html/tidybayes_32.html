@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>density_bins</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Density bins and histogram bins as data frames</h2>
+
+<h3>Description</h3>
+
+<p>Generates a data frame of bins representing the kernel density (or
+histogram) of a vector, suitable for use in generating predictive
+distributions for visualization. These functions were originally
+designed for use with the now-deprecated <code>predict_curve()</code>, and
+may be deprecated in the future.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">density_bins(x, n = 101, ...)
+
+histogram_bins(x, n = 30, breaks = n, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of bins</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>density()</code> or
+<code>hist()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breaks</code></td>
+<td>
+<p>Used to set bins for <code>histogram_bins</code>. Can be number of bins (by default it is set to the value
+of <code>n</code>) or a method for setting bins. See the <code>breaks</code> argument of <code>hist()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions are simple wrappers to <code>density()</code> and
+<code>hist()</code> that compute density estimates and return their results
+in a consistent format: a data frame of bins suitable for use with
+the now-deprecated <code>predict_curve()</code>.
+</p>
+<p><code>density_bins</code> computes a kernel density estimate using
+<code>density()</code>.
+</p>
+<p><code>histogram_bins</code> computes a density histogram using <code>hist()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame representing bins and their densities with the
+following columns: </p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mid</code></td>
+<td>
+<p>Bin midpoint</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>Lower endpoint of
+each bin</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper</code></td>
+<td>
+<p>Upper endpoint of each bin</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>density</code></td>
+<td>
+<p>Density
+estimate of the bin</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See <code>add_predicted_draws()</code> and <code>stat_lineribbon()</code> for a better approach. These
+functions may be deprecated in the future.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+library(ggplot2)
+library(dplyr)
+library(brms)
+library(modelr)
+
+theme_set(theme_light())
+
+m_mpg = brm(mpg ~ hp * cyl, data = mtcars)
+
+step = 1
+mtcars %&gt;%
+  group_by(cyl) %&gt;%
+  data_grid(hp = seq_range(hp, by = step)) %&gt;%
+  add_predicted_draws(m_mpg) %&gt;%
+  summarise(density_bins(.prediction), .groups = "drop") %&gt;%
+  ggplot() +
+  geom_rect(aes(
+    xmin = hp - step/2, ymin = lower, ymax = upper, xmax = hp + step/2,
+    fill = ordered(cyl), alpha = density
+  )) +
+  geom_point(aes(x = hp, y = mpg, fill = ordered(cyl)), shape = 21, data = mtcars) +
+  scale_alpha_continuous(range = c(0, 1)) +
+  scale_fill_brewer(palette = "Set2")
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

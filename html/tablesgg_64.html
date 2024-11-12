@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>propsa&lt;-</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Update Graphical Properties for Selected Table Elements </h2>
+
+<h3>Description</h3>
+
+<p>Update the graphical properties of table elements in selected rows and
+columns of a plotted table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">propsa(x, arows=NULL, acols=NULL, setEnabled=TRUE) &lt;- value
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>pltdTable</code> object containing a plotted table.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arows, acols</code></td>
+<td>
+<p>Numeric vectors of row and column numbers in the table's augmented
+row-column grid.  The default value of NULL means all rows or columns.
+Use half-integer values to refer to the locations of horizontal or
+vertical rules running between rows or columns.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>setEnabled</code></td>
+<td>
+<p>Logical scalar.  If TRUE then any element whose properties are updated by
+this function will have its <code>enabled</code> value set to TRUE (and thus
+will be displayed in a plot).  <code>enabled</code> will not be changed for
+elements that are not updated.  If <code>setEnabled</code> is FALSE,
+<code>enabled</code> is not changed for any elements.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>An <code>element_entry</code>, <code>element_refmark</code>, <code>element_hvrule</code>, or
+<code>element_block</code> object that contains the new values for graphical
+properties.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>There are three similar functions that can be used to modify the graphical
+properties of table elements: <code>props&lt;-</code>, <code>propsa&lt;-</code>, and
+<code>propsd&lt;-</code>.  They differ only in how one specifies which elements are
+to be modified.  <code>props&lt;-</code> uses element or block ID, or searches the
+text content of entries.  <code>propsa&lt;-</code> uses explicit row and column
+numbers within the augmented row-column grid.  <code>propsd&lt;-</code> uses the
+values of element descriptors (as described in <code>?elements</code>).
+</p>
+<p>The type of elements that are updated is determined by <code>value</code>: if
+<code>value</code> is an <code>element_entry</code> or <code>element_refmark</code> object
+then entries are updated; if it is an <code>element_hvrule</code> object then
+hvrules are; if it is an <code>element_block</code> object then blocks are.  See
+the documentation for <code>props&lt;-</code> for discussion of their use.
+</p>
+<p>For this function the selected elements are those which are (a) completely
+contained within the rows listed in <code>arows</code> and the columns listed in
+<code>acols</code>; and (b) of a type (entry, block, or hvrule) corresponding to
+the class of <code>value</code>.  For (a), <code>arows</code> and <code>acols</code> are
+treated as _sets_ of row/column numbers, not _ranges_.  For example, a
+horizontal rule running between rows 3 and 4 will not be selected by
+<code>arows=c(3, 4)</code>; the value 3.5 must be included in <code>arows</code>.
+</p>
+<p>The helper functions <code>arow</code> and <code>acol</code> provide a partial bridge
+between this function and <code>props&lt;-</code>.  They return row and column
+numbers associated with particular element IDs, or with specified values
+of the row and column headers.  For example, <code style="white-space: pre;">⁠propsa(plt,
+arows=arow(plt, id="body"), acols=acol(plt, id="body"))⁠</code> is equivalent to
+<code style="white-space: pre;">⁠props(plt, id="body")⁠</code>.  See the examples below for cases where the
+combination of <code>propsa&lt;-</code> and <code>arow</code>/<code>acol</code> is more
+convenient than <code>props&lt;-</code> alone.
+</p>
+<p>This function overrides graphical properties in <code>x</code> that may have
+been set by a style.  Therefore the value of <code>style_row</code> is set to NA
+for any elements whose properties are updated by this function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object like <code>x</code>, with updated graphical properties for the
+selected elements.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>element_entry</code>, <code>element_refmark</code>,
+<code>element_hvrule</code>, <code>element_block</code>,
+<code>arow</code>, <code>acol</code>, <code>props&lt;-</code>,
+<code>propsd&lt;-</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">plt &lt;- plot(iris2_tab, title="Summary statistics for the iris data")
+
+plt2 &lt;- plt
+# Change the title to italics:
+propsa(plt2, arows=1) &lt;- element_entry(fontface=3)
+# Change the vertical rule between row header and body from empty to 
+# a solid line:
+propsa(plt2, acols=2.5) &lt;- element_hvrule(linetype=1, color="black", 
+                                          size=0.5)
+# Put all the mean values in bold face:
+propsa(plt2, arows=arow(plt2, hpath=c(NA, "mean")), 
+       acols=acol(plt2, id="body")) &lt;- element_entry(fontface=2)
+
+plt3 &lt;- plt
+# Use shading to highlight the rows for the 'versicolor' species:
+propsa(plt3, arows=arow(plt3, hpath=c("versicolor"))) &lt;- 
+       element_block(fill="gray85")
+# Compare tables before and after modification:
+print(plt, vpx=0.25, vpy=0.75)
+print(plt2, vpx=0.75, vpy=0.75, newpage=FALSE)
+print(plt3, vpx=0.5, vpy=0.25, newpage=FALSE)
+
+# Striping every other row in a data frame listing (must include row names):
+data(mtcars, package="datasets")
+plt &lt;- plot(textTable(head(mtcars, 10), 
+                      title="Partial listing of the 'mtcars' data frame"))
+ar &lt;- arow(plt, id="body")
+propsa(plt, arows=ar[ar %% 2 == 0]) &lt;- element_block(fill="gray85")
+plt
+  </code></pre>
+
+
+</div>

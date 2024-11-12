@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_rsp_step</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subgroup treatment effect pattern (STEP) fit for binary (response) outcome</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>This fits the Subgroup Treatment Effect Pattern logistic regression models for a binary
+(response) outcome. The treatment arm variable must have exactly 2 levels,
+where the first one is taken as reference and the estimated odds ratios are
+for the comparison of the second level vs. the first one.
+</p>
+<p>The (conditional) logistic regression model which is fit is:
+</p>
+<p><code>response ~ arm * poly(biomarker, degree) + covariates + strata(strata)</code>
+</p>
+<p>where <code>degree</code> is specified by <code>control_step()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_rsp_step(variables, data, control = c(control_step(), control_logistic()))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>character</code>)<br> list of analysis variables:
+needs <code>response</code>, <code>arm</code>, <code>biomarker</code>, and optional <code>covariates</code> and <code>strata</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the dataset containing the variables to summarize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(named <code>list</code>)<br> combined control list from <code>control_step()</code>
+and <code>control_logistic()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A matrix of class <code>step</code>. The first part of the columns describe the
+subgroup intervals used for the biomarker variable, including where the
+center of the intervals are and their bounds. The second part of the
+columns contain the estimates for the treatment arm comparison.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For the default degree 0 the <code>biomarker</code> variable is not included in the model.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>control_step()</code> and <code>control_logistic()</code> for the available
+customization options.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Testing dataset with just two treatment arms.
+library(survival)
+library(dplyr)
+
+adrs_f &lt;- tern_ex_adrs %&gt;%
+  filter(
+    PARAMCD == "BESRSPI",
+    ARM %in% c("B: Placebo", "A: Drug X")
+  ) %&gt;%
+  mutate(
+    # Reorder levels of ARM to have Placebo as reference arm for Odds Ratio calculations.
+    ARM = droplevels(forcats::fct_relevel(ARM, "B: Placebo")),
+    RSP = case_when(AVALC %in% c("PR", "CR") ~ 1, TRUE ~ 0),
+    SEX = factor(SEX)
+  )
+
+variables &lt;- list(
+  arm = "ARM",
+  biomarker = "BMRKR1",
+  covariates = "AGE",
+  response = "RSP"
+)
+
+# Fit default STEP models: Here a constant treatment effect is estimated in each subgroup.
+# We use a large enough bandwidth to avoid too small subgroups and linear separation in those.
+step_matrix &lt;- fit_rsp_step(
+  variables = variables,
+  data = adrs_f,
+  control = c(control_logistic(), control_step(bandwidth = 0.9))
+)
+dim(step_matrix)
+head(step_matrix)
+
+# Specify different polynomial degree for the biomarker interaction to use more flexible local
+# models. Or specify different logistic regression options, including confidence level.
+step_matrix2 &lt;- fit_rsp_step(
+  variables = variables,
+  data = adrs_f,
+  control = c(control_logistic(conf_level = 0.9), control_step(bandwidth = NULL, degree = 1))
+)
+
+# Use a global constant model. This is helpful as a reference for the subgroup models.
+step_matrix3 &lt;- fit_rsp_step(
+  variables = variables,
+  data = adrs_f,
+  control = c(control_logistic(), control_step(bandwidth = NULL, num_points = 2L))
+)
+
+# It is also possible to use strata, i.e. use conditional logistic regression models.
+variables2 &lt;- list(
+  arm = "ARM",
+  biomarker = "BMRKR1",
+  covariates = "AGE",
+  response = "RSP",
+  strata = c("STRATA1", "STRATA2")
+)
+
+step_matrix4 &lt;- fit_rsp_step(
+  variables = variables2,
+  data = adrs_f,
+  control = c(control_logistic(), control_step(bandwidth = NULL))
+)
+
+</code></pre>
+
+
+</div>

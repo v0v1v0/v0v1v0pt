@@ -1,0 +1,195 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_best</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit a model to the numerically optimal configuration</h2>
+
+<h3>Description</h3>
+
+<p><code>fit_best()</code> takes the results from model tuning and fits it to the training
+set using tuning parameters associated with the best performance.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_best(x, ...)
+
+## Default S3 method:
+fit_best(x, ...)
+
+## S3 method for class 'tune_results'
+fit_best(
+  x,
+  ...,
+  metric = NULL,
+  eval_time = NULL,
+  parameters = NULL,
+  verbose = FALSE,
+  add_validation_set = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The results of class <code>tune_results</code> (coming from functions such as
+<code>tune_grid()</code>, <code>tune_bayes()</code>, etc). The control option
+<code>save_workflow = TRUE</code> should have been used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used, must be empty.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metric</code></td>
+<td>
+<p>A character string (or <code>NULL</code>) for which metric to optimize. If
+<code>NULL</code>, the first metric is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eval_time</code></td>
+<td>
+<p>A single numeric time point where dynamic event time
+metrics should be chosen (e.g., the time-dependent ROC curve, etc). The
+values should be consistent with the values used to create <code>x</code>. The <code>NULL</code>
+default will automatically use the first evaluation time used by <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>An optional 1-row tibble of tuning parameter settings, with
+a column for each tuning parameter. This tibble should have columns for each
+tuning parameter identifier (e.g. <code>"my_param"</code> if <code>tune("my_param")</code> was used).
+If <code>NULL</code>, this argument will be set to
+<code>select_best(metric, eval_time)</code>.
+If not <code>NULL</code>, <code>parameters</code> overwrites the specification via <code>metric</code>, and
+<code>eval_time</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical for printing logging.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add_validation_set</code></td>
+<td>
+<p>When the resamples embedded in <code>x</code> are a split into
+training set and validation set, should the validation set be included in the
+data set used to train the model? If not, only the training set is used. If
+<code>NULL</code>, the validation set is not used for resamples originating from
+<code>rsample::validation_set()</code> while it is used for resamples originating
+from <code>rsample::validation_split()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is a shortcut for the manual steps of:
+</p>
+<pre>
+  best_param &lt;- select_best(tune_results, metric) # or other `select_*()`
+  wflow &lt;- finalize_workflow(wflow, best_param)  # or just `finalize_model()`
+  wflow_fit &lt;- fit(wflow, data_set)
+</pre>
+
+
+<h3>Value</h3>
+
+<p>A fitted workflow.
+</p>
+
+
+<h3>Case Weights</h3>
+
+<p>Some models can utilize case weights during training. tidymodels currently
+supports two types of case weights: importance weights (doubles) and
+frequency weights (integers). Frequency weights are used during model
+fitting and evaluation, whereas importance weights are only used during
+fitting.
+</p>
+<p>To know if your model is capable of using case weights, create a model spec
+and test it using <code>parsnip::case_weights_allowed()</code>.
+</p>
+<p>To use them, you will need a numeric column in your data set that has been
+passed through either <code>hardhat:: importance_weights()</code> or
+<code>hardhat::frequency_weights()</code>.
+</p>
+<p>For functions such as <code>fit_resamples()</code> and the <code style="white-space: pre;">⁠tune_*()⁠</code> functions, the
+model must be contained inside of a <code>workflows::workflow()</code>. To declare that
+case weights are used, invoke <code>workflows::add_case_weights()</code> with the
+corresponding (unquoted) column name.
+</p>
+<p>From there, the packages will appropriately handle the weights during model
+fitting and (if appropriate) performance estimation.
+</p>
+
+
+<h3>See also</h3>
+
+<p><code>last_fit()</code> is closely related to <code>fit_best()</code>. They both
+give you access to a workflow fitted on the training data but are situated
+somewhat differently in the modeling workflow. <code>fit_best()</code> picks up
+after a tuning function like <code>tune_grid()</code> to take you from tuning results
+to fitted workflow, ready for you to predict and assess further. <code>last_fit()</code>
+assumes you have made your choice of hyperparameters and finalized your
+workflow to then take you from finalized workflow to fitted workflow and
+further to performance assessment on the test data. While <code>fit_best()</code> gives
+a fitted workflow, <code>last_fit()</code> gives you the performance results. If you
+want the fitted workflow, you can extract it from the result of <code>last_fit()</code>
+via extract_workflow().
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(recipes)
+library(rsample)
+library(parsnip)
+library(dplyr)
+
+data(meats, package = "modeldata")
+meats &lt;- meats %&gt;% select(-water, -fat)
+
+set.seed(1)
+meat_split &lt;- initial_split(meats)
+meat_train &lt;- training(meat_split)
+meat_test  &lt;- testing(meat_split)
+
+set.seed(2)
+meat_rs &lt;- vfold_cv(meat_train, v = 10)
+
+pca_rec &lt;-
+  recipe(protein ~ ., data = meat_train) %&gt;%
+  step_normalize(all_numeric_predictors()) %&gt;%
+  step_pca(all_numeric_predictors(), num_comp = tune())
+
+knn_mod &lt;- nearest_neighbor(neighbors = tune()) %&gt;% set_mode("regression")
+
+ctrl &lt;- control_grid(save_workflow = TRUE)
+
+set.seed(128)
+knn_pca_res &lt;-
+  tune_grid(knn_mod, pca_rec, resamples = meat_rs, grid = 10, control = ctrl)
+
+knn_fit &lt;- fit_best(knn_pca_res, verbose = TRUE)
+predict(knn_fit, meat_test)
+
+</code></pre>
+
+
+</div>

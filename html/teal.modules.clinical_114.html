@@ -1,0 +1,347 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_t_coxreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>teal Module: Cox Regression Model</h2>
+
+<h3>Description</h3>
+
+<p>This module fits Cox univariable or multi-variable models, consistent with the TLG Catalog
+templates for Cox regression tables <code>COXT01</code> and <code>COXT02</code>, respectively. See the TLG Catalog entries
+for <code>COXT01</code> <a href="https://insightsengineering.github.io/tlg-catalog/stable/tables/efficacy/coxt01.html">here</a>
+and <code>COXT02</code> <a href="https://insightsengineering.github.io/tlg-catalog/stable/tables/efficacy/coxt02.html">here</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_t_coxreg(
+  label,
+  dataname,
+  parentname = ifelse(inherits(arm_var, "data_extract_spec"),
+    teal.transform::datanames_input(arm_var), "ADSL"),
+  arm_var,
+  arm_ref_comp = NULL,
+  paramcd,
+  cov_var,
+  strata_var,
+  aval_var = teal.transform::choices_selected(teal.transform::variable_choices(dataname,
+    "AVAL"), "AVAL", fixed = TRUE),
+  cnsr_var = teal.transform::choices_selected(teal.transform::variable_choices(dataname,
+    "CNSR"), "CNSR", fixed = TRUE),
+  multivariate = TRUE,
+  na_level = default_na_str(),
+  conf_level = teal.transform::choices_selected(c(0.95, 0.9, 0.8), 0.95, keep_order =
+    TRUE),
+  pre_output = NULL,
+  post_output = NULL,
+  basic_table_args = teal.widgets::basic_table_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>)<br> menu item label of the module in the teal app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataname</code></td>
+<td>
+<p>(<code>character</code>)<br> analysis data used in teal module.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parentname</code></td>
+<td>
+<p>(<code>character</code>)<br> parent analysis data used in teal module, usually this refers to <code>ADSL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for variable names that can be used as <code>arm_var</code>.
+It defines the grouping variable(s) in the results table.
+If there are two elements selected for <code>arm_var</code>,
+second variable will be nested under the first variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_ref_comp</code></td>
+<td>
+<p>(<code>list</code>) optional,<br> if specified it must be a named list with each element corresponding to
+an arm variable in <code>ADSL</code> and the element must be another list (possibly
+with delayed <code>teal.transform::variable_choices()</code> or delayed <code>teal.transform::value_choices()</code>
+with the elements named <code>ref</code> and <code>comp</code> that the defined the default
+reference and comparison arms when the arm variable is changed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramcd</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the parameter code variable from <code>dataname</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the covariates variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> names of
+the variables for stratified analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aval_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the analysis variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cnsr_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the censoring variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multivariate</code></td>
+<td>
+<p>(<code>logical</code>)<br> if <code>FALSE</code>, the univariable approach is used instead of the
+multi-variable model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_level</code></td>
+<td>
+<p>(<code>string</code>)<br> used to replace all <code>NA</code> or empty values
+in character or factor variables in the data. Defaults to <code>"&lt;Missing&gt;"</code>. To set a
+default <code>na_level</code> to apply in all modules, run <code>set_default_na_str("new_default")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the confidence level, each within range of (0, 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed before the output to put the output into context.
+For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed after the output to put the output into context.
+For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basic_table_args</code></td>
+<td>
+<p>(<code>basic_table_args</code>) optional<br> object created by <code>teal.widgets::basic_table_args()</code>
+with settings for the module table. The argument is merged with option <code>teal.basic_table_args</code> and with default
+module arguments (hard coded in the module body).
+For more details, see the vignette: <code>vignette("custom-basic-table-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The Cox Proportional Hazards (PH) model is the most commonly used method to
+estimate the magnitude of the effect in survival analysis. It assumes proportional
+hazards: the ratio of the hazards between groups (e.g., two arms) is constant over time.
+This ratio is referred to as the "hazard ratio" (HR) and is one of the most
+commonly reported metrics to describe the effect size in survival analysis.
+</p>
+<p>This modules expects that the analysis data has the following variables:
+</p>
+
+<ul>
+<li> <p><code>AVAL</code>: time to event
+</p>
+</li>
+<li> <p><code>CNSR</code>: 1 if record in <code>AVAL</code> is censored, 0 otherwise
+</p>
+</li>
+<li> <p><code>PARAMCD</code>: variable used to filter for endpoint (e.g. OS). After
+filtering for <code>PARAMCD</code> one observation per patient is expected
+</p>
+</li>
+</ul>
+<p>The arm variables and stratification/covariate variables are taken from the <code>ADSL</code> data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>teal_module</code> object.
+</p>
+
+
+<h3>Note</h3>
+
+
+<ul>
+<li>
+<p> The likelihood ratio test is not supported for models that include strata - the Wald
+test will be substituted in these cases.
+</p>
+</li>
+<li>
+<p> Multi-variable is the default choice for backward compatibility.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>The <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a> where additional example
+apps implementing this module can be found.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## First example
+## =============
+## The example below is based on the usual approach involving creation of
+## a random CDISC dataset and then running the application.
+
+arm_ref_comp &lt;- list(
+  ACTARMCD = list(
+    ref = "ARM B",
+    comp = c("ARM A", "ARM C")
+  ),
+  ARM = list(
+    ref = "B: Placebo",
+    comp = c("A: Drug X", "C: Combination")
+  )
+)
+
+data &lt;- teal_data()
+data &lt;- within(data, {
+  ADSL &lt;- tmc_ex_adsl
+  ADTTE &lt;- tmc_ex_adtte
+})
+datanames &lt;- c("ADSL", "ADTTE")
+datanames(data) &lt;- datanames
+join_keys(data) &lt;- default_cdisc_join_keys[datanames]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_t_coxreg(
+      label = "Cox Reg.",
+      dataname = "ADTTE",
+      arm_var = choices_selected(c("ARM", "ARMCD", "ACTARMCD"), "ARM"),
+      arm_ref_comp = arm_ref_comp,
+      paramcd = choices_selected(
+        value_choices(data[["ADTTE"]], "PARAMCD", "PARAM"), "OS"
+      ),
+      strata_var = choices_selected(
+        c("COUNTRY", "STRATA1", "STRATA2"), "STRATA1"
+      ),
+      cov_var = choices_selected(
+        c("AGE", "BMRKR1", "BMRKR2", "REGION1"), "AGE"
+      ),
+      multivariate = TRUE
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+## Second example
+## ==============
+## This time, a synthetic pair of ADTTE/ADSL data is fabricated for Cox regression
+## where ties and pval_method matter.
+
+## Dataset fabrication
+## -------------------
+
+data &lt;- teal_data()
+data &lt;- within(data, {
+  library(dplyr)
+  ADTTE &lt;- data.frame(
+    STUDYID = "LUNG",
+    AVAL = c(4, 3, 1, 1, 2, 2, 3, 1, 2),
+    CNSR = c(1, 1, 1, 0, 1, 1, 0, 0, 0),
+    ARMCD = factor(
+      c(0, 1, 1, 1, 1, 0, 0, 0, 0),
+      labels = c("ARM A", "ARM B")
+    ),
+    SEX = factor(
+      c(0, 0, 0, 0, 1, 1, 1, 1, 1),
+      labels = c("F", "M")
+    ),
+    INST = factor(c("A", "A", "B", "B", "A", "B", "A", "B", "A")),
+    stringsAsFactors = FALSE
+  )
+  ADTTE &lt;- rbind(ADTTE, ADTTE, ADTTE, ADTTE)
+  ADTTE &lt;- as_tibble(ADTTE)
+  set.seed(1)
+  ADTTE$INST &lt;- sample(ADTTE$INST)
+  ADTTE$AGE &lt;- sample(seq(5, 75, 5), size = nrow(ADTTE), replace = TRUE)
+  ADTTE$USUBJID &lt;- paste("sub", 1:nrow(ADTTE), ADTTE$INST, sep = "-")
+  ADTTE$PARAM &lt;- ADTTE$PARAMCD &lt;- "OS"
+  ADSL &lt;- subset(
+    ADTTE,
+    select = c("USUBJID", "STUDYID", "ARMCD", "SEX", "INST", "AGE")
+  )
+})
+
+datanames &lt;- c("ADSL", "ADTTE")
+datanames(data) &lt;- datanames
+join_keys(data) &lt;- default_cdisc_join_keys[datanames]
+
+## `teal` application
+## ----------------
+## Note that the R code exported by `Show R Code` does not include the data
+## pre-processing. You will need to create the dataset as above before
+## running the exported R code.
+
+arm_ref_comp &lt;- list(ARMCD = list(ref = "ARM A", comp = c("ARM B")))
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_t_coxreg(
+      label = "Cox Reg.",
+      dataname = "ADTTE",
+      arm_var = choices_selected(c("ARMCD"), "ARMCD"),
+      arm_ref_comp = arm_ref_comp,
+      paramcd = choices_selected(
+        value_choices(data[["ADTTE"]], "PARAMCD", "PARAM"), "OS"
+      ),
+      strata_var = choices_selected(c("INST"), NULL),
+      cov_var = choices_selected(c("SEX", "AGE"), "SEX"),
+      multivariate = TRUE
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

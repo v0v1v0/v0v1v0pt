@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_bce_loss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Binary cross entropy loss</h2>
+
+<h3>Description</h3>
+
+<p>Creates a criterion that measures the Binary Cross Entropy
+between the target and the output:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_bce_loss(weight = NULL, reduction = "mean")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>(Tensor, optional): a manual rescaling weight given to the loss
+of each batch element. If given, has to be a Tensor of size <code>nbatch</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reduction</code></td>
+<td>
+<p>(string, optional): Specifies the reduction to apply to the output:
+<code>'none'</code> | <code>'mean'</code> | <code>'sum'</code>. <code>'none'</code>: no reduction will be applied,
+<code>'mean'</code>: the sum of the output will be divided by the number of
+elements in the output, <code>'sum'</code>: the output will be summed.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The unreduced (i.e. with <code>reduction</code> set to <code>'none'</code>) loss can be described as:
+</p>
+<p style="text-align: center;"><code class="reqn">
+  \ell(x, y) = L = \{l_1,\dots,l_N\}^\top, \quad
+l_n = - w_n \left[ y_n \cdot \log x_n + (1 - y_n) \cdot \log (1 - x_n) \right]
+</code>
+</p>
+
+<p>where <code class="reqn">N</code> is the batch size. If <code>reduction</code> is not <code>'none'</code>
+(default <code>'mean'</code>), then
+</p>
+<p style="text-align: center;"><code class="reqn">
+  \ell(x, y) = \left\{ \begin{array}{ll}
+\mbox{mean}(L), &amp; \mbox{if reduction} = \mbox{'mean';}\\
+\mbox{sum}(L),  &amp; \mbox{if reduction} = \mbox{'sum'.}
+\end{array}
+\right.
+</code>
+</p>
+
+<p>This is used for measuring the error of a reconstruction in for example
+an auto-encoder. Note that the targets <code class="reqn">y</code> should be numbers
+between 0 and 1.
+</p>
+<p>Notice that if <code class="reqn">x_n</code> is either 0 or 1, one of the log terms would be
+mathematically undefined in the above loss equation. PyTorch chooses to set
+<code class="reqn">\log (0) = -\infty</code>, since <code class="reqn">\lim_{x\to 0} \log (x) = -\infty</code>.
+</p>
+<p>However, an infinite term in the loss equation is not desirable for several reasons.
+For one, if either <code class="reqn">y_n = 0</code> or <code class="reqn">(1 - y_n) = 0</code>, then we would be
+multiplying 0 with infinity. Secondly, if we have an infinite loss value, then
+we would also have an infinite term in our gradient, since
+<code class="reqn">\lim_{x\to 0} \frac{d}{dx} \log (x) = \infty</code>.
+</p>
+<p>This would make BCELoss's backward method nonlinear with respect to <code class="reqn">x_n</code>,
+and using it for things like linear regression would not be straight-forward.
+Our solution is that BCELoss clamps its log function outputs to be greater than
+or equal to -100. This way, we can always have a finite loss value and a linear
+backward method.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, *)</code> where <code class="reqn">*</code> means, any number of additional
+dimensions
+</p>
+</li>
+<li>
+<p> Target: <code class="reqn">(N, *)</code>, same shape as the input
+</p>
+</li>
+<li>
+<p> Output: scalar. If <code>reduction</code> is <code>'none'</code>, then <code class="reqn">(N, *)</code>, same
+shape as input.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+m &lt;- nn_sigmoid()
+loss &lt;- nn_bce_loss()
+input &lt;- torch_randn(3, requires_grad = TRUE)
+target &lt;- torch_rand(3)
+output &lt;- loss(m(input), target)
+output$backward()
+}
+</code></pre>
+
+
+</div>

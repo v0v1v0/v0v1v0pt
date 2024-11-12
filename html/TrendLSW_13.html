@@ -1,0 +1,166 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TLSWsim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Simulate Trend Locally Stationary Wavelet Process</h2>
+
+<h3>Description</h3>
+
+<p>Simulates a trend locally stationary wavelet process with a given trend function
+and spectrum. Extends the <code>LSWsim</code> function from the <code>wavethresh</code> package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TLSWsim(
+  trend,
+  spec,
+  filter.number = 4,
+  family = "DaubExPhase",
+  innov.func,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>trend</code></td>
+<td>
+<p>Either:
+</p>
+
+<ul>
+<li>
+<p>A numeric vector of length <code class="reqn">n</code> giving the values of the deterministic
+trend function,
+</p>
+</li>
+<li>
+<p>A real-valued function of one argument defined on rescaled time <code class="reqn">[0,1)</code>.
+</p>
+</li>
+</ul>
+<p>When using a numeric vector for <code>trend</code>, if <code class="reqn">n</code> is not a power of 2 then <code>spec</code> must be specified using
+a numeric matrix of dimensions <code class="reqn">\lfloor \log_2 (n) \rfloor \times n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spec</code></td>
+<td>
+<p>Either:
+</p>
+
+<ul>
+<li>
+<p>A <code>wavethresh</code> object of class wd which contains the spectrum for simulating
+an LSW process,
+</p>
+</li>
+<li>
+<p>A numeric matrix of dimensions <code class="reqn">J \times n</code>, where the <code class="reqn">j</code>-th row corresponds to the spectrum values at scale <code class="reqn">j</code> and
+<code class="reqn">\lfloor \log_2 (n) \rfloor = J</code>,
+</p>
+</li>
+<li>
+<p>A list of length <code class="reqn">J=\log_2(n)</code>, where the <code class="reqn">j</code>-th element of the list is a function of one argument specifying the spectrum
+function at scale <code class="reqn">j</code> on rescaled time <code class="reqn">[0,1)</code>.
+</p>
+</li>
+</ul>
+<p>When using a numeric matrix for <code>spec</code>, if <code class="reqn">n</code> is not a power of 2 then <code>trend</code>
+must be specified using a numeric vector of length <code class="reqn">n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter.number</code></td>
+<td>
+<p>The filter number for the wavelet used to simulate the LSW process (default 4)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>The family of the wavelet used to simulate the LSW process (default <code>DaubExPhase</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>innov.func</code></td>
+<td>
+<p>A function with first argument <code>n</code> used for simulating the innovations. By default,
+normal random innovations are sampled using the <code>rnorm</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Optional arguments to be passed to the function  <code>innov.func</code> for
+sampling the innovation process.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code class="reqn">n</code>-length vector containing a TLSW process simulated from the trend and spectral description given by the trend and
+spec arguments.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>LSWsim</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#---- simulate with numeric trend, and spec a wd object as in wavethresh-----
+
+spec &lt;- wavethresh::cns(1024)
+
+spec &lt;- wavethresh::putD(spec, level = 8, seq(from = 2, to = 8, length = 1024))
+
+trend &lt;- sin(pi * (seq(from = 0, to = 4, length = 1024)))
+
+x &lt;- TLSWsim(trend = trend, spec = spec)
+
+plot.ts(x)
+
+#---- simulate with numeric trend, and spec a matrix, with non-dyadic n-----
+
+spec &lt;- matrix(0, nrow = 9, ncol = 1000)
+
+spec[1, ] &lt;- seq(from = 1, to = 10, length = 1000)
+
+trend &lt;- sin(pi * (seq(from = 0, to = 4, length = 1000)))
+
+x &lt;- TLSWsim(trend = trend, spec = spec)
+
+plot.ts(x)
+
+#---- simulate with functional trend, and spec a list of functions-----
+
+spec &lt;- vector(mode = "list", length = 10)
+
+spec[[1]] &lt;- function(u) {
+  1 + 9 * u
+}
+
+trend &lt;- function(u) {
+  sin(pi * u)
+}
+
+x &lt;- TLSWsim(trend = trend, spec = spec)
+
+plot.ts(x)
+
+</code></pre>
+
+
+</div>

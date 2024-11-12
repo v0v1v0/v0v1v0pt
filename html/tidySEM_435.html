@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pseudo_class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate an Auxiliary Model using the Pseudo-Class Method</h2>
+
+<h3>Description</h3>
+
+<p>Estimate an auxiliary model based on multiple datasets, randomly drawing
+latent class values based on the estimated probability of belonging to each
+class. The pseudo class variable is treated as an observed variable within
+each dataset, and results are pooled across datasets to account for
+classification uncertainty.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pseudo_class(x, model, df_complete = NULL, ...)
+
+## S3 method for class 'MxModel'
+pseudo_class(x, model, df_complete = NULL, data = NULL, m = 20, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An object for which a method exists, typically either a fitted
+<code>mx_mixture</code> model or <code>class_draws</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Either an expression to execute on every generated dataset,
+or a function that performs the analysis on every generated dataset,
+or a character that can be interpreted as a structural equation model using
+<code>as_ram</code>. This <code>model</code> can explicitly refer to <code>data</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df_complete</code></td>
+<td>
+<p>Integer. Degrees of freedom of the complete-data analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to other functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data.frame on which the auxiliary model can be evaluated. Note
+that the row order must be identical to that of the data used to fit <code>x</code>,
+as these data will be augmented with a pseudo-class draw for that specific
+individual.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>Integer. Number of datasets to generate. Default is 20.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class <code>data.frame</code> containing pooled
+estimates.
+</p>
+
+
+<h3>References</h3>
+
+<p>Pseudo-class technique:
+Wang C-P, Brown CH, Bandeen-Roche K (2005). Residual Diagnostics for Growth
+Mixture Models: Examining the Impact of a Preventive Intervention on
+Multiple Trajectories of Aggressive Behavior. Journal of the American
+Statistical Association 100(3):1054-1076. <a href="https://doi.org/10.1198/016214505000000501">doi:10.1198/016214505000000501</a>
+</p>
+<p>Pooling results across samples:
+Van Buuren, S. 2018. Flexible Imputation of Missing Data. Second Edition.
+Boca Raton, FL: Chapman &amp; Hall/CRC. <a href="https://doi.org/10.1201/9780429492259">doi:10.1201/9780429492259</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(2)
+dat &lt;- iris[c(1:5, 50:55, 100:105), 1:4]
+colnames(dat) &lt;- c("SL", "SW", "PL", "PW")
+fit &lt;- suppressWarnings(mx_profiles(data = dat, classes = 3))
+
+pct_mx &lt;- pseudo_class(x = fit,
+                       model = "SL ~ class",
+                       data = dat,
+                       m = 2)
+
+pct_lm &lt;- pseudo_class(x = fit,
+             model = lm( SL ~ class, data = data),
+             data = dat,
+             m = 2)
+
+
+pcte &lt;- pseudo_class(x = fit,
+                     model = lm(SL ~ class, data = data),
+                     data = dat,
+                     m = 2)
+
+pct_func &lt;- pseudo_class(x = fit,
+                         model = function(data){lm(SL ~ class, data = data)},
+                         data = dat,
+                         m = 2)
+
+
+
+</code></pre>
+
+
+</div>

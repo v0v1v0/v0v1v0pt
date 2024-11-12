@@ -1,0 +1,241 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>import_as</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Import R-package, its Re-exports, Dependencies, and/or Extensions, Under a Single Alias</h2>
+
+<h3>Description</h3>
+
+<p>The <code>import_as()</code> function
+imports the namespace of an R-package,
+and optionally also its re-exports, dependencies, and extensions,
+all under the same alias.
+The specified alias,
+containing the exported functions from the specified packages,
+will be placed in the current environment. <br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">import_as(
+  alias,
+  main_package,
+  re_exports = TRUE,
+  dependencies = NULL,
+  extensions = NULL,
+  lib.loc = .libPaths(),
+  import_order = c("dependencies", "main_package", "extensions")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>alias</code></td>
+<td>
+<p>a syntactically valid non-hidden name giving the alias object
+where the package(s) are to be imported into. <br>
+This name can be given either as a single string (i.e. <code>"alias."</code>),
+or as a one-sided formula with a single term (i.e. <code>~ alias.</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main_package</code></td>
+<td>
+<p>a single string,
+giving the name of the main package to import under the given alias. <br>
+Core R (i.e. "base", "stats", etc.) is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>re_exports</code></td>
+<td>
+<p><code>TRUE</code> or <code>FALSE</code>.
+</p>
+
+<ul>
+<li>
+<p> If <code>re_exports = TRUE</code> the re-exports from the <code>main_package</code>
+(including those exported from Core R)
+are added to the alias together with the main package. <br>
+This is the default,
+as it is analogous to the behaviour of base R's :: operator. <br></p>
+</li>
+<li>
+<p> If <code>re_exports = FALSE</code>,
+these re-exports are not added together with the main package. <br>
+The user can still import the packages under the alias from which the re-exported functions came from,
+by specifying them in the <code>dependencies</code> argument.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dependencies</code></td>
+<td>
+<p>an optional character vector,
+giving the names of the dependencies of the
+<code>main_package</code> to be imported also under the alias. <br>
+Defaults to <code>NULL</code>, which means no dependencies are imported under the alias. <br>
+See pkg_get_deps to quickly get dependencies from a package. <br>
+Core R (i.e. "base", "stats", etc.) is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extensions</code></td>
+<td>
+<p>an optional character vector,
+giving the names of the extensions of the
+<code>main_package</code> to be imported also under the alias. <br>
+Defaults to <code>NULL</code>, which means no extensions are imported under the alias. <br>
+Core R (i.e. "base", "stats", etc.) is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lib.loc</code></td>
+<td>
+<p>character vector specifying library search path
+(the location of R library trees to search through). <br>
+The <code>lib.loc</code> argument would usually be <code>.libPaths()</code>. <br>
+See also loadNamespace. <br><br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>import_order</code></td>
+<td>
+<p>the character vector <br><code>c("dependencies", "main_package", "extensions")</code>, <br>
+or some re-ordering of this character vector,
+giving the relative import order of the groups of packages. <br>
+See Details section for more information. <br></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><b>Expanded Definitions of Some Arguments</b> <br></p>
+
+<ul>
+<li>
+<p> "Re-exports" are functions that are defined in the dependencies of the
+<code>main_package</code>, but are re-exported in the namespace of the <code>main_package</code>. <br>
+Unlike the <code>Dependencies</code> argument, functions from core R are included in re-exports.
+</p>
+</li>
+<li>
+<p> "Dependencies" are here defined as any R-package appearing in the
+"Depends", "Imports", or "LinkingTo" fields of the Description file of the
+<code>main_package</code>. So no recursive dependencies.
+</p>
+</li>
+<li>
+<p> "Extensions" are reverse-dependencies that actually extend the functionality of the
+<code>main_package</code>. <br>
+Programmatically, some package "E" is considered an extension of some
+"main_package",
+if the following is <code>TRUE</code>: <br><code>"main_package" %in% </code> pkg_get_deps_minimal<code>("E")</code> <br><br></p>
+</li>
+</ul>
+<p><b>Why Aliasing Multiple Packages is Useful</b> <br>
+To use an R-package with its extension packages or dependencies,
+whilst avoiding the disadvantages of attaching a package (see tinycodet_import),
+one would traditionally use the :: operator like so: <br></p>
+<div class="sourceCode r"><pre>main_package::some_function1()
+dependency1::some_function2()
+extension1::some_function3()
+</pre></div>
+<p>This becomes cumbersome as more packages are needed and/or
+as the package name(s) become longer. <br>
+The <code>import_as()</code> function avoids this issue
+by allowing multiple <b>related</b> packages to be imported under a single alias,
+allowing one to code like this:
+</p>
+<div class="sourceCode r"><pre>import_as(
+   ~ alias., "main_package",
+   dependencies = "dependency1", extensions = "extension1",
+   lib.loc = .libPaths()
+)
+alias.$some_function1()
+alias.$some_function2()
+alias.$some_function3()
+</pre></div>
+<p>Thus importing a package, or multiple directly related packages, under a single alias,
+which <code>import_as()</code> provides, avoids the above issues.
+Importing a package under an alias is referred to as "aliasing" a package. <br><br><br><b>Alias Naming Recommendation</b> <br>
+To keep package alias object names easily distinguishable from other objects
+that can also be subset with the $ operator,
+I recommend ending (not starting!) all alias names
+with a dot (<code>.</code>) or underscore (<code>_</code>). <br><br><br><b>Regarding <code>import_order</code></b> <br>
+The order of the character vector given in
+the <code>dependencies</code> and <code>extensions</code> arguments matters.
+If multiple packages share objects with the same name,
+the objects of the package named last will overwrite those of the earlier named packages. <br><br>
+The <code>import_order</code> argument defaults to the character vector <br><code>c("dependencies", "main_package", "extensions")</code>, <br>
+which is the recommended setting. <br>
+This setting results in the following importing order: <br></p>
+
+<ol>
+<li>
+<p> The dependencies, <b>in the order specified by the <code>depenencies</code> argument</b>.
+</p>
+</li>
+<li>
+<p> The main_package (see argument <code>main_package</code>),
+including re-exports (if <code>re_exports = TRUE</code>).
+</p>
+</li>
+<li>
+<p> The extensions, <b>in the order specified by the <code>extensions</code> argument</b>. <br><br></p>
+</li>
+</ol>
+<p><b>Other Details</b> <br>
+Packages that appear in the "Suggests" or "Enhances" fields of packages
+are not considered dependencies or extensions. <br><br>
+No more than 10 packages
+(ignoring re-exports)
+are allowed to be imported under a single alias. <br><br></p>
+
+
+<h3>Value</h3>
+
+<p>A locked environment object, similar to the output of loadNamespace,
+with the name as specified in the <code>alias</code> argument,
+will be created. <br>
+This object, referred to as the "(package) alias object",
+will contain the exported functions from the specified package(s). <br>
+The alias object will be placed in the current environment. <br><br>
+To use, for example, function "some_function()" from alias "alias.", use: <br><code>alias.$some_function()</code> <br>
+To see the special attributes of this alias object, use attr.import. <br>
+To "unimport" the package alias object, simply remove it
+(i.e. <code>rm(list = "alias.")</code>). <br></p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_import
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+all(c("data.table", "tidytable") %installed in% .libPaths())
+
+import_as( # this creates the 'tdt.' object
+  "tdt.", "tidytable", dependencies = "data.table"
+)
+# same as:
+import_as(
+  ~ tdt., "tidytable", dependencies = "data.table"
+)
+
+
+
+</code></pre>
+
+
+</div>

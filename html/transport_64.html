@@ -1,0 +1,228 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>unbalanced</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Unbalanced Optimal Transport Between Two Objects</h2>
+
+<h3>Description</h3>
+
+<p>Compute optimal transport between unnormalized images / mass distributions on grids 
+(<code>pgrid</code> objects) or between mass distributions on general point patterns
+(<code>wpp</code> objects) under the option that mass can be dispose of. Transport cost
+per unit is the Euclidean distance of the transport to the <code>p</code>-th power.
+Disposal cost per unit is <code>C^p</code>.<br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">unbalanced(a, b, ...)
+
+## S3 method for class 'pgrid'
+unbalanced(
+  a,
+  b,
+  p = 1,
+  C = NULL,
+  method = c("networkflow", "revsimplex"),
+  output = c("dist", "all", "rawres"),
+  threads = 1,
+  ...
+)
+
+## S3 method for class 'wpp'
+unbalanced(
+  a,
+  b,
+  p = 1,
+  C = NULL,
+  method = c("networkflow", "revsimplex"),
+  output = c("dist", "all", "rawres"),
+  threads = 1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a, b</code></td>
+<td>
+<p>objects of class <code>pgrid</code> or <code>wpp</code> that are compatible.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other arguments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>a power <code class="reqn">\geq 1</code> applied to the transport and disposal costs. The order
+of the resulting unbalanced Wasserstein metric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>C</code></td>
+<td>
+<p>The base disposal cost (without the power <code>p</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>one of <code>"networkflow"</code> and <code>"revsimplex"</code>, specifing the algorithm used. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>character. One of "dist", "all" and "rawres". Determines what the function
+returns: only the unbalanced Wasserstein distance; all available information about the 
+transport plan and the extra mass; or the raw result obtained by the networkflow algorithm.
+The latter is the same format as in the <code>transport</code> function with option <code>fullreturn=TRUE</code>.
+The choice <code>output = "rawres"</code> is mainly intended for internal use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>an integer specifying the number of threads for parallel computing in connection with
+the networkflow method.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given two non-negative mass distributions <code class="reqn">a=(a_x)_{x \in S}</code>, <code class="reqn">b=(a_y)_{y \in S}</code>
+on a set <code class="reqn">S</code> (a pixel grid / image if <code>a</code>, <code>b</code> are of class <code>pgrid</code> or a more
+general weighted point pattern if <code>a</code>, <code>b</code> are of class <code>wpp</code>), this function minimizes the functional
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_{x,y \in S} \pi_{x,y} d(x,y)^p + C^p \bigl( \sum_{x \in S} (a_x - \pi^{(1)}_x) + \sum_{y \in S} (b_y - \pi^{(2)}_y) \bigr)</code>
+</p>
+
+<p>over all <code class="reqn">(\pi_{x,y})_{x,y \in S}</code> satisfying
+</p>
+<p style="text-align: center;"><code class="reqn">0 \leq \pi^{(1)}_x := \sum_{y \in S} \pi_{x,y} \leq a_x \ \textrm{and} \ 0 \leq \pi^{(2)}_y := \sum_{x \in S} \pi_{x,y} \leq b_y.</code>
+</p>
+
+<p>Thus <code class="reqn">\pi_{x,y}</code> denotes the amount of mass transported from <code class="reqn">x</code> to <code class="reqn">y</code>, whereas <code class="reqn">\pi^{(1)}_x</code>
+and <code class="reqn">\pi^{(2)}_y</code> are the total mass transported away from <code class="reqn">x</code> and total mass transported to <code class="reqn">y</code>, respectively.
+Accordingly <code class="reqn">\sum_{x \in S} (a_x - \pi^{(1)}_x)</code> and <code class="reqn">\sum_{y \in S} (b_y - \pi^{(2)}_y)</code> are the total
+amounts of mass of <code class="reqn">a</code> and <code class="reqn">b</code>, respectively, that need to be disposed of.
+</p>
+<p>The minimal value of the functional above taken to the <code class="reqn">1/p</code> is what we refer to as unbalanced
+<code class="reqn">(p,C)</code>-Wasserstein metric. This metric is used, in various variants, in an number of research papers.
+See Heinemann et al. (2022) and the references therein and Müller et al. (2022), Remark 3. We follow the
+convention of the latter paper regarding the parametrization and the use of the term <em>unbalanced Wasserstein metric</em>.
+</p>
+<p>The practical difference between the two methods "networkflow" and "revsimplex" can 
+roughly described as follows. The former is typically faster for large examples (for <code>pgrid</code> objects 64x64
+and beyond), especially if several threads are used. The latter is typically faster
+for smaller examples (which may be relevant if pairwise transports between many objects
+are computed) and it guarantees a sparse(r) solution, i.e. at most <code class="reqn">m+n+1</code> individual
+transports, where <code class="reqn">m</code> and <code class="reqn">n</code> are the numbers of non-zero masses in <code>a</code> and <code>b</code>, respectively).
+Note however that due to the implementation the revsimplex algorithm is a little less
+precise (roughly within 1e-7 tolerance). For more details on the algorithms see <code>transport</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>output = "dist"</code> a single numeric, the unbalanced <code class="reqn">(p,C)</code>-Wasserstein distance.
+Otherwise a list. If <code>output = "all"</code> the list is of class <code>ut_pgrid</code> or <code>ut_wpp</code> according
+to the class of the objects <code>a</code> and <code>b</code>. It has <code>a</code>, <code>b</code>, <code>p</code>, <code>C</code> as attributes and 
+the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>dist</code></td>
+<td>
+<p>same as for <code>output = "dist"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plan</code></td>
+<td>
+<p>an optimal transport plan. This is a data frame with columns <code>from</code>, <code>to</code> and <code>mass</code>
+that specifies from which element of <code>a</code> to which element of <code>b</code> what amount of mass is sent.
+<code>from</code> and <code>to</code> are specified as vector indices in terms of the usual column major enumeration
+of the matrices a$mass and b$mass. The plan can be plotted via <code>plot.pgrid(a, b, plan)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>atrans, btrans</code></td>
+<td>
+<p>matrices (pgrid) or vectors (wpp) specifying the masses transported from each point and to each point,
+respectively. Corresponds to <code class="reqn">(\pi^{(1)}_x)_{x \in S}</code> and <code class="reqn">(\pi^{(2)}_y)_{y \in S}</code> above.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aextra, bextra</code></td>
+<td>
+<p>matrices (pgrid) or vectors (wpp) specifying the amount of mass at each point of <code>a</code> and <code>b</code>,
+respectively, that cannot be transported and needs to be disposed of. Corresponds to
+<code class="reqn">(a_x - \pi^{(1)}_x)_{x \in S}</code> and <code class="reqn">(b_y - \pi^{(2)}_y)_{y \in S}</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inplace</code></td>
+<td>
+<p>(pgrid only) a matrix specifying the amount of mass at each point that can stay in place. Corresponds
+to <code class="reqn">(\pi_{x,x})_{x \in S}</code>.</p>
+</td>
+</tr>
+</table>
+<p>Note that <code>atrans + aextra + inplace</code> (pgrid) or <code>atrans + aextra</code> (wpp)must be equal
+to <code>a$mass</code> and likewise for b.
+A warning occurs if this is not the case (which may indeed happen from time to time for method
+revsimplex, but the error reported should be very small).
+</p>
+
+
+<h3>References</h3>
+
+<p>Florian Heinemann, Marcel Klatt and Axel Munk (2022).<br>
+Kantorovich-Rubinstein distance and barycenter for finitely supported measures: Foundations and Algorithms.<br>
+Arxiv preprint.<br><a href="https://doi.org/10.48550/arXiv.2112.03581">doi:10.48550/arXiv.2112.03581</a><br><br>
+Raoul Müller, Dominic Schuhmacher and Jorge Mateu (2020).<br>
+Metrics and barycenters for point pattern data
+Statistics and Computing 30, 953-972.<br><a href="https://doi.org/10.1007/s11222-020-09932-y">doi:10.1007/s11222-020-09932-y</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.ut_pgrid</code> and <code>plot.ut_wpp</code>, which can plot the various components of the list obtained for <code>output="all"</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">a &lt;- pgrid(matrix(1:12, 3, 4))
+b &lt;- pgrid(matrix(c(9:4, 12:7), 3, 4))
+res1 &lt;- unbalanced(a, b, 1, 0.5, output="all")
+res2 &lt;- unbalanced(a, b, 1, 0.3, output="all")
+plot(a, b, res1$plan, angle=20, rot=TRUE)
+plot(a, b, res2$plan, angle=20, rot=TRUE)
+par(mfrow=c(1,2))
+matimage(res2$aextra, x = a$generator[[1]], y = a$generator[[2]])
+matimage(res2$bextra, x = b$generator[[1]], y = b$generator[[2]])
+
+set.seed(31)
+a &lt;- wpp(matrix(runif(8),4,2), 3:6)
+b &lt;- wpp(matrix(runif(10),5,2), 1:5)
+res1 &lt;- unbalanced(a, b, 1, 0.5, output="all")
+res2 &lt;- unbalanced(a, b, 1, 0.3, output="all")
+plot(a, b, res1$plan)
+plot(a, b, res2$plan)
+
+</code></pre>
+
+
+</div>

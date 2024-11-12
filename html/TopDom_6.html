@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>overlapScores</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculates Overlap Scores Between Two Sets of Topological Domains</h2>
+
+<h3>Description</h3>
+
+<p>Calculates Overlap Scores Between Two Sets of Topological Domains
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">overlapScores(a, reference, debug = getOption("TopDom.debug", FALSE))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a, reference</code></td>
+<td>
+<p>Topological domain (TD) set <code class="reqn">A</code> and TD reference
+set <code class="reqn">R</code> both in a format as returned by <code>TopDom()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debug</code></td>
+<td>
+<p>If <code>TRUE</code>, debug output is produced.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <em>overlap score</em>, <code class="reqn">overlap(A', r_i)</code>, represents how well a
+<em>consecutive</em> subset <code class="reqn">A'</code> of topological domains (TDs) in <code class="reqn">A</code>
+overlap with topological domain <code class="reqn">r_i</code> in reference set <code class="reqn">R</code>.
+For each reference TD <code class="reqn">r_i</code>, the <em>best match</em> <code class="reqn">A'_max</code> is
+identified, that is, the <code class="reqn">A'</code> subset that maximize
+<code class="reqn">overlap(A', r_i)</code>.
+For exact definitions, see Page 8 in Shin et al. (2016).
+</p>
+<p>Note that the overlap score is an asymmetric score, which means that
+<code>overlapScores(a, b) != overlapScores(b, a)</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a named list of class <code>TopDomOverlapScores</code>, where the names
+correspond to the chromosomes in domain reference set <code class="reqn">R</code>.
+Each of these chromosome elements contains a data.frame with fields:
+</p>
+
+<ul>
+<li> <p><code>chromosome</code>  - <code class="reqn">D_{R,c}</code> character strings
+</p>
+</li>
+<li> <p><code>best_score</code>  - <code class="reqn">D_{R,c}</code> numerics in <code class="reqn">[0,1]</code>
+</p>
+</li>
+<li> <p><code>best_length</code> - <code class="reqn">D_{R,c}</code> positive integers
+</p>
+</li>
+<li> <p><code>best_set</code>    - list of <code class="reqn">D_{R,c}</code> index vectors
+</p>
+</li>
+</ul>
+<p>where <code class="reqn">D_{R,c}</code> is the number of TDs in reference set <code class="reqn">R</code> on
+chromosome <code class="reqn">c</code>.  If a TD in reference <code class="reqn">R</code> is not a <code>"domain"</code>,
+then the corresponding <code>best_score</code> and <code>best_length</code> values are
+<code>NA_real_</code> and <code>NA_integer_</code>, respectively, while <code>best_set</code> is an empty
+list.
+</p>
+
+
+<h3>Warning - This might differ not be the correct implementation</h3>
+
+<p>The original TopDom scripts do not provide an implementation for
+calculating overlap scores.  Instead, the implementation of
+<code>TopDom::overlapScores()</code> is based on the textual description of
+overlap scores provided in Shin et al. (2016).  It is not known if this
+is the exact same algorithm and implementation as the authors of the
+TopDom article used.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Henrik Bengtsson - based on the description in Shin et al. (2016).
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> Shin et al.,
+TopDom: an efficient and deterministic method for identifying
+topological domains in genomes,
+<em>Nucleic Acids Research</em>, 44(7): e70, April 2016.
+doi: 10.1093/nar/gkv1505,
+PMCID: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4838359/">PMC4838359</a>,
+PMID: <a href="https://pubmed.ncbi.nlm.nih.gov/26704975/">26704975</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>TopDom.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tibble)
+path &lt;- system.file("exdata", package = "TopDom", mustWork = TRUE)
+
+## Original count data (on a subset of the bins to speed up example)
+chr &lt;- "chr19"
+pathname &lt;- file.path(path, sprintf("nij.%s.gz", chr))
+data &lt;- readHiC(pathname, chr = chr, binSize = 40e3, bins = 1:500)
+print(data)
+
+## Find topological domains using TopDom method for two window sizes
+tds_5 &lt;- TopDom(data, window.size = 5L)
+tds_6 &lt;- TopDom(data, window.size = 6L)
+
+## Overlap scores (in both directions)
+overlap_56 &lt;- overlapScores(tds_6, reference = tds_5)
+print(overlap_56)
+print(as_tibble(overlap_56))
+
+overlap_65 &lt;- overlapScores(tds_5, reference = tds_6)
+print(overlap_65)
+print(as_tibble(overlap_65))
+
+</code></pre>
+
+
+</div>

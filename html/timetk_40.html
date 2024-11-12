@@ -1,0 +1,194 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mutate_by_time</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Mutate (for Time Series Data)</h2>
+
+<h3>Description</h3>
+
+<p><code>mutate_by_time()</code> is a time-based variant of the popular <code>dplyr::mutate()</code> function
+that uses <code>.date_var</code> to specify a date or date-time column and <code>.by</code> to group the
+calculation by groups like "5 seconds", "week", or "3 months".
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mutate_by_time(
+  .data,
+  .date_var,
+  .by = "day",
+  ...,
+  .type = c("floor", "ceiling", "round")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tbl</code> object or <code>data.frame</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.date_var</code></td>
+<td>
+<p>A column containing date or date-time values to summarize.
+If missing, attempts to auto-detect date column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>A time unit to summarise by.
+Time units are collapsed using <code>lubridate::floor_date()</code> or <code>lubridate::ceiling_date()</code>.
+</p>
+<p>The value can be:
+</p>
+
+<ul>
+<li> <p><code>second</code>
+</p>
+</li>
+<li> <p><code>minute</code>
+</p>
+</li>
+<li> <p><code>hour</code>
+</p>
+</li>
+<li> <p><code>day</code>
+</p>
+</li>
+<li> <p><code>week</code>
+</p>
+</li>
+<li> <p><code>month</code>
+</p>
+</li>
+<li> <p><code>bimonth</code>
+</p>
+</li>
+<li> <p><code>quarter</code>
+</p>
+</li>
+<li> <p><code>season</code>
+</p>
+</li>
+<li> <p><code>halfyear</code>
+</p>
+</li>
+<li> <p><code>year</code>
+</p>
+</li>
+</ul>
+<p>Arbitrary unique English abbreviations as in the <code>lubridate::period()</code> constructor are allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Name-value pairs.
+The name gives the name of the column in the output.
+</p>
+<p>The value can be:
+</p>
+
+<ul>
+<li>
+<p> A vector of length 1, which will be recycled to the correct length.
+</p>
+</li>
+<li>
+<p> A vector the same length as the current group (or the whole data frame
+if ungrouped).
+</p>
+</li>
+<li> <p><code>NULL</code>, to remove the column.
+</p>
+</li>
+<li>
+<p> A data frame or tibble, to create multiple columns in the output.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.type</code></td>
+<td>
+<p>One of "floor", "ceiling", or "round. Defaults to "floor". See <code>lubridate::round_date</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>tibble</code> or <code>data.frame</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time-Based dplyr functions:
+</p>
+
+<ul>
+<li> <p><code>summarise_by_time()</code> - Easily summarise using a date column.
+</p>
+</li>
+<li> <p><code>mutate_by_time()</code> - Simplifies applying mutations by time windows.
+</p>
+</li>
+<li> <p><code>pad_by_time()</code> - Insert time series rows with regularly spaced timestamps
+</p>
+</li>
+<li> <p><code>filter_by_time()</code> - Quickly filter using date ranges.
+</p>
+</li>
+<li> <p><code>filter_period()</code> - Apply filtering expressions inside periods (windows)
+</p>
+</li>
+<li> <p><code>slice_period()</code> - Apply slice inside periods (windows)
+</p>
+</li>
+<li> <p><code>condense_period()</code> - Convert to a different periodicity
+</p>
+</li>
+<li> <p><code>between_time()</code> - Range detection for date or date-time sequences.
+</p>
+</li>
+<li> <p><code>slidify()</code> - Turn any function into a sliding (rolling) function
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Libraries
+library(dplyr)
+
+# First value in each month
+m4_daily_first_by_month_tbl &lt;- m4_daily %&gt;%
+    group_by(id) %&gt;%
+    mutate_by_time(
+        .date_var = date,
+        .by       = "month", # Setup for monthly aggregation
+        # mutate recycles a single value
+        first_value_by_month  = first(value)
+    )
+m4_daily_first_by_month_tbl
+
+# Visualize Time Series vs 1st Value Each Month
+m4_daily_first_by_month_tbl %&gt;%
+    tidyr::pivot_longer(value:first_value_by_month) %&gt;%
+    plot_time_series(date, value, name,
+                     .facet_scale = "free", .facet_ncol = 2,
+                     .smooth = FALSE, .interactive = FALSE)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,264 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>abnormal</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Count patients with abnormal range values</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>count_abnormal()</code> creates a layout element to count patients with abnormal analysis range
+values in each direction.
+</p>
+<p>This function analyzes primary analysis variable <code>var</code> which indicates abnormal range results.
+Additional analysis variables that can be supplied as a list via the <code>variables</code> parameter are
+<code>id</code> (defaults to <code>USUBJID</code>), a variable to indicate unique subject identifiers, and <code>baseline</code>
+(defaults to <code>BNRIND</code>), a variable to indicate baseline reference ranges.
+</p>
+<p>For each direction specified via the <code>abnormal</code> parameter (e.g. High or Low), a fraction of
+patient counts is returned, with numerator and denominator calculated as follows:
+</p>
+
+<ul>
+<li> <p><code>num</code>: The number of patients with this abnormality recorded while on treatment.
+</p>
+</li>
+<li> <p><code>denom</code>: The total number of patients with at least one post-baseline assessment.
+</p>
+</li>
+</ul>
+<p>This function assumes that <code>df</code> has been filtered to only include post-baseline records.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">count_abnormal(
+  lyt,
+  var,
+  abnormal = list(Low = "LOW", High = "HIGH"),
+  variables = list(id = "USUBJID", baseline = "BNRIND"),
+  exclude_base_abn = FALSE,
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  table_names = var,
+  .stats = NULL,
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_count_abnormal(
+  df,
+  .var,
+  abnormal = list(Low = "LOW", High = "HIGH"),
+  variables = list(id = "USUBJID", baseline = "BNRIND"),
+  exclude_base_abn = FALSE
+)
+
+a_count_abnormal(
+  df,
+  .var,
+  abnormal = list(Low = "LOW", High = "HIGH"),
+  variables = list(id = "USUBJID", baseline = "BNRIND"),
+  exclude_base_abn = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>abnormal</code></td>
+<td>
+<p>(named <code>list</code>)<br> list identifying the abnormal range level(s) in <code>var</code>. Defaults to
+<code>list(Low = "LOW", High = "HIGH")</code> but you can also group different levels into the named list,
+for example, <code>abnormal = list(Low = c("LOW", "LOW LOW"), High = c("HIGH", "HIGH HIGH"))</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>string</code>)<br> list of additional analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exclude_base_abn</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether to exclude subjects with baseline abnormality
+from numerator and denominator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run <code>get_stats("abnormal")</code>
+to see available statistics for this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var, var</code></td>
+<td>
+<p>(<code>string</code>)<br> single variable name that is passed by <code>rtables</code> when requested
+by a statistics function.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>count_abnormal()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_count_abnormal()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_count_abnormal()</code> returns the statistic <code>fraction</code> which is a vector with <code>num</code> and <code>denom</code> counts of patients.
+</p>
+</li></ul>
+<ul><li> <p><code>a_count_abnormal()</code> returns the corresponding list with formatted <code>rtables::CellValue()</code>.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>count_abnormal()</code>: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_count_abnormal()</code>: Statistics function which counts patients with abnormal range values
+for a single <code>abnormal</code> level.
+</p>
+</li>
+<li> <p><code>a_count_abnormal()</code>: Formatted analysis function which is used as <code>afun</code> in <code>count_abnormal()</code>.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+
+<ul>
+<li> <p><code>count_abnormal()</code> only considers a single variable that contains multiple abnormal levels.
+</p>
+</li>
+<li> <p><code>df</code> should be filtered to only include post-baseline records.
+</p>
+</li>
+<li>
+<p> The denominator includes patients that may have other abnormal levels at baseline,
+and patients missing baseline records. Patients with these abnormalities at
+baseline can be optionally excluded from numerator and denominator via the
+<code>exclude_base_abn</code> parameter.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+df &lt;- data.frame(
+  USUBJID = as.character(c(1, 1, 2, 2)),
+  ANRIND = factor(c("NORMAL", "LOW", "HIGH", "HIGH")),
+  BNRIND = factor(c("NORMAL", "NORMAL", "HIGH", "HIGH")),
+  ONTRTFL = c("", "Y", "", "Y"),
+  stringsAsFactors = FALSE
+)
+
+# Select only post-baseline records.
+df &lt;- df %&gt;%
+  filter(ONTRTFL == "Y")
+
+# Layout creating function.
+basic_table() %&gt;%
+  count_abnormal(var = "ANRIND", abnormal = list(high = "HIGH", low = "LOW")) %&gt;%
+  build_table(df)
+
+# Passing of statistics function and formatting arguments.
+df2 &lt;- data.frame(
+  ID = as.character(c(1, 1, 2, 2)),
+  RANGE = factor(c("NORMAL", "LOW", "HIGH", "HIGH")),
+  BL_RANGE = factor(c("NORMAL", "NORMAL", "HIGH", "HIGH")),
+  ONTRTFL = c("", "Y", "", "Y"),
+  stringsAsFactors = FALSE
+)
+
+# Select only post-baseline records.
+df2 &lt;- df2 %&gt;%
+  filter(ONTRTFL == "Y")
+
+basic_table() %&gt;%
+  count_abnormal(
+    var = "RANGE",
+    abnormal = list(low = "LOW", high = "HIGH"),
+    variables = list(id = "ID", baseline = "BL_RANGE")
+  ) %&gt;%
+  build_table(df2)
+
+</code></pre>
+
+
+</div>

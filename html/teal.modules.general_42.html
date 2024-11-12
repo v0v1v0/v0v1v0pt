@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_outliers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Outliers analysis</h2>
+
+<h3>Description</h3>
+
+<p>Module to analyze and identify outliers using different methods
+such as IQR, Z-score, and Percentiles, and offers visualizations including
+box plots, density plots, and cumulative distribution plots to help interpret the outliers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_outliers(
+  label = "Outliers Module",
+  outlier_var,
+  categorical_var = NULL,
+  ggtheme = c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void"),
+  ggplot2_args = teal.widgets::ggplot2_args(),
+  plot_height = c(600, 200, 2000),
+  plot_width = NULL,
+  pre_output = NULL,
+  post_output = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outlier_var</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Specifies variable(s) to be analyzed for outliers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>categorical_var</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>) optional,
+specifies the categorical variable(s) to split the selected outlier variables on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggtheme</code></td>
+<td>
+<p>(<code>character</code>) optional, <code>ggplot2</code> theme to be used by default. Defaults to <code>"gray"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional, object created by <code>teal.widgets::ggplot2_args()</code>
+with settings for all the plots or named list of <code>ggplot2_args</code> objects for plot-specific settings.
+The argument is merged with options variable <code>teal.ggplot2_args</code> and default module setup.
+</p>
+<p>List names should match the following: <code>c("default", "Boxplot","Density Plot","Cumulative Distribution Plot")</code>.
+</p>
+<p>For more details see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot height as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> intended for use with a slider UI element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot width as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> for a slider encoding the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed before the module's output,
+providing context or a title.
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed after the module's output,
+adding context or further instructions. Elements like <code>shiny::helpText()</code> are useful.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(teal.widgets)
+
+# general data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  CO2 &lt;- CO2
+  CO2[["primary_key"]] &lt;- seq_len(nrow(CO2))
+})
+datanames(data) &lt;- "CO2"
+join_keys(data) &lt;- join_keys(join_key("CO2", "CO2", "primary_key"))
+
+vars &lt;- choices_selected(variable_choices(data[["CO2"]], c("Plant", "Type", "Treatment")))
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_outliers(
+      outlier_var = list(
+        data_extract_spec(
+          dataname = "CO2",
+          select = select_spec(
+            label = "Select variable:",
+            choices = variable_choices(data[["CO2"]], c("conc", "uptake")),
+            selected = "uptake",
+            multiple = FALSE,
+            fixed = FALSE
+          )
+        )
+      ),
+      categorical_var = list(
+        data_extract_spec(
+          dataname = "CO2",
+          filter = filter_spec(
+            vars = vars,
+            choices = value_choices(data[["CO2"]], vars$selected),
+            selected = value_choices(data[["CO2"]], vars$selected),
+            multiple = TRUE
+          )
+        )
+      ),
+      ggplot2_args = list(
+        ggplot2_args(
+          labs = list(subtitle = "Plot generated by Outliers Module")
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  ADSL &lt;- rADSL
+})
+datanames(data) &lt;- "ADSL"
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+fact_vars_adsl &lt;- names(Filter(isTRUE, sapply(data[["ADSL"]], is.factor)))
+vars &lt;- choices_selected(variable_choices(data[["ADSL"]], fact_vars_adsl))
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_outliers(
+      outlier_var = list(
+        data_extract_spec(
+          dataname = "ADSL",
+          select = select_spec(
+            label = "Select variable:",
+            choices = variable_choices(data[["ADSL"]], c("AGE", "BMRKR1")),
+            selected = "AGE",
+            multiple = FALSE,
+            fixed = FALSE
+          )
+        )
+      ),
+      categorical_var = list(
+        data_extract_spec(
+          dataname = "ADSL",
+          filter = filter_spec(
+            vars = vars,
+            choices = value_choices(data[["ADSL"]], vars$selected),
+            selected = value_choices(data[["ADSL"]], vars$selected),
+            multiple = TRUE
+          )
+        )
+      ),
+      ggplot2_args = list(
+        ggplot2_args(
+          labs = list(subtitle = "Plot generated by Outliers Module")
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

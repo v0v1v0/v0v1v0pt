@@ -1,0 +1,89 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>build_gabin_population</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Initialize populations in genetic algorithms</h2>
+
+<h3>Description</h3>
+
+<p>Build an initial population set for genetic algorithms
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">build_gabin_population(x, ...)
+
+log_gabin_population(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a numeric vector coercible into a stats::ts object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to methods</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Genetic algorithms require a method for randomly generating initial
+populations (i.e., a first generation).
+The default method used by <code>GA::ga()</code> for changepoint detection is usually
+<code>GA::gabin_Population()</code>, which selects candidate changepoints uniformly at
+random with probability 0.5.
+This leads to an initial population with excessively large candidate
+changepoint sets (on the order of <code class="reqn">n/2</code>), which makes the genetic
+algorithm slow.
+</p>
+
+<ul>
+<li> <p><code>build_gabin_population()</code> takes a <code>ts</code> object and runs several fast
+changepoint detection algorithms on it, then sets the initial probability
+to 3 times the average value of the size of the changepoint sets returned
+by those algorithms. This is a conservative guess as to the likely size of
+the optimal changepoint set.
+</p>
+</li>
+<li> <p><code>log_gabin_population()</code> takes a <code>ts</code> object and sets the initial
+probability to the natural logarithm of the length of the time series.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A <code>function</code> that can be passed to the <code>population</code> argument of
+<code>GA::ga()</code> (through <code>segment_ga()</code>)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>GA::gabin_Population()</code>, <code>segment_ga()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Build a function to generate the population
+f &lt;- build_gabin_population(CET)
+
+# Segment the time series using the population generation function
+segment(CET, method = "ga", population = f, maxiter = 5)
+f &lt;- log_gabin_population(CET)
+segment(CET, method = "ga", population = f, maxiter = 10)
+</code></pre>
+
+
+</div>

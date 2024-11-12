@@ -1,0 +1,191 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>render_chordchart</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Render a chord chart with LilyPond</h2>
+
+<h3>Description</h3>
+
+<p>Render a standalone chord chart of chord fretboard diagrams with LilyPond
+for a set of chords.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">render_chordchart(
+  chords,
+  file,
+  size = 1.2,
+  header = NULL,
+  paper = NULL,
+  colors = NULL,
+  crop_png = TRUE,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  details = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>chords</code></td>
+<td>
+<p>named character vector of valid formatting for LilyPond chord
+names and values. See examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>output file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>size</code></td>
+<td>
+<p>numeric, size of fretboard diagrams (relative to paper font
+size). Use this to scale diagrams up or down.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>header</code></td>
+<td>
+<p>a named list of arguments passed to the header of the
+LilyPond file. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paper</code></td>
+<td>
+<p>a named list of arguments for the LilyPond file page layout.
+See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colors</code></td>
+<td>
+<p>reserved; not yet implemented for this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crop_png</code></td>
+<td>
+<p>logical, see <code>lilypond()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transparent</code></td>
+<td>
+<p>logical, transparent background, png only.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res</code></td>
+<td>
+<p>numeric, resolution, png only. <code>transparent = TRUE</code> may fail when
+<code>res</code> exceeds ~150.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_ly</code></td>
+<td>
+<p>logical, keep intermediate LilyPond file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>details</code></td>
+<td>
+<p>logical, set to <code>TRUE</code> to print LilyPond log output to
+console. Windows only.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function uses a generates a LilyPond template for displaying only a
+fretboard diagram chart. It then passes the file to LilyPond for rendering.
+To plot specific fretboard diagrams in R using ggplot and with greater
+control, use <code>plot_fretboard()</code>.
+</p>
+<p>The options for <code>paper</code> include the following and have the following
+default values if not provided.
+</p>
+
+<ul>
+<li> <p><code>textheight = 220</code>
+</p>
+</li>
+<li> <p><code>linewidth = 150</code>
+</p>
+</li>
+<li> <p><code>indent = 0</code>
+</p>
+</li>
+<li> <p><code>fontsize = 10</code>
+</p>
+</li>
+<li> <p><code>page_numbers = FALSE</code>
+</p>
+</li>
+<li> <p><code>print_first_page_number = TRUE</code>
+</p>
+</li>
+<li> <p><code>first_page_number = 1</code>
+</p>
+</li>
+</ul>
+<p><code>fontsize</code> only controls the global font size. If you want to scale the
+size of the fretboard diagrams up or down use the the <code>size</code> argument
+rather than this <code>paper</code> value.
+</p>
+<p>Note that chord chart output must fit on a single page. If the full set of
+chord diagrams does not fit on one page then diagrams will be clipped in the
+rendered output. Use <code>size</code> to keep the output to one page or make
+multiple sheets separately.
+</p>
+
+
+<h3>Value</h3>
+
+<p>writes files to disk
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot_fretboard()</code>, <code>lilypond()</code>,
+<code>tab()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">suppressPackageStartupMessages(library(dplyr))
+
+chords &lt;- filter(
+  guitarChords, root %in% c("c", "f") &amp; id %in% c("7", "M7", "m7") &amp;
+  !grepl("#", notes) &amp; root_fret &lt;= 12) |&gt;
+  arrange(root, id)
+chords &lt;- setNames(chords$fretboard, chords$lp_name)
+head(chords)
+
+# requires LilyPond installation
+if(tabr_options()$lilypond != ""){
+  outfile &lt;- file.path(tempdir(), "out.pdf")
+  hdr &lt;- list(
+    title = "Dominant 7th, major 7th and minor 7th chords",
+    subtitle = "C and F root"
+  )
+  render_chordchart(chords, outfile, 2, hdr, list(textheight = 175))
+}
+</code></pre>
+
+
+</div>

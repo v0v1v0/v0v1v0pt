@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>semidiscrete1</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute Semidiscrete Optimal Transport for Euclidean Distance Cost</h2>
+
+<h3>Description</h3>
+
+<p>Computes the weight vector of the Apollonius diagram describing the semidiscrete
+optimal transport plan for the Euclidean distance cost function and the associated
+Wasserstein distance.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">semidiscrete1(
+  source,
+  target,
+  xrange = c(0, 1),
+  yrange = c(0, 1),
+  verbose = FALSE,
+  reg = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>source</code></td>
+<td>
+<p>A matrix specifing the source measure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>A three-column matrix specifing the target measure in the form
+x-coordinate, y-coordinate, mass.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xrange, yrange</code></td>
+<td>
+<p>Vectors with two components defining the window on which 
+the source measure lives. Defaults to <code class="reqn">[0,1] \times [0,1]</code>.
+<code>source</code> is interpreted as an image of equally sized quadratic pixels
+on this window.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical. Shall information about multiscale progress and L-BFGS return
+codes be printed?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg</code></td>
+<td>
+<p>A non-negative regularization parameter. It is usually not
+necessary to deviate from the default 0.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list describing the solution. The components are
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>A vector of length equal to the first dimension of <code>target</code>
+containing the weights for the Apollonius diagram discribing the
+optimal semidiscrete transport from source to target.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wasserstein_dist</code></td>
+<td>
+<p>The <code class="reqn">L_1</code>-Wasserstein distance between source and target.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ret_code</code></td>
+<td>
+<p>A return code. Equal to 1 if everything is OK, since our code
+interrupts the usual lbfgs code. Other values can be converted to the
+corresponding return message by using <code>ret_message</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>This function requires the Computational Geometry Algorithms Library (CGAL),
+available at <a href="https://www.cgal.org">https://www.cgal.org</a>. Adapt the file src/Makevars according
+to the instructions given there and re-install from source.
+</p>
+<p>Internally the code from liblbfgs 1.10 by Naoaki Okazaki (2010) is used.
+See <a href="http://www.chokkan.org/software/liblbfgs/">http://www.chokkan.org/software/liblbfgs/</a>.
+</p>
+<p>A stand-alone version of the C++ code of this function is available
+at <a href="https://github.com/valentin-hartmann-research/semi-discrete-transport">https://github.com/valentin-hartmann-research/semi-discrete-transport</a>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Valentin Hartmann <a href="mailto:valentin.hartmann@epfl.ch">valentin.hartmann@epfl.ch</a> (stand-alone C++ code)<br>
+Dominic Schuhmacher <a href="mailto:schuhmacher@math.uni-goettingen.de">schuhmacher@math.uni-goettingen.de</a> (R-port)
+</p>
+
+
+<h3>References</h3>
+
+<p>V. Hartmann and D. Schuhmacher (2017).
+Semi-discrete optimal transport — the case p=1.
+Preprint <a href="https://arxiv.org/abs/1706.07650">arXiv:1706.07650</a>
+</p>
+<p>Menelaos Karavelas and Mariette Yvinec. 2D Apollonius Graphs 
+(Delaunay Graphs of Disks). In CGAL User and Reference Manual.
+CGAL Editorial Board, 4.12 edition, 2018
+</p>
+<p>Naoaki Okazaki (2010). libLBFGS: a library of Limited-memory
+Broyden-Fletcher-Goldfarb-Shanno (L-BFGS). Version 1.10
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ret_message</code>, <code>semidiscrete</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# the following function rotates a matrix m clockwise, so
+# that image(rococlock(m)) has the same orientation as print(m):
+roclock &lt;- function(m) t(m)[, nrow(m):1]
+
+set.seed(30)
+n &lt;- 20
+nu &lt;- matrix(c(runif(2*n), rgamma(n,3,1)), n, 3)
+pixelbdry &lt;- seq(0,1,length=33)
+image(pixelbdry, pixelbdry, roclock(random32a$mass), asp=1, col = grey(seq(0,1,length.out=32)))
+points(nu[,1], nu[,2], pch=16, cex=sqrt(nu[,3])/2, col=2)
+
+res &lt;- semidiscrete1(random32a$mass, nu)
+plot_apollonius(nu[,1:2], res$weights, show_weights = FALSE, add = TRUE)
+points(nu[,1], nu[,2], pch=16, cex=sqrt(nu[,3])/2, col=2)
+## End(Not run)
+
+
+</code></pre>
+
+
+</div>

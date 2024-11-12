@@ -1,0 +1,191 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trans_alasso</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adaptive LASSO for Semiparametric Transformation Models.</h2>
+
+<h3>Description</h3>
+
+<p>Select the important variables in semiparametric transformation
+models for right censored data using adaptive lasso.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trans_alasso(Z, Y, delta_i, r, lamb_vec, solu = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>the baseline covariates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>observed event times</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta_i</code></td>
+<td>
+<p>censoring indicator. If <code class="reqn">Y</code> is censored, <code>delta_i</code>=0. If not, <code>delta_i</code>=1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>parameter in transformation function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lamb_vec</code></td>
+<td>
+<p>the grad of the tuning parameter <code class="reqn">\lambda</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>solu</code></td>
+<td>
+<p>determines whether the solution path will be plotted. The default is TRUE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The initial value of the coefficient <code class="reqn">\beta</code> used as the adapting
+weights is EM estimator, which is computed by the function <code>EM_est</code>.
+The tuning parameter <code class="reqn">\lambda</code> is data-dependent and we select it using
+generalized crossvalidation. There may be some errors for small
+<code class="reqn">\lambda</code>, in which case the <code class="reqn">\lambda</code> and the number of adaptive
+lasso iteration are recorded in the <code>skip_para</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list containing
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+  <code>beta_res</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> the estimated <code class="reqn">\beta</code> with the selected tuning parameter <code class="reqn">\lambda</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  <code>GCV_res</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> the value of GCV  with the selected tuning parameter <code class="reqn">\lambda</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  <code>lamb_res</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> the selected tuning parameter <code class="reqn">\lambda</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  <code>beta_all</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> estimated <code class="reqn">\beta</code> with all tuning parameters </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  <code>CSV_all</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> value of GCV  with all tuning parameters </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  <code>skip_para</code> </td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: left;"> a list containing the <code class="reqn">\lambda</code> and the number of adaptive lasso iteration when adaptive lasso doesn't work. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Xiaoxi, L. , &amp; Donglin, Z. . (2013). Variable selection in
+semiparametric transformation models for right-censored data. Biometrika(4),
+859-876.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+ if(!requireNamespace("MASS", quietly = TRUE))
+ {stop("package MASS needed for this example. Please install it.")}
+
+ gen_lasdat = function(n,r,rho,beta_true,a,b,seed=66,std = FALSE)
+{
+
+  set.seed(seed)
+  beta_len = length(beta_true)
+  beta_len = beta_len
+  sigm = matrix(0, nrow = beta_len, ncol = beta_len)
+  for(i in 1:(beta_len-1))
+  {
+    diag(sigm[1:(beta_len+1-i),i:beta_len]) = rho^(i-1)
+  }
+  sigm[1,beta_len] = rho^(beta_len-1)
+  sigm[lower.tri(sigm)] = t(sigm)[lower.tri(sigm)]
+
+  Z = MASS::mvrnorm(n, mu = rep(0, beta_len), Sigma = sigm)
+  beta_Z.true = c(Z %*% beta_true)
+  U = runif(n)
+  if(r&gt;0)
+  {
+    t = ((U^(-r)-1)/(a*r*exp(beta_Z.true)))^(1/b)
+  }else if(r == 0)
+  {
+    t = (-log(U)/(a*exp(beta_Z.true)))^(1/b)
+    #t = (exp(-log(U)/(0.5 * exp(beta_Z.true))) - 1)
+  }
+  C = runif(n,0,8)
+  Y = pmin(C,t)
+  delta_i = ifelse( C &gt;= t, 1, 0)
+  if(std)
+  {
+    Z = apply(Z,2,normalize)
+  }
+  return(list(Z = Z, Y = Y, delta_i = delta_i,censor = mean(1-delta_i)))
+}
+
+now_rep=1
+dat = gen_lasdat(100,1,0.5,c(0.3,0.5,0.7,0,0,0,0,0,0,0),2,5,seed= 6+60*now_rep,std = FALSE)
+Z = dat$Z
+Y = dat$Y
+delta_i = dat$delta_i
+
+tra_ala = trans_alasso(Z,Y,delta_i,lamb_vec = c(5,7),r=1)
+tra_ala$GCV_res
+tra_ala$beta_res
+tra_ala$lamb_res
+
+
+</code></pre>
+
+
+</div>

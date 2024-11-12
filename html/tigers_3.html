@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>barycoords</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computes Barycentric Coordinates</h2>
+
+<h3>Description</h3>
+
+<p>The barycentric coordinates of a point inside a polygon are weighted
+coordinates of the vertices of this polygon. The algorithm implemented
+in this function works for any concave or convex polygon (Hormann and
+Floater, 2006).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">barycoords(XY, point)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>XY</code></td>
+<td>
+<p>A two-column matrix giving the coordinates of a polygon.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>point</code></td>
+<td>
+<p>a vector with two values giving the coordinates of a point.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If the polygon is a triangle, the <code>trilinear2Cartesian</code>
+can be used instead.
+</p>
+<p>The polygon must be open (see <code>is.open</code>), and can be
+either in clockwise or in counterclockwise order (see
+<code>is.clockwise</code>).
+</p>
+<p>For the moment, the function is not vectorized with respect to
+<code>point</code>, so it must be called for each point separately (see
+examples). This is likely to change in the future.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a numeric vector giving the barycentric coordinates of the point
+(second argument). The length of the returned vector is equal to the
+number of vertices in the polygon (first argument).
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Emmanuel Paradis</p>
+
+
+<h3>References</h3>
+
+<p>Hormann, K. and Floater, M. S. (2006) Mean value coordinates for
+arbitrary planar polygons. <em>ACM Transactions on Graphics</em>
+<b>25</b>, 1424–1441. &lt;doi:10.1145/1183287.1183295&gt;
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>trilinear2Cartesian</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## a square:
+xy &lt;- cbind(c(0, 1, 1, 0), c(0, 0, 1, 1))
+
+## a small function to get the coordinates directly:
+f &lt;- function(Pxy) barycoords(xy, Pxy)
+## the CMYK scale:
+F &lt;- col2rgb(c("cyan", "magenta", "yellow", "black"))
+
+n &lt;- 1e5L
+## random points in the square
+Pxys &lt;- matrix(runif(2 * n), n, 2)
+system.time(res &lt;- t(apply(Pxys, 1, f))) # &lt; 1 sec
+colnames(res) &lt;- as.character(1:4)
+
+## all rows should (approximately) sum to one:
+all.equal(rowSums(res), rep(1, n), tol = 1e-15)
+
+## transform the barycentric coordinates into colours:
+COLS &lt;- t(F %*% t(res)) / 255
+rgbCOLS &lt;- apply(COLS, 1, function(x) do.call(rgb, as.list(x)))
+## add transparency:
+rgbCOLS &lt;- paste0(rgbCOLS, "33")
+## plot the results:
+plot(0:1, 0:1, "n", asp = 1, ann = FALSE, axes = FALSE)
+points(Pxys, pch = ".", col = rgbCOLS, cex = 20)
+## the visual effect is nicer with n &lt;- 1e6L above and cex = 7
+## in the last command
+
+
+## the example below follows the same logic than the previous one
+
+## an 8-vertex polygon:
+xy &lt;- cbind(c(0, 0.5, 1, 3, 1, 0.5, 0, -2),
+            c(0, -2, 0, 0.5, 1, 3, 1, 0.5))
+
+## random points in the square and in the 4 triangles:
+Pxys &lt;- rbind(matrix(runif(2 * n), n, 2),
+              rpit(n, xy[1:3, ]),
+	      rpit(n, xy[3:5, ]),
+	      rpit(n, xy[5:7, ]),
+	      rpit(n, xy[c(7:8, 1), ]))
+
+system.time(res &lt;- t(apply(Pxys, 1, f))) # &lt; 5 sec
+
+colnames(res) &lt;- as.character(1:8)
+F &lt;- col2rgb(c("black", "red", "orange", "green",
+               "yellow", "blue", "purple", "white"))
+## F &lt;- col2rgb(rainbow(8)) # alternative
+COLS &lt;- t(F %*% t(res)) / 255.001
+rgbCOLS &lt;- apply(COLS, 1, function(x) do.call(rgb, as.list(x)))
+rgbCOLS &lt;- paste0(rgbCOLS, "33") # add transparency
+plot(xy, , "n", asp = 1, ann = FALSE, axes = FALSE)
+points(Pxys, pch = ".", col = rgbCOLS, cex = 5)
+
+</code></pre>
+
+
+</div>

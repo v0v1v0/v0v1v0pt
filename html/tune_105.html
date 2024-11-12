@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>int_pctl.tune_results</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Bootstrap confidence intervals for performance metrics</h2>
+
+<h3>Description</h3>
+
+<p>Using out-of-sample predictions, the bootstrap is used to create percentile
+confidence intervals.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tune_results'
+int_pctl(
+  .data,
+  metrics = NULL,
+  eval_time = NULL,
+  times = 1001,
+  parameters = NULL,
+  alpha = 0.05,
+  allow_par = TRUE,
+  event_level = "first",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A object with class <code>tune_results</code> where the <code>save_pred = TRUE</code>
+option was used in the control function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics</code></td>
+<td>
+<p>A <code>yardstick::metric_set()</code>. By default, it uses the same
+metrics as the original object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eval_time</code></td>
+<td>
+<p>A vector of evaluation times for censored regression models.
+<code>NULL</code> is appropriate otherwise. If <code>NULL</code> is used with censored models, a
+evaluation time is selected, and a warning is issued.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>The number of bootstrap samples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>An optional tibble of tuning parameter values that can be
+used to filter the predicted values before processing. This tibble should
+only have columns for each tuning parameter identifier (e.g. <code>"my_param"</code>
+if <code>tune("my_param")</code> was used).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Level of significance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_par</code></td>
+<td>
+<p>A logical to allow parallel processing (if a parallel
+backend is registered).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>event_level</code></td>
+<td>
+<p>A single string. Either <code>"first"</code> or <code>"second"</code> to specify
+which level of truth to consider as the "event".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each model configuration (if any), this function takes bootstrap samples
+of the out-of-sample predicted values. For each bootstrap sample, the metrics
+are computed and these are used to compute confidence intervals.
+See <code>rsample::int_pctl()</code> and the references therein for more details.
+</p>
+<p>Note that the <code>.estimate</code> column is likely to be different from the results
+given by <code>collect_metrics()</code> since a different estimator is used. Since
+random numbers are used in sampling, set the random number seed prior to
+running this function.
+</p>
+<p>The number of bootstrap samples should be large to have reliable intervals.
+The defaults reflect the fewest samples that should be used.
+</p>
+<p>The computations for each configuration can be extensive. To increase
+computational efficiency parallel processing can be used. The <span class="pkg">future</span>
+package is used here. To execute the resampling iterations in parallel,
+specify a plan with future first. The <code>allow_par</code> argument
+can be used to avoid parallelism.
+</p>
+<p>Also, if a censored regression model used numerous evaluation times, the
+computations can take a long time unless the times are filtered with the
+<code>eval_time</code> argument.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tibble of metrics with additional columns for <code>.lower</code> and
+<code>.upper</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Davison, A., &amp; Hinkley, D. (1997). <em>Bootstrap Methods and their
+Application</em>. Cambridge: Cambridge University Press.
+doi:10.1017/CBO9780511802843
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>rsample::int_pctl()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(Sacramento, package = "modeldata")
+library(rsample)
+library(parsnip)
+
+set.seed(13)
+sac_rs &lt;- vfold_cv(Sacramento)
+
+lm_res &lt;-
+  linear_reg() %&gt;%
+  fit_resamples(
+    log10(price) ~ beds + baths + sqft + type + latitude + longitude,
+    resamples = sac_rs,
+    control = control_resamples(save_pred = TRUE)
+  )
+
+set.seed(31)
+int_pctl(lm_res)
+
+</code></pre>
+
+
+</div>

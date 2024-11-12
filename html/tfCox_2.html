@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cv_tfCox</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit Trend Filtering Cox model and Choose Tuning Parameter via K-Fold Cross-Validation</h2>
+
+<h3>Description</h3>
+
+<p>Fit additive trend filtering Cox model where each component function is estimated to be piecewise constant or polynomial. Tuning parameter is selected via k-fold cross-validation. </p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cv_tfCox(dat, ord=0, alpha=1, discrete=NULL, lambda.seq=NULL,
+lambda.min.ratio=0.01, n.lambda=30, n.fold=5, seed=NULL, tol=1e-6,
+niter=1000, stepSize=25,  backtracking=0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dat</code></td>
+<td>
+
+<p>A list that contains <code>time</code>, <code>status</code> and <code>X</code>. <code>time</code> is failure or censoring time, <code>status</code> is censoring indicator, and  <code>X</code> is n x p matrix and may have p &gt; n.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ord</code></td>
+<td>
+
+<p>The polynomial order of the trend filtering fit; a non-negative interger (<code>ord&gt;= 3</code> is not recommended). For instance, <code>ord=0</code> will produce piewise constant fit, <code>ord=1</code> will produce piewise linear fit, and <code>ord=2</code> will produce piewise quadratic fit.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+
+<p>The trade-off between trend filtering penalty and group lasso penalty. It must be in [0,1]. <code>alpha=1</code> corresponds to the case with only trend filtering penalty to produce piecewise polynomial, and <code>alpha=0</code> corresponds to the case with only group lasso penalty to produce sparsity of the functions. <code>alpha</code> between 0 and 1 is the tradeoff between the strength of these two penalties. For p &lt; n, we suggest using 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discrete</code></td>
+<td>
+
+<p>A vector of covariate/feature indice that are discrete. Discrete covariates are not penalized in the model. Default <code>NULL</code> means that none of the covariates are discrete thus all covariates will be penalized in the model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.seq</code></td>
+<td>
+
+<p>The sequence of positive lambda values to consider. The default is <code>NULL</code>, which calculates <code>lambda.seq</code> using <code>lambda.min.ratio</code> and <code>n.lambda</code>. If <code>lambda.seq</code> is provided, it will override the default.  <code>lambda.seq</code> should be a decreasing positive sequence of values since <code>cv_tfCox</code> replies on warm starts to speed up the computation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.min.ratio</code></td>
+<td>
+
+<p>Smallest value for lambda.seq, as a fraction of the maximum lambda value, which is the smallest value such that the penalty term is zero. The default is 0.01.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.lambda</code></td>
+<td>
+
+<p>The number of lambda values to consider. Default is 30.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.fold</code></td>
+<td>
+
+<p>The number of folds for cross-validation of <code>lambda</code>. The default is 5.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+
+<p>An optional number used with <code>set.seed()</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+
+<p>Convergence criterion for estimates.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>niter</code></td>
+<td>
+
+<p>Maximum number of iterations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stepSize</code></td>
+<td>
+
+<p>Iniitial step size. Default is 25.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>backtracking</code></td>
+<td>
+
+<p>Whether backtracking should be used 1 (TRUE) or 0 (FALSE). Default is 0 (FALSE). 
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that <code>cv_tfCox</code> does not cross-validate over <code>alpha</code>, and <code>alpha</code> should be provided. However, if the user would like to cross-validate over <code>alpha</code>, then <code>cv_tfCox</code> should be called multiple times for different values of <code>alpha</code> and the same <code>seed</code>. This ensures that the cross-validation folds (<code>fold</code>) remain the same for the different values of <code>alpha</code>. See the example below for details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object with S3 class "cv_tfCox".
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>best.lambda</code></td>
+<td>
+
+<p>Optional lambda value chosen by cross-dalidation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.seq</code></td>
+<td>
+
+<p>lambda sequence considered.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean.cv.error</code></td>
+<td>
+
+<p>vector of average cross validation error with the same length as <code>lambda.seq</code>
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Jiacheng Wu
+</p>
+
+
+<h3>References</h3>
+
+<p>Jiacheng Wu &amp; Daniela Witten (2019) Flexible and Interpretable Models for Survival Data, Journal of Computational and Graphical Statistics, DOI: 10.1080/10618600.2019.1592758
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.cv_tfCox</code>, <code>plot.cv_tfCox</code>, <code>tfCox</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#generate data
+set.seed(123)
+dat = sim_dat(n=100, zerof=0, scenario=1)
+
+#fit piecewise constant functions
+#cross-validation to choose the tuning parameter lambda with fixed alpha=1
+cv = cv_tfCox(dat, ord=0, alpha=1, n.fold=2, seed=123)
+plot(cv, showSE=TRUE)
+</code></pre>
+
+
+</div>

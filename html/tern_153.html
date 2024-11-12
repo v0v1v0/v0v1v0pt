@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_coxreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fitting functions for Cox proportional hazards regression</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Fitting functions for univariate and multivariate Cox regression models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_coxreg_univar(variables, data, at = list(), control = control_coxreg())
+
+fit_coxreg_multivar(variables, data, control = control_coxreg())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code>)<br> the names of the variables found in <code>data</code>, passed as a named list and
+corresponding to the <code>time</code>, <code>event</code>, <code>arm</code>, <code>strata</code>, and <code>covariates</code> terms. If <code>arm</code> is missing from
+<code>variables</code>, then only Cox model(s) including the <code>covariates</code> will be fitted and the corresponding effect
+estimates will be tabulated later.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the dataset containing the variables to fit the models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>at</code></td>
+<td>
+<p>(<code>list</code> of <code>numeric</code>)<br> when the candidate covariate is a <code>numeric</code>, use <code>at</code> to specify
+the value of the covariate at which the effect should be estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> a list of parameters as returned by the helper function <code>control_coxreg()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>fit_coxreg_univar()</code> returns a <code>coxreg.univar</code> class object which is a named <code>list</code>
+with 5 elements:
+</p>
+
+<ul>
+<li> <p><code>mod</code>: Cox regression models fitted by <code>survival::coxph()</code>.
+</p>
+</li>
+<li> <p><code>data</code>: The original data frame input.
+</p>
+</li>
+<li> <p><code>control</code>: The original control input.
+</p>
+</li>
+<li> <p><code>vars</code>: The variables used in the model.
+</p>
+</li>
+<li> <p><code>at</code>: Value of the covariate at which the effect should be estimated.
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li> <p><code>fit_coxreg_multivar()</code> returns a <code>coxreg.multivar</code> class object which is a named list
+with 4 elements:
+</p>
+
+<ul>
+<li> <p><code>mod</code>: Cox regression model fitted by <code>survival::coxph()</code>.
+</p>
+</li>
+<li> <p><code>data</code>: The original data frame input.
+</p>
+</li>
+<li> <p><code>control</code>: The original control input.
+</p>
+</li>
+<li> <p><code>vars</code>: The variables used in the model.
+</p>
+</li>
+</ul>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>fit_coxreg_univar()</code>: Fit a series of univariate Cox regression models given the inputs.
+</p>
+</li>
+<li> <p><code>fit_coxreg_multivar()</code>: Fit a multivariate Cox regression model.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>When using <code>fit_coxreg_univar</code> there should be two study arms.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>h_cox_regression for relevant helper functions, cox_regression.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(survival)
+
+set.seed(1, kind = "Mersenne-Twister")
+
+# Testing dataset [survival::bladder].
+dta_bladder &lt;- with(
+  data = bladder[bladder$enum &lt; 5, ],
+  data.frame(
+    time = stop,
+    status = event,
+    armcd = as.factor(rx),
+    covar1 = as.factor(enum),
+    covar2 = factor(
+      sample(as.factor(enum)),
+      levels = 1:4, labels = c("F", "F", "M", "M")
+    )
+  )
+)
+labels &lt;- c("armcd" = "ARM", "covar1" = "A Covariate Label", "covar2" = "Sex (F/M)")
+formatters::var_labels(dta_bladder)[names(labels)] &lt;- labels
+dta_bladder$age &lt;- sample(20:60, size = nrow(dta_bladder), replace = TRUE)
+
+plot(
+  survfit(Surv(time, status) ~ armcd + covar1, data = dta_bladder),
+  lty = 2:4,
+  xlab = "Months",
+  col = c("blue1", "blue2", "blue3", "blue4", "red1", "red2", "red3", "red4")
+)
+
+# fit_coxreg_univar
+
+## Cox regression: arm + 1 covariate.
+mod1 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = "covar1"
+  ),
+  data = dta_bladder,
+  control = control_coxreg(conf_level = 0.91)
+)
+
+## Cox regression: arm + 1 covariate + interaction, 2 candidate covariates.
+mod2 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder,
+  control = control_coxreg(conf_level = 0.91, interaction = TRUE)
+)
+
+## Cox regression: arm + 1 covariate, stratified analysis.
+mod3 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd", strata = "covar2",
+    covariates = c("covar1")
+  ),
+  data = dta_bladder,
+  control = control_coxreg(conf_level = 0.91)
+)
+
+## Cox regression: no arm, only covariates.
+mod4 &lt;- fit_coxreg_univar(
+  variables = list(
+    time = "time", event = "status",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder
+)
+
+# fit_coxreg_multivar
+
+## Cox regression: multivariate Cox regression.
+multivar_model &lt;- fit_coxreg_multivar(
+  variables = list(
+    time = "time", event = "status", arm = "armcd",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder
+)
+
+# Example without treatment arm.
+multivar_covs_model &lt;- fit_coxreg_multivar(
+  variables = list(
+    time = "time", event = "status",
+    covariates = c("covar1", "covar2")
+  ),
+  data = dta_bladder
+)
+
+</code></pre>
+
+
+</div>

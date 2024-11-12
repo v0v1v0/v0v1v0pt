@@ -1,0 +1,173 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Collocations</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Collocations model.</h2>
+
+<h3>Description</h3>
+
+<p>Creates Collocations model which can be used for phrase extraction.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Collocations
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p><code>R6Class</code> object.</p>
+
+
+<h3>Fields</h3>
+
+
+<dl>
+<dt><code>collocation_stat</code></dt>
+<dd>
+<p><code>data.table</code> with collocations(phrases) statistics.
+Useful for filtering non-relevant phrases</p>
+</dd>
+</dl>
+<h3>Usage</h3>
+
+<p>For usage details see <b>Methods, Arguments and Examples</b> sections.
+</p>
+<pre>
+model = Collocations$new(vocabulary = NULL, collocation_count_min = 50, pmi_min = 5, gensim_min = 0,
+                         lfmd_min = -Inf, llr_min = 0, sep = "_")
+model$partial_fit(it, ...)
+model$fit(it, n_iter = 1, ...)
+model$transform(it)
+model$prune(pmi_min = 5, gensim_min = 0, lfmd_min = -Inf, llr_min = 0)
+model$collocation_stat
+</pre>
+
+
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>$new(vocabulary = NULL, collocation_count_min = 50, sep = "_")</code></dt>
+<dd>
+<p>Constructor for Collocations model.
+For description of arguments see <b>Arguments</b> section.</p>
+</dd>
+<dt><code>$fit(it, n_iter = 1, ...)</code></dt>
+<dd>
+<p>fit Collocations model to input iterator <code>it</code>.
+Iterating over input iterator <code>it</code> <code>n_iter</code> times, so hierarchically can learn multi-word phrases.
+Invisibly returns <code>collocation_stat</code>.</p>
+</dd>
+<dt><code>$partial_fit(it, ...)</code></dt>
+<dd>
+<p>iterates once over data and learns collocations. Invisibly returns <code>collocation_stat</code>.
+Workhorse for <code>$fit()</code></p>
+</dd>
+<dt><code>$transform(it)</code></dt>
+<dd>
+<p>transforms input iterator using learned collocations model.
+Result of the transformation is new <code>itoken</code> or <code>itoken_parallel</code> iterator which will
+produce tokens with phrases collapsed into single token.</p>
+</dd>
+<dt><code>$prune(pmi_min = 5, gensim_min = 0, lfmd_min = -Inf, llr_min = 0)</code></dt>
+<dd>
+<p>filter out non-relevant phrases with low score. User can do it directly by modifying <code>collocation_stat</code> object.</p>
+</dd>
+</dl>
+<h3>Arguments</h3>
+
+
+<dl>
+<dt>model</dt>
+<dd>
+<p>A <code>Collocation</code> model object</p>
+</dd>
+<dt>n_iter</dt>
+<dd>
+<p>number of iteration over data</p>
+</dd>
+<dt>pmi_min, gensim_min, lfmd_min, llr_min</dt>
+<dd>
+<p>minimal scores of the corresponding
+statistics in order to collapse tokens into collocation:
+</p>
+
+<ul>
+<li>
+<p> pointwise mutual information
+</p>
+</li>
+<li>
+<p> "gensim" scores - https://radimrehurek.com/gensim/models/phrases.html adapted from word2vec paper
+</p>
+</li>
+<li>
+<p> log-frequency biased mutual dependency
+</p>
+</li>
+<li>
+<p> Dunning's  logarithm of the ratio between the likelihoods of the hypotheses of dependence and independence
+</p>
+</li>
+</ul>
+<p>See <a href="https://aclanthology.org/I05-1050/">https://aclanthology.org/I05-1050/</a> for details.
+Also see data in <code>model$collocation_stat</code> for better intuition</p>
+</dd>
+<dt>it</dt>
+<dd>
+<p>An input <code>itoken</code> or <code>itoken_parallel</code> iterator</p>
+</dd>
+<dt>vocabulary</dt>
+<dd>
+<p><code>text2vec_vocabulary</code> - if provided will look for collocations consisted of only from vocabulary</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(text2vec)
+data("movie_review")
+
+preprocessor = function(x) {
+  gsub("[^[:alnum:]\\s]", replacement = " ", tolower(x))
+}
+sample_ind = 1:100
+tokens = word_tokenizer(preprocessor(movie_review$review[sample_ind]))
+it = itoken(tokens, ids = movie_review$id[sample_ind])
+system.time(v &lt;- create_vocabulary(it))
+v = prune_vocabulary(v, term_count_min = 5)
+
+model = Collocations$new(collocation_count_min = 5, pmi_min = 5)
+model$fit(it, n_iter = 2)
+model$collocation_stat
+
+it2 = model$transform(it)
+v2 = create_vocabulary(it2)
+v2 = prune_vocabulary(v2, term_count_min = 5)
+# check what phrases model has learned
+setdiff(v2$term, v$term)
+# [1] "main_character"  "jeroen_krabb"    "boogey_man"      "in_order"
+# [5] "couldn_t"        "much_more"       "my_favorite"     "worst_film"
+# [9] "have_seen"       "characters_are"  "i_mean"          "better_than"
+# [13] "don_t_care"      "more_than"       "look_at"         "they_re"
+# [17] "each_other"      "must_be"         "sexual_scenes"   "have_been"
+# [21] "there_are_some"  "you_re"          "would_have"      "i_loved"
+# [25] "special_effects" "hit_man"         "those_who"       "people_who"
+# [29] "i_am"            "there_are"       "could_have_been" "we_re"
+# [33] "so_bad"          "should_be"       "at_least"        "can_t"
+# [37] "i_thought"       "isn_t"           "i_ve"            "if_you"
+# [41] "didn_t"          "doesn_t"         "i_m"             "don_t"
+
+# and same way we can create document-term matrix which contains
+# words and phrases!
+dtm = create_dtm(it2, vocab_vectorizer(v2))
+# check that dtm contains phrases
+which(colnames(dtm) == "jeroen_krabb")
+</code></pre>
+
+
+</div>

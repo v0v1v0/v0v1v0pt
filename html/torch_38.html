@@ -1,0 +1,579 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Distribution</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generic R6 class representing distributions</h2>
+
+<h3>Description</h3>
+
+<p>Distribution is the abstract base class for probability distributions.
+Note: in Python, adding torch.Size objects works as concatenation
+Try for example: torch.Size((2, 1)) + torch.Size((1,))
+</p>
+
+
+<h3>Public fields</h3>
+
+<div class="r6-fields">
+
+<dl>
+<dt><code>.validate_args</code></dt>
+<dd>
+<p>whether to validate arguments</p>
+</dd>
+<dt><code>has_rsample</code></dt>
+<dd>
+<p>whether has an rsample</p>
+</dd>
+<dt><code>has_enumerate_support</code></dt>
+<dd>
+<p>whether has enumerate support</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Active bindings</h3>
+
+<div class="r6-active-bindings">
+
+<dl>
+<dt><code>batch_shape</code></dt>
+<dd>
+<p>Returns the shape over which parameters are batched.</p>
+</dd>
+<dt><code>event_shape</code></dt>
+<dd>
+<p>Returns the shape of a single sample (without batching).
+Returns a dictionary from argument names to
+<code>torch_Constraint</code> objects that
+should be satisfied by each argument of this distribution. Args that
+are not tensors need not appear in this dict.</p>
+</dd>
+<dt><code>support</code></dt>
+<dd>
+<p>Returns a <code>torch_Constraint</code> object representing this distribution's
+support.</p>
+</dd>
+<dt><code>mean</code></dt>
+<dd>
+<p>Returns the mean on of the distribution</p>
+</dd>
+<dt><code>variance</code></dt>
+<dd>
+<p>Returns the variance of the distribution</p>
+</dd>
+<dt><code>stddev</code></dt>
+<dd>
+<p>Returns the standard deviation of the distribution
+TODO: consider different message</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-torch_Distribution-new"><code>Distribution$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-expand"><code>Distribution$expand()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-sample"><code>Distribution$sample()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-rsample"><code>Distribution$rsample()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-log_prob"><code>Distribution$log_prob()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-cdf"><code>Distribution$cdf()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-icdf"><code>Distribution$icdf()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-enumerate_support"><code>Distribution$enumerate_support()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-entropy"><code>Distribution$entropy()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-perplexity"><code>Distribution$perplexity()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-.extended_shape"><code>Distribution$.extended_shape()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-.validate_sample"><code>Distribution$.validate_sample()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-print"><code>Distribution$print()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_Distribution-clone"><code>Distribution$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-torch_Distribution-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Initializes a distribution class.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$new(batch_shape = NULL, event_shape = NULL, validate_args = NULL)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>batch_shape</code></dt>
+<dd>
+<p>the shape over which parameters are batched.</p>
+</dd>
+<dt><code>event_shape</code></dt>
+<dd>
+<p>the shape of a single sample (without batching).</p>
+</dd>
+<dt><code>validate_args</code></dt>
+<dd>
+<p>whether to validate the arguments or not. Validation
+can be time consuming so you might want to disable it.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-expand"></a>
+
+
+
+<h4>Method <code>expand()</code>
+</h4>
+
+<p>Returns a new distribution instance (or populates an existing instance
+provided by a derived class) with batch dimensions expanded to batch_shape.
+This method calls expand on the distribution’s parameters. As such, this
+does not allocate new memory for the expanded distribution instance.
+Additionally, this does not repeat any args checking or parameter
+broadcasting in <code>initialize</code>, when an instance is first created.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$expand(batch_shape, .instance = NULL)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>batch_shape</code></dt>
+<dd>
+<p>the desired expanded size.</p>
+</dd>
+<dt><code>.instance</code></dt>
+<dd>
+<p>new instance provided by subclasses that need to
+override <code>expand</code>.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-sample"></a>
+
+
+
+<h4>Method <code>sample()</code>
+</h4>
+
+<p>Generates a <code>sample_shape</code> shaped sample or <code>sample_shape</code> shaped batch of
+samples if the distribution parameters are batched.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$sample(sample_shape = NULL)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>sample_shape</code></dt>
+<dd>
+<p>the shape you want to sample.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-rsample"></a>
+
+
+
+<h4>Method <code>rsample()</code>
+</h4>
+
+<p>Generates a sample_shape shaped reparameterized sample or sample_shape
+shaped batch of reparameterized samples if the distribution parameters
+are batched.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$rsample(sample_shape = NULL)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>sample_shape</code></dt>
+<dd>
+<p>the shape you want to sample.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-log_prob"></a>
+
+
+
+<h4>Method <code>log_prob()</code>
+</h4>
+
+<p>Returns the log of the probability density/mass function evaluated at
+<code>value</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$log_prob(value)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>values to evaluate the density on.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-cdf"></a>
+
+
+
+<h4>Method <code>cdf()</code>
+</h4>
+
+<p>Returns the cumulative density/mass function evaluated at
+<code>value</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$cdf(value)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>values to evaluate the density on.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-icdf"></a>
+
+
+
+<h4>Method <code>icdf()</code>
+</h4>
+
+<p>Returns the inverse cumulative density/mass function evaluated at
+<code>value</code>.
+</p>
+<p>@description
+Returns tensor containing all values supported by a discrete
+distribution. The result will enumerate over dimension 0, so the shape
+of the result will be <code style="white-space: pre;">⁠(cardinality,) + batch_shape + event_shape (where ⁠</code>event_shape = ()<code style="white-space: pre;">⁠for univariate distributions). Note that this enumerates over all batched tensors in lock-step⁠</code>list(c(0, 0), c(1, 1), ...)<code style="white-space: pre;">⁠. With ⁠</code>expand=FALSE<code style="white-space: pre;">⁠, enumeration happens along dim 0, but with the remaining batch dimensions being singleton dimensions, ⁠</code>list(c(0), c(1), ...)'.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$icdf(value)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>values to evaluate the density on.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-enumerate_support"></a>
+
+
+
+<h4>Method <code>enumerate_support()</code>
+</h4>
+
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$enumerate_support(expand = TRUE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>expand</code></dt>
+<dd>
+<p>(bool): whether to expand the support over the
+batch dims to match the distribution's <code>batch_shape</code>.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>Tensor iterating over dimension 0.
+</p>
+
+
+<hr>
+<a id="method-torch_Distribution-entropy"></a>
+
+
+
+<h4>Method <code>entropy()</code>
+</h4>
+
+<p>Returns entropy of distribution, batched over batch_shape.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$entropy()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p>Tensor of shape batch_shape.
+</p>
+
+
+<hr>
+<a id="method-torch_Distribution-perplexity"></a>
+
+
+
+<h4>Method <code>perplexity()</code>
+</h4>
+
+<p>Returns perplexity of distribution, batched over batch_shape.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$perplexity()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p>Tensor of shape batch_shape.
+</p>
+
+
+<hr>
+<a id="method-torch_Distribution-.extended_shape"></a>
+
+
+
+<h4>Method <code>.extended_shape()</code>
+</h4>
+
+<p>Returns the size of the sample returned by the distribution, given
+a <code>sample_shape</code>. Note, that the batch and event shapes of a distribution
+instance are fixed at the time of construction. If this is empty, the
+returned shape is upcast to (1,).
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$.extended_shape(sample_shape = NULL)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>sample_shape</code></dt>
+<dd>
+<p>(torch_Size): the size of the sample to be drawn.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-.validate_sample"></a>
+
+
+
+<h4>Method <code>.validate_sample()</code>
+</h4>
+
+<p>Argument validation for distribution methods such as <code>log_prob</code>,
+<code>cdf</code> and <code>icdf</code>. The rightmost dimensions of a value to be
+scored via these methods must agree with the distribution's batch
+and event shapes.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$.validate_sample(value)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>(Tensor): the tensor whose log probability is to be
+computed by the <code>log_prob</code> method.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_Distribution-print"></a>
+
+
+
+<h4>Method <code>print()</code>
+</h4>
+
+<p>Prints the distribution instance.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$print()</pre></div>
+
+
+<hr>
+<a id="method-torch_Distribution-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>Distribution$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+</div>

@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>?</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set Variable Types, Argument Types and Return Types.</h2>
+
+<h3>Description</h3>
+
+<p>Use <code style="white-space: pre;">⁠?⁠</code> to set a function's return type, argument types, or variable types
+in the body of the function. <code>declare</code> is an alternative to set a variable's
+type.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">`?`(lhs, rhs)
+
+declare(x, assertion, value, const = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lhs</code></td>
+<td>
+<p>lhs</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rhs</code></td>
+<td>
+<p>rhs</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>variable name as a string</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assertion</code></td>
+<td>
+<p>a function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>an optional value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>const</code></td>
+<td>
+<p>whether to declare <code>x</code> as a constant</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>declare</code> (and <code style="white-space: pre;">⁠?⁠</code> when it maps to <code>declare</code>) returns <code>value</code> invisibly, it is called for side effects.
+<code style="white-space: pre;">⁠assertion ? function(&lt;args&gt;) {&lt;body&gt;}⁠</code> returns a typed function, of class <code>c("typed", "function")</code>.
+<code style="white-space: pre;">⁠fun &lt;- assertion ? function(&lt;args&gt;) {&lt;body&gt;}⁠</code> returns a typed function and
+binds it to <code>fun</code> in the local environment.
+</p>
+
+
+<h3>Set A Variable's Type</h3>
+
+<p>When used to set a variable's type, <code style="white-space: pre;">⁠?⁠</code> maps
+to <code>declare</code> so that <code>assertion ? var</code> calls <code>declare("var", assertion)</code>,
+<code>assertion ? var &lt;- value</code> calls <code>declare("var", assertion, value)</code>, and
+<code>assertion ? (var) &lt;- value</code> calls <code>declare("var", assertion, value, const = TRUE)</code>
+</p>
+<p>In those cases an active binding is defined so <code>var</code> returns <code>value</code> (or
+<code>NULL</code> if none was provided). If <code>const</code> is <code>FALSE</code> (the default), the
+returned value can then be altered if by assigning to <code>var</code>, but a value which
+doesn't satisfy the assertion will trigger an error.
+</p>
+
+
+<h3>Set A Function's Return Type</h3>
+
+<p>The syntaxes <code style="white-space: pre;">⁠assertion ? function(&lt;args&gt;) {&lt;body&gt;}⁠</code> and <code style="white-space: pre;">⁠fun &lt;- assertion ? function(&lt;args&gt;) {&lt;body&gt;}⁠</code>
+can be used to create a function of class <code>c("typed", "function")</code>.
+The returned function will have its body modified so that return values are
+wrapped inside a <code>check_output()</code> call. Printing the function will display
+the return type.
+</p>
+
+
+<h3>Set A Function Argument's Type</h3>
+
+<p>When using the above syntax, or if we don't want to force a return type, the
+simpler <code style="white-space: pre;">⁠? function(&lt;args&gt;) {&lt;body&gt;}⁠</code> or <code style="white-space: pre;">⁠fun &lt;- ? function(&lt;args&gt;) {&lt;body&gt;}⁠</code>
+syntax, we can set argument types by providing arguments as <code>arg = default_value ? assertion</code> or
+<code>arg = ? assertion</code>. When entering the function, argument types will be checked.
+</p>
+<p>By default the arguments are only checked at the top, and might be assigned later
+in the function's body values that don't satisfy the assertion, to avoid this
+we can type <code>arg = default_value ? +assertion</code> or <code>arg = ? +assertion</code>.
+</p>
+<p>Note that forgetting the <code style="white-space: pre;">⁠?⁠</code> before <code>function</code> is an easy mistake to do!
+</p>
+<p>If we'd rather check the quoted argument rather than the argument's value,
+we can type <code>arg = default_value ? ~assertion</code> or
+<code>arg = ? ~assertion</code>. A possible use case might be <code>arg = ? ~ Symbol()</code>.
+</p>
+<p>Dots can be checked too, <code>... = ? assertion</code> will make sure that every argument
+passed to dots satisfies the assertion.
+</p>
+<p>The special assertion factory <code>Dots</code> can also be used, in that case the checks will
+apply to <code>list(...)</code> rather than to each element individually, for instance
+<code style="white-space: pre;">⁠function(... = ? Dots(2))⁠</code> makes sure the dots were fed 2 values.
+</p>
+<p>The returned function will have its body modified so the arguments are
+checked by <code>check_arg()</code> calls at the top. Printing the function will display
+the argument types.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">Integer() ? function (x= ? Integer()) {
+  Integer() ? y &lt;- 2L
+  res &lt;- x + y
+  res
+}
+</code></pre>
+
+
+</div>

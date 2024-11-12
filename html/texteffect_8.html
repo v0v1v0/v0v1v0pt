@@ -1,0 +1,105 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sibp_exclusivity</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate Exclusivity Metric</h2>
+
+<h3>Description</h3>
+
+<p><code>sibp_exculsivity</code> calculates the coherence metric for an <code>sibp</code> object fit on a training set.  <code>sibp_rank_runs</code> runs <code>sibp_exclusivity</code> on each element in the list returned by <code>sibp_param_search</code>, and ranks the parameter configurations from most to least promising.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">	  sibp_exclusivity(sibp.fit, X, num.words = 10)
+	  sibp_rank_runs(sibp.search, X, num.words = 10)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sibp.fit</code></td>
+<td>
+<p>A <code>sibp</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sibp.search</code></td>
+<td>
+<p>A list of <code>sibp</code> object fit using the training set, obtained using <code>sibp_param_search</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>The covariates for the full data set.  The division between the training and test set is handled inside the function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num.words</code></td>
+<td>
+<p>The top words whose coherence will be evaluated.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The metric is formally described at the top of page 1605 of <a href="https://aclweb.org/anthology/P/P16/P16-1151.pdf">https://aclweb.org/anthology/P/P16/P16-1151.pdf</a>.  The purpose of this metric is merely to suggest which parameter configurations might contain the most interesting treatments to test if there are too many configurations to investigate manually.  The choice of the parameter configuration should always be made on the basis of which treatments are substantively the most interesting, see sibp_top_words.</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>exclusivity</code></td>
+<td>
+<p>An exclusivity matrix which quantifies the degree to which the top words in a treatment appear in documents that have that treatment but not in documents that lack that treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exclusivity_rank</code></td>
+<td>
+<p>A table that ranks the treatments discovered by the various runs from sibp.search from most exclusive to least exclusive.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Christian Fong</p>
+
+
+<h3>References</h3>
+
+<p>Fong, Christian and Justin Grimmer.  2016. “Discovery of Treatments from Text Corpora” Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics. <a href="https://aclweb.org/anthology/P/P16/P16-1151.pdf">https://aclweb.org/anthology/P/P16/P16-1151.pdf</a></p>
+
+
+<h3>See Also</h3>
+
+<p>sibp_param_search, sibp_top_words</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">##Load the sample of Wikipedia biography data
+data(BioSample)
+
+# Divide into training and test sets
+Y &lt;- BioSample[,1]
+X &lt;- BioSample[,-1]
+set.seed(1)
+train.ind &lt;- sample(1:nrow(X), size = 0.5*nrow(X), replace = FALSE)
+
+# Search sIBP for several parameter configurations; fit each to the training set
+sibp.search &lt;- sibp_param_search(X, Y, K = 2, alphas = c(2,4),
+                                 sigmasq.ns = c(0.8, 1), iters = 1,
+							     train.ind = train.ind)
+# Get metric for evaluating most promising parameter configurations
+sibp_rank_runs(sibp.search, X, 10)
+</code></pre>
+
+
+</div>

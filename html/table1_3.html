@@ -1,0 +1,177 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>eqcut</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cut a continuous variable into equal-sized groups.</h2>
+
+<h3>Description</h3>
+
+<p>Cut a continuous variable into equal-sized groups.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">eqcut(
+  x,
+  ngroups,
+  labeling = eqcut.default.labeling,
+  withhold = NULL,
+  varlabel = if (has.label(x)) label(x) else deparse(substitute(x)),
+  quantile.type = 7,
+  right = FALSE,
+  ...
+)
+
+eqcut.default.labeling(x, xcat, which, what, from, to, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngroups</code></td>
+<td>
+<p>The number of groups desired.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labeling</code></td>
+<td>
+<p>A function that produces the category labels (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>withhold</code></td>
+<td>
+<p>A named list of logical vectors (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varlabel</code></td>
+<td>
+<p>A character string to be used as a label for <code>x</code>, or
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quantile.type</code></td>
+<td>
+<p>An integer from 1 to 9, passed as the <code>type</code> argument to function <code>quantile</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>right</code></td>
+<td>
+<p>Should intervals be right-closed? (passed to <code>cut</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed on to function <code>labeling</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xcat</code></td>
+<td>
+<p>A factor returned by <code>cut</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which, what</code></td>
+<td>
+<p>Character vectors for labeling the categories in an
+appropriate way (see Examples).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from, to</code></td>
+<td>
+<p>Numeric vectors giving the ranges covered by the categories
+of <code>x</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>labeling</code> must have the signature <code>function(x, xcat,
+which, what, from, to, ...)</code> and produces the character vector of factor
+levels. See below for an example.
+</p>
+<p>The <code>withhold</code> list can be used when <code>x</code> contains special values
+that should not be considered in the calculation of the quantiles used to
+create the <code>ngroups</code> categories. The special values are given a label
+that corresponds to the name of the corresponding list element. See below
+for an example.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>factor</code> of the same length as <code>x</code>. There are
+<code>ngroups</code> levels plus one additional level for each element of
+<code>withhold</code>.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul><li> <p><code>eqcut.default.labeling()</code>: The default labeling function.
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p><code>cut</code>
+<code>quantile</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- sample(100)
+table(eqcut(x, 2))
+table(eqcut(x, 3))
+table(eqcut(x, 4))
+table(eqcut(x, 5))
+table(eqcut(x, 6))
+table(eqcut(x, 7))
+table(eqcut(x, 8))
+
+# An example of using eqcut in a table with custom labeling function.
+dat &lt;- expand.grid(id=1:100, sex=c("Male", "Female"), treat=c("Treated", "Placebo"))
+dat$age &lt;- runif(nrow(dat), 18, 50)
+dat$wt &lt;- exp(rnorm(nrow(dat), log(75 + 10*(dat$sex=="Male")), 0.2))
+dat$auc &lt;- ifelse(dat$treat=="Placebo", NA, exp(rnorm(nrow(dat), log(1000), 0.34)))
+dat$auc[3] &lt;- NA  # Add a missing value
+
+label(dat$sex) &lt;- "Sex"
+label(dat$age) &lt;- "Age"
+label(dat$wt)  &lt;- "Weight"
+label(dat$auc) &lt;- "AUC"
+units(dat$age) &lt;- "y"
+units(dat$wt)  &lt;- "kg"
+units(dat$auc) &lt;- "ng.h/mL"
+
+w &lt;- list(Placebo=(dat$treat=="Placebo"), Excluded=is.na(dat$auc))
+f &lt;- function(x, xcat, which, what, from, to, ...) {
+   what &lt;- sub("of ", "of&lt;br/&gt;", what)
+   sprintf("%s %s&lt;br/&gt;&amp;ge;%s to &amp;lt;%s",
+       which, what, signif_pad(from, 3, FALSE), signif_pad(to, 3, FALSE))
+}
+table1(~ sex + age + wt | eqcut(auc, 3, f, w), data=dat)
+
+</code></pre>
+
+
+</div>

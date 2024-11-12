@@ -1,0 +1,309 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_smooth</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Smoothing Transformation using Loess</h2>
+
+<h3>Description</h3>
+
+<p><code>step_smooth</code> creates a a <em>specification</em> of a recipe
+step that will apply local polynomial regression
+to one or more a Numeric column(s). The effect is smoothing the time series
+<strong>similar to a moving average without creating missing values or using partial smoothing.</strong>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_smooth(
+  recipe,
+  ...,
+  period = 30,
+  span = NULL,
+  degree = 2,
+  names = NULL,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  skip = FALSE,
+  id = rand_id("smooth")
+)
+
+## S3 method for class 'step_smooth'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more numeric columns to be smoothed.
+See <code>recipes::selections()</code> for more details.
+For the <code>tidy</code> method, these are not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>The number of periods to include in the local smoothing.
+Similar to window size for a moving average.
+See details for an explanation <code>period</code> vs <code>span</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>span</code></td>
+<td>
+<p>The span is a percentage of data to be included
+in the smoothing window. Period is preferred for shorter windows
+to fix the window size.
+See details for an explanation <code>period</code> vs <code>span</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degree</code></td>
+<td>
+<p>The degree of the polynomials to be used.
+Set to 2 by default for 2nd order polynomial.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>An optional character string that is the same
+length of the number of terms selected by <code>terms</code>. These will be
+the names of the <strong>new columns</strong> created by the step.
+</p>
+
+<ul>
+<li>
+<p> If <code>NULL</code>, existing columns are transformed.
+</p>
+</li>
+<li>
+<p> If not <code>NULL</code>, new columns will be created.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new variable columns created by the original variables
+will be used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variables that will be
+used as inputs. This field is a placeholder and will be
+populated once <code>recipes::prep()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the recipe is
+baked by bake.recipe()? While all operations are baked when prep.recipe()
+is run, some operations may not be able to be conducted on new data
+(e.g. processing the outcome variable(s)). Care should be taken when
+using skip = TRUE as it may affect the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_smooth</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Smoother Algorithm</strong>
+This function is a <code>recipe</code> specification that wraps the <code>stats::loess()</code>
+with a modification to set a fixed <code>period</code> rather than a percentage of
+data points via a <code>span</code>.
+</p>
+<p><strong>Why Period vs Span?</strong>
+The <code>period</code> is fixed whereas the <code>span</code> changes as the number of observations change.
+</p>
+<p><strong>When to use Period?</strong>
+The effect of using a <code>period</code> is similar to a Moving Average where the Window Size
+is the <em><strong>Fixed Period</strong></em>. This helps when you are trying to smooth local trends.
+If you want a 30-day moving average, specify <code>period = 30</code>.
+</p>
+<p><strong>When to use Span?</strong>
+Span is easier to specify when you want a <em><strong>Long-Term Trendline</strong></em> where the
+window size is unknown. You can specify <code>span = 0.75</code> to locally regress
+using a window of 75% of the data.
+</p>
+<p><strong>Warning - Using Span with New Data</strong>
+When using span on New Data, the number of observations is likely different than
+what you trained with. This means the trendline / smoother can be vastly different
+than the smoother you trained with.
+</p>
+<p><strong>Solution to Span with New Data</strong>
+Don't use <code>span</code>. Rather, use <code>period</code> to fix the window size.
+This ensures that new data includes the same number of observations in the local
+polynomial regression (loess) as the training data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>step_smooth</code>, an updated version of recipe with
+the new step added to the sequence of existing steps (if any).
+For the <code>tidy</code> method, a tibble with columns <code>terms</code>
+(the selectors or variables selected), <code>value</code> (the feature
+names).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Main Recipe Functions:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(dplyr)
+library(ggplot2)
+
+# Training Data
+FB_tbl &lt;- FANG %&gt;%
+    filter(symbol == "FB") %&gt;%
+    select(symbol, date, adjusted)
+
+# New Data - Make some fake new data next 90 time stamps
+new_data &lt;- FB_tbl %&gt;%
+    tail(90) %&gt;%
+    mutate(date = date %&gt;% tk_make_future_timeseries(length_out = 90))
+
+# ---- PERIOD ----
+
+# Create a recipe object with a step_smooth()
+rec_smooth_period &lt;- recipe(adjusted ~ ., data = FB_tbl) %&gt;%
+    step_smooth(adjusted, period = 30)
+
+# Bake the recipe object - Applies the Loess Transformation
+training_data_baked &lt;- bake(prep(rec_smooth_period), FB_tbl)
+
+# "Period" Effect on New Data
+new_data_baked &lt;- bake(prep(rec_smooth_period), new_data)
+
+# Smoother's fit on new data is very similar because
+# 30 days are used in the new data regardless of the new data being 90 days
+training_data_baked %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line() +
+    geom_line(color = "red", data = new_data_baked)
+
+# ---- SPAN ----
+
+# Create a recipe object with a step_smooth
+rec_smooth_span &lt;- recipe(adjusted ~ ., data = FB_tbl) %&gt;%
+    step_smooth(adjusted, span = 0.03)
+
+# Bake the recipe object - Applies the Loess Transformation
+training_data_baked &lt;- bake(prep(rec_smooth_span), FB_tbl)
+
+# "Period" Effect on New Data
+new_data_baked &lt;- bake(prep(rec_smooth_span), new_data)
+
+# Smoother's fit is not the same using span because new data is only 90 days
+# and 0.03 x 90 = 2.7 days
+training_data_baked %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line() +
+    geom_line(color = "red", data = new_data_baked)
+
+# ---- NEW COLUMNS ----
+# Use the `names` argument to create new columns instead of overwriting existing
+
+rec_smooth_names &lt;- recipe(adjusted ~ ., data = FB_tbl) %&gt;%
+    step_smooth(adjusted, period = 30, names = "adjusted_smooth_30") %&gt;%
+    step_smooth(adjusted, period = 180, names = "adjusted_smooth_180") %&gt;%
+    step_smooth(adjusted, span = 0.75, names = "long_term_trend")
+
+bake(prep(rec_smooth_names), FB_tbl) %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line(alpha = 0.5) +
+    geom_line(aes(y = adjusted_smooth_30), color = "red", size = 1) +
+    geom_line(aes(y = adjusted_smooth_180), color = "blue", size = 1) +
+    geom_line(aes(y = long_term_trend), color = "orange", size = 1)
+
+
+
+</code></pre>
+
+
+</div>

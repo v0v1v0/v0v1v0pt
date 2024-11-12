@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>expect_custom</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extension of 'expect' to allow inclusion of custom fields</h2>
+
+<h3>Description</h3>
+
+<p>Use expect_custom to allow inclusion of arbitrary data in expectation
+results. Additional data is stored in a list in an attribute called <code>custom</code>
+in the resulting expectation. This allows data expectations to store
+information about the number of failed and successful cases for reporting of
+test results.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">expect_custom(
+  ok,
+  failure_message,
+  info = NULL,
+  srcref = NULL,
+  trace = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ok</code></td>
+<td>
+<p><code>TRUE</code> or <code>FALSE</code> indicating if the expectation was successful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>failure_message</code></td>
+<td>
+<p>Message to show if the expectation failed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p>Character vector continuing additional information. Included for
+backward compatibility only and new expectations should not use it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>srcref</code></td>
+<td>
+<p>Location of the failure. Should only needed to be explicitly
+supplied when you need to forward a srcref captured elsewhere.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional data to be added to a list in the <code>custom</code> attribute of
+the resulting expectation.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An expectation object. Signals the expectation condition with a
+<code>continue_test</code> restart.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># calling expect_custom directly with some custom data
+x &lt;- expect_custom(TRUE, "Test", extra_data = 1:5, more_data = "Hello")
+str(x)
+
+# an example expectation (note additional libraries used)
+library(rlang)
+
+expect_example &lt;- function(var, data = get_testdata()) {
+  act &lt;- quasi_label(enquo(data))
+  act$var_desc &lt;- expr_label(get_expr(enquo(var)))
+  act$var &lt;- expr_text(get_expr(enquo(var)))
+
+  act$result &lt;- act$val[[act$var]] &gt; 0
+  act$result[is.na(act$result)] &lt;- FALSE
+
+  expect_custom(
+    all(act$result, na.rm = TRUE),
+    glue::glue("{act$lab} has {sum(!act$result, na.rm = TRUE)} cases with \\
+                {act$var_desc} not greater than 0."),
+    failed_count = sum(!act$result, na.rm = TRUE),
+    total_count = sum(!is.na(act$result))
+  )
+
+  invisible(act$result)
+}
+
+try(expect_example(x, data = data.frame(x = c(NA, -2:2))))
+</code></pre>
+
+
+</div>

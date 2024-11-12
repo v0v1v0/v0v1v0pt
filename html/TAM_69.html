@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>IRT.informationCurves</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Item and Test Information Curve
+</h2>
+
+<h3>Description</h3>
+
+<p>An S3 method which computes item and test information curves, see Muraki (1993).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">IRT.informationCurves(object, ...)
+
+## S3 method for class 'tam.mml'
+IRT.informationCurves( object, h=.0001, iIndex=NULL,
+          theta=NULL, ... )
+
+## S3 method for class 'tam.mml.2pl'
+IRT.informationCurves( object, h=.0001, iIndex=NULL,
+          theta=NULL, ... )
+
+## S3 method for class 'tam.mml.mfr'
+IRT.informationCurves( object, h=.0001, iIndex=NULL,
+          theta=NULL, ... )
+
+## S3 method for class 'tam.mml.3pl'
+IRT.informationCurves( object, h=.0001, iIndex=NULL,
+          theta=NULL, ... )
+
+## S3 method for class 'IRT.informationCurves'
+plot(x, curve_type="test", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>Object of class <code>tam.mml</code>, <code>tam.mml.2pl</code>, <code>tam.mml.mfr</code>
+or <code>tam.mml.3pl</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Further arguments to be passed
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>Numerical differentiation parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iIndex</code></td>
+<td>
+<p>Indices of items for which test information should be computed.
+The default is to use all items.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Optional vector of <code class="reqn">\theta</code> for which information curves
+should be computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>curve_type</code></td>
+<td>
+<p>Type of information to be plotted. It can be <code>"test"</code>
+for the test information curve and <code>"se"</code> for the
+standard error curve.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>Object of class <code>tam.mml</code>, <code>tam.mml.2pl</code>, <code>tam.mml.mfr</code>
+or <code>tam.mml.3pl</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>List with following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>se_curve</code></td>
+<td>
+<p>Standard error curves</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test_info_curve</code></td>
+<td>
+<p>Test information curve</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info_curves_item</code></td>
+<td>
+<p>Item information curves</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info_curves_categories</code></td>
+<td>
+<p>Item-category information curves</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Used <code class="reqn">\theta</code> grid</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Muraki, E. (1993). Information functions of the generalized partial credit
+model. <em>Applied Psychological Measurement, 17</em>(4), 351-363.
+<a href="https://doi.org/10.1177/014662169301700403">doi:10.1177/014662169301700403</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+#############################################################################
+# EXAMPLE 1: Dichotomous data | data.read
+#############################################################################
+
+data(data.read, package="sirt")
+dat &lt;- data.read
+
+# fit 2PL model
+mod1 &lt;- TAM::tam.mml.2pl( dat )
+summary(mod1)
+
+# compute information curves at grid seq(-5,5,length=100)
+imod1 &lt;- TAM::IRT.informationCurves( mod1, theta=seq(-5,5,len=100)  )
+str(imod1)
+# plot test information
+plot( imod1 )
+# plot standard error curve
+plot( imod1, curve_type="se", xlim=c(-3,2) )
+# cutomized plot
+plot( imod1, curve_type="se", xlim=c(-3,2), ylim=c(0,2), lwd=2, lty=3)
+
+#############################################################################
+# EXAMPLE 2: Mixed dichotomous and polytomous data
+#############################################################################
+
+data(data.timssAusTwn.scored, package="TAM")
+dat &lt;- data.timssAusTwn.scored
+# select item response data
+items &lt;- grep( "M0", colnames(dat), value=TRUE )
+resp &lt;- dat[, items ]
+
+#*** Model 1: Partial credit model
+mod1 &lt;- TAM::tam.mml( resp )
+summary(mod1)
+# information curves
+imod1 &lt;- TAM::IRT.informationCurves( mod1, theta=seq(-3,3,len=20)  )
+
+#*** Model 2: Generalized partial credit model
+mod2 &lt;- TAM::tam.mml.2pl( resp, irtmodel="GPCM")
+summary(mod2)
+imod2 &lt;- TAM::IRT.informationCurves( mod2 )
+
+#*** Model 3: Mixed 3PL and generalized partial credit model
+psych::describe(resp)
+maxK &lt;- apply( resp, 2, max, na.rm=TRUE )
+I &lt;- ncol(resp)
+# specify guessing parameters, including a prior distribution
+est.guess &lt;- 1:I
+est.guess[ maxK &gt; 1 ] &lt;- 0
+guess &lt;- .2*(est.guess &gt;0)
+guess.prior &lt;- matrix( 0, nrow=I, ncol=2 )
+guess.prior[ est.guess  &gt; 0, 1] &lt;- 5
+guess.prior[ est.guess  &gt; 0, 2] &lt;- 17
+
+# fit model
+mod3 &lt;- TAM::tam.mml.3pl( resp, gammaslope.des="2PL", est.guess=est.guess, guess=guess,
+           guess.prior=guess.prior,
+           control=list( maxiter=100, Msteps=10, fac.oldxsi=0.1,
+                        nodes=seq(-8,8,len=41) ),  est.variance=FALSE )
+summary(mod3)
+
+# information curves
+imod3 &lt;- TAM::IRT.informationCurves( mod3 )
+imod3
+
+#*** estimate model in mirt package
+library(mirt)
+itemtype &lt;- rep("gpcm", I)
+itemtype[ maxK==1] &lt;- "3PL"
+mod3b &lt;- mirt::mirt(resp, 1, itemtype=itemtype, verbose=TRUE )
+print(mod3b)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

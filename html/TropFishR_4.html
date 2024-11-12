@@ -1,0 +1,296 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>catchCurve</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Catch curve</h2>
+
+<h3>Description</h3>
+
+<p>This function applies the (length-converted) linearised catch
+curve to age composition and length-frequency data,
+respectively. It allows to estimate the instantaneous total mortality rate (Z).
+Optionally, the gear selectivity can be estimated and the cumulative catch
+curve cna be applied.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">catchCurve(
+  param,
+  catch_columns = NA,
+  cumulative = FALSE,
+  calc_ogive = FALSE,
+  reg_int = NULL,
+  reg_num = 1,
+  auto = FALSE,
+  plot = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>param</code></td>
+<td>
+<p>a list consisting of following parameters:
+</p>
+
+<ul>
+<li> <p><code>midLengths</code> or <code>age</code>: midpoints of the length classes (length-frequency
+data) or ages (age composition data),
+</p>
+</li>
+<li> <p><code>Linf</code>: infinite length for investigated species in cm [cm],
+</p>
+</li>
+<li> <p><code>K</code>: growth coefficent for investigated species per year [1/year],
+</p>
+</li>
+<li> <p><code>t0</code>: theoretical time zero, at which individuals of this species hatch,
+</p>
+</li>
+<li> <p><code>catch</code>: catches, vector or matrix with catches of subsequent years if
+the catch curve with constat time intervals should be applied;
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>catch_columns</code></td>
+<td>
+<p>numerical; indicating the column of the catch matrix which should be
+used for the analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cumulative</code></td>
+<td>
+<p>logical; if TRUE the cumulative
+catch curve is applied (Jones and van Zalinge method)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_ogive</code></td>
+<td>
+<p>logical; if TRUE the selection ogive is additionally
+calculated from the catch curve (only if <code>cumulative = FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg_int</code></td>
+<td>
+<p>instead of using the identity method a range can be determined,
+which is to be used for the regression analysis. If equal to NULL identity method
+is applied (default). For multiple regression lines provide list with the two points
+for the regression line in each element of the list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg_num</code></td>
+<td>
+<p>integer indicating how many separate regression lines should be applied to the
+data. Default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>auto</code></td>
+<td>
+<p>logical; no interactive functions used instead regression line is chosen
+automatically. Default = FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>logical; should a plot be displayed? Default = TRUE</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function includes the identify function, which asks you to
+choose two points from a graph manually. The two points which you choose by clicking
+on the plot in the graphical device represent the start and end of the data points,
+which should be used for the analysis. Based on these points the regression line
+is calculated.
+When the selection ogive
+is calculated by means of the catch curve the assumption is made, that Z is constant
+for all year classes or length groups, respectively. Accoring to Sparre and Venema
+(1998) this assumption might be true, because F is smaller for young fish
+(Selectivity) while M is higher for young fish (high natural mortality). The selectivity
+for not fully exploited old fish (e.g. due to gillnet fishery) can not be calculated yet
+by use of the catch curve.
+Based on the format of the list argument <code>catch</code> and whether the argument
+<code>catch_columns</code> is defined, the function automatically
+distinguishes between the catch curve with variable parameter system (if catch is a
+vector) and the one with constant parameter system (if catch is a matrix or a
+data.frame and <code>catch_columns = NA</code>). In the case of the variable parameter
+system the catches of one year are
+assumed to represent the catches during the entire life span of a so called
+pseudo-cohort.
+The cumulative catch curve does not allow for the estimation of the selectivity
+ogive.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the input parameters and following list objects:
+</p>
+
+<ul>
+<li> <p><strong>classes.num</strong>, <strong>tplusdt_2</strong>, <strong>t_midL</strong>, or
+<strong>ln_Linf_L</strong>: age, relative age or subsitute depending on input and method,
+</p>
+</li>
+<li> <p><strong>lnC</strong> or <strong>lnC_dt</strong>: logarithm of (rearranged) catches,
+</p>
+</li>
+<li> <p><strong>reg_int</strong>: the interval used for the regression analysis,
+</p>
+</li>
+<li> <p><strong>linear_mod</strong>: linear model used for the regression analysis,
+</p>
+</li>
+<li> <p><strong>Z</strong>: instantaneous total mortality rate, confidenceInt
+</p>
+</li>
+<li> <p><strong>se</strong>: standard error of the total mortality;
+</p>
+</li>
+<li> <p><strong>confidenceInt</strong>: confidence interval of the total mortality;</p>
+</li>
+</ul>
+<p>in case calc_ogive == TRUE, additionally:
+</p>
+
+<ul>
+<li> <p><strong>intercept</strong>: intercept of regression analysis,
+</p>
+</li>
+<li> <p><strong>linear_mod_sel</strong>: linear model used for the selectivity analysis,
+</p>
+</li>
+<li> <p><strong>Sobs</strong>: observed selection ogive,
+</p>
+</li>
+<li> <p><strong>ln_1_S_1</strong>: dependent variable of regression analysis for
+selectivity parameters,
+</p>
+</li>
+<li> <p><strong>Sest</strong>: estimated selection ogive,
+</p>
+</li>
+<li> <p><strong>t50</strong>: age at first capture (age at which fish have a 50
+probability to be caught),
+</p>
+</li>
+<li> <p><strong>t75</strong>: age at which fish have a 75
+</p>
+</li>
+<li> <p><strong>L50</strong>: length at first capture (length at which fish have a 50
+probability to be caught),
+</p>
+</li>
+<li> <p><strong>L75</strong>: length at which fish have a 75
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Baranov, F.I., 1926. On the question of the dynamics of the fishing industry.
+<em>Nauchn. Byull. Rybn. Khoz</em>, 8 (1925), 7-11
+</p>
+<p>Beverton, R.J.H. and S.J. Holt, 1956. A review of methods for estimating mortality
+rates in exploited fish populations, with special reference to sources of bias in
+catch sampling. <em>Rapports et Proces verbaux des Reunions</em>, Conseil Table3
+</p>
+<p>Chapman, D., and D.S Robson, 1960. The analysis of a catch curve.
+<em>Biometrics</em>, 354-368
+</p>
+<p>Edser, T., 1908. Note on the number of plaice at each length, in certain samples
+from the southern part of the North Sea, 1906. <em>Journal of the Royal
+Statistical Society</em>, 686-690
+</p>
+<p>Heincke, F., 1913. Investigations on the plaice. General report. 1. The plaice fishery
+and protective regulations. Part I. <em>Rapp.P.-v.Reun.CIEM</em>, 17A:1-153 + Annexes
+</p>
+<p>ICES, 1981. Report of the <em>Ad hoc</em> working group on the use of effort data in
+assessment, Copenhagen, 2-6 March 1981. <em>ICES C.M.</em> 1981/G:5 (mimeo)
+</p>
+<p>Jones, R., and N.P. Van Zalinge, 1981. Estimates of mortality rate and population size
+for shrimp in Kuwait waters. <em>Kuwait Bull. Mar. Sci</em>, 2, 273-288
+</p>
+<p>Pauly, D., 1983. Length-converted catch curves: a powerful tool for fisheries research
+in the tropics (part I). <em>ICLARM Fishbyte</em>, 1(2), 9-13
+</p>
+<p>Pauly, D., 1984. Length-converted catch curves: a powerful tool for fisheries
+research in the tropics (part II). <em>ICLARM Fishbyte</em>, 2(1), 17-19
+</p>
+<p>Pauly, D., 1984. Length-converted catch curves: a powerful tool for fisheries
+research in the tropics (III: Conclusion). <em>ICLARM Fishbyte</em>, 2(3), 9-10
+</p>
+<p>Ricker, W.E., 1987. Computation and interpretation of biological statistics of fish
+populations. <em>Bull.Fish.Res.Board Can.</em>, (191):382 p.
+</p>
+<p>Robson, D.S., and D.G. Chapman, 1961. Catch curves and mortality rates.
+<em>Trans.Am.Fish.Soc.</em>, 90(2):181-189
+</p>
+<p>Sparre, P., Venema, S.C., 1998. Introduction to tropical fish stock assessment.
+Part 1. Manual. <em>FAO Fisheries Technical Paper</em>, (306.1, Rev. 2). 407 p.
+</p>
+<p>Van Sickle, J. 1977. Mortality rates from size distributions: the application of a
+conservation law. <em>Oecologia, Berl.</em>, 27(4):311-318
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#_______________________________________________
+# Variable paramter system (with catch vector)
+# based on length frequency data
+data(goatfish)
+output &lt;- catchCurve(goatfish)
+summary(output$linear_mod)
+
+# based on age composition data
+data(whiting)
+catchCurve(whiting, catch_columns = 1)
+
+#_______________________________________________
+# Constant parameter system based on age composition data (with catch matrix)
+catchCurve(whiting)
+
+#_______________________________________________
+# Cumulative Catch Curve
+# based on length frequency data
+data(goatfish)
+catchCurve(goatfish, cumulative = TRUE)
+
+# based on age composition data
+data(synCAA2)
+catchCurve(synCAA2, cumulative = TRUE)
+
+#_______________________________________________
+# Catch Curve with estimation of selection ogive
+data(synLFQ3)
+output &lt;- catchCurve(synLFQ3, calc_ogive = TRUE)
+summary(output$linear_mod_sel)
+ 
+
+# the same with predefined selection for regression line:
+data(synLFQ3)
+output &lt;- catchCurve(synLFQ3, calc_ogive = TRUE, reg_int = c(9,21))
+plot(output, plot_selec = TRUE)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,233 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_g_scatterplotmatrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Scatterplot matrix</h2>
+
+<h3>Description</h3>
+
+<p>Generates a scatterplot matrix from selected <code>variables</code> from datasets.
+Each plot within the matrix represents the relationship between two variables,
+providing the overview of correlations and distributions across selected data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_g_scatterplotmatrix(
+  label = "Scatterplot Matrix",
+  variables,
+  plot_height = c(600, 200, 2000),
+  plot_width = NULL,
+  pre_output = NULL,
+  post_output = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Specifies plotting variables from an incoming dataset with filtering and selecting. In case of
+<code>data_extract_spec</code> use <code>select_spec(..., ordered = TRUE)</code> if plot elements should be
+rendered according to selection order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot height as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> intended for use with a slider UI element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot width as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> for a slider encoding the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed before the module's output,
+providing context or a title.
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed after the module's output,
+adding context or further instructions. Elements like <code>shiny::helpText()</code> are useful.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For more examples, please see the vignette "Using scatterplot matrix" via
+<code>vignette("using-scatterplot-matrix", package = "teal.modules.general")</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># general data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  countries &lt;- data.frame(
+    id = c("DE", "FR", "IT", "ES", "PT", "GR", "NL", "BE", "LU", "AT"),
+    government = factor(
+      c(2, 2, 2, 1, 2, 2, 1, 1, 1, 2),
+      labels = c("Monarchy", "Republic")
+    ),
+    language_family = factor(
+      c(1, 3, 3, 3, 3, 2, 1, 1, 3, 1),
+      labels = c("Germanic", "Hellenic", "Romance")
+    ),
+    population = c(83, 67, 60, 47, 10, 11, 17, 11, 0.6, 9),
+    area = c(357, 551, 301, 505, 92, 132, 41, 30, 2.6, 83),
+    gdp = c(3.4, 2.7, 2.1, 1.4, 0.3, 0.2, 0.7, 0.5, 0.1, 0.4),
+    debt = c(2.1, 2.3, 2.4, 2.6, 2.3, 2.4, 2.3, 2.4, 2.3, 2.4)
+  )
+  sales &lt;- data.frame(
+    id = 1:50,
+    country_id = sample(
+      c("DE", "FR", "IT", "ES", "PT", "GR", "NL", "BE", "LU", "AT"),
+      size = 50,
+      replace = TRUE
+    ),
+    year = sort(sample(2010:2020, 50, replace = TRUE)),
+    venue = sample(c("small", "medium", "large", "online"), 50, replace = TRUE),
+    cancelled = sample(c(TRUE, FALSE), 50, replace = TRUE),
+    quantity = rnorm(50, 100, 20),
+    costs = rnorm(50, 80, 20),
+    profit = rnorm(50, 20, 10)
+  )
+})
+datanames(data) &lt;- c("countries", "sales")
+join_keys(data) &lt;- join_keys(
+  join_key("countries", "countries", "id"),
+  join_key("sales", "sales", "id"),
+  join_key("countries", "sales", c("id" = "country_id"))
+)
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_g_scatterplotmatrix(
+      label = "Scatterplot matrix",
+      variables = list(
+        data_extract_spec(
+          dataname = "countries",
+          select = select_spec(
+            label = "Select variables:",
+            choices = variable_choices(data[["countries"]]),
+            selected = c("area", "gdp", "debt"),
+            multiple = TRUE,
+            ordered = TRUE,
+            fixed = FALSE
+          )
+        ),
+        data_extract_spec(
+          dataname = "sales",
+          filter = filter_spec(
+            label = "Select variable:",
+            vars = "country_id",
+            choices = value_choices(data[["sales"]], "country_id"),
+            selected = c("DE", "FR", "IT", "ES", "PT", "GR", "NL", "BE", "LU", "AT"),
+            multiple = TRUE
+          ),
+          select = select_spec(
+            label = "Select variables:",
+            choices = variable_choices(data[["sales"]], c("quantity", "costs", "profit")),
+            selected = c("quantity", "costs", "profit"),
+            multiple = TRUE,
+            ordered = TRUE,
+            fixed = FALSE
+          )
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  ADSL &lt;- rADSL
+  ADRS &lt;- rADRS
+})
+datanames(data) &lt;- c("ADSL", "ADRS")
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_g_scatterplotmatrix(
+      label = "Scatterplot matrix",
+      variables = list(
+        data_extract_spec(
+          dataname = "ADSL",
+          select = select_spec(
+            label = "Select variables:",
+            choices = variable_choices(data[["ADSL"]]),
+            selected = c("AGE", "RACE", "SEX"),
+            multiple = TRUE,
+            ordered = TRUE,
+            fixed = FALSE
+          )
+        ),
+        data_extract_spec(
+          dataname = "ADRS",
+          filter = filter_spec(
+            label = "Select endpoints:",
+            vars = c("PARAMCD", "AVISIT"),
+            choices = value_choices(data[["ADRS"]], c("PARAMCD", "AVISIT"), c("PARAM", "AVISIT")),
+            selected = "INVET - END OF INDUCTION",
+            multiple = TRUE
+          ),
+          select = select_spec(
+            label = "Select variables:",
+            choices = variable_choices(data[["ADRS"]]),
+            selected = c("AGE", "AVAL", "ADY"),
+            multiple = TRUE,
+            ordered = TRUE,
+            fixed = FALSE
+          )
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

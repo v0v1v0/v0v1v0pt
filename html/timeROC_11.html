@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>print</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Print objects in the timeROC library</h2>
+
+<h3>Description</h3>
+
+<p>Printing of objects created with the timeROC function
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'ipcwsurvivalROC'
+print(x, No.lines=5,digits=2, ...)
+## S3 method for class 'ipcwcompetingrisksROC'
+print(x, No.lines=5,digits=2, ...)
+## S3 method for class 'ipcwsurvivalSeSpPPVNPV'
+print(x, No.lines=5,digits=2, ...)
+## S3 method for class 'ipcwcompetingrisksSeSpPPVNPV'
+print(x, No.lines=5,digits=2, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>Object of class "ipcwsurvivalROC", "ipcwcompetingrisksROC",
+"ipcwsurvivalSeSpPPVNPV" or "ipcwcompetingrisksSeSpPPVNPV".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>No.lines</code></td>
+<td>
+
+<p>The (maximum) number of lines printed. Each line corresponds to a time point included in the vector <code>times</code> of the object <code>x</code>. 
+For example, if <code>No.lines=5</code>, then the function chooses the five time points corresponding to the quantiles of the vector  <code>times</code> of the object <code>x</code>. If <code>No.lines=10</code>, it chooses the deciles, etc...
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+
+<p>The number of significant digits. Default value is <code>digits = 2</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Not used.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The print function recalls the sample size (after having removed missing data), the AUC estimates, and  the estimated standard errors (only if they have been estimated) for at maximum <code>No.lines</code> time points. In addition, it displays the frequencies of :
+</p>
+
+<ul>
+<li>
+<p> observed cases: subjects for which we know they undergo the (main) event prior the time "t" of interest.
+</p>
+</li>
+<li>
+<p> survivors : event-free subjects at time "t" of interest.
+</p>
+</li>
+<li>
+<p> censored subjects : censored subjects prior the time "t" of interest, for which we cannot know if they undergo an event or not prior time "t" (and so for which we cannot know if they are cases or controls at time "t").
+</p>
+</li>
+<li>
+<p> other events:  (in the competing risks setting only) subjects for which we know that they undergo an event different from the main event prior the time "t" of interest.
+</p>
+</li>
+</ul>
+<p>Furthermore, the function recalls the method used to compute the inverse probability of censoring weights.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Paul Blanche <a href="mailto:pabl@sund.ku.dk">pabl@sund.ku.dk</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>timeROC</code>, <code>SeSpPPVNPV</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">##-------------Without competing risks-------------------
+library(survival)
+data(pbc)
+head(pbc)
+pbc&lt;-pbc[!is.na(pbc$trt),] # select only randomised subjects
+pbc$status&lt;-as.numeric(pbc$status==2) # create event indicator: 1 for death, 0 for censored
+
+ROC.bili.cox&lt;-timeROC(T=pbc$time,
+                      delta=pbc$status,marker=pbc$bili,
+                      other_markers=as.matrix(pbc[,c("chol","albumin")]),
+                      cause=1,weighting="cox",
+                      times=quantile(pbc$time,probs=seq(0.2,0.8,0.01)))
+
+# prints descriptive statistics and AUC estimates (5,10 and 20 lines)
+print(ROC.bili.cox)
+print(ROC.bili.cox,No.lines=10)
+print(ROC.bili.cox,No.lines=20,digits=1)
+
+# Se, Sp, PPV and NPV computation for serum bilirunbin at threshold c=0.9(mg/dl) 
+res.SeSpPPVNPV.bili &lt;- SeSpPPVNPV(cutpoint=0.9,
+                                  T=pbc$time,
+                                  delta=pbc$status,marker=pbc$bili,
+                                  other_markers=as.matrix(pbc[,c("chol","albumin")]),
+                                  cause=1,weighting="cox",
+                                  times=quantile(pbc$time,probs=seq(0.2,0.8,0.1)))
+
+# prints descriptive statistics and Se, Sp, PPV and NPV
+#  estimates for serum bilirunbin at threshold c=0.9(mg/dl) 
+print(res.SeSpPPVNPV.bili,No.lines=20,digits=1)
+
+ROC.bili.marginal&lt;-timeROC(T=pbc$time,
+                           delta=pbc$status,marker=pbc$bili,
+                           cause=1,weighting="marginal",
+                           times=quantile(pbc$time,probs=seq(0.1,0.9,0.2)),
+                           iid=TRUE)
+
+# prints descriptive statistics, AUC estimates and also standard errors
+# of AUCs because weighting="marginal" and iid=TRUE were used.
+print(ROC.bili.marginal)
+
+##-------------With competing risks-------------------
+data(Melano)
+ROC.thick&lt;-timeROC(T=Melano$time,delta=Melano$status,
+                   marker=Melano$thick,cause=1,
+                   weighting="marginal",
+                   times=c(1500,2000,2500),iid=TRUE)
+
+# prints descriptive statistics, AUC estimates and also standard errors
+# of AUCs because weighting="marginal" and iid=TRUE were used.
+print(ROC.thick)
+
+
+# Se, Sp, PPV and NPV computation for tumor thickness at
+#threshold c=3 (1/100 mm)
+res.SeSpPPVNPV.thick &lt;- SeSpPPVNPV(cutpoint=3,
+                                  T=Melano$time,delta=Melano$status,
+                                  weighting="marginal",
+                                  marker=Melano$thick,cause=1,
+                                  times=c(1800,2000,2200),
+                                  iid=TRUE)
+print(res.SeSpPPVNPV.thick,digits=1)
+</code></pre>
+
+
+</div>

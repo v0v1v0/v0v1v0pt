@@ -1,0 +1,246 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>GREG.SI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The Generalized Regression Estimator under SI sampling design</h2>
+
+<h3>Description</h3>
+
+<p>Computes the generalized regression estimator of the population total for several variables of interest under simple random sampling without replacement</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">GREG.SI(N, n, y, x, tx, b, b0=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>N</code></td>
+<td>
+<p>The population size</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>The sample size</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Vector, matrix or data frame containing the recollected information of the variables of interest for every
+unit in the selected sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Vector, matrix or data frame containing the recollected auxiliary information for every unit in the selected sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tx</code></td>
+<td>
+<p>Vector containing the populations totals of the auxiliary information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>Vector of estimated regression coefficients</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b0</code></td>
+<td>
+<p>By default FALSE. The intercept of the regression model</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The function returns a vector of total population estimates for each variable of interest, its estimated standard error and its estimated coefficient of variation.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hugo Andres Gutierrez Rojas <a href="mailto:hagutierrezro@gmail.com">hagutierrezro@gmail.com</a></p>
+
+
+<h3>References</h3>
+
+<p>Sarndal, C-E. and Swensson, B. and Wretman, J. (1992), <em>Model Assisted Survey Sampling</em>. Springer.<br>
+Gutierrez, H. A. (2009), <em>Estrategias de muestreo: Diseno de encuestas y estimacion de parametros</em>.
+Editorial Universidad Santo Tomas.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>E.Beta</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">######################################################################
+## Example 1: Linear models involving continuous auxiliary information
+######################################################################
+
+# Draws a simple random sample without replacement
+data(Lucy)
+attach(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- 400
+sam &lt;- S.SI(N,n)
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+
+########### common mean model
+
+estima&lt;-data.frame(Income, Employees, Taxes)
+x &lt;- rep(1,n)
+model &lt;- E.Beta(N, n, estima, x, ck=1,b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- c(N)
+GREG.SI(N,n,estima,x,tx, b, b0=FALSE)
+
+########### common ratio model
+
+estima&lt;-data.frame(Income)
+x &lt;- data.frame(Employees)
+model &lt;- E.Beta(N, n, estima, x, ck=x,b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- sum(Lucy$Employees)
+GREG.SI(N,n,estima,x,tx, b, b0=FALSE)
+
+########### Simple regression model without intercept
+
+estima&lt;-data.frame(Income, Employees)
+x &lt;- data.frame(Taxes)
+model &lt;- E.Beta(N, n, estima, x, ck=1,b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- sum(Lucy$Taxes)
+GREG.SI(N,n,estima,x,tx, b, b0=FALSE)
+
+########### Multiple regression model without intercept
+
+estima&lt;-data.frame(Income)
+x &lt;- data.frame(Employees, Taxes)
+model &lt;- E.Beta(N, n, estima, x, ck=1, b0=FALSE)
+b &lt;- as.matrix(model[1,,])
+tx &lt;- c(sum(Lucy$Employees), sum(Lucy$Taxes))
+GREG.SI(N,n,estima,x,tx, b, b0=FALSE) 
+
+########### Simple regression model with intercept
+
+estima&lt;-data.frame(Income, Employees)
+x &lt;- data.frame(Taxes)
+model &lt;- E.Beta(N, n, estima, x, ck=1,b0=TRUE) 
+b &lt;- as.matrix(model[1,,])
+tx &lt;- c(N, sum(Lucy$Taxes))
+GREG.SI(N,n,estima,x,tx, b, b0=TRUE) 
+
+########### Multiple regression model with intercept
+
+estima&lt;-data.frame(Income)                               
+x &lt;- data.frame(Employees, Taxes)
+model &lt;- E.Beta(N, n, estima, x, ck=1,b0=TRUE)
+b &lt;- as.matrix(model[1,,])
+tx &lt;- c(N, sum(Lucy$Employees), sum(Lucy$Taxes))            
+GREG.SI(N,n,estima,x,tx, b, b0=TRUE) 
+
+####################################################################
+## Example 2: Linear models with discrete auxiliary information
+####################################################################
+
+# Draws a simple random sample without replacement
+data(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- 400
+sam &lt;- S.SI(N,n)
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+
+# The auxiliary information is discrete type
+Doma&lt;-Domains(Level)
+
+########### Poststratified common mean model
+
+estima&lt;-data.frame(Income, Employees, Taxes)
+model &lt;- E.Beta(N, n, estima, Doma, ck=1,b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- colSums(Domains(Lucy$Level))
+GREG.SI(N,n,estima,Doma,tx, b, b0=FALSE) 
+
+########### Poststratified common ratio model 
+
+estima&lt;-data.frame(Income, Employees)
+x &lt;- Doma*Taxes
+model &lt;- E.Beta(N, n, estima, x ,ck=1,b0=FALSE)
+b &lt;- as.matrix(model[1,,])
+tx &lt;- colSums(Domains(Lucy$Level)*Lucy$Taxes)
+GREG.SI(N,n,estima,x,tx, b, b0=FALSE) 
+
+######################################################################
+## Example 3: Domains estimation trough the postestratified estimator
+######################################################################
+
+# Draws a simple random sample without replacement
+data(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- 400
+sam &lt;- S.SI(N,n)
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+
+# The auxiliary information is discrete type
+Doma&lt;-Domains(Level)
+
+########### Poststratified common mean model for the 
+  # Income total in each poststratum ###################
+
+estima&lt;-Doma*Income
+model &lt;- E.Beta(N, n, estima, Doma, ck=1, b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- colSums(Domains(Lucy$Level))
+GREG.SI(N,n,estima,Doma,tx, b, b0=FALSE) 
+
+########### Poststratified common mean model for the 
+  # Employees total in each poststratum ###################
+
+estima&lt;-Doma*Employees
+model &lt;- E.Beta(N, n, estima, Doma, ck=1,b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- colSums(Domains(Lucy$Level))
+GREG.SI(N,n,estima,Doma,tx, b, b0=FALSE) 
+
+########### Poststratified common mean model for the 
+  # Taxes total in each poststratum ###################
+
+estima&lt;-Doma*Taxes
+model &lt;- E.Beta(N, n, estima, Doma, ck=1, b0=FALSE)
+b &lt;- t(as.matrix(model[1,,]))
+tx &lt;- colSums(Domains(Lucy$Level))
+GREG.SI(N,n,estima,Doma,tx, b, b0=FALSE) 
+
+</code></pre>
+
+
+</div>

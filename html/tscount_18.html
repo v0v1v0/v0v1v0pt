@@ -1,0 +1,234 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>interv_multiple.tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Detecting Multiple Interventions in Count Time Series Following Generalised Linear Models
+</h2>
+
+<h3>Description</h3>
+
+<p>Iterative detection procedure for multiple interventions of unknown types occuring at unknown times as proposed by Fokianos and Fried (2010, 2012).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+interv_multiple(fit, taus=2:length(fit$ts), deltas=c(0,0.8,1),
+                external=FALSE, B=10, signif_level=0.05,
+                start.control_bootstrap, final.control_bootstrap,
+                inter.control_bootstrap, parallel=FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fit</code></td>
+<td>
+
+<p>an object of class <code>"tsglm"</code>. Usually the result of a call to <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>taus</code></td>
+<td>
+
+<p>integer vector of times which are considered for the possible intervention to occur.
+Default is to consider all times.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deltas</code></td>
+<td>
+
+<p>numeric vector that determines the types of intervention to be considered (see Details).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>external</code></td>
+<td>
+
+<p>logical value specifying wether the interventions effect is external or not (see Details).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>positive integer value giving the number of bootstrap samples for estimation of the p-value.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>signif_level</code></td>
+<td>
+
+<p>numeric value with <code>0 &lt;= signif_level &lt;= 1</code> giving a significance level for the procedure.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.control_bootstrap</code></td>
+<td>
+
+<p>named list that determines how to make initial estimation in the bootstrap, see argument <code>start.control</code> in <code>tsglm</code>. If missing, the same settings as for the regular estimation are used.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final.control_bootstrap</code></td>
+<td>
+
+<p>named list that determines how to make final maximum likelihood estimation in the bootstrap, see argument <code>final.control</code> in <code>tsglm</code>. If missing, the same settings as for the regular estimation are used. If <code>final.control_bootstrap=NULL</code>, then the model is not re-fitted for each bootstrap sample. Instead the parameters of the original fit which have been used for simulating the bootstrap samples are used. This approach saves computation time at the cost of a more conservative procedure, see Fokianos and Fried (2012).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inter.control_bootstrap</code></td>
+<td>
+
+<p>named list  determining how to maximise the log-likelihood function in an intermediate step, see argument <code>inter.control</code> in <code>tsglm</code>. If missing, the same settings as for the regular estimation are used.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+
+<p>logical value. If <code>parallel=TRUE</code>, the bootstrap is distributed to multiple cores parallely. Requires a computing cluster to be initialised and registered as the default cluster by <code>makeCluster</code> and <code>setDefaultCluster</code> from package <code>parallel</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>additional arguments passed to the function for detection of single intervention effects <code>interv_detect</code> and via this function some of the arguments are passed to the fitting function <code>tsglm</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function performs an iterative procedure for detection of multiple intervention effects. In each step the function <code>interv_detect</code> is applied for each of the possible intervention types provided in the argument <code>deltas</code>. If there is (after a Bonferroni correction) no significant intervention effect the procedure stops. Otherwise the type of intervention with the minimum p-value is chosen. In case of equal p-values preference is given to a level shift (i.e. <code class="reqn">\delta=1</code>) and then to the type of intervention with the largest test statistic. The effect of the chosen intervention is removed from the time series. The time series cleaned from the intervention effect is tested for further interventions in a next step.
+</p>
+<p>For each time in <code>taus</code> the test statistic of a score test on an intervention effect occuring at that time is computed, see <code>interv_test</code>. The time with the maximum test statistic is considered as a candidate for a possible intervention effect at that time. The type of the intervention effect is specified by <code>delta</code> as described in <code>interv_covariate</code>. The intervention is included as an additional covariate according to the definition in <code>tsglm</code>. It can have an internal (the default) or external (<code>external=TRUE</code>) effect (see Liboschik et al., 2014).
+</p>
+<p>All p-values given in the output are multiplied by the number of intervention types considered to account for the multiple testing in each step by a Bonferroni correction. Note that this correction can lead to p-values greater than one.
+</p>
+<p>Note that this bootstrap procedure is very time-consuming.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>"interv_multiple"</code>, which is a list with the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>interventions</code></td>
+<td>
+
+<p>data frame giving the detected interventions, which has the variables <code>tau</code>, <code>delta</code>, <code>size</code>, <code>test_statistic</code> and <code>p-value</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fit_H0</code></td>
+<td>
+
+<p>object of class <code>"tsglm"</code> with the fitted model under the null hypothesis of no intervention, see <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fit_cleaned</code></td>
+<td>
+
+<p>object of class <code>"tsglm"</code> with the fitted model for the cleanded time series after the last step of the iterative procedure, see <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_interv</code></td>
+<td>
+
+<p>model specification of the model with all detected interventions at their respective times.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fit_interv</code></td>
+<td>
+
+<p>object of class <code>"tsglm"</code> with the fitted model with all detected interventions at their respective times, see <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>track</code></td>
+<td>
+
+<p>named list of matrices with the detailed results of the iterative detection procedure. Element <code>tau_max</code> gives the times where the test statistic has its maximum for each type of intervention and in each iteration step and element <code>size</code> gives the estimated sizes of the respective intervention effects. Elements <code>test_statistic</code> and <code>p_value</code> require no further explanation.
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tobias Liboschik, Philipp Probst, Konstantinos Fokianos and Roland Fried
+</p>
+
+
+<h3>References</h3>
+
+<p>Fokianos, K. and Fried, R. (2010) Interventions in INGARCH processes. <em>Journal of Time Series Analysis</em> <b>31(3)</b>, 210–225, <a href="http://dx.doi.org/10.1111/j.1467-9892.2010.00657.x">http://dx.doi.org/10.1111/j.1467-9892.2010.00657.x</a>.
+</p>
+<p>Fokianos, K., and Fried, R. (2012) Interventions in log-linear Poisson autoregression. <em>Statistical Modelling</em> <b>12(4)</b>, 299–322. <a href="http://dx.doi.org/10.1177/1471082X1201200401">http://dx.doi.org/10.1177/1471082X1201200401</a>.
+</p>
+<p>Liboschik, T. (2016) Modelling count time series following generalized linear models. <em>PhD Thesis TU Dortmund University</em>, <a href="http://dx.doi.org/10.17877/DE290R-17191">http://dx.doi.org/10.17877/DE290R-17191</a>.
+</p>
+<p>Liboschik, T., Kerschke, P., Fokianos, K. and Fried, R. (2016) Modelling interventions in INGARCH processes. <em>International Journal of Computer Mathematics</em> <b>93(4)</b>, 640–657, <a href="http://dx.doi.org/10.1080/00207160.2014.949250">http://dx.doi.org/10.1080/00207160.2014.949250</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>S3 methods <code>print</code> and <code>plot</code>.
+</p>
+<p><code>tsglm</code> for fitting a GLM for time series of counts.
+<code>interv_test</code> for testing for intervention effects and <code>interv_detect</code> for detection of single interventions of given type. <code>interv_covariate</code> for generation of deterministic covariates describing intervention effects.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+###Campylobacter infections in Canada (see help("campy"))
+#Searching for potential intervention effects (runs several hours!):
+campyfit &lt;- tsglm(ts=campy, model=list(past_obs=1, past_mean=c(7,13)))
+campyfit_intervmultiple &lt;- interv_multiple(fit=campyfit, taus=80:120,
+                              deltas=c(0,0.8,1), B=500, signif_level=0.05)
+campyfit_intervmultiple
+plot(campyfir_intervmultiple)
+#Parallel computation for shorter run time on a cluster:
+library(parallel)
+ntasks &lt;- 3
+clust &lt;- makeCluster(ntasks)
+setDefaultCluster(cl=clust)
+interv_multiple(fit=campyfit, taus=80:120, deltas=c(0,0.8,1), B=500,
+                signif_level=0.05, parallel=TRUE)
+## End(Not run)
+</code></pre>
+
+
+</div>

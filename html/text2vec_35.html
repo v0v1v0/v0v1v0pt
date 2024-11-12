@@ -1,0 +1,168 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>itoken</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Iterators (and parallel iterators) over input objects</h2>
+
+<h3>Description</h3>
+
+<p>This family of function creates iterators over input objects
+in order to create vocabularies, or DTM and TCM matrices.
+iterators usually used in following functions : create_vocabulary,
+create_dtm, vectorizers,
+create_tcm. See them for details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">itoken(iterable, ...)
+
+## S3 method for class 'character'
+itoken(iterable, preprocessor = identity,
+  tokenizer = space_tokenizer, n_chunks = 10,
+  progressbar = interactive(), ids = NULL, ...)
+
+## S3 method for class 'list'
+itoken(iterable, n_chunks = 10,
+  progressbar = interactive(), ids = names(iterable), ...)
+
+## S3 method for class 'iterator'
+itoken(iterable, preprocessor = identity,
+  tokenizer = space_tokenizer, progressbar = interactive(), ...)
+
+itoken_parallel(iterable, ...)
+
+## S3 method for class 'character'
+itoken_parallel(iterable, preprocessor = identity,
+  tokenizer = space_tokenizer, n_chunks = 10, ids = NULL, ...)
+
+## S3 method for class 'iterator'
+itoken_parallel(iterable, preprocessor = identity,
+  tokenizer = space_tokenizer, n_chunks = 1L, ...)
+
+## S3 method for class 'list'
+itoken_parallel(iterable, n_chunks = 10, ids = NULL,
+  ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>iterable</code></td>
+<td>
+<p>an object from which to generate an iterator</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to other methods</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preprocessor</code></td>
+<td>
+<p><code>function</code> which takes chunk of
+<code>character</code> vectors and does all pre-processing.
+Usually <code>preprocessor</code> should return a
+<code>character</code> vector of preprocessed/cleaned documents. See "Details"
+section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tokenizer</code></td>
+<td>
+<p><code>function</code> which takes a <code>character</code> vector from
+<code>preprocessor</code>, split it into tokens and returns a <code>list</code>
+of <code>character</code> vectors. If you need to perform stemming -
+call stemmer inside tokenizer. See examples section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_chunks</code></td>
+<td>
+<p><code>integer</code>, the number of pieces that object should
+be divided into. Then each chunk is processed independently (and in case <code>itoken_parallel</code>
+<b>in parallel if some parallel backend is registered</b>).
+Usually there is tradeoff: larger number of chunks means lower memory footprint, but slower (if
+<code>preprocessor, tokenizer</code> functions are efficiently vectorized). And small number
+of chunks means larger memory footprint but faster execution (again if user
+supplied <code>preprocessor, tokenizer</code> functions are efficiently vectorized).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progressbar</code></td>
+<td>
+<p><code>logical</code> indicates whether to show progress bar.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ids</code></td>
+<td>
+<p><code>vector</code> of document ids. If <code>ids</code> is not provided,
+<code>names(iterable)</code> will be used. If <code>names(iterable) == NULL</code>,
+incremental ids will be assigned.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>S3 methods for creating an itoken iterator from list of tokens
+</p>
+
+<ul>
+<li>
+<p><code>list</code>: all elements of the input list should be
+character vectors containing tokens
+</p>
+</li>
+<li>
+<p><code>character</code>: raw text
+source: the user must provide a tokenizer function
+</p>
+</li>
+<li>
+<p><code>ifiles</code>: from files, a user must provide a function to read in the file
+(to ifiles) and a function to tokenize it (to itoken)
+</p>
+</li>
+<li>
+<p><code>idir</code>: from a directory, the user must provide a function to
+read in the files (to idir) and a function to tokenize it (to itoken)
+</p>
+</li>
+<li>
+<p><code>ifiles_parallel</code>: from files in parallel
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>ifiles, idir, create_vocabulary,
+create_dtm, vectorizers,
+create_tcm
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("movie_review")
+txt = movie_review$review[1:100]
+ids = movie_review$id[1:100]
+it = itoken(txt, tolower, word_tokenizer, n_chunks = 10)
+it = itoken(txt, tolower, word_tokenizer, n_chunks = 10, ids = ids)
+# Example of stemming tokenizer
+# stem_tokenizer =function(x) {
+#   lapply(word_tokenizer(x), SnowballC::wordStem, language="en")
+# }
+it = itoken_parallel(movie_review$review[1:100], n_chunks = 4)
+system.time(dtm &lt;- create_dtm(it, hash_vectorizer(2**16), type = 'TsparseMatrix'))
+</code></pre>
+
+
+</div>

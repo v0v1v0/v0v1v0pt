@@ -1,0 +1,444 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>slice</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subset rows using their positions</h2>
+
+<h3>Description</h3>
+
+<p><code>slice()</code> lets you index rows by their (integer) locations. It allows you
+to select, remove, and duplicate rows. It is accompanied by a number of
+helpers for common use cases:
+</p>
+
+<ul>
+<li> <p><code>slice_head()</code> and <code>slice_tail()</code> select the first or last rows.
+</p>
+</li>
+<li> <p><code>slice_sample()</code> randomly selects rows.
+</p>
+</li>
+<li> <p><code>slice_min()</code> and <code>slice_max()</code> select rows with highest or lowest values
+of a variable.
+</p>
+</li>
+</ul>
+<p>If <code>.data</code> is a grouped_df, the operation will be performed on each group,
+so that (e.g.) <code>slice_head(df, n = 5)</code> will select the first five rows in
+each group.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'Seurat'
+slice(.data, ..., .by = NULL, .preserve = FALSE)
+
+## S3 method for class 'Seurat'
+slice_sample(
+  .data,
+  ...,
+  n = NULL,
+  prop = NULL,
+  by = NULL,
+  weight_by = NULL,
+  replace = FALSE
+)
+
+## S3 method for class 'Seurat'
+slice_head(.data, ..., n, prop, by = NULL)
+
+## S3 method for class 'Seurat'
+slice_tail(.data, ..., n, prop, by = NULL)
+
+## S3 method for class 'Seurat'
+slice_min(
+  .data,
+  order_by,
+  ...,
+  n,
+  prop,
+  by = NULL,
+  with_ties = TRUE,
+  na_rm = FALSE
+)
+
+## S3 method for class 'Seurat'
+slice_max(
+  .data,
+  order_by,
+  ...,
+  n,
+  prop,
+  by = NULL,
+  with_ties = TRUE,
+  na_rm = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A data frame, data frame extension (e.g. a tibble), or a
+lazy data frame (e.g. from dbplyr or dtplyr). See <em>Methods</em>, below, for
+more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>For <code>slice()</code>: &lt;<code>data-masking</code>&gt;
+Integer row values.
+</p>
+<p>Provide either positive values to keep, or negative values to drop.
+The values provided must be either all positive or all negative.
+Indices beyond the number of rows in the input are silently ignored.
+</p>
+<p>For <code style="white-space: pre;">⁠slice_*()⁠</code>, these arguments are passed on to methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by, by</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>&lt;<code>tidy-select</code>&gt; Optionally, a selection of columns to
+group by for just this operation, functioning as an alternative to <code>group_by()</code>. For
+details and examples, see ?dplyr_by.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.preserve</code></td>
+<td>
+<p>Relevant when the <code>.data</code> input is grouped.
+If <code>.preserve = FALSE</code> (the default), the grouping structure
+is recalculated based on the resulting data, otherwise the grouping is kept as is.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n, prop</code></td>
+<td>
+<p>Provide either <code>n</code>, the number of rows, or <code>prop</code>, the
+proportion of rows to select. If neither are supplied, <code>n = 1</code> will be
+used. If <code>n</code> is greater than the number of rows in the group
+(or <code>prop &gt; 1</code>), the result will be silently truncated to the group size.
+<code>prop</code> will be rounded towards zero to generate an integer number of
+rows.
+</p>
+<p>A negative value of <code>n</code> or <code>prop</code> will be subtracted from the group
+size. For example, <code>n = -2</code> with a group of 5 rows will select 5 - 2 = 3
+rows; <code>prop = -0.25</code> with 8 rows will select 8 * (1 - 0.25) = 6 rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_by</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Sampling
+weights. This must evaluate to a vector of non-negative numbers the same
+length as the input. Weights are automatically standardised to sum to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replace</code></td>
+<td>
+<p>Should sampling be performed with (<code>TRUE</code>) or without
+(<code>FALSE</code>, the default) replacement.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order_by</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Variable or
+function of variables to order by. To order by multiple variables, wrap
+them in a data frame or tibble.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with_ties</code></td>
+<td>
+<p>Should ties be kept together? The default, <code>TRUE</code>,
+may return more rows than you request. Use <code>FALSE</code> to ignore ties,
+and return the first <code>n</code> rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_rm</code></td>
+<td>
+<p>Should missing values in <code>order_by</code> be removed from the result?
+If <code>FALSE</code>, <code>NA</code> values are sorted to the end (like in <code>arrange()</code>), so
+they will only be included if there are insufficient non-missing values to
+reach <code>n</code>/<code>prop</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Slice does not work with relational databases because they have no
+intrinsic notion of row order. If you want to perform the equivalent
+operation, use <code>filter()</code> and <code>row_number()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of the same type as <code>.data</code>. The output has the following
+properties:
+</p>
+
+<ul>
+<li>
+<p> Each row may appear 0, 1, or many times in the output.
+</p>
+</li>
+<li>
+<p> Columns are not modified.
+</p>
+</li>
+<li>
+<p> Groups are not modified.
+</p>
+</li>
+<li>
+<p> Data frame attributes are preserved.
+</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<p>These function are <strong>generic</strong>s, which means that packages can provide
+implementations (methods) for other classes. See the documentation of
+individual methods for extra arguments and differences in behaviour.
+</p>
+<p>Methods available in currently loaded packages:
+</p>
+
+<ul>
+<li> <p><code>slice()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_head()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_tail()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_min()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_max()</code>: no methods found.
+</p>
+</li>
+<li> <p><code>slice_sample()</code>: no methods found.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other single table verbs: 
+<code>arrange()</code>,
+<code>mutate()</code>,
+<code>rename()</code>,
+<code>summarise()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(pbmc_small)
+pbmc_small |&gt; slice(1)
+
+# Slice group-wise using .by
+pbmc_small |&gt; slice(1:2, .by=groups)
+
+
+# slice_sample() allows you to random select with or without replacement
+pbmc_small |&gt; slice_sample(n=5)
+
+# if using replacement, and duplicate cells are returned, a tibble will be
+# returned because duplicate cells cannot exist in Seurat objects
+pbmc_small |&gt; slice_sample(n=1, replace=TRUE) # returns Seurat
+pbmc_small |&gt; slice_sample(n=100, replace=TRUE) # returns tibble
+
+# weight by a variable
+pbmc_small |&gt; slice_sample(n=5, weight_by=nCount_RNA)
+
+# sample by group
+pbmc_small |&gt; slice_sample(n=5, by=groups)
+
+# sample using proportions
+pbmc_small |&gt; slice_sample(prop=0.10)
+
+
+# First rows based on existing order
+pbmc_small |&gt; slice_head(n=5)
+
+
+# Last rows based on existing order
+pbmc_small |&gt; slice_tail(n=5)
+
+
+# Rows with minimum and maximum values of a metadata variable
+pbmc_small |&gt; slice_min(nFeature_RNA, n=5)
+
+# slice_min() and slice_max() may return more rows than requested
+# in the presence of ties.
+pbmc_small |&gt;  slice_min(nFeature_RNA, n=2)
+
+# Use with_ties=FALSE to return exactly n matches
+pbmc_small |&gt; slice_min(nFeature_RNA, n=2, with_ties=FALSE)
+
+# Or use additional variables to break the tie:
+pbmc_small |&gt; slice_min(tibble::tibble(nFeature_RNA, nCount_RNA), n=2)
+
+# Use by for group-wise operations
+pbmc_small |&gt; slice_min(nFeature_RNA, n=5, by=groups)
+
+
+# Rows with minimum and maximum values of a metadata variable
+pbmc_small |&gt; slice_max(nFeature_RNA, n=5)
+
+</code></pre>
+
+
+</div>

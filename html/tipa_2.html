@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tipaPhaseRef</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use phase reference points to estimate the phase shift induced by a stimulus
+during a circadian time-course.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the phase shift based on the times of a phase reference point
+(e.g., onset of activity), accounting for possible period changes and for the
+point in the circadian cycle at which the stimulus occurred. If the rhythms
+of the measurement are approximately sinusoidal, it is recommended to instead
+use <code>tipaCosinor()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tipaPhaseRef(phaseRefTimes, stimOnset, stimDuration = 0, period = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>phaseRefTimes</code></td>
+<td>
+<p>Vector of times of the chosen phase reference point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stimOnset</code></td>
+<td>
+<p>Time at which the stimulus started.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stimDuration</code></td>
+<td>
+<p>Duration of the stimulus and any transients. Data between
+<code>stimOnset</code> and <code>stimOnset + stimDuration</code> will be ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>Optional list with elements "pre" and "post" corresponding to
+the period of the oscillations prior to and subsequent to the stimulus. If
+not supplied, the periods for pre- and post-stimulus are calculated as the
+mean time between occurrences of the phase reference point within the
+respective epoch. Using this argument is not recommended.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>phaseShift</code></td>
+<td>
+<p>Estimated phase shift in circadian hours. Negative values
+indicate a delay, positive values an advance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>epochInfo</code></td>
+<td>
+<p><code>data.frame</code> containing estimated period for each epoch.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>tipaCosinor()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Peak times of bioluminescence (in hours)
+phaseRefTimes = c(-75.5, -51.5, -27.4, -3.8,
+                  20.5, 42.4, 65.5, 88.0)
+result = tipaPhaseRef(phaseRefTimes, stimOnset = 0)
+
+# Data from multiple (simulated) experiments
+getExtrFile = function() {
+  system.file('extdata', 'phaseRefTimes.csv', package = 'tipa')}
+getStimFile = function() {
+  system.file('extdata', 'stimOnsets.csv', package = 'tipa')}
+
+extrDf = read.csv(getExtrFile(), stringsAsFactors = FALSE)
+stimDf = read.csv(getStimFile(), stringsAsFactors = FALSE)
+
+resultList = lapply(stimDf$expId, function(ii) {
+  phaseRefTimes = extrDf$phaseRefTime[extrDf$expId == ii]
+  stimOnset = stimDf$stimOnset[stimDf$expId == ii]
+  tipaPhaseRef(phaseRefTimes, stimOnset)})
+
+phaseShifts = sapply(resultList, function(r) r$phaseShift)
+
+</code></pre>
+
+
+</div>

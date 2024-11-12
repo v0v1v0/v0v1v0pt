@@ -1,0 +1,216 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tq_portfolio</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Aggregates a group of returns by asset into portfolio returns</h2>
+
+<h3>Description</h3>
+
+<p>Aggregates a group of returns by asset into portfolio returns
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tq_portfolio(
+  data,
+  assets_col,
+  returns_col,
+  weights = NULL,
+  col_rename = NULL,
+  ...
+)
+
+tq_portfolio_(
+  data,
+  assets_col,
+  returns_col,
+  weights = NULL,
+  col_rename = NULL,
+  ...
+)
+
+tq_repeat_df(data, n, index_col_name = "portfolio")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>tibble</code> (tidy data frame) of returns in tidy format (i.e long format).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assets_col</code></td>
+<td>
+<p>The column with assets (securities)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returns_col</code></td>
+<td>
+<p>The column with returns</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Optional parameter for the asset weights, which can be passed as a numeric vector the length of
+the number of assets or a two column tibble with asset names in first column
+and weights in second column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col_rename</code></td>
+<td>
+<p>A string or character vector containing names that can be used
+to quickly rename columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters passed to <code>PerformanceAnalytics::Return.portfolio</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of times to repeat a data frame row-wise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index_col_name</code></td>
+<td>
+<p>A renaming function for the "index" column, used when repeating data frames.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tq_portfolio</code> is a wrapper for <code>PerformanceAnalytics::Return.portfolio</code>.
+The main advantage is the results are returned as a <code>tibble</code> and the
+function can be used with the <code>tidyverse</code>.
+</p>
+<p><code>assets_col</code> and <code>returns_col</code> are columns within <code>data</code> that are used
+to compute returns for a portfolio. The columns should be in "long" format (or "tidy" format)
+meaning there is only one column containing all of the assets and one column containing
+all of the return values (i.e. not in "wide" format with returns spread by asset).
+</p>
+<p><code>weights</code> are the weights to be applied to the asset returns.
+Weights can be input in one of three options:
+</p>
+
+<ul>
+<li>
+<p> Single Portfolio: A numeric vector of weights that is the same length as unique number of assets.
+The weights are applied in the order of the assets.
+</p>
+</li>
+<li>
+<p> Single Portfolio: A two column tibble with assets in the first column and weights in the second column.
+The advantage to this method is the weights are mapped to the assets and any unlisted
+assets default to a weight of zero.
+</p>
+</li>
+<li>
+<p> Multiple Portfolios: A three column tibble with portfolio index in the first
+column, assets in the second column, and weights in the third column. The tibble
+must be grouped by portfolio index.
+</p>
+</li>
+</ul>
+<p><code>tq_repeat_df</code> is a simple function that repeats
+a data frame <code>n</code> times row-wise (long-wise), and adds a new column for a portfolio index.
+The function is used to assist in Multiple Portfolio analyses, and
+is a useful precursor to <code>tq_portfolio</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns data in the form of a <code>tibble</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>tq_transmute()</code> which can be used to get period returns.
+</p>
+</li>
+<li> <p><code>PerformanceAnalytics::Return.portfolio()</code> which is the underlying function
+that specifies which parameters can be passed via <code>...</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Load libraries
+library(dplyr)
+
+# Use FANG data set
+
+# Get returns for individual stock components
+monthly_returns_stocks &lt;- FANG %&gt;%
+    group_by(symbol) %&gt;%
+    tq_transmute(adjusted, periodReturn, period = "monthly")
+
+##### Portfolio Aggregation Methods #####
+
+# Method 1: Use tq_portfolio with numeric vector of weights
+
+weights &lt;- c(0.50, 0.25, 0.25, 0)
+tq_portfolio(data = monthly_returns_stocks,
+             assets_col = symbol,
+             returns_col = monthly.returns,
+             weights = weights,
+             col_rename = NULL,
+             wealth.index = FALSE)
+
+# Method 2: Use tq_portfolio with two column tibble and map weights
+
+# Note that GOOG's weighting is zero in Method 1. In Method 2,
+# GOOG is not added and same result is achieved.
+weights_df &lt;- tibble(symbol = c("META", "AMZN", "NFLX"),
+                     weights = c(0.50, 0.25, 0.25))
+tq_portfolio(data = monthly_returns_stocks,
+             assets_col = symbol,
+             returns_col = monthly.returns,
+             weights = weights_df,
+             col_rename = NULL,
+             wealth.index = FALSE)
+
+# Method 3: Working with multiple portfolios
+
+# 3A: Duplicate monthly_returns_stocks multiple times
+mult_monthly_returns_stocks &lt;- tq_repeat_df(monthly_returns_stocks, n = 4)
+
+# 3B: Create weights table grouped by portfolio id
+weights &lt;- c(0.50, 0.25, 0.25, 0.00,
+             0.00, 0.50, 0.25, 0.25,
+             0.25, 0.00, 0.50, 0.25,
+             0.25, 0.25, 0.00, 0.50)
+stocks &lt;- c("META", "AMZN", "NFLX", "GOOG")
+weights_table &lt;- tibble(stocks) %&gt;%
+    tq_repeat_df(n = 4) %&gt;%
+    bind_cols(tibble(weights)) %&gt;%
+    group_by(portfolio)
+
+# 3C: Scale to multiple portfolios
+tq_portfolio(data = mult_monthly_returns_stocks,
+             assets_col = symbol,
+             returns_col = monthly.returns,
+             weights = weights_table,
+             col_rename = NULL,
+             wealth.index = FALSE)
+</code></pre>
+
+
+</div>

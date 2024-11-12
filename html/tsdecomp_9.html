@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filtering</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Double-Sided Symmetric Linear Filter</h2>
+
+<h3>Description</h3>
+
+<p>Double-sided symmetric linear filter.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">filtering(x, mod, 
+  trend = list(ar=1, ma=1, sigma2=NULL), 
+  transitory = list(ar=1, ma=1, sigma2=NULL), 
+  seasonal = list(ar=1, ma=1, sigma2=NULL),
+  irregular.sigma2 = NULL,
+  extend = 16, drift = FALSE)
+dsfilter(x, w, mod, extend = 16)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a univariate time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mod</code></td>
+<td>
+<p>an object of class <code>Arima</code>. See <code>arima</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trend</code></td>
+<td>
+<p>a list containing the coefficients and variance of the ARIMA model related to the 
+trend component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transitory</code></td>
+<td>
+<p>a list containing the coefficients and variance of the ARIMA model related to the 
+transitory component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seasonal</code></td>
+<td>
+<p>a list containing the coefficients and variance of the ARIMA model related to the 
+seasonal component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>irregular.sigma2</code></td>
+<td>
+<p>numeric, variance of the irregular component. If <code>NULL</code>, the 
+estimate of the irregular component is not computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extend</code></td>
+<td>
+<p>integer; if greater than zero, the series is extended by means of forecasts 
+and backcasts based on the fitted model <code>mod</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drift</code></td>
+<td>
+<p>logical, if <code>TRUE</code> the <code>intercept</code> in the fitted model <code>mod</code> or an 
+external regressor named <code>"drift"</code> is treated as a deterministic linear trend.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>a vector of filter coefficients (one side).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions perform the convolution of the time series and the double-sided 
+symmetric filter. They perform:
+</p>
+<p><code>stats::filter(c(rep(0, n-1), x, rep(0, n-1)), </code>
+</p>
+<p><code>+ filter=c(rev(w[-1]), w), method="convolution", sides=1)</code> 
+</p>
+<p>where <code>n</code> is <code>length(x)</code>.
+</p>
+<p>The design of the filter in the ARIMA-model-based decomposition procedure 
+relies on the following result. 
+The minimum mean squared error estimator of the component
+is given by the ACGF of the model:
+
+</p>
+<p style="text-align: center;"><code class="reqn">%
+\theta(L)x_t = \phi_n(L)\theta_s(L)a_t \,,</code>
+</p>
+
+
+<p>where <code class="reqn">\theta(L)</code> is the MA of the model fitted to the observed data, 
+<code class="reqn">\theta_s(L)</code> is the MA of the component (signal) to be estimated 
+and <code class="reqn">\phi_n(L)</code> is the product of the AR polynomials 
+of the remaining components.
+The estimate of the signal, <code class="reqn">\hat{s}_t</code>, is obtained by means of a 
+double-sided symmetrical filter where the weights, <code class="reqn">w</code>, are the 
+theoretical autocovariances of the model above:
+
+</p>
+<p style="text-align: center;"><code class="reqn">%
+\hat{s}_t = \sum_{i=-\infty}^\infty w_i x_{t-i} \,.</code>
+</p>
+
+
+
+<h3>Value</h3>
+
+<p><code>filtering</code> returns a list of class <code>tsdecFilter</code> containing 
+the series extended with forecasts (if <code>extend &gt; 0</code>)
+(based on the ARMA model given as input),
+the weights of one side of the filter for each component 
+and the corresponding estimate of the components.
+</p>
+<p><code>dsfilter</code> returns the filtered time series.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ARIMAdec</code>, <code>filter</code>.
+</p>
+
+
+</div>

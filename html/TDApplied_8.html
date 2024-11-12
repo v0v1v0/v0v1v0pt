@@ -1,0 +1,168 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>diagram_kkmeans</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cluster a group of persistence diagrams using kernel k-means.</h2>
+
+<h3>Description</h3>
+
+<p>Finds latent cluster labels for a group of persistence diagrams, using a kernelized version
+of the popular k-means algorithm. An optimal number of clusters may be determined by analyzing
+the withinss field of the clustering object over several values of k.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">diagram_kkmeans(
+  diagrams,
+  K = NULL,
+  centers,
+  dim = 0,
+  t = 1,
+  sigma = 1,
+  rho = NULL,
+  num_workers = parallelly::availableCores(omit = 1),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diagrams</code></td>
+<td>
+<p>a list of n&gt;=2 persistence diagrams which are either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or the <code>diagram_to_df</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>an optional precomputed Gram matrix of persistence diagrams, default NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>centers</code></td>
+<td>
+<p>number of clusters to initialize, no more than the number of diagrams although smaller values are recommended.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>the non-negative integer homological dimension in which the distance is to be computed, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>a positive number representing the scale for the persistence Fisher kernel, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a positive number representing the bandwidth for the Fisher information metric, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If supplied, Gram matrix calculation is sequential.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional parameters for the <code>kkmeans</code> kernlab function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Returns the output of <code>kkmeans</code> on the desired Gram matrix of a group of persistence diagrams
+in a particular dimension. The additional list elements stored in the output are needed
+to estimate cluster labels for new persistence diagrams in the 'predict_diagram_kkmeans'
+function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list of class 'diagram_kkmeans' containing the output of <code>kkmeans</code> on the Gram matrix, i.e. a list containing the elements
+</p>
+
+<dl>
+<dt>clustering</dt>
+<dd>
+<p>an S4 object of class specc, the output of a <code>kkmeans</code> function call. The '.Data' slot of this object contains cluster memberships, 'withinss' contains the within-cluster sum of squares for each cluster, etc.</p>
+</dd>
+<dt>diagrams</dt>
+<dd>
+<p>the input 'diagrams' argument.</p>
+</dd>
+<dt>dim</dt>
+<dd>
+<p>the input 'dim' argument.</p>
+</dd>
+<dt>t</dt>
+<dd>
+<p>the input 't' argument.</p>
+</dd>
+<dt>sigma</dt>
+<dd>
+<p>the input 'sigma' argument.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Dhillon, I and Guan, Y and Kulis, B (2004). "A Unified View of Kernel k-means , Spectral Clustering and Graph Cuts." <a href="https://people.bu.edu/bkulis/pubs/spectral_techreport.pdf">https://people.bu.edu/bkulis/pubs/spectral_techreport.pdf</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>predict_diagram_kkmeans</code> for predicting cluster labels of new diagrams.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D1,D2,D2)
+
+  # calculate kmeans clusters with centers = 2, and sigma = t = 2 in dimension 0
+  clust &lt;- diagram_kkmeans(diagrams = g,centers = 2,dim = 0,t = 2,sigma = 2,num_workers = 2)
+  
+  # repeat with precomputed Gram matrix, gives the same result just much faster
+  K &lt;- gram_matrix(diagrams = g,num_workers = 2,t = 2,sigma = 2)
+  cluster &lt;- diagram_kkmeans(diagrams = g,K = K,centers = 2,dim = 0,sigma = 2,t = 2)
+  
+}
+</code></pre>
+
+
+</div>

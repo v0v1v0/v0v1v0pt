@@ -1,0 +1,503 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tam.linking</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Linking of Fitted Unidimensional Item Response Models in <span class="pkg">TAM</span>
+</h2>
+
+<h3>Description</h3>
+
+<p>Performs linking of fitted unidimensional item response models in <span class="pkg">TAM</span>
+according to the Stocking-Lord and the Haebara method (Kolen &amp; Brennan, 2014;
+Gonzales &amp; Wiberg, 2017).
+Several studies can either be linked by a chain of linkings of two studies
+(<code>method="chain"</code>) or a joint linking approach (<code>method="joint"</code>)
+comprising all pairwise linkings.
+</p>
+<p>The linking of two studies is implemented in the <code>tam_linking_2studies</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tam.linking(tamobj_list, type="Hae", method="joint", pow_rob_hae=1, eps_rob_hae=1e-4,
+   theta=NULL, wgt=NULL, wgt_sd=2, fix.slope=FALSE, elim_items=NULL,
+   par_init=NULL, verbose=TRUE)
+
+## S3 method for class 'tam.linking'
+summary(object, file=NULL, ...)
+
+## S3 method for class 'tam.linking'
+print(x, ...)
+
+tam_linking_2studies( B1, AXsi1, guess1, B2, AXsi2, guess2, theta, wgt, type,
+    M1=0, SD1=1, M2=0, SD2=1, fix.slope=FALSE, pow_rob_hae=1)
+
+## S3 method for class 'tam_linking_2studies'
+summary(object, file=NULL, ...)
+
+## S3 method for class 'tam_linking_2studies'
+print(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tamobj_list</code></td>
+<td>
+
+<p>List of fitted objects in <span class="pkg">TAM</span>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+
+<p>Type of linking method: <code>"SL"</code> (Stocking-Lord), <code>"Hae"</code> (Haebara) or
+<code>"RobHae"</code> (robust Haebara). See Details for more information.
+The default is the Haebara linking method.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Chain linking (<code>"chain"</code>) or joint linking (<code>"joint"</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pow_rob_hae</code></td>
+<td>
+<p>Power for robust Heabara linking</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps_rob_hae</code></td>
+<td>
+<p>Value <code class="reqn">\varepsilon</code> for numerical approximation of
+loss function <code class="reqn">|x|^p</code> in robust Haebara linking</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+
+<p>Grid of <code class="reqn">\theta</code> points. The default is <code>seq(-6,6,len=101)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wgt</code></td>
+<td>
+
+<p>Weights defined for the <code>theta</code> grid. The default is <br><code>tam_normalize_vector( stats::dnorm( theta, sd=2 ))</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wgt_sd</code></td>
+<td>
+<p>Standard deviation for <code class="reqn">\theta</code> grid used for
+linking function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fix.slope</code></td>
+<td>
+
+<p>Logical indicating whether the slope transformation constant is fixed to 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>elim_items</code></td>
+<td>
+<p>List of vectors refering to items which should be removed
+from linking (see Model 'lmod2' in Example 1)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par_init</code></td>
+<td>
+<p>Optional vector with initial parameter values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+
+<p>Logical indicating progress of linking computation
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class <code>tam.linking</code> or <code>tam_linking_2studies</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Object of class <code>tam.linking</code> or <code>tam_linking_2studies</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>A file name in which the summary output will be written</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B1</code></td>
+<td>
+<p>Array <code class="reqn">B</code> for first study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AXsi1</code></td>
+<td>
+<p>Matrix <code class="reqn">A \xi</code> for first study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>guess1</code></td>
+<td>
+<p>Guessing parameter for first study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B2</code></td>
+<td>
+<p>Array <code class="reqn">B</code> for second study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AXsi2</code></td>
+<td>
+<p>Matrix <code class="reqn">A \xi</code> for second study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>guess2</code></td>
+<td>
+<p>Guessing parameter for second study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M1</code></td>
+<td>
+<p>Mean of first study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SD1</code></td>
+<td>
+<p>Standard deviation of first study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M2</code></td>
+<td>
+<p>Mean of second study</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SD2</code></td>
+<td>
+<p>Standard deviation of second study</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The Haebara linking is defined by minimizing the loss function
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_i \sum_k \int \left ( P_{ik} ( \theta ) - P_{ik}^\ast ( \theta ) \right )^2  </code>
+</p>
+
+<p>A robustification of Haebara linking minimizes the loss function
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_i \sum_k \int \left ( P_{ik} ( \theta ) - P_{ik}^\ast ( \theta ) \right )^p  </code>
+</p>
+
+<p>with a power <code class="reqn">p</code> (defined in <code>pow_rob_hae</code>) smaller than 2. He, Cui and
+Osterlind (2015) consider <code class="reqn">p=1</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>List containing entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>parameters_list</code></td>
+<td>
+<p>List containing transformed item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linking_list</code></td>
+<td>
+<p>List containing results of each linking in the
+linking chain</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M_SD</code></td>
+<td>
+<p>Mean and standard deviation for each study after linking</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trafo_items</code></td>
+<td>
+<p>Transformation constants for item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trafo_persons</code></td>
+<td>
+<p>Transformation constants for person parameters</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Battauz, M. (2015). <span class="pkg">equateIRT</span>: An <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> package for IRT test equating.
+<em>Journal of Statistical Software, 68</em>(7), 1-22.
+<a href="https://doi.org/10.18637/jss.v068.i07">doi:10.18637/jss.v068.i07</a>
+</p>
+<p>Gonzalez, J., &amp; Wiberg, M. (2017).
+<em>Applying test equating methods: Using <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span></em>. New York, Springer.
+<a href="https://doi.org/10.1007/978-3-319-51824-4">doi:10.1007/978-3-319-51824-4</a>
+</p>
+<p>He, Y., Cui, Z., &amp; Osterlind, S. J. (2015). New robust scale transformation methods in the
+presence of outlying common items.
+<em>Applied Psychological Measurement, 39</em>(8), 613-626.
+<a href="https://doi.org/10.1177/0146621615587003">doi:10.1177/0146621615587003</a>
+</p>
+<p>Kolen, M. J., &amp; Brennan, R. L. (2014). <em>Test equating, scaling, and linking:
+Methods and practices</em>. New York, Springer.
+<a href="https://doi.org/10.1007/978-1-4939-0317-7">doi:10.1007/978-1-4939-0317-7</a>
+</p>
+<p>Weeks, J. P. (2010). <span class="pkg">plink</span>: An <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> package for linking mixed-format tests
+using IRT-based methods. <em>Journal of Statistical Software, 35</em>(12), 1-33.
+<a href="https://doi.org/10.18637/jss.v035.i12">doi:10.18637/jss.v035.i12</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Linking or equating of item response models can be also conducted with <span class="pkg">plink</span>
+(Weeks, 2010), <span class="pkg">equate</span>, <span class="pkg">equateIRT</span> (Battauz, 2015), <span class="pkg">equateMultiple</span>,
+<span class="pkg">kequate</span> and <span class="pkg">irteQ</span> packages.
+</p>
+<p>See also the <code>sirt::linking.haberman</code>,
+<code>sirt::invariance.alignment</code> and <code>sirt::linking.haebara</code> functions
+in the <b>sirt</b> package.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+#############################################################################
+# EXAMPLE 1: Linking dichotomous data with the 2PL model
+#############################################################################
+
+data(data.ex16)
+dat &lt;- data.ex16
+items &lt;- colnames(dat)[-c(1,2)]
+
+# fit grade 1
+rdat1 &lt;- TAM::tam_remove_missings( dat[ dat$grade==1, ], items=items )
+mod1 &lt;- TAM::tam.mml.2pl( resp=rdat1$resp[, rdat1$items], pid=rdat1$dat$idstud )
+summary(mod1)
+
+# fit grade 2
+rdat2 &lt;- TAM::tam_remove_missings( dat[ dat$grade==2, ], items=items )
+mod2 &lt;- TAM::tam.mml.2pl( resp=rdat2$resp[, rdat2$items], pid=rdat2$dat$idstud )
+summary(mod2)
+
+# fit grade 3
+rdat3 &lt;- TAM::tam_remove_missings( dat[ dat$grade==3, ], items=items )
+mod3 &lt;- TAM::tam.mml.2pl( resp=rdat3$resp[, rdat3$items], pid=rdat3$dat$idstud )
+summary(mod3)
+
+# define list of fitted models
+tamobj_list &lt;- list( mod1, mod2, mod3 )
+
+#-- link item response models
+lmod &lt;- TAM::tam.linking( tamobj_list)
+summary(lmod)
+
+# estimate WLEs based on transformed item parameters
+parm_list &lt;- lmod$parameters_list
+
+# WLE grade 1
+arglist &lt;- list( resp=mod1$resp, B=parm_list[[1]]$B, AXsi=parm_list[[1]]$AXsi )
+wle1 &lt;- TAM::tam.mml.wle(tamobj=arglist)
+
+# WLE grade 2
+arglist &lt;- list( resp=mod2$resp, B=parm_list[[2]]$B, AXsi=parm_list[[2]]$AXsi )
+wle2 &lt;- TAM::tam.mml.wle(tamobj=arglist)
+
+# WLE grade 3
+arglist &lt;- list( resp=mod3$resp, B=parm_list[[3]]$B, AXsi=parm_list[[3]]$AXsi )
+wle3 &lt;- TAM::tam.mml.wle(tamobj=arglist)
+
+# compare result with chain linking
+lmod1b &lt;- TAM::tam.linking(tamobj_list)
+summary(lmod1b)
+
+#-- linking with some eliminated items
+
+# remove three items from first group and two items from third group
+elim_items &lt;- list( c("A1", "E2","F1"), NULL,  c("F1","F2") )
+lmod2 &lt;- TAM::tam.linking(tamobj_list, elim_items=elim_items)
+summary(lmod2)
+
+#-- Robust Haebara linking with p=1
+lmod3a &lt;- TAM::tam.linking(tamobj_list, type="RobHae", pow_rob_hae=1)
+summary(lmod3a)
+
+#-- Robust Haeabara linking with initial parameters and prespecified epsilon value
+par_init &lt;- lmod3a$par
+lmod3b &lt;- TAM::tam.linking(tamobj_list, type="RobHae", pow_rob_hae=.1,
+                eps_rob_hae=1e-3, par_init=par_init)
+summary(lmod3b)
+
+#############################################################################
+# EXAMPLE 2: Linking polytomous data with the partial credit model
+#############################################################################
+
+data(data.ex17)
+dat &lt;- data.ex17
+
+items &lt;- colnames(dat)[-c(1,2)]
+
+# fit grade 1
+rdat1 &lt;- TAM::tam_remove_missings( dat[ dat$grade==1, ], items=items )
+mod1 &lt;- TAM::tam.mml.2pl( resp=rdat1$resp[, rdat1$items], pid=rdat1$dat$idstud )
+summary(mod1)
+
+# fit grade 2
+rdat2 &lt;- TAM::tam_remove_missings( dat[ dat$grade==2, ], items=items )
+mod2 &lt;- TAM::tam.mml.2pl( resp=rdat2$resp[, rdat2$items], pid=rdat2$dat$idstud )
+summary(mod2)
+
+# fit grade 3
+rdat3 &lt;- TAM::tam_remove_missings( dat[ dat$grade==3, ], items=items )
+mod3 &lt;- TAM::tam.mml.2pl( resp=rdat3$resp[, rdat3$items], pid=rdat3$dat$idstud )
+summary(mod3)
+
+# list of fitted TAM models
+tamobj_list &lt;- list( mod1, mod2, mod3 )
+
+#-- linking: fix slope because partial credit model is fitted
+lmod &lt;- TAM::tam.linking( tamobj_list, fix.slope=TRUE)
+summary(lmod)
+
+# WLEs can be estimated in the same way as in Example 1.
+
+#############################################################################
+# EXAMPLE 3: Linking dichotomous data with the multiple group 2PL models
+#############################################################################
+
+data(data.ex16)
+dat &lt;- data.ex16
+items &lt;- colnames(dat)[-c(1,2)]
+
+# fit grade 1
+rdat1 &lt;- TAM::tam_remove_missings( dat[ dat$grade==1, ], items=items )
+# create some grouping variable
+group &lt;- ( seq( 1, nrow( rdat1$dat ) ) %% 3 ) + 1
+mod1 &lt;- TAM::tam.mml.2pl( resp=rdat1$resp[, rdat1$items], pid=rdat1$dat$idstud, group=group)
+summary(mod1)
+
+# fit grade 2
+rdat2 &lt;- TAM::tam_remove_missings( dat[ dat$grade==2, ], items=items )
+group &lt;- 1*(rdat2$dat$dat$idstud &gt; 500)
+mod2 &lt;- TAM::tam.mml.2pl( resp=rdat2$resp[, rdat2$items], pid=rdat2$dat$dat$idstud, group=group)
+summary(mod2)
+
+# fit grade 3
+rdat3 &lt;- TAM::tam_remove_missings( dat[ dat$grade==3, ], items=items )
+mod3 &lt;- TAM::tam.mml.2pl( resp=rdat3$resp[, rdat3$items], pid=rdat3$dat$idstud )
+summary(mod3)
+
+# define list of fitted models
+tamobj_list &lt;- list( mod1, mod2, mod3 )
+
+#-- link item response models
+lmod &lt;- TAM::tam.linking( tamobj_list)
+
+#############################################################################
+# EXAMPLE 4: Linking simulated dichotomous data with two groups
+#############################################################################
+
+library(sirt)
+
+#*** simulate data
+N &lt;- 3000  # number of persons
+I &lt;- 30    # number of items
+b &lt;- seq(-2,2, length=I)
+# data for group 1
+dat1 &lt;- sirt::sim.raschtype( rnorm(N, mean=0, sd=1), b=b )
+# data for group 2
+dat2 &lt;- sirt::sim.raschtype( rnorm(N, mean=1, sd=.6), b=b )
+
+# fit group 1
+mod1 &lt;- TAM::tam.mml.2pl( resp=dat1 )
+summary(mod1)
+
+# fit group 2
+mod2 &lt;- TAM::tam.mml.2pl( resp=dat2 )
+summary(mod2)
+
+# define list of fitted models
+tamobj_list &lt;- list( mod1, mod2 )
+
+#-- link item response models
+lmod &lt;- TAM::tam.linking( tamobj_list)
+summary(lmod)
+
+# estimate WLEs based on transformed item parameters
+parm_list &lt;- lmod$parameters_list
+
+# WLE grade 1
+arglist &lt;- list( resp=mod1$resp, B=parm_list[[1]]$B, AXsi=parm_list[[1]]$AXsi )
+wle1 &lt;- TAM::tam.mml.wle(tamobj=arglist)
+
+# WLE grade 2
+arglist &lt;- list( resp=mod2$resp, B=parm_list[[2]]$B, AXsi=parm_list[[2]]$AXsi )
+wle2 &lt;- TAM::tam.mml.wle(tamobj=arglist)
+summary(wle1)
+summary(wle2)
+
+# estimation with linked and fixed item parameters for group 2
+B &lt;- parm_list[[2]]$B
+xsi.fixed &lt;- cbind( 1:I, -parm_list[[2]]$AXsi[,2] )
+mod2f &lt;- TAM::tam.mml( resp=dat2, B=B, xsi.fixed=xsi.fixed )
+summary(mod2f)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

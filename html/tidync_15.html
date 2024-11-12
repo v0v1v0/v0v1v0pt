@@ -1,0 +1,86 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>hyper_filter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subset NetCDF variable by expression</h2>
+
+<h3>Description</h3>
+
+<p>The <code>hyper_filter()</code> acts on a tidync object by matching one or more
+filtering expressions like with <code>dplyr::filter</code>. This allows us to lazily
+specify a subset from a NetCDF array without pulling  any data. The modified
+object may be printed to see the effects of subsetting, or saved for further
+use.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">hyper_filter(.x, ...)
+
+## S3 method for class 'tidync'
+hyper_filter(.x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>NetCDF file, connection object, or <code>tidync</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>currently ignored</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>hyper_filter()</code> will act on an existing tidync object or a
+source string.
+</p>
+<p>Filter arguments must be named as per the dimensions in the variable in form
+<code>dimname = dimname &lt; 10</code>. This is a restrictive variant of <code>dplyr::filter()</code>,
+with a syntax more like <code>dplyr::mutate()</code>. This ensures that each element is
+named, so we know which dimension to apply this to, but also that the
+expression evaluated against can do some extra work for a nuanced test.
+</p>
+<p>There are special columns provided with each axis, one is 'index' so that
+exact matching can be done by position, or to ignore the actual value of the
+coordinate. That means we can use a form like <code>dimname = index &lt; 10</code> to
+subset by position in the array index, without necessarily knowing the
+values along that dimension.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">f &lt;- "S20080012008031.L3m_MO_CHL_chlor_a_9km.nc"
+l3file &lt;- system.file("extdata/oceandata", f, package= "tidync")
+## filter by value
+tidync(l3file) %&gt;% hyper_filter(lon = lon &lt; 100)
+## filter by index
+tidync(l3file) %&gt;% hyper_filter(lon = index &lt; 100)
+
+## be careful that multiple comparisons must occur in one expression
+ tidync(l3file) %&gt;% hyper_filter(lon = lon &lt; 100 &amp; lon &gt; 50)
+
+## filter in combination/s
+tidync(l3file) %&gt;% hyper_filter(lat = abs(lat) &lt; 10, lon = index &lt; 100)
+</code></pre>
+
+
+</div>

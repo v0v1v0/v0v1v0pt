@@ -1,0 +1,228 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pkgs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Miscellaneous Package Related Functions</h2>
+
+<h3>Description</h3>
+
+<p>The <code>pkgs %installed in% lib.loc</code> operator
+checks if one or more given packages (<code>pkgs</code>) exist
+in the given library paths (<code>lib.loc</code>),
+without loading the packages. <br>
+The syntax of this operator forces the user to make it
+syntactically explicit
+where to look for installed R-packages. <br>
+As <code>pkgs %installed in% lib.loc</code> does not even load a package,
+the user can safely use it
+without fearing any unwanted side-effects. <br><br>
+The <code>pkg_get_deps()</code> function gets the <b>direct</b> dependencies of a package
+from the Description file. It works on non-CRAN packages also. <br><br>
+The <code>pkg_get_deps_minimal()</code> function is the same as
+<code>pkg_get_deps()</code>,
+except with
+<code>base, recom, rstudioapi, shared_tidy</code>
+all set to <code>FALSE</code>,
+and the default value for <code>deps_type</code> is c("Depends", "Imports"). <br><br>
+The <code>pkg_lsf()</code> function
+gets a list of exported functions/operators from a package. <br>
+One handy use for this function is to, for example,
+globally attach all infix operators from a package using <code>library</code>,
+like so:
+</p>
+<div class="sourceCode r"><pre>y &lt;- pkg_lsf("packagename", type = "inops")
+library(packagename, include.only = y)
+</pre></div>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pkgs %installed in% lib.loc
+
+pkg_get_deps(
+  package,
+  lib.loc = .libPaths(),
+  deps_type = c("LinkingTo", "Depends", "Imports"),
+  base = FALSE,
+  recom = TRUE,
+  rstudioapi = TRUE,
+  shared_tidy = TRUE
+)
+
+pkg_get_deps_minimal(
+  package,
+  lib.loc = .libPaths(),
+  deps_type = c("Depends", "Imports")
+)
+
+pkg_lsf(package, type, lib.loc = .libPaths())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pkgs</code></td>
+<td>
+<p>a character vector with the package name(s).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lib.loc</code></td>
+<td>
+<p>character vector specifying library search path
+(the location of R library trees to search through). <br>
+The <code>lib.loc</code> argument would usually be <code>.libPaths()</code>. <br>
+See also loadNamespace.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>package</code></td>
+<td>
+<p>a single string giving the package name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deps_type</code></td>
+<td>
+<p>a character vector, giving the dependency types to be used. <br>
+The order of the character vector given in <code>deps_type</code> affects
+the order of the returned character vector; see Details sections.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base</code></td>
+<td>
+<p>logical,
+indicating whether base/core R should be included (<code>TRUE</code>),
+or not included (<code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recom</code></td>
+<td>
+<p>logical,
+indicating whether the pre-installed 'recommended' R-packages should be included
+(<code>TRUE</code>),
+or not included (<code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rstudioapi</code></td>
+<td>
+<p>logical,
+indicating whether the 'rstudioapi' R-package should be included
+(<code>TRUE</code>),
+or not included (<code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shared_tidy</code></td>
+<td>
+<p>logical,
+indicating whether the shared dependencies of the 'tidyverse' should be included
+(<code>TRUE</code>),
+or not included (<code>FALSE</code>). <br><b>Details:</b> <br>
+Some of the (often many) dependencies 'tidyverse' packages have
+are shared across the majority of the 'tidyverse'. <br>
+The "official" list of shared dependencies in the 'tidyverse' currently is the following: <br>
+'rlang', 'lifecycle', 'cli', 'glue', and 'withr'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The type of functions to list. Possibilities:
+</p>
+
+<ul>
+<li> <p><code>"inops"</code> or <code>"operators"</code>: Only infix operators.
+</p>
+</li>
+<li> <p><code>"regfuns"</code>: Only regular functions (thus excluding infix operators).
+</p>
+</li>
+<li> <p><code>"all"</code>: All functions, both regular functions and infix operators. <br><br></p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For <code>pkg_get_deps()</code>: <br>
+For each string in argument <code>deps_type</code>,
+the package names in the corresponding field of the Description file are extracted,
+in the order as they appear in that field. <br>
+The order given in argument <code>deps_type</code>
+also affects the order of the returned character vector: <br>
+For example, <code>c("LinkingTo", "Depends", "Imports")</code>, <br>
+means the package names are extracted from the fields in the following order:
+</p>
+
+<ol>
+<li>
+<p> "LinkingTo";
+</p>
+</li>
+<li>
+<p> "Depends";
+</p>
+</li>
+<li>
+<p> "Imports".
+</p>
+</li>
+</ol>
+<p>The unique (thus non-repeating)
+package names are then returned to the user. <br><br></p>
+
+
+<h3>Value</h3>
+
+<p>For  <code>pkgs %installed in% lib.loc</code>: <br>
+Returns a named logical vector. <br>
+The names give the package names. <br>
+The value <code>TRUE</code> indicates a package is installed in <code>lib.loc</code>. <br>
+The value <code>FALSE</code> indicates a package is not installed in <code>lib.loc</code>. <br>
+The value <code>NA</code> indicates a package is not actually a separate package,
+but base/core 'R'
+(i.e. 'base', 'stats', etc.). <br><br>
+For <code>pkg_get_deps()</code> and <code>pkg_get_deps_minimal()</code>: <br>
+A character vector of direct dependencies, without duplicates. <br><br>
+For <code>pkg_lsf()</code>: <br>
+Returns a character vector of exported function names in the specified package. <br><br></p>
+
+
+<h3>References</h3>
+
+<p>O'Brien J., elegantly extract R-package dependencies of a package not listed on CRAN. <em>Stack Overflow</em>. (1 September 2023). <a href="https://stackoverflow.com/questions/30223957/elegantly-extract-r-package-dependencies-of-a-package-not-listed-on-cran">https://stackoverflow.com/questions/30223957/elegantly-extract-r-package-dependencies-of-a-package-not-listed-on-cran</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_import
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+"dplyr" %installed in% .libPaths()
+
+pkg_get_deps_minimal("dplyr")
+pkgs &lt;- pkg_get_deps("dplyr")
+pkgs %installed in% .libPaths()
+pkg_lsf("dplyr", "all")
+
+
+
+
+</code></pre>
+
+
+</div>

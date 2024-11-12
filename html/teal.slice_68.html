@@ -1,0 +1,121 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>toggle_button</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Toggle button properties.</h2>
+
+<h3>Description</h3>
+
+<p>Switch between different icons or titles on a button.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">toggle_icon(input_id, icons, one_way = FALSE)
+
+toggle_title(input_id, titles, one_way = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_id</code></td>
+<td>
+<p>(<code>character(1)</code>) (name-spaced) id of the button</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>icons, titles</code></td>
+<td>
+<p>(<code>character(2)</code>) vector specifying values between which to toggle</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>one_way</code></td>
+<td>
+<p>(<code>logical(1)</code>) flag specifying whether to keep toggling;
+if TRUE, the target will be changed
+from the first element of <code>icons</code>/<code>titles</code> to the second</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Wrapper functions that use <code>shinyjs::runjs</code> to change button properties in response to events,
+typically clicking those very buttons.
+<code>shiny</code>'s <code>actionButton</code> and <code>actionLink</code> create <code style="white-space: pre;">⁠&lt;a&gt;⁠</code> tags,
+which may contain a child <code style="white-space: pre;">⁠&lt;i&gt;⁠</code> tag that specifies an icon to be displayed.
+<code>toggle_icon</code> calls the <code>toggleClass</code> (when <code>one_way = FALSE</code>) or
+<code>removeClass</code> and <code>addClass</code> methods (when <code>one_way = TRUE</code>) to change icons.
+<code>toggle_title</code> calls the <code>attr</code> method to modify the <code>Title</code> attribute of the button.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code>, invisibly.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># use non-exported function from teal.slice
+toggle_icon &lt;- getFromNamespace("toggle_icon", "teal.slice")
+
+library(shiny)
+library(shinyjs)
+
+ui &lt;- fluidPage(
+  useShinyjs(),
+  actionButton("hide_content", label = "hide", icon = icon("xmark")),
+  actionButton("show_content", label = "show", icon = icon("check")),
+  actionButton("toggle_content", label = "toggle", icon = icon("angle-down")),
+  tags$br(),
+  tags$div(
+    id = "content",
+    verbatimTextOutput("printout")
+  )
+)
+
+server &lt;- function(input, output, session) {
+  observeEvent(input$hide_content,
+    {
+      hide("content")
+      toggle_icon("toggle_content", c("fa-angle-down", "fa-angle-right"), one_way = TRUE)
+    },
+    ignoreInit = TRUE
+  )
+
+  observeEvent(input$show_content,
+    {
+      show("content")
+      toggle_icon("toggle_content", c("fa-angle-right", "fa-angle-down"), one_way = TRUE)
+    },
+    ignoreInit = TRUE
+  )
+
+  observeEvent(input$toggle_content,
+    {
+      toggle("content")
+      toggle_icon("toggle_content", c("fa-angle-right", "fa-angle-down"))
+    },
+    ignoreInit = TRUE
+  )
+
+  output$printout &lt;- renderPrint({
+    head(faithful, 10)
+  })
+}
+if (interactive()) {
+  shinyApp(ui, server)
+}
+
+</code></pre>
+
+
+</div>

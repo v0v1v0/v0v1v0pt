@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data_extract_ui</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> data extraction module user-interface</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data_extract_ui(id, label, data_extract_spec, is_single_dataset = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>(<code>character</code>) shiny input unique identifier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>) Label above the data extract input.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_extract_spec</code></td>
+<td>
+<p>(<code>list</code> of <code>data_extract_spec</code>)
+This is the outcome of listing <code>data_extract_spec()</code> constructor calls.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_single_dataset</code></td>
+<td>
+<p>(<code>logical</code>) <code>FALSE</code> to display the dataset widget.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>There are three inputs that will be rendered
+</p>
+
+<ol>
+<li>
+<p> Dataset select Optional. If more than one data_extract_spec is handed over
+to the function, a shiny shiny::selectInput will be rendered. Else just the name
+of the dataset is given.
+</p>
+</li>
+<li>
+<p> Filter Panel Optional. If the data_extract_spec contains a
+filter element a shiny shiny::selectInput will be rendered with the options to
+filter the dataset.
+</p>
+</li>
+<li>
+<p> Select panel A shiny shiny::selectInput to select columns from the dataset to
+go into the analysis.
+</p>
+</li>
+</ol>
+<p>The output can be analyzed using <code>data_extract_srv(...)</code>.
+</p>
+<p>This functionality should be used in the encoding panel of your <code>teal</code> app.
+It will allow app-developers to specify a <code>data_extract_spec()</code> object.
+This object should be used to <code>teal</code> module variables being filtered data
+from CDISC datasets.
+</p>
+<p>You can use this function in the same way as any
+<a href="https://shiny.rstudio.com/articles/modules.html"><code style="white-space: pre;">⁠shiny module⁠</code></a> UI.
+The corresponding server module can be found in <code>data_extract_srv()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Shiny <code>shiny::selectInput</code><code>s</code> that allow to define how to extract data from
+a specific dataset. The input elements will be returned inside a shiny::div container.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+library(teal.widgets)
+
+adtte_filters &lt;- filter_spec(
+  vars = c("PARAMCD", "CNSR"),
+  sep = "-",
+  choices = c("OS-1" = "OS-1", "OS-0" = "OS-0", "PFS-1" = "PFS-1"),
+  selected = "OS-1",
+  multiple = FALSE,
+  label = "Choose endpoint and Censor"
+)
+
+response_spec &lt;- data_extract_spec(
+  dataname = "ADTTE",
+  filter = adtte_filters,
+  select = select_spec(
+    choices = c("AVAL", "BMRKR1", "AGE"),
+    selected = c("AVAL", "BMRKR1"),
+    multiple = TRUE,
+    fixed = FALSE,
+    label = "Column"
+  )
+)
+# Call to use inside your teal module UI function
+standard_layout(
+  output = tableOutput("table"),
+  encoding = div(
+    data_extract_ui(
+      id = "regressor",
+      label = "Regressor Variable",
+      data_extract_spec = response_spec
+    )
+  )
+)
+
+</code></pre>
+
+
+</div>

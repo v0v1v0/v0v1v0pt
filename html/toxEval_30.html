@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>graph_chem_data</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Prepare boxplot data</h2>
+
+<h3>Description</h3>
+
+<p>A set of functions to prepare the data for boxplots. Often, these
+functions are used within the plotting functions. They are exported however
+to allow custom graphs to be created.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">graph_chem_data(
+  chemical_summary,
+  ...,
+  manual_remove = NULL,
+  mean_logic = FALSE,
+  sum_logic = TRUE
+)
+
+tox_boxplot_data(
+  chemical_summary,
+  category = "Biological",
+  manual_remove = NULL,
+  mean_logic = FALSE,
+  sum_logic = TRUE
+)
+
+side_by_side_data(
+  gd_left,
+  gd_right,
+  left_title = "Left",
+  right_title = "Right"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>chemical_summary</code></td>
+<td>
+<p>Data frame from <code>get_chemical_summary</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional group_by arguments. This can be handy for creating facet graphs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>manual_remove</code></td>
+<td>
+<p>Vector of categories to remove.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_logic</code></td>
+<td>
+<p>Logical. <code>TRUE</code> displays the mean sample from each site,
+<code>FALSE</code> displays the maximum sample from each site.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sum_logic</code></td>
+<td>
+<p>Logical. <code>TRUE</code> sums the EARs in a specified grouping,
+<code>FALSE</code> does not. <code>FALSE</code> may be better for traditional benchmarks as
+opposed to ToxCast benchmarks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>category</code></td>
+<td>
+<p>Character. Either "Biological", "Chemical Class", or "Chemical".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gd_left</code></td>
+<td>
+<p>Data frame that must include the columns chnm, Class, and either EAR or meanEAR.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gd_right</code></td>
+<td>
+<p>Data frame that must include the columns chnm, Class, and either EAR or meanEAR.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>left_title</code></td>
+<td>
+<p>Character that will be associated with the "gd_left" data
+frame in a column named "guide_side".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>right_title</code></td>
+<td>
+<p>Character that will be associated with the "gd_right" data
+frame in a column named "guide_side".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function side_by_side_data will combine two data frames,
+either the output of <code>get_chemical_summary</code> or <code>graph_chem_data</code>,
+into a single data frame. The important work here is that the chemicals
+and classes factor levels are ordered primarily based on "gd_left", but
+include "gd_right" when the contents are mismatched.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">path_to_tox &lt;- system.file("extdata", package = "toxEval")
+file_name &lt;- "OWC_data_fromSup.xlsx"
+full_path &lt;- file.path(path_to_tox, file_name)
+
+tox_list &lt;- create_toxEval(full_path)
+
+ACC &lt;- get_ACC(tox_list$chem_info$CAS)
+ACC &lt;- remove_flags(ACC)
+
+cleaned_ep &lt;- clean_endPoint_info(end_point_info)
+filtered_ep &lt;- filter_groups(cleaned_ep)
+
+chemical_summary &lt;- get_chemical_summary(tox_list, ACC, filtered_ep)
+# Let's say we want to compare 2 chemical summaries
+# We'll look at one summing EARs, and with concentrations
+# First, we need a chemical summary for concentrations:
+chemical_summary_conc &lt;- get_concentration_summary(tox_list)
+
+gd_tox &lt;- graph_chem_data(chemical_summary)
+gd_conc &lt;- graph_chem_data(chemical_summary_conc)
+
+ch_combo &lt;- side_by_side_data(gd_tox, gd_conc,
+  left_title = "ToxCast",
+  right_title = "Concentrations"
+)
+plot_chemical_boxplots(ch_combo, guide_side,
+  x_label = ""
+) +
+  ggplot2::facet_grid(. ~ guide_side, scales = "free_x")
+</code></pre>
+
+
+</div>

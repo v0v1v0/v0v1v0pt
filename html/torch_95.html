@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>linalg_svd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computes the singular value decomposition (SVD) of a matrix.</h2>
+
+<h3>Description</h3>
+
+<p>Letting <code class="reqn">\mathbb{K}</code> be <code class="reqn">\mathbb{R}</code> or <code class="reqn">\mathbb{C}</code>,
+the <strong>full SVD</strong> of a matrix
+<code class="reqn">A \in \mathbb{K}^{m \times n}</code>, if <code>k = min(m,n)</code>, is defined as
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">linalg_svd(A, full_matrices = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>(Tensor): tensor of shape <code style="white-space: pre;">⁠(*, m, n)⁠</code> where <code>*</code> is zero or more batch dimensions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>full_matrices</code></td>
+<td>
+<p>(bool, optional): controls whether to compute the full or reduced
+SVD, and consequently, the shape of the returned tensors <code>U</code> and <code>V</code>. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<p>Math could not be displayed. Please visit the package website.</p>
+
+<p>where <code class="reqn">\operatorname{diag}(S) \in \mathbb{K}^{m \times n}</code>,
+<code class="reqn">V^{H}</code> is the conjugate transpose when <code class="reqn">V</code> is complex, and the transpose when <code class="reqn">V</code> is real-valued.
+</p>
+<p>The matrices  <code class="reqn">U</code>, <code class="reqn">V</code> (and thus <code class="reqn">V^{H}</code>) are orthogonal in the real case, and unitary in the complex case.
+When <code>m &gt; n</code> (resp. <code>m &lt; n</code>) we can drop the last <code>m - n</code> (resp. <code>n - m</code>) columns of <code>U</code> (resp. <code>V</code>) to form the <strong>reduced SVD</strong>:
+</p>
+
+<p>Math could not be displayed. Please visit the package website.</p>
+
+<p>where <code class="reqn">\operatorname{diag}(S) \in \mathbb{K}^{k \times k}</code>.
+</p>
+<p>In this case, <code class="reqn">U</code> and <code class="reqn">V</code> also have orthonormal columns.
+Supports input of float, double, cfloat and cdouble dtypes.
+</p>
+<p>Also supports batches of matrices, and if <code>A</code> is a batch of matrices then
+the output has the same batch dimensions.
+</p>
+<p>The returned decomposition is a named tuple <code style="white-space: pre;">⁠(U, S, V)⁠</code>
+which corresponds to <code class="reqn">U</code>, <code class="reqn">S</code>, <code class="reqn">V^{H}</code> above.
+</p>
+<p>The singular values are returned in descending order.
+The parameter <code>full_matrices</code> chooses between the full (default) and reduced SVD.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list <code style="white-space: pre;">⁠(U, S, V)⁠</code> which corresponds to <code class="reqn">U</code>, <code class="reqn">S</code>, <code class="reqn">V^{H}</code> above.
+<code>S</code> will always be real-valued, even when <code>A</code> is complex.
+It will also be ordered in descending order.
+<code>U</code> and <code>V</code> will have the same dtype as <code>A</code>. The left / right singular vectors will be given by
+the columns of <code>U</code> and the rows of <code>V</code> respectively.
+</p>
+
+
+<h3>Warnings</h3>
+
+<p>The returned tensors <code>U</code> and <code>V</code> are not unique, nor are they continuous with
+respect to <code>A</code>.
+Due to this lack of uniqueness, different hardware and software may compute
+different singular vectors.
+This non-uniqueness is caused by the fact that multiplying any pair of singular
+vectors <code class="reqn">u_k, v_k</code> by <code>-1</code> in the real case or by
+<code class="reqn">e^{i \phi}, \phi \in \mathbb{R}</code> in the complex case produces another two
+valid singular vectors of the matrix.
+This non-uniqueness problem is even worse when the matrix has repeated singular values.
+In this case, one may multiply the associated singular vectors of <code>U</code> and <code>V</code> spanning
+the subspace by a rotation matrix and the resulting vectors will span the same subspace.
+</p>
+<p>Gradients computed using <code>U</code> or <code>V</code> will only be finite when
+<code>A</code> does not have zero as a singular value or repeated singular values.
+Furthermore, if the distance between any two singular values is close to zero,
+the gradient will be numerically unstable, as it depends on the singular values
+<code class="reqn">\sigma_i</code> through the computation of
+<code class="reqn">\frac{1}{\min_{i \neq j} \sigma_i^2 - \sigma_j^2}</code>.
+The gradient will also be numerically unstable when <code>A</code> has small singular
+values, as it also depends on the computaiton of <code class="reqn">\frac{1}{\sigma_i}</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>When <code>full_matrices=TRUE</code>, the gradients with respect to <code style="white-space: pre;">⁠U[..., :, min(m, n):]⁠</code>
+and <code style="white-space: pre;">⁠Vh[..., min(m, n):, :]⁠</code> will be ignored, as those vectors can be arbitrary bases
+of the corresponding subspaces.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>linalg_svdvals()</code> computes only the singular values.
+Unlike <code>linalg_svd()</code>, the gradients of <code>linalg_svdvals()</code> are always
+numerically stable.
+</p>
+</li>
+<li> <p><code>linalg_eig()</code> for a function that computes another type of spectral
+decomposition of a matrix. The eigendecomposition works just on on square matrices.
+</p>
+</li>
+<li> <p><code>linalg_eigh()</code> for a (faster) function that computes the eigenvalue decomposition
+for Hermitian and symmetric matrices.
+</p>
+</li>
+<li> <p><code>linalg_qr()</code> for another (much faster) decomposition that works on general
+matrices.
+</p>
+</li>
+</ul>
+<p>Other linalg: 
+<code>linalg_cholesky_ex()</code>,
+<code>linalg_cholesky()</code>,
+<code>linalg_det()</code>,
+<code>linalg_eigh()</code>,
+<code>linalg_eigvalsh()</code>,
+<code>linalg_eigvals()</code>,
+<code>linalg_eig()</code>,
+<code>linalg_householder_product()</code>,
+<code>linalg_inv_ex()</code>,
+<code>linalg_inv()</code>,
+<code>linalg_lstsq()</code>,
+<code>linalg_matrix_norm()</code>,
+<code>linalg_matrix_power()</code>,
+<code>linalg_matrix_rank()</code>,
+<code>linalg_multi_dot()</code>,
+<code>linalg_norm()</code>,
+<code>linalg_pinv()</code>,
+<code>linalg_qr()</code>,
+<code>linalg_slogdet()</code>,
+<code>linalg_solve_triangular()</code>,
+<code>linalg_solve()</code>,
+<code>linalg_svdvals()</code>,
+<code>linalg_tensorinv()</code>,
+<code>linalg_tensorsolve()</code>,
+<code>linalg_vector_norm()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+a &lt;- torch_randn(5, 3)
+linalg_svd(a, full_matrices = FALSE)
+}
+</code></pre>
+
+
+</div>

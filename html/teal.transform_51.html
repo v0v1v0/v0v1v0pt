@@ -1,0 +1,181 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter_spec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Data extract filter specification</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>It consists in choices and additionally the variable names for the choices.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">filter_spec(
+  vars,
+  choices = NULL,
+  selected = if (inherits(choices, "delayed_data")) NULL else choices[1],
+  multiple = length(selected) &gt; 1 || inherits(selected, "all_choices"),
+  label = "Filter by",
+  sep = attr(choices, "sep"),
+  drop_keys = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code> or <code>delayed_data</code>) object.
+Character vector giving the columns to be filtered. These should be
+key variables of the data set to be filtered.
+<code>delayed_data</code> objects can be created via <code>variable_choices()</code>, <code>value_choices()</code>,
+or <code>choices_selected()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choices</code></td>
+<td>
+<p>(<code>character</code> or <code>numeric</code> or <code>logical</code> or (<code>delayed_data</code>) object.
+Named character vector to define the choices of a shiny <code>shiny::selectInput()</code>.
+These choices will be used to filter the dataset.
+</p>
+<p>These shall be filter values of the <code>vars</code> input separated by the separator(<code>sep</code>). Please
+watch out that the filter values have to follow the order of the <code>vars</code> input. In the following
+example we will show how to filter two columns:
+</p>
+<p><code>vars = c("PARAMCD","AVISIT")</code> and <code>choices = c("CRP - BASELINE", "ALT - BASELINE")</code>
+will lead to a filtering of
+<code>(PARAMCD == "CRP" &amp; AVISIT == "BASELINE") | (PARAMCD == "ALT" &amp; AVISIT == "BASELINE")</code>.
+</p>
+<p>The <code>sep</code> input has to be <code>" - "</code> in this case.
+</p>
+<p><code>delayed_data</code> objects can be created via <code>variable_choices()</code> or <code>value_choices()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selected</code></td>
+<td>
+<p>(<code>character</code> or <code>numeric</code> or <code>logical</code> or (<code>delayed_data</code> or <code>all_choices</code>) object.
+Named character vector to define the selected values of a shiny <code>shiny::selectInput()</code>
+(default values).
+This value will be displayed inside the shiny app upon start.
+The <code>all_choices</code> object indicates selecting all possible choices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multiple</code></td>
+<td>
+<p>(<code>logical</code>) Whether multiple values shall be allowed in the
+shiny <code>shiny::selectInput()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(optional <code>character</code>). Define a label on top of this specific
+shiny <code>shiny::selectInput()</code>. The default value is <code>"Filter by"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep</code></td>
+<td>
+<p>(<code>character</code>) A separator string to split the <code>choices</code> or
+<code>selected</code> inputs into the values of the different columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_keys</code></td>
+<td>
+<p>(optional <code>logical</code>) whether to drop filter column from the
+dataset keys, <code>TRUE</code> on default.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>filter_spec</code> is used inside <code>teal</code> apps to allow filtering datasets
+for their key variables. Imagine having an adverse events table. It has
+the columns <code>PARAMCD</code> and <code>CNSR</code>. <code>PARAMCD</code> contains the levels
+<code>"OS"</code>, <code>"PFS"</code>, <code>"EFS"</code>. <code>CNSR</code> contains the levels <code>"0"</code> and <code>"1"</code>.
+The first example should show how a <code>filter_spec</code> setup will influence
+the drop-down menu the app user will see.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>filter_spec</code>-S3-class object or <code>delayed_filter_spec</code>-S3-class object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># for Adverse Events table
+filter_spec(
+  vars = c("PARAMCD", "CNSR"),
+  sep = "-",
+  choices = c("OS-1" = "OS-1", "OS-0" = "OS-0", "PFS-1" = "PFS-1"),
+  selected = "OS-1",
+  multiple = FALSE,
+  label = "Choose endpoint and Censor"
+)
+
+# filtering a single variable
+filter_spec(
+  vars = c("PARAMCD"),
+  sep = "-",
+  choices = c("OS", "PFS", "EFS"),
+  selected = "OS",
+  multiple = FALSE,
+  label = "Choose endpoint"
+)
+
+# filtering a single variable by multiple levels of the variable
+filter_spec(
+  vars = c("PARAMCD"),
+  sep = "-",
+  choices = c("OS", "PFS", "EFS"),
+  selected = c("OS", "PFS"),
+  multiple = TRUE,
+  label = "Choose endpoint"
+)
+
+# delayed version
+filter_spec(
+  vars = variable_choices("ADSL", "SEX"),
+  sep = "-",
+  choices = value_choices("ADSL", "SEX", "SEX"),
+  selected = "F",
+  multiple = FALSE,
+  label = "Choose endpoint and Censor"
+)
+# using `choices_selected()`
+filter_spec(
+  vars = choices_selected(variable_choices("ADSL", subset = c("SEX", "AGE")), "SEX", fixed = FALSE),
+  multiple = TRUE
+)
+
+filter_spec(
+  vars = choices_selected(variable_choices("ADSL"), "SEX", fixed = TRUE),
+  multiple = TRUE
+)
+
+# choose all choices
+adsl_filter &lt;- filter_spec(
+  vars = choices_selected(variable_choices("ADSL"), "SEX", fixed = FALSE),
+  choices = value_choices("ADSL", "SEX"),
+  selected = all_choices()
+)
+</code></pre>
+
+
+</div>

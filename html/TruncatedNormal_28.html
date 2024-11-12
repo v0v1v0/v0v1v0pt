@@ -1,0 +1,153 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmvnorm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Multivariate truncated normal distribution</h2>
+
+<h3>Description</h3>
+
+<p>Density, distribution function and random generation for the multivariate truncated normal distribution
+with mean vector <code>mu</code>, covariance matrix <code>sigma</code>, lower truncation limit <code>lb</code> and upper truncation limit <code>ub</code>.
+The truncation limits can include infinite values. The Monte Carlo (<code>type = "mc"</code>) uses a sample of size <code>B</code>, while the
+quasi Monte Carlo (<code>type = "qmc"</code>) uses a pointset of size <code>ceiling(n/12)</code> and estimates the relative error using 12 independent randomized QMC estimators.
+</p>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>number of observations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x, q</code></td>
+<td>
+<p>vector of quantiles</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>number of replications for the (quasi)-Monte Carlo scheme</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>logical; if <code>TRUE</code>, probabilities and density are given on the log scale.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu</code></td>
+<td>
+<p>vector of location parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>covariance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lb</code></td>
+<td>
+<p>vector of lower truncation limits</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ub</code></td>
+<td>
+<p>vector of upper truncation limits</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check</code></td>
+<td>
+<p>logical; if <code>TRUE</code> (default), the code checks that the scale matrix <code>sigma</code> is positive definite and symmetric</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments, currently ignored</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>string, either of <code>mc</code> or <code>qmc</code> for Monte Carlo and quasi Monte Carlo, respectively</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>dtmvnorm</code> gives the density, <code>ptmvnorm</code> and <code>pmvnorm</code> give the distribution function of respectively the truncated and multivariate Gaussian distribution and <code>rtmvnorm</code> generate random deviates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+dtmvnorm(x, mu, sigma, lb, ub, type = c("mc", "qmc"), log = FALSE, B = 1e4)
+ptmvnorm(q, mu, sigma, lb, ub, type = c("mc", "qmc"), log = FALSE, B = 1e4)
+rtmvnorm(n, mu, sigma, lb, ub)</pre>
+
+
+<h3>Author(s)</h3>
+
+<p>Zdravko I. Botev, Leo Belzile (wrappers)
+</p>
+
+
+<h3>References</h3>
+
+<p>Z. I. Botev (2017), <em>The normal law under linear restrictions:
+simulation and estimation via minimax tilting</em>, Journal of the Royal
+Statistical Society, Series B, <b>79</b> (1), pp. 1–24.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">d &lt;- 4; lb &lt;- rep(0, d)
+mu &lt;- runif(d)
+sigma &lt;- matrix(0.5, d, d) + diag(0.5, d)
+samp &lt;- rtmvnorm(n = 10, mu = mu, sigma = sigma, lb = lb)
+loglik &lt;- dtmvnorm(samp, mu = mu, sigma = sigma, lb = lb, log = TRUE)
+cdf &lt;- ptmvnorm(samp, mu = mu, sigma = sigma, lb = lb, log = TRUE, type = "q")
+
+# Exact Bayesian Posterior Simulation Example
+# Vignette, example 5
+## Not run: 
+data("lupus"); # load lupus data
+Y &lt;- lupus[,1]; # response data
+X &lt;- as.matrix(lupus[,-1])  # construct design matrix
+n &lt;- nrow(X)
+d &lt;- ncol(X)
+X &lt;- diag(2*Y-1) %*% X; # incorporate response into design matrix
+nusq &lt;- 10000; # prior scale parameter
+C &lt;- solve(diag(d)/nusq + crossprod(X))
+sigma &lt;- diag(n) + nusq*tcrossprod(X) # this is covariance of Z given beta
+est &lt;- pmvnorm(sigma = sigma, lb = 0)
+# estimate acceptance probability of crude Monte Carlo
+print(attributes(est)$upbnd/est[1])
+# reciprocal of acceptance probability
+Z &lt;- rtmvnorm(sigma = sigma, n = 1e3, lb = rep(0, n))
+# sample exactly from auxiliary distribution
+beta &lt;- rtmvnorm(n = nrow(Z), sigma = C) + Z %*% X %*% C
+# simulate beta given Z and plot boxplots of marginals
+boxplot(beta, ylab = expression(beta))
+# output the posterior means
+colMeans(beta)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

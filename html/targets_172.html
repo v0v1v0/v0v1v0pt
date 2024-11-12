@@ -1,0 +1,144 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_progress</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read progress.</h2>
+
+<h3>Description</h3>
+
+<p>Read a project's target progress data for the most recent
+run of <code>tar_make()</code> or similar. Only the most recent record is shown.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_progress(
+  names = NULL,
+  fields = "progress",
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>Optional, names of the targets. If supplied, the
+output is restricted to the selected targets.
+The object supplied to <code>names</code> should be <code>NULL</code> or a
+<code>tidyselect</code> expression like <code>any_of()</code> or <code>starts_with()</code>
+from <code>tidyselect</code> itself, or <code>tar_described_as()</code> to select target names
+based on their descriptions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fields</code></td>
+<td>
+<p>Optional, names of progress data columns to read.
+Set to <code>NULL</code> to read all fields.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data frame with one row per target and the following columns:
+</p>
+
+<ul>
+<li> <p><code>name</code>: name of the target.
+</p>
+</li>
+<li> <p><code>type</code>: type of target: <code>"stem"</code> for non-branching targets,
+<code>"pattern"</code> for dynamically branching targets, and <code>"branch"</code>
+for dynamic branches.
+</p>
+</li>
+<li> <p><code>parent</code>: name of the target's parent. For branches, this is the
+name of the associated pattern. For other targets, the pattern
+is just itself.
+</p>
+</li>
+<li> <p><code>branches</code>: number of dynamic branches of a pattern. 0 for non-patterns.
+</p>
+</li>
+<li> <p><code>progress</code>: the most recent progress update of that target.
+Could be <code>"dispatched"</code>, <code>"completed"</code>, "<code>skipped</code>", <code>"canceled"</code>,
+or <code>"errored"</code>. <code>"dispatched"</code> means the target was sent off
+to be run, but in the case of <code>tar_make()</code> with a <code>crew</code> controller,
+the target might not actually start running right away if the <code>crew</code>
+workers are all busy.
+</p>
+</li>
+</ul>
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other progress: 
+<code>tar_canceled()</code>,
+<code>tar_completed()</code>,
+<code>tar_dispatched()</code>,
+<code>tar_errored()</code>,
+<code>tar_poll()</code>,
+<code>tar_progress_branches()</code>,
+<code>tar_progress_summary()</code>,
+<code>tar_skipped()</code>,
+<code>tar_watch()</code>,
+<code>tar_watch_server()</code>,
+<code>tar_watch_ui()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(x, seq_len(2)),
+    tar_target(y, 2 * x, pattern = map(x))
+  )
+}, ask = FALSE)
+tar_make()
+tar_progress()
+tar_progress(starts_with("y_")) # see also any_of()
+})
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,616 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fmt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a vector of class formatted numbers</h2>
+
+<h3>Description</h3>
+
+<p><code>fmt</code> vectors, of class <code>tabxplor_fmt</code>, powers <span class="pkg">tabxplor</span>
+and <code>tab</code> tibbles.
+As a <code>record</code>, they stores all data necessary to
+calculate percentages, Chi2 metadata or confidence intervals, but also to format and
+color the table to help the user read it. You can access this data with
+<code>vctrs::field</code>, or change it with
+<code>vctrs:field&lt;-</code>. A <code>fmt</code> vector have 13 fields :
+<code>n</code>, <code>digits</code>, <code>display</code>, <code>wn</code>, <code>pct</code>, <code>mean</code>,
+<code>diff</code>, <code>ctr</code>, <code>var</code>, <code>ci</code>, <code>in_totrow</code>,  <code>in_tottab</code>,
+<code>in_refrow</code>. Other arguments are attributes, attached not to each value, but to
+the whole vector, like <code>type</code>, <code>totcol</code> or <code>color</code>. You can get them
+with <code>attr</code> and modify them with
+<code>attr&lt;-</code>. Special functions listed below are made to
+facilitate programming with with <span class="pkg">tabxplor</span> formatted numbers.
+<code>taxplfmt</code> vectors can use all standard operations, like +, -, sum(), or c(),
+using <span class="pkg">vctrs</span>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fmt(
+  n = integer(),
+  type = "n",
+  digits = rep(0L, length(n)),
+  display = dplyr::case_when(type == "mean" ~ "mean", type %in% c("row", "col", "all",
+    "all_tabs") ~ "pct", TRUE ~ "n"),
+  wn = rep(NA_real_, length(n)),
+  pct = rep(NA_real_, length(n)),
+  mean = rep(NA_real_, length(n)),
+  diff = rep(NA_real_, length(n)),
+  ctr = rep(NA_real_, length(n)),
+  var = rep(NA_real_, length(n)),
+  ci = rep(NA_real_, length(n)),
+  rr = rep(NA_real_, length(n)),
+  or = rep(NA_real_, length(n)),
+  in_totrow = rep(FALSE, length(n)),
+  in_tottab = rep(FALSE, length(n)),
+  in_refrow = rep(FALSE, length(n)),
+  comp_all = NA,
+  ref = "",
+  ci_type = "",
+  col_var = "",
+  totcol = FALSE,
+  refcol = FALSE,
+  color = ""
+)
+
+is_fmt(x)
+
+get_num(x)
+
+set_num(x, value)
+
+get_type(x, ...)
+
+set_type(x, type)
+
+is_totrow(x, ...)
+
+as_totrow(x, in_totrow = TRUE)
+
+is_tottab(x, ...)
+
+as_tottab(x, in_tottab = TRUE)
+
+set_display(x, value)
+
+is_totcol(x, ...)
+
+as_totcol(x, totcol = TRUE)
+
+is_refrow(x, ...)
+
+as_refrow(x, in_refrow = TRUE)
+
+get_comp_all(x, replace_na = TRUE)
+
+set_comp_all(x, comp_all = FALSE)
+
+get_ref_type(x, ...)
+
+set_diff_type(x, ref)
+
+get_ci_type(x, ...)
+
+set_ci_type(x, ci_type)
+
+get_col_var(x, ...)
+
+set_col_var(x, col_var)
+
+is_refcol(x, ...)
+
+as_refcol(x, refcol = TRUE)
+
+get_color(x, ...)
+
+set_color(x, color)
+
+get_digits(x)
+
+set_digits(x, value)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>The underlying count, as an integer vector of length <code>n()</code>. It is used
+to calculate confidence intervals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The type of the column, which defines the type of background calculation
+to be made (as a single string, since it's not a field but an attribute) :
+</p>
+
+<ul>
+<li> <p><code>"n"</code>: counts
+</p>
+</li>
+<li> <p><code>"mean"</code>: mean column (from numeric variables)
+</p>
+</li>
+<li> <p><code>"row"</code>: row percentages
+</p>
+</li>
+<li> <p><code>"col"</code>: column percentages
+</p>
+</li>
+<li> <p><code>"all"</code>: frequencies by subtable/group (i.e. by <code>tab_vars</code>)
+</p>
+</li>
+<li> <p><code>"all_tabs"</code>: frequencies for the whole table
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>The number of digits, as an integer, or an integer vector the length
+of <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>display</code></td>
+<td>
+<p>The display type : the name of the field you want to show when printing
+the vector. Among <code>"n"</code>, <code>"wn"</code>, <code>"pct"</code>, <code>"diff"</code>, <code>"ctr"</code>,
+<code>"mean"</code>, <code>"var"</code>, <code>"ci"</code>,
+<code>"pct_ci"</code> (percentages with visible confidence interval),
+<code>"mean_ci"</code> (means with visible confidence interval). As a single string, or a
+character vector the length of <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wn</code></td>
+<td>
+<p>The underlying weighted counts, as a double vector the length of
+<code>n</code>. It is used in certain operations on <code>fmt</code>, like means.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pct</code></td>
+<td>
+<p>The percentages, as a double vector the length of <code>n</code>.
+Calculate with <code>tab_pct</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean</code></td>
+<td>
+<p>The means, as a double vector the length of <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diff</code></td>
+<td>
+<p>The differences (from totals or first cells),
+as a double vector the length of <code>n</code>. Used to set colors for means and
+row or col percentages. Calculate with <code>tab_pct</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ctr</code></td>
+<td>
+<p>The contributions of cells to (sub)tables variances,
+as a double vector the length of <code>n</code>. Used to print colors when
+<code>color = "contrib"</code>. The mean contribution of each (sub)table is written on
+total rows (then, colors don't print well without total rows).
+Calculate with <code>tab_chi2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var</code></td>
+<td>
+<p>The cells variances, as a double vector the length of <code>n</code>.
+Used with <code>type = "mean"</code> to calculate confidence intervals.
+Calculate with <code>tab_plain</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci</code></td>
+<td>
+<p>The confidence intervals, as a double vector the length of <code>n</code>.
+Used to print colors (<code>"diff_ci"</code>, <code>"after_ci"</code>).
+Calculate with <code>tab_ci</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rr</code></td>
+<td>
+<p>The relative risk, as a double vector the length of <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>or</code></td>
+<td>
+<p>The odds ratio or relative risk ratio, as a double vector the length of <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>in_totrow</code></td>
+<td>
+<p><code>TRUE</code> when the cell is part of a total row</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>in_tottab</code></td>
+<td>
+<p><code>TRUE</code> when the cell is part of a total table</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>in_refrow</code></td>
+<td>
+<p><code>TRUE</code> when the cell is part of a reference row
+(cf. <code>ref</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>comp_all</code></td>
+<td>
+<p><code>FALSE</code> when the comparison level is the subtable/group,
+<code>TRUE</code> when it is the whole table</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>The type of difference of the vector. Cf. <code>tab</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_type</code></td>
+<td>
+<p>The type of confidence intervals of the vector (calculate
+with <code>tab_ci</code>) :
+</p>
+
+<ul>
+<li> <p><code>""</code> or <code>"no"</code>: no ci have been calculated
+</p>
+</li>
+<li> <p><code>"cell"</code>: absolute confidence intervals of cells percentages.
+</p>
+</li>
+<li> <p><code>"diff"</code>: confidence intervals of the difference between a cell and the
+relative total cell (or relative first cell when <code>ref = "first"</code>).
+</p>
+</li>
+<li> <p><code>"auto"</code>: <code>"diff"</code> for means and row/col percentages,
+<code>"cell"</code> for frequencies ("all", "all_tabs").
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col_var</code></td>
+<td>
+<p>The name of the <code>col_var</code> used to calculate the vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>totcol</code></td>
+<td>
+<p><code>TRUE</code> when the vector is a total column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>refcol</code></td>
+<td>
+<p><code>TRUE</code> when the vector is a reference column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color</code></td>
+<td>
+<p>The type of color to print :
+</p>
+
+<ul>
+<li> <p><code>"no"</code>: no colors are printed.
+</p>
+</li>
+<li> <p><code>"diff"</code>: color percentages and means based on cells differences from
+totals (or from first cells when <code>ref = "first"</code>).
+</p>
+</li>
+<li> <p><code>"diff_ci"</code>: color pct and means based on cells differences from totals
+or first cells, removing coloring when the confidence interval of this difference
+is higher than the difference itself.
+</p>
+</li>
+<li> <p><code>"after_ci"</code>: idem, but cut off the confidence interval from the
+difference first.
+</p>
+</li>
+<li> <p><code>"contrib"</code>: color cells based on their contribution to variance
+(except mean columns, from numeric variables).
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The object to test, to get a field in, or to modify.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The value you want to inject in some <code>fmt</code> vector's vctrs::field
+or attribute using a given "set" function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Used in methods to add arguments in the future.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replace_na</code></td>
+<td>
+<p>By default, <code>get_comp_all</code> takes NA in comparison level
+to be a <code>FALSE</code> (=comparison at subtables/groups level). Set to <code>FALSE</code>
+to avoid this behavior.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A vector of class <code>tabxplor_fmt</code>.
+</p>
+<p>A logical vector.
+</p>
+<p>A double vector.
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A character vector with the vectors type.
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A logical vector with the fmt vectors totrow field.
+</p>
+<p>A modified fmt vector with totrow field changed.
+</p>
+<p>A logical vector with the fmt vectors tottab field.
+</p>
+<p>A modified fmt vector with tottab field changed.
+</p>
+<p>The entered objects, with all fmt vectors with the wanted display.
+</p>
+<p>A logical vector with the fmt vectors totcol attribute.
+</p>
+<p>A modified fmt vector with totcol attribute changed.
+</p>
+<p>A logical vector with the fmt vectors in_refrow field
+</p>
+<p>A modified fmt vector with in_refrom field changed.
+</p>
+<p>A modified fmt vector with comp attribute changed.
+</p>
+<p>A logical vector with the fmt vectors type attributes
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A logical vector with the fmt vectors ci_type attributes
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A logical vector with the fmt vectors col_var attributes
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A logical vector with the fmt vectors is_refcol attributes
+</p>
+<p>A modified fmt vector.
+</p>
+<p>A logical vector with the fmt vectors color attributes
+</p>
+<p>A modified fmt vector.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>is_fmt()</code>: a test function for class fmt.
+</p>
+</li>
+<li> <p><code>get_num()</code>: get the currently displayed field
+</p>
+</li>
+<li> <p><code>set_num()</code>: set the currently displayed field (not changing display type)
+</p>
+</li>
+<li> <p><code>get_type()</code>: get types of fmt columns (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>set_type()</code>: set the column type attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>is_totrow()</code>: test function to detect cells in total rows
+(at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>as_totrow()</code>: set the "in_totrow" field (belong to total row)
+</p>
+</li>
+<li> <p><code>is_tottab()</code>: test function to detect cells in total tables
+(at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>as_tottab()</code>: set the "in_tottab" field (belong to total table)
+</p>
+</li>
+<li> <p><code>set_display()</code>: set the "display" vctrs::field of a <code>fmt</code> vector, or of
+all of them in the whole tibble.
+</p>
+</li>
+<li> <p><code>is_totcol()</code>: test function for total columns
+(at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>as_totcol()</code>: set the "totcol" attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>is_refrow()</code>: test function to detect cells in reference rows
+(at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>as_refrow()</code>: set the "in_refrow" field (belong to reference row)
+</p>
+</li>
+<li> <p><code>get_comp_all()</code>: get comparison level of fmt columns
+</p>
+</li>
+<li> <p><code>set_comp_all()</code>: set the comparison level attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>get_ref_type()</code>: get differences type of fmt columns (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>set_diff_type()</code>: set the differences type attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>get_ci_type()</code>: get confidence intervals type of fmt columns (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>set_ci_type()</code>: set the confidence intervals type attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>get_col_var()</code>: get names of column variable of fmt columns (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>set_col_var()</code>: set the "col_var" attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>is_refcol()</code>: test function for reference columns (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>as_refcol()</code>: set the "ref_col" attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>get_color()</code>: get color (at <code>fmt</code> level or <code>tab</code> level)
+</p>
+</li>
+<li> <p><code>set_color()</code>: set the "color" attribute of a <code>fmt</code> vector
+</p>
+</li>
+<li> <p><code>get_digits()</code>: get the "digits" field
+</p>
+</li>
+<li> <p><code>set_digits()</code>: set the "digits" field
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+f &lt;- fmt(n = c(7, 19, 2), type = "row", pct = c(0.25, 0.679, 0.07))
+f
+
+# To get the currently displayed field :
+get_num(f)
+
+# To modify the currently displayed field :
+set_num(f, c(1, 0, 0))
+
+
+# See all the underlying fields of a fmt vector (a data frame with a number of rows
+#  equal to the length of the vector) :
+vctrs::vec_data(f)
+
+# To get the numbers of digits :
+vctrs::field(f, "digits")
+f$digits
+
+# To get the count :
+vctrs::field(f, "n")
+f$n
+
+# To get the display :
+vctrs::field(f, "display")
+f$display
+
+# To modify a field, you can use `dplyr::mutate` on the fmt vector,
+# referring to the names of the columns of the underlying data.frame (`vctrs::vec_data`) :
+vctrs::`field&lt;-`(f, "pct", c(1, 0, 0))
+mutate(f, pct = c(1, 0, 0))
+
+# See all the attributes of a fmt vector :
+attributes(f)
+
+# To modify the "type" attribute of a fmt vector :
+set_type(f, "col")
+
+# To modify the "color" attribute of a fmt vector :
+set_color(f, "contrib")
+
+
+
+
+tabs &lt;- tab(starwars, sex, hair_color, gender, na = "drop", pct = "row",
+            other_if_less_than = 5)
+
+# To identify the total columns, and work with them :
+is_totcol(tabs)
+tabs %&gt;% mutate(across(where(is_totcol), ~ "total column"))
+
+# To identify the total rows, and work with them :
+is_totrow(tabs)
+tabs %&gt;%
+  mutate(across(
+    where(is_fmt),
+    ~ if_else(is_totrow(.), true = "into_total_row", false = "normal_cell")
+  ))
+
+# To identify the total tables, and work with them :
+tottabs &lt;- is_tottab(tabs)
+tabs %&gt;% tibble::add_column(tottabs) %&gt;%
+  mutate(total = if_else(tottabs, "part of a total table", "normal cell"))
+
+# To access the displayed numbers, as numeric vectors :
+tabs %&gt;% mutate(across(where(is_fmt), get_num))
+
+# To access the displayed numbers, as character vectors (without colors) :
+tabs %&gt;% mutate(across(where(is_fmt), format))
+
+# To access the (non-displayed) differences of the cells percentages from totals :
+tabs %&gt;% mutate(across(where(is_fmt), ~ vctrs::field(., "diff")))
+
+
+# To do more complex operations, like creating a new column with standard deviation and
+# print it with 2 decimals, use `dplyr::mutate` on all the fmt columns of a table :
+
+tab_num(forcats::gss_cat, race, c(age, tvhours), marital, digits = 1L, comp = "all") |&gt;
+  dplyr::mutate(dplyr::across( #Mutate over the whole table.
+    c(age, tvhours),
+    ~ dplyr::mutate(.,         #Mutate over each fmt vector's underlying data.frame.
+                    var     = sqrt(var),
+                    display = "var",
+                    digits  = 2L) |&gt;
+      set_color("no"),
+    .names = "{.col}_sd"
+  ))
+</code></pre>
+
+
+</div>

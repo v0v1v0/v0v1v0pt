@@ -1,0 +1,173 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update.lda_topic_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Update a Latent Dirichlet Allocation topic model with new data</h2>
+
+<h3>Description</h3>
+
+<p>Update an LDA model with new data using collapsed Gibbs sampling.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'lda_topic_model'
+update(
+  object,
+  dtm,
+  additional_k = 0,
+  iterations = NULL,
+  burnin = -1,
+  new_alpha = NULL,
+  new_beta = NULL,
+  optimize_alpha = FALSE,
+  calc_likelihood = FALSE,
+  calc_coherence = TRUE,
+  calc_r2 = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>a fitted object of class <code>lda_topic_model</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>A document term matrix or term co-occurrence matrix of class dgCMatrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>additional_k</code></td>
+<td>
+<p>Integer number of topics to add, defaults to 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>Integer number of iterations for the Gibbs sampler to run. A
+future version may include automatic stopping criteria.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>Integer number of burnin iterations. If <code>burnin</code> is greater than -1,
+the resulting "phi" and "theta" matrices are an average over all iterations
+greater than <code>burnin</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>new_alpha</code></td>
+<td>
+<p>For now not used. This is the prior for topics over documents
+used when updating the model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>new_beta</code></td>
+<td>
+<p>For now not used. This is the prior for words over topics
+used when updating the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize_alpha</code></td>
+<td>
+<p>Logical. Do you want to optimize alpha every 10 Gibbs iterations?
+Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_likelihood</code></td>
+<td>
+<p>Do you want to calculate the likelihood every 10 Gibbs iterations?
+Useful for assessing convergence. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_coherence</code></td>
+<td>
+<p>Do you want to calculate probabilistic coherence of topics
+after the model is trained? Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_r2</code></td>
+<td>
+<p>Do you want to calculate R-squared after the model is trained?
+Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to <code>TmParallelApply</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns an S3 object of class c("LDA", "TopicModel").
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# load a document term matrix
+d1 &lt;- nih_sample_dtm[1:50,]
+
+d2 &lt;- nih_sample_dtm[51:100,]
+
+# fit a model
+m &lt;- FitLdaModel(d1, k = 10, 
+                 iterations = 200, burnin = 175,
+                 optimize_alpha = TRUE, 
+                 calc_likelihood = FALSE,
+                 calc_coherence = TRUE,
+                 calc_r2 = FALSE)
+
+# update an existing model by adding documents
+m2 &lt;- update(object = m,
+             dtm = rbind(d1, d2),
+             iterations = 200,
+             burnin = 175)
+             
+# use an old model as a prior for a new model
+m3 &lt;- update(object = m,
+             dtm = d2, # new documents only
+             iterations = 200,
+             burnin = 175)
+             
+# add topics while updating a model by adding documents
+m4 &lt;- update(object = m,
+             dtm = rbind(d1, d2),
+             additional_k = 3,
+             iterations = 200,
+             burnin = 175)
+             
+# add topics to an existing model
+m5 &lt;- update(object = m,
+             dtm = d1, # this is the old data
+             additional_k = 3,
+             iterations = 200,
+             burnin = 175)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

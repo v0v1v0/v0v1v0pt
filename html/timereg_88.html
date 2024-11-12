@@ -1,0 +1,216 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>prep.comp.risk</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set up weights for delayed-entry competing risks data for comp.risk function</h2>
+
+<h3>Description</h3>
+
+<p>Computes the weights of Geskus (2011) modified to the setting of the
+comp.risk function. The returned weights are
+<code class="reqn">1/(H(T_i)*G_c(min(T_i,tau)))</code> and tau is the max of the times argument,
+here <code class="reqn">H</code> is the estimator of the truncation distribution and <code class="reqn">G_c</code>
+is the right censoring distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">prep.comp.risk(
+  data,
+  times = NULL,
+  entrytime = NULL,
+  time = "time",
+  cause = "cause",
+  cname = "cweight",
+  tname = "tweight",
+  strata = NULL,
+  nocens.out = TRUE,
+  cens.formula = NULL,
+  cens.code = 0,
+  prec.factor = 100,
+  trunc.mintau = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data frame for comp.risk.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>times for estimating equations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>entrytime</code></td>
+<td>
+<p>name of delayed entry variable, if not given computes
+right-censoring case.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>name of survival time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cause</code></td>
+<td>
+<p>name of cause indicator</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cname</code></td>
+<td>
+<p>name of censoring weight.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tname</code></td>
+<td>
+<p>name of truncation weight.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>strata variable to obtain stratified weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nocens.out</code></td>
+<td>
+<p>returns only uncensored part of data-frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cens.formula</code></td>
+<td>
+<p>censoring model formula for Cox models for the
+truncation and censoring model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cens.code</code></td>
+<td>
+<p>code for censoring among causes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prec.factor</code></td>
+<td>
+<p>precision factor, for ties between censoring/even times,
+truncation times/event times</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trunc.mintau</code></td>
+<td>
+<p>specicies wether the truncation distribution is
+evaluated in death times or death times minimum max(times), FALSE makes the
+estimator equivalent to Kaplan-Meier (in the no covariate case).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns an object. With the following arguments: </p>
+<table><tr style="vertical-align: top;">
+<td><code>dataw</code></td>
+<td>
+<p>a
+data.frame with weights.</p>
+</td>
+</tr></table>
+<p>The function wants to make two new variables "weights" and "cw" so if these
+already are in the data frame it tries to add an "_" in the names.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>Geskus (2011), Cause-Specific Cumulative Incidence Estimation
+and the Fine and Gray Model Under Both Left Truncation and Right Censoring,
+Biometrics (2011), pp 39-49.
+</p>
+<p>Shen (2011), Proportional subdistribution hazards regression for
+left-truncated competing risks data, Journal of Nonparametric Statistics
+(2011), 23, 885-895
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(bmt)
+nn &lt;- nrow(bmt)
+entrytime &lt;- rbinom(nn,1,0.5)*(bmt$time*runif(nn))
+bmt$entrytime &lt;- entrytime
+times &lt;- seq(5,70,by=1)
+
+### adds weights to uncensored observations
+bmtw &lt;- prep.comp.risk(bmt,times=times,time="time",
+		       entrytime="entrytime",cause="cause")
+
+#########################################
+### nonparametric estimates
+#########################################
+## {{{ 
+### nonparametric estimates, right-censoring only 
+out &lt;- comp.risk(Event(time,cause)~+1,data=bmt,
+		 cause=1,model="rcif2",
+		 times=c(5,30,70),n.sim=0)
+out$cum
+### same as 
+###out &lt;- prodlim(Hist(time,cause)~+1,data=bmt)
+###summary(out,cause="1",times=c(5,30,70))
+
+### with truncation 
+out &lt;- comp.risk(Event(time,cause)~+1,data=bmtw,cause=1,
+  model="rcif2",
+  cens.weight=bmtw$cw,weights=bmtw$weights,times=c(5,30,70),
+  n.sim=0)
+out$cum
+### same as
+###out &lt;- prodlim(Hist(entry=entrytime,time,cause)~+1,data=bmt)
+###summary(out,cause="1",times=c(5,30,70))
+## }}} 
+
+#########################################
+### Regression 
+#########################################
+## {{{ 
+### with truncation correction
+out &lt;- comp.risk(Event(time,cause)~const(tcell)+const(platelet),data=bmtw,
+ cause=1,cens.weight=bmtw$cw,
+ weights=bmtw$weights,times=times,n.sim=0)
+summary(out)
+
+### with only righ-censoring, standard call
+outn &lt;- comp.risk(Event(time,cause)~const(tcell)+const(platelet),data=bmt,
+	  cause=1,times=times,n.sim=0)
+summary(outn)
+## }}} 
+
+
+</code></pre>
+
+
+</div>

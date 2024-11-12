@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>findSite</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Delineating sites of potential importance to conservation</h2>
+
+<h3>Description</h3>
+
+<p><code>findSite</code> uses the core areas (based on utilization distributions) of
+individual animals to identify areas used regularly used by a significant
+portion of the local source population (i.e. the tracked population).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">findSite(KDE, represent, popSize = NULL, levelUD, thresh, polyOut = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>KDE</code></td>
+<td>
+<p>estUDm or SpatialPixels/GridDataFrame. If estUDm, as created by
+<code>estSpaceUse</code> or <code>adehabitatHR::kernelUD</code>, if Spatial*,
+each column should correspond to the Utilization Distribution of a single
+individual or track.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>represent</code></td>
+<td>
+<p>Numeric (between 0-1). Output value provided by
+<code>repAssess</code> which assesses how representative the tracking data
+are for characterising the space use of the wider population.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>popSize</code></td>
+<td>
+<p>Numeric, the number of individuals breeding or residing at the
+origin location from where animals were tracked, quantifying the population
+that the tracking data represent. This number will be used to calculate how
+many animals use the delineated areas of aggregation. If no value for
+<code>popSize</code> is provided then output will be as the proportion of the
+population.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>levelUD</code></td>
+<td>
+<p>Numeric (percentage). Specifies the quantile used for
+delineating the core use (or home range) areas of individuals based on the
+kernel density estimation (e.g core area=50, home range=95).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thresh</code></td>
+<td>
+<p>Numeric (percentage). Threshold percentage of local source
+population needed to be found using a location for it to be considered part
+of a 'potentialSite'. Default is set based on degree of representativeness.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>polyOut</code></td>
+<td>
+<p>Logical. (Default TRUE) Should the output be a polygon dataset
+(TRUE) or grid of animal densities (FALSE). See 'Value' below for more
+details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>findSite</code> estimates the proportion of the local source population using
+an area based on the proportion of overlap among individual core areas and
+the degree of representativeness as quantified by <code>repAssess</code>).
+This value is then compared to a threshold of importance (i.e. a certain 
+the population) to delineate areas as 'potentialSites'. Thresholds area
+either set automatically set on the representativenss of the sample
+(lower rep==higher threshold), or set manually by the user.
+</p>
+<p>The areas identified are sites of ecological relevance to the populations,
+which may be significant for the wider region or entire species, which cane
+be assessed using global (or regional) criteria, such as those of the Key
+Biodiversity Area program.
+</p>
+<p>The KBA criteria for site assessment are published in the KBA standard, which
+may be found here: <a href="http://www.keybiodiversityareas.org/">http://www.keybiodiversityareas.org/</a>.
+</p>
+<p>If grid used for estimating core areas (i.e. KDE) is very memory-heavy
+(e.g. &gt;10,000 cells) use <code>polyOut = FALSE</code> to speed things up.
+</p>
+
+
+<h3>Value</h3>
+
+<p>if <code>polyOut = TRUE</code> function returns an object of class
+<code>sf</code> containing polygon data with three data columns:
+Column <code>N_IND</code> indicates the number of tracked individuals whose core
+use area (at <code>levelUD</code>) overlapped with this polygon.
+</p>
+<p>Column <code>N_animals</code> estimates the number of animals from the
+represented population that predictably use the polygon area during the
+tracked season. If no value for (at <code>popSize</code>) is provided, this
+number is the proportion of the represented population using the area.
+</p>
+<p>Column <code>potentialSite</code> indicates whether the polygon can be considered
+a potential Site (TRUE) or not (FALSE).
+</p>
+<p>if <code>polyOut = FALSE</code> function returns a gridded surface of class
+SpatialPixelsDataFrame, with the same three aforementioned columns as cell
+values.
+</p>
+<p>If <code>polyOut = TRUE</code> the user may choose to automatically produce a plot
+of the result using <code>plot=TRUE</code>. The map produced displays the areas
+which hold aggregations above a certain threshold proportion of the
+population. If there are no areas displayed on the map, then either the
+species doesn't aggregate, the Scale is too small to identify aggregations
+in this species, or the tracked sample aren't representative enough to meet
+the thresholds.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">KDE &lt;- track2KBA::KDE_example
+
+## identify potential sites
+pot_site &lt;- findSite(KDE, represent = 90, levelUD = 50)
+
+</code></pre>
+
+
+</div>

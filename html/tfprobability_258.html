@@ -1,0 +1,284 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd_student_t_process</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Marginal distribution of a Student's T process at finitely many points</h2>
+
+<h3>Description</h3>
+
+<p>A Student's T process (TP) is an indexed collection of random variables, any
+finite collection of which are jointly Multivariate Student's T. While this
+definition applies to finite index sets, it is typically implicit that the
+index set is infinite; in applications, it is often some finite dimensional
+real or complex vector space. In such cases, the TP may be thought of as a
+distribution over (real- or complex-valued) functions defined over the index set.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd_student_t_process(
+  df,
+  kernel,
+  index_points,
+  mean_fn = NULL,
+  jitter = 1e-06,
+  validate_args = FALSE,
+  allow_nan_stats = FALSE,
+  name = "StudentTProcess"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>Positive Floating-point <code>Tensor</code> representing the degrees of freedom.
+Must be greater than 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel</code></td>
+<td>
+<p><code>PositiveSemidefiniteKernel</code>-like instance representing the
+TP's covariance function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index_points</code></td>
+<td>
+<p><code>float</code> <code>Tensor</code> representing finite (batch of) vector(s) of
+points in the index set over which the TP is defined. Shape has the form
+<code style="white-space: pre;">⁠[b1, ..., bB, e, f1, ..., fF]⁠</code> where <code>F</code> is the number of feature
+dimensions and must equal <code>kernel.feature_ndims</code> and <code>e</code> is the number
+(size) of index points in each batch. Ultimately this distribution
+corresponds to a <code>e</code>-dimensional multivariate Student's T. The batch
+shape must be broadcastable with <code>kernel.batch_shape</code> and any batch dims
+yielded by <code>mean_fn</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_fn</code></td>
+<td>
+<p>Function that acts on <code>index_points</code> to produce a (batch
+of) vector(s) of mean values at <code>index_points</code>. Takes a <code>Tensor</code> of
+shape <code style="white-space: pre;">⁠[b1, ..., bB, f1, ..., fF]⁠</code> and returns a <code>Tensor</code> whose shape is
+broadcastable with <code style="white-space: pre;">⁠[b1, ..., bB]⁠</code>. Default value: <code>NULL</code> implies
+constant zero function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>jitter</code></td>
+<td>
+<p><code>float</code> scalar <code>Tensor</code> added to the diagonal of the covariance
+matrix to ensure positive definiteness of the covariance matrix. Default value: <code>1e-6</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. When TRUE distribution parameters are checked
+for validity despite possibly degrading runtime performance. When FALSE invalid inputs may
+silently render incorrect outputs. Default value: FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p>Logical, default TRUE. When TRUE, statistics (e.g., mean, mode, variance)
+use the value NaN to indicate the result is undefined. When FALSE, an exception is raised if
+one or more of the statistic's batch members are undefined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Just as Student's T distributions are fully specified by their degrees of
+freedom, location and scale, a Student's T process can be completely specified
+by a degrees of freedom parameter, mean function and covariance function.
+</p>
+<p>Let <code>S</code> denote the index set and <code>K</code> the space in which each indexed random variable
+takes its values (again, often R or C).
+The mean function is then a map <code>m: S -&gt; K</code>, and the covariance function,
+or kernel, is a positive-definite function <code style="white-space: pre;">⁠k: (S x S) -&gt; K⁠</code>. The properties
+of functions drawn from a TP are entirely dictated (up to translation) by
+the form of the kernel function.
+</p>
+<p>This <code>Distribution</code> represents the marginal joint distribution over function
+values at a given finite collection of points <code style="white-space: pre;">⁠[x[1], ..., x[N]]⁠</code> from the
+index set <code>S</code>. By definition, this marginal distribution is just a
+multivariate Student's T distribution, whose mean is given by the vector
+<code style="white-space: pre;">⁠[ m(x[1]), ..., m(x[N]) ]⁠</code> and whose covariance matrix is constructed from
+pairwise applications of the kernel function to the given inputs:
+</p>
+<div class="sourceCode"><pre>| k(x[1], x[1])    k(x[1], x[2])  ...  k(x[1], x[N]) |
+| k(x[2], x[1])    k(x[2], x[2])  ...  k(x[2], x[N]) |
+|      ...              ...                 ...      |
+| k(x[N], x[1])    k(x[N], x[2])  ...  k(x[N], x[N]) |
+
+</pre></div>
+<p>For this to be a valid covariance matrix, it must be symmetric and positive
+definite; hence the requirement that <code>k</code> be a positive definite function
+(which, by definition, says that the above procedure will yield PD matrices).
+Note also we use a parameterization as suggested in Shat et al. (2014), which requires <code>df</code>
+to be greater than 2. This allows for the covariance for any finite
+dimensional marginal of the TP (a multivariate Student's T distribution) to
+just be the PD matrix generated by the kernel.
+</p>
+<p>Mathematical Details
+</p>
+<p>The probability density function (pdf) is a multivariate Student's T whose
+parameters are derived from the TP's properties:
+</p>
+<div class="sourceCode"><pre>pdf(x; df, index_points, mean_fn, kernel) = MultivariateStudentT(df, loc, K)
+K = (df - 2) / df  * (kernel.matrix(index_points, index_points) + jitter * eye(N))
+loc = (x - mean_fn(index_points))^T @ K @ (x - mean_fn(index_points))
+</pre></div>
+<p>where:
+</p>
+
+<ul>
+<li> <p><code>df</code> is the degrees of freedom parameter for the TP.
+</p>
+</li>
+<li> <p><code>index_points</code> are points in the index set over which the TP is defined,
+</p>
+</li>
+<li> <p><code>mean_fn</code> is a callable mapping the index set to the TP's mean values,
+</p>
+</li>
+<li> <p><code>kernel</code> is <code>PositiveSemidefiniteKernel</code>-like and represents the covariance
+function of the TP,
+</p>
+</li>
+<li> <p><code>jitter</code> is added to the diagonal to ensure positive definiteness up to
+machine precision (otherwise Cholesky-decomposition is prone to failure),
+</p>
+</li>
+<li> <p><code>eye(N)</code> is an N-by-N identity matrix.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a distribution instance.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li> <p><a href="https://www.cs.cmu.edu/~andrewgw/tprocess.pdf">Amar Shah, Andrew Gordon Wilson, and Zoubin Ghahramani. Student-t Processes as Alternatives to Gaussian Processes. In <em>Artificial Intelligence and Statistics</em>, 2014.</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>For usage examples see e.g. <code>tfd_sample()</code>, <code>tfd_log_prob()</code>, <code>tfd_mean()</code>.
+</p>
+<p>Other distributions: 
+<code>tfd_autoregressive()</code>,
+<code>tfd_batch_reshape()</code>,
+<code>tfd_bates()</code>,
+<code>tfd_bernoulli()</code>,
+<code>tfd_beta_binomial()</code>,
+<code>tfd_beta()</code>,
+<code>tfd_binomial()</code>,
+<code>tfd_categorical()</code>,
+<code>tfd_cauchy()</code>,
+<code>tfd_chi2()</code>,
+<code>tfd_chi()</code>,
+<code>tfd_cholesky_lkj()</code>,
+<code>tfd_continuous_bernoulli()</code>,
+<code>tfd_deterministic()</code>,
+<code>tfd_dirichlet_multinomial()</code>,
+<code>tfd_dirichlet()</code>,
+<code>tfd_empirical()</code>,
+<code>tfd_exp_gamma()</code>,
+<code>tfd_exp_inverse_gamma()</code>,
+<code>tfd_exponential()</code>,
+<code>tfd_gamma_gamma()</code>,
+<code>tfd_gamma()</code>,
+<code>tfd_gaussian_process_regression_model()</code>,
+<code>tfd_gaussian_process()</code>,
+<code>tfd_generalized_normal()</code>,
+<code>tfd_geometric()</code>,
+<code>tfd_gumbel()</code>,
+<code>tfd_half_cauchy()</code>,
+<code>tfd_half_normal()</code>,
+<code>tfd_hidden_markov_model()</code>,
+<code>tfd_horseshoe()</code>,
+<code>tfd_independent()</code>,
+<code>tfd_inverse_gamma()</code>,
+<code>tfd_inverse_gaussian()</code>,
+<code>tfd_johnson_s_u()</code>,
+<code>tfd_joint_distribution_named_auto_batched()</code>,
+<code>tfd_joint_distribution_named()</code>,
+<code>tfd_joint_distribution_sequential_auto_batched()</code>,
+<code>tfd_joint_distribution_sequential()</code>,
+<code>tfd_kumaraswamy()</code>,
+<code>tfd_laplace()</code>,
+<code>tfd_linear_gaussian_state_space_model()</code>,
+<code>tfd_lkj()</code>,
+<code>tfd_log_logistic()</code>,
+<code>tfd_log_normal()</code>,
+<code>tfd_logistic()</code>,
+<code>tfd_mixture_same_family()</code>,
+<code>tfd_mixture()</code>,
+<code>tfd_multinomial()</code>,
+<code>tfd_multivariate_normal_diag_plus_low_rank()</code>,
+<code>tfd_multivariate_normal_diag()</code>,
+<code>tfd_multivariate_normal_full_covariance()</code>,
+<code>tfd_multivariate_normal_linear_operator()</code>,
+<code>tfd_multivariate_normal_tri_l()</code>,
+<code>tfd_multivariate_student_t_linear_operator()</code>,
+<code>tfd_negative_binomial()</code>,
+<code>tfd_normal()</code>,
+<code>tfd_one_hot_categorical()</code>,
+<code>tfd_pareto()</code>,
+<code>tfd_pixel_cnn()</code>,
+<code>tfd_poisson_log_normal_quadrature_compound()</code>,
+<code>tfd_poisson()</code>,
+<code>tfd_power_spherical()</code>,
+<code>tfd_probit_bernoulli()</code>,
+<code>tfd_quantized()</code>,
+<code>tfd_relaxed_bernoulli()</code>,
+<code>tfd_relaxed_one_hot_categorical()</code>,
+<code>tfd_sample_distribution()</code>,
+<code>tfd_sinh_arcsinh()</code>,
+<code>tfd_skellam()</code>,
+<code>tfd_spherical_uniform()</code>,
+<code>tfd_student_t()</code>,
+<code>tfd_transformed_distribution()</code>,
+<code>tfd_triangular()</code>,
+<code>tfd_truncated_cauchy()</code>,
+<code>tfd_truncated_normal()</code>,
+<code>tfd_uniform()</code>,
+<code>tfd_variational_gaussian_process()</code>,
+<code>tfd_vector_diffeomixture()</code>,
+<code>tfd_vector_exponential_diag()</code>,
+<code>tfd_vector_exponential_linear_operator()</code>,
+<code>tfd_vector_laplace_diag()</code>,
+<code>tfd_vector_laplace_linear_operator()</code>,
+<code>tfd_vector_sinh_arcsinh_diag()</code>,
+<code>tfd_von_mises_fisher()</code>,
+<code>tfd_von_mises()</code>,
+<code>tfd_weibull()</code>,
+<code>tfd_wishart_linear_operator()</code>,
+<code>tfd_wishart_tri_l()</code>,
+<code>tfd_wishart()</code>,
+<code>tfd_zipf()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_repository_cas_local</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Local content-addressable storage (CAS) repository
+(an experimental feature).</h2>
+
+<h3>Description</h3>
+
+<p>Local content-addressable storage (CAS) repository.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_repository_cas_local(path = NULL, consistent = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>Character string, file path to the CAS repository
+where all the data object files will be stored. <code>NULL</code> to default to
+<code>file.path(tar_config_get("store"), "cas")</code> (usually <code>"_targets/cas/"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>consistent</code></td>
+<td>
+<p>Logical. Set to <code>TRUE</code> if the storage platform is
+strongly read-after-write consistent. Set to <code>FALSE</code> if the platform
+is not necessarily strongly read-after-write consistent.
+</p>
+<p>A data storage system is said to have strong read-after-write consistency
+if a new object is fully available for reading as soon as the write
+operation finishes. Many modern cloud services like Amazon S3 and
+Google Cloud Storage have strong read-after-write consistency,
+meaning that if you upload an object with a PUT request, then a
+GET request immediately afterwards will retrieve the precise
+version of the object you just uploaded.
+</p>
+<p>Some storage systems do not have strong read-after-write consistency.
+One example is network file systems (NFS). On a computing cluster,
+if one node creates a file on an NFS, then there is a delay before
+other nodes can access the new file. <code>targets</code> handles this situation
+by waiting for the new file to appear with the correct hash
+before attempting to use it in downstream computations.
+<code>consistent = FALSE</code> imposes a waiting period in which <code>targets</code>
+repeatedly calls the <code>exists</code> method until the file becomes available
+(at time intervals configurable with <code>tar_resources_network()</code>).
+These extra calls to <code>exists</code> may come with a
+little extra latency / computational burden,
+but on systems which are not strongly read-after-write consistent,
+it is the only way <code>targets</code> can safely use the current results
+for downstream computations.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Pass to the <code>repository</code> argument of <code>tar_target()</code> or
+<code>tar_option_set()</code> to use a local CAS system.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A character string from <code>tar_repository_cas()</code> which may be
+passed to the <code>repository</code> argument of <code>tar_target()</code> or
+<code>tar_option_set()</code> to use a local CAS system.
+</p>
+
+
+<h3>Content-addressable storage</h3>
+
+<p>Normally, <code>targets</code> organizes output data
+based on target names. For example,
+if a pipeline has a single target <code>x</code> with default settings,
+then <code>tar_make()</code> saves the output data to the file
+<code style="white-space: pre;">⁠_targets/objects/x⁠</code>. When the output of <code>x</code> changes, <code>tar_make()</code>
+overwrites <code style="white-space: pre;">⁠_targets/objects/x⁠</code>.
+In other words, no matter how many changes happen to <code>x</code>,
+the data store always looks like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+    objects/
+        x
+</pre></div>
+<p>By contrast, with content-addressable storage (CAS),
+<code>targets</code> organizes outputs based on the hashes of their contents.
+The name of each output file is its hash, and the
+metadata maps these hashes to target names. For example, suppose
+target <code>x</code> has <code>repository = tar_repository_cas_local("my_cas")</code>.
+When the output of <code>x</code> changes, <code>tar_make()</code> creates a new file
+inside <code style="white-space: pre;">⁠my_cas/⁠</code> without overwriting or deleting any other files
+in that folder. If you run <code>tar_make()</code> three different times
+with three different values of <code>x</code>, then storage will look like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+my_cas/
+    1fffeb09ad36e84a
+    68328d833e6361d3
+    798af464fb2f6b30
+</pre></div>
+<p>The next call to <code>tar_read(x)</code> uses <code>tar_meta(x)$data</code>
+to look up the current hash of <code>x</code>. If <code>tar_meta(x)$data</code> returns
+<code>"1fffeb09ad36e84a"</code>, then <code>tar_read(x)</code> returns the data from
+<code style="white-space: pre;">⁠my_cas/1fffeb09ad36e84a⁠</code>. Files <code style="white-space: pre;">⁠my_cas/68328d833e6361d3⁠</code> and
+and <code style="white-space: pre;">⁠my_cas/798af464fb2f6b30⁠</code> are left over from previous values of <code>x</code>.
+</p>
+<p>Because CAS accumulates historical data objects,
+it is ideal for data versioning and collaboration.
+If you commit the <code style="white-space: pre;">⁠_targets/meta/meta⁠</code> file to version control
+alongside the source code,
+then you can revert to a previous state of your pipeline with all your
+targets up to date, and a colleague can leverage your hard-won
+results using a fork of your code and metadata.
+</p>
+<p>The downside of CAS is the cost of accumulating many data objects
+over time. Most pipelines that use CAS
+should have a garbage collection system or retention policy
+to remove data objects when they no longer needed.
+</p>
+<p>The <code>tar_repository_cas()</code> function lets you create your own CAS system
+for <code>targets</code>. You can supply arbitrary custom methods to upload,
+download, and check for the existence of data objects. Your custom
+CAS system can exist locally on a shared file system or remotely
+on the cloud (e.g. in an AWS S3 bucket).
+See the "Repository functions" section and the documentation
+of individual arguments for advice on how
+to write your own methods.
+</p>
+<p>The <code>tar_repository_cas_local()</code> function has an example
+CAS system based on a local folder on disk.
+It uses <code>tar_cas_u()</code> for uploads,
+<code>tar_cas_d()</code> for downloads, and
+<code>tar_cas_e()</code> for existence.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other content-addressable storage: 
+<code>tar_repository_cas()</code>,
+<code>tar_repository_cas_local_gc()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  repository &lt;- tar_repository_cas_local("cas")
+  write_file &lt;- function(object) {
+    writeLines(as.character(object), "file.txt")
+    "file.txt"
+  }
+  list(
+    tar_target(x, c(2L, 4L), repository = repository),
+    tar_target(
+      y,
+      x,
+      pattern = map(x),
+      format = "qs",
+      repository = repository
+    ),
+    tar_target(z, write_file(y), format = "file", repository = repository)
+  )
+})
+tar_make()
+tar_read(y)
+tar_read(z)
+list.files("cas")
+tar_meta(any_of(c("x", "z")), fields = any_of("data"))
+})
+}
+</code></pre>
+
+
+</div>

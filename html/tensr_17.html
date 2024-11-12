@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ihop</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The incredible higher-order polar decomposition (IHOP).</h2>
+
+<h3>Description</h3>
+
+<p>Mmm, pancakes.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ihop(X, itermax = 100, tol = 10^-9, print_diff = TRUE, mode_rep = NULL,
+  use_sig = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>An array of numerics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itermax</code></td>
+<td>
+<p>An integer. The maximum number of iterations to perform during
+the optimization procedure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>A numeric. The algorithm will stop when the Frobenius norm of the
+difference of core arrays between subsequent iterations is below <code>tol</code>
+(for <code>use_sig = FALSE</code>) or when the absolute difference between the
+ratio of subsequent values of <code>sig</code> and 1 is less than <code>tol</code> (for
+<code>use_sig = TRUE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print_diff</code></td>
+<td>
+<p>A logical. Should we print the updates of the algorithm?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_rep</code></td>
+<td>
+<p>A vector. Which component matrices should be set to be the
+identity?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_sig</code></td>
+<td>
+<p>A logical. See <code>tol</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function will calculate the higher-order polar decomposition, a
+generalization of the polar decomposition to tensors. It generalizes a
+minimization formulation of the polar decomposition.
+</p>
+<p>Given an array <code>X</code>, <code>ihop</code> will output <code>L</code> a list of lower
+triangular matrices with positive diagonal elements and unit Frobenius norm,
+<code>R</code> a core array with certain orthogonality properties, and <code>sig</code> a
+total variation parameter. We have that <code>X</code> is equal to <code>sig *
+atrans(R, L)</code> up to numerical precision.
+</p>
+<p><code>t(solve(L[[i]])) %*% mat(R, i)</code> will have orthonormal rows for all
+<code>i</code>.
+</p>
+<p>For more details on the IHOP, see
+<a href="https://doi.org/10.1016/j.laa.2016.04.033">Gerard and Hoff (2016)</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>R</code> A core array which, in combination with <code>L</code>, has
+certain orthogonality properties.
+</p>
+<p><code>L</code> A list of lower triangular matrices with unit Frobenius norm.
+</p>
+<p><code>sig</code> A numeric.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Gerard, D., &amp; Hoff, P. (2016). A higher-order LQ
+decomposition for separable covariance models.
+<em>Linear Algebra and its Applications</em>, 505, 57-84.
+<a href="https://doi.org/10.1016/j.laa.2016.04.033">https://doi.org/10.1016/j.laa.2016.04.033</a>
+<a href="http://arxiv.org/pdf/1410.1094v1.pdf">http://arxiv.org/pdf/1410.1094v1.pdf</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Generate random data.
+p &lt;- c(2, 3, 4)
+X &lt;- array(stats::rnorm(prod(p)), dim = p)
+
+#Calculate IHOP.
+ihop_x &lt;- ihop(X)
+R &lt;- ihop_x$R
+L &lt;- ihop_x$L
+sig &lt;- ihop_x$sig
+
+#Reconstruct X
+trim(X - sig * atrans(R, L))
+
+#Orthogonality properties
+ortho_1 &lt;- t(solve(L[[1]])) %*% mat(R, 1)
+trim(ortho_1 %*% t(ortho_1))
+
+ortho_2 &lt;- t(solve(L[[2]])) %*% mat(R, 2)
+trim(ortho_2 %*% t(ortho_2))
+
+ortho_3 &lt;- t(solve(L[[3]])) %*% mat(R, 3)
+trim(ortho_3 %*% t(ortho_3))
+</code></pre>
+
+
+</div>

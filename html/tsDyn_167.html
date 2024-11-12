@@ -1,0 +1,238 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>VECM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of Vector error correction model (VECM)</h2>
+
+<h3>Description</h3>
+
+<p>Estimate a VECM by either Engle-Granger (2OLS) or Johansen (MLE) method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">VECM(
+  data,
+  lag,
+  r = 1,
+  include = c("const", "trend", "none", "both"),
+  beta = NULL,
+  estim = c("2OLS", "ML"),
+  LRinclude = c("none", "const", "trend", "both"),
+  exogen = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>multivariate time series (first row being first=oldest value)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>Number of lags (in the VECM representation, see Details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>Number of cointegrating relationships</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include</code></td>
+<td>
+<p>Type of deterministic regressors to include</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>for VECM only: user-specified cointegrating values, the cointegrating vector will be
+taken as: (1, -<code>beta</code>)
+If NULL, will be estimated using the estimator specified in <code>estim</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estim</code></td>
+<td>
+<p>Type of estimator: <code>2OLS</code> for the two-step approach or
+<code>ML</code> for Johansen MLE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>LRinclude</code></td>
+<td>
+<p>Type of deterministic regressors to include in the long-term
+relationship. Can also be a matrix with exogeneous regressors (2OLS only).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exogen</code></td>
+<td>
+<p>Inclusion of exogenous variables (first row being first=oldest
+value). Is either of same size than data (then automatically cut) or than
+end-sample.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is just a wrapper for the <code>lineVar</code>, with
+model="VECM".
+</p>
+<p>More comprehensive functions for VECM are in package <span class="pkg">vars</span>. 
+Differences with that package are: </p>
+ <dl>
+<dt>Engle-Granger
+estimator</dt>
+<dd>
+<p>The Engle-Granger estimator is available</p>
+</dd>
+<dt>Presentation</dt>
+<dd>
+<p>Results are printed in a different ways, using a matrix
+form</p>
+</dd> <dt>lateX export</dt>
+<dd>
+<p>The matrix of coefficients can be exported to
+latex, with or without standard-values and significance stars</p>
+</dd>
+<dt>Prediction</dt>
+<dd>
+<p>The <code>predict</code> method contains a <code>newdata</code>
+argument allowing to compute rolling forecasts.</p>
+</dd> </dl>
+<p>Two estimators are available: the Engle-Granger two step approach
+(<code>2OLS</code>) or the Johansen (<code>ML</code>). For the 2OLS, deterministic
+regressors (or external variables if <code>LRinclude</code> is of class numeric) can be
+added for the estimation of the cointegrating value and for the ECT. This is
+only working when the beta value is not pre-specified.
+</p>
+<p>The arg beta is the cointegrating value, the cointegrating vector will be
+taken as: (1, -beta).
+</p>
+<p>Note that the lag specification corresponds to the lags in the VECM
+representation, not in the VAR (as is done in package vars or software
+GRETL). Basically, a VAR with 2 lags corresponds here to a VECM with 1 lag.
+The lag can be set to 0, although some methods (irf, fevd) won't work for this case.
+</p>
+<p>#'The arg <code>beta</code> allows to specify constrained cointegrating values, leading to
+<code class="reqn">ECT= \beta^{'}X_{t-1}</code>. It should be specified as a <code class="reqn">K \times r</code> matrix. In case of
+<code class="reqn">r=1</code>, can also be specified as a vector. Note that the vector should be normalised, 
+with the first value to 1, and the next values showing the opposite sign in the long-run relationship <code class="reqn">- \beta</code>. 
+In case the vector has <code class="reqn">K-1</code> values, this is what <code>lineVar</code> is doing, setting <code class="reqn">(1, - \beta)</code>. 
+Note finally one should provide values for all
+the coefficients (eventually except for special case of r=1 and k-1), if you want to provide only part of the 
+parameters, and let the others be estimated, look at the functions in package urca. 
+</p>
+<p>The eigenvector matrix <code class="reqn">\beta</code> is normalised using the Phillips triangular representation, 
+see Hamilton (1994, p. 576) and Juselius (2006, p. 216), see <code>coefA</code> for more details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>VECM</code> (and higher classes <code>VAR</code> and
+<code>nlVar</code>) with methods: 
+</p>
+ 
+<dl>
+<dt>Usual methods:</dt>
+<dd>
+<p>Print, summary,  residuals, fitted, vcov</p>
+</dd> 
+<dt>Fit criteria:</dt>
+<dd>
+<p>AIC, BIC, <code>MAPE</code>, <code>mse</code>, <code>logLik</code>
+(the latter only for models estimated with MLE)</p>
+</dd> 
+<dt>Prediction:</dt>
+<dd>
+<p>predict and <code>predict_rolling</code></p>
+</dd> 
+<dt>coef extraction:</dt>
+<dd>
+<p>Extract cointegrating/adjustment coefficients, <code>coefA</code>, <code>coefB</code> <code>coefPI</code></p>
+</dd> 
+<dt>VAR/VECM methods:</dt>
+<dd>
+<p>Impulse response function (<code>irf.VECM</code>) and forecast error variance
+decomposition (<code>fevd</code>)</p>
+</dd> 
+<dt>LaTeX:</dt>
+<dd>
+<p>toLatex</p>
+</dd> </dl>
+<h3>Author(s)</h3>
+
+<p>Matthieu Stigler
+</p>
+
+
+<h3>References</h3>
+
+<p>Hamilton (1994) Time Series Analysis, Princeton University Press
+</p>
+<p>Juselius (2006) The Cointegrated VAR model, Oxford University Press
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>coefA</code>, <code>coefB</code> and <code>coefPI</code> 
+to extract the relevant parameter matrices. 
+</p>
+<p><code>lineVar</code> <code>TVAR</code> and <code>TVECM</code> for
+the corresponding threshold models. <code>linear</code> for the univariate AR
+model.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(zeroyld)
+data&lt;-zeroyld
+
+#Fit a VECM with Engle-Granger 2OLS estimator:
+vecm.eg&lt;-VECM(zeroyld, lag=2)
+
+#Fit a VECM with Johansen MLE estimator:
+vecm.jo&lt;-VECM(zeroyld, lag=2, estim="ML")
+
+#compare results with package vars:
+if(require(vars)) {
+ data(finland)
+ #check long coint values
+   all.equal(VECM(finland, lag=2, estim="ML", r=2)$model.specific$beta, 
+             cajorls(ca.jo(finland, K=3, spec="transitory"), r=2)  $beta, check.attributes=FALSE)
+# check OLS parameters
+  all.equal(t(coefficients(VECM(finland, lag=2, estim="ML", r=2))), 
+    coefficients(cajorls(ca.jo(finland, K=3, spec="transitory"), r=2)$rlm), check.attributes=FALSE)
+
+}
+
+
+##export to Latex
+toLatex(vecm.eg)
+toLatex(summary(vecm.eg))
+options("show.signif.stars"=FALSE)
+toLatex(summary(vecm.eg), parenthese="Pvalue")
+options("show.signif.stars"=TRUE)
+
+
+
+</code></pre>
+
+
+</div>

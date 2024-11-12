@@ -1,0 +1,105 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>emmeans_comparison</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use emmeans contrast methods with compare_levels</h2>
+
+<h3>Description</h3>
+
+<p>Convert emmeans contrast methods into comparison functions
+suitable for use with <code>compare_levels()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">emmeans_comparison(method, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>An emmeans-style contrast method. One of: (1) a string specifying
+the name of an emmeans contrast method, like
+<code>"pairwise"</code>, <code>"trt.vs.ctrl"</code>, <code>"eff"</code>; or (2) an emmeans-style contrast
+function itself, like emmeans::pairwise.emmc, emmeans::trt.vs.ctrl.emmc, etc,
+or a custom function that takes a vector of factor levels and returns a
+contrast matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed on to the contrast method.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given an emmeans contrast method name as a string
+(e.g., <code>"pairwise"</code>, <code>"trt.vs.ctrl"</code>, etc) or an emmeans-style contrast function
+(e.g., emmeans::pairwise.emmc, emmeans::trt.vs.ctrl.emmc, etc), <code>emmeans_comparison()</code>
+returns a new function that can be used in the <code>comparison</code> argument to <code>compare_levels()</code>
+to compute those contrasts.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A function that takes a single argument, <code>var</code>, containing a variable
+to generate contrasts for (e.g., a factor or a character vector) and returns
+a function that generates a list of named unevaluated expressions representing
+different contrasts of that variable. This function is suitable to be used
+as the <code>comparison</code> argument in <code>compare_levels()</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>compare_levels()</code>, emmeans::contrast-methods.
+See <code>gather_emmeans_draws()</code> for a different approach to using <code>emmeans</code> with
+<code>tidybayes</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(dplyr)
+library(ggplot2)
+
+data(RankCorr, package = "ggdist")
+
+# emmeans contrast methods return matrices. E.g. the "eff" comparison
+# compares each level to the average of all levels:
+emmeans:::eff.emmc(c("a","b","c","d"))
+
+# tidybayes::compare_levels() can't use a contrast matrix like this
+# directly; it takes arbitrary expressions of factor levels. But
+# we can use `emmeans_comparison` to generate the equivalent expressions:
+emmeans_comparison("eff")(c("a","b","c","d"))
+
+# We can use the "eff" comparison type with `compare_levels()` as follows:
+RankCorr %&gt;%
+  spread_draws(b[i,j]) %&gt;%
+  filter(j == 1) %&gt;%
+  compare_levels(b, by = i, comparison = emmeans_comparison("eff")) %&gt;%
+  median_qi()
+
+</code></pre>
+
+
+</div>

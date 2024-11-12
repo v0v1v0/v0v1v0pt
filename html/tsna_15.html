@@ -1,0 +1,215 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>paths</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Temporally Reachable Paths in a networkDynamic Object
+</h2>
+
+<h3>Description</h3>
+
+<p>Functions to search out the sequence and distances of vertices in a <code>networkDynamic</code> object reachable from an initial vertex by following paths constrained by edge timing.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tPath(nd, v, direction=c('fwd','bkwd'), 
+                 type=c('earliest.arrive', 'latest.depart'),
+                 start, end, active.default = TRUE, graph.step.time = 0)
+
+is.tPath(x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nd</code></td>
+<td>
+
+<p>networkDynamic object to be searched for temporal paths
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>v</code></td>
+<td>
+
+<p>integer id of the vertex to be used as the starting point of the search
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+
+<p>option indicating the temporal direction in which the network should be searched: <code>'fwd'</code> means search forwards in time and forward along edge directions, <code>'bkwd'</code> means search backwards in time and backwards along edge directions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+
+<p>option indicating the type of path (temporal constraint of the path) be searched for:
+</p>
+
+<ul>
+<li> <p><code>'earliest.arrive'</code> will find the paths that arrive first at the target vertices, 
+</p>
+</li>
+<li> <p><code>'latest.depart'</code> will find the paths that leave the source vertex at the latest possible time.  
+</p>
+</li>
+</ul>
+<p>Additional options will be added as implemented. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+
+<p>time at which to begin searching. Edges that terminate before this time will not be considered. If not specified, defaults to earliest time observed on the network according to <code>get.change.times</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+
+<p>time to end the path search.  Edges that onset on or after this time will not be considered in the path search.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>active.default</code></td>
+<td>
+
+<p>Boolean, default TRUE. Should edges with no timing information be considered active by default?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>graph.step.time</code></td>
+<td>
+
+<p>numeric.  How much time should be added for each edge traversal (graph hop)? Default is 0, meaning that path distances returned will be purely temporal and will not incorporate graph path distances and 'transmission' can cross multiple edges in a single instant.  A value of 1 would correspond to counting path distances like a traditional centrality score or discrete time simulation.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object to be tested for inheriting the class <code>'tPath'</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A <em>temporal path</em> in a dynamic network is a sequence of vertices and edges such that the onset times of successive elements are greater than or equal than those of the previous. In other words, the path is a directed traversal of the network that respects the constraints of edge activity spells and permits 'waiting' at intermediate vertices for 'future' edges to form.
+</p>
+<p>When set to use <code>direction='fwd'</code> , <code>type='earliest.arrive'</code> <code>tPath</code> performs a time-minimizing Dijkstra's style Depth First Search to find the set of vertices reachable on a <em>forward temporal path</em> from the initial seed vertex <code>v</code> while respecting the constraints of edge timing.The path found is a <em>earliest arriving</em> (in contrast to the <em>earliest leaving</em> or <em>quickest</em> or <em>latest arriving</em> path). When there are multiple equivalent paths only a single one will be arbitrarily returned.   NOTE THAT THE PATH-FINDING ALGORITHM WILL NOT GIVE CORRECT RESULTS IF ANY SPELLS CONTAIN VALUES LESS THAN 0.
+</p>
+<p>When set to <code>direction='bkwd'</code> and <code>type='latest.depart'</code> the path will be found by searching backwards in time from the <code>end</code> point. In other words, it returns the set of vertices that can reach <code>v</code>, along with latest possible departure times from those vertices.  Note that in this case the elapsed time values returned for <code>tdist</code> will be negative, indicating time measured backwards from the <code>end</code> bound. 
+</p>
+<p>When set to <code>type='fewest.steps'</code> the path returned will be a 'shortest' (fewest steps/graph hops) time-respecting path.  This would not be necessiairly the quickest or earliest route, but would pass across the fewest possible number of edges (requires the fewest number of transmission steps).   
+</p>
+<p>The <code>graph.step.time</code> parmeter allows specifying an explicit duration for edge traversals.  In this case the algorithm considers both the onset and terminus times of activity spells to ensure that suffecient time remains for an edge traversal to be made.  If <code>graph.step.time</code> &gt; the remaining duration of an edge's activity spell, the edge is considered non-traverseable. The primary use case for this parameter is to align the paths discovered with those that might be found by a discrete time transmission simulation in which a path can only spread a single graph hop per model timestep. 
+</p>
+<p>Vertex activity is currently ignored, and it is assumed that once a path reaches a vertex, all future edges from the vertex are accessible.  The path search can be constrained in time using the <code>start</code> and <code>end</code> parameters to bound the time span to be explored by the path search.
+</p>
+<p><code>'bwkd'</code> <code>'latest.depart'</code> is essentially the inverse of fwd earliest arrive.  It finds the latest time paths backwards from the initial seed vertex. This is the <em>latest-leaving</em> time. Note that the distance returned are positive, but represent the latest distance back in time from the <code>end</code> parameter time at which a vertex can reach <code>v</code>. 
+</p>
+<p>The <code>is.tPath</code> function checks if an object has the class <code>tPath</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Currently an object of class <code>tPath</code> which is essentially list with several elements providing information on the path found. 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>tdist</code></td>
+<td>
+<p>A numeric vector with length equal to network size in which each element contains the earliest/latest <em>temporal</em> distance at which the corresponding vertex could reach / be reached from the seed vertex. Values are elapsed time, as measured from the <code>start</code> parameter. Unreachable vertices are marked with <code>Inf</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>previous</code></td>
+<td>
+<p>A numeric vector with length equal to network size in which each element indicates the previous vertex along (a possible)  reachable path. Can be used to reconstruct the path tree. The initial vertex and unreachable vertices are marked with <code>0</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gsteps</code></td>
+<td>
+<p>A numeric vector (of length equal to network size) in which each element indicates the number of steps in the path (number of graph hops) to the vertex along the temporal path found starting at the seed vertex.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>the numeric start value that was used as the earliest bound for the path calculation (may not have been explicitly set)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+<p>the numerid end value that was used as the latest bound for the path calculation (may not have been explicitly set)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+<p>The direction <code>'fwd'</code> or <code>'bkwd'</code> of the path</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The type of temporal constraint for the path</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Temporal distances are in terms of time measured from the <code>start</code> parameter, so to recover the model times at which each vertex was reached for forward paths use <code>$tdist+start</code> and backward paths with <code>end- $tdist</code>. This is an early draft of the function, its name and arguments are subject to change before release. 
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Skye Bender-deMoll
+</p>
+
+
+<h3>References</h3>
+
+<p>Unpublished discussions with James Moody and Martina Morris and the statnet team.  
+</p>
+<p>Useful background information (for a slightly different algorithm) can be found in:
+B. Bui Xuan, Afonso Ferreira, Aubin Jarry. "Computing shortest, fastest, and foremost journeys
+in dynamic networks." RR-4589, 2002. https://hal.inria.fr/inria-00071996/document
+</p>
+<p>B. Bui Xuan, Afonso Ferreira, Aubin Jarry. Evolving graphs and least cost journeys in dynamic
+networks. WiOpt'03: Modeling and Optimization in Mobile, Ad Hoc and Wireless Networks,
+Mar 2003, Sophia Antipolis, France. 10 p., 2003
+https://hal.inria.fr/inria-00466676/document
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">require(networkDynamicData)
+data(hospital_contact)
+hosPath&lt;-tPath(hospital,v=1)
+</code></pre>
+
+
+</div>

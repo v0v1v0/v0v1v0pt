@@ -1,0 +1,279 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tso</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Automatic Procedure for Detection of Outliers</h2>
+
+<h3>Description</h3>
+
+<p>These functions are the interface to the automatic detection 
+procedure provided in this package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tso(y, xreg = NULL, cval = NULL, delta = 0.7, 
+  types = c("AO", "LS", "TC"), 
+  maxit = 1, maxit.iloop = 4, maxit.oloop = 4, cval.reduce = 0.14286, 
+  discard.method = c("en-masse", "bottom-up"), discard.cval = NULL, 
+  remove.method, remove.cval,
+  tsmethod = c("auto.arima", "arima"), 
+  args.tsmethod = NULL, logfile = NULL, check.rank = FALSE)
+
+tso0(x, xreg = NULL, cval = 3.5, delta = 0.7, 
+  types = c("AO", "LS", "TC"), maxit.iloop = 4, maxit.oloop = 4,
+  discard.method = c("en-masse", "bottom-up"), discard.cval = NULL,   
+  tsmethod = c("auto.arima", "arima"), args.tsmethod = NULL, 
+  logfile = NULL, check.rank = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>a time series where outliers are to be detected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a time series object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+<p>an optional matrix of regressors with the same number of rows as <code>y</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cval</code></td>
+<td>
+<p>a numeric. The critical value to determine the significance of each type of outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>types</code></td>
+<td>
+<p>a character vector indicating the type of outlier to be considered by the 
+detection procedure: innovational outliers (<code>"IO"</code>), additive outliers (<code>"AO"</code>), 
+level shifts (<code>"LS"</code>), temporary changes (<code>"TC"</code>) 
+and seasonal level shifts (<code>"SLS"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>a numeric. The maximum number of iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit.iloop</code></td>
+<td>
+<p>a numeric. The maximum number of iterations in the inner loop. 
+See <code>locate.outliers</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit.oloop</code></td>
+<td>
+<p>a numeric. The maximum number of iterations in the outer loop.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cval.reduce</code></td>
+<td>
+<p>a numeric. Factor by which <code>cval</code> is reduced 
+if the procedure is run on the adjusted series, if <code>maxit &gt; 1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discard.method</code></td>
+<td>
+<p>a character. The method used in the second stage of the procedure. 
+See <code>discard.outliers</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discard.cval</code></td>
+<td>
+<p>a numeric. The critical value to determine the significance of each 
+type of outlier in the second stage of the procedure (discard outliers). By default it is 
+set equal to <code>cval</code>. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove.method</code></td>
+<td>
+<p>deprecated, argument <code>discard.method</code> should be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove.cval</code></td>
+<td>
+<p>deprecated, argument <code>discard.cval</code> should be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tsmethod</code></td>
+<td>
+<p>a character. The framework for time series modelling. It basically is the name 
+of the function to which the arguments defined in <code>args.tsmethod</code> are referred to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>args.tsmethod</code></td>
+<td>
+<p>an optional list containing arguments to be passed to 
+the function invoking the method selected in <code>tsmethod</code>.</p>
+</td>
+</tr>
+</table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>logfile</code></td>
+<td>
+<p>a character or <code>NULL</code>. It is the path to the file where 
+tracking information is printed. Ignored if <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check.rank</code></td>
+<td>
+<p>logical. If <code>TRUE</code> the regressors are checked for perfect collinearity.
+The variables related to coefficients that turn out to be <code>NA</code> due to possible 
+perfect collinearity are discarded.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Five types of outliers can be considered. 
+By default: <code>"AO"</code> additive outliers, <code>"LS"</code> level shifts,
+and <code>"TC"</code> temporary changes are selected;
+<code>"IO"</code> innovative outliers and <code>"SLS"</code> seasonal level shifts 
+can also be selected.
+</p>
+<p><code>tso0</code> is mostly a wrapper function around the functions 
+<code>locate.outliers</code> and <code>discard.outliers</code>.
+</p>
+<p><code>tso</code> iterates around <code>tso0</code> first for the original series 
+and then for the adjusted series. The process stops if no additional outliers 
+are found in the current iteration or if <code>maxit</code> iterations are reached.
+</p>
+<p><code>tso0</code> is an auxiliar function (it is the workhorse for <code>tso</code> 
+but it is not intended to be called directly by the user,
+use <code>tso(maxit = 1, ...)</code> instead.
+<code>tso0</code> does not check the arguments since they are assumed to be passed 
+already checked by <code>tso</code>; the default value for <code>cval</code> is not based 
+on the sample size.
+For the time being, <code>tso0</code> is exported in the NAMESPACE since it 
+is convenient for debugging.
+</p>
+<p>If no value is specified for argument <code>cval</code> a default value based on the sample size 
+is used. Let <code class="reqn">n</code> be the number of observations. If <code class="reqn">n \le 50</code> then <code>cval</code> is set 
+equal to <code class="reqn">3.0</code>; If <code class="reqn">n \ge 450</code> then <code>cval</code> is set equal to <code class="reqn">4.0</code>;
+otherwise <code>cval</code> is set equal to <code class="reqn">3 + 0.0025 * (n - 50)</code>.
+</p>
+<p>If <code>tsmethod</code> is <code>NULL</code>, the following default arguments are used in the 
+function selected in <code>tsmethod</code>:
+<code>tsmethod = "auto.arima"</code>: <code>allowdrift = FALSE</code>, <code>ic = "bic"</code>;
+<code>tsmethod = "arima"</code> = <code>order = c(0, 1, 1)</code> <code>seasonal = list(order = c(0, 1, 1))</code>.
+</p>
+<p>If <code>args.tsmethod</code> is <code>NULL</code>, the following lists are used by default,
+respectively for each method:
+<code>auto.arima</code>: <code>list(allowdrift = FALSE, ic = "bic")</code>;
+<code>arima</code>: <code>list(order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1)))</code>.
+</p>
+<p><code>xreg</code> must be a matrix with time series attributes, <code>tsp</code>, 
+that must be the same same as <code>tsp(x)</code>. Column names are also compulsory.
+If there is only one regressor it may still have non-null dimension, i.e. 
+it must be a one-column matrix.
+</p>
+<p>The external regressors (if any) should be defined in the argument <code>xreg</code>.
+However, they may be also defined as an element in <code>args.tsmethod</code> since this list 
+is passed to function that fits the model. The function <code>tso</code> 
+deals with this possibility and returns a warning if <code>"xreg"</code> is defined 
+twice with different values. No checks are done in <code>tso0</code>.
+</p>
+<p>If <code>maxit = 1</code> the procedure is run only once on the original series.
+If <code>maxit &gt; 1</code> the procedure is run iteratively, first for the original series 
+and then for the adjusted series. The critical value used for the adjusted series 
+may be reduced by the factor <code>cval.reduce</code>, equal to <code class="reqn">0.14286</code> by default.
+The new critical value is defined as <code class="reqn">cval * (1 - cval.reduce)</code>.
+</p>
+<p>By default, the same critical value is used in the first stage of the procedure 
+(location of outliers) and in the second stage (discard outliers). 
+Under the framework of structural time series models I noticed that 
+the default critical value based on the sample size is too high, since all the 
+potential outliers located in the first stage were discarded in the second stage 
+(even in simulated series with known location of outliers). 
+In order to investigate this issue, the argument <code>discard.cval</code> has been added. 
+In this way a different critical value can be used in the second stage. 
+Alternatively, the argument <code>discard.cval</code> could be omitted and simply choose 
+a lower critical value, <code>cval</code>, to be used in both stages.
+However, using the argument <code>discard.cval</code> is more convenient since it avoids 
+locating too many outliers in the first stage.
+
+
+
+<code>discard.cval</code> is not affected by <code>cval.reduce</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class <code>tsoutliers</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Gómez, V. and Maravall, A. (1996). 
+<em>Programs TRAMO and SEATS. Instructions for the user</em>.
+Banco de España, Servicio de Estudios. Working paper number 9628.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf</a>
+</p>
+<p>Gómez, V. and Taguas, D. (1995). 
+<em>Detección y Corrección Automática de Outliers con TRAMO: 
+Una Aplicación al IPC de Bienes Industriales no Energéticos</em>.
+Ministerio de Economía y Hacienda. Document number D-95006.
+<a href="https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf">https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers</code>, <code>discard.outliers</code>, 
+<code>plot.tsoutliers</code>, <code>print.tsoutliers</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("hicp")
+tso(y = log(hicp[[1]]))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

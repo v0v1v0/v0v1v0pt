@@ -1,0 +1,232 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>interpolation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Spatial interpolation</h2>
+
+<h3>Description</h3>
+
+<p>Make a SpatRaster with interpolated values using a fitted model object of classes such as "gstat" (gstat package) or "Krige" (fields package), or any other model that has location (e.g., "x" and "y", or "longitude" and "latitude") as predictors (independent variables). If x and y are the only predictors, it is most efficient if you provide an empty (no associated data in memory or on file) SpatRaster for which you want predictions. If there are more spatial predictor variables, provide these as a SpatRaster in the first argument of the function. If you do not have x and y locations as implicit predictors in your model you should use <code>predict</code> instead.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+interpolate(object, model, fun=predict, ..., xyNames=c("x", "y"), 
+       factors=NULL, const=NULL, index = NULL, cores=1, cpkgs=NULL, 
+	   na.rm=FALSE, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>model object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function. Default value is "predict", but can be replaced with e.g. "predict.se" (depending on the class of <code>model</code>), or a custom function (see examples)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xyNames</code></td>
+<td>
+<p>character. variable names that the model uses for the spatial coordinates. E.g., <code>c("longitude", "latitude")</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factors</code></td>
+<td>
+<p>list with levels for factor variables. The list elements should be named with names that correspond to names in <code>object</code> such that they can be matched. This argument may be omitted for some models from which the levels can be extracted from the <code>model</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>const</code></td>
+<td>
+<p>data.frame. Can be used to add a constant for which there is no SpatRaster for model predictions. This is particularly useful if the constant is a character-like factor value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index</code></td>
+<td>
+<p>positive integer or NULL. Allows for selecting of the variable returned if the model returns multiple variables</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>positive integer. If <code>cores &gt; 1</code>, a 'parallel' package cluster with that many cores is created and used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cpkgs</code></td>
+<td>
+<p>character. The package(s) that need to be loaded on the nodes to be able to run the model.predict function (see examples in <code>predict</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, cells with <code>NA</code> values in the predictors are removed from the computation. This option prevents errors with models that cannot handle <code>NA</code> values. In most other cases this will not affect the output. An exception is when predicting with a model that returns predicted values even if some (or all!) variables are <code>NA</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>predict</code>, <code>interpIDW</code>, <code>interpNear</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+r &lt;- rast(system.file("ex/elev.tif", package="terra"))
+ra &lt;- aggregate(r, 10)
+xy &lt;- data.frame(xyFromCell(ra, 1:ncell(ra)))
+v &lt;- values(ra)
+i &lt;- !is.na(v)
+xy &lt;- xy[i,]
+v &lt;- v[i]
+
+## Not run: 
+library(fields) 
+tps &lt;- Tps(xy, v)
+p &lt;- rast(r)
+
+# use model to predict values at all locations
+p &lt;- interpolate(p, tps)
+p &lt;- mask(p, r)
+plot(p)
+
+### change "fun" from predict to fields::predictSE to get the TPS standard error
+## need to use "rast(p)" to remove the values
+se &lt;- interpolate(rast(p), tps, fun=predictSE)
+se &lt;- mask(se, r)
+plot(se)
+
+### another predictor variable, "e"
+e &lt;- (init(r, "x") * init(r, "y")) / 100000000
+names(e) &lt;- "e"
+
+z &lt;- as.matrix(extract(e, xy)[,-1])
+
+## add as another independent variable
+xyz &lt;- cbind(xy, z)
+tps2 &lt;- Tps(xyz, v)
+p2 &lt;- interpolate(e, tps2, xyOnly=FALSE)
+
+## as a linear covariate
+tps3 &lt;- Tps(xy, v, Z=z)
+
+## Z is a separate argument in Krig.predict, so we need a new function
+## Internally (in interpolate) a matrix is formed of x, y, and elev (Z)
+
+pfun &lt;- function(model, x, ...) {
+   predict(model, x[,1:2], Z=x[,3], ...)
+}
+p3 &lt;- interpolate(e, tps3, fun=pfun)
+
+
+#### gstat examples
+library(gstat)
+library(sp)
+data(meuse)
+
+### inverse distance weighted (IDW)
+r &lt;- rast(system.file("ex/meuse.tif", package="terra"))
+mg &lt;- gstat(id = "zinc", formula = zinc~1, locations = ~x+y, data=meuse, 
+            nmax=7, set=list(idp = .5))
+z &lt;- interpolate(r, mg, debug.level=0, index=1)
+z &lt;- mask(z, r)
+
+## with a model built with an `sf` object you need to provide custom function
+
+library(sf)
+sfmeuse &lt;- st_as_sf(meuse, coords = c("x", "y"), crs=crs(r))
+mgsf &lt;- gstat(id = "zinc", formula = zinc~1, data=sfmeuse,  nmax=7, set=list(idp = .5))
+
+interpolate_gstat &lt;- function(model, x, crs, ...) {
+	v &lt;- st_as_sf(x, coords=c("x", "y"), crs=crs)
+	p &lt;- predict(model, v, ...)
+	as.data.frame(p)[,1:2]
+}
+
+zsf &lt;- interpolate(r, mgsf, debug.level=0, fun=interpolate_gstat, crs=crs(r), index=1)
+zsf &lt;- mask(zsf, r)
+
+### kriging
+
+### ordinary kriging
+v &lt;- variogram(log(zinc)~1, ~x+y, data=meuse)
+mv &lt;- fit.variogram(v, vgm(1, "Sph", 300, 1))
+gOK &lt;- gstat(NULL, "log.zinc", log(zinc)~1, meuse, locations=~x+y, model=mv)
+OK &lt;- interpolate(r, gOK, debug.level=0)
+
+## universal kriging
+vu &lt;- variogram(log(zinc)~elev, ~x+y, data=meuse)
+mu &lt;- fit.variogram(vu, vgm(1, "Sph", 300, 1))
+gUK &lt;- gstat(NULL, "log.zinc", log(zinc)~elev, meuse, locations=~x+y, model=mu)
+names(r) &lt;- "elev"
+UK &lt;- interpolate(r, gUK, debug.level=0)
+
+## co-kriging
+gCoK &lt;- gstat(NULL, 'log.zinc', log(zinc)~1, meuse, locations=~x+y)
+gCoK &lt;- gstat(gCoK, 'elev', elev~1, meuse, locations=~x+y)
+gCoK &lt;- gstat(gCoK, 'cadmium', cadmium~1, meuse, locations=~x+y)
+gCoK &lt;- gstat(gCoK, 'copper', copper~1, meuse, locations=~x+y)
+coV &lt;- variogram(gCoK)
+plot(coV, type='b', main='Co-variogram')
+coV.fit &lt;- fit.lmc(coV, gCoK, vgm(model='Sph', range=1000))
+coV.fit
+plot(coV, coV.fit, main='Fitted Co-variogram')
+coK &lt;- interpolate(r, coV.fit, debug.level=0)
+plot(coK)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

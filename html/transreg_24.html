@@ -1,0 +1,260 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>transreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Penalised regression with multiple sets of prior effects</h2>
+
+<h3>Description</h3>
+
+<p>Implements penalised regression with multiple sets of prior effects
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">transreg(
+  y,
+  X,
+  prior,
+  family = "gaussian",
+  alpha = 1,
+  foldid = NULL,
+  nfolds = 10,
+  scale = "iso",
+  stack = "sim",
+  sign = FALSE,
+  switch = FALSE,
+  select = TRUE,
+  track = FALSE,
+  parallel = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>target: vector of length <code class="reqn">n</code> (see <code>family</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>features: matrix with <code class="reqn">n</code> rows (samples)
+and <code class="reqn">p</code> columns (features)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prior</code></td>
+<td>
+<p>prior coefficients: matrix with <code class="reqn">p</code> rows (features)
+and <code class="reqn">k</code> columns (sources of co-data)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>character "gaussian" (<code class="reqn">y</code>: real numbers),
+"binomial" (<code class="reqn">y</code>: 0s and 1s),
+or "poisson" (<code class="reqn">y</code>: non-negative integers);</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>elastic net mixing parameter (0=ridge, 1=lasso):
+number between 0 and 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>foldid</code></td>
+<td>
+<p>fold identifiers: vector of length <code class="reqn">n</code>
+with entries from 1 to 'nfolds'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfolds</code></td>
+<td>
+<p>number of folds: positive integer</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>character
+"exp" for exponential calibration or
+"iso" for isotonic calibration</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stack</code></td>
+<td>
+<p>character "sta" (standard stacking) or "sim" (simultaneous stacking)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sign</code></td>
+<td>
+<p>sign discovery procedure: logical
+(experimental argument)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>switch</code></td>
+<td>
+<p>choose between positive and negative weights for each source: logical</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p>select from sources: logical</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>track</code></td>
+<td>
+<p>show intermediate output (messages and plots): logical</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>logical (see cv.glmnet)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>* <code class="reqn">n</code>: sample size
+* <code class="reqn">p</code>: number of features
+* <code class="reqn">k</code>: number of sources
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of class 'transreg'.
+Rather than accessing its slots (see list below),
+it is recommended to use methods like
+[coef.transreg()] and [predict.transreg()].
+</p>
+<p>* slot 'base':
+Object of class 'glmnet'.
+Regression of outcome on features (without prior effects),
+with <code class="reqn">1 + p</code> estimated coefficients
+(intercept + features).
+</p>
+<p>* slot 'meta.sta':
+'NULL' or object of class 'glmnet'.
+Regression of outcome on cross-validated linear predictors
+from prior effects and estimated effects,
+with <code class="reqn">1 + k + 2</code> estimated coefficients
+(intercept + sources of co-data + lambda_min and lambda_1se).
+</p>
+<p>* slot 'meta.sim':
+'NULL' or object of class 'glmnet'.
+Regression of outcome on meta-features
+(cross-validated linear predictors from prior effects)
+and original features,
+with <code class="reqn">1 + k + p</code> estimated coefficients
+(intercept + sources of co-data + features).
+</p>
+<p>* slot 'prior.calib':
+Calibrated prior effects.
+Matrix with <code class="reqn">p</code> rows and <code class="reqn">k</code> columns.
+</p>
+<p>* slot 'data':
+Original data.
+List with slots 'y', 'X' and 'prior' (see arguments).
+</p>
+<p>* slot 'info':
+Information on call.
+Data frame with entries
+<code class="reqn">n</code>, <code class="reqn">p</code>, <code class="reqn">k</code>, 'family', 'alpha', 'scale' and 'stack'
+(see details and arguments).
+</p>
+
+
+<h3>References</h3>
+
+<p><a href="https://orcid.org/0000-0001-6498-4801">Armin Rauschenberger</a>,
+<a href="https://orcid.org/0000-0002-2327-3904">Zied Landoulsi</a>,
+<a href="https://orcid.org/0000-0003-4780-8472">Mark A. van de Wiel</a>,
+and
+<a href="https://orcid.org/0000-0003-3977-7469">Enrico Glaab</a>
+(2023).
+"Penalised regression with multiple sets of prior effects".
+<em>Bioinformatics</em> 39(12):btad680.
+<a href="https://doi.org/10.1093/bioinformatics/btad680">doi:10.1093/bioinformatics/btad680</a>.
+(Click
+<a href="https://orbilu.uni.lu/bitstream/10993/53227/1/transreg.pdf">here</a>
+to access PDF.)
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Methods for objects of class [transreg]
+include <code>coef</code> 
+and <code>predict</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#--- simulation ---
+n &lt;- 100; p &lt;- 500
+X &lt;- matrix(rnorm(n=n*p),nrow=n,ncol=p)
+beta &lt;- rnorm(p)*rbinom(n=p,size=1,prob=0.2)
+prior1 &lt;- beta + rnorm(p)
+prior2 &lt;- beta + rnorm(p)
+y_lin &lt;- X %*% beta
+y_log &lt;- 1*(y_lin &gt; 0)
+
+#--- single vs multiple priors ---
+one &lt;- transreg(y=y_lin,X=X,prior=prior1)
+two &lt;- transreg(y=y_lin,X=X,prior=cbind(prior1,prior2))
+weights(one)
+weights(two)
+
+
+#--- linear vs logistic regression ---
+lin &lt;- transreg(y=y_lin,X=X,prior=prior1,family="gaussian")
+log &lt;- transreg(y=y_log,X=X,prior=prior1,family="binomial")
+hist(predict(lin,newx=X)) # predicted values
+hist(predict(log,newx=X)) # predicted probabilities
+
+#--- ridge vs lasso penalisation ---
+ridge &lt;- transreg(y=y_lin,X=X,prior=prior1,alpha=0)
+lasso &lt;- transreg(y=y_lin,X=X,prior=prior1,alpha=1)
+# initial coefficients (without prior)
+plot(x=coef(ridge$base)[-1]) # dense
+plot(x=coef(lasso$base)[-1]) # sparse
+# final coefficients (with prior)
+plot(x=coef(ridge)$beta) # dense
+plot(x=coef(lasso)$beta) # not sparse
+
+#--- exponential vs isotonic calibration ---
+exp &lt;- transreg(y=y_lin,X=X,prior=prior1,scale="exp")
+iso &lt;- transreg(y=y_lin,X=X,prior=prior1,scale="iso")
+plot(x=prior1,y=exp$prior.calib)
+plot(x=prior1,y=iso$prior.calib)
+
+#--- standard vs simultaneous stacking ---
+prior &lt;- c(prior1[1:250],rep(0,250))
+sta &lt;- transreg(y=y_lin,X=X,prior=prior,stack="sta")
+sim &lt;- transreg(y=y_lin,X=X,prior=prior,stack="sim")
+plot(x=coef(sta$base)[-1],y=coef(sta)$beta)
+plot(x=coef(sim$base)[-1],y=coef(sim)$beta)
+
+</code></pre>
+
+
+</div>

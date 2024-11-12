@@ -1,0 +1,176 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ellipsoid_omr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute omission rate and statistical metrics for ellipsoid models.</h2>
+
+<h3>Description</h3>
+
+<p>Computes omission rate and statistical metrics for ellipsoid models using
+environmental data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ellipsoid_omr(
+  env_data,
+  env_test = NULL,
+  env_bg,
+  cf_level,
+  mve = TRUE,
+  proc = FALSE,
+  proc_iter = 100,
+  rseed = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>env_data</code></td>
+<td>
+<p>A data frame containing the environmental data used for
+modeling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env_test</code></td>
+<td>
+<p>A data frame with environmental testing data.
+Default is NULL. If provided, the selection process includes p-values
+from a binomial test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env_bg</code></td>
+<td>
+<p>Environmental data sampled from the calibration area to compute
+the approximated prevalence of the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cf_level</code></td>
+<td>
+<p>Proportion of points to be included in the ellipsoids.
+Equivalent to the error (E) proposed by Peterson et al. (2008).
+<a href="https://doi.org/10.1016/j.ecolmodel.2007.11.008">doi:10.1016/j.ecolmodel.2007.11.008</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mve</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, computes a minimum volume ellipsoid using
+<code>cov.rob</code> from the MASS package. If <code>FALSE</code>,
+uses the covariance matrix of the input data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proc</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, performs a partial ROC test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proc_iter</code></td>
+<td>
+<p>Numeric. Total number of iterations for the partial ROC
+bootstrap.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rseed</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, sets a random seed for the partial
+ROC bootstrap. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data.frame with the following columns:
+</p>
+
+<ul>
+<li>
+<p> "fitted_vars": Names of variables that were fitted.
+</p>
+</li>
+<li>
+<p> "nvars": Number of fitted variables
+</p>
+</li>
+<li>
+<p> "om_rate_train": Omission rate of the training data.
+</p>
+</li>
+<li>
+<p> "non_pred_train_ids": Row IDs of non-predicted training data.
+</p>
+</li>
+<li>
+<p> "om_rate_test"': Omission rate of the testing data.
+</p>
+</li>
+<li>
+<p> "non_pred_test_ids": Row IDs of non-predicted testing data.
+</p>
+</li>
+<li>
+<p> "bg_prevalence": Approximated prevalence of the model (see details).
+</p>
+</li>
+<li>
+<p> "pval_bin": p-value of the binomial test.
+</p>
+</li>
+<li>
+<p> "pval_proc": p-value of the partial ROC test.
+</p>
+</li>
+<li>
+<p> "env_bg_paucratio": Environmental partial AUC ratio value.
+</p>
+</li>
+<li>
+<p> "env_bg_auc": Environmental AUC value.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+#This code is for running in parallel
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(this_species = abtc,train_prop=0.7)
+abbg &lt;- tenm::bg_by_date(this_species = abex,
+                         buffer_ngbs=10,n_bg=50000)
+future::plan("sequential")
+edata &lt;- abex$env_data
+etrain &lt;- edata[edata$trian_test=="Train",c("bio_05","bio_06","bio_12")]
+etest &lt;- edata[edata$trian_test=="Test",c("bio_05","bio_06","bio_12")]
+bg &lt;- abbg$env_bg[,c("bio_05","bio_06","bio_12")]
+eor &lt;- ellipsoid_omr(env_data=etrain,env_test=etest,env_bg=bg,
+                     cf_level=0.975,proc=TRUE)
+eor
+
+</code></pre>
+
+
+</div>

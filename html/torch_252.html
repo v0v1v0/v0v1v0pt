@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_embedding_bag</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Embedding bag module</h2>
+
+<h3>Description</h3>
+
+<p>Computes sums, means or maxes of <code>bags</code> of embeddings, without instantiating the
+intermediate embeddings.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_embedding_bag(
+  num_embeddings,
+  embedding_dim,
+  max_norm = NULL,
+  norm_type = 2,
+  scale_grad_by_freq = FALSE,
+  mode = "mean",
+  sparse = FALSE,
+  include_last_offset = FALSE,
+  padding_idx = NULL,
+  .weight = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_embeddings</code></td>
+<td>
+<p>(int): size of the dictionary of embeddings</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>embedding_dim</code></td>
+<td>
+<p>(int): the size of each embedding vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_norm</code></td>
+<td>
+<p>(float, optional): If given, each embedding vector with norm larger than <code>max_norm</code>
+is renormalized to have norm <code>max_norm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm_type</code></td>
+<td>
+<p>(float, optional): The p of the p-norm to compute for the <code>max_norm</code> option. Default <code>2</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_grad_by_freq</code></td>
+<td>
+<p>(boolean, optional): If given, this will scale gradients by the inverse of frequency of
+the words in the mini-batch. Default <code>False</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode</code></td>
+<td>
+<p>(string, optional): <code>"sum"</code>, <code>"mean"</code> or <code>"max"</code>. Specifies the way to reduce the bag.
+<code>"sum"</code> computes the weighted sum, taking <code>per_sample_weights</code>  into consideration. <code>"mean"</code> computes
+the average of the values in the bag, <code>"max"</code> computes the max value over each bag.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sparse</code></td>
+<td>
+<p>(bool, optional): If <code>True</code>, gradient w.r.t. <code>weight</code> matrix will be a sparse tensor.
+See Notes for more details regarding sparse gradients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include_last_offset</code></td>
+<td>
+<p>(bool, optional): if <code>True</code>, <code>offsets</code> has one additional element, where the last element
+is equivalent to the size of <code>indices</code>. This matches the CSR format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding_idx</code></td>
+<td>
+<p>(int, optional):  If given, pads the output with the embedding vector at <code>padding_idx</code>
+(initialized to zeros) whenever it encounters the index.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.weight</code></td>
+<td>
+<p>(Tensor, optional) embeddings weights (in case you want to set it manually)</p>
+</td>
+</tr>
+</table>
+<h3>Attributes</h3>
+
+
+<ul><li>
+<p> weight (Tensor): the learnable weights of the module of shape (num_embeddings, embedding_dim)
+initialized from <code class="reqn">\mathcal{N}(0, 1)</code>
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+# an EmbeddingBag module containing 10 tensors of size 3
+embedding_sum &lt;- nn_embedding_bag(10, 3, mode = 'sum')
+# a batch of 2 samples of 4 indices each
+input &lt;- torch_tensor(c(1, 2, 4, 5, 4, 3, 2, 9), dtype = torch_long())
+offsets &lt;- torch_tensor(c(0, 4), dtype = torch_long())
+embedding_sum(input, offsets)
+# example with padding_idx
+embedding_sum &lt;- nn_embedding_bag(10, 3, mode = 'sum', padding_idx = 1)
+input &lt;- torch_tensor(c(2, 2, 2, 2, 4, 3, 2, 9), dtype = torch_long())
+offsets &lt;- torch_tensor(c(0, 4), dtype = torch_long())
+embedding_sum(input, offsets)
+# An EmbeddingBag can be loaded from an Embedding like so
+embedding &lt;- nn_embedding(10, 3, padding_idx = 2)
+embedding_sum &lt;- nn_embedding_bag$from_pretrained(embedding$weight,
+                                                 padding_idx = embedding$padding_idx,
+                                                 mode='sum')
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,213 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>permutation_test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Permutation test for finding group differences between persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>A non-parametric ANOVA-like test for persistence diagrams 
+(see <a href="https://link.springer.com/article/10.1007/s41468-017-0008-7">https://link.springer.com/article/10.1007/s41468-017-0008-7</a> for details). In each
+desired dimension a test statistic (loss) is calculated, then the group labels are shuffled
+for some number of iterations and the loss is recomputed each time thereby generating a null
+distribution for the test statistic. This test generates a p-value in each desired dimension.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">permutation_test(
+  ...,
+  iterations = 20,
+  p = 2,
+  q = 2,
+  dims = c(0, 1),
+  dist_mats = NULL,
+  group_sizes = NULL,
+  paired = FALSE,
+  distance = "wasserstein",
+  sigma = NULL,
+  rho = NULL,
+  num_workers = parallelly::availableCores(omit = 1),
+  verbose = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>lists of persistence diagrams which are either the output of persistent homology calculations like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>. Each list must contain at least 2 diagrams.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>the number of iterations for permuting group labels, default 20.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>a positive number representing the wasserstein power parameter, a number at least 1 (and Inf if using the bottleneck distance) and default 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>q</code></td>
+<td>
+<p>a finite number at least 1 for exponentiation in the Turner loss function, default 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dims</code></td>
+<td>
+<p>a non-negative integer vector of the homological dimensions in which the test is to be carried out, default c(0,1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist_mats</code></td>
+<td>
+<p>an optional list of precomputed distances matrices, one for each dimension, where the rows and columns would correspond to the unlisted groups of diagrams (in order), default NULL. If not NULL then no lists of diagrams need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_sizes</code></td>
+<td>
+<p>a vector of group sizes, one for each group, when 'dist_mats' is not NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paired</code></td>
+<td>
+<p>a boolean flag for if there is a second-order pairing between diagrams at the same index in different groups, default FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>a string which determines which type of distance calculation to carry out, either "wasserstein" (default) or "fisher".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>the positive bandwidth for the Fisher information metric, default NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If supplied, code execution is sequential.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>a boolean flag for if the time duration of the function call should be printed, default FALSE</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The test is carried out in parallel and optimized in order to not recompute already-calculated distances. As such, memory issues
+may occur when the number of persistence diagrams is very large. 
+Like in (<a href="https://github.com/hassan-abdallah/Statistical_Inference_PH_fMRI/blob/main/Abdallah_et_al_Statistical_Inference_PH_fMRI.pdf">https://github.com/hassan-abdallah/Statistical_Inference_PH_fMRI/blob/main/Abdallah_et_al_Statistical_Inference_PH_fMRI.pdf</a>)
+an option is provided for pairing diagrams between groups to reduce variance (in order to boost statistical power), and
+like it was suggested in the original paper functionality is provided for an arbitrary number of groups (not just 2).
+A small p-value in a dimension suggests that the groups are different (separated) in that dimension.
+If 'distance' is "fisher" then 'sigma' must not be NULL. TDAstats also has a 'permutation_test' function
+so care should be taken to use the desired function when using TDApplied with TDAstats. If 'dist_mats' is supplied
+then the sum of the elements of 'group_sizes' must equal the number of rows and columns of each of its elements.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list with the following elements:
+</p>
+
+<dl>
+<dt>dimensions</dt>
+<dd>
+<p>the input 'dims' argument.</p>
+</dd>
+<dt>permvals</dt>
+<dd>
+<p>a numeric vector of length 'iterations' with the permuted loss value for each iteration (permutation)</p>
+</dd>
+<dt>test_statisics</dt>
+<dd>
+<p>a numeric vector of the test statistic value in each dimension.</p>
+</dd>
+<dt>p_values</dt>
+<dd>
+<p>a numeric vector of the p-values in each dimension.</p>
+</dd>
+<dt>run_time</dt>
+<dd>
+<p>the run time of the function call, containing time units.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Robinson T, Turner K (2017). "Hypothesis testing for topological data analysis." <a href="https://link.springer.com/article/10.1007/s41468-017-0008-7">https://link.springer.com/article/10.1007/s41468-017-0008-7</a>.
+</p>
+<p>Abdallah H et al. (2021). "Statistical Inference for Persistent Homology applied to fMRI." <a href="https://github.com/hassan-abdallah/Statistical_Inference_PH_fMRI/blob/main/Abdallah_et_al_Statistical_Inference_PH_fMRI.pdf">https://github.com/hassan-abdallah/Statistical_Inference_PH_fMRI/blob/main/Abdallah_et_al_Statistical_Inference_PH_fMRI.pdf</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>independence_test</code> for an inferential test of independence for two groups of persistence diagrams.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two groups of diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  g1 &lt;- list(D1,D2)
+  g2 &lt;- list(D1,D2)
+
+  # run test in dimension 0 with 1 iteration, note that the TDA package function
+  # "permutation_test" can mask TDApplied's function, so we will specify explicitly
+  # which function we are using
+  perm_test &lt;- TDApplied::permutation_test(g1,g2,iterations = 1,
+                                           num_workers = 2,
+                                           dims = c(0))
+                                 
+  # repeat with precomputed distance matrix, gives similar results
+  # (same but the randomness of the permutations can give small differences)
+  # just much faster
+  D &lt;- distance_matrix(diagrams = list(D1,D2,D1,D2),dim = 0,
+                       num_workers = 2)
+  perm_test &lt;- TDApplied::permutation_test(dist_mats = list(D),group_sizes = c(2,2),
+                                           dims = c(0))
+}
+</code></pre>
+
+
+</div>

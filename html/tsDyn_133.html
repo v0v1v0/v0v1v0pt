@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SETAR</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Self Threshold Autoregressive model</h2>
+
+<h3>Description</h3>
+
+<p>Self Exciting Threshold AutoRegressive model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">setar(x, m, d=1, steps=d, series, mL, mM, mH, thDelay=0, mTh, thVar, th, trace=FALSE, 
+      nested=FALSE, include = c( "const", "trend","none", "both"), 
+      common=c("none", "include","lags", "both"), model=c("TAR", "MTAR"), ML=seq_len(mL), 
+      MM=seq_len(mM), MH=seq_len(mH),nthresh=1,trim=0.15, type=c("level", "diff", "ADF"),
+      restriction=c("none","OuterSymAll","OuterSymTh") )
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p> time series </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m, d, steps</code></td>
+<td>
+<p> embedding dimension, time delay, forecasting steps </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>series</code></td>
+<td>
+<p> time series name (optional) </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mL,mM, mH</code></td>
+<td>
+<p>autoregressive order for ‘low’ (mL) ‘middle’ (mM, only useful if nthresh=2) and ‘high’ (mH)regime (default values: m). Must be &lt;=m. Alternatively, you can specify <code>ML</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thDelay</code></td>
+<td>
+<p>'time delay' for the threshold variable (as multiple of embedding time delay d)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mTh</code></td>
+<td>
+<p>coefficients for the lagged time series, to obtain the threshold variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thVar</code></td>
+<td>
+<p>external threshold variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>th</code></td>
+<td>
+<p>threshold value (if missing, a search over a reasonable grid is tried)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>should additional infos be printed? (logical)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include</code></td>
+<td>
+<p>Type of deterministic regressors to include</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>common</code></td>
+<td>
+<p>Indicates which elements are common to all regimes: no, only the <code>include</code> variables, the lags or both</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ML,MM,MH</code></td>
+<td>
+<p>vector of lags for  order for ‘low’ (ML) ‘middle’ (MM, only useful if nthresh=2) and ‘high’ (MH)regime. Max must be &lt;=m</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Whether the threshold variable is taken in levels (TAR) or differences (MTAR)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nthresh</code></td>
+<td>
+<p>Number of threshold of the model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trim</code></td>
+<td>
+<p>trimming parameter indicating the minimal percentage of observations in each regime. Default to 0.15</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Whether the variable is taken is level, difference or a mix (diff y= y-1, diff lags) as in the ADF test</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restriction</code></td>
+<td>
+<p>Restriction on the threshold. <code>OuterSymAll</code> will take a symmetric threshold and symmetric coefficients for outer regimes. OuterSymTh currently unavailable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>Whether is this a nested call? (useful for correcting final model df)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Self Exciting Threshold AutoRegressive model.
+</p>
+<p style="text-align: center;"><code class="reqn">X_{t+s} = 
+  x_{t+s} = ( \phi_{1,0} + \phi_{1,1} x_t + \phi_{1,2} x_{t-d} + \dots +
+  \phi_{1,mL} x_{t - (mL-1)d} ) I( z_t \leq th) +
+  ( \phi_{2,0} + \phi_{2,1} x_t + \phi_{2,2} x_{t-d} + \dots + \phi_{2,mH}
+  x_{t - (mH-1)d} ) I(z_t &gt; th) + \epsilon_{t+steps}</code>
+</p>
+
+<p>with <var>z</var> the threshold variable. The threshold variable can alternatively be specified by (in that order):
+</p>
+
+<dl>
+<dt>thDelay</dt>
+<dd> <p><code>z[t] = x[t - thDelay*d ]</code> </p>
+</dd>
+<dt>mTh</dt>
+<dd> <p><code>z[t] = x[t] mTh[1] + x[t-d] mTh[2] + ... + x[t-(m-1)d] mTh[m]</code> </p>
+</dd>
+<dt>thVar</dt>
+<dd> <p><code>z[t] = thVar[t]</code> </p>
+</dd>
+</dl>
+<p>For fixed <code>th</code> and threshold variable, the model is linear, so
+<code>phi1</code> and <code>phi2</code> estimation can be done directly by CLS
+(Conditional Least Squares).
+Standard errors for phi1 and phi2 coefficients provided by the
+<code>summary</code> method for this model are taken from the linear
+regression theory, and are to be considered asymptotical.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>nlar</code>, subclass <code>setar</code>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p> Antonio, Fabio Di Narzo </p>
+
+
+<h3>References</h3>
+
+<p>Non-linear time series models in empirical finance, Philip Hans Franses and Dick van Dijk, Cambridge: Cambridge University Press (2000).
+</p>
+<p>Non-Linear Time Series: A Dynamical Systems Approach, Tong, H., Oxford: Oxford University Press (1990).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.setar</code> for details on plots produced for this model from the <code>plot</code> generic.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#fit a SETAR model, with threshold as suggested in Tong(1990, p 377)
+mod.setar &lt;- setar(log10(lynx), m=2, thDelay=1, th=3.25)
+mod.setar
+summary(mod.setar)
+
+## example in Tsay (2005)
+data(m.unrate)
+setar(diff(m.unrate), ML=c(2,3,4,12), MH=c(2,4,12), th=0.1, include="none")
+</code></pre>
+
+
+</div>

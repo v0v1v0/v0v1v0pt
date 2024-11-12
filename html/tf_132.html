@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tf_interpolate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Re-evaluate <code>tf</code>-objects on a new grid of argument values.</h2>
+
+<h3>Description</h3>
+
+<p>Change the internal representation of a <code>tf</code>-object so that it
+uses a different grid of argument values (<code>arg</code>). Useful for
+</p>
+
+<ul>
+<li>
+<p> thinning out dense grids to make data smaller
+</p>
+</li>
+<li>
+<p> filling out sparse grids to make derivatives/integrals and locating extrema
+or zero crossings more accurate (... <em>if</em> the interpolation works well ...)
+</p>
+</li>
+<li>
+<p> making irregular functional data into (more) regular data.
+</p>
+</li>
+</ul>
+<p>For <code>tfd</code>-objects, this is just syntactic sugar for <code>tfd(object, arg = arg)</code>.
+To inter/extrapolate more reliably and avoid <code>NA</code>s, call
+<code>tf_interpolate</code> with <code>evaluator = tf_approx_fill_extend</code>.<br>
+For <code>tfb</code>-objects, this re-evaluates basis functions on the new grid which can
+speed up subsequent computations if they all use that grid.
+NB: <strong>To reliably impute very irregular data on a regular, common grid,
+you'll be better off doing FPCA-based imputation or other model-based
+approaches in most cases.</strong>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tf_interpolate(object, arg, ...)
+
+## S3 method for class 'tfb'
+tf_interpolate(object, arg, ...)
+
+## S3 method for class 'tfd'
+tf_interpolate(object, arg, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an object inheriting from <code>tf</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arg</code></td>
+<td>
+<p>a vector of argument values on which to evaluate the functions in
+<code>object</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments handed over to <code>tfd</code> or <code>tfb</code>, for the
+construction of the returned object</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>tfd</code> or <code>tfb</code> object on the new grid given by <code>arg</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tf_rebase()</code>, which is more general.
+</p>
+<p>Other tidyfun inter/extrapolation functions: 
+<code>tf_approx_linear()</code>,
+<code>tf_evaluate()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# thinning out a densely observed tfd
+dense &lt;- tf_rgp(10, arg = seq(0, 1, length.out = 1001))
+less_dense &lt;- tf_interpolate(dense, arg = seq(0, 1, length.out = 101))
+dense
+less_dense
+# filling out sparse data (use a suitable evaluator-function!)
+sparse &lt;- tf_rgp(10, arg = seq(0, 5, length.out = 11))
+plot(sparse, points = TRUE)
+# change evaluator for better interpolation
+tfd(sparse, evaluator = tf_approx_spline) |&gt;
+  tf_interpolate(arg = seq(0, 5, length.out = 201)) |&gt;
+  lines(col = 2, lty = 2)
+
+set.seed(1860)
+sparse_irregular &lt;- tf_rgp(5) |&gt;
+  tf_sparsify(0.5) |&gt;
+  tf_jiggle()
+tf_interpolate(sparse_irregular, arg = seq(0, 1, length.out = 51))
+
+</code></pre>
+
+
+</div>

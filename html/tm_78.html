@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>readPDF</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read In a PDF Document</h2>
+
+<h3>Description</h3>
+
+<p>Return a function which reads in a portable document format (<abbr><span class="acronym">PDF</span></abbr>)
+document extracting both its text and its metadata.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">readPDF(engine = c("pdftools", "xpdf", "Rpoppler",
+                   "ghostscript", "Rcampdf", "custom"),
+        control = list(info = NULL, text = NULL))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>engine</code></td>
+<td>
+<p>a character string for the preferred <abbr><span class="acronym">PDF</span></abbr> extraction
+engine (see <b>Details</b>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>a list of control options for the engine with the named
+components <code>info</code> and <code>text</code> (see <b>Details</b>).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Formally this function is a function generator, i.e., it returns a function
+(which reads in a text document) with a well-defined signature, but can access
+passed over arguments (e.g., the preferred <abbr><span class="acronym">PDF</span></abbr> extraction
+<code>engine</code> and <code>control</code> options) via lexical scoping.
+</p>
+<p>Available <abbr><span class="acronym">PDF</span></abbr> extraction engines are as follows.
+</p>
+
+<dl>
+<dt><code>"pdftools"</code></dt>
+<dd>
+<p>(default) Poppler <abbr><span class="acronym">PDF</span></abbr> rendering library
+as provided by the functions <code>pdf_info</code> and
+<code>pdf_text</code> in package <span class="pkg">pdftools</span>.</p>
+</dd>
+<dt><code>"xpdf"</code></dt>
+<dd>
+<p>command line <code>pdfinfo</code> and
+<code>pdftotext</code> executables which must be installed and accessible on
+your system. Suitable utilities are provided by the Xpdf
+(<a href="http://www.xpdfreader.com/">http://www.xpdfreader.com/</a>) <abbr><span class="acronym">PDF</span></abbr> viewer or by the
+Poppler (<a href="https://poppler.freedesktop.org/">https://poppler.freedesktop.org/</a>) <abbr><span class="acronym">PDF</span></abbr> rendering
+library.</p>
+</dd>
+<dt><code>"Rpoppler"</code></dt>
+<dd>
+<p>Poppler <abbr><span class="acronym">PDF</span></abbr> rendering library as
+provided by the functions <code>PDF_info</code> and
+<code>PDF_text</code> in package <span class="pkg">Rpoppler</span>.</p>
+</dd>
+<dt><code>"ghostscript"</code></dt>
+<dd>
+<p>Ghostscript using ‘<span class="file">pdf_info.ps</span>’ and
+‘<span class="file">ps2ascii.ps</span>’.</p>
+</dd>
+<dt><code>"Rcampdf"</code></dt>
+<dd>
+<p>Perl CAM::PDF <abbr><span class="acronym">PDF</span></abbr> manipulation library
+as provided by the functions <code>pdf_info</code> and <code>pdf_text</code>
+in package <span class="pkg">Rcampdf</span>, available from the repository at
+<a href="http://datacube.wu.ac.at">http://datacube.wu.ac.at</a>.</p>
+</dd>
+<dt><code>"custom"</code></dt>
+<dd>
+<p>custom user-provided extraction engine.</p>
+</dd>
+</dl>
+<p>Control parameters for engine <code>"xpdf"</code> are as follows.
+</p>
+
+<dl>
+<dt><code>info</code></dt>
+<dd>
+<p>a character vector specifying options passed over to
+the <code>pdfinfo</code> executable.</p>
+</dd>
+<dt><code>text</code></dt>
+<dd>
+<p>a character vector specifying options passed over to
+the <code>pdftotext</code> executable.</p>
+</dd>
+</dl>
+<p>Control parameters for engine <code>"custom"</code> are as follows.
+</p>
+
+<dl>
+<dt><code>info</code></dt>
+<dd>
+<p>a function extracting metadata from a <abbr><span class="acronym">PDF</span></abbr>.
+The function must accept a file path as first argument and must return a
+named list with the components <code>Author</code> (as character string),
+<code>CreationDate</code> (of class <code>POSIXlt</code>), <code>Subject</code> (as
+character string), <code>Title</code> (as character string), and <code>Creator</code>
+(as character string).</p>
+</dd>
+<dt><code>text</code></dt>
+<dd>
+<p>a function extracting content from a <abbr><span class="acronym">PDF</span></abbr>.
+The function must accept a file path as first argument and must return a
+character vector.</p>
+</dd>
+</dl>
+<h3>Value</h3>
+
+<p>A <code>function</code> with the following formals:
+</p>
+
+<dl>
+<dt><code>elem</code></dt>
+<dd>
+<p>a named list with the component <code>uri</code> which must
+hold a valid file name.</p>
+</dd>
+<dt><code>language</code></dt>
+<dd>
+<p>a string giving the language.</p>
+</dd>
+<dt><code>id</code></dt>
+<dd>
+<p>Not used.</p>
+</dd>
+</dl>
+<p>The function returns a <code>PlainTextDocument</code> representing the text
+and metadata extracted from <code>elem$uri</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Reader</code> for basic information on the reader infrastructure
+employed by package <span class="pkg">tm</span>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">uri &lt;- paste0("file://",
+              system.file(file.path("doc", "tm.pdf"), package = "tm"))
+engine &lt;- if(nzchar(system.file(package = "pdftools"))) {
+    "pdftools" 
+} else {
+    "ghostscript"
+}
+reader &lt;- readPDF(engine)
+pdf &lt;- reader(elem = list(uri = uri), language = "en", id = "id1")
+cat(content(pdf)[1])
+VCorpus(URISource(uri, mode = ""),
+        readerControl = list(reader = readPDF(engine = "ghostscript")))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trajmsm_ipw</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Marginal Structural Model and Latent Class of Growth Analysis estimated with IPW</h2>
+
+<h3>Description</h3>
+
+<p>Estimate parameters of LCGA-MSM using IPW.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trajmsm_ipw(
+  formula1,
+  formula2,
+  family,
+  identifier,
+  treatment,
+  covariates,
+  baseline,
+  obsdata,
+  numerator = "stabilized",
+  include_censor = FALSE,
+  censor,
+  weights = NULL,
+  treshold = 0.99
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula1</code></td>
+<td>
+<p>Specification of the model for the outcome to be fitted for a binomial or gaussian distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula2</code></td>
+<td>
+<p>Specification of the model for the outcome to be fitted for a survival outcome.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>Specification of the error distribution and link function to be used in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>identifier</code></td>
+<td>
+<p>Name of the column of the unique identifier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment</code></td>
+<td>
+<p>Time-varying treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covariates</code></td>
+<td>
+<p>Names of the time-varying covariates (should be a list).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline</code></td>
+<td>
+<p>Name of the baseline covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obsdata</code></td>
+<td>
+<p>Dataset to be used in the analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>numerator</code></td>
+<td>
+<p>Type of weighting ("stabilized" or "unstabilized").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include_censor</code></td>
+<td>
+<p>Logical, if TRUE, includes censoring.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>censor</code></td>
+<td>
+<p>Name of the censoring variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>A vector of estimated weights. If NULL, the weights are computed by the function <code>IPW</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treshold</code></td>
+<td>
+<p>For weight truncation.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Provides a matrix of estimates for LCGA-MSM, obtained using IPW.
+</p>
+<p>Provides a matrix of estimates for LCGA-MSM, obtained using IPW.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+obsdata_long = gendata(n = 1000, format = "long", total_followup = 6, seed = 845)
+years &lt;- 2011:2016
+baseline_var &lt;- c("age","sex")
+variables &lt;- c("hyper", "bmi")
+covariates &lt;- lapply(years, function(year) {
+paste0(variables, year)})
+treatment_var &lt;- paste0("statins", 2011:2016)
+formula_treatment = as.formula(cbind(statins, 1 - statins) ~ time)
+restraj = build_traj(obsdata = obsdata_long, number_traj = 3,
+formula = formula_treatment, identifier = "id")
+datapost = restraj$data_post
+trajmsm_long &lt;- merge(obsdata_long, datapost, by = "id")
+    AggFormula &lt;- as.formula(paste("statins", "~", "time", "+", "class"))
+    AggTrajData &lt;- aggregate(AggFormula, data = trajmsm_long, FUN = mean)
+    AggTrajData
+trajmsm_long$ipw_group &lt;- relevel(trajmsm_long$class, ref = "1")
+obsdata = reshape(data = trajmsm_long, direction = "wide", idvar = "id",
+v.names = c("statins","bmi","hyper"), timevar = "time", sep ="")
+formula = paste0("y ~", paste0(treatment_var,collapse = "+"), "+",
+                paste0(unlist(covariates), collapse = "+"),"+",
+                paste0(baseline_var, collapse = "+"))
+
+resmsm_ipw = trajmsm_ipw(formula1 = as.formula("y ~ ipw_group"),
+           identifier = "id", baseline = baseline_var, covariates = covariates,
+           treatment = treatment_var, family = "binomial",
+           obsdata = obsdata,numerator = "stabilized", include_censor = FALSE, treshold = 0.99)
+resmsm_ipw
+
+</code></pre>
+
+
+</div>

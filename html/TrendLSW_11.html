@@ -1,0 +1,449 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TLSW</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate Trend and Spectrum of Trend Locally Stationary Wavelet Process</h2>
+
+<h3>Description</h3>
+
+<p>Using wavelet-based methods, this function estimates the trend and evolutionary
+wavelet spectrum (EWS) of a nonstationary time series.
+</p>
+<p>Two methods are implemented (see references), the direct estimator (<code>T.est.type="linear"</code> and
+<code>S.do.diff=FALSE</code>), and the difference estimator (<code>T.est.type="nonlinear"</code>) and <code>S.do.diff=TRUE</code>)
+The defaults give the direct estimator.
+</p>
+<p>All the defaults are set carefully.  Key times to change defaults are
+</p>
+
+<ul>
+<li>
+<p> if the data contains "cusps", then the difference estimator is preferred.
+</p>
+</li>
+<li>
+<p> to assess stability of the estimate to the wavelet, change the wavelet number <code>T.filter.number</code> and
+<code>S.filter.number</code> and/or the wavelet type <code>T.family</code> and <code>S.family</code>, see details.
+</p>
+</li>
+</ul>
+<p>The arguments affecting trend are preceded by <code>T.</code> and those affecting spectral estimation are preceded
+by <code>S.</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TLSW(
+  x,
+  do.trend.est = TRUE,
+  do.spec.est = TRUE,
+  T.est.type = "linear",
+  T.filter.number = 4,
+  T.family = "DaubExPhase",
+  T.transform = "nondec",
+  T.boundary.handle = TRUE,
+  T.max.scale = floor(log2(length(x)) * 0.7),
+  T.thresh.type = "hard",
+  T.thresh.normal = TRUE,
+  T.CI = FALSE,
+  T.sig.lvl = 0.05,
+  T.reps = 200,
+  T.CI.type = "normal",
+  T.lacf.max.lag = floor(10 * (log10(length(x)))),
+  S.filter.number = 4,
+  S.family = "DaubExPhase",
+  S.smooth = TRUE,
+  S.smooth.type = "mean",
+  S.binwidth = floor(6 * sqrt(length(x))),
+  S.max.scale = floor(log2(length(x)) * 0.7),
+  S.boundary.handle = TRUE,
+  S.inv.mat = NULL,
+  S.do.diff = FALSE,
+  S.lag = 1,
+  S.diff.number = 1,
+  gen.filter.number = S.filter.number,
+  gen.family = S.family
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The time series you wish to analyse.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.trend.est</code></td>
+<td>
+<p>Logical variable, indicating whether trend estimation is to be performed on the time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.spec.est</code></td>
+<td>
+<p>Logical variable, indicating whether spectral estimation is to be performed on the time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.est.type</code></td>
+<td>
+<p>String indicating type of wavelet thresholding used. Can be <code>"linear"</code> (default), which means
+that all non-boundary wavelet coefficients are set to zero, or <code>"nonlinear"</code>, where
+each wavelet coefficient is thresholded using a time-varying, noise-dependent threshold.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.filter.number</code></td>
+<td>
+<p>The index number for the wavelet used for trend estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.family</code></td>
+<td>
+<p>The family of the wavelet used for trend estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.transform</code></td>
+<td>
+<p>String giving the type of wavelet transform used for trend estimation.
+Can be <code>"dec"</code>, in which case a standard (decimated) wavelet transform is used, or <code>"nondec"</code> (default),
+in which case a nondecimated transform is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.boundary.handle</code></td>
+<td>
+<p>Logical variable, if <code>TRUE</code>, the time series is
+boundary corrected when estimating the trend.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.max.scale</code></td>
+<td>
+<p>Integer variable, selects the number of scales of the wavelet transform to
+apply thresholding to for trend estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.thresh.type</code></td>
+<td>
+<p>String variable, used only if <code>T.est.type = "nonlinear"</code>; the type of
+thresholding function used in the trend estimation. Can be
+<code>"soft"</code> or <code>"hard"</code> (default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.thresh.normal</code></td>
+<td>
+<p>Logical variable, used only if <code>T.est.type = "nonlinear"</code>;
+if <code>TRUE</code>, uses a threshold assuming the data are normally
+distributed. If <code>FALSE</code>, uses a larger threshold to reflect non-normality.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.CI</code></td>
+<td>
+<p>Logical variable. If <code>TRUE</code>, a <code>(1-T.sig.lvl)</code> pointwise confidence interval is
+computed for the trend estimate. When <code>T.transform = "dec"</code> and <code>T.est.type = "linear"</code>, this is
+computed using the asymptotic distribution of the trend estimator.
+Otherwise, it is computed via bootstrapping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.sig.lvl</code></td>
+<td>
+<p>Used only if <code>T.CI = TRUE</code>; a numeric value
+(<code>0 &lt;= T.sig.lvl &lt;= 1</code>) with which a <code>(1-T.sig.lvl)</code> pointwise
+confidence interval for the trend estimate is generated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.reps</code></td>
+<td>
+<p>Used only if <code>T.transform = "nondec"</code> and  <code>T.CI = TRUE</code>; the number of bootstrap
+replications used to calculate the confidence interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.CI.type</code></td>
+<td>
+<p>Used only if <code>T.transform = "nondec"</code> and <code>T.CI = TRUE</code>; the type of confidence
+interval computed. Can be <code>"percentile"</code>, in which case empirical percentiles are used, or
+<code>"normal"</code> (default), in which case the (symmetric) normal approximation is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.lacf.max.lag</code></td>
+<td>
+<p>Used only if <code>T.est.type = "linear"</code> and  <code>T.CI = TRUE</code>;
+the maximum lag of the autocovariance to compute needed for calculating the asymptotic confidence interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.filter.number</code></td>
+<td>
+<p>The index number for the wavelet used for spectrum estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.family</code></td>
+<td>
+<p>The family of the wavelet used for spectrum estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.smooth</code></td>
+<td>
+<p>A logical variable to indicate whether smoothing is performed on the wavelet periodogram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.smooth.type</code></td>
+<td>
+<p>String indicating which type of smoothing to use on wavelet periodogram.
+Can be one of
+</p>
+
+<ul>
+<li>
+<p><code>"mean"</code>: (default) running mean smoother.
+</p>
+</li>
+<li> <p><code>"median"</code>: running median smoother.
+</p>
+</li>
+<li>
+<p><code>"epan"</code>: Epanechnikov kernel smoother.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.binwidth</code></td>
+<td>
+<p>The bin width of the smoother used to smooth
+the raw wavelet periodogram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.max.scale</code></td>
+<td>
+<p>The coarsest wavelet scale used to estimate the spectrum.
+Should be a positive integer less than <code class="reqn">J</code>, where <code class="reqn">n=2^J</code> is the length of the
+time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.boundary.handle</code></td>
+<td>
+<p>Logical variable, if TRUE, the time series is
+boundary corrected, to get a more accurate spectrum estimate at the
+boundaries of the times series. If FALSE, no boundary correction is applied.
+Recommended to use TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.inv.mat</code></td>
+<td>
+<p>The user can pre-calculate and supply the appropriate
+correction matrix used to correct the raw wavelet periodogram. If left blank,
+then the correction matrix is calculated when performing spectral estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.do.diff</code></td>
+<td>
+<p>Logical variable, indicating if the time series is to be
+differenced before spectral estimation is performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.lag</code></td>
+<td>
+<p>The lag of differencing used, only applicable if <code>S.do.dif = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S.diff.number</code></td>
+<td>
+<p>The number of differencing operations performed,
+only applicable if <code>S.do.diff = TRUE</code>. A first difference is strongly recommended as default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gen.filter.number</code></td>
+<td>
+<p>The index number for the wavelet that generates the
+stochastic component of the time series. For the "DaubExPhase" family, the filter number can be between
+1 to 10. For the "DaubLeAsymm" family, the filter number can be between 4 to 10.
+Recommended to leave as the default, set to the same as <code>S.filter.number</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gen.family</code></td>
+<td>
+<p>The family of the generating wavelet. It is recommended to
+use either the Daubechies Extremal Phase family, or the Daubechies Least
+Asymmetric family, corresponding to the "DaubExPhase" or the "DaubLeAsymm"
+options. Recommended to leave as the default, set to the same as <code>S.family</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The fitted <em>trend LSW process</em> <code class="reqn">X_{t,n} </code>, <code class="reqn">t = 0, \ldots , n-1</code>, and <code class="reqn">n = 2^J</code> is
+a doubly-indexed stochastic process with the following representation in the mean square sense:
+</p>
+<p style="text-align: center;"><code class="reqn">X_{t} = T_t + \varepsilon_t = T_t + \sum_{j = 1}^{\infty} \sum_{k \in \mathbb{Z}} w_{j,k;n} \psi_{j,k} (t) \xi_{j,k} ,</code>
+</p>
+
+<p>where <code class="reqn">\{\xi_{j,k} \}</code> is a random, uncorrelated, zero-mean orthonormal increment sequence,
+<code class="reqn">\{w_{j,k;n} \}</code> is a set of amplitudes, and <code class="reqn">\{\psi_{j, k} \}_{j,k}</code> is a set of discrete
+non-decimated wavelets.  The trend component <code class="reqn">T_t := T(t/n)</code> is assumed to be a general smooth (Holder)
+continuous function. See the referenced papers for full details of the model.
+The key considerations for users are:
+</p>
+
+<ul>
+<li>
+<p> The model assumes smooth trend and spectral components.  The larger the <code>T.filter.number</code>
+the smoother the assumption on the underlying trend and similarly for <code>S.filter.number</code> and the
+spectral estimate.
+</p>
+</li>
+<li>
+<p> The choice of wavelet (smoothness assumption) does affect the estimation so one should check the
+robustness of their conclusions to the choice of wavelet (<code>T.filter.number</code> and <code>S.filter.number</code>).
+This is akin to selecting the kernel in nonparametric modelling.
+</p>
+</li>
+<li>
+<p> The underlying methods are designed for signals of length <code class="reqn">n=2^J</code> and so modifications
+are made to signals which are not of this form.  A natural approach is to extend the data (at both ends)
+and the default approach does this by reflection with a trend correction to avoid discontinuities.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>An object of class <code>"TLSW"</code>, a list that contains the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Input data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.spec.est</code></td>
+<td>
+<p>Input parameter, logical variable specifying if spectral estimation was performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spec.est</code></td>
+<td>
+<p>A list object, returned if <code>do.spec.est = TRUE</code>. Contains relevant input parameters
+and the following fields related to the spectrum estimate:
+</p>
+
+<ul>
+<li> <p><code>S</code>: The evolutionary wavelet spectral (smoothed and corrected) estimate of the input data. This object is of
+class wd and so can be plotted and printed in the usual way using wavethresh
+functionality.
+</p>
+</li>
+<li> <p><code>WavPer</code>: The raw wavelet periodogram of the input
+data. The EWS estimate (S, above) is the smoothed corrected version of this raw
+wavelet periodogram.
+</p>
+</li>
+<li> <p><code>SmoothWavPer</code>: The smoothed, but uncorrected raw
+wavelet periodogram of the input data.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.trend.est</code></td>
+<td>
+<p>Input parameter, logical variable specifying if trend estimation was performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trend.est</code></td>
+<td>
+<p>A list object, returned if <code>do.trend.est = TRUE</code>. Contains relevant input parameters
+and the following fields related to the trend estimate:
+</p>
+
+<ul>
+<li> <p><code>T</code>: A vector of length <code>length(x)</code> containing the trend estimate.
+</p>
+</li>
+<li> <p><code>lower.CI</code>: Returned if <code>T.CI = TRUE</code>. The lower limit of the pointwise confidence interval.
+</p>
+</li>
+<li> <p><code>upper.CI</code>: Returned if <code>T.CI = TRUE</code>. The upper limit of the pointwise confidence interval.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>McGonigle, E. T., Killick, R., and Nunes, M. (2022a). Trend
+locally stationary wavelet processes. <em>Journal of Time Series
+Analysis</em>, 43(6), 895-917.
+</p>
+<p>McGonigle, E. T., Killick, R., and Nunes, M. (2022b). Modelling
+time-varying first and second-order structure of time series via wavelets
+and differencing. <em>Electronic Journal of Statistics</em>, 6(2), 4398-4448.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.TLSW</code>, <code>summary.TLSW</code>, <code>print.TLSW</code>, <code>wd</code>, <code>ewspec3</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># simulates an example time series and estimates its trend and evolutionary wavelet spectrum
+
+spec &lt;- matrix(0, nrow = 10, ncol = 2^10)
+
+spec[1, ] &lt;- seq(from = 1, to = 10, length = 1024)
+
+trend &lt;- sin(pi * (seq(from = 0, to = 4, length = 1024)))
+
+set.seed(1)
+
+x &lt;- TLSWsim(trend = trend, spec = spec)
+
+plot.ts(x)
+
+x.TLSW &lt;- TLSW(x)
+
+summary(x.TLSW)
+
+plot(x.TLSW) # by default plots both the trend and spectrum estimates
+
+</code></pre>
+
+
+</div>

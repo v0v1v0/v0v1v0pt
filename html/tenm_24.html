@@ -1,0 +1,75 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tdf2swd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Temporal data.frame to Samples With Data format</h2>
+
+<h3>Description</h3>
+
+<p>Converts a temporal data.frame to Samples With Data (SWD) table for use
+with other modeling platforms such as MaxEnt.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tdf2swd(this_species, sp_name = "sp")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>this_species</code></td>
+<td>
+<p>An object of class sp.temporal.env
+(see <code>ex_by_date</code> ) or sp.temporal.bg
+(see <code>bg_by_date</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sp_name</code></td>
+<td>
+<p>Character vector specifying the species name.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data.frame formatted as Samples With Data (SWD) table.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(this_species = abtc,
+                         train_prop=0.7)
+abbg &lt;- tenm::bg_by_date(abex,
+                         buffer_ngbs=10,n_bg=50000)
+future::plan("sequential")
+# SWD table for occurrence records
+occ_swd &lt;- tdf2swd(this_species=abex,sp_name="abro_gram")
+# SWD table for background data
+bg_swd &lt;- tdf2swd(this_species=abbg)
+
+</code></pre>
+
+
+</div>

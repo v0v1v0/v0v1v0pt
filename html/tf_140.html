@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tf_smooth</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Simple smoothing of <code>tf</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>Apply running means or medians, <code>lowess</code> or Savitzky-Golay
+filtering to smooth functional data. This does nothing for <code>tfb</code>-objects,
+which should be smoothed by using a smaller basis / stronger penalty.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tf_smooth(x, ...)
+
+## S3 method for class 'tfb'
+tf_smooth(x, verbose = TRUE, ...)
+
+## S3 method for class 'tfd'
+tf_smooth(
+  x,
+  method = c("lowess", "rollmean", "rollmedian", "savgol"),
+  verbose = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a <code>tf</code> object containing functional data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments for the respective <code>method</code>. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>give lots of diagnostic messages? Defaults to TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>one of "lowess" (see <code>stats::lowess()</code>), "rollmean",
+"rollmedian" (see <code>zoo::rollmean()</code>) or "savgol" (see <code>pracma::savgol()</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tf_smooth.tfd</code> overrides/automatically sets some defaults of the
+used methods:
+</p>
+
+<ul>
+<li> <p><strong><code>lowess</code></strong> uses a span parameter of <code>f</code> = 0.15 (instead of 0.75)
+by default.
+</p>
+</li>
+<li> <p><strong><code>rollmean</code>/<code>median</code></strong> use a window size of <code>k</code> = $&lt;$number of
+grid points$&gt;$/20 (i.e., the nearest odd integer to that) and sets <code>fill=   "extend"</code> (i.e., constant extrapolation to replace missing values at the
+extremes of the domain) by default. Use <code>fill= NA</code> for <code>zoo</code>'s default
+behavior of shortening the smoothed series.
+</p>
+</li>
+<li> <p><strong><code>savgol</code></strong> uses a window size of <code>k</code> = $&lt;$number of
+grid points$&gt;$/10 (i.e., the nearest odd integer to that).
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a smoothed version of the input. For some methods/options, the
+smoothed functions may be shorter than the original ones (at both ends).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(zoo)
+library(pracma)
+f &lt;- tf_sparsify(tf_jiggle(tf_rgp(4, 201, nugget = 0.05)))
+f_lowess &lt;- tf_smooth(f, "lowess")
+# these methods ignore the distances between arg-values:
+f_mean &lt;- tf_smooth(f, "rollmean")
+f_median &lt;- tf_smooth(f, "rollmean", k = 31)
+f_sg &lt;- tf_smooth(f, "savgol", fl = 31)
+layout(t(1:4))
+plot(f, points = FALSE, main = "original")
+plot(f_lowess,
+  points = FALSE, col = "blue", main = "lowess (default,\n span 0.9 in red)"
+)
+lines(tf_smooth(f, "lowess", f = 0.9), col = "red", alpha = 0.2)
+plot(f_mean,
+  points = FALSE, col = "blue", main = "rolling means &amp;\n medians (red)"
+)
+lines(f_median, col = "red", alpha = 0.2) # note constant extrapolation at both ends!
+plot(f, points = FALSE, main = "orginal and\n savgol (red)")
+lines(f_sg, col = "red")
+</code></pre>
+
+
+</div>

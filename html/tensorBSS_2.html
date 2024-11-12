@@ -1,0 +1,166 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ggtaugplot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Augmentation plot for each mode of an object of class taug using ggplot2
+</h2>
+
+<h3>Description</h3>
+
+<p>The augmentation plot is a measure for deciding about the number of interesting components. Of interest for the augmentation plot, which is quite similar to the ladle plot, is the minimum.
+The function offers, however, also the possibility to plot other criterion values that combined make up the actual criterion. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ggtaugplot(x, crit = "gn", type = "l", scales = "free", position = "horizontal",
+  ylab = crit, xlab = "component", main = deparse(substitute(x)),  ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class taug.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crit</code></td>
+<td>
+<p>the criterion to be plotted, options are <code>"gn"</code>, <code>"fn"</code>, <code>"phin"</code> and <code>"lambda"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>plotting type, either lines <code>l</code> or points <code>p</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>position</code></td>
+<td>
+<p>placement of augmentation plots for separate modes, options are <code>"horizontal"</code> and <code>"vertical"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scales</code></td>
+<td>
+<p>determines whether the x- and y-axis scales are shared or allowed to vary freely across the subplots. The options are: both axes are free (the default, <code>"free"</code>), x-axis is free (<code>"free_x"</code>), y-axis is free (<code>"free_y"</code>), neither is free (<code>"fixed"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylab</code></td>
+<td>
+<p>default ylab value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab</code></td>
+<td>
+<p>default xlab value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>default title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other arguments for the plotting functions.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The main criterion of the augmentation criterion is the scaled sum of the eigenvalues and the measure of variation of the eigenvectors up to the component of interest.
+</p>
+<p>The sum is denoted <code>"gn"</code> and the individual parts are <code>"fn"</code> for the measure of the eigenvector variation and <code>"phin"</code> for the scaled eigenvalues.
+The last option <code>"lambda"</code> corresponds to the unscaled eigenvalues yielding then a screeplot.
+</p>
+<p>The plot is drawn separately for each mode of the data.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen, Joni Virta, Una Radojicic
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Radojicic, U., Lietzen, N., Nordhausen, K. and Virta, J. (2021), On order determinaton in 2D PCA. Manuscript.</cite>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tPCAaug</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(ICtest)
+
+
+# matrix-variate example
+n &lt;- 200
+sig &lt;- 0.6
+
+Z &lt;- rbind(sqrt(0.7)*rt(n,df=5)*sqrt(3/5),
+           sqrt(0.3)*runif(n,-sqrt(3),sqrt(3)),
+           sqrt(0.3)*(rchisq(n,df=3)-3)/sqrt(6),
+           sqrt(0.9)*(rexp(n)-1),
+           sqrt(0.1)*rlogis(n,0,sqrt(3)/pi),
+           sqrt(0.5)*(rbeta(n,2,2)-0.5)*sqrt(20)
+)
+
+dim(Z) &lt;- c(3, 2, n)
+
+U1 &lt;- rorth(12)[,1:3]
+U2 &lt;- rorth(8)[,1:2]
+U &lt;- list(U1=U1, U2=U2)
+Y &lt;- tensorTransform2(Z,U,1:2)
+EPS &lt;- array(rnorm(12*8*n, mean=0, sd=sig), dim=c(12,8,n))
+X &lt;- Y + EPS
+
+
+TEST &lt;- tPCAaug(X)
+TEST
+ggtaugplot(TEST)
+
+# higher order tensor example
+
+Z2 &lt;- rnorm(n*3*2*4*6)
+
+dim(Z2) &lt;- c(3,2,4,6,n)
+
+U2.1 &lt;- rorth(10)[ ,1:3]
+U2.2 &lt;- rorth(8)[ ,1:2]
+U2.3 &lt;- rorth(5)[ ,1:4]
+U2.4 &lt;- rorth(15)[ ,1:6]
+
+U2 &lt;- list(U1 = U2.1, U2 = U2.2, U3 = U2.3, U4 = U2.4)
+Y2 &lt;- tensorTransform2(Z2, U2, 1:4)
+EPS2 &lt;- array(rnorm(10*8*5*15*n, mean=0, sd=sig), dim=c(10, 8, 5, 15, n))
+X2 &lt;- Y2 + EPS2
+
+
+TEST2 &lt;- tPCAaug(X2)
+ggtaugplot(TEST2, crit = "lambda", position = "vertical",
+ scales = "free_x")
+</code></pre>
+
+
+</div>

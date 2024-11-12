@@ -1,0 +1,170 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>segment_ga</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Segment a time series using a genetic algorithm</h2>
+
+<h3>Description</h3>
+
+<p>Segmenting functions for various genetic algorithms
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">segment_ga(
+  x,
+  model_fn = fit_meanshift_norm,
+  penalty_fn = BIC,
+  model_fn_args = list(),
+  ...
+)
+
+segment_ga_shi(x, ...)
+
+segment_ga_coen(x, ...)
+
+segment_ga_random(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A time series</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_fn</code></td>
+<td>
+<p>A <code>character</code> or <code>name</code> coercible into a fun_cpt function.
+See, for example, <code>fit_meanshift_norm()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalty_fn</code></td>
+<td>
+<p>A function that evaluates the changepoint set returned by
+<code>model_fn</code>. We provide <code>AIC()</code>, <code>BIC()</code>, <code>MBIC()</code>, <code>MDL()</code>, and <code>BMDL()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_fn_args</code></td>
+<td>
+<p>A <code>list()</code> of parameters passed to <code>model_fn</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>GA::ga()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>segment_ga()</code> uses the genetic algorithm in <code>GA::ga()</code> to "evolve" a random
+set of candidate changepoint sets, using the penalized objective function
+specified by <code>penalty_fn</code>.
+By default, the normal <code>meanshift</code> model is fit (see <code>fit_meanshift_norm()</code>)
+and the BIC penalty is applied.
+</p>
+
+<ul><li> <p><code>segment_ga_shi()</code>: Shi's algorithm is the algorithm used in
+<a href="https://doi.org/10.1175/JCLI-D-21-0489.1">doi:10.1175/JCLI-D-21-0489.1</a>.
+Note that in order to achieve the reported results you have to run the algorithm
+for a really long time.
+Pass the values <code>maxiter</code> = 50000 and <code>run</code> = 10000
+to <code>GA::ga()</code> using the dots.
+</p>
+</li></ul>
+<ul><li> <p><code>segment_ga_coen()</code>: Coen's algorithm is the one used in
+<a href="https://doi.org/10.1007/978-3-031-47372-2_20">doi:10.1007/978-3-031-47372-2_20</a>.
+Note that the speed of the algorithm is highly sensitive to the size of the
+changepoint sets under consideration, with large changepoint sets being slow.
+Consider setting the <code>population</code> argument to <code>GA::ga()</code> to improve
+performance. Coen's algorithm uses the <code>build_gabin_population()</code> function
+for this purpose by default.
+</p>
+</li></ul>
+<ul><li> <p><code>segment_ga_random()</code>: Randomly select candidate changepoint sets. This
+is implemented as a genetic algorithm with only one generation (i.e.,
+<code>maxiter = 1</code>). Note
+that this function uses <code>log_gabin_population()</code> by default.
+</p>
+</li></ul>
+<h3>Value</h3>
+
+<p>A <code>tidyga</code> object. This is just a <code>GA::ga()</code> object with an additional
+slot for <code>data</code> (the original time series) and <code>model_fn_args</code> (captures
+the <code>model_fn</code> and <code>penalty_fn</code> arguments).
+</p>
+
+
+<h3>References</h3>
+
+<p>Shi, et al. (2022, <a href="https://doi.org/10.1175/JCLI-D-21-0489.1">doi:10.1175/JCLI-D-21-0489.1</a>)
+</p>
+<p>Taimal, et al. (2023, <a href="https://doi.org/10.1007/978-3-031-47372-2_20">doi:10.1007/978-3-031-47372-2_20</a>)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>build_gabin_population()</code>
+</p>
+<p><code>log_gabin_population()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Segment a time series using a genetic algorithm
+res &lt;- segment_ga(CET, maxiter = 5)
+summary(res)
+str(res)
+plot(res)
+
+
+# Segment a time series using Shi's algorithm
+x &lt;- segment(CET, method = "ga-shi", maxiter = 5)
+str(x)
+
+# Segment a time series using Coen's algorithm
+y &lt;- segment(CET, method = "ga-coen", maxiter = 5)
+changepoints(y)
+
+# Segment a time series using Coen's algorithm and an arbitrary threshold
+z &lt;- segment(CET, method = "ga-coen", maxiter = 5, 
+             model_fn_args = list(threshold = 2))
+changepoints(z)
+
+## Not run: 
+# This will take a really long time!
+x &lt;- segment(CET, method = "ga-shi", maxiter = 500, run = 100)
+changepoints(x)
+
+# This will also take a really long time!
+y &lt;- segment(CET, method = "ga", model_fn = fit_lmshift, penalty_fn = BIC, 
+  popSize = 200, maxiter = 5000, run = 1000, 
+  model_fn_args = list(trends = TRUE), 
+  population = build_gabin_population(CET)
+)
+
+## End(Not run)
+
+## Not run: 
+x &lt;- segment(method = "ga-coen", maxiter = 50)
+
+## End(Not run)
+
+x &lt;- segment(CET, method = "random")
+</code></pre>
+
+
+</div>

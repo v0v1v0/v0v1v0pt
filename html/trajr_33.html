@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrajGenerate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate a random trajectory</h2>
+
+<h3>Description</h3>
+
+<p>Generates a trajectory. If <code>random</code> is <code>TRUE</code>, the trajectory will
+be a correllated random walk/idiothetic directed walk (Kareiva &amp; Shigesada,
+1983), corresponding to an animal navigating without a compass (Cheung,
+Zhang, Stricker, &amp; Srinivasan, 2008). If <code>random</code> is <code>FALSE</code>, it
+will be a directed walk/allothetic directed walk/oriented path, corresponding
+to an animal navigating with a compass (Cheung, Zhang, Stricker, &amp;
+Srinivasan, 2007, 2008).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TrajGenerate(
+  n = 1000,
+  random = TRUE,
+  stepLength = 2,
+  angularErrorSd = 0.5,
+  angularErrorDist = function(n) stats::rnorm(n, sd = angularErrorSd),
+  linearErrorSd = 0.2,
+  linearErrorDist = function(n) stats::rnorm(n, sd = linearErrorSd),
+  fps = 50,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of steps in the trajectory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>random</code></td>
+<td>
+<p>If TRUE, a random search trajectory is returned, otherwise a
+directed trajectory (with direction = 0 radians) is returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stepLength</code></td>
+<td>
+<p>Mean length of each step in the trajectory, in arbitrary
+length units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>angularErrorSd</code></td>
+<td>
+<p>Standard deviation of angular errors in radians.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>angularErrorDist</code></td>
+<td>
+<p>Function which accepts a single argument - the number
+of values to return, and generates random deviates according to some
+distribution. The returned values are added to the previous step angle
+(when <code>random == TRUE</code>), or to <code>0</code> (is <code>random == FALSE</code>) to
+generate the step angle for each step in the trajectory. If the mean of the
+returned values is not zero, the walk will be biased.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linearErrorSd</code></td>
+<td>
+<p>Standard deviation of linear step length errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linearErrorDist</code></td>
+<td>
+<p>Function which accepts a single argument - the number
+of values to return, and generates random deviates according to some
+distribution. The returned values are added to <code>stepLength</code> to
+generate the lengths of each step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fps</code></td>
+<td>
+<p>Simulated frames-per-second - used to generate times for each
+point in the trajectory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments are passed to <code>TrajFromCoords</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>By default, for both random and directed walks, errors are normally
+distributed, unbiased, and independent of each other, so are <em>simple
+directed walks</em> in the terminology of Cheung, Zhang, Stricker, &amp; Srinivasan,
+(2008). This behaviour may be modified by specifying alternative values for
+the <code>angularErrorDist</code> and/or <code>linearErrorDist</code> parameters.
+</p>
+<p>The initial angle (for a random walk) or the intended direction (for a
+directed walk) is <code>0</code> radians. To change the initial angle or intended
+direction, call <code>TrajRotate</code> on the new trajectory. The starting
+position is <code>(0, 0)</code>. To change the starting position, call
+<code>TrajTranslate</code> on the new trajectory.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A new Trajectory with <code>n</code> segments and <code>n + 1</code> coordinate
+pairs.
+</p>
+
+
+<h3>References</h3>
+
+<p>Kareiva, P. M., &amp; Shigesada, N. (1983). Analyzing insect movement as a
+correlated random walk. Oecologia, 56(2), 234-238. doi:10.1007/bf00379695
+</p>
+<p>Cheung, A., Zhang, S., Stricker, C., &amp; Srinivasan, M. V. (2007). Animal
+navigation: the difficulty of moving in a straight line. Biological
+Cybernetics, 97(1), 47-61. doi:10.1007/s00422-007-0158-0
+</p>
+<p>Cheung, A., Zhang, S., Stricker, C., &amp; Srinivasan, M. V. (2008). Animal
+navigation: general properties of directed walks. Biological Cybernetics,
+99(3), 197-217. doi:10.1007/s00422-008-0251-z
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate a 1000 step correlated random walk
+trj &lt;- TrajGenerate()
+plot(trj, main = "Correlated walk")
+
+# Generate a 1000 step levy flight - paths lengths follow a cauchy distribution
+trj &lt;- TrajGenerate(linearErrorDist = rcauchy)
+plot(trj, main = "Levy flight")
+
+# Generate a short directed trajectory
+trj &lt;- TrajGenerate(n = 20, random = FALSE)
+plot(trj, main = "Directed walk")
+
+# Generate an uncorrelated random walk
+trj &lt;- TrajGenerate(500, angularErrorDist = function(n) runif(n, -pi, pi))
+plot(trj, main = "Uncorrelated walk")
+
+# Generate a walk directed northwards, starting from (200, 300),
+# with a mean step length of 200. The initially generated trajectory
+# is directed to angle 0, with starting point (0, 0)
+trj &lt;- TrajGenerate(n = 20, stepLength = 200, random = FALSE)
+# Rotate 90 degrees about (0, 0) (i.e. from east to north)
+trj &lt;- TrajRotate(trj, pi / 2, relative = FALSE)
+# Translate to desired starting point
+trj &lt;- TrajTranslate(trj, 200, 300)
+
+</code></pre>
+
+
+</div>

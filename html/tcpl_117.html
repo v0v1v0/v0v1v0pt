@@ -1,0 +1,105 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tcplSubsetChid</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subset level 5 data to a single sample per chemical</h2>
+
+<h3>Description</h3>
+
+<p><code>tcplSubsetChid</code> subsets level 5 data to a single tested sample per
+chemical. In other words, if a chemical is tested more than once (a chid
+has more than one spid) for a given assay endpoint, the function uses a
+series of logic to select a single "representative" sample.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcplSubsetChid(dat, flag = TRUE, type = "mc", export_ready = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dat</code></td>
+<td>
+<p>data.table, a data.table with level 5 data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flag</code></td>
+<td>
+<p>Integer, the mc6_mthd_id values to go into the flag count, see
+details for more information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character of length 1, the data type, "sc" or "mc"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>export_ready</code></td>
+<td>
+<p>Boolean, default FALSE, should only export ready 1 values be included in calculation</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tcplSubsetChid</code> is intended to work with level 5 data that has
+chemical and assay information mapped with <code>tcplPrepOtpt</code>.
+</p>
+<p>To select a single sample, first a "consensus hit-call" is made by majority
+rule, with ties defaulting to active. After the chemical-wise hit call is
+made, the samples corresponding to to chemical-wise hit call are logically
+ordered using the fit category, the number of the flags, and AC50 (or modl_ga),
+then the first sample for every chemical is selected.
+</p>
+<p>The <code>flag</code> param can be used to specify a subset of flags to be used in
+the flag count. Leaving <code>flag</code> TRUE utilize all the available flags.
+Setting <code>flag</code> to <code>FALSE</code> will do the subsetting without
+considering any flags.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data.table with a single sample for every given chemical-assay
+pair.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tcplPrepOtpt</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+## Load the example level 5 data
+d1 &lt;- tcplLoadData(lvl = 5, fld = "aeid", val = 797)
+d1 &lt;- tcplPrepOtpt(d1)
+
+## Subset to an example of a duplicated chid
+d2 &lt;- d1[chid == 20182]
+d2[, list(m4id, hitc, fitc, modl_ga)]
+
+## Here the consensus hit-call is 1 (active), and the fit categories are
+## all equal. Therefore, if the flags are ignored, the selected sample will
+## be the sample with the lowest modl_ga.
+tcplSubsetChid(dat = d2, flag = FALSE)[, list(m4id, modl_ga)]
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

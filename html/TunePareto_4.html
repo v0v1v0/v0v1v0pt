@@ -1,0 +1,207 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>createObjective</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Create a new objective function
+</h2>
+
+<h3>Description</h3>
+
+<p>Creates a new <code>TuneParetoObjective</code> object. An objective consists of two parts: The precalculation function, which applies the classifier to the data, and the objective itself, which is calculated from the predicted class labels.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">createObjective(precalculationFunction, 
+                precalculationParams = NULL, 
+                objectiveFunction, 
+                objectiveFunctionParams = NULL,
+                direction = c("minimize", "maximize"), 
+                name)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>precalculationFunction</code></td>
+<td>
+
+<p>The name of the precalculation function that applies the classifiers to the data. Two predefined precalculation functions are <code>reclassification</code> and <code>crossValidation</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precalculationParams</code></td>
+<td>
+
+<p>A named list of parameters for the precalculation function. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objectiveFunction</code></td>
+<td>
+
+<p>The name of the objective function that calculates the objective from the precalculated class labels.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objectiveFunctionParams</code></td>
+<td>
+
+<p>A named list of further parameters for the objective function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+
+<p>Specifies whether the objective is minimized or maximized.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+
+<p>A readable name of the objective.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The objective calculation is divided into a precalculation step and the objective calculation itself. The main reason for this is the possibility to aggregate precalculation across objectives. For example, if both the specificity and the sensitivity of a cross-validation (with the same parameters) are required, the cross-validation is run only once to save computational time. Afterwards, the results are passed to both objective functions.
+</p>
+<p>A precalculation function has the following parameters:
+</p>
+
+<dl>
+<dt>data</dt>
+<dd>
+<p>The data set to be used for the precalculation. This is usually a matrix or data frame with the samples in the rows and the features in the columns.
+</p>
+</dd>
+<dt>labels</dt>
+<dd>
+<p>A vector of class labels for the samples in <code>data</code>.
+</p>
+</dd>
+<dt>classifier</dt>
+<dd>
+<p>A <code>TuneParetoClassifier</code> wrapper object containing the classifier to tune. A number of state-of-the-art classifiers are included in <span class="pkg">TunePareto</span> (see <code>predefinedClassifiers</code>). Custom classifiers can be employed using <code>tuneParetoClassifier</code>.
+</p>
+</dd>
+<dt>classifierParams</dt>
+<dd>
+<p>A named list of parameter assignments for the classifier.
+</p>
+</dd>
+<dt>predictorParams</dt>
+<dd>
+<p>If the classifier has separate training and prediction functions, a named list of parameter assignments for the predictor.
+</p>
+</dd>
+</dl>
+<p>Additionally, the function can have further parameters which are supplied in <code>precalculationParams</code>. To train a classifier and obtain predictions, the precalculation function can call the generic <code>trainTuneParetoClassifier</code> and <code>predict.TuneParetoModel</code> functions. 
+</p>
+<p>The precalculation function usually returns the predicted labels, the true labels and the model, but the only requirement of the return value is that it can be processed by the corresponding objective function. Predefined precalculation functions are <code>reclassification</code> and <code>crossValidation</code>.
+</p>
+<p>The objective function has a single obligatory parameter named <code>result</code> which supplies the result of the precalculation. Furthermore, optional parameters can be specified. Their values are taken from <code>objectiveFunctionParams</code>. The function either returns a single number specifying the objective value, or a list with a <code>score</code> component containing the objective value and a <code>additionalData</code> component that contains additional information to be stored in the <code>additionalData</code> component of the <code>TuneParetoResult</code> object (see <code>tunePareto</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>Retuns an object of class <code>TuneParetoObjective</code> with the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>precalculationFunction</code></td>
+<td>
+<p>The supplied precalculation function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precalculationParams</code></td>
+<td>
+<p>The additional parameters to be passed to the precalculation function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objectiveFunction</code></td>
+<td>
+<p>The objective function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minimize</code></td>
+<td>
+<p><code>TRUE</code> if the objective is minimized, <code>FALSE</code> if it is maximized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>The readable name of the objective.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>predefinedObjectiveFunctions</code>, <code>trainTuneParetoClassifier</code>, <code>predict.TuneParetoModel</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# create new objective minimizing the number of support vectors
+# for a support vector machine
+
+reclassSupportVectors &lt;- function (saveModel = FALSE) 
+{
+    createObjective(precalculationFunction = reclassification, 
+        precalculationParams = NULL, objectiveFunction = 
+        function(result, saveModel) 
+        {
+	        if(result$model$classifier$name != "svm")
+		        stop("This objective function can only be applied 
+		              to classifiers of type tunePareto.svm()")
+
+      		res &lt;- result$model$model$tot.nSV
+
+		      if (saveModel) 
+		      # return a list containing the objective value as well as the model
+		      {
+		         return(list(additionalData = result$model, fitness = res))
+		      }
+		      else 
+		      # only return the objective value
+		        return(res)
+        }, 
+        objectiveFunctionParams = list(saveModel = saveModel), 
+        direction = "minimize", 
+        name = "Reclass.SupportVectors")
+}
+
+# tune error vs. number of support vectors on the 'iris' data set
+r &lt;- tunePareto(data = iris[, -ncol(iris)], 
+                labels = iris[, ncol(iris)],
+                classifier = tunePareto.svm(),
+                cost=c(0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50),
+                objectiveFunctions=list(reclassError(), reclassSupportVectors()))
+
+print(r)
+</code></pre>
+
+
+</div>

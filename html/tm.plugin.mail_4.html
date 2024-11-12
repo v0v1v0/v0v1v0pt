@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>readMail</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read In an E-Mail Document</h2>
+
+<h3>Description</h3>
+
+<p>Return a function which reads in an electronic mail document.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">readMail(DateFormat = character())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>DateFormat</code></td>
+<td>
+<p>A character vector giving date-time formats for the
+“Date” header field in the mail document.  By default, the
+“basic” formats of
+<a href="https://www.rfc-editor.org/rfc/rfc5322">RFC 5322</a> are tried.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>Formally this function is a function generator, i.e., it returns a
+function (which reads in a mail document) with a well-defined
+signature, but can access passed over arguments (e.g., the
+“Date” header format) via lexical scoping.
+</p>
+<p>In version 0.3.0 of the <span class="pkg">tm.plugin.mail</span> package, the reader code
+was switched to use the Python <span class="pkg">email</span> library via CRAN package
+<a href="https://CRAN.R-project.org/package=reticulate"><span class="pkg">reticulate</span></a>.  Compared to previous versions, this allows to
+</p>
+
+<ul>
+<li>
+<p> handle textual message bodies in character sets other than
+US-ASCII and the use of base64 or quoted-printable transfer
+encodings
+(<a href="https://www.rfc-editor.org/rfc/rfc2045">RFC 2045</a>)
+</p>
+</li>
+<li>
+<p> handle non-US-ASCII text data in message header fields
+(<a href="https://www.rfc-editor.org/rfc/rfc2047">RFC 2047</a>)
+</p>
+</li>
+<li>
+<p> correctly handle the metadata in structured header fields
+(<a href="https://www.rfc-editor.org/rfc/rfc5322">RFC 5322</a>)
+</p>
+</li>
+</ul>
+<p>For messages using the Multipurpose Internet Mail Extensions (MIME)
+extensions, the texts extracted from the messages are the (suitably
+decoded) bodies when using the ‘text/plain’ or
+‘text/html’ content types, or the body parts using these
+types when using ‘multipart/mixed’ or
+‘multipart/alternative’ (see
+<a href="https://www.rfc-editor.org/rfc/rfc2046">RFC 2046</a> for more
+information).
+Non-MIME messages are treated like ‘text/plain’.
+The extracted texts are represented as character vectors with length
+the number of extracted body parts and names giving the MIME
+<em>subtype</em> (<code>"plain"</code> or <code>"html"</code>).
+</p>
+<p>This allows text mining applications to flexibly handle HTML content
+“as appropriate” by filtering on the names of the content of
+the <code>MailDocument</code> objects.
+</p>
+<p>In case the Python processing fails or its results cannot be
+transferred to R (in particular, when text body parts contain embedded
+NULs), the reader falls back to simple header field processing
+appropriate for unstructered headers, and/or extracting no text.
+Information about problems is provided in the <code>problems</code> element
+of the metadata.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>function</code> with the following formals:
+</p>
+
+<dl>
+<dt><code>elem</code></dt>
+<dd>
+<p>a named list with the component <code>content</code>
+which must hold the document to be read in.</p>
+</dd>
+<dt><code>language</code></dt>
+<dd>
+<p>a string giving the language.</p>
+</dd>
+<dt><code>id</code></dt>
+<dd>
+<p>a character giving a unique identifier for the
+created text document.</p>
+</dd>
+</dl>
+<p>The function returns a <code>MailDocument</code> representing the
+text and metadata extracted from <code>elem$content</code>.  The argument
+<code>id</code> is used as fallback if no corresponding metadata entry is
+found in <code>elem$content</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Ingo Feinerer and Kurt Hornik</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Reader</code> for basic information on the reader
+infrastructure employed by package <span class="pkg">tm</span>.
+</p>
+<p><code>strptime</code> for date-time format specifications.
+</p>
+<p><a href="https://www.rfc-editor.org/rfc/rfc5322">RFC 5322</a>,
+<a href="https://www.rfc-editor.org/rfc/rfc2045">RFC 2045</a>,
+<a href="https://www.rfc-editor.org/rfc/rfc2045">RFC 2045</a>,
+<a href="https://www.rfc-editor.org/rfc/rfc2047">RFC 2047</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">require("tm")
+newsgroup &lt;- system.file("mails", package = "tm.plugin.mail")
+news &lt;- VCorpus(DirSource(newsgroup),
+                readerControl = list(reader = readMail))
+inspect(news)
+## Use the high-level content and metadata accessors from package 'NLP':
+require("NLP")
+content(news[[2]])
+meta(news[[2]])
+## Processed header fields of the message.
+meta(news[[2]])$header
+</code></pre>
+
+
+</div>

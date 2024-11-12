@@ -1,0 +1,114 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ACP.calculator</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Antecedental Rainfall (and temperature) Accumulation calculator for the VI Complete Time Series</h2>
+
+<h3>Description</h3>
+
+<p>Takes the Complete Time Series Vegetation Index and a table of every possible accumulation period and offset
+period for precipitation and temperature(optional).  A OLS is calculated <code>lm</code> for every combination
+of VI ~ rainfall (and temperature if that is included).
+if only the VPR is being calculated, this Function preferences those results where slope&gt;0
+(increase in rainfall causes an increase in vegetation),returning the rainfall accumulation
+that has the highest R-squared and a positive slope. If no combination produces a
+positive slope then the one with the highest R-squared is returned.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ACP.calculator(
+  CTSR.VI,
+  ACP.table,
+  ACT.table = NULL,
+  allow.negative = FALSE,
+  allowneg.retest = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>CTSR.VI</code></td>
+<td>
+<p>Complete Monthly Time Series of Vegetation Index values.
+An object of class <code>'ts'</code> object without NA's.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ACP.table</code></td>
+<td>
+<p>A table of every combination of offset period and accumulation period.for precipitation
+ACP.table can be calculated using the <code>climate.accumulator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ACT.table</code></td>
+<td>
+<p>A table of every combination of offset period and accumulation period.for temperature
+ACP.table can be calculated using the <code>climate.accumulator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.negative</code></td>
+<td>
+<p>If true, will not preference positive slope in either CTSR or VI calculations. default=FALSE is set
+because negative associations between rainfall and vegetation in water limited ecosystems is unexpected
+If temperature data is included then this paramter is forced to TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allowneg.retest</code></td>
+<td>
+<p>default=FALSE
+If temperature data is provided but found to not be significant then a retest is performed.
+This paramter is to allow negative on re-test.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list containing:
+</p>
+<p><b>summary</b>
+a Matrix containing "slope", "intercept", "p.value", "R^2.Value", "Break.Height", "Slope.Change"
+of the <code>lm</code> between Antecedental Rainfall Accumulation (CTSR.RF) and the CTSR.VI
+</p>
+<p><b>CTSR.precip</b>
+see CTSR.RF in <code>TSSRESTREND</code> for description
+</p>
+<p><b>CTSR.osp</b>
+The offest period for the complete time series rainfall
+</p>
+<p><b>CTSR.acp</b>
+The accumulation period for the complete time series rainfall
+</p>
+<p><b>CTSR.tmp</b>
+The optimally accumulated CTS temperature
+</p>
+<p><b>CTSR.tosp</b>
+The offest period for the complete time series temperature
+</p>
+<p><b>CTSR.tacp</b>
+The accumulation period for the complete time series temperature
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Find the data
+vi.path &lt;- system.file("extdata", "rabbitVI.csv", package = "TSS.RESTREND", mustWork = TRUE)
+in.VI &lt;- read.csv(vi.path)
+CTSR.VI &lt;- ts(in.VI, start=c(1982, 1), end=c(2013,12), frequency = 12)
+data(rabbitACPtable)
+ACPres &lt;- ACP.calculator(CTSR.VI, rabbitACPtable)
+print(ACPres$summary)
+</code></pre>
+
+
+</div>

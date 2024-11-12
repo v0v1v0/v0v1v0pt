@@ -1,0 +1,273 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>maxPersistence</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Maximal Persistence Method
+</h2>
+
+<h3>Description</h3>
+
+<p>Given a point cloud and a function built on top of the data, we are interested in studying the evolution of the sublevel sets (or superlevel sets) of the function, using persistent homology. The Maximal Persistence Method selects the optimal smoothing parameter of the function, by maximizing the number of significant topological features, or by maximizing the total significant persistence of the features. For each value of the smoothing parameter, the function <code>maxPersistence</code> computes a persistence diagram using <code>gridDiag</code> and returns the values of the two criteria, the dimension of detected features, their persistence, and a bootstrapped confidence band. The features that fall outside of the band are statistically significant. See References. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">maxPersistence(
+    FUN, parameters, X, lim, by,
+    maxdimension = length(lim) / 2 - 1, sublevel = TRUE,
+    library = "GUDHI", B = 30, alpha = 0.05,
+    bandFUN = "bootstrapBand", distance = "bottleneck",
+    dimension = min(1, maxdimension), p = 1, parallel = FALSE,
+    printProgress = FALSE, weight = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+
+<p>the name of a function whose inputs are: 1) <code>X</code>, a <code class="reqn">n</code> by <code class="reqn">d</code> matrix of coordinates of the input point cloud, where <code class="reqn">d</code> is the dimension of the space; 2) a matrix of coordinates of points forming a grid at which the function can be evaluated (note that this grid is not passed as an input, but is automatically computed by <code>maxPersistence</code>); 3) a real valued smoothing parameter. For example, see <code>kde</code>, <code>dtm</code>, <code>kernelDist</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+
+<p>a numerical vector, storing a sequence of values for the smoothing paramter of <code>FUN</code> among which <code>maxPersistence</code> will select the optimal ones.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+
+<p>a <code class="reqn">n</code> by <code class="reqn">d</code> matrix of coordinates of the input point cloud, where <code class="reqn">d</code> is the dimension of the space.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lim</code></td>
+<td>
+
+<p>a <code class="reqn">2</code> by <code class="reqn">d</code> matrix, where each column specifying the range of each dimension of the grid, over which the function <code>FUN</code> is evaluated.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+
+<p>either a number or a vector of length <code class="reqn">d</code> specifying space between points of the grid in each dimension. If a number is given, then same space is used in each dimension.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxdimension</code></td>
+<td>
+
+<p>a number that indicates the maximum dimension to compute persistent homology to. The default value is <code class="reqn">d - 1</code>, which is (dimension of embedding space - 1).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sublevel</code></td>
+<td>
+
+<p>a logical variable indicating if the persistent homology should be computed for sublevel sets of <code>FUN</code> (<code>TRUE</code>) or superlevel sets (<code>FALSE</code>). The default value is <code>TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>library</code></td>
+<td>
+
+<p>a string specifying which library to compute the persistence diagram. The user can choose either the library <code>"GUDHI"</code>, <code>"Dionysus"</code>, or <code>"PHAT"</code>. The default value is <code>"GUDHI"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bandFUN</code></td>
+<td>
+
+<p>the function to be used in the computation of the confidence band. Either <code>"bootstrapDiagram"</code> or <code>"bootstrapBand"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>the number of bootstrap iterations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+
+<p>for each value store in <code>parameters</code>, <code>maxPersistence</code> computes a (<code>1-alpha</code>) confidence band.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+
+<p>optional (if bandFUN == bootstrapDiagram): a string specifying the distance to be used for persistence diagrams: either <code>"bottleneck"</code> or <code>"wasserstein"</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dimension</code></td>
+<td>
+
+<p>optional (if bandFUN == bootstrapDiagram): an integer or a vector specifying the dimension of the features used to compute the bottleneck distance. 0 for connected components, 1 for loops, 2 for voids. The default value is <code>1</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+
+<p>optional (if bandFUN == bootstrapDiagram AND distance == "wasserstein"): integer specifying the power to be used in the computation of the Wasserstein distance. The default value is <code>1</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+
+<p>logical: if <code>TRUE</code>, the bootstrap iterations are parallelized, using the library <code>parallel</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>printProgress</code></td>
+<td>
+
+<p>if <code>TRUE</code>, a progress bar is printed. The default value is <code>FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+
+<p>either NULL, a number, or a vector of length <code class="reqn">n</code>. If it is NULL, weight is not used. If it is a number, then same weight is applied to each points of <code>X</code>. If it is a vector, <code>weight</code> represents weights of each points of <code>X</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>maxPersistence</code> calls the <code>gridDiag</code> function, which computes the persistence diagram of sublevel (or superlevel) sets of a function, evaluated over a grid of points.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function <code>maxPersistence</code> returns an object of the class "maxPersistence", a list with the following components
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+
+<p>the same vector <code>parameters</code> given in input
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigNumber</code></td>
+<td>
+
+<p>a numeric vector storing the number of significant features in the persistence diagrams computed using each value in <code>parameters</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigPersistence</code></td>
+<td>
+
+<p>a numeric vector storing the sum of significant persistence of the features in the persistence diagrams, computed using each value in <code>parameters</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bands</code></td>
+<td>
+
+<p>a numeric vector storing the bootstrap band's width, for each value in <code>parameters</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Persistence</code></td>
+<td>
+
+<p>a list of the same lenght of <code>parameters</code>. Each element of the list is a <code class="reqn">P_i</code> by 2 matrix, where <code class="reqn">P_i</code> is the number of features found using the parameter <code class="reqn">i</code>: the first column stores the dimension of each feature and the second column the persistence abs(death-birth|).
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Jisu Kim and Fabrizio Lecci
+</p>
+
+
+<h3>References</h3>
+
+<p>Chazal F, Cisewski J, Fasy BT, Lecci F, Michel B, Rinaldo A, Wasserman L (2014). "Robust Topological Inference: distance-to-a-measure and kernel distance."
+</p>
+<p>Fasy BT, Lecci F, Rinaldo A, Wasserman L, Balakrishnan S, Singh A (2013). "Statistical Inference For Persistent Homology", (arXiv:1303.7117). Annals of Statistics.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gridDiag</code>, <code>kde</code>, <code>kernelDist</code>, <code>dtm</code>, <code>bootstrapBand</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## input data: circle with clutter noise
+n &lt;- 600
+percNoise &lt;- 0.1
+XX1 &lt;- circleUnif(n)
+noise &lt;- cbind(runif(percNoise * n, -2, 2), runif(percNoise * n, -2, 2))
+X &lt;- rbind(XX1, noise)
+
+## limits of the Gird at which the density estimator is evaluated
+Xlim &lt;- c(-2, 2)
+Ylim &lt;- c(-2, 2)
+lim &lt;- cbind(Xlim, Ylim)
+by &lt;- 0.2
+
+B &lt;- 80
+alpha &lt;- 0.05
+
+## candidates
+parametersKDE &lt;- seq(0.1, 0.5, by = 0.2)
+
+maxKDE &lt;- maxPersistence(kde, parametersKDE, X, lim = lim, by = by,
+                         bandFUN = "bootstrapBand", B = B, alpha = alpha,
+                         parallel = FALSE, printProgress = TRUE)
+print(summary(maxKDE))
+
+par(mfrow = c(1,2))
+plot(X, pch = 16, cex = 0.5, main = "Circle")
+plot(maxKDE)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tunevt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit a tuned Virtual Twins model</h2>
+
+<h3>Description</h3>
+
+<p><code>tunevt</code> fits a Virtual Twins model to estimate factors and subgroups
+associated with differential treatment effects while controlling the Type I
+error rate of falsely detecting at least one heterogeneous effect when the
+treatment effect is uniform across the study population.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tunevt(
+  data,
+  Y = "Y",
+  Trt = "Trt",
+  step1 = "randomforest",
+  step2 = "rtree",
+  alpha0,
+  p_reps,
+  threshold = NA,
+  keepz = FALSE,
+  parallel = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data frame containing a response, binary treatment indicators,
+and covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>a string specifying the name of the column of <code>data</code>
+contains the response.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Trt</code></td>
+<td>
+<p>a string specifying the name of the column of <code>data</code>
+contains the treatment indicators.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step1</code></td>
+<td>
+<p>character strings specifying the Step 1 model. Supports
+either "<code>lasso</code>", "<code>mars</code>", "<code>randomforest</code>", or
+"<code>superlearner</code>".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step2</code></td>
+<td>
+<p>a character string specifying the Step 2 model. Supports
+"<code>lasso</code>", "<code>rtree</code>",  "<code>classtree</code>", or "<code>ctree</code>".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha0</code></td>
+<td>
+<p>the nominal Type I error rate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p_reps</code></td>
+<td>
+<p>the number of permutations to run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>for "<code>step2 = 'classtree'</code>" only. The value against
+which to test if the estimated individual treatment effect from Step 1 is
+higher (TRUE) or lower (FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keepz</code></td>
+<td>
+<p>logical. Should the estimated CATE from Step 1 be returned?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>Should the loop over replications be parallelized? If
+<code>FALSE</code>, then no, if <code>TRUE</code>, then yes.
+Note that running in parallel requires a <em>parallel backend</em> that must be
+registered before performing the computation.
+See the <code>foreach</code> documentation for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to the Step 1 model call.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Virtual Twins is a two-step approach to detecting differential treatment
+effects. Subjects' conditional average treatment effects (CATEs) are first
+estimated in Step 1 using a flexible model. Then, a simple and interpretable
+model is fit in Step 2 to model either (1) the expected value of these
+estimated CATEs if <code>step2</code> is equal to "<code>lasso</code>", "<code>rtree</code>",
+or "<code>ctree</code>" or (2) the probability that the CATE is greater than a
+specified <code>threshold</code> if <code>step2</code> is equal to "<code>classtree</code>".
+</p>
+<p>The Step 2 model is dependent on some tuning parameter. This parameter is
+selected to control the Type I error rate by permuting the data under the
+null hypothesis of a constant treatment effect and identifying the minimal
+null penalty parameter (MNPP), which is the smallest penalty parameter that
+yields a Step 2 model with no covariate effects. The <code>1-alpha0</code> quantile
+of the distribution of is then used to fit the Step 2 model on the original
+data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>"tunevt"</code>.
+</p>
+<p>An object of class <code>"tunevt"</code> is a list containing at least the
+following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>the matched call</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vtmod</code></td>
+<td>
+<p>the model estimated by the given <code>step2</code> procedure fit
+with the permuted tuning parameter for the estimated CATEs from the
+<code>step1</code> model. See <code>vt2_lasso</code>,
+<code>vt2_rtree</code>, or <code>vt2_ctree</code> for specifics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mnpp</code></td>
+<td>
+<p>the MNPP for the estimated CATEs from Step 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta_null</code></td>
+<td>
+<p>a vector of the MNPPs from each permutation under
+the null hypothesis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalue</code></td>
+<td>
+<p>the probability of observing a MNPP as or more extreme
+as the observed MNPP under the null hypothesis of no effect
+heterogeneity.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>if <code>keepz = TRUE</code>, the estimated CATEs from the
+<code>step1</code> model.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+
+<p>Foster JC, Taylor JM, Ruberg SJ (2011).
+“Subgroup identification from randomized clinical trial data.”
+<em>Statistics in Medicine</em>, <b>30</b>(24), 2867–2880.
+ISSN 02776715, <a href="https://doi.org/10.1002/sim.4322">doi:10.1002/sim.4322</a>.
+</p>
+<p>Wolf JM, Koopmeiners JS, Vock DM (2022).
+“A permutation procedure to detect heterogeneous treatment effects in randomized clinical trials while controlling the type I error rate.”
+<em>Clinical Trials</em>, <b>19</b>(5), 512-521.
+ISSN 1740-7745, <a href="https://doi.org/10.1177/17407745221095855">doi:10.1177/17407745221095855</a>, Publisher: SAGE Publications.
+</p>
+<p>Deng C, Wolf JM, Vock DM, Carroll DM, Hatsukami DK, Leng N, Koopmeiners JS (2023).
+“Practical guidance on modeling choices for the virtual twins method.”
+<em>Journal of Biopharmaceutical Statistics</em>.
+<a href="https://doi.org/10.1080/10543406.2023.2170404">doi:10.1080/10543406.2023.2170404</a>.
+</p>
+
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(tehtuner_example)
+# Low p_reps for example use only
+tunevt(
+  tehtuner_example, step1 = "lasso", step2 = "rtree",
+  alpha0 = 0.2, p_reps = 5
+)
+
+</code></pre>
+
+
+</div>

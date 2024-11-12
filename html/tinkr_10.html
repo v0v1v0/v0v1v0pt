@@ -1,0 +1,167 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>resolve_anchor_links</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Resolve Reference-Style Links</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://www.markdownguide.org/basic-syntax/#reference-style-links">Reference style links and images</a>
+are a form of markdown syntax that reduces duplication and makes markdown
+more readable. They come in two parts:
+</p>
+
+<ol>
+<li>
+<p> The inline part that uses two pairs of square brackets where the second
+pair of square brackets contains the reference for the anchor part of the
+link. Example:
+</p>
+<div class="sourceCode"><pre>[inline text describing link][link-reference]
+</pre></div>
+</li>
+<li>
+<p> The anchor part, which can be anywhere in the document, contains a pair
+of square brackets followed by a colon and space with the link and
+optionally the link title. Example:
+</p>
+<div class="sourceCode"><pre>[link-reference]: https://docs.ropensci.org/tinkr/ 'documentation for tinkr'
+</pre></div>
+</li>
+</ol>
+<p>Commonmark treats reference-style links as regular links, which can be a
+pain when converting large documents. This function resolves these
+links by reading in the source document, finding the reference-style links,
+and adding them back at the end of the document with the 'anchor' attribute
+and appending the reference to the link with the 'ref' attribute.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">resolve_anchor_links(body, txt, ns = md_ns())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>body</code></td>
+<td>
+<p>an XML body</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>txt</code></td>
+<td>
+<p>the text of a source file</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ns</code></td>
+<td>
+<p>an the namespace that resolves the Markdown namespace (defaults to
+<code>md_ns()</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+
+<h4>Nomenclature</h4>
+
+<p>The reference-style link contains two parts, but they don't have common names
+(the <a href="https://www.markdownguide.org/basic-syntax/">markdown guide</a> calls
+these "first part and second part"), so in this documentation, we call the
+link pattern of <code style="white-space: pre;">⁠[link text][link-ref]⁠</code> as the "inline reference-style link"
+and the pattern of <code style="white-space: pre;">⁠[link-ref]: &lt;URL&gt;⁠</code> as the "anchor references-style link".
+</p>
+
+
+
+<h4>Reference-style links in commonmark's XML representation</h4>
+
+<p>A link or image in XML is represented by a node with the following attributes
+</p>
+
+<ul>
+<li>
+<p> destination: the URL for the link
+</p>
+</li>
+<li>
+<p> title: an optional title for the link
+</p>
+</li>
+</ul>
+<p>For example, this markdown link <code style="white-space: pre;">⁠[link text](https://example.com "example  link")⁠</code> is represented in XML as text inside of a link node:
+</p>
+<div class="sourceCode r"><pre>lnk &lt;- "[link text](https://example.com 'example link')"
+xml &lt;- xml2::read_xml(commonmark::markdown_xml(lnk))
+cat(as.character(xml2::xml_find_first(xml, ".//d1:link")))
+#&gt; &lt;link destination="https://example.com" title="example link"&gt;
+#&gt;   &lt;text xml:space="preserve"&gt;link text&lt;/text&gt;
+#&gt; &lt;/link&gt;
+</pre></div>
+<p>However, reference-style links are rendered equivalently:
+</p>
+<div class="sourceCode r"><pre>lnk &lt;- "
+[link text][link-ref]
+
+[link-ref]: https://example.com 'example link'
+"
+xml &lt;- xml2::read_xml(commonmark::markdown_xml(lnk))
+cat(as.character(xml2::xml_find_first(xml, ".//d1:link")))
+#&gt; &lt;link destination="https://example.com" title="example link"&gt;
+#&gt;   &lt;text xml:space="preserve"&gt;link text&lt;/text&gt;
+#&gt; &lt;/link&gt;
+</pre></div>
+
+
+
+<h4>XML attributes of reference-style links</h4>
+
+<p>To preserve the anchor reference-style links, we search the source document
+for the destination attribute proceded by <code style="white-space: pre;">⁠]: ⁠</code>, transform that information
+into a new link node with the <code>anchor</code> attribute, and add it to the end of
+the document. That node looks like this:
+</p>
+<div class="sourceCode"><pre>&lt;link destination="https://example.com" title="example link" anchor="true"&gt;
+  &lt;text&gt;link-ref&lt;/text&gt;
+&lt;/link&gt;
+</pre></div>
+<p>From there, we add the anchor text to the node that is present in our
+document as the <code>ref</code> attribute:
+</p>
+<div class="sourceCode"><pre>&lt;link destination="https://example.com" title="example link" rel="link-ref"&gt;
+  &lt;text xml:space="preserve"&gt;link text&lt;/text&gt;
+&lt;/link&gt;
+</pre></div>
+
+
+
+<h3>Note</h3>
+
+<p>this function is internally used in the function <code>to_xml()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">f &lt;- system.file("extdata", "link-test.md", package = "tinkr")
+md &lt;- yarn$new(f, sourcepos = TRUE, anchor_links = FALSE)
+md$show()
+if (requireNamespace("withr")) {
+lnks &lt;- withr::with_namespace("tinkr", 
+  resolve_anchor_links(md$body, readLines(md$path)))
+md$body &lt;- lnks
+md$show()
+}
+</code></pre>
+
+
+</div>

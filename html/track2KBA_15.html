@@ -1,0 +1,183 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tripSplit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Split tracking data into trips</h2>
+
+<h3>Description</h3>
+
+<p><code>tripSplit</code> employs <code>splitSingleID</code> to split data from multiple
+individuals' into discrete trips made from centrally-located places.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tripSplit(
+  dataGroup,
+  colony,
+  innerBuff = NULL,
+  returnBuff = NULL,
+  duration = NULL,
+  gapLimit = NULL,
+  nests = FALSE,
+  rmNonTrip = FALSE,
+  verbose = TRUE
+)
+
+splitSingleID(
+  Track,
+  colony,
+  innerBuff = 15,
+  returnBuff = 45,
+  duration = 12,
+  gapLimit = gapLimit,
+  nests = FALSE,
+  verbose = verbose
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataGroup</code></td>
+<td>
+<p>data.frame. Must contain 'Latitude', 'Longitude', 'ID' and
+'DateTime' columns (correct format may be assured using
+<code>formatFields</code> function).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colony</code></td>
+<td>
+<p>data.frame. Containing 'Latitude' and 'Longitude' fields
+specifying the central location(s) from which trips begin. If data are from
+MoveBank this information may be extracted using the <code>move2KBA</code>
+function. If <em>nests</em>=TRUE, each row should correspond to an appropriate
+location (Lat/Lon) for each ID value in <em>dataGroup</em>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>innerBuff</code></td>
+<td>
+<p>numeric (in kilometers). Indicate the distance that an
+animal must travel for the movement to be considered a trip. Note that this
+is also the metric that determines whether two subsequent trips are split -
+if your animal records locations &gt; <code>innerBuff</code> (km) from its place of
+origin and no locations at the place of origin (e.g. for burrow-nesting
+species) then subsequent trips may be lumped into a single trip. Increase
+<code>innerBuff</code> to ensure correct splitting of trips.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returnBuff</code></td>
+<td>
+<p>numeric (in kilometers). Indicate the proximity required
+for a trip to be considered as returning. This is useful for identifying
+incomplete trips (i.e. where storage/transmission failed during the trip).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>duration</code></td>
+<td>
+<p>numeric (in hours). The period of time that the animals must
+be at large for the movement to be considered a trip.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gapLimit</code></td>
+<td>
+<p>numeric (in days). The period of time between points to be
+considered too large to be a contiguous tracking event. Can be used to ensure
+that deployments on the same animal in different years do not get combined
+into extra long trips. Defaults to one year.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nests</code></td>
+<td>
+<p>logical scalar (TRUE/FALSE). Should the central place used in
+trip-splitting be specific to each ID? If so, each place must be matched with
+an 'ID' value in both <em>dataGroup</em> and <em>colony</em> objects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rmNonTrip</code></td>
+<td>
+<p>logical scalar (TRUE/FALSE). Should periods not associated
+with trips be filtered out? Note that this does not filter out the trip
+start and end points which fall within innerBuff. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical scalar (TRUE/FALSE). Should the function print
+messages when trips start outside the innerBuffer or doesn't return to the
+'colony'? Default is TRUE.
+<code>tripSummary</code>. Default is TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Track</code></td>
+<td>
+<p>dataFrame.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function splits central place foraging animal movement data into
+individual trips away from a central location based on distance and time.
+</p>
+<p><code>nests=TRUE</code> may be used if it is desired, for example, to use specific
+nest locations instead of one central location for all individuals/dataGroup.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an un-projected (WGS84) SpatialPointsDataFrame, with the
+field 'tripID' added to identify each unique trip-ID combination.
+If rmNonTrip=TRUE, then output has been filtered of points deemed not
+associated with trip movements.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tripSummary</code>, <code>mapTrips</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## make some play data
+dataGroup &lt;- data.frame(Longitude = rep(c(1:10, 10:1), 2), 
+                        Latitude =  rep(c(1:10, 10:1), 2),
+                        ID = c(rep("A", 20), rep("B", 20)),
+                        DateTime = format(
+                        lubridate::ymd_hms("2021-01-01 00:00:00") +
+                        lubridate::hours(0:19))
+)
+colony &lt;- data.frame(
+ Longitude = dataGroup$Longitude[1], Latitude = dataGroup$Latitude[1]
+)
+## split tracks into trips
+Trips &lt;- tripSplit(dataGroup,
+                   colony=colony,
+                   innerBuff=2,
+                   returnBuff=20,
+                   duration=1,
+                   nests = FALSE,
+                   rmNonTrip = TRUE
+)
+                   
+</code></pre>
+
+
+</div>

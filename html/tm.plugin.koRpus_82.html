@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>docTermMatrix,kRp.corpus-method</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate a document-term matrix from a corpus object</h2>
+
+<h3>Description</h3>
+
+<p>Calculates a sparse document-term matrix calculated from a given object of class
+<code>kRp.corpus</code> and adds it to the object's feature list.
+You can also calculate the term frequency inverted document frequency value (tf-idf) for each
+term.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'kRp.corpus'
+docTermMatrix(
+  obj,
+  terms = "token",
+  case.sens = FALSE,
+  tfidf = FALSE,
+  as.feature = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>An object of class <code>kRp.corpus</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>terms</code></td>
+<td>
+<p>A character string defining the <code>tokens</code> column to be used for calculating the matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>case.sens</code></td>
+<td>
+<p>Logical, whether terms should be counted case sensitive.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tfidf</code></td>
+<td>
+<p>Logical,
+if <code>TRUE</code> calculates term frequency–inverse document frequency (tf-idf)
+values instead of absolute frequency.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as.feature</code></td>
+<td>
+<p>Logical,
+whether the output should be just the sparse matrix or the input object with
+that matrix added as a feature. Use <code>corpusDocTermMatrix</code>
+to get the matrix from such an aggregated object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The settings of <code>terms</code>, <code>case.sens</code>,
+and <code>tfidf</code> will be stored in the object's <code>meta</code> slot,
+so you can use <code>corpusMeta(..., "doc_term_matrix")</code> to fetch it.
+</p>
+<p>See the examples to learn how to limit the analysis to desired word classes.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Either an object of the input class or a sparse matrix of class
+<code>dgCMatrix</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># use readCorpus() to create an object of class kRp.corpus
+# code is only run when the english language package can be loaded
+if(require("koRpus.lang.en", quietly = TRUE)){
+  myCorpus &lt;- readCorpus(
+    dir=file.path(path.package("tm.plugin.koRpus"), "examples", "corpus"),
+    hierarchy=list(
+      Topic=c(
+        Winner="Reality Winner",
+        Edwards="Natalie Edwards"
+      ),
+      Source=c(
+        Wikipedia_prev="Wikipedia (old)",
+        Wikipedia_new="Wikipedia (new)"
+      )
+    ),
+    # use tokenize() so examples run without a TreeTagger installation
+    tagger="tokenize",
+    lang="en"
+  )
+
+  # get the document-term frequencies in a sparse matrix
+  myDTMatrix &lt;- docTermMatrix(myCorpus, as.feature=FALSE)
+
+  # combine with filterByClass() to, e.g.,  exclude all punctuation
+  myDTMatrix &lt;- docTermMatrix(filterByClass(myCorpus), as.feature=FALSE)
+
+  # instead of absolute frequencies, get the tf-idf values
+  myDTMatrix &lt;- docTermMatrix(
+    filterByClass(myCorpus),
+    tfidf=TRUE,
+    as.feature=FALSE
+  )
+} else {}
+</code></pre>
+
+
+</div>

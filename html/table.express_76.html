@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mutate_sd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Mutate subset of data</h2>
+
+<h3>Description</h3>
+
+<p>Like mutate-table.express but possibly recycling calls.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mutate_sd(.data, .SDcols, .how = identity, ...)
+
+## S3 method for class 'ExprBuilder'
+mutate_sd(
+  .data,
+  .SDcols,
+  .how = identity,
+  ...,
+  .pairwise = TRUE,
+  .prefix,
+  .suffix,
+  .parse = getOption("table.express.parse", FALSE),
+  .chain = getOption("table.express.chain", TRUE)
+)
+
+## S3 method for class 'EagerExprBuilder'
+mutate_sd(.data, ..., .parent_env = rlang::caller_env())
+
+## S3 method for class 'data.table'
+mutate_sd(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>An instance of ExprBuilder.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.SDcols</code></td>
+<td>
+<p>See data.table::data.table and the details here.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.how</code></td>
+<td>
+<p>The function(s) or function call(s) that will perform the transformation. If many,
+a list should be used, either with <code>list()</code> or <code>.()</code>. If the list is named, the names will be
+used for the new columns' names. Lambdas specified as formulas are supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Possibly more arguments for <em>all</em> functions/calls in <code>.how</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.pairwise</code></td>
+<td>
+<p>If <code>FALSE</code>, each function in <code>.how</code> is applied to each column in <code>.SDcols</code> (like
+a cartesian product).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.prefix, .suffix</code></td>
+<td>
+<p>Only relevant when <code>.how</code> is a function: add a prefix or suffix to the new
+column's name. If neither is missing, <code>.prefix</code> has preference.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.parse</code></td>
+<td>
+<p>Logical. Whether to apply <code>rlang::parse_expr()</code> to obtain the expressions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.chain</code></td>
+<td>
+<p>Logical. Should a new frame be automatically chained to the expression if the
+clause being set already exists?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.parent_env</code></td>
+<td>
+<p>See <code>end_expr()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function works similar to <code>transmute_sd()</code> but keeps all columns and <em>can</em> modify by
+reference, like mutate-table.express. It can serve like
+dplyr's scoped mutation variants depending on what's given to <code>.SDcols</code>.
+</p>
+<p>Additionally, <code>.SDcols</code> supports:
+</p>
+
+<ul>
+<li> <p>tidyselect::select_helpers
+</p>
+</li>
+<li>
+<p> A predicate using the <code>.COL</code> pronoun that should return a single logical when <code>.COL</code> is
+replaced by a <em>column</em> of the data.
+</p>
+</li>
+<li>
+<p> A formula using <code>.</code> or <code>.x</code> instead of the aforementioned <code>.COL</code>.
+</p>
+</li>
+</ul>
+<p>The caveat is that the expression is evaluated eagerly, i.e. with the currently captured
+<code>data.table</code>. Consider using <code>chain()</code> to explicitly capture intermediate results as actual
+<code>data.table</code>s.
+</p>
+<p>To see more examples, check the
+<a href="https://asardaes.github.io/table.express/articles/table.express.html">vignette</a>, or the
+table.express-package entry.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data("mtcars")
+
+data.table::as.data.table(mtcars) %&gt;%
+    start_expr %&gt;%
+    mutate_sd(c("mpg", "cyl"), ~ .x * 2)
+
+</code></pre>
+
+
+</div>

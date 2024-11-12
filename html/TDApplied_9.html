@@ -1,0 +1,176 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>diagram_kpca</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate the kernel PCA embedding of a group of persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>Project a group of persistence diagrams into a low-dimensional embedding space using
+a kernelized version of the popular PCA algorithm.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">diagram_kpca(
+  diagrams,
+  K = NULL,
+  dim = 0,
+  t = 1,
+  sigma = 1,
+  rho = NULL,
+  features = 1,
+  num_workers = parallelly::availableCores(omit = 1),
+  th = 1e-04
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diagrams</code></td>
+<td>
+<p>a list of persistence diagrams which are either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>an optional precomputed Gram matrix of the persistence diagrams in 'diagrams', default NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>the non-negative integer homological dimension in which the distance is to be computed, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>a positive number representing the scale for the persistence Fisher kernel, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a positive number representing the bandwidth for the Fisher information metric, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If supplied, Gram matrix calculation is sequential.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>features</code></td>
+<td>
+<p>number of features (principal components) to return, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>th</code></td>
+<td>
+<p>the threshold value under which principal components are ignored (default 0.0001).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Returns the output of kernlab's <code>kpca</code> function on the desired Gram matrix of a group of persistence diagrams
+in a particular dimension. The prediction function <code>predict_diagram_kpca</code> can be used to 
+project new persistence diagrams using an old embedding, and this could be one practical
+advantage of using <code>diagram_kpca</code> over <code>diagram_mds</code>. The embedding coordinates can also
+be used for further analysis, or simply as a data visualization tool for persistence diagrams.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list of class 'diagram_kpca' containing the elements
+</p>
+
+<dl>
+<dt>pca</dt>
+<dd>
+<p>the output of kernlab's <code>kpca</code> function on the Gram matrix: an S4 object containing the slots 'pcv' (a matrix containing the principal component vectors (column wise)), 'eig' (the corresponding eigenvalues), 'rotated' (the original data projected (rotated) on the principal components) and 'xmatrix' (the original data matrix).</p>
+</dd>
+<dt>diagrams</dt>
+<dd>
+<p>the input 'diagrams' argument.</p>
+</dd>
+<dt>t</dt>
+<dd>
+<p>the input 't' argument.</p>
+</dd>
+<dt>sigma</dt>
+<dd>
+<p>the input 'sigma' argument.</p>
+</dd>
+<dt>dim</dt>
+<dd>
+<p>the input 'dim' argument.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Scholkopf, B and Smola, A and Muller, K (1998). "Nonlinear Component Analysis as a Kernel Eigenvalue Problem." <a href="https://www.mlpack.org/papers/kpca.pdf">https://www.mlpack.org/papers/kpca.pdf</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>predict_diagram_kpca</code> for predicting embedding coordinates of new diagrams.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create six diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D3 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D4 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D5 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D6 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D2,D3,D4,D5,D6)
+
+  # calculate their 2D PCA embedding with sigma = t = 2 in dimension 1
+  pca &lt;- diagram_kpca(diagrams = g,dim = 1,t = 2,sigma = 2,features = 2,num_workers = 2,th = 1e-6)
+  
+  # repeat with precomputed Gram matrix, gives same result but much faster
+  K &lt;- gram_matrix(diagrams = g,dim = 1,t = 2,sigma = 2,num_workers = 2)
+  pca &lt;- diagram_kpca(diagrams = g,K = K,dim = 1,t = 2,sigma = 2,features = 2,th = 1e-6)
+  
+}
+</code></pre>
+
+
+</div>

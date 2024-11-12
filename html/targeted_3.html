@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>alean</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Assumption Lean inference for generalized linear model parameters</h2>
+
+<h3>Description</h3>
+
+<p>Assumption lean inference via cross-fitting (Double ML). See
+&lt;doi:10.1111/rssb.12504
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">alean(
+  response_model,
+  exposure_model,
+  data,
+  link = "identity",
+  g_model,
+  nfolds = 1,
+  silent = FALSE,
+  mc.cores,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>response_model</code></td>
+<td>
+<p>formula or ml_model object (formula =&gt; glm)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exposure_model</code></td>
+<td>
+<p>model for the exposure</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link</code></td>
+<td>
+<p>Link function (g)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g_model</code></td>
+<td>
+<p>Model for <code class="reqn">E[g(Y|A,W)|W]</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfolds</code></td>
+<td>
+<p>Number of folds</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>supress all messages and progressbars</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mc.cores</code></td>
+<td>
+<p>mc.cores Optional number of cores. parallel::mcmapply used instead of future</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to future.apply::future_mapply</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Let <code class="reqn">Y</code> be the response variable, <code class="reqn">A</code> the exposure and <code class="reqn">W</code>
+covariates. The target parameter is: </p>
+<p style="text-align: center;"><code class="reqn">\Psi(P) = \frac{E(Cov[A,
+g\{E(Y|A,W)\}\mid W])} {E\{Var(A\mid W)\}} </code>
+</p>
+
+<p>The <code>response_model</code> is the model for <code class="reqn">E(Y|A,W)</code>, and
+<code>exposure_model</code> is the model for <code class="reqn">E(A|W)</code>.
+<code>link</code> specifies <code class="reqn">g</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>alean.targeted object
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Klaus Kähler Holst
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+sim1 &lt;- function(n, family=gaussian(), ...) {
+   m &lt;- lvm() |&gt;
+     distribution(~ y, binomial.lvm()) |&gt;
+     regression('a', value=function(l) l) |&gt;
+     regression('y', value=function(a,l) a + l)
+     if (family$family=="binomial")
+        distribution(m, ~a) &lt;- binomial.lvm()
+   sim(m, n)
+}
+
+library(splines)
+f &lt;- binomial()
+d &lt;- sim1(1e4, family=f)
+e &lt;- alean(response_model=ML(y ~ a + bs(l, df=3), family=binomial),
+           exposure_model=ML(a ~ bs(l, df=3), family=f),
+           data=d,
+           link = "logit", mc.cores=1, nfolds=1)
+e
+
+e &lt;- alean(response_model=ML(y ~ a + l, family=binomial),
+           exposure_model=ML(a ~ l),
+           data=d,
+           link = "logit", mc.cores=1, nfolds=1)
+e
+</code></pre>
+
+
+</div>

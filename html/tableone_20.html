@@ -1,0 +1,217 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>svyCreateTableOne</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create an object summarizing both continuous and categorical variables for weighted data</h2>
+
+<h3>Description</h3>
+
+<p>Create an object summarizing all baseline variables (both continuous and categorical) optionally stratifying by one or more startifying variables and performing statistical tests. The object gives a table that is easy to use in medical research papers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">svyCreateTableOne(
+  vars,
+  strata,
+  data,
+  factorVars,
+  includeNA = FALSE,
+  test = TRUE,
+  testApprox = svyTestChisq,
+  argsApprox = NULL,
+  testNormal = svyTestNormal,
+  argsNormal = list(method = "Wald"),
+  testNonNormal = svyTestNonNormal,
+  argsNonNormal = NULL,
+  smd = TRUE,
+  addOverall = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>Variables to be summarized given as a character vector. Factors are handled as categorical variables, whereas numeric variables are handled as continuous variables. If empty, all variables in the survey design object specified in the data argument are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>Stratifying (grouping) variable name(s) given as a character vector. If omitted, the overall results are returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A survey design object in which these variables exist. All variables (both vars and strata) must be in this survey design object. It is created with the <code>svydesign</code> function in the <code>survey</code> package.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factorVars</code></td>
+<td>
+<p>Numerically coded variables that should be handled as categorical variables given as a character vector. Do not include factors, unless you need to relevel them by removing empty levels. If omitted, only factors are considered categorical variables. The variables specified here must also be specified in the <code>vars</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>includeNA</code></td>
+<td>
+<p>If TRUE, NA is handled as a regular factor level rather than missing. NA is shown as the last factor level in the table. Only effective for categorical variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test</code></td>
+<td>
+<p>If TRUE, as in the default and there are more than two groups, groupwise comparisons are performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testApprox</code></td>
+<td>
+<p>A function used to perform the large sample approximation based tests. The default is <code>svychisq</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsApprox</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in testApprox.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testNormal</code></td>
+<td>
+<p>A function used to perform the normal assumption based tests. The default is multiple degrees of freedom test using <code>svyglm</code> and <code>regTermTest</code>. This is equivalent of the <code>svyttest</code> when there are only two groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsNormal</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in <code>testNormal</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testNonNormal</code></td>
+<td>
+<p>A function used to perform the nonparametric tests. The default is <code>svyranktest</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsNonNormal</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in <code>testNonNormal</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smd</code></td>
+<td>
+<p>If TRUE, as in the default and there are more than two groups, standardized mean differences for all pairwise comparisons are calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>addOverall</code></td>
+<td>
+<p>(optional, only used if strata are supplied) Adds an overall column to the table. Smd and p-value calculations are performed using only the stratifed clolumns.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See the details for <code>CreateTableOne</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>svyTableOne</code>, which is a list of three objects.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>ContTable</code></td>
+<td>
+<p>an object of class <code>svyContTable</code>, containing continuous variables only</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CatTable</code></td>
+<td>
+<p> an object of class <code>svyCatTable</code>, containing categorical variables only</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MetaData</code></td>
+<td>
+<p>list of metadata regarding variables</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Kazuki Yoshida
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>print.TableOne</code>, <code>summary.TableOne</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Load packages
+library(tableone)
+library(survey)
+
+## Create a weighted survey design object
+data(nhanes)
+nhanesSvy &lt;- svydesign(ids = ~ SDMVPSU, strata = ~ SDMVSTRA, weights = ~ WTMEC2YR,
+                       nest = TRUE, data = nhanes)
+
+## Create a table object
+## factorVars are converted to factors; no need for variables already factors
+## strata will stratify summaries; leave it unspecified for overall summaries
+tab1 &lt;- svyCreateTableOne(vars = c("HI_CHOL","race","agecat","RIAGENDR"),
+                          strata = "RIAGENDR", data = nhanesSvy,
+                          factorVars = c("race","RIAGENDR"))
+
+## Detailed output
+summary(tab1)
+
+## Default formatted printing
+tab1
+
+## nonnormal specifies variables to be shown as median [IQR]
+print(tab1, nonnormal = "HI_CHOL", contDigits = 3, catDigits = 2,
+      pDigits = 4, smd = TRUE)
+
+## minMax changes it to median [min, max]
+print(tab1, nonnormal = "HI_CHOL", minMax = TRUE, contDigits = 3,
+      catDigits = 2, pDigits = 4, smd = TRUE)
+
+## showAllLevels can be used tow show levels for all categorical variables
+print(tab1, showAllLevels = TRUE, smd = TRUE)
+
+## To see all printing options
+?print.TableOne
+
+## To examine categorical variables only
+tab1$CatTable
+
+## To examine continuous variables only
+tab1$ContTable
+
+## If SMDs are needed as numericals, use ExtractSmd()
+ExtractSmd(tab1)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>JointExceedanceCurve</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Joint exceedance curves</h2>
+
+<h3>Description</h3>
+
+<p>Calculate bivariate joint exceedance curves
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">JointExceedanceCurve(Sample, ExceedanceProb,...)
+## S3 method for class 'jointExcCurve'
+print(x,...)
+
+## Default S3 method:
+JointExceedanceCurve(Sample, ExceedanceProb, n = 50, x = NULL, ...)
+
+## S3 method for class 'mexMC'
+JointExceedanceCurve(
+  Sample,
+  ExceedanceProb,
+  n = 50,
+  x = NULL,
+  which = 1:2,
+  ...
+)
+
+## S3 method for class 'predict.mex'
+JointExceedanceCurve(
+  Sample,
+  ExceedanceProb,
+  n = 50,
+  x = NULL,
+  which = 1:2,
+  ...
+)
+
+calcJointExceedanceCurve(Sample, ExceedanceProb, n = 50, x = NULL)
+
+## S3 method for class 'jointExcCurve'
+print(x, ...)
+
+geom_jointExcCurve(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Sample</code></td>
+<td>
+<p>Monte Carlo (or other) sample from which to calculate joint exceedance curve</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ExceedanceProb</code></td>
+<td>
+<p>Takes values between 0 and 1, constant value of joint exceedance probability for which the curve will be calculated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further aguments to be passed to methods</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>If <code>x=NULL</code> then this is HALF the number of points at which the curve will be estimated (ie the curve is calculated at 2n locations)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>If specified by the user, the values of in the first dimension of <code>Sample</code> at which to calculate the curve. Defaults to <code>NULL</code> otherwise should be a numeric vector within the range of the first dimension of <code>Sample</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>Vector length two identifying which margins to use for joint exceedance curve estimation. Can be integer vector, giving column numbers of original data matrix, or character vector identifying variables by name (these must match column names in original data).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Calculates pairs of points (x,y) for which the point exceedance
+probability P(X&gt;x and Y&gt;y) is constant.  This is available only in
+two dimensions: for higher dimensional data, the bivariate margin
+will be used and other variables ignored. Takes as input either a
+two column matrix of observations, output from <code>mexMonteCarlo</code>
+(in which case samples from all fitted models are used to calculate curves)
+or output from a call to the <code>predict</code> method for an object of
+class <code>mex</code> (in which case just the single fitted model is used
+for estimation, with the importance sample generated in the call
+to <code>predict</code> being used to calculate the joint exceedance curve).
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of class <code>jointExcCurve</code>. This is a
+list of length two, one for each variable for which the curve is
+calculated.  Each item of the list is a vector of coordinate values
+for the variable in question.  Attributes include <code>names</code> and
+the exceedance probability used to calculate the curve <code>ExceedanceProb</code>.
+</p>
+<p>The curve is calculated by finding pairs of points (x,y) for which the empirical
+probability P(X&gt;x, Y&gt;y) of both variables exceeding their corresponding value is equal
+to the specified <code>ExceedanceProb</code>.  Note that when this is calculated
+for an object of class <code>predict.mex</code> (returned by a call to the <code>predict</code>
+method for an object of class <code>mex</code>) then the exceedance probability is
+interpreted as the UNCONDITIONAL exceedance probability of the importance sample,
+ie the probability of sampled values occurring from the original modelled joint
+distribution, and NOT the conditional distribution used to generate the
+importance sample.
+</p>
+<p>Estimated curve can be added to a ggplot of the data (and/or importance sample) by using the function <code>geom_jointExcCurve</code>, see examples below.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ # for data frame of raw data
+ Sigma &lt;- matrix(c(1, .5, .5, 1), ncol=2)
+ m1 &lt;- rmvnorm(5000,sigma=Sigma)
+ m1 &lt;- as.data.frame(m1)
+ j1 &lt;- JointExceedanceCurve(m1,0.01)
+ j2 &lt;- JointExceedanceCurve(m1,0.005)
+ j3 &lt;- JointExceedanceCurve(m1,0.001)
+ ggplot(m1,aes(V1,V2)) + geom_point(colour="dark blue",alpha=0.5) +
+ geom_jointExcCurve(j1,colour="orange") +
+ geom_jointExcCurve(j2,colour="orange") +
+ geom_jointExcCurve(j3,colour="orange")
+
+ # using importance sample generated by call to predict for object of class mex
+ m &lt;- mex(winter,mqu=0.7,dqu=0.7,which="NO")
+ m2 &lt;- predict(m,nsim=5000,pqu=0.999)
+ g &lt;- ggplot(m2,plot.=FALSE)
+ j4 &lt;- JointExceedanceCurve(m2,0.0005,which=c("NO","NO2"))
+ j5 &lt;- JointExceedanceCurve(m2,0.0002,which=c("NO","NO2"))
+ j6 &lt;- JointExceedanceCurve(m2,0.0001,which=c("NO","NO2"))
+ g[[2]] +
+     geom_jointExcCurve(j4,aes(NO,NO2),col="orange") +
+     geom_jointExcCurve(j5,aes(NO,NO2),col="orange") +
+     geom_jointExcCurve(j6,aes(NO,NO2),col="orange")
+
+# for augmented dataset, generated by MC sampling from collection of fitted H+T models
+ m &lt;- mexAll(winter,mqu=0.7,dqu=rep(0.7,5))
+ m3 &lt;- mexMonteCarlo(nSample=5000,mexList=m)
+ j7 &lt;- JointExceedanceCurve(m3,0.05,which=c("NO","NO2"))
+ j8 &lt;- JointExceedanceCurve(m3,0.02,which=c("NO","NO2"))
+ j9 &lt;- JointExceedanceCurve(m3,0.01,which=c("NO","NO2"))
+ ggplot(as.data.frame(m3$MCsample[,c("NO","NO2")]),aes(NO,NO2)) +
+     geom_point(col="light blue",alpha=0.5) +
+     geom_jointExcCurve(j7,col="orange") +
+     geom_jointExcCurve(j8,col="orange") +
+     geom_jointExcCurve(j9,col="orange")
+
+</code></pre>
+
+
+</div>

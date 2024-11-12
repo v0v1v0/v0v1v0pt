@@ -1,0 +1,192 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>testPackage</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Test an R package and report the results in JUnit</h2>
+
+<h3>Description</h3>
+
+<p>Run all tests of a package and report the results as JUnit xml. This function
+can be seen as a drop in replacement for <code>tinytest::test_package()</code> but with a
+key difference that uncaught errors will be catched and reported JUnit!
+This function is intended to be used in a test stage of a CI build.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">testPackage(
+  pkgname,
+  file = stdout(),
+  errorOnFailure = TRUE,
+  testdir = "tinytest",
+  lib.loc = NULL,
+  at_home = FALSE,
+  ncpu = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pkgname</code></td>
+<td>
+<p><code>character(1)</code>. Name of the package to tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p><code>character(1) | connection</code>: Full file path or connection object to write the
+JUnit xml content to. By default <code>stdout()</code> connection is used.
+<strong>Warning</strong> if the file already exist it will be overwritten!</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errorOnFailure</code></td>
+<td>
+<p><code>logical(1)</code> Should an error be raised (after writing the JUnit) when a
+at least one test failed? By default TRUE. This is done as a
+convenience to have the CI fail at the test stage on failure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testdir</code></td>
+<td>
+<p><code>character(1)</code> testing directory of the package. See ?<code>tinytest::test_package()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lib.loc</code></td>
+<td>
+<p><code>character(1) | NULL</code> Library location where the package is installed.
+By default: <code>NULL</code> meaning the package is searched on the standard .libPaths().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>at_home</code></td>
+<td>
+<p><code>logical(1)</code> should local test be run? By default FALSE as we want to as closely
+mimic the environement of how tests would get ran in CRAN.
+See for more details <code>tinytest::test_package()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncpu</code></td>
+<td>
+<p><code style="white-space: pre;">⁠postive integer(1) | clutser⁠</code> Either an integer specifying the amount of cpu's
+to parralize the testing over or a <code>cluster</code> object to run the tests in.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Extra arguments passed on to <code>runTestDir()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>testPackage()</code> is meant as a CI-friendly alternative to the native <code>tinytest::test_package()</code>.
+Next to directly reporting the tests results in a JUnit xml format, it also catches errors that
+are raised in the tests files and reports them as "error" in the JUnit.
+</p>
+<p><code>tinytest::test_package()</code> would have let the error bubble up, stop the testing
+process and not report any failures from other test files. One is then also forced
+to look into the logs of the CI to see what the error was. <code>testPackage()</code> presents you that
+error in the JUnit with a stacktrace. Next to all the test results of the other files that
+ran without a problem.
+</p>
+<p>If you prefer the behaviour from <code>tinytest::test_package()</code>, you can still use it in
+combination with <code>writeJUnit()</code> if all tests results pass.
+</p>
+<p>Just like <code>tinytest::test_package()</code> an error is raised if at least one failure occured during
+testing. Obviously catched errors are also seen as failures. This error is raised
+<strong>after</strong> the test results have been written away to the file, such that your CI can still pick
+it up and report the failure.
+The error raising is done as a convenience to stop the CI from continue if test-failure occured.
+You can opt-out of this behaviour by setting the <code>errorOnFailure</code> parameter to FALSE. Then a
+case <code>tinytests2JUnit</code> object is returned (a sub-class of <code>tinytests</code> object containing addition
+info for the JUnit).
+Caught errors are also captured in this object as <code>tinytest</code>-objects. They
+actually have a special sub-class but this is considered an internal implemenation detail.
+</p>
+<p><code>testPackage()</code> is NOT meant to be called from within your <code>tests/tinytests.R</code> file! Tests
+invoked by R CMD Check or on CRAN should still make use of <code>tinytest::test_package()</code>.
+This function is only meant to be called from within a testing step in your CI to
+report the test results in an JUnit xml format.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>errorOnFailure</code> = FALSE, a <code>tinytests2JUnit</code> object (a subclass of <code>tinytests</code>
+object that captures more info for export to JUnit). Else, an error is raised if at least
+on failure occurs. Meant as convenience to automatically stop the CI build.
+</p>
+
+
+<h3>Side-effects</h3>
+
+<p>Side effects are registered as 'passed' tests in the JUnit output and have been given a status
+"SIDE-EFFECT". The call and diff is also returned in the standard-output of the testcase tag.
+</p>
+<p>They are not considred failures and would thus not stop a pipeline.
+</p>
+
+
+<h3>tinytests to JUnit</h3>
+
+<p>To comply the the JUnit specification the tests results are adapted as follows:
+</p>
+
+<ul>
+<li>
+<p> A single test run <code>tinytests</code> is mapped to a <code style="white-space: pre;">⁠&lt;testsuites&gt;⁠</code> tag.
+</p>
+</li>
+<li>
+<p> All <code>tinytest</code> results from a single file are mapped to a single <code style="white-space: pre;">⁠&lt;testsuite&gt;⁠</code> tag.
+</p>
+
+<ul><li>
+<p> The name of the testsuite is equal to the test file name (without the file suffix)
+</p>
+</li></ul>
+</li>
+<li>
+<p> An individual <code>tinytest</code> object (eg. a single <code style="white-space: pre;">⁠except_*⁠</code> exception test) is mapped to a
+<code style="white-space: pre;">⁠&lt;testcase&gt;⁠</code> tag.
+</p>
+
+<ul><li>
+<p> The name of the testcase is equal to the fileName + Line specification of where the expect
+statement is performed + the info.
+</p>
+</li></ul>
+</li>
+</ul>
+<p>For reference: <a href="https://llg.cubic.org/docs/junit/">https://llg.cubic.org/docs/junit/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>runTestDir()</code> and <code>tinytest::test_package()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tmpFile &lt;- tempfile(fileext = ".xml")
+testPackage("tinytest", file = tmpFile, verbose = 0)
+</code></pre>
+
+
+</div>

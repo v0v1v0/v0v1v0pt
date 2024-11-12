@@ -1,0 +1,455 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tclust</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>TCLUST method for robust clustering</h2>
+
+<h3>Description</h3>
+
+<p>This function searches for <code>k</code> (or less) clusters with 
+different covariance structures in a data matrix <code>x</code>. Relative cluster 
+scatter can be restricted when <code>restr="eigen"</code> by constraining the ratio 
+between the largest and the smallest of the scatter matrices eigenvalues 
+by a constant value <code>restr.fact</code>. Relative cluster scatters can be also 
+restricted with <code>restr="deter"</code> by constraining the ratio between the 
+largest and the smallest of the scatter matrices' determinants. 
+</p>
+<p>For robustifying the estimation, a proportion <code>alpha</code> of observations is trimmed. 
+In particular, the trimmed k-means method is represented by the <code>tclust()</code> method,
+by setting parameters <code>restr.fact=1</code>, <code>opt="HARD"</code> and <code>equal.weights=TRUE</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tclust(
+  x,
+  k,
+  alpha = 0.05,
+  nstart = 500,
+  niter1 = 3,
+  niter2 = 20,
+  nkeep = 5,
+  iter.max,
+  equal.weights = FALSE,
+  restr = c("eigen", "deter"),
+  restr.fact = 12,
+  cshape = 1e+10,
+  opt = c("HARD", "MIXT"),
+  center = FALSE,
+  scale = FALSE,
+  store_x = TRUE,
+  parallel = FALSE,
+  n.cores = -1,
+  zero_tol = 1e-16,
+  drop.empty.clust = TRUE,
+  trace = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A matrix or data.frame of dimension n x p, containing the observations (row-wise).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>The number of clusters initially searched for.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The proportion of observations to be trimmed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nstart</code></td>
+<td>
+<p>The number of random initializations to be performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>niter1</code></td>
+<td>
+<p>The number of concentration steps to be performed for the nstart initializations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>niter2</code></td>
+<td>
+<p>The maximum number of concentration steps to be performed for the 
+<code>nkeep</code> solutions kept for further iteration. The concentration steps are 
+stopped, whenever two consecutive steps lead to the same data partition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nkeep</code></td>
+<td>
+<p>The number of iterated initializations (after niter1 concentration 
+steps) with the best values in the target function that are kept for further iterations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter.max</code></td>
+<td>
+<p>(deprecated, use the combination <code>nkeep, niter1 and niter2</code>) 
+The maximum number of concentration steps to be performed.
+The concentration steps are stopped, whenever two consecutive steps lead
+to the same data partition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>equal.weights</code></td>
+<td>
+<p>A logical value, specifying whether equal cluster weights 
+shall be considered in the concentration and assignment steps.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restr</code></td>
+<td>
+<p>Restriction type to control relative cluster scatters. 
+The default value is <code>restr="eigen"</code>, so that the maximal ratio between 
+the largest and the smallest of the scatter matrices eigenvalues is constrained 
+to be smaller then or equal to <code>restr.fact</code> 
+(Garcia-Escudero, Gordaliza, Matran, and Mayo-Iscar, 2008). 
+Alternatively, <code>restr="deter"</code> imposes that the maximal ratio between 
+the largest and the smallest of the scatter matrices determinants is smaller 
+or equal than <code>restr.fact</code> (see Garcia-Escudero, Mayo-Iscar and Riani, 2020)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restr.fact</code></td>
+<td>
+<p>The constant <code>restr.fact &gt;= 1</code> constrains the allowed 
+differences among group scatters in terms of eigenvalues ratio
+(if <code>restr="eigen"</code>) or determinant ratios (if <code>restr="deter"</code>). Larger values 
+imply larger differences of group scatters, a value of 1 specifies the 
+strongest restriction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cshape</code></td>
+<td>
+<p>constraint to apply to the shape matrices, <code>cshape &gt;= 1</code>, 
+(see Garcia-Escudero, Mayo-Iscar and Riani, 2020)). 
+This options only works if <code>restr=='deter'</code>. In this case the default 
+value is <code>cshape=1e10</code> to ensure the procedure is (virtually) affine equivariant. 
+On the other hand, <code>cshape</code> values close to 1 would force the clusters to 
+be almost spherical (without necessarily the same scatters if <code>restr.fact</code> 
+is strictly greater than 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opt</code></td>
+<td>
+<p>Define the target function to be optimized. A classification likelihood 
+target function is considered if <code>opt="HARD"</code> and a mixture classification 
+likelihood if <code>opt="MIXT"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>center</code></td>
+<td>
+<p>Optional centering of the data: a function or a vector of length p 
+which can optionally be specified for centering x before calculation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>Optional scaling of the data: a function or a vector of length p 
+which can optionally be specified for scaling x before calculation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store_x</code></td>
+<td>
+<p>A logical value, specifying whether the data matrix <code>x</code> shall be 
+included in the result object. By default this value is set to <code>TRUE</code>, because 
+some of the plotting functions depend on this information. However, when big data 
+matrices are handled, the result object's size can be decreased noticeably 
+when setting this parameter to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>A logical value, specifying whether the nstart initializations should be done in parallel.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.cores</code></td>
+<td>
+<p>The number of cores to use when paralellizing, only taken into account if parallel=T.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zero_tol</code></td>
+<td>
+<p>The zero tolerance used. By default set to 1e-16.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop.empty.clust</code></td>
+<td>
+<p>Logical value specifying, whether empty clusters shall be 
+omitted in the resulting object. (The result structure does not contain center 
+and covariance estimates of empty clusters anymore. Cluster names are reassigned 
+such that the first l clusters (l &lt;= k) always have at least one observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>Defines the tracing level, which is set to 0 by default. Tracing level 1 
+gives additional information on the stage of the iterative process.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The procedure allows to deal with robust clustering with an <code>alpha</code>
+proportion of trimming level and searching for <code>k</code> clusters. We are considering 
+classification trimmed likelihood when using <code>opt=”HARD”</code> so that “hard” or “crisp” 
+clustering assignments are done. On the other hand, mixture trimmed likelihood 
+are applied when using <code>opt=”MIXT”</code> so providing a kind of clusters “posterior” 
+probabilities for the observations. 
+Relative cluster scatter can be restricted when <code>restr="eigen"</code> by constraining 
+the ratio between the largest and the smallest of the scatter matrices eigenvalues 
+by a constant value <code>restr.fact</code>. Setting <code>restr.fact=1</code>, yields the 
+strongest restriction, forcing all clusters to be spherical and equally scattered. 
+Relative cluster scatters can be also restricted with <code>restr="deter"</code> by 
+constraining the ratio between the largest and the smallest of the scatter 
+matrices' determinants. 
+</p>
+<p>This iterative algorithm performs "concentration steps" to improve the current 
+cluster assignments. For approximately obtaining the global optimum, the procedure 
+is randomly initialized <code>nstart</code> times and <code>niter1</code> concentration steps are performed for 
+them. The <code>nkeep</code> most “promising” iterations, i.e. the <code>nkeep</code> iterated solutions with 
+the initial best values for the target function, are then iterated until convergence 
+or until <code>niter2</code> concentration steps are done. 
+</p>
+<p>The parameter <code>restr.fact</code> defines the cluster scatter matrices restrictions, 
+which are applied on all clusters during each concentration step. It restricts 
+the ratio between the maximum and minimum eigenvalue of 
+all clusters' covariance structures to that parameter. Setting <code>restr.fact=1</code>, 
+yields the strongest restriction, forcing all clusters to be spherical and equally scattered. 
+</p>
+<p>Cluster components with similar sizes are favoured when considering <code>equal.weights=TRUE</code> 
+while <code>equal.weights=FALSE</code> admits possible different prior probabilities for 
+the components and it can easily return empty clusters when the number of 
+clusters is greater than apparently needed.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function returns the following values:
+</p>
+
+<ul>
+<li>
+<p> cluster - A numerical vector of size <code>n</code> containing the cluster assignment 
+for each observation. Cluster names are integer numbers from 1 to k, 0 indicates 
+trimmed observations. Note that it could be empty clusters with no observations 
+when <code>equal.weights=FALSE</code>.
+</p>
+</li>
+<li>
+<p> obj - The value of the objective function of the best (returned) solution.
+</p>
+</li>
+<li>
+<p> size - An integer vector of size k, returning the number of observations contained by each cluster.
+</p>
+</li>
+<li>
+<p> weights - Vector of Cluster weights
+</p>
+</li>
+<li>
+<p> centers - A matrix of size p x k containing the centers (column-wise) of each cluster. 
+</p>
+</li>
+<li>
+<p> cov - 	An array of size p x p x k containing the covariance matrices of each cluster. 
+</p>
+</li>
+<li>
+<p> code - A numerical value indicating if the concentration steps have 
+converged for the returned solution (2).
+</p>
+</li>
+<li>
+<p> posterior - A matrix with k columns that contains the posterior 
+probabilities of membership of each observation (row-wise) to the <code>k</code> 
+clusters. This posterior probabilities are 0-1 values in the 
+<code>opt="HARD"</code> case. Trimmed observations have 0 membership probabilities 
+to all clusters.
+</p>
+</li>
+<li>
+<p> cluster.ini - A matrix with nstart rows and number of columns equal to 
+the number of observations and where each row shows the final clustering 
+assignments (0 for trimmed observations) obtained after the <code>niter1</code> 
+iteration of the <code>nstart</code> random initializations.
+</p>
+</li>
+<li>
+<p> obj.ini - A numerical vector of length <code>nstart</code> containing the values 
+of the target function obtained after the <code>niter1</code> iteration of the 
+<code>nstart</code> random initializations.
+</p>
+</li>
+<li>
+<p> x - The input data set.
+</p>
+</li>
+<li>
+<p> k - The input number of clusters.
+</p>
+</li>
+<li>
+<p> alpha - The input trimming level.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Javier Crespo Guerrero, Luis Angel Garcia Escudero, Agustin Mayo Iscar.
+</p>
+
+
+<h3>References</h3>
+
+<p>Fritz, H.; Garcia-Escudero, L.A.; Mayo-Iscar, A. (2012), "tclust: An R Package 
+for a Trimming Approach to Cluster Analysis". Journal of Statistical Software, 
+47(12), 1-26. URL http://www.jstatsoft.org/v47/i12/
+</p>
+<p>Garcia-Escudero, L.A.; Gordaliza, A.; Matran, C. and Mayo-Iscar, A. (2008), 
+"A General Trimming Approach to Robust Cluster Analysis". Annals of Statistics, 
+Vol.36, 1324–1345.  
+</p>
+<p>García-Escudero, L. A., Gordaliza, A. and Mayo-Íscar, A. (2014). A constrained 
+robust proposal for mixture modeling avoiding spurious solutions. 
+Advances in Data Analysis and Classification, 27–43. 
+</p>
+<p>García-Escudero, L. A., and Mayo-Íscar, A. and Riani, M. (2020). Model-based 
+clustering with determinant-and-shape constraint. Statistics and Computing, 
+30, 1363–1380.]
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ 
+ ##--- EXAMPLE 1 ------------------------------------------
+ sig &lt;- diag(2)
+ cen &lt;- rep(1,2)
+ x &lt;- rbind(MASS::mvrnorm(360, cen * 0,   sig),
+            MASS::mvrnorm(540, cen * 5,   sig * 6 - 2),
+            MASS::mvrnorm(100, cen * 2.5, sig * 50))
+ 
+ ## Two groups and 10\% trimming level
+ clus &lt;- tclust(x, k = 2, alpha = 0.1, restr.fact = 8)
+ 
+ plot(clus)
+ plot(clus, labels = "observation")
+ plot(clus, labels = "cluster")
+ 
+ ## Three groups (one of them very scattered) and 0\% trimming level
+ clus &lt;- tclust(x, k = 3, alpha=0.0, restr.fact = 100)
+ 
+ plot(clus)
+ 
+ ##--- EXAMPLE 2 ------------------------------------------
+ data(geyser2)
+ (clus &lt;- tclust(geyser2, k = 3, alpha = 0.03))
+ 
+ plot(clus)
+ 
+## Not run: 
+
+ ##--- EXAMPLE 3 ------------------------------------------
+ data(M5data)
+ x &lt;- M5data[, 1:2]
+ 
+ clus.a &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact =  1,
+                   restr = "eigen", equal.weights = TRUE)
+ clus.b &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact =  50,
+                    restr = "eigen", equal.weights = FALSE)
+ clus.c &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact =  1,
+                   restr = "deter", equal.weights = TRUE)
+ clus.d &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact = 50,
+                   restr = "deter", equal.weights = FALSE)
+ 
+ pa &lt;- par(mfrow = c (2, 2))
+ plot(clus.a, main = "(a)")
+ plot(clus.b, main = "(b)")
+ plot(clus.c, main = "(c)")
+ plot(clus.d, main = "(d)")
+ par(pa)
+ 
+ ##--- EXAMPLE 4 ------------------------------------------
+
+ data (swissbank)
+ ## Two clusters and 8\
+ (clus &lt;- tclust(swissbank, k = 2, alpha = 0.08, restr.fact = 50))
+ 
+ ## Pairs plot of the clustering solution
+ pairs(swissbank, col = clus$cluster + 1)
+ ## Two coordinates
+ plot(swissbank[, 4], swissbank[, 6], col = clus$cluster + 1,
+      xlab = "Distance of the inner frame to lower border",
+      ylab = "Length of the diagonal")
+ plot(clus)
+ 
+ ## Three clusters and 0\
+ clus&lt;- tclust(swissbank, k = 3, alpha = 0.0, restr.fact = 110)
+ 
+ ## Pairs plot of the clustering solution
+ pairs(swissbank, col = clus$cluster + 1)
+ 
+ ## Two coordinates
+ plot(swissbank[, 4], swissbank[, 6], col = clus$cluster + 1, 
+       xlab = "Distance of the inner frame to lower border", 
+       ylab = "Length of the diagonal")
+ 
+ plot(clus)
+ 
+ ##--- EXAMPLE 5 ------------------------------------------
+  data(M5data)
+  x &lt;- M5data[, 1:2]
+  
+  ## Classification trimmed likelihood approach
+  clus.a &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact =  50,
+                     opt="HARD", restr = "eigen", equal.weights = FALSE)
+ ## Mixture trimmed likelihood approach
+  clus.b &lt;- tclust(x, k = 3, alpha = 0.1, restr.fact =  50,
+                     opt="MIXT", restr = "eigen", equal.weights = FALSE)
+ 
+ ## Hard 0-1 cluster assignment (all 0 if trimmed unit)
+ head(clus.a$posterior)
+ 
+ ## Posterior probabilities cluster assignment for the
+ ##  mixture approach (all 0 if trimmed unit)
+ head(clus.b$posterior)
+ 
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

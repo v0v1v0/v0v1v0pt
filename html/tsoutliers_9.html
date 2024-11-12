@@ -1,0 +1,195 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>locate.outliers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Stage I of the Procedure: Locate Outliers (Baseline Function)</h2>
+
+<h3>Description</h3>
+
+<p>This function applies the <code class="reqn">t</code>-statistics for the significance of outliers 
+at every time point and selects those that are significant given a critical value.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">locate.outliers(resid, pars, cval = 3.5, types = c("AO", "LS", "TC"), delta = 0.7)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>resid</code></td>
+<td>
+<p>a time series. Residuals from a time series model fitted to the data.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>a list containing the parameters of the model fitted to the data. 
+See details below.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>cval</code></td>
+<td>
+<p>a numeric. The critical value to determine the significance of each 
+type of outlier.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>types</code></td>
+<td>
+<p>a character vector indicating the types of outliers to be considered.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>Five types of outliers can be considered. 
+By default: <code>"AO"</code> additive outliers, <code>"LS"</code> level shifts,
+and <code>"TC"</code> temporary changes are selected;
+<code>"IO"</code> innovative outliers and <code>"SLS"</code> seasonal level shifts 
+can also be selected.
+</p>
+<p>The approach described in Chen &amp; Liu (1993) is followed to locate outliers.
+The original framework is based on ARIMA time series models. 
+The extension to structural time series models is currently experimental.
+</p>
+<p>Let us define an ARIMA model for the series <code class="reqn">y_t^*</code> subject 
+to <code class="reqn">m</code> outliers defined as <code class="reqn">L_j(B)</code> with weights <code class="reqn">w</code>:
+</p>
+<p style="text-align: center;"><code class="reqn">y_t^* = \sum_{j=1}^m \omega_j L_j(B) I_t(t_j) + 
+\frac{\theta(B)}{\phi(B) \alpha(B)} a_t \,,</code>
+</p>
+
+<p>where <code class="reqn">I_t(t_j)</code> is an indicator variable containing the value 
+<code class="reqn">1</code> at observation <code class="reqn">t_j</code> where the <code class="reqn">j</code>-th outlier arises;
+<code class="reqn">\phi(B)</code> is an autoregressive polynomial with all roots outside the unit circle;
+<code class="reqn">\theta(B)</code> is a moving average polynomial with all roots outside the unit circle;
+and <code class="reqn">\alpha(B)</code> is an autoregressive polynomial with all roots on the unit circle.
+</p>
+<p>The presence of outliers is tested by means of <code class="reqn">t</code>-statistics 
+applied on the following regression equation:
+</p>
+<p style="text-align: center;"><code class="reqn">\pi(B) y_t^* \equiv \hat{e}_t = 
+\sum_{j=1}^m \omega_j \pi(B) L_j(B) I_t(t_j) + a_t \,.</code>
+</p>
+
+<p>where <code class="reqn">\pi(B) = \sum_{i=0}^\infty \pi_i B^i</code>.
+
+The regressors of the above equation are created by the functions
+<code>outliers.regressors.arima</code> and the remaining functions described here.
+</p>
+<p>The function <code>locate.outliers</code> computes all the <code class="reqn">t</code>-statistics for each type of 
+outlier and for every time point. See <code>outliers.tstatistics</code>.
+Then, the cases where the corresponding <code class="reqn">t</code>-statistic are (in absolute value) 
+below the threshold <code>cval</code> are removed. Thus, a potential set of outliers is obtained.
+</p>
+<p>Some polishing rules are applied by <code>locate.outliers</code>:
+
+</p>
+
+<ul>
+<li>
+<p> If level shifts are found at consecutive time points, only then point with higher 
+<code class="reqn">t</code>-statistic in absolute value is kept.
+
+</p>
+</li>
+<li>
+<p> If more than one type of outlier exceed the threshold <code>cval</code> at a given time point, 
+the type of outlier with higher <code class="reqn">t</code>-statistic in absolute value is kept and the others 
+are removed.
+
+
+
+</p>
+</li>
+</ul>
+<p>The argument <code>pars</code> is a list containing the parameters of the model.
+In the framework of ARIMA models, the coefficients of the ARIMA must be defined in <code>pars</code> 
+as the product of the autoregressive non-seasonal and seasonal polynomials (if any) and the 
+differencing filter (if any). The function <code>coefs2poly</code> can be used to define 
+the argument <code>pars</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame defining by rows the potential set of outliers. 
+The type of outlier, the observation, the coefficient and the <code class="reqn">t</code>-statistic
+are given by columns respectively for each outlier.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The default critical value, <code>cval</code>, is set equal to <code class="reqn">3.5</code> and, 
+hence, it is not based on the sample size as in functions <code>tso</code> 
+or <code>locate.outliers.oloop</code>.
+
+
+
+
+</p>
+<p>Currently the innovational outlier <code>"SLS"</code> is not available 
+if <code>pars</code> is related to a structural time series model.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Gómez, V. and Maravall, A. (1996). 
+<em>Programs TRAMO and SEATS. Instructions for the user</em>.
+Banco de España, Servicio de Estudios. Working paper number 9628.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf</a>
+</p>
+<p>Gómez, V. and Taguas, D. (1995). 
+<em>Detección y Corrección Automática de Outliers con TRAMO: 
+Una Aplicación al IPC de Bienes Industriales no Energéticos</em>.
+Ministerio de Economía y Hacienda. Document number D-95006.
+<a href="https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf">https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf</a>
+</p>
+<p>Kaiser, R., and Maravall, A. (1999). 
+<em>Seasonal Outliers in Time Series</em>.
+Banco de España, Servicio de Estudios. Working paper number 9915.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers.oloop</code>,
+<code>locate.outliers.iloop</code>, 
+<code>outliers.tstatistics</code>, 
+<code>tso</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("hicp")
+y &lt;- log(hicp[["011600"]])
+fit &lt;- arima(y, order = c(1, 1, 0), seasonal = list(order = c(2, 0, 2)))
+resid &lt;- residuals(fit)
+pars &lt;- coefs2poly(fit)
+outliers &lt;- locate.outliers(resid, pars)
+outliers
+</code></pre>
+
+
+</div>

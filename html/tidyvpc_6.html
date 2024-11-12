@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>binning</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Binning methods for Visual Predictive Check (VPC)</h2>
+
+<h3>Description</h3>
+
+<p>This function executes binning methods available in classInt i.e. "jenks", "kmeans", "sd", "pretty", "pam", "kmeans", "hclust", "bclust", "fisher", "dpih", "box", "headtails", and "maximum".
+You may also bin directly on x-variable or alternatively specify "centers" or "breaks". For explanation of binning methods see <code>classIntervals</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">binning(o, ...)
+
+## S3 method for class 'tidyvpcobj'
+binning(
+  o,
+  bin,
+  data = o$data,
+  xbin = "xmedian",
+  centers,
+  breaks,
+  nbins,
+  altx,
+  stratum = NULL,
+  by.strata = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>o</code></td>
+<td>
+<p>A <code>tidyvpcobj</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to include for <code>classIntervals</code>. See <code>...</code> usage for <code>style</code> in <code>?classIntervals</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bin</code></td>
+<td>
+<p>Character string indicating binning method or unquoted variable name if binning on x-variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Observed data supplied in <code>observed()</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xbin</code></td>
+<td>
+<p>Character string indicating midpoint type for binning.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>centers</code></td>
+<td>
+<p>Numeric vector of centers for binning. Use <code>bin = "centers"</code>, if supplying centers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breaks</code></td>
+<td>
+<p>Numeric vector of breaks for binning. Use <code>bin = "breaks"</code>, if supplying breaks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbins</code></td>
+<td>
+<p>Numeric number indicating the number of bins to use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>altx</code></td>
+<td>
+<p>Unquoted variable name in observed data for alternative x-variable binning.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stratum</code></td>
+<td>
+<p>List indicating the name of stratification variable and level, if using different binning methods by strata.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by.strata</code></td>
+<td>
+<p>Logical indicating whether binning should be performed by strata.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Updates <code>tidyvpcobj</code> with <code>data.frame</code> containing bin information including left/right boundaries and midpoint, as specified in <code>xbin</code> argument.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>observed</code> <code>simulated</code> <code>censoring</code> <code>predcorrect</code> <code>stratify</code> <code>binless</code> <code>vpcstats</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+require(magrittr)
+
+ # Binning on x-variable NTIME
+vpc &lt;- observed(obs_data, x=TIME, y=DV) %&gt;%
+    simulated(sim_data, y=DV) %&gt;%
+    binning(bin = NTIME) %&gt;%
+    vpcstats()
+
+ # Binning using ntile and xmean for midpoint
+vpc &lt;- observed(obs_data, x=TIME, y=DV) %&gt;%
+    simulated(sim_data, y=DV) %&gt;%
+    binning(bin = "ntile", nbins = 8, xbin = "xmean") %&gt;%
+    vpcstats()
+
+ # Binning using centers
+vpc &lt;- observed(obs_data, x=TIME, y=DV) %&gt;%
+    simulated(sim_data, y=DV) %&gt;%
+    binning(bin = "centers", centers = c(1,3,5,7)) %&gt;%
+    vpcstats()
+
+ # Different Binning for each level of Strata
+vpc &lt;- observed(obs_data, x=TIME, y=DV) %&gt;%
+    simulated(sim_data, y=DV) %&gt;%
+    stratify(~ GENDER) %&gt;%
+    binning(stratum = list(GENDER = "M"), bin = "jenks", nbins = 5, by.strata = TRUE) %&gt;%
+    binning(stratum = list(GENDER = "F"), bin = "kmeans", nbins = 4, by.strata = TRUE) %&gt;%
+    vpcstats()
+
+ # Binning Categorical DV using rounded time variable
+
+  vpc &lt;- observed(obs_cat_data, x = agemonths, y = zlencat ) %&gt;%
+      simulated(sim_cat_data, y = DV) %&gt;%
+      binning(bin = round(agemonths, 0)) %&gt;%
+      vpcstats(vpc.type = "categorical")
+
+
+</code></pre>
+
+
+</div>

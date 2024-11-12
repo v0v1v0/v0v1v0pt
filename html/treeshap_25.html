@@ -1,0 +1,98 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>treeshap</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate SHAP values of a tree ensemble model.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate SHAP values and optionally SHAP Interaction values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">treeshap(unified_model, x, interactions = FALSE, verbose = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>unified_model</code></td>
+<td>
+<p>Unified data.frame representation of the model created with a (model).unify function. A <code>model_unified.object</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Observations to be explained. A <code>data.frame</code> or <code>matrix</code> object with the same columns as in the training set of the model. Keep in mind that objects different than <code>data.frame</code> or plain <code>matrix</code> will cause an error or unpredictable behavior.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interactions</code></td>
+<td>
+<p>Whether to calculate SHAP interaction values. By default is <code>FALSE</code>. Basic SHAP values are always calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Whether to print progress bar to the console. Should be logical. Progress bar will not be displayed on Windows.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>treeshap.object</code> object (for single-output models) or <code>treeshap_multioutput.object</code>, which is a list of <code>treeshap.object</code> objects (for multi-output models). SHAP values can be accessed from <code>treeshap.object</code> with <code>$shaps</code>, and interaction values can be accessed with <code>$interactions</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>xgboost.unify</code> for <code>XGBoost models</code>
+<code>lightgbm.unify</code> for <code>LightGBM models</code>
+<code>gbm.unify</code> for <code>GBM models</code>
+<code>randomForest.unify</code> for <code>randomForest models</code>
+<code>ranger.unify</code> for <code>ranger models</code>
+<code>ranger_surv.unify</code> for <code>ranger survival models</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(xgboost)
+data &lt;- fifa20$data[colnames(fifa20$data) != 'work_rate']
+target &lt;- fifa20$target
+
+# calculating simple SHAP values
+param &lt;- list(objective = "reg:squarederror", max_depth = 3)
+xgb_model &lt;- xgboost::xgboost(as.matrix(data), params = param, label = target,
+                              nrounds = 20, verbose = FALSE)
+unified_model &lt;- xgboost.unify(xgb_model, as.matrix(data))
+treeshap1 &lt;- treeshap(unified_model, head(data, 3))
+plot_contribution(treeshap1, obs = 1)
+treeshap1$shaps
+
+# It's possible to calcualte explanation over different part of the data set
+
+unified_model_rec &lt;- set_reference_dataset(unified_model, data[1:1000, ])
+treeshap_rec &lt;- treeshap(unified_model, head(data, 3))
+plot_contribution(treeshap_rec, obs = 1)
+
+# calculating SHAP interaction values
+param2 &lt;- list(objective = "reg:squarederror", max_depth = 7)
+xgb_model2 &lt;- xgboost::xgboost(as.matrix(data), params = param2, label = target, nrounds = 10)
+unified_model2 &lt;- xgboost.unify(xgb_model2, as.matrix(data))
+treeshap2 &lt;- treeshap(unified_model2, head(data, 3), interactions = TRUE)
+treeshap2$interactions
+
+</code></pre>
+
+
+</div>

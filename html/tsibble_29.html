@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>index_by</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group by time index and collapse with <code>summarise()</code>
+</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p><code>index_by()</code> is the counterpart of <code>group_by()</code> in temporal context, but it
+only groups the time index. The following operation is applied to each partition
+of the index, similar to <code>group_by()</code> but dealing with index only.
+<code>index_by()</code> + <code>summarise()</code> will update the grouping index variable to be
+the new index. Use <code>ungroup()</code> to remove the index grouping vars.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">index_by(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tbl_ts</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>If empty, grouping the current index. If not empty, a single
+expression is required for either an existing variable or a name-value pair.
+A lambda expression is supported, for example <code>~ as.Date(.)</code> where <code>.</code> refers
+to the index variable.
+The index functions that can be used, but not limited:
+</p>
+
+<ul>
+<li> <p>lubridate::year: yearly aggregation
+</p>
+</li>
+<li> <p>yearquarter: quarterly aggregation
+</p>
+</li>
+<li> <p>yearmonth: monthly aggregation
+</p>
+</li>
+<li> <p>yearweek: weekly aggregation
+</p>
+</li>
+<li> <p>as.Date or lubridate::as_date: daily aggregation
+</p>
+</li>
+<li> <p>lubridate::ceiling_date, lubridate::floor_date, or lubridate::round_date:
+fine-resolution aggregation
+</p>
+</li>
+<li>
+<p> Extract time components functions, such as <code>lubridate::hour()</code> &amp; <code>lubridate::day()</code>
+</p>
+</li>
+<li>
+<p> other index functions from other packages or self-defined functions
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ul><li>
+<p> A <code>index_by()</code>-ed tsibble is indicated by <code>@</code> in the "Groups" when
+displaying on the screen.
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">pedestrian %&gt;% index_by()
+# Monthly counts across sensors
+library(dplyr, warn.conflicts = FALSE)
+monthly_ped &lt;- pedestrian %&gt;%
+  group_by_key() %&gt;%
+  index_by(Year_Month = ~ yearmonth(.)) %&gt;%
+  summarise(
+    Max_Count = max(Count),
+    Min_Count = min(Count)
+  )
+monthly_ped
+index(monthly_ped)
+
+# Using existing variable
+pedestrian %&gt;%
+  group_by_key() %&gt;%
+  index_by(Date) %&gt;%
+  summarise(
+    Max_Count = max(Count),
+    Min_Count = min(Count)
+  )
+
+# Attempt to aggregate to 4-hour interval, with the effects of DST
+pedestrian %&gt;%
+  group_by_key() %&gt;%
+  index_by(Date_Time4 = ~ lubridate::floor_date(., "4 hour")) %&gt;%
+  summarise(Total_Count = sum(Count))
+
+library(lubridate, warn.conflicts = FALSE)
+# Annual trips by Region and State
+tourism %&gt;%
+  index_by(Year = ~ year(.)) %&gt;%
+  group_by(Region, State) %&gt;%
+  summarise(Total = sum(Trips))
+
+# Rounding to financial year, using a custom function
+financial_year &lt;- function(date) {
+  year &lt;- year(date)
+  ifelse(quarter(date) &lt;= 2, year, year + 1)
+}
+tourism %&gt;%
+  index_by(Year = ~ financial_year(.)) %&gt;%
+  summarise(Total = sum(Trips))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,308 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_repository_cas</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Define a custom content-addressable storage
+(CAS) repository (an experimental feature).</h2>
+
+<h3>Description</h3>
+
+<p>Define a custom storage repository that uses
+content-addressable storage (CAS).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_repository_cas(
+  upload,
+  download,
+  exists,
+  consistent = FALSE,
+  substitute = list()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>upload</code></td>
+<td>
+<p>A function with arguments <code>key</code> and <code>path</code>, in that order.
+This function should upload the file or directory from <code>path</code>
+to the CAS system.
+<code>path</code> is where the file is originally saved to disk outside the CAS
+system. It could be a staging area or a custom <code>format = "file"</code>
+location. <code>key</code> denotes the name of the destination data object
+in the CAS system.
+</p>
+<p>To differentiate between
+<code>format = "file"</code> targets and non-<code>"file"</code> targets, the <code>upload</code>
+method can use <code>tar_format_get()</code>. For example, to make
+<code>tar_repository_cas_local()</code> efficient, <code>upload</code> moves the file
+if <code>targets::tar_format_get() == "file"</code> and copies it otherwise.
+</p>
+<p>See the "Repository functions" section for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>download</code></td>
+<td>
+<p>A function with arguments <code>key</code> and <code>path</code>, in that order.
+This function should download the data object at <code>key</code> from
+the CAS system to the file or directory at <code>path</code>.
+<code>key</code> denotes the name of the data object in the CAS system.
+<code>path</code> is a temporary staging area and not the final destination.
+</p>
+<p>Please be careful to avoid deleting the object at <code>key</code> from the CAS
+system. If the CAS system is a local file system, for example,
+<code>download</code> should copy the file and not simply move it
+(e.g. please avoid <code>file.rename()</code>).
+</p>
+<p>See the "Repository functions" section for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exists</code></td>
+<td>
+<p>A function with a single argument <code>key</code>.
+This function should check if there is an object at <code>key</code> in
+the CAS system.
+</p>
+<p>For efficiency, <code>exists</code> can maintain an in-memory cache of keys.
+New lookups can check the cache and potentially avoid expensive
+queries to the CAS system. See the source code of <code>tar_cas_e()</code>
+for an example of how this can work for a local file system CAS.
+</p>
+<p>See the "Repository functions" section for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>consistent</code></td>
+<td>
+<p>Logical. Set to <code>TRUE</code> if the storage platform is
+strongly read-after-write consistent. Set to <code>FALSE</code> if the platform
+is not necessarily strongly read-after-write consistent.
+</p>
+<p>A data storage system is said to have strong read-after-write consistency
+if a new object is fully available for reading as soon as the write
+operation finishes. Many modern cloud services like Amazon S3 and
+Google Cloud Storage have strong read-after-write consistency,
+meaning that if you upload an object with a PUT request, then a
+GET request immediately afterwards will retrieve the precise
+version of the object you just uploaded.
+</p>
+<p>Some storage systems do not have strong read-after-write consistency.
+One example is network file systems (NFS). On a computing cluster,
+if one node creates a file on an NFS, then there is a delay before
+other nodes can access the new file. <code>targets</code> handles this situation
+by waiting for the new file to appear with the correct hash
+before attempting to use it in downstream computations.
+<code>consistent = FALSE</code> imposes a waiting period in which <code>targets</code>
+repeatedly calls the <code>exists</code> method until the file becomes available
+(at time intervals configurable with <code>tar_resources_network()</code>).
+These extra calls to <code>exists</code> may come with a
+little extra latency / computational burden,
+but on systems which are not strongly read-after-write consistent,
+it is the only way <code>targets</code> can safely use the current results
+for downstream computations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>substitute</code></td>
+<td>
+<p>Named list of values to be inserted into the
+body of each custom function in place of symbols in the body.
+For example, if
+<code>upload = function(key, path) do_upload(key, path, bucket = X)</code>
+and <code>substitute = list(X = "my_aws_bucket")</code>, then
+the <code>upload</code> function will actually end up being
+<code>function(key, path) do_upload(key, path, bucket = "my_aws_bucket")</code>.
+</p>
+<p>Please do not include temporary or sensitive information
+such as authentication credentials.
+If you do, then <code>targets</code> will write them
+to metadata on disk, and a malicious actor could
+steal and misuse them. Instead, pass sensitive information
+as environment variables using <code>tar_resources_repository_cas()</code>.
+These environment variables only exist in the transient memory
+spaces of the R sessions of the local and worker processes.</p>
+</td>
+</tr>
+</table>
+<h3>Content-addressable storage</h3>
+
+<p>Normally, <code>targets</code> organizes output data
+based on target names. For example,
+if a pipeline has a single target <code>x</code> with default settings,
+then <code>tar_make()</code> saves the output data to the file
+<code style="white-space: pre;">⁠_targets/objects/x⁠</code>. When the output of <code>x</code> changes, <code>tar_make()</code>
+overwrites <code style="white-space: pre;">⁠_targets/objects/x⁠</code>.
+In other words, no matter how many changes happen to <code>x</code>,
+the data store always looks like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+    objects/
+        x
+</pre></div>
+<p>By contrast, with content-addressable storage (CAS),
+<code>targets</code> organizes outputs based on the hashes of their contents.
+The name of each output file is its hash, and the
+metadata maps these hashes to target names. For example, suppose
+target <code>x</code> has <code>repository = tar_repository_cas_local("my_cas")</code>.
+When the output of <code>x</code> changes, <code>tar_make()</code> creates a new file
+inside <code style="white-space: pre;">⁠my_cas/⁠</code> without overwriting or deleting any other files
+in that folder. If you run <code>tar_make()</code> three different times
+with three different values of <code>x</code>, then storage will look like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+my_cas/
+    1fffeb09ad36e84a
+    68328d833e6361d3
+    798af464fb2f6b30
+</pre></div>
+<p>The next call to <code>tar_read(x)</code> uses <code>tar_meta(x)$data</code>
+to look up the current hash of <code>x</code>. If <code>tar_meta(x)$data</code> returns
+<code>"1fffeb09ad36e84a"</code>, then <code>tar_read(x)</code> returns the data from
+<code style="white-space: pre;">⁠my_cas/1fffeb09ad36e84a⁠</code>. Files <code style="white-space: pre;">⁠my_cas/68328d833e6361d3⁠</code> and
+and <code style="white-space: pre;">⁠my_cas/798af464fb2f6b30⁠</code> are left over from previous values of <code>x</code>.
+</p>
+<p>Because CAS accumulates historical data objects,
+it is ideal for data versioning and collaboration.
+If you commit the <code style="white-space: pre;">⁠_targets/meta/meta⁠</code> file to version control
+alongside the source code,
+then you can revert to a previous state of your pipeline with all your
+targets up to date, and a colleague can leverage your hard-won
+results using a fork of your code and metadata.
+</p>
+<p>The downside of CAS is the cost of accumulating many data objects
+over time. Most pipelines that use CAS
+should have a garbage collection system or retention policy
+to remove data objects when they no longer needed.
+</p>
+<p>The <code>tar_repository_cas()</code> function lets you create your own CAS system
+for <code>targets</code>. You can supply arbitrary custom methods to upload,
+download, and check for the existence of data objects. Your custom
+CAS system can exist locally on a shared file system or remotely
+on the cloud (e.g. in an AWS S3 bucket).
+See the "Repository functions" section and the documentation
+of individual arguments for advice on how
+to write your own methods.
+</p>
+<p>The <code>tar_repository_cas_local()</code> function has an example
+CAS system based on a local folder on disk.
+It uses <code>tar_cas_u()</code> for uploads,
+<code>tar_cas_d()</code> for downloads, and
+<code>tar_cas_e()</code> for existence.
+</p>
+
+
+<h3>Repository functions</h3>
+
+<p>In <code>tar_repository_cas()</code>, functions <code>upload</code>, <code>download</code>,
+and <code>exists</code> must be completely pure and self-sufficient.
+They must load or namespace all their own packages,
+and they must not depend on any custom user-defined
+functions or objects in the global environment of your pipeline.
+<code>targets</code> converts each function to and from text,
+so it must not rely on any data in the closure.
+This disqualifies functions produced by <code>Vectorize()</code>,
+for example.
+</p>
+<p><code>upload</code> and <code>download</code> can assume <code>length(path)</code> is 1, but they should
+account for the possibility that <code>path</code> could be a directory. To simply
+avoid supporting directories, <code>upload</code> could simply call an assertion:
+</p>
+<div class="sourceCode r"><pre>targets::tar_assert_not_dir(
+  path,
+  msg = "This CAS upload method does not support directories."
+)
+</pre></div>
+<p>Otherwise, support for directories may require handling them as a
+special case. For example, <code>upload</code> and <code>download</code> could copy
+all the files in the given directory,
+or they could manage the directory as a zip archive.
+</p>
+<p>Some functions may need to be adapted and configured based on other
+inputs. For example, you may want to define
+<code style="white-space: pre;">⁠upload = \(key, path) file.rename(path, file.path(folder, key))⁠</code>
+but do not want to hard-code a value of <code>folder</code> when you write the
+underlying function. The <code>substitute</code> argument handles this situation.
+For example, if <code>substitute</code> is <code>list(folder = "my_folder")</code>,
+then <code>upload</code> will end up as
+<code style="white-space: pre;">⁠\(key, path) file.rename(path, file.path("my_folder", key))⁠</code>.
+</p>
+<p>Temporary or sensitive such as authentication credentials
+should not be injected
+this way into the function body. Instead, pass them as environment
+variables using <code>tar_resources_repository_cas()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other content-addressable storage: 
+<code>tar_repository_cas_local()</code>,
+<code>tar_repository_cas_local_gc()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  repository &lt;- tar_repository_cas(
+    upload = function(key, path) {
+      if (dir.exists(path)) {
+        stop("This CAS repository does not support directory outputs.")
+      }
+      if (!file.exists("cas")) {
+        dir.create("cas", recursive = TRUE)
+      }
+      file.rename(path, file.path("cas", key))
+    },
+    download = function(key, path) {
+      file.copy(file.path("cas", key), path)
+    },
+    exists = function(key) {
+      file.exists(file.path("cas", key))
+    }
+  )
+  write_file &lt;- function(object) {
+    writeLines(as.character(object), "file.txt")
+    "file.txt"
+  }
+  list(
+    tar_target(x, c(2L, 4L), repository = repository),
+    tar_target(
+      y,
+      x,
+      pattern = map(x),
+      format = "qs",
+      repository = repository
+    ),
+    tar_target(z, write_file(y), format = "file", repository = repository)
+  )
+})
+tar_make()
+tar_read(y)
+tar_read(z)
+list.files("cas")
+tar_meta(any_of(c("x", "z")), fields = any_of("data"))
+})
+}
+</code></pre>
+
+
+</div>

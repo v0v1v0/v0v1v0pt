@@ -1,0 +1,387 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ps</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Gradient boosted propensity score estimation</h2>
+
+<h3>Description</h3>
+
+<p><code>ps</code> calculates propensity scores using gradient boosted logistic
+regression and diagnoses the resulting propensity scores using a variety of
+methods
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ps(
+  formula = formula(data),
+  data,
+  n.trees = 10000,
+  interaction.depth = 3,
+  shrinkage = 0.01,
+  bag.fraction = 1,
+  n.minobsinnode = 10,
+  perm.test.iters = 0,
+  print.level = 2,
+  verbose = TRUE,
+  estimand = "ATE",
+  stop.method = c("ks.mean", "es.mean"),
+  sampw = NULL,
+  version = "gbm",
+  ks.exact = NULL,
+  n.keep = 1,
+  n.grid = 25,
+  keep.data = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>An object of class <code>formula</code>: a symbolic
+description of the propensity score model to be fit with the treatment
+indicator on the left side of the formula and the potential confounding
+variables on the right side.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A dataset that includes the treatment indicator as well as the
+potential confounding variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.trees</code></td>
+<td>
+<p>Number of gbm iterations passed on to <code>gbm::gbm()</code>. Default: 10000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interaction.depth</code></td>
+<td>
+<p>A positive integer denoting the tree depth used in
+gradient boosting. Default: 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shrinkage</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the learning rate.
+See <code>gbm</code> for more details. Default: 0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bag.fraction</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the fraction of
+the observations randomly selected in each iteration of the gradient
+boosting algorithm to propose the next tree. See <code>gbm</code> for
+more details. Default: 1.0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.minobsinnode</code></td>
+<td>
+<p>An integer specifying the minimum number of observations 
+in the terminal nodes of the trees used in the gradient boosting.  See 
+<code>gbm</code> for
+more details. Default: 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perm.test.iters</code></td>
+<td>
+<p>A non-negative integer giving the number of iterations
+of the permutation test for the KS statistic. If <code>perm.test.iters=0</code>
+then the function returns an analytic approximation to the p-value. Setting
+<code>perm.test.iters=200</code> will yield precision to within 3% if the true
+p-value is 0.05. Use <code>perm.test.iters=500</code> to be within 2%. Default: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print.level</code></td>
+<td>
+<p>The amount of detail to print to the screen. Default: 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>If <code>TRUE</code>, lots of information will be printed to monitor the
+the progress of the fitting. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimand</code></td>
+<td>
+<p><code>"ATE"</code> (average treatment effect) or <code>"ATT"</code> (average treatment
+effect on the treated) : the causal effect of interest. ATE estimates the
+change in the outcome if the treatment were applied to the entire
+population versus if the control were applied to the entire population. ATT
+estimates the analogous effect, averaging only over the treated population.
+Default: <code>"ATE"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop.method</code></td>
+<td>
+<p>A method or methods of measuring and summarizing balance across pretreatment
+variables. Current options are <code>ks.mean</code>, <code>ks.max</code>, <code>es.mean</code>, and <code>es.max</code>. <code>ks</code> refers to the
+Kolmogorov-Smirnov statistic and es refers to standardized effect size. These are summarized
+across the pretreatment variables by either the maximum (<code>.max</code>) or the mean (<code>.mean</code>). 
+Default: <code>c("ks.mean", "es.mean")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sampw</code></td>
+<td>
+<p>Optional sampling weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>version</code></td>
+<td>
+<p><code>"gbm"</code>, <code>"xgboost"</code>, or <code>"legacy"</code>, indicating which version of the twang package to use.
+</p>
+
+<dl>
+<dt><code>"gbm"</code></dt>
+<dd>
+<p> uses gradient boosting from the <code>gbm</code> package,</p>
+</dd>
+<dt><code>"xgboost"</code></dt>
+<dd>
+<p> uses gradient boosting from the <code>xgboost</code> package, and</p>
+</dd>
+<dt><code>"legacy"</code></dt>
+<dd>
+<p> uses the prior implementation of the <code>ps</code> function.</p>
+</dd>
+</dl>
+<p>Default: <code>"gbm"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ks.exact</code></td>
+<td>
+<p><code>NULL</code> or a logical indicating whether the
+Kolmogorov-Smirnov p-value should be based on an approximation of exact
+distribution from an unweighted two-sample Kolmogorov-Smirnov test. If
+<code>NULL</code>, the approximation based on the exact distribution is computed
+if the product of the effective sample sizes is less than 10,000.
+Otherwise, an approximation based on the asymptotic distribution is used.
+**Warning:** setting <code>ks.exact = TRUE</code> will add substantial
+computation time for larger sample sizes. Default: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.keep</code></td>
+<td>
+<p>A numeric variable indicating the algorithm should only
+consider every <code>n.keep</code>-th iteration of the propensity score model and
+optimize balance over this set instead of all iterations. Default: 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.grid</code></td>
+<td>
+<p>A numeric variable that sets the grid size for an initial
+search of the region most likely to minimize the <code>stop.method</code>. A
+value of <code>n.grid=50</code> uses a 50 point grid from <code>1:n.trees</code>. It
+finds the minimum, say at grid point 35. It then looks for the actual
+minimum between grid points 34 and 36. If specified with <code>n.keep&gt;1</code>, <code>n.grid</code> 
+corresponds to a grid of points on the kept iterations as defined by <code>n.keep</code>. Default: 25.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep.data</code></td>
+<td>
+<p>A logical variable indicating whether or not the data is saved in 
+the resulting <code>ps</code> object. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments that are passed to <code>ps</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For user more comfortable with the options of <code>xgboost::xgboost()</code>,
+the options for <code>ps</code> controlling the behavior of the gradient boosting
+algorithm can be specified using the <code>xgboost</code> naming
+scheme. This includes <code>nrounds</code>, <code>max_depth</code>, <code>eta</code>, and
+<code>subsample</code>. In addition, the list of parameters passed to
+<code>xgboost</code> can be specified with <code>params</code>.
+</p>
+<p>Note that unlike earlier versions of 'twang', the plotting functions are
+no longer included in the <code>ps</code> function. See  <code>plot</code> for
+details of the plots.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of class <code>ps</code>, a list containing 
+</p>
+
+<dl>
+<dt><code>gbm.obj</code></dt>
+<dd>
+<p> The returned <code>gbm</code> or <code>xgboost</code> object.</p>
+</dd>
+<dt><code>treat</code></dt>
+<dd>
+<p> The vector of treatment indicators.</p>
+</dd>
+<dt><code>treat.var</code></dt>
+<dd>
+<p> The treatment variable.</p>
+</dd>
+<dt><code>desc</code></dt>
+<dd>
+<p> A list containing balance tables for each method selected in
+<code>stop.methods</code>. Includes a component for the unweighted
+analysis names “unw”. Each <code>desc</code> component includes
+a list with the following components
+</p>
+
+<dl>
+<dt><code>ess</code></dt>
+<dd>
+<p> The effective sample size of the control group.</p>
+</dd>
+<dt><code>n.treat</code></dt>
+<dd>
+<p> The number of subjects in the treatment group.</p>
+</dd>
+<dt><code>n.ctrl</code></dt>
+<dd>
+<p> The number of subjects in the control group.</p>
+</dd>
+<dt><code>max.es</code></dt>
+<dd>
+<p> The largest effect size across the covariates.</p>
+</dd>
+<dt><code>mean.es</code></dt>
+<dd>
+<p> The mean absolute effect size.</p>
+</dd>
+<dt><code>max.ks</code></dt>
+<dd>
+<p> The largest KS statistic across the covariates.</p>
+</dd>
+<dt><code>mean.ks</code></dt>
+<dd>
+<p> The average KS statistic across the covariates.</p>
+</dd>
+<dt><code>bal.tab</code></dt>
+<dd>
+<p> a (potentially large) table summarizing the quality of the 
+weights for equalizing the distribution of features across 
+the two groups. This table is best extracted using the
+<code>bal.table</code> method. See the help for <code>bal.table</code> for details
+on the table's contents.</p>
+</dd>
+<dt><code>n.trees</code></dt>
+<dd>
+<p> The estimated optimal number of gradient boosted
+iterations to optimize the loss function for the associated 
+<code>stop.methods</code>.</p>
+</dd>
+<dt><code>ps</code></dt>
+<dd>
+<p> a data frame containing the estimated propensity scores. Each
+column is associated with one of the methods selected in <code>stop.methods</code>.</p>
+</dd>
+<dt><code>w</code></dt>
+<dd>
+<p> a data frame containing the propensity score weights. Each
+column is associated with one of the methods selected in <code>stop.methods</code>.</p>
+</dd>
+</dl>
+<p>If sampling weights are given then these are incorporated into these weights.
+</p>
+<dl>
+<dt><code>estimand</code></dt>
+<dd>
+<p> The estimand of interest (ATT or ATE).</p>
+</dd>
+</dl>
+</dd>
+<dt><code>datestamp</code></dt>
+<dd>
+<p> Records the date of the analysis.</p>
+</dd>
+<dt><code>parameters</code></dt>
+<dd>
+<p> Saves the <code>ps</code> call.</p>
+</dd>
+<dt><code>alerts</code></dt>
+<dd>
+<p> Text containing any warnings accumulated during the estimation.</p>
+</dd>
+<dt><code>iters</code></dt>
+<dd>
+<p> A sequence of iterations used in the GBM fits used by <code>plot</code> function.</p>
+</dd>
+<dt><code>balance</code></dt>
+<dd>
+<p> The balance measures for the pretreatment covariates used in plotting, with a column for each
+<code>stop.method</code>.</p>
+</dd>
+<dt><code>balance.ks</code></dt>
+<dd>
+<p> The KS balance measures for the pretreatment covariates used in plotting, with a column for each
+covariate.</p>
+</dd>
+<dt><code>balance.es</code></dt>
+<dd>
+<p> The standard differences for the pretreatment covariates used in plotting, with a column for each
+covariate.</p>
+</dd>
+<dt><code>ks</code></dt>
+<dd>
+<p> The KS balance measures for the pretreatment covariates on a finer grid, with a column for each
+covariate.</p>
+</dd>
+<dt><code>es</code></dt>
+<dd>
+<p> The standard differences for the pretreatment covariates on a finer grid, with a column for each
+covariate.</p>
+</dd>
+<dt><code>n.trees</code></dt>
+<dd>
+<p> Maximum number of trees considered in GBM fit.</p>
+</dd>
+<dt><code>data</code></dt>
+<dd>
+<p> Data as specified in the <code>data</code> argument.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Dan McCaffrey, G. Ridgeway, Andrew Morral (2004). "Propensity
+Score Estimation with Boosted Regression for Evaluating Adolescent
+Substance Abuse Treatment", *Psychological Methods* 9(4):403-425.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gbm</code>, <code>xgboost</code>, <code>plot</code>, <code>bal.table</code>
+</p>
+
+
+</div>

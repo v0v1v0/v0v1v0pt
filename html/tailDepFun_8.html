@@ -1,0 +1,212 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>EstimationMaxLinear</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of the parameters of the max-linear model</h2>
+
+<h3>Description</h3>
+
+<p>Estimation the parameters of the max-linear model, using either the pairwise M-estimator or weighted least squares (WLS).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">EstimationMaxLinear(
+  x,
+  indices,
+  k,
+  method,
+  Bmatrix = NULL,
+  Ldot = NULL,
+  biascorr = FALSE,
+  k1 = (nrow(x) - 10),
+  tau = 5,
+  startingValue,
+  Omega = diag(nrow(indices)),
+  iterate = FALSE,
+  covMat = TRUE,
+  GoFtest = FALSE,
+  dist = 0.01,
+  EURO = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An <code class="reqn">n</code> x <code class="reqn">d</code> data matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indices</code></td>
+<td>
+<p>A <code class="reqn">q</code> x <code class="reqn">d</code> matrix containing at least 2 non-zero elements per row, representing the values in which we will evaluate the stable tail dependence function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>An integer between 1 and <code class="reqn">n - 1</code>; the threshold parameter in the definition of the empirical stable tail dependence function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Choose between <code>Mestimator</code> and <code>WLS</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Bmatrix</code></td>
+<td>
+<p>A function that converts the parameter vector theta to a parameter matrix B. If nothing is provided, then a simple 2-factor model is assumed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ldot</code></td>
+<td>
+<p>For <code>method = "WLS"</code> only. A <code class="reqn">q</code> x <code class="reqn">p</code> matrix, where <code class="reqn">p</code> is the number of parameters of the model. Represents the total derivative of the function L defined in Einmahl et al. (2016). If nothing is provided, then a simple 2-factor model is assumed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>biascorr</code></td>
+<td>
+<p>For <code>method = "WLS"</code> only. If <code>TRUE</code>, then the bias-corrected estimator of the stable tail dependence function is used. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k1</code></td>
+<td>
+<p>For <code>biascorr = TRUE</code> only. The value of <code class="reqn">k_1</code> in the definition of the bias-corrected estimator of the stable tail dependence function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>For <code>biascorr = TRUE</code> only. The parameter of the power kernel.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>startingValue</code></td>
+<td>
+<p>Initial value of the parameters in the minimization routine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Omega</code></td>
+<td>
+<p>A <code class="reqn">q</code> x <code class="reqn">q</code> matrix specifying the metric with which the distance between the parametric and nonparametric estimates will be computed. The default is the identity matrix, i.e., the Euclidean metric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterate</code></td>
+<td>
+<p>A Boolean variable. For <code>method = "WLS"</code> only. If <code>TRUE</code>, then continuous updating is used. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covMat</code></td>
+<td>
+<p>A Boolean variable. For <code>method = "WLS"</code> only. If <code>TRUE</code> (the default), the covariance matrix is calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GoFtest</code></td>
+<td>
+<p>A Boolean variable. For <code>method = "WLS"</code> only. If <code>TRUE</code>, then the goodness-of-fit test of Corollary 2.6 from Einmahl et al. (2016) is performed. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist</code></td>
+<td>
+<p>A positive scalar. If <code>GoFtest = TRUE</code>, only eigenvalues <code class="reqn">\nu</code> larger than <code>dist</code> are used; see Corollary 2.6 (Einmahl et al., 2016). Defaults to 0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>EURO</code></td>
+<td>
+<p>A Boolean variable. If <code>TRUE</code>, then the model from Einmahl et al. (2016, Section 4) is assumed, and the corresponding <code>Bmatrix</code> and <code>Ldot</code> are used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The matrix <code>indices</code> can be either user defined or returned by <code>selectGrid</code>.
+For <code>method = "Mestimator"</code>, only a grid with exactly two ones per row is accepted,
+representing the pairs to be used. The functions <code>Bmatrix</code> and <code>Ldot</code> can be defined
+such that they represent a max-linear model on a directed acyclic graph: see the vignette for this package for an example.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>Mestimator</code>, the estimator <code>theta</code> is returned. For <code>WLS</code>, a list with the following components:
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+<code>theta</code> </td>
+<td style="text-align: left;"> The estimator with estimated optimal weight matrix. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+<code>theta_pilot</code> </td>
+<td style="text-align: left;"> The estimator without the optimal weight matrix.</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+<code>covMatrix</code> </td>
+<td style="text-align: left;"> The estimated covariance matrix for the estimator. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+<code>value</code> </td>
+<td style="text-align: left;"> The value of the minimized function at <code>theta</code>. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+<code>GoFresult</code> </td>
+<td style="text-align: left;"> A list of length two, returning the value of the test statistic and <code>s</code>. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Einmahl, J.H.J., Kiriliouk, A., and Segers, J. (2018). A continuous updating weighted least squares estimator of tail dependence in high dimensions. Extremes 21(2), 205-233.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>selectGrid</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Generate data
+set.seed(1)
+n &lt;- 1000
+fr &lt;- matrix(-1/log(runif(2*n)), nrow = n, ncol = 2)
+data &lt;- cbind(pmax(0.3*fr[,1],0.7*fr[,2]),pmax(0.5*fr[,1],0.5*fr[,2]),pmax(0.9*fr[,1],0.1*fr[,2]))
+## Transform data to unit Pareto margins
+x &lt;- apply(data, 2, function(i) n/(n + 0.5 - rank(i)))
+## Define indices in which we evaluate the estimator
+indices &lt;- selectGrid(cst = c(0,0.5,1), d = 3)
+EstimationMaxLinear(x, indices, k = 100, method = "WLS", startingValue = c(0.3,0.5,0.9))
+indices &lt;- selectGrid(cst = c(0,1), d = 3)
+EstimationMaxLinear(x, indices, k = 100, method = "Mestimator", startingValue = c(0.3,0.5,0.9))
+</code></pre>
+
+
+</div>

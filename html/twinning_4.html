@@ -1,0 +1,97 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>twin</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Partition datasets into statistcally similar twin sets</h2>
+
+<h3>Description</h3>
+
+<p><code>twin()</code> implements the twinning algorithm presented in Vakayil and Joseph (2022). A partition of the dataset is returned, such that the resulting two disjoint sets, termed as <em>twins</em>, are distributed similar to each other, as well as the whole dataset. Such a partition is an optimal training-testing split (Joseph and Vakayil, 2021) for training and testing statistical and machine learning models, and is model-independent. The statistical similarity also allows one to treat either of the twins as a compression (lossy) of the dataset for tractable model building on Big Data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">twin(data, r, u1 = NULL, format_data = TRUE, leaf_size = 8)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The dataset including both the predictors and response(s); should not contain missing values, and only numeric and/or factor column(s) are allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>An integer representing the inverse of the splitting ratio, e.g., for an 80-20 partition, <code>r = 1 / 0.2 = 5</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u1</code></td>
+<td>
+<p>Index of the data point from where twinning starts; if not provided, twinning starts from a random point in the dataset. Fixing <code>u1</code> makes twinning deterministic, i.e., the same twins are returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format_data</code></td>
+<td>
+<p>If set to <code>TRUE</code>, constant columns in <code>data</code> are removed, factor columns are converted to numerical using Helmert coding, and then the columns are scaled to zero mean and unit standard deviation. If set to <code>FALSE</code>, the user is expected to perform data pre-processing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>leaf_size</code></td>
+<td>
+<p>Maximum number of elements in the leaf-nodes of the <em>kd</em>-tree.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The twinning algorithm requires nearest neighbor queries that are performed using a <em>kd</em>-tree. The <em>kd</em>-tree implementation in the <code>nanoflann</code> (Blanco and Rai, 2014) C++ library is used.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Indices of the smaller twin.
+</p>
+
+
+<h3>References</h3>
+
+<p>Vakayil, A., &amp; Joseph, V. R. (2022). Data Twinning. Statistical Analysis and Data Mining: The ASA Data Science Journal, to appear. arXiv preprint arXiv:2110.02927.
+</p>
+<p>Joseph, V. R., &amp; Vakayil, A. (2021). SPlit: An Optimal Method for Data Splitting. Technometrics, 1-11. doi:10.1080/00401706.2021.1921037.
+</p>
+<p>Blanco, J. L. &amp; Rai, P. K. (2014). nanoflann: a C++ header-only fork of FLANN, a library for nearest neighbor (NN) with kd-trees. https://github.com/jlblancoc/nanoflann.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## 1. An 80-20 partition of a numeric dataset
+X = rnorm(n=100, mean=0, sd=1)
+Y = rnorm(n=100, mean=X^2, sd=1)
+data = cbind(X, Y)
+twin1_indices = twin(data, r=5) 
+twin1 = data[twin1_indices, ]
+twin2 = data[-twin1_indices, ]
+plot(data, main="Smaller Twin")
+points(twin1, col="green", cex=2)
+
+## 2. An 80-20 split of the iris dataset
+twin1_indices = twin(iris, r=5)
+twin1 = iris[twin1_indices, ]
+twin2 = iris[-twin1_indices, ]
+
+</code></pre>
+
+
+</div>

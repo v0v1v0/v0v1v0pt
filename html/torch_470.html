@@ -1,0 +1,81 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>torch_einsum</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Einsum</h2>
+
+<h3>Description</h3>
+
+<p>Einsum
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">torch_einsum(equation, tensors, path = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>equation</code></td>
+<td>
+<p>(string) The equation is given in terms of lower case letters (indices) to be associated           with each dimension of the operands and result. The left hand side lists the operands           dimensions, separated by commas. There should be one index letter per tensor dimension.           The right hand side follows after <code style="white-space: pre;">⁠-&gt;⁠</code> and gives the indices for the output.           If the <code style="white-space: pre;">⁠-&gt;⁠</code> and right hand side are omitted, it implicitly defined as the alphabetically           sorted list of all indices appearing exactly once in the left hand side.           The indices not apprearing in the output are summed over after multiplying the operands           entries.           If an index appears several times for the same operand, a diagonal is taken.           Ellipses <code>...</code> represent a fixed number of dimensions. If the right hand side is inferred,           the ellipsis dimensions are at the beginning of the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tensors</code></td>
+<td>
+<p>(Tensor) The operands to compute the Einstein sum of.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>(int) This function uses <a href="https://optimized-einsum.readthedocs.io/en/stable/">opt_einsum</a> to
+speed up computation or to consume less memory by optimizing contraction order. This optimization
+occurs when there are at least three inputs, since the order does not matter otherwise.
+Note that finding <em>the</em> optimal path is an NP-hard problem, thus, <code>opt_einsum</code> relies
+on different heuristics to achieve near-optimal results. If <code>opt_einsum</code> is not available,
+the default order is to contract from left to right.
+The path argument is used to changed that default, but it should only be set by advanced users.</p>
+</td>
+</tr>
+</table>
+<h3>einsum(equation, *operands) -&gt; Tensor </h3>
+
+<p>This function provides a way of computing multilinear expressions (i.e. sums of products) using the
+Einstein summation convention.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+x = torch_randn(c(5))
+y = torch_randn(c(4))
+torch_einsum('i,j-&gt;ij', list(x, y))  # outer product
+A = torch_randn(c(3,5,4))
+l = torch_randn(c(2,5))
+r = torch_randn(c(2,4))
+torch_einsum('bn,anm,bm-&gt;ba', list(l, A, r)) # compare torch_nn$functional$bilinear
+As = torch_randn(c(3,2,5))
+Bs = torch_randn(c(3,5,4))
+torch_einsum('bij,bjk-&gt;bik', list(As, Bs)) # batch matrix multiplication
+A = torch_randn(c(3, 3))
+torch_einsum('ii-&gt;i', list(A)) # diagonal
+A = torch_randn(c(4, 3, 3))
+torch_einsum('...ii-&gt;...i', list(A)) # batch diagonal
+A = torch_randn(c(2, 3, 4, 5))
+torch_einsum('...ij-&gt;...ji', list(A))$shape # batch permute
+
+}
+</code></pre>
+
+
+</div>

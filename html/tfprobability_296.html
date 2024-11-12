@@ -1,0 +1,215 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>vi_monte_carlo_variational_loss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Monte-Carlo approximation of an f-Divergence variational loss</h2>
+
+<h3>Description</h3>
+
+<p>Variational losses measure the divergence between an unnormalized target
+distribution <code>p</code> (provided via <code>target_log_prob_fn</code>) and a surrogate
+distribution <code>q</code> (provided as <code>surrogate_posterior</code>). When the
+target distribution is an unnormalized posterior from conditioning a model on
+data, minimizing the loss with respect to the parameters of
+<code>surrogate_posterior</code> performs approximate posterior inference.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">vi_monte_carlo_variational_loss(
+  target_log_prob_fn,
+  surrogate_posterior,
+  sample_size = 1L,
+  importance_sample_size = 1L,
+  discrepancy_fn = vi_kl_reverse,
+  use_reparametrization = NULL,
+  seed = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>target_log_prob_fn</code></td>
+<td>
+<p>function that takes a set of <code>Tensor</code> arguments
+and returns a <code>Tensor</code> log-density. Given
+<code>q_sample &lt;- surrogate_posterior$sample(sample_size)</code>, this
+will be (in Python) called as <code>target_log_prob_fn(q_sample)</code> if <code>q_sample</code> is a list
+or a tuple, <code style="white-space: pre;">⁠target_log_prob_fn(**q_sample)⁠</code> if <code>q_sample</code> is a
+dictionary, or <code>target_log_prob_fn(q_sample)</code> if <code>q_sample</code> is a <code>Tensor</code>.
+It should support batched evaluation, i.e., should return a result of
+shape <code style="white-space: pre;">⁠[sample_size]⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>surrogate_posterior</code></td>
+<td>
+<p>A <code>tfp$distributions$Distribution</code>
+instance defining a variational posterior (could be a
+<code>tfp$distributions$JointDistribution</code>). Crucially, the distribution's <code>log_prob</code> and
+(if reparameterized) <code>sample</code> methods must directly invoke all ops
+that generate gradients to the underlying variables. One way to ensure
+this is to use <code>tfp$util$DeferredTensor</code> to represent any parameters
+defined as transformations of unconstrained variables, so that the
+transformations execute at runtime instead of at distribution creation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample_size</code></td>
+<td>
+<p><code>integer</code> number of Monte Carlo samples to use
+in estimating the variational divergence. Larger values may stabilize
+the optimization, but at higher cost per step in time and memory.
+Default value: <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>importance_sample_size</code></td>
+<td>
+<p>integer number of terms used to define an
+importance-weighted divergence. If importance_sample_size &gt; 1, then the
+surrogate_posterior is optimized to function as an importance-sampling
+proposal distribution. In this case it often makes sense to use importance
+sampling to approximate posterior expectations (see
+tfp.vi.fit_surrogate_posterior for an example). Default value: 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discrepancy_fn</code></td>
+<td>
+<p>function representing a Csiszar <code>f</code> function in
+in log-space. That is, <code>discrepancy_fn(log(u)) = f(u)</code>, where <code>f</code> is
+convex in <code>u</code>.  Default value: <code>vi_kl_reverse</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_reparametrization</code></td>
+<td>
+<p><code>logical</code>. When <code>NULL</code> (the default),
+automatically set to: <code>surrogate_posterior.reparameterization_type == tfp$distributions$FULLY_REPARAMETERIZED</code>.
+When <code>TRUE</code> uses the standard Monte-Carlo average. When <code>FALSE</code> uses the score-gradient trick. (See above for
+details.)  When <code>FALSE</code>, consider using <code>csiszar_vimco</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p><code>integer</code> seed for <code>surrogate_posterior$sample</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function defines divergences of the form
+<code style="white-space: pre;">⁠E_q[discrepancy_fn(log p(z) - log q(z))]⁠</code>, sometimes known as
+<a href="https://en.wikipedia.org/wiki/F-divergence">f-divergences</a>.
+</p>
+<p>In the special case <code>discrepancy_fn(logu) == -logu</code> (the default
+<code>vi_kl_reverse</code>), this is the reverse Kullback-Liebler divergence
+<code>KL[q||p]</code>, whose negation applied to an unnormalized <code>p</code> is the widely-used
+evidence lower bound (ELBO). Other cases of interest available under
+<code>tfp$vi</code> include the forward <code>KL[p||q]</code> (given by <code>vi_kl_forward(logu) == exp(logu) * logu</code>),
+total variation distance, Amari alpha-divergences, and more.
+</p>
+<p>Csiszar f-divergences
+</p>
+<p>A Csiszar function <code>f</code> is a convex function from <code style="white-space: pre;">⁠R^+⁠</code> (the positive reals)
+to <code>R</code>. The Csiszar f-Divergence is given by:
+</p>
+<div class="sourceCode"><pre>D_f[p(X), q(X)] := E_{q(X)}[ f( p(X) / q(X) ) ]
+~= m**-1 sum_j^m f( p(x_j) / q(x_j) ),
+where x_j ~iid q(X)
+</pre></div>
+<p>For example, <code style="white-space: pre;">⁠f = lambda u: -log(u)⁠</code> recovers <code>KL[q||p]</code>, while <code style="white-space: pre;">⁠f = lambda u: u * log(u)⁠</code>
+recovers the forward <code>KL[p||q]</code>. These and other functions are available in <code>tfp$vi</code>.
+</p>
+<p>Tricks: Reparameterization and Score-Gradient
+</p>
+<p>When q is "reparameterized", i.e., a diffeomorphic transformation of a
+parameterless distribution (e.g., <code style="white-space: pre;">⁠Normal(Y; m, s) &lt;=&gt; Y = sX + m, X ~ Normal(0,1)⁠</code>),
+we can swap gradient and expectation, i.e.,
+<code style="white-space: pre;">⁠grad[Avg{ s_i : i=1...n }] = Avg{ grad[s_i] : i=1...n }⁠</code> where <code style="white-space: pre;">⁠S_n=Avg{s_i}⁠</code>
+and <code style="white-space: pre;">⁠s_i = f(x_i), x_i ~iid q(X)⁠</code>.
+</p>
+<p>However, if q is not reparameterized, TensorFlow's gradient will be incorrect
+since the chain-rule stops at samples of unreparameterized distributions. In
+this circumstance using the Score-Gradient trick results in an unbiased
+gradient, i.e.,
+</p>
+<div class="sourceCode"><pre>grad[ E_q[f(X)] ]
+  = grad[ int dx q(x) f(x) ]
+  = int dx grad[ q(x) f(x) ]
+  = int dx [ q'(x) f(x) + q(x) f'(x) ]
+  = int dx q(x) [q'(x) / q(x) f(x) + f'(x) ]
+  = int dx q(x) grad[ f(x) q(x) / stop_grad[q(x)] ]
+  = E_q[ grad[ f(x) q(x) / stop_grad[q(x)] ] ]
+</pre></div>
+<p>Unless <code>q.reparameterization_type != tfd.FULLY_REPARAMETERIZED</code> it is
+usually preferable to set <code>use_reparametrization = True</code>.
+</p>
+<p>Example Application:
+The Csiszar f-Divergence is a useful framework for variational inference.
+I.e., observe that,
+</p>
+<div class="sourceCode"><pre>f(p(x)) =  f( E_{q(Z | x)}[ p(x, Z) / q(Z | x) ] )
+        &lt;= E_{q(Z | x)}[ f( p(x, Z) / q(Z | x) ) ]
+        := D_f[p(x, Z), q(Z | x)]
+</pre></div>
+<p>The inequality follows from the fact that the "perspective" of <code>f</code>, i.e.,
+<code style="white-space: pre;">⁠(s, t) |-&gt; t f(s / t))⁠</code>, is convex in <code style="white-space: pre;">⁠(s, t)⁠</code> when <code style="white-space: pre;">⁠s/t in domain(f)⁠</code> and
+<code>t</code> is a real. Since the above framework includes the popular Evidence Lower
+BOund (ELBO) as a special case, i.e., <code>f(u) = -log(u)</code>, we call this framework
+"Evidence Divergence Bound Optimization" (EDBO).
+</p>
+
+
+<h3>Value</h3>
+
+<p>monte_carlo_variational_loss <code>float</code>-like <code>Tensor</code> Monte Carlo
+approximation of the Csiszar f-Divergence.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> Ali, Syed Mumtaz, and Samuel D. Silvey. "A general class of coefficients of divergence of one distribution from another."
+Journal of the Royal Statistical Society: Series B (Methodological) 28.1 (1966): 131-142.
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Other vi-functions: 
+<code>vi_amari_alpha()</code>,
+<code>vi_arithmetic_geometric()</code>,
+<code>vi_chi_square()</code>,
+<code>vi_csiszar_vimco()</code>,
+<code>vi_dual_csiszar_function()</code>,
+<code>vi_fit_surrogate_posterior()</code>,
+<code>vi_jeffreys()</code>,
+<code>vi_jensen_shannon()</code>,
+<code>vi_kl_forward()</code>,
+<code>vi_kl_reverse()</code>,
+<code>vi_log1p_abs()</code>,
+<code>vi_modified_gan()</code>,
+<code>vi_pearson()</code>,
+<code>vi_squared_hellinger()</code>,
+<code>vi_symmetrized_csiszar_function()</code>
+</p>
+
+
+</div>

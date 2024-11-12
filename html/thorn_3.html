@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thorn-shiny</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Shiny bindings for <code>thorn</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Output and render functions for using <code>thorn</code> within Shiny
+applications and interactive Rmd documents.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thornOutput(outputId, width = "100%", height = "100%")
+
+renderThorn(expr, env = parent.frame(), quoted = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>outputId</code></td>
+<td>
+<p>output variable to read from</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width, height</code></td>
+<td>
+<p>a valid CSS measurement (like <code>"100%"</code>,
+<code>"400px"</code>, <code>"auto"</code>) or a number, which will be coerced to a
+string and have <code>"px"</code> appended</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>an expression that generates a shader created with
+<code>thorn</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env</code></td>
+<td>
+<p>the environment in which to evaluate <code>expr</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quoted</code></td>
+<td>
+<p>logical, whether <code>expr</code> is a quoted expression</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># use a shader as the background of a Shiny app ####
+library(thorn)
+library(shiny)
+
+ui &lt;- fluidPage(
+  thornOutput("thorn", width = "100%", height = "100%"),
+  br(),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput(
+        "slider", "Slide me",
+        value = 10, min = 0, max = 20
+      ),
+      selectInput(
+        "select", "Select me", choices = c("Choice 1", "Choice 2")
+      )
+    ),
+    mainPanel()
+  )
+)
+
+server &lt;- function(input, output){
+
+  output[["thorn"]] &lt;- renderThorn({
+    thorn("biomorph2")
+  })
+
+}
+
+if(interactive()){
+  shinyApp(ui, server)
+}
+
+# all available shaders ####
+library(thorn)
+library(shiny)
+
+ui &lt;- fluidPage(
+  br(),
+  sidebarLayout(
+    sidebarPanel(
+      wellPanel(
+        radioButtons(
+          "shader", "Shader",
+          choices = c(
+            "thorn",
+            "thorn-color",
+            "ikeda",
+            "biomorph1",
+            "biomorph2",
+            "biomorph3",
+            "sweet",
+            "apollony",
+            "smoke"
+          )
+        )
+      )
+    ),
+    mainPanel(
+      thornOutput("shader", width = "calc(100% - 15px)", height = "400px")
+    )
+  )
+)
+
+server &lt;- function(input, output){
+
+  output[["shader"]] &lt;- renderThorn({
+    thorn(input[["shader"]])
+  })
+
+}
+
+if(interactive()){
+  shinyApp(ui, server)
+}
+</code></pre>
+
+
+</div>

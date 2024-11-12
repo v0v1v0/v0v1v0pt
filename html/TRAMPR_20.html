@@ -1,0 +1,241 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>load.abi</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Load ABI Output Files</h2>
+
+<h3>Description</h3>
+
+<p>These functions help convert data from Applied Biosystems
+Gene Mapper (ABI) output format into <code>TRAMPsamples</code>
+objects for analysis.  Note that this operates on the summarised
+output (a text file), rather than the <code>.fsa</code> files containing
+data for individual runs.
+</p>
+<p>Details of the procedure of this function are given below, and a
+worked example is given in the package vignette; type
+<code>vignette("TRAMPRdemo")</code> to view it.
+</p>
+<p>The function <code>peakscanner.to.genemapper</code> is an experimental
+function to convert from peakscanner output to abi genemapper output.
+The peakscanner output is very slightly different in format, and
+currently <code>load.abi</code> is very fussy about the input file's
+structure.  Eventially <code>load.abi</code> will be made more tolerant, but
+as an interim solution, run <code>peakscanner.to.genemapper</code> on your
+file.  By default, running
+<code>peakscanner.to.genemapper(myfile.csv)</code> will produce a file
+<code>myfile.txt</code>.  This can then be loaded using <code>load.abi</code> as
+described below, specifying <code>myfile.txt</code> as the <code>file</code>
+argument.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">load.abi(file, file.template, file.info, primer.translate, ...)
+load.abi.create.template(file, file.template)
+load.abi.create.info(file, file.template, file.info)
+
+peakscanner.to.genemapper(filename, output)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>The name of the file from which the ABI data are to be
+read from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file.template</code></td>
+<td>
+<p>The name of the file containing the
+“template” file (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file.info</code></td>
+<td>
+<p>(Optional) the name of the file containing extra
+information associated with each sample (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>primer.translate</code></td>
+<td>
+<p>List used to translate dye codes into
+primers.  The same codes are assumed to apply across the whole
+file.  See Details for format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional objects to incorportate
+into a <code>TRAMPsamples</code> object.  See <code>TRAMPsamples</code>
+for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>In <code>peakscanner.to.genemapper</code>, the name of the
+csv file containing output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>In <code>peakscanner.to.genemapper</code>, the name of the
+file to be output in abi format (if omitted, this will be
+automatically generated).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Some terminology: a “sample” refers to a physical sample
+(e.g. a root tip), while a “run” refers to an individual
+TRFLP run (i.e. one enzyme and one primer).  Because two primers are
+run at once, each “runfile” contains information on two
+“runs”, but each “sample” may contain more than one
+“runfile”.  Runfiles are distinguished by different
+<code>sample.file.name</code> values in the ABI file, while different
+samples are distinguished by different
+<code>sample.fk</code>/<code>sample.pk</code> values.
+</p>
+<p><code>primer.translate</code> is a list used to translate between the dyes
+recorded in the ABI file and the primers used.  Each element
+corresponds to a different primer, and is a vector of different colour
+dyes.  The list:
+</p>
+<p><code>list(ITS1F="B", ITS4="G")</code>
+</p>
+<p>would translate all dyes with the value <code>"B"</code> to <code>"ITS1F"</code>,
+and all dyes with the value <code>"G"</code> to <code>"ITS4"</code>.  The list:
+</p>
+<p><code>list(ITS1F="B", ITS4=c("G", "Y"))</code>
+</p>
+<p>would do the same, except that <em>both</em> <code>"G"</code> and <code>"Y"</code>
+dyes would be converted to <code>"ITS4"</code>.  If a dye is used in the
+data that is not represented within <code>primer.translate</code>, then it
+will be excluded (e.g., all rows of data with <code>dye</code> as
+<code>"R"</code> will be excluded).
+</p>
+<p>The procedure for loading in ABI data is:
+</p>
+
+
+<ol>
+<li>
+<p> Create the “template” file.  Template files are
+required to record which enzymes were used for each run, since that
+is not included in the ABI output, and to group together separate
+runs (typically different enzymes) that apply to the same
+individual.  The function <code>load.abi.create.template</code> will
+create a template that contains all the unique file names found in
+the ABI file (as <code>sample.file.name</code>), and blank columns titled
+<code>enzyme</code> and <code>sample.index</code>.  Running
+</p>
+<p><code>load.abi.create.template(x)</code>
+</p>
+<p>where <code>x</code> is the name of your ABI file will create a template
+file in the same directory as the ABI file.  The function will print
+the name and location of the template file to the console.
+</p>
+</li>
+<li>
+<p> Edit the template file and save.  The <code>enzyme</code> and
+<code>sample.index</code> columns are initially empty and need filling in,
+which can be done in Excel, or another spreadsheet program.  The
+<code>sample.index</code> column links <code>sample.file.name</code> back to an
+individual sample; multiple <code>sample.file.name</code>s that share
+<code>sample.index</code> values come from the same individual sample.
+(If editing with Excel, ignore all the warnings about incompatible
+file formats when saving.)  <code>sample.index</code> should be a positive
+integer (but see Note below).
+</p>
+</li>
+<li>
+<p> Optionally create an “info” file, which is useful if
+you want to associate extra information against your samples.  The
+function <code>load.abi.create.info</code> will create an info file that
+contains all the unique values of <code>sample.index</code>, and an empty
+column titled <code>species</code>.  The <code>species</code> column can be
+filled in where the species is known (e.g. from collections of
+sporocarps).  Any additional columns may be added.  Running
+</p>
+<p><code>load.abi.create.info(x)</code>
+</p>
+<p>where <code>x</code> is the name of your ABI file will create an info
+file in the same directory as the ABI file.  The function will print
+the name and location of the info file to the console.  Edit and
+save this file.
+</p>
+</li>
+<li>
+<p> Create the <code>TRAMPsamples</code> object by running
+<code>load.abi</code>.  This loads your ABI data, plus the new template
+file, plus an optional information file.  Running
+</p>
+<p><code>my.samples &lt;- load.abi(x, primer.translate=primer.translate)</code>
+</p>
+<p>will create an object “<code>my.samples</code>” containing your
+data.
+</p>
+</li>
+</ol>
+<p>By default, the filenames of the template and info files will be
+automatically generated: <code>&lt;prefix&gt;.&lt;ext&gt;</code> becomes
+<code>&lt;prefix&gt;_template.csv</code> or <code>&lt;prefix&gt;_info.csv</code>.  If you
+choose to specify <code>file.template</code> or <code>file.info</code> manually
+when running <code>load.info.create.template</code> or
+<code>load.info.create.info</code>, you must use the same values of
+<code>file.template</code> and <code>file.info</code> when running
+<code>load.abi</code>.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>Do not change the names of any columns produced by
+<code>load.abi.create.template</code> or <code>load.abi.create.info</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>There is no reason that data from other types of output files could
+not be manually imported using <code>TRAMPsamples</code>.  We welcome
+contributions for other major data formats.
+</p>
+<p>When creating <code>sample.index</code> values, these should be positive
+integers.  If you enter strings (e.g. <code>a1</code>, <code>b1</code>), these
+will be automatically converted into integers.  Once loaded,
+<code>sample.pk</code>/<code>sample.fk</code> is always a positive integer key,
+but <code>sample.index</code> will be retained as your string keys.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>read.abi</code>, which reads in ABI data with few
+modifications.
+</p>
+<p><code>TRAMPsamples</code>, which documents the data type produced by
+<code>load.abi</code>.
+</p>
+<p>The package vignette, which includes a worked example of loading data
+using these functions; to locate the vignette, type
+<code>help(library=TRAMPR)</code>, and scroll to the bottom of the page, or
+type: <code>system.file("doc/TRAMPR_demo.pdf", package="TRAMPR")</code>.
+</p>
+
+
+</div>

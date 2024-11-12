@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thresholding</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Noise reduction from the sequence of detail coefficients returned by the Tail-Greedy Unbalanced Wavelet (TGUW) transformation</h2>
+
+<h3>Description</h3>
+
+<p>This function is used inside <code>trendsegment</code> and performs the thresholding of the detail coefficients returned by the Tail-Greedy Unbalanced Wavelet (TGUW) transformation.
+The denoising is achieved by a prespecified threshold in a "connected" way in that it prunes the branches if and only if
+the detail coefficient itself and all of its children coefficients are below some thresholds in its size. Also, the
+"two together" rule is applied to any paired detail coefficients returned by Type 3
+merging (merging two sets of paired smooth coefficients) in the sense that both detail coefficients should be survived if at least one of their size is over threshold. For details, see H. Maeng and P. Fryzlewicz (2023), Detecting linear trend changes in data sequences.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thresholding(ts.obj, lambda, minsegL, bal = 0, connected = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts.obj</code></td>
+<td>
+<p>A list returned by <code>TGUW</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>The magnitude of the threshold. It has a form of <code>sigma * th.const * sqrt(2 * log(n))</code> where <code>n</code> is the length of input data <code>x</code>, the default of <code>th.const</code> is 1.3 and the <code>sigma</code> can be estimated by Median Absolute Deviation (MAD) method under the Gaussian assumption for noise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minsegL</code></td>
+<td>
+<p>The minimum segment length of estimated signal returned by <code>trendsegment</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bal</code></td>
+<td>
+<p>The minimum ratio of the length of the shorter region to the length of the entire merging region especially when the merges of Type 2 (merging one initial and a paired smooth coefficient) or of Type 3 (merging two sets of (paired) smooth coefficients) are performed. Only triplets which satisfy this balancedness condition survives in denoising. Point anomalies can be detected only if <code>bal &lt; 1/n</code> and <code>minsegL = 1</code>. The default is set to 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>connected</code></td>
+<td>
+<p>If connected=TRUE, the thresholding puts the connected rule above the <code>minsegL</code>, otherwise it makes keeping the <code>minsegL</code> a priority.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>ts.obj</code></td>
+<td>
+<p>The modified ts.obj containing zero detail coefficients in the <code>merging.hist</code> if not survived from thresholding.</p>
+</td>
+</tr></table>
+<h3>Author(s)</h3>
+
+<p>Hyeyoung Maeng <a href="mailto:hyeyoung.maeng@durham.ac.uk">hyeyoung.maeng@durham.ac.uk</a>, Piotr Fryzlewicz <a href="mailto:p.fryzlewicz@lse.ac.uk">p.fryzlewicz@lse.ac.uk</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>trendsegment</code>, <code>TGUW</code>, <code>invTGUW</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- c(1:10, rep(5,9))
+n &lt;- length(x)
+x &lt;- x + rnorm(n)
+tguwfit &lt;- TGUW(x)
+th.const &lt;- 1.3
+lambda &lt;- (stats::mad(diff(diff(x)))/sqrt(6)) * sqrt(2 * log(n)) * th.const
+thrfit &lt;- thresholding(ts.obj = tguwfit, lambda = lambda, minsegL = 5, bal = 0, connected = FALSE)
+thrfit
+</code></pre>
+
+
+</div>

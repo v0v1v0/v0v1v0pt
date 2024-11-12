@@ -1,0 +1,224 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot_chemical_boxplots</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Grouped Boxplots</h2>
+
+<h3>Description</h3>
+
+<p>The <code>plot_tox_boxplots</code> function creates a set of boxplots representing EAR
+values computed with the <code>get_chemical_summary</code> function, and
+dependent on the choice of several input options. See "Summarizing the data"
+in the Introduction vignette: <a href="../doc/Introduction.html#summarize_data"><code>vignette("Introduction", package = "toxEval")</code></a>.
+for a description of how the EAR values are computed, aggregated,
+and summarized. Choosing "Chemical Class" in the category argument
+will generate separate boxplots for each unique class. "Chemical" will generate
+boxplots for each individual chemical, and "Biological" will generate boxplots
+for each group in the selected ToxCast annotation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plot_chemical_boxplots(
+  chemical_summary,
+  ...,
+  manual_remove = NULL,
+  mean_logic = FALSE,
+  sum_logic = TRUE,
+  plot_ND = TRUE,
+  font_size = NA,
+  title = NA,
+  x_label = NA,
+  palette = NA,
+  hit_threshold = NA,
+  site_counts = "count"
+)
+
+plot_tox_boxplots(
+  chemical_summary,
+  category = "Biological",
+  manual_remove = NULL,
+  mean_logic = FALSE,
+  sum_logic = TRUE,
+  plot_ND = TRUE,
+  font_size = NA,
+  title = NA,
+  x_label = NA,
+  palette = NA,
+  hit_threshold = NA
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>chemical_summary</code></td>
+<td>
+<p>Data frame from <code>get_chemical_summary</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional group_by arguments. This can be handy for creating facet graphs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>manual_remove</code></td>
+<td>
+<p>Vector of categories to remove.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_logic</code></td>
+<td>
+<p>Logical. <code>TRUE</code> displays the mean sample from each site,
+<code>FALSE</code> displays the maximum sample from each site.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sum_logic</code></td>
+<td>
+<p>Logical. <code>TRUE</code> sums the EARs in a specified grouping,
+<code>FALSE</code> does not. <code>FALSE</code> may be better for traditional benchmarks as
+opposed to ToxCast benchmarks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_ND</code></td>
+<td>
+<p>Logical. Whether or not to plot "Biological" groupings,
+"Chemical Class" groupings, or "Chemical" that do not have any detections.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>font_size</code></td>
+<td>
+<p>Numeric value to adjust the axis font size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>Character title for plot. Default is NA which produces no title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_label</code></td>
+<td>
+<p>Character for x label. Default is NA which produces an automatic label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>palette</code></td>
+<td>
+<p>Vector of color palette for boxplot fill. Can be a named vector
+to specify specific colors for specific categories.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hit_threshold</code></td>
+<td>
+<p>Numeric threshold defining a "hit".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>site_counts</code></td>
+<td>
+<p>This describes how to calculate the left-side counts.
+Default is "count" which is number of sites with detections. "frequency" 
+would calculate a percentage of detections. This assumes all 
+non-detects have been included as 0 for a value. "none" is the
+final option which can be to remove those labels. Custom labels
+could then be constructed after this function is run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>category</code></td>
+<td>
+<p>Character. Either "Biological", "Chemical Class", or "Chemical".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is also possible to display a threshold line using the hit_threshold argument.
+The graph will then include the number of sites with detections, the threshold
+line, and the number of "hits" indicating how many sites that have EAR values
+exceeding the hit_threshold.
+</p>
+<p>The graph shows a slightly different result for a single site. For a single
+site graph, the number of chemicals that were detected and have associated endpoint
+ACCs represented are displayed.
+</p>
+<p>The functions <code>plot_tox_boxplots</code> and <code>graph_chem_data</code> are functions that perform
+the statistical calculations to create the plot. <code>graph_chem_data</code> is specific
+to the "Chemical" plot, and <code>plot_tox_boxplots</code> is for "Biological" and
+"Chemical Class".
+</p>
+<p>Box plots are standard Tukey representations. See "Box plot details" in the Basic Workflow vignette:
+<a href="../doc/basicWorkflow.html#box_plot_details"><code>vignette("basicWorkflow", package = "toxEval")</code></a>
+for more information.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># This is the example workflow:
+path_to_tox &lt;- system.file("extdata", package = "toxEval")
+file_name &lt;- "OWC_data_fromSup.xlsx"
+
+full_path &lt;- file.path(path_to_tox, file_name)
+
+tox_list &lt;- create_toxEval(full_path)
+ACC &lt;- get_ACC(tox_list$chem_info$CAS)
+ACC &lt;- remove_flags(ACC)
+
+cleaned_ep &lt;- clean_endPoint_info(end_point_info)
+filtered_ep &lt;- filter_groups(cleaned_ep)
+chemical_summary &lt;- get_chemical_summary(tox_list, ACC, filtered_ep)
+plot_tox_boxplots(chemical_summary, "Biological")
+
+
+plot_tox_boxplots(chemical_summary, "Chemical Class")
+plot_tox_boxplots(chemical_summary, "Chemical")
+
+
+cbPalette &lt;- c(
+  "#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442",
+  "#0072B2", "#D55E00", "#CC79A7"
+)
+graphData &lt;- tox_boxplot_data(
+  chemical_summary = chemical_summary,
+  category = "Biological"
+)
+cbValues &lt;- colorRampPalette(cbPalette)(length(levels(graphData$category)))
+names(cbValues) &lt;- levels(graphData$category)
+
+plot_tox_boxplots(chemical_summary,
+  hit_threshold = 0.1,
+  category = "Biological",
+  palette = cbValues,
+  title = "Maximum EAR per site, grouped by biological activity groupings"
+)
+
+plot_tox_boxplots(chemical_summary,
+  category = "Chemical", x_label = "EAR"
+)
+single_site &lt;- dplyr::filter(chemical_summary, site == "USGS-04024000")
+plot_tox_boxplots(single_site,
+  category = "Biological"
+)
+plot_tox_boxplots(single_site,
+  category = "Chemical", hit_threshold = 0.001
+)
+
+</code></pre>
+
+
+</div>

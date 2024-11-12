@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_series_split</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Simple Training/Test Set Splitting for Time Series</h2>
+
+<h3>Description</h3>
+
+<p><code>time_series_split</code> creates resample splits using <code>time_series_cv()</code> but
+returns only a <strong>single split.</strong> This is useful when creating a single
+train/test split.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_series_split(
+  data,
+  date_var = NULL,
+  initial = 5,
+  assess = 1,
+  skip = 1,
+  lag = 0,
+  cumulative = FALSE,
+  slice = 1,
+  point_forecast = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>date_var</code></td>
+<td>
+<p>A date or date-time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial</code></td>
+<td>
+<p>The number of samples used for analysis/modeling in the
+initial resample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assess</code></td>
+<td>
+<p>The number of samples used for each assessment resample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A integer indicating how many (if any) <em>additional</em> resamples
+to skip to thin the total amount of data points in the analysis resample.
+See the example below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>A value to include an lag between the assessment
+and analysis set. This is useful if lagged predictors will be used
+during training and testing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cumulative</code></td>
+<td>
+<p>A logical. Should the analysis resample grow beyond the
+size specified by <code>initial</code> at each resample?.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>slice</code></td>
+<td>
+<p>Returns a single slice from time_series_cv</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>point_forecast</code></td>
+<td>
+<p>Whether or not to have the testing set be a single point forecast or to be a forecast horizon.
+The default is to be a forecast horizon. Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>These dots are for future extensions and must be empty.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Time-Based Specification</strong>
+</p>
+<p>The <code>initial</code>, <code>assess</code>, <code>skip</code>, and <code>lag</code> variables can be specified as:
+</p>
+
+<ul>
+<li>
+<p> Numeric: <code>initial = 24</code>
+</p>
+</li>
+<li>
+<p> Time-Based Phrases: <code>initial = "2 years"</code>, if the <code>data</code> contains
+a <code>date_var</code> (date or datetime)
+</p>
+</li>
+</ul>
+<p><strong>Initial (Training Set) and Assess (Testing Set)</strong>
+</p>
+<p>The main options, <code>initial</code> and <code>assess</code>, control the number of
+data points from the original data that are in the analysis (training set)
+and the assessment (testing set), respectively.
+</p>
+<p><strong>Skip</strong>
+</p>
+<p><code>skip</code> enables the function to not use every data point in the resamples.
+When <code>skip = 1</code>, the resampling data sets will increment by one position.
+</p>
+<p>Example: Suppose that the rows of a data set are consecutive days. Using <code>skip = 7</code>
+will make the analysis data set operate on <em>weeks</em> instead of days. The
+assessment set size is not affected by this option.
+</p>
+<p><strong>Lag</strong>
+</p>
+<p>The Lag parameter creates an overlap between the Testing set. This is needed
+when lagged predictors are used.
+</p>
+<p><strong>Cumulative vs Sliding Window</strong>
+</p>
+<p>When <code>cumulative = TRUE</code>, the <code>initial</code> parameter is ignored and the
+analysis (training) set will grow as
+resampling continues while the assessment (testing) set size will always remain
+static.
+</p>
+<p>When <code>cumulative = FALSE</code>, the <code>initial</code> parameter fixes the analysis (training)
+set and resampling occurs over a fixed window.
+</p>
+<p><strong>Slice</strong>
+</p>
+<p>This controls which slice is returned. If <code>slice = 1</code>, only the most recent
+slice will be returned.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An <code>rsplit</code> object that can be used with the <code>training</code> and <code>testing</code>
+functions to extract the data in each split.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul><li> <p><code>time_series_cv()</code> and <code>rsample::rolling_origin()</code> - Functions used to create
+time series resample specifications.
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# DATA ----
+m750 &lt;- m4_monthly %&gt;% dplyr::filter(id == "M750")
+
+# Get the most recent 3 years as testing, and previous 10 years as training
+m750 %&gt;%
+    time_series_split(initial = "10 years", assess = "3 years")
+
+# Skip the most recent 3 years
+m750 %&gt;%
+    time_series_split(
+        initial = "10 years",
+        assess  = "3 years",
+        skip    = "3 years",
+        slice   = 2          # &lt;- Returns 2nd slice, 3-years back
+    )
+
+# Add 1 year lag for testing overlap
+m750 %&gt;%
+    time_series_split(
+        initial = "10 years",
+        assess  = "3 years",
+        skip    = "3 years",
+        slice   = 2,
+        lag     = "1 year"   # &lt;- Overlaps training/testing by 1 year
+    )
+
+
+</code></pre>
+
+
+</div>

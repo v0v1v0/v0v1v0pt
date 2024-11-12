@@ -1,0 +1,84 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>FreeADFun</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Free memory allocated on the C++ side by <code>MakeADFun</code>.</h2>
+
+<h3>Description</h3>
+
+<p>Free memory allocated on the C++ side by <code>MakeADFun</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">FreeADFun(obj)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>Object returned by <code>MakeADFun</code></p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>An object returned by <code>MakeADFun</code> contains pointers to
+structures allocated on the C++ side. These are managed by R's
+garbage collector which for the most cases is sufficient. However,
+because the garbage collector is unaware of the C++ object sizes,
+it may fail to release memory to the system as frequently as
+necessary. In such cases one can manually call
+<code>FreeADFun(obj)</code> to release the resources.
+</p>
+
+
+<h3>Memory management</h3>
+
+<p>Memory allocated on the C++ side by <code>MakeADFun</code> is
+represented by external pointers. Each such pointer has an
+associated 'finalizer' (see <code>reg.finalizer</code>) that deallocates
+the external pointer when <code>gc()</code> decides the pointer is no
+longer needed.  Deallocated pointers are recognized on the R
+side as external null pointers <code>&lt;pointer: (nil)&gt;</code>. This is
+important as it provides a way to prevent the finalizers from
+freeing pointers that have already been deallocated <em>even if
+the deallocation C-code has been unloaded</em>.
+The user DLL maintains a list of all external pointers on the C
+side. Three events can reduce the list:
+</p>
+
+<ul>
+<li>
+<p> Garbage collection of an external pointer that is no longer needed (triggers corresponding finalizer).
+</p>
+</li>
+<li>
+<p> Explicit deallocation of external pointers using <code>FreeADFun()</code> (corresponding finalizers are untriggered but harmless).
+</p>
+</li>
+<li>
+<p> Unload/reload of the user's DLL deallocates all external pointers (corresponding finalizers are untriggered but harmless).
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>This function is normally not needed.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">runExample("simple", thisR = TRUE)          ## Create 'obj'
+FreeADFun(obj)                              ## Free external pointers
+obj$fn()                                    ## Re-allocate external pointers
+</code></pre>
+
+
+</div>

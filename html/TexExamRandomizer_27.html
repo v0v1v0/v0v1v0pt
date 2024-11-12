@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ObtainExamStats</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Obtaining exam statistics</h2>
+
+<h3>Description</h3>
+
+<p>This function gets an answer sheet of the original version of the exam as a data frame, and a parsed list, which is obtained from <code>GradeExams</code> and it outputs the statistics of how many answers are parsed exam, that is graded and obtains from there
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ObtainExamStats(
+  OriginalExamAnswerSheet,
+  ExamAnswerParsedList,
+  names.FullExamOriginalCols
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>OriginalExamAnswerSheet</code></td>
+<td>
+<p>The answer sheet of the original exam. (In this package the convention is the exam version "0")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ExamAnswerParsedList</code></td>
+<td>
+<p>A parsed list for every student, as outputted by <code>GradeExams</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>names.FullExamOriginalCols</code></td>
+<td>
+<p>Names of those columns that in the answer sheet identify for all versions where that item is found on the original columns, (i.e., as ordered from the original version exam)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns the <code>OriginalExamAnswerSheet</code> with a column added to it, named "<code>ExamAnswerCount</code>" that counts the number of answers for each question
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Grading Exams: 
+<code>GradeExams()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+asheet_file &lt;-
+    system.file(
+        "extdata",
+        "ExampleTables",
+        "ExampleAnswerSheet.csv",
+        package = "TexExamRandomizer")
+responses_file &lt;-
+    system.file(
+        "extdata",
+        "ExampleTables",
+        "ExampleResponses.csv",
+        package = "TexExamRandomizer")
+FullAnswerSheet &lt;-
+    read.csv(
+        asheet_file,
+        header = TRUE,
+        stringsAsFactors = FALSE,
+        na.strings = c("", "NA", "Na"),
+        strip.white = TRUE)
+Responses &lt;- read.csv(
+    responses_file,
+    header = TRUE,
+    stringsAsFactors = FALSE,
+    na.strings = c("", "NA", "Na"),
+    strip.white = TRUE)
+compiledanswers &lt;-
+    WhichAnswerOriginal(
+        StudentAnswers = Responses,
+        FullExamAnswerSheet = FullAnswerSheet,
+        names.StudentAnswerQCols = grep(
+            names(Responses),
+            pattern = "^Q.*[[:digit:]]",
+            value = TRUE),
+        names.StudentAnswerExamVersion = grep(
+            names(Responses),
+            pattern = "Version",
+            value = TRUE),
+        OriginalExamVersion = 0,
+        names.FullExamVersion = "Version",
+        names.FullExamOriginalCols = grep(
+            names(FullAnswerSheet),
+            pattern = "_original",
+            value = TRUE),
+        names.CorrectAndIncorrectCols = c(
+            "choice",
+            "CorrectChoice")
+    )
+OriginalAnswerSheet &lt;- FullAnswerSheet[FullAnswerSheet$Version == 0,]
+ExamStats &lt;-
+    ObtainExamStats(
+        OriginalExamAnswerSheet = OriginalAnswerSheet,
+        ExamAnswerParsedList = compiledanswers,
+        names.FullExamOriginalCols =  grep(
+            names(FullAnswerSheet),
+            pattern = "_original",
+            value = TRUE)
+    )
+</code></pre>
+
+
+</div>

@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thematic_with_theme</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tools for getting and restoring global state</h2>
+
+<h3>Description</h3>
+
+<p>These functions are helpful for getting and/or temporarily activating a
+<code>thematic_theme()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thematic_with_theme(theme, expr)
+
+thematic_local_theme(theme, .local_envir = parent.frame())
+
+thematic_set_theme(theme)
+
+thematic_get_theme(resolve = TRUE)
+
+thematic_get_option(name = "", default = NULL, resolve = TRUE)
+
+thematic_get_mixture(amounts = 0.5, default = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>theme</code></td>
+<td>
+<p>a <code>thematic_theme()</code> object (or a return value of thematic_on/<code>thematic_get_theme()</code>)
+or <code>NULL</code> (in which case <code>thematic_off()</code> is called).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>R code that produces a plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.local_envir</code></td>
+<td>
+<p>The environment to use for scoping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resolve</code></td>
+<td>
+<p>whether or not <code>'auto'</code> values should be resolved before returning</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>a theme element name (e.g., <code>fg</code>, <code>bg</code>, etc.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default</code></td>
+<td>
+<p>a default value to return in the event no thematic theme is active.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>amounts</code></td>
+<td>
+<p>value(s) between 0 and 1 specifying how much to mix <code>bg</code> (0) and <code>fg</code> (1).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>the result of <code>expr</code>.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>thematic_with_theme()</code>: similar to <code>thematic_on()</code>, but for an single plot.
+</p>
+</li>
+<li> <p><code>thematic_local_theme()</code>: similar to <code>thematic_with_theme()</code>, but de-couples
+the theme from the plot expression.
+</p>
+</li>
+<li> <p><code>thematic_set_theme()</code>: set a given <code>theme</code> object as the current theme.
+</p>
+</li>
+<li> <p><code>thematic_get_theme()</code>: obtain the current <code>theme</code>.
+</p>
+</li>
+<li> <p><code>thematic_get_option()</code>: obtain a particular <code>theme</code> option (and provide a <code>default</code>
+if no <code>theme</code> is active).
+</p>
+</li>
+<li> <p><code>thematic_get_mixture()</code>: obtain a mixture of the current <code>theme</code>'s <code>bg</code> and <code>fg</code>.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Use thematic_with_theme() for a one-time use of thematic
+thematic_with_theme(
+  thematic_theme("darkblue", "skyblue", accent = "red"),
+  plot(1:10, col = thematic_get_option("accent"), pch = 19)
+)
+
+# Use thematic_set_theme() if doing something more complicated
+# like programming on top thematic (without causing side effects)
+my_plot &lt;- function(expr, las = 3, ...) {
+  old_theme &lt;- thematic_on("black", "white")
+  on.exit(thematic_set_theme(old_theme), add = TRUE)
+  opts &lt;- par(las = las)
+  on.exit(par(opts), add = TRUE)
+  # Imagine some more customization with ...
+  force(expr)
+}
+my_plot(plot(1:10))
+
+thematic_off()
+thematic_get_option("bg", "white")
+thematic_on(bg = "red")
+thematic_get_option("bg", "white")
+thematic_off()
+
+thematic_with_theme(
+  thematic_theme("darkblue", "skyblue"),
+  scales::show_col(thematic_get_mixture(seq(0, 1, by = 0.1)))
+)
+
+</code></pre>
+
+
+</div>

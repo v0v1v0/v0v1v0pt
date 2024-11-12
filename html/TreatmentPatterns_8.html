@@ -1,0 +1,213 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>executeTreatmentPatterns</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>executeTreatmentPatterns</h2>
+
+<h3>Description</h3>
+
+<p>Compute treatment patterns according to the specified parameters within
+specified cohorts. For more customization, or investigation of patient level
+outcomes, you can run computePathways and
+export separately.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">executeTreatmentPatterns(
+  cohorts,
+  cohortTableName,
+  outputPath,
+  cdm = NULL,
+  connectionDetails = NULL,
+  cdmSchema = NULL,
+  resultSchema = NULL,
+  tempEmulationSchema = NULL,
+  minEraDuration = 0,
+  eraCollapseSize = 30,
+  combinationWindow = 30,
+  minCellCount = 5
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>cohorts</code></td>
+<td>
+<p>(<code>data.frame()</code>)<br>
+Data frame containing the following columns and data types:
+</p>
+
+<dl>
+<dt>cohortId <code>numeric(1)</code>
+</dt>
+<dd>
+<p>Cohort ID's of the cohorts to be used in the cohort table.</p>
+</dd>
+<dt>cohortName <code>character(1)</code>
+</dt>
+<dd>
+<p>Cohort names of the cohorts to be used in the cohort table.</p>
+</dd>
+<dt>type <code>character(1)</code> ["target", "event', "exit"]</dt>
+<dd>
+<p>Cohort type, describing if the cohort is a target, event, or exit cohort</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cohortTableName</code></td>
+<td>
+<p>(<code>character(1)</code>)<br>
+Cohort table name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outputPath</code></td>
+<td>
+<p>(<code>character(1)</code>)<br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cdm</code></td>
+<td>
+<p>(<code>CDMConnector::cdm_from_con()</code>: <code>NULL</code>)<br>
+Optional; Ignores <code>connectionDetails</code>, <code>cdmSchema</code>, and <code>resultSchema</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>connectionDetails</code></td>
+<td>
+<p>(<code>DatabaseConnector::createConnectionDetails()</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>cdmSchema</code> and <code>resultSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cdmSchema</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>connectionDetails</code> and <code>resultSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resultSchema</code></td>
+<td>
+<p>(<code>character(1)</code>: <code>NULL</code>)<br>
+Optional; In congruence with <code>connectionDetails</code> and <code>cdmSchema</code>. Ignores <code>cdm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tempEmulationSchema</code></td>
+<td>
+<p>(<code>character(1)</code>) Schema to emulate temp tables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minEraDuration</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>0</code>)<br>
+Minimum time an event era should last to be included in analysis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eraCollapseSize</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Window of time between which two eras of the same event cohort are collapsed
+into one era</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>combinationWindow</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>30</code>)<br>
+Window of time two event cohorts need to overlap to be considered a
+combination treatment</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minCellCount</code></td>
+<td>
+<p>(<code>integer(1)</code>: <code>5</code>)<br>
+Minimum count required per pathway. Censors data below <code>x</code> as <code style="white-space: pre;">⁠&lt;x⁠</code>. This
+minimum value will carry over to the sankey diagram and sunburst plot.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>(<code>invisible(NULL)</code>)
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ableToRun &lt;- all(
+  require("CirceR", character.only = TRUE, quietly = TRUE),
+  require("CDMConnector", character.only = TRUE, quietly = TRUE),
+  require("TreatmentPatterns", character.only = TRUE, quietly = TRUE),
+  require("dplyr", character.only = TRUE, quietly = TRUE)
+)
+
+if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
+  library(TreatmentPatterns)
+  library(CDMConnector)
+  library(dplyr)
+
+  withr::local_envvar(
+    R_USER_CACHE_DIR = tempfile(),
+    EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
+  )
+
+  tryCatch({
+    if (Sys.getenv("skip_eunomia_download_test") != "TRUE") {
+      CDMConnector::downloadEunomiaData(overwrite = TRUE)
+    }
+  },
+  error = function(e) NA)
+
+  con &lt;- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  cdm &lt;- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
+
+  cohortSet &lt;- readCohortSet(
+    path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+  )
+
+  cdm &lt;- generateCohortSet(
+    cdm = cdm,
+    cohortSet = cohortSet,
+    name = "cohort_table"
+  )
+
+  cohorts &lt;- cohortSet %&gt;%
+    # Remove 'cohort' and 'json' columns
+    select(-"cohort", -"json") %&gt;%
+    mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %&gt;%
+    rename(
+      cohortId = "cohort_definition_id",
+      cohortName = "cohort_name",
+    ) %&gt;%
+    select("cohortId", "cohortName", "type")
+
+  executeTreatmentPatterns(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    outputPath = tempdir()
+  )
+    
+  DBI::dbDisconnect(con, shutdown = TRUE)
+}
+
+</code></pre>
+
+
+</div>

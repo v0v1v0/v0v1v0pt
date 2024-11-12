@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tensor_regress</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Supervised Tensor Decomposition with Interactive Side Information</h2>
+
+<h3>Description</h3>
+
+<p>Supervised tensor decomposition with interactive side information on multiple modes. Main function in the package. The function takes a response tensor, multiple side information matrices,
+and a desired Tucker rank as input. The output is a rank-constrained M-estimate of the core tensor and factor matrices.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tensor_regress(
+  tsr,
+  X_covar1 = NULL,
+  X_covar2 = NULL,
+  X_covar3 = NULL,
+  core_shape,
+  niter = 20,
+  cons = c("non", "vanilla", "penalty"),
+  lambda = 0.1,
+  alpha = 1,
+  solver = "CG",
+  dist = c("binary", "poisson", "normal"),
+  traj_long = FALSE,
+  initial = c("random", "QR_tucker")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tsr</code></td>
+<td>
+<p>response tensor with 3 modes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X_covar1</code></td>
+<td>
+<p>side information on first mode</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X_covar2</code></td>
+<td>
+<p>side information on second mode</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X_covar3</code></td>
+<td>
+<p>side information on third mode</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>core_shape</code></td>
+<td>
+<p>the Tucker rank of the tensor decomposition</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>niter</code></td>
+<td>
+<p>max number of iterations if update does not convergence</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cons</code></td>
+<td>
+<p>the constraint method, "non" for without constraint, "vanilla" for global scale down at each iteration, "penalty" for adding log-barrier penalty to object function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>penalty coefficient for "penalty" constraint</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>max norm constraint on linear predictor</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>solver</code></td>
+<td>
+<p>solver for solving object function when using "penalty" constraint, see "details"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist</code></td>
+<td>
+<p>distribution of the response tensor, see "details"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>traj_long</code></td>
+<td>
+<p>if "TRUE", set the minimal iteration number to 8; if "FALSE", set the minimal iteration number to 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial</code></td>
+<td>
+<p>initialization of the alternating optimiation, "random" for random initialization, "QR_tucker" for deterministic initialization using tucker decomposition</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Constraint <code>penalty</code> adds log-barrier regularizer to
+general object function (negative log-likelihood). The main function uses solver in function "optim" to
+solve the objective function. The "solver" passes to the argument "method" in function "optim".
+</p>
+<p><code>dist</code> specifies three distributions of response tensor: binary, poisson and normal distribution.
+</p>
+<p>If <code>dist</code> is set to "normal" and <code>initial</code> is set to "QR_tucker", then the function returns the results after initialization.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list containing the following:
+</p>
+<p><code>W</code> a list of orthogonal factor matrices - one for each mode, with the number of columns given by <code>core_shape</code>
+</p>
+<p><code>G</code>  an array, core tensor with the size specified by <code>core_shape</code>
+</p>
+<p><code>C_ts</code>  an array, coefficient tensor, Tucker product of <code>G</code>,<code>A</code>,<code>B</code>,<code>C</code>
+</p>
+<p><code>U</code> linear predictor,i.e. Tucker product of <code>C_ts</code>,<code>X_covar1</code>,<code>X_covar2</code>,<code>X_covar3</code>
+</p>
+<p><code>lglk</code> a vector containing loglikelihood at convergence
+</p>
+<p><code>sigma</code> a scalar, estimated error variance (for Gaussian tensor) or dispersion parameter (for Bernoulli and Poisson tensors)
+</p>
+<p><code>violate</code> a vector listing whether each iteration violates the max norm constraint on the linear predictor, <code>1</code> indicates violation
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">seed = 34
+dist = 'binary'
+data=sim_data(seed, whole_shape = c(20,20,20), core_shape=c(3,3,3),
+p=c(5,5,5),dist=dist, dup=5, signal=4)
+re = tensor_regress(data$tsr[[1]],data$X_covar1,data$X_covar2,data$X_covar3,
+core_shape=c(3,3,3),niter=10, cons = 'non', dist = dist,initial = "random")
+</code></pre>
+
+
+</div>

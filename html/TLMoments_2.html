@@ -1,0 +1,173 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as.parameters</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Converting to parameters-objects</h2>
+
+<h3>Description</h3>
+
+<p>Convert vector, matrix, list, or data.frame to parameters-objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">as.parameters(..., distr = NULL)
+
+## S3 method for class 'numeric'
+as.parameters(..., distr)
+
+## S3 method for class 'matrix'
+as.parameters(x, distr, ...)
+
+## S3 method for class 'list'
+as.parameters(x, distr, ...)
+
+## S3 method for class 'data.frame'
+as.parameters(x, formula, distr, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>parameters of distribution. This can be named vectors or lists, matrices, or data.frames. See examples below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+<p>character giving the distribution. Function of name
+q\"distr\" has to be available.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>numeric vector, matrix, list, or data.frame of parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>if <code>x</code> is data.frame a formula has to be given.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>object of class parameters, see parameters help page.
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul>
+<li> <p><code>numeric</code>: as.parameters for numeric data vectors
+</p>
+</li>
+<li> <p><code>matrix</code>: as.parameters for numeric data matrices
+</p>
+</li>
+<li> <p><code>list</code>: as.parameters for numeric data lists
+</p>
+</li>
+<li> <p><code>data.frame</code>: as.parameters for numeric data.frames
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>parameters</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Vector input:
+as.parameters(loc = 3, scale = 2, shape = .4, distr = "gev")
+as.parameters(c(loc = 3, scale = 2, shape = .4), distr = "gev")
+
+# Names can be shortened if unambiguous:
+as.parameters(l = 3, sc = 2, sh = .4, distr = "gev")
+as.parameters(m = 3, s = 1, distr = "norm")
+
+# Wrong or ambiguous names lead to errors!
+## Not run: 
+as.parameters(l = 3, s = 2, s = .4, distr = "gev")
+as.parameters(loc2 = 3, scale = 2, shape = .4, distr = "gev")
+
+## End(Not run)
+
+# If no names are given, a warning is given and they are guessed for gev, gpd, gum, and ln3.
+as.parameters(3, 2, .4, distr = "gev")
+as.parameters(c(3, 2, .4), distr = "gev")
+## Not run: 
+as.parameters(3, 2, .2, .4, distr = "gev") #=&gt; doesn't work
+
+## End(Not run)
+
+# Matrix input:
+# Parameters in matrices must have either matching rownames or colnames!
+as.parameters(cbind(loc = 10, scale = 4, shape = seq(0, .4, .1)), distr = "gev")
+as.parameters(rbind(loc = 10, scale = 4, shape = seq(0, .4, .1)), distr = "ln3")
+
+# If no names are given, a guess is made based on number of rows
+# or cols according to distribution (and a warning is given).
+as.parameters(matrix(1:9, nr = 3), distr = "gev")
+as.parameters(matrix(1:8, nc = 2), distr = "gum")
+
+
+# The same principles apply for list input and data.frames:
+
+# List input:
+as.parameters(list(list(mean = 2, sd = 1), list(mean = 0, sd = 1)), distr = "norm")
+as.parameters(list(c(m = 2, s = 1), c(m = 0, s = 1)), distr = "norm")
+as.parameters(list(c(loc = 2, scale = 1), c(0, 1)), distr = "gum")
+## Not run: 
+as.parameters(list(c(loc = 2, scale = 1), c(0, 1, 2)), distr = "gum")
+
+## End(Not run)
+
+# Dataframe input:
+xdat &lt;- data.frame(station = c(1, 2), mean = c(2, 0), sd = c(1, 1))
+as.parameters(xdat, cbind(mean, sd) ~ station, distr = "norm")
+as.parameters(xdat, . ~ station, distr = "norm")
+as.parameters(xdat, cbind(mean, sd) ~ ., distr = "norm")
+
+xdat &lt;- data.frame(station = c(1, 2), m = c(2, 0), s = c(1, 1))
+as.parameters(xdat, cbind(m, s) ~ station, distr = "norm")
+## Not run: 
+as.parameters(xdat, cbind(m, s) ~ station, distr = "gev")
+
+## End(Not run)
+
+###
+
+# Results of as.parameters can be used in the normal TLMoments-scheme:
+# they can be transfered to quantiles or to TLMoments.
+
+xdat &lt;- data.frame(station = c(1, 2), mean = c(2, 0), sd = c(1, 1))
+quantiles(as.parameters(xdat, cbind(mean, sd) ~ ., distr = "norm"), c(.99))
+
+# quantile estimation
+p &lt;- as.parameters(loc = 3, scale = 2, shape = .4, distr = "gev")
+quantiles(p, c(.9, .95))
+p &lt;- as.parameters(cbind(loc = 10, scale = 4, shape = seq(0, .4, .1)), distr = "gev")
+quantiles(p, c(.9, .95))
+p &lt;- as.parameters(list(list(mean = 2, sd = 1), list(mean = 0, sd = 1)), distr = "norm")
+quantiles(p, c(.95, .975))
+
+# With magrittr
+library(magrittr)
+as.parameters(loc = 3, scale = 2, shape = .4, distr = "gev") %&gt;% quantiles(c(.9, .99))
+</code></pre>
+
+
+</div>

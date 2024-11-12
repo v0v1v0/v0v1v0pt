@@ -1,0 +1,155 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tukeytrendfit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Fit multiple marginal models by updating a given fitted model object with re-scaled dose variable.
+</h2>
+
+<h3>Description</h3>
+
+<p>Wrapper function to re-fit a given model after different rescalings of a single dose variable. The refitted models are combined into a list that is suitable as input to the multiple marginal model function of package multcomp, mmm.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tukeytrendfit(fit, dose, 
+scaling = c("ari", "ord", "log", "arilog", "highvslow", "treat"),
+ctype = NULL, ddf = c("residual", "KR", "PB"), d0shift = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fit</code></td>
+<td>
+
+<p>A fitted model object, currently, the classes <code>lm</code>, <code>glm</code>, <code>lmer</code>, and <code>nlme</code> are supported. The left hand side of the models formula must contain a single (numeric) variable that is treated as a dose variable in Tukeys trend test. It may contain further variables that are not changed when refitting the model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dose</code></td>
+<td>
+
+<p>A single character string, naming a numeric variable in the models formula. This variable is rescaled acc. to the options in <code>scaling</code> and the model in <code>fit</code> is then refitted
+with the rescaled <code>dose</code> variable.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scaling</code></td>
+<td>
+
+<p>A vector of character strings, naming the options for rescaling the variable specified in <code>dose</code>: <code>"ari"</code>: no rescaling, <code>"ord"</code>: ranks of dose levels, <code>"log"</code>: log-transformed dose levels, <code>"arilog"</code>: log-transformnd dose levels, with interpolated dose score for 0, <code>"high.vs.low"</code>: dose coerced to a factor, and only highest and lowest dose level retained, all others set NA, <code>"treat"</code>: dose coerced to a factor, all levels retained with the option to apply multiple contrast tests to the treatment levels
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ctype</code></td>
+<td>
+
+<p>optional character string naming a contrast type for multiple comparisons between dose levels, when <code>scaling="treat"</code>. Options are <code>"Dunnett"</code>, <code>"William"</code> etc., see <code>?contrMat</code> in package <code>multcomp</code>. Argument <code>ctype</code> is ignored if <code>scaling</code> does not involve option <code>"treat"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ddf</code></td>
+<td>
+
+<p>single character string, defining the option for the degree of freedom in inference after model fitting. By default, <code>"residual"</code> degrees of freedom will be used for all models. <code>"KR"</code>: For models of class <code>"lmerMod"</code> (fitted by <code>"lmer"</code> from package <code>"lme4"</code>), Kenward-Roger degrees of freedom can be computed (based on methods from package <code>"pbkrtest"</code>); <code>"PB"</code>: For models of class <code>"lme"</code> (fitted by <code>"lme"</code> from package <code>"nlme"</code>), containment degrees of freedom as defined by Pinheiro and Bates can be extracted.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d0shift</code></td>
+<td>
+
+<p>an optional factor, that is multiplied with the interpolated dose score for <code>dose = 0</code> in option <code>scaling="arilog"</code>; ignored in all other options for rescaling
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with elements
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mmm</code></td>
+<td>
+<p>a list of fitted models, after rescaling the <code>dose</code> variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mlf</code></td>
+<td>
+<p>a list of matrices defining a linear functions of model parameters for each model in <code>mmm</code>, defining the parameter of interest for inference in function <code>mlf</code> and <code>glht</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>a vector of degrees of freedom, one for each model in <code>mmm</code></p>
+</td>
+</tr>
+</table>
+<p>and information of the model typ and call of the initial model
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Frank Schaarschmidt and Christian Ritz (providing internal functions to interface objects of class <code>"lmerMod"</code> and <code>"lme"</code>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Tukey JW, Ciminera JL, Heyse JF (1985). Testing the statistical certainty of a response to increasing doses of a drug. Biometrics 41(1), 295-301.
+</p>
+<p>Pipper CB, Ritz C, Bisgaard H (2012). A versatile methode for confirmatory evaluation of the effects of a covariate in multiple models. JRSSC - Applied Statistics 61, 315-326.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Functions <code>glht</code> and <code>mmm</code> in package <code>multcomp</code>; 
+<code>tukeytrendformula</code> for starting with a model formula and data.frame;
+<code>combtt</code> for concatenating several objects resulting from this function, e.g. for multiple endpoints or with different covariates; 
+<code>asglht</code> for direct conversion to a glht-object
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(litter, package="multcomp")
+
+# variable of interest is 'dose', but
+# we may want to include 'number' as a covariate
+
+dl &lt;- litter
+dl$dosen &lt;- as.numeric(as.character(dl$dose))
+
+fit &lt;- lm(weight ~ dosen + number, data=dl)
+
+# as it is unclear on which scale of dosage, 
+# dose-response-shape is met best, we may try different
+# re-scalings of the dose variable, including Dunnett- type multiple contrast test
+
+ttlitter &lt;- tukeytrendfit(fit, dose="dosen", 
+ scaling=c("ari", "ord", "log", "treat"), ctype="Dunnett")
+
+summary(asglht(ttlitter))
+
+
+</code></pre>
+
+
+</div>

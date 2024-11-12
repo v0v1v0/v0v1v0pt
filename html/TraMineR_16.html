@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dissdomassoc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Domain association measures</h2>
+
+<h3>Description</h3>
+
+<p>Measures of association between domains are computed as the association between the pairwise dissimilarities in the domains. Measures are: Pearson correlation, Spearman correlation, global Cronbach alpha, and Cronbach alpha for each subset of the domains. The function can also return the share of variance (R-square) of the dissimilarities in one domain that can be reproduced from the dissimilarities in the other domains.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">  dissdomassoc(domdiss, jointdiss = NULL, what = c("pearson","R2"),
+        dnames=names(domdiss), weights=NULL, w.rank=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>domdiss</code></td>
+<td>
+<p>List of symmetrical matrices or dist objects: the pairwise dissimilarities per domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>jointdiss</code></td>
+<td>
+<p><code>NULL</code> (default), matrix or dist object: pairwise dissimilarities for joint dimensions.</p>
+</td>
+</tr>
+</table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>what</code></td>
+<td>
+<p>String or vector of strings: requested association measures among <code>'pearson'</code>, <code>'spearman'</code>, <code>'R2'</code> <code>'cronbach'</code>, <code>'cron.subsets'</code>. Can also be <code>'all'</code> for all measures but <code>'spearman'</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dnames</code></td>
+<td>
+<p>String vector of length equal to number of domains. Names of domains. Default is <code>names(domdiss)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Vector of non-negative weights. If <code>NULL</code>, no weights are applied. (Currently Cronbach measures ignore weights!). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w.rank</code></td>
+<td>
+<p>Logical. If weights are provided and <code>'spearman'</code> is selected, should we use weighted ranks. Caution: computation of weighted ranks considerably increases computation time!</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p> The <code>dissdomassoc</code> function computes the domain association measures proposed by <cite>Piccarreta (2017)</cite>.
+These are for each pair of domains the correlation (Pearson or Spearman) between the domain specific pairwise dissimilarities. When <code>'R2'</code> is requested, the function computes the share of variance of the dissimilarities in one domain that is reproduced by the dissimilarities in all other domains. The Cronbach alpha measures the coherence between the domains. With <code>'cron.subsets'</code>, Cronbach alpha is computed for the entire set of domains as well as for each possible subset of two or more domains.
+</p>
+<p>When a <code>jointdiss</code> distance matrix or object is provided, correlations of each individual with this joint domain are also computed. The R2 of the joint domain takes account of all domains. However, R2's for the domains remain unchanged, i.e. they ignore the joint domain. Likewise, <code>jointdiss</code> does not affect the Cronbach alpha.
+</p>
+<p>Spearman correlations are based on rank values of the distances. The computation of weighted ranks may take a while for large number of sequences (<code>&gt; 500</code>,  i.e. 124750 distances per domain). Therefore, weighted ranks are only used when explicitly requested by setting <code>w.rank = TRUE</code>. When <code>w.rank = FALSE</code> (default), Spearman is computed as the weighted Pearson correlation between non-weighted ranks.
+</p>
+<p>When <code>"pearson"</code> and/or <code>"spearman"</code> correlations are requested, p-values (probability to get a stronger correlation under the zero correlation assumption) are automatically computed.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>ddomassoc</code>, which is a list of tables of the requested association measures and tables of p-values of the Pearson and Spearman correlations when applicable. The <code>summary</code> method organizes the correlations and their p-values in table form.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard</p>
+
+
+<h3>References</h3>
+
+<p>Piccarreta (2017). Joint Sequence Analysis: Association and Clustering. <em>Sociological Methods and Research</em>, 46(2), 252–287. <a href="https://doi.org/10.1177/0049124115591013">doi:10.1177/0049124115591013</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqdomassoc</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(biofam)
+
+## Building one channel per type of event left, children or married
+## Using only first 200 sequences
+bf &lt;- as.matrix(biofam[1:200, 10:25])
+children &lt;-  bf==4 | bf==5 | bf==6
+married &lt;- bf == 2 | bf== 3 | bf==6
+left &lt;- bf==1 | bf==3 | bf==5 | bf==6
+## weights
+weights &lt;- biofam[1:200,"wp00tbgs"]
+
+## Building sequence objects
+child.seq &lt;- seqdef(children)
+marr.seq &lt;- seqdef(married)
+left.seq &lt;- seqdef(left)
+## distances by channel
+dchild &lt;- seqdist(child.seq, method="OM", sm="INDELSLOG")
+dmarr &lt;- seqdist(marr.seq, method="OM", sm="INDELSLOG")
+dleft &lt;- seqdist(left.seq, method="OM", sm="INDELSLOG")
+dbiofam &lt;- list(dchild,dmarr,dleft)
+names(dbiofam) &lt;- c("child","marr","left")
+
+## Association between domains and R2 by domain
+rass &lt;- dissdomassoc(dbiofam, weights=weights)
+
+## Joint distances using additive trick with domain INDELSLOG costs.
+mcdist &lt;- seqMD(channels=list(child.seq, marr.seq, left.seq), what="diss",
+                    method="OM", sm =list("INDELSLOG", "INDELSLOG", "INDELSLOG"))
+
+rassj &lt;- dissdomassoc(dbiofam, jointdiss=mcdist, what=c("all"), weights=weights)
+rassj[["Pearson.Rsquare"]]
+rass[["Pearson.Rsquare"]]
+summary(rassj)
+</code></pre>
+
+
+</div>

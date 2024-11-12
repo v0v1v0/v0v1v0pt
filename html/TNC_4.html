@@ -1,0 +1,176 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tdc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Temporal degree centrality</h2>
+
+<h3>Description</h3>
+
+<p><code>tdc</code> returns the temporal degree centrality for each node in a dynamic
+network (sequence of graph snapshots).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tdc(x, type = NULL, startsnapshot = 1, endsnapshot = length(x),
+  directed = FALSE, normalize = TRUE, centrality_evolution = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A list of adjacency matrices or a list of adjacency lists.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Data format of <code>x</code>. Possible formats are <code>"M"</code> for a
+list of adjacency matrices (containing only 1s and 0s) and <code>"L"</code> for a
+list of adjacency lists (adjacency lists of the igraph package are
+supported). Default is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>startsnapshot</code></td>
+<td>
+<p>Numeric. Entry of <code>x</code> to start the calculation of
+<code>tdc</code>. Default is 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>endsnapshot</code></td>
+<td>
+<p>Numeric. Entry of <code>x</code> to end the calculation of
+<code>tdc</code>. Default is the last element of <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>directed</code></td>
+<td>
+<p>Logical. Set <code>TRUE</code> if the temporal network is a
+directed network. Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>Logical. Set <code>TRUE</code> if centrality values should be
+normalized with <code class="reqn">1/((|V|-1)*m)</code> where <code class="reqn">|V|</code> is the number of nodes
+and <code class="reqn">m =</code> <code>endsnapshot</code> <code class="reqn">-</code> <code>startsnapshot</code>. Default is
+<code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>centrality_evolution</code></td>
+<td>
+<p>Logical. Set <code>TRUE</code> if an additional matrix
+should be returned containing the centrality values at each snapshot. Rows
+correspondent to nodes, columns correspondent to snapshots. Default
+is <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tdc</code> calculates the temporal degree centrality (see Kim and
+Anderson, 2012), which is defined as the average degree centrality over all
+snapshots.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The (normalized) temporal degree centrality values of all nodes
+(<code>TDC</code>). If <code>centrality_evolution</code> is <code>TRUE</code> an additional
+matrix is returned (<code>CentEvo</code>), containing the temporal centrality
+value at each snapshot between <code>startsnapshot</code> and <code>endsnapshot</code>.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>Using adjacency matrices as input exponentially increases
+the required memory. Use adjacency lists to save memory.
+</p>
+
+
+<h3>References</h3>
+
+<p>Kim, Hyoungshick and Anderson, Ross, 2012. <em>Temporal node
+centrality in complex networks</em>. Physical Review E, 85 (2).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tbc,tcc</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Create a list of adjacency matrices, plot the corresponding graphs
+# (using the igraph package) and calculating tdc
+
+A1 &lt;- matrix(c(0,1,0,0,0,0,
+               1,0,1,0,0,0,
+               0,1,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0), ncol=6)
+
+A2 &lt;- matrix(c(0,0,0,0,0,0,
+               0,0,1,0,0,0,
+               0,1,0,1,1,0,
+               0,0,1,0,0,0,
+               0,0,1,0,0,0,
+               0,0,0,0,0,0), ncol=6)
+
+A3 &lt;- matrix(c(0,0,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0), ncol=6)
+
+A4 &lt;- matrix(c(0,1,0,0,0,0,
+               1,0,0,1,0,0,
+               0,0,0,0,0,0,
+               0,1,0,0,0,0,
+               0,0,0,0,0,0,
+               0,0,0,0,0,0), ncol=6)
+
+library(igraph)
+par(mfrow=c(2,2))
+
+Layout &lt;-
+ layout_in_circle(graph_from_adjacency_matrix(A1, mode = "undirected"))
+
+plot(graph_from_adjacency_matrix(A1, "undirected"), layout=Layout)
+plot(graph_from_adjacency_matrix(A2, "undirected"), layout=Layout)
+plot(graph_from_adjacency_matrix(A3, "undirected"), layout=Layout)
+plot(graph_from_adjacency_matrix(A4, "undirected"), layout=Layout)
+
+As &lt;- list(A1,A2,A3,A4)
+
+tdc(As, "M", centrality_evolution=TRUE)
+
+#' ### Create list of adjacency lists
+Ls &lt;- lapply(seq_along(As), function(i){
+  sapply(1:6, function(j){which(As[[i]][j,]==1)})
+})
+
+tdc(Ls, "L", centrality_evolution=TRUE)
+
+</code></pre>
+
+
+</div>

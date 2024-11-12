@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_linear_regression</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Formal representation of a linear regression from provided covariates.</h2>
+
+<h3>Description</h3>
+
+<p>This model defines a time series given by a linear combination of
+covariate time series provided in a design matrix:
+</p>
+<div class="sourceCode"><pre>observed_time_series &lt;- tf$matmul(design_matrix, weights)
+</pre></div>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_linear_regression(design_matrix, weights_prior = NULL, name = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>design_matrix</code></td>
+<td>
+<p>float <code>tensor</code> of shape <code>tf$concat(list(batch_shape, list(num_timesteps, num_features)))</code>.
+This may also optionally be an instance of <code>tf$linalg$LinearOperator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights_prior</code></td>
+<td>
+<p><code>Distribution</code> representing a prior over the regression
+weights. Must have event shape <code>list(num_features)</code> and batch shape
+broadcastable to the design matrix's <code>batch_shape</code>. Alternately,
+<code>event_shape</code> may be scalar (<code>list()</code>), in which case the prior is
+internally broadcast as
+<code>tfd_transformed_distribution(weights_prior, tfb_identity(), event_shape = list(num_features), batch_shape = design_matrix$batch_shape)</code>.
+If <code>NULL</code>, defaults to <code>tfd_student_t(df = 5, loc = 0, scale = 10)</code>,
+a weakly-informative prior loosely inspired by the
+<a href="https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations">Stan prior choice recommendations</a>.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>the name of this model component. Default value: 'LinearRegression'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The design matrix has shape <code>list(num_timesteps, num_features)</code>.
+The weights are treated as an unknown random variable of size <code>list(num_features)</code>
+(both components also support batch shape), and are integrated over using the same
+approximate inference tools as other model parameters, i.e., generally HMC or
+variational inference.
+</p>
+<p>This component does not itself include observation noise; it defines a
+deterministic distribution with mass at the point
+<code>tf$matmul(design_matrix, weights)</code>. In practice, it should be combined with
+observation noise from another component such as <code>sts_sum</code>, as demonstrated below.
+</p>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>StructuralTimeSeries</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see <code>sts_fit_with_hmc()</code>, <code>sts_forecast()</code>, <code>sts_decompose_by_component()</code>.
+</p>
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

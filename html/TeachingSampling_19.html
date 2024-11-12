@@ -1,0 +1,224 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>E.UC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of the Population Total and its variance using the Ultimate Cluster technique</h2>
+
+<h3>Description</h3>
+
+<p>This function computes a weighted estimator of the population total and
+estimates its variance by using the Ultimate Cluster technique. This approximation
+performs well in many sampling designs. The user specifically needs to
+declare the variables of interest, the primary sampling units, the strata, and 
+the sampling weights for every singlt unit in the sample.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">E.UC(S, PSU, dk, y)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>Vector identifying the membership to the strata of each unit in selected sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PSU</code></td>
+<td>
+<p>Vector identifying the membership to the strata of 
+each unit in the population.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dk</code></td>
+<td>
+<p>Sampling weights of the units in the sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Vector, matrix or data frame containig the recollected 
+information of the variables of interest for every unit in the 
+selected sample.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function returns a data matrix whose columns correspond to 
+the estimated parameters of the variables of interest.
+</p>
+
+
+<h3>Value</h3>
+
+<p>This function returns the estimation of the population total of 
+every single variable of interest, its estimated standard error 
+and its estimated coefficient of variation.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hsugo Andres Gutierrez Rojas &lt;hugogutierrez at gmail.com&gt;
+</p>
+
+
+<h3>References</h3>
+
+<p>Sarndal, C-E. and Swensson, B. and Wretman, J. (1992), <em>Model Assisted Survey Sampling</em>. Springer.<br>
+Gutierrez, H. A. (2009), <em>Estrategias de muestreo: Diseno de encuestas y estimacion de parametros</em>. Editorial Universidad Santo Tomas
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>E.2SI</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#############################
+## Example 1:              ##
+## Stratified Two-stage SI ##
+#############################
+
+data('BigCity')
+FrameI &lt;- BigCity %&gt;% group_by(PSU) %&gt;%
+summarise(Stratum = unique(Stratum),
+          Persons = n(),
+          Income = sum(Income),
+          Expenditure = sum(Expenditure))
+            
+attach(FrameI)
+
+sizes = FrameI %&gt;% group_by(Stratum) %&gt;%
+        summarise(NIh = n(),
+        nIh = 2,
+        dI = NIh/nIh)
+        
+NIh &lt;- sizes$NIh
+nIh &lt;- sizes$nIh
+
+samI &lt;- S.STSI(Stratum, NIh, nIh)
+UI &lt;- levels(as.factor(FrameI$PSU))
+sampleI &lt;- UI[samI]
+          
+FrameII &lt;- left_join(sizes, BigCity[which(BigCity$PSU %in% sampleI), ])
+attach(FrameII)
+
+HHdb &lt;- FrameII %&gt;% 
+        group_by(PSU) %&gt;%
+        summarise(Ni = length(unique(HHID)))
+        
+Ni &lt;- as.numeric(HHdb$Ni)
+ni &lt;- ceiling(Ni * 0.1)
+ni
+sum(ni)
+
+sam = S.SI(Ni[1], ni[1])
+clusterII = FrameII[which(FrameII$PSU == sampleI[1]), ]
+sam.HH &lt;- data.frame(HHID = unique(clusterII$HHID)[sam])
+clusterHH &lt;- left_join(sam.HH, clusterII, by = "HHID") 
+clusterHH$dki &lt;- Ni[1]/ni[1]
+clusterHH$dk &lt;- clusterHH$dI * clusterHH$dki
+data = clusterHH
+for (i in 2:length(Ni)) {
+      sam = S.SI(Ni[i], ni[i])
+      clusterII = FrameII[which(FrameII$PSU == sampleI[i]), ]
+      sam.HH &lt;- data.frame(HHID = unique(clusterII$HHID)[sam])
+      clusterHH &lt;- left_join(sam.HH, clusterII, by = "HHID") 
+      clusterHH$dki &lt;- Ni[i]/ni[i]
+      clusterHH$dk &lt;- clusterHH$dI * clusterHH$dki
+      data1 = clusterHH
+      data = rbind(data, data1)
+}
+
+sum(data$dk)
+attach(data)
+estima &lt;- data.frame(Income, Expenditure)
+area &lt;- as.factor(PSU)
+stratum &lt;- as.factor(Stratum)
+
+E.UC(stratum, area, dk, estima)
+
+################################
+## Example 2:                 ##
+## Self weighted Two-stage SI ##
+################################
+
+data('BigCity')
+FrameI &lt;- BigCity %&gt;% group_by(PSU) %&gt;%
+summarise(Stratum = unique(Stratum),
+          Households = length(unique(HHID)),
+          Income = sum(Income),
+          Expenditure = sum(Expenditure))
+            
+attach(FrameI)
+
+sizes = FrameI %&gt;% group_by(Stratum) %&gt;%
+        summarise(NIh = n(),
+        nIh = 2)
+        
+NIh &lt;- sizes$NIh
+nIh &lt;- sizes$nIh
+
+resI &lt;- S.STpiPS(Stratum, Households, nIh)
+head(resI)
+samI &lt;- resI[, 1]
+piI &lt;- resI[, 2]
+UI &lt;- levels(as.factor(FrameI$PSU))
+sampleI &lt;- data.frame(PSU = UI[samI], dI = 1/piI) 
+ 
+FrameII &lt;- left_join(sampleI, 
+           BigCity[which(BigCity$PSU %in% sampleI[,1]), ])
+           
+attach(FrameII)
+
+HHdb &lt;- FrameII %&gt;% 
+        group_by(PSU) %&gt;%
+        summarise(Ni = length(unique(HHID)))
+Ni &lt;- as.numeric(HHdb$Ni)
+ni &lt;- 5
+
+sam = S.SI(Ni[1], ni)
+clusterII = FrameII[which(FrameII$PSU == sampleI$PSU[1]), ]
+sam.HH &lt;- data.frame(HHID = unique(clusterII$HHID)[sam])
+clusterHH &lt;- left_join(sam.HH, clusterII, by = "HHID") 
+clusterHH$dki &lt;- Ni[1]/ni
+clusterHH$dk &lt;- clusterHH$dI * clusterHH$dki
+data = clusterHH
+for (i in 2:length(Ni)) {
+      sam = S.SI(Ni[i], ni)
+      clusterII = FrameII[which(FrameII$PSU == sampleI$PSU[i]), ]
+      sam.HH &lt;- data.frame(HHID = unique(clusterII$HHID)[sam])
+      clusterHH &lt;- left_join(sam.HH, clusterII, by = "HHID") 
+      clusterHH$dki &lt;- Ni[i]/ni
+      clusterHH$dk &lt;- clusterHH$dI * clusterHH$dki
+      data1 = clusterHH
+      data = rbind(data, data1)
+}
+
+sum(data$dk)
+attach(data)
+estima &lt;- data.frame(Income, Expenditure)
+area &lt;- as.factor(PSU)
+stratum &lt;- as.factor(Stratum)
+
+E.UC(stratum, area, dk, estima)
+</code></pre>
+
+
+</div>

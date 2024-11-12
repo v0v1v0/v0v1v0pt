@@ -1,0 +1,355 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mdb_cursor</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use mdb transactions</h2>
+
+<h3>Description</h3>
+
+<p>Cursors are required for some advanced queries on an mdb database,
+when the basic set of functions in <code>mdb_txn</code> is not
+sufficient.
+</p>
+
+
+<h3>Details</h3>
+
+<p>Cursors must be created from within a transaction (which in turn
+are created from an environment).
+</p>
+
+
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>close</code></dt>
+<dd>
+<p>Close the cursor
+</p>
+<p><em>Usage:</em>
+<code>close()</code>
+</p>
+<p><em>Value</em>:
+None, called for side effects only
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_cursor_close()</code>
+</p>
+</dd>
+<dt><code>put</code></dt>
+<dd>
+<p>Store data using the cursor
+</p>
+<p><em>Usage:</em>
+<code>put(key, value, overwrite = TRUE, append = FALSE)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key (string or raw)
+
+</p>
+</li>
+<li>
+<p><code>value</code>:   The value (string or raw)
+
+</p>
+</li>
+<li>
+<p><code>overwrite</code>:   As for <code>mdb_txn</code> <code>$put</code>
+
+</p>
+</li>
+<li>
+<p><code>append</code>:   As for <code>mdb_txn</code> <code>$put</code>
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+Logical scalar, indicating if data was previously stored at this key
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_cursor_put()</code>
+</p>
+</dd>
+<dt><code>del</code></dt>
+<dd>
+<p>Delete the current key
+</p>
+<p><em>Usage:</em>
+<code>del()</code>
+</p>
+<p><em>Value</em>:
+Logical, indicating if a value was deleted (which will be <code>TRUE</code> if the cursor was valid before this operation). Primarily called for its side effect of deleting the data.  After deletion, we call <code>mdb_cursor_get</code> with <code>MDB_GET_CURRENT</code> which will re-validate the cursor.
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_cursor_del()</code>
+</p>
+</dd>
+<dt><code>replace</code></dt>
+<dd>
+<p>Replace a key's current value with a new value, returning the old value.  This is like doing a <code>get()</code> followed by a <code>put</code> within a transaction.
+</p>
+<p><em>Usage:</em>
+<code>replace(key, value, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key to replace
+
+</p>
+</li>
+<li>
+<p><code>value</code>:   The new value to store
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Return the value as raw.  With a value of <code>NULL</code> it will return a string if possible (i.e., if there are no null bytes) and a raw vector otherwise.  With <code>as_raw = TRUE</code> we always return a raw vector.  With <code>as_raw = FALSE</code> we always return a string, or throw an error if this is not possible.
+
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>pop</code></dt>
+<dd>
+<p>Delete a key's value, returning the value just before it was deleted.  This is like doing a <code>get</code> followed by a <code>del</code> within a transaction.
+</p>
+<p><em>Usage:</em>
+<code>pop(key, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key to delete
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Return the value as raw.  With a value of <code>NULL</code> it will return a string if possible (i.e., if there are no null bytes) and a raw vector otherwise.  With <code>as_raw = TRUE</code> we always return a raw vector.  With <code>as_raw = FALSE</code> we always return a string, or throw an error if this is not possible.
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+Depending on <code>as_raw</code> and if there is a value stored, <code>NULL</code>, a character string or a raw vector
+</p>
+</dd>
+<dt><code>first</code></dt>
+<dd>
+<p>Move the cursor to the first item in the database
+</p>
+<p><em>Usage:</em>
+<code>first()</code>
+</p>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>last</code></dt>
+<dd>
+<p>Move the cursor to the last item in the database
+</p>
+<p><em>Usage:</em>
+<code>last()</code>
+</p>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>move_next</code></dt>
+<dd>
+<p>Move the cursor to the next item in the database.  If called while at the last item in the database, this will invalidate the cursor position.
+</p>
+<p><em>Usage:</em>
+<code>move_next()</code>
+</p>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>move_prev</code></dt>
+<dd>
+<p>Move the cursor to the previous item in the database.  If called while at the first item in the database, this will invalidate the cursor position.
+</p>
+<p><em>Usage:</em>
+<code>move_prev()</code>
+</p>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>move_to</code></dt>
+<dd>
+<p>Move the cursor to the item in the database with key <code>key</code>. If <code>key</code> does not exist, this will invalidate the cursor position.
+</p>
+<p><em>Usage:</em>
+<code>move_to(key)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>key</code>:   Key to move to (string or raw)
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>seek</code></dt>
+<dd>
+<p>Move the cursor to the item in the database with key equal to or greater than <code>key</code>.  If <code>key</code> does not exist and no key with a key greater than <code>key</code> exists, this will invalidate the cursor position.
+</p>
+<p><em>Usage:</em>
+<code>seek(key)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>key</code>:   Key to seek (string or raw)
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+Invisibly, a logical indicating if the cursor position is valid, but primarily called for side effects
+</p>
+</dd>
+<dt><code>get</code></dt>
+<dd>
+<p>Move to a key and fetch the value
+</p>
+<p><em>Usage:</em>
+<code>get(key, as_proxy = FALSE, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key to find (string or raw)
+
+</p>
+</li>
+<li>
+<p><code>as_proxy</code>:   Return as an <code>mdb_proxy</code> object?
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Return the value as raw.  With a value of <code>NULL</code> it will return a string if possible (i.e., if there are no null bytes) and a raw vector otherwise.  With <code>as_raw = TRUE</code> we always return a raw vector.  With <code>as_raw = FALSE</code> we always return a string, or throw an error if this is not possible.
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+Depending on <code>as_raw</code> and if there is a value stored, <code>NULL</code>, a character string or a raw vector
+</p>
+</dd>
+<dt><code>is_valid</code></dt>
+<dd>
+<p>Test if cursor is valid (i.e., that it is pointing at data that can be retrieved).  Cursors start off invalid until placed (e.g., <code>first</code>, <code>last</code>) and can be invalidated by moving off the beginning or end of the database.
+</p>
+<p><em>Usage:</em>
+<code>is_valid()</code>
+</p>
+</dd>
+<dt><code>key</code></dt>
+<dd>
+<p>Return the current key
+</p>
+<p><em>Usage:</em>
+<code>key(as_proxy = FALSE, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>as_proxy</code>:   Return as an <code>mdb_proxy</code> object?
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Return the value as raw.  With a value of <code>NULL</code> it will return a string if possible (i.e., if there are no null bytes) and a raw vector otherwise.  With <code>as_raw = TRUE</code> we always return a raw vector.  With <code>as_raw = FALSE</code> we always return a string, or throw an error if this is not possible.
+
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>value</code></dt>
+<dd>
+<p>Return the current value
+</p>
+<p><em>Usage:</em>
+<code>value(as_proxy = FALSE, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>as_proxy</code>:   Return as an <code>mdb_proxy</code> object?
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Return the value as raw.  With a value of <code>NULL</code> it will return a string if possible (i.e., if there are no null bytes) and a raw vector otherwise.  With <code>as_raw = TRUE</code> we always return a raw vector.  With <code>as_raw = FALSE</code> we always return a string, or throw an error if this is not possible.
+
+</p>
+</li>
+</ul>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Start by creating a new environment, and within that a write
+# transaction, and from that a new cursor.  But first put a bunch
+# of data into the database
+env &lt;- thor::mdb_env(tempfile())
+env$mput(letters, LETTERS)
+txn &lt;- env$begin(write = TRUE)
+cur &lt;- txn$cursor()
+
+# Move the cursor to the first position
+cur$first()
+
+# The key and value:
+cur$key()
+cur$value()
+
+# Move to a different key:
+cur$move_to("g")
+cur$value()
+
+# Delete the current item
+cur$del()
+cur$key()
+
+# We can't move to 'g' any more as it's gone:
+(cur$move_to("g"))
+cur$key() # NULL
+
+# But we can *seek* 'g', which will move to 'h'
+(cur$seek("g"))
+cur$key() # "h"
+
+# Get raw values out:
+cur$value(as_raw = TRUE)
+
+# Cleanup
+env$destroy()
+</code></pre>
+
+
+</div>

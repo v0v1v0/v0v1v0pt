@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_assign</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>An assignment-based pipeline DSL</h2>
+
+<h3>Description</h3>
+
+<p>An assignment-based domain-specific language for pipeline
+construction.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_assign(targets)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>targets</code></td>
+<td>
+<p>An expression with special syntax to define a
+collection of targets in a pipeline.
+Example: <code>tar_assign(x &lt;- tar_target(get_data()))</code> is equivalent
+to <code>list(tar_target(x, get_data()))</code>.
+The rules of the syntax
+are as follows:
+</p>
+
+<ul>
+<li>
+<p> The code supplied to <code>tar_assign()</code> must be enclosed in curly braces
+beginning with <code style="white-space: pre;">⁠{⁠</code> and <code style="white-space: pre;">⁠}⁠</code> unless it only contains a
+one-line statement or uses <code>=</code> as the assignment.
+</p>
+</li>
+<li>
+<p> Each statement in the code block must be of the form
+<code>x &lt;- f()</code>, or <code>x = f()</code> where <code>x</code> is the name of a target and
+<code>f()</code> is a function like <code>tar_target()</code> or <code>tar_quarto()</code>
+which accepts a <code>name</code> argument.
+</p>
+</li>
+<li>
+<p> The native pipe operator <code style="white-space: pre;">⁠|&gt;⁠</code> is allowed because it lazily
+evaluates its arguments and be converted into non-pipe syntax
+without evaluating the code.
+</p>
+</li>
+</ul>
+</td>
+</tr></table>
+<h3>Value</h3>
+
+<p>A list of <code>tar_target()</code> objects.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+write.csv(airquality, "data.csv", row.names = FALSE)
+targets::tar_script({
+  library(tarchetypes)
+  tar_option_set(packages = c("readr", "dplyr", "ggplot2"))
+  tar_assign({
+    file &lt;- tar_target("data.csv", format = "file")
+
+    data &lt;- read_csv(file, col_types = cols()) |&gt;
+      filter(!is.na(Ozone)) |&gt;
+      tar_target()
+
+    model = lm(Ozone ~ Temp, data) |&gt;
+      coefficients() |&gt;
+      tar_target()
+
+    plot &lt;- {
+        ggplot(data) +
+          geom_point(aes(x = Temp, y = Ozone)) +
+          geom_abline(intercept = model[1], slope = model[2]) +
+          theme_gray(24)
+      } |&gt;
+        tar_target()
+  })
+})
+targets::tar_make()
+})
+}
+</code></pre>
+
+
+</div>

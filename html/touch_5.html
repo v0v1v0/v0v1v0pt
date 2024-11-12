@@ -1,0 +1,256 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>icd_map</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Translatation of ICD Codes by General Equivalence Mappings (GEMs)</h2>
+
+<h3>Description</h3>
+
+<p>An open-source implementation in R similar to the Mapping tool developed by
+the Agency for Healthcare Research and Quality (AHRQ).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">icd_map(dx, from = 9, to = 10, year = 2018,
+        method = c("gem", "reverse-gem", "both", "multi-stage"),
+        decimal = FALSE, nomatch = c('""', NA),
+        output = c("character", "list", "tidy-data"), cache = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dx</code></td>
+<td>
+<p>A character vector representing diagnosis codes.  Each element
+of the vector can either represent individual diagnosis code or a set
+of diagnosis codes that are concartenated by commas in between.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>A integer value specifying the original code version.
+Currently, the available options are <code>9</code> or <code>10</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>A integer value specifying the original code version.
+Currently, the available options are <code>9</code> or <code>10</code>.  If the
+input <code>from</code> and <code>to</code> are the same, the function will skip
+all the translation and return the input <code>dx</code> with a warning.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>year</code></td>
+<td>
+<p>A numeric value specifying the year of the CMS GEMs.  The
+currently available options are <code>2017</code> and <code>2018</code>.  By
+default, 2018 CMS GEMs is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>A character string specifying the translateion method.  The
+available options are <code>"gem"</code> for CMS GEM, <code>"reverse-gem"</code>
+for the reverse of CMS GEM, <code>"both"</code> for both GEM and reverse
+GEM, <code>"multi-stage"</code> for multiple stage procedure.  See Section
+Details for more detailed description of the procedure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decimal</code></td>
+<td>
+<p>A logical value.  If <code>TRUE</code>, the diagnosis codes would
+be returned with decimal points.  The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nomatch</code></td>
+<td>
+<p>A character string indicating no translation result can be
+found through the specified mapping.  By default, empty strings,
+<code>""</code>, will be used.  Another available option is <code>NA</code> (or
+more specific <code>NA_character_</code>).  In that case, the code will be
+translated to <code>NA_character_</code> if no translataion result can be
+found.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>A character value specifying the format of the output.  The
+avaiable options are <code>"character"</code>, <code>"list"</code>, and
+<code>"tidy-data"</code>.  By default, option <code>"character"</code> is used and
+results in a character vector that consists of element-wise
+concatenatation by commas of all the translated diagnosis codes from
+the original codes.  If <code>"list"</code> is specified, all the translated
+codes will not be concartenated and a list of character vectors will
+be returned by the function.  Similarly, if <code>"tidy-data"</code> is
+specified, a data frame in a tidy format will be returned.  The first
+column of the data frame consists of the original diagnosis codes; the
+second column consists of the translated diagnosis codes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache</code></td>
+<td>
+<p>A logical value specifying whether to cache all the mappings
+for <code>method = "both"</code> (both CMS GEM and its reverse mapping), and
+<code>method = "multi-stage"</code> (the multiple stage procedure).  If
+<code>TRUE</code> by default, the specified mapping will be generated,
+cached and, applied to the translation.  If <code>FALSE</code>, the CMS GEM
+and its reverse mapping will be used for translatation every time
+without cache.  It is recommended to set <code>cache = TRUE</code> for
+translation from ICD-9 to ICD-10.  For translation from ICD-10 to
+ICD-9, the caching process only takes noticeable time (usually several
+minutes at most) for the multi-stage procedure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments for future usage.  A warning will be thrown out
+if any argument goes into <code>...</code> accidentally.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function aims to efficiently translates the ICD diagnosis codes to the
+a different version by the General Equivalence Mappings (GEMs) developed by
+the National Center for Health Statistics, Centers for Medicare and Medicaid
+Services (CMS), AHIMA, the American Hospital Association, and 3M Health
+Information Systems.  The CMS GEMs currently consist of the forward mapping
+from ICD-9 codes to ICD-10 codes and the backward mapping from ICD-10 codes
+to ICD-9 codes.  In addition to these two mappings, the Agency for
+Healthcare Research and Quality (AHRQ) also proposed translation by using
+the reverse mappings and multi-stage procedure.
+</p>
+<p>Taking the translation from ICD-9 codes to ICD-10 codes as an example, the
+procedure is elaborated as follows: In stage one, the input ICD-9 codes
+are mapped to ICD-10 codes using the ICD-9 to ICD-10 forward map as well
+as the reverse of the ICD-10 to ICD-9 backward map.  If <code>multiStage =
+FALSE</code>, the procedure will return the translation results from stage one
+(and skip the following stages).  Otherwise, the procedure will continue
+and become a multiple stage process.  In stage two, the ICD-10 codes
+output from the stage one are mapped back to ICD-9 codes using the
+backward map as well as the reverse of the forward map; In stage three, it
+applies the forward map and reverse-backward map used in stage one again
+to the ICD-9 codes from the stage two and return the resulting ICD-10
+codes.
+</p>
+<p>The flags of the GEMs are not exported from this function.  For codes with
+positive combination flags, the combination of the converted ICD-10 codes is
+indicated by the plus sign <code>"+"</code>.  For example, the ICD-9 code
+<code>"24951"</code> can be translated by 2018 GEMs to ICD-10 code,
+<code>"E0839"</code>, <code>"E0939"</code>, or one of the codes from <code>("E08311",
+"E08319", "E0836", "E09311" "E09319", "E0936")</code> with <code>"E0865"</code>.  The
+plus sign in the output, such as <code>"E08311+E0865"</code>, is used to indicate
+the combination of <code>"E08311"</code> and <code>"E0865"</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A character vector of the same length with the input vector will
+be returned by default or if <code>output = "charactor"</code>.  A list of
+character vectors will be returned if <code>output = "list"</code>; A data
+frame in tidy-format will be returned if <code>output = "tidy-data"</code>.
+See argument <code>output</code> for details.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Wenjie Wang &lt;wenjie.2.wang@uconn.edu&gt;
+</p>
+
+
+<h3>References</h3>
+
+<p>2017-ICD-10-CM-and-GEMs.  The U.S. Centers for Medicare &amp; Medicaid
+Services. 22 August, 2016.
+<a href="https://www.cms.gov/medicare/coding/icd10/2017-icd-10-cm-and-gems">https://www.cms.gov/medicare/coding/icd10/2017-icd-10-cm-and-gems</a>.
+Accessed 5 July, 2022.
+</p>
+<p>2018-ICD-10-CM-and-GEMs.  The U.S. Centers for Medicare &amp; Medicaid
+Services. 11 August, 2017.
+<a href="https://www.cms.gov/medicare/coding/icd10/2018-icd-10-cm-and-gems">https://www.cms.gov/medicare/coding/icd10/2018-icd-10-cm-and-gems</a>.
+Accessed 5 July, 2022.
+</p>
+<p>The AHRQ MapIT Automated In-house Stand-alone Mapping Tool. Agency for
+Healthcare Research and Quality. 26 March, 2018.
+<a href="https://qualityindicators.ahrq.gov/resources/toolkits">https://qualityindicators.ahrq.gov/resources/toolkits</a>.
+Accessed 5 July, 2022.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>find_billable</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(touch)
+
+### some random ICD-9 and ICD-10 codes
+icd9codes &lt;- c("0011", "001.1", "316", "29383", "E9808", "V90")
+icd10codes &lt;- c("F0390", "F0630", "F54", "F30.13", "A010", "M61019")
+
+### forward mapping from ICD-9 to ICD-10
+icd_map(icd9codes)
+icd_map(icd9codes, decimal = TRUE, nomatch = NA)
+
+### backward mapping from ICD-10 to ICD-9
+icd_map(icd10codes, from = 10, to = 9)
+icd_map(icd10codes, from = 10, to = 9, nomatch = NA, output = "list")
+icd_map(icd10codes, from = 10, to = 9,
+        decimal = TRUE, nomatch = NA, output = "tidy")
+
+### reverse-backward mapping from ICD-9 to ICD-10
+icd_map(icd9codes, method = "reverse-gem")
+icd_map(icd9codes, method = "reverse", decimal = TRUE, nomatch = NA)
+
+### reverse-forward mapping from ICD-10 to ICD-9
+icd_map(icd10codes, from = 10, to = 9, method = "reverse-gem")
+icd_map(icd10codes, from = 10, to = 9, method = "reverse",
+        decimal = TRUE, nomatch = NA)
+
+### forward and reverse-backward mapping from ICD-9 to ICD-10
+icd_map(icd9codes, method = "both")
+icd_map(icd9codes, method = "both", decimal = TRUE, nomatch = NA)
+
+### backward and reverse-forward mapping from ICD-10 to ICD-9
+icd_map(icd10codes, from = 10, to = 9, method = "both")
+icd_map(icd10codes, from = 10, to = 9, method = "both",
+        decimal = TRUE, nomatch = NA)
+
+### multi-stage process mapping ICD-9 to ICD-10
+icd_map(icd9codes, method = "multi-stage")
+icd_map(icd9codes, method = "multi-stage", decimal = TRUE, nomatch = NA)
+
+### multi-stage process mapping ICD-10 to ICD-9
+icd_map(icd10codes, from = 10, to = 9,
+        method = "multi-stage", cache = FALSE)
+icd_map(icd10codes, from = 10, to = 9, method = "multi-stage",
+        decimal = TRUE, nomatch = NA, cache = FALSE)
+
+### For codes with positive combination flags
+icd_map("24951", output = "list")
+## where the "+" signs indicate the code combinations
+</code></pre>
+
+
+</div>

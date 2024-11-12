@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>spread_all</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Spreads all scalar values of a JSON object into new columns</h2>
+
+<h3>Description</h3>
+
+<p>Like the <code>spread</code> function in <code>tidyr</code> but for JSON,
+this function spreads out any JSON objects that are scalars into new columns.
+If objects are nested, then the recursive flag will expand scalar values of
+nested objects out with a compound column name based on the sequences of
+nested object names concatenated with the <code>sep</code> character.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">spread_all(.x, recursive = TRUE, sep = ".")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a json string or <code>tbl_json</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recursive</code></td>
+<td>
+<p>whether or not to recursively spread nested objects</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep</code></td>
+<td>
+<p>character used to separate nested object names when resursive
+is <code>TRUE</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that arrays are ignored by this function, use <code>gather_array</code>
+to gather the array first, and then use <code>spread_all</code> if the array
+contains objects or use one of the <code>append_values</code> functions to
+capture the array values if they are scalars.
+</p>
+<p>Note that scalar JSON values (e.g., a JSON string like '1') are also
+ignored, as they have no names to create column names with.
+</p>
+<p>The order of columns is determined by the order they are encountered in the
+JSON document, with nested objects placed at the end.
+</p>
+<p>If an objects have name-value pairs with names that are duplicates, then
+<code>".n"</code> is appended for n incrementing from 2 on to ensure that columns
+are unique. This also happens if <code>.x</code> already has a column with the
+name of a name-value pair.
+</p>
+<p>This function does not change the value of the JSON attribute of the
+<code>tbl_json</code> object in any way.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_json</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>spread_values</code> to specific which specific values
+to spread along with their types,
+<code>spread</code> for spreading data frames
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# A simple example
+json &lt;- c('{"a": "x", "b": 1, "c": true}',
+          '{"a": "y", "c": false}',
+          '{"a": null, "d": "z"}')
+json %&gt;% spread_all
+
+# A more complex example
+worldbank %&gt;% spread_all
+
+## Not run: 
+  # Resolving duplicate column names
+  json &lt;- '{"a": "x", "a": "y"}'
+  json %&gt;% spread_all
+
+## End(Not run)
+</code></pre>
+
+
+</div>

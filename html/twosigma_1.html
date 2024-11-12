@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>adhoc.twosigma</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>adhoc.twosigma: Perform the ad hoc method described in TWO-SIGMA paper</h2>
+
+<h3>Description</h3>
+
+<p>adhoc.twosigma: Perform the ad hoc method described in TWO-SIGMA paper
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">adhoc.twosigma(
+  count,
+  mean_covar,
+  zi_covar,
+  id,
+  weights = rep(1, length(count))
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>count</code></td>
+<td>
+<p>Vector of non-negative integer read counts.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_covar</code></td>
+<td>
+<p>Covariates for the (conditional) mean model. Must be a matrix (without an intercept column) or = 1 to indicate an intercept only model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zi_covar</code></td>
+<td>
+<p>Covariates for the zero-inflation model. Must be a matrix (without an intercept column), = 1 to indicate an intercept only model, or = 0 to indicate no zero-inflation model desired.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Vector of individual-level ID's. Used as predictor in ANOVA model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights, as in glm. Defaults to 1 for all observations and no scaling or centering of weights is performed. Passed into zeroinfl function.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>P-value from the ANOVA F test.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Set Parameters to Simulate Some Data
+
+nind&lt;-10;ncellsper&lt;-rep(50,nind)
+sigma.a&lt;-.5;sigma.b&lt;-.5;phi&lt;-.1
+alpha&lt;-c(1,0,-.5,-2);beta&lt;-c(2,0,-.1,.6)
+beta2&lt;-c(2,1,-.1,.6)
+id.levels&lt;-1:nind;nind&lt;-length(id.levels)
+id&lt;-rep(id.levels,times=ncellsper)
+sim.seed&lt;-1234
+
+# Simulate individual level covariates
+
+t2d_sim&lt;-rep(rbinom(nind,1,p=.4),times=ncellsper)
+cdr_sim&lt;-rbeta(sum(ncellsper),3,6)
+age_sim&lt;-rep(sample(c(20:60),size=nind,replace = TRUE),times=ncellsper)
+
+# Construct design matrices
+
+Z&lt;-cbind(scale(t2d_sim),scale(age_sim),scale(cdr_sim))
+colnames(Z)&lt;-c("t2d_sim","age_sim","cdr_sim")
+X&lt;-cbind(scale(t2d_sim),scale(age_sim),scale(cdr_sim))
+colnames(X)&lt;-c("t2d_sim","age_sim","cdr_sim")
+
+# Simulate Data
+
+sim_dat&lt;-matrix(nrow=2,ncol=sum(ncellsper))
+for(i in 1:nrow(sim_dat)){
+   sim_dat[i,]&lt;-simulate_zero_inflated_nb_random_effect_data(ncellsper,X,Z,alpha,beta2
+   ,phi,sigma.a,sigma.b,id.levels=NULL)$Y
+}
+rownames(sim_dat)&lt;-paste("Gene",1:2)
+
+# Run adhoc.twosigma
+
+adhoc.twosigma(sim_dat[1,],mean_covar = X,zi_covar=Z,id = id)
+</code></pre>
+
+
+</div>

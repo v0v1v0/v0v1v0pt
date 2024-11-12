@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tis</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Time Indexed Series </h2>
+
+<h3>Description</h3>
+
+<p>The function <code>tis</code> is used to create time-indexed series objects.
+</p>
+<p><code>as.tis</code> and <code>is.tis</code> coerce an object to a time-indexed
+series and test whether an object is a time-indexed series.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tis(data, start = 1, tif = NULL, frequency = NULL, end = NULL)
+as.tis(x, ...)
+## S3 method for class 'ts'
+as.tis(x, ...)
+## S3 method for class 'tis'
+as.tis(x, ...)
+## S3 method for class 'zoo'
+as.tis(x, ...)
+## Default S3 method:
+as.tis(x, ...)
+is.tis(x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+
+<p>a numeric vector or matrix of the observed time-series values.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+
+<p>the time of the first observation. This can be a <code>ti</code> object, or
+anything that <code>ti(start, tif = tif, freq = frequency)</code>, can turn into a <code>ti</code> object. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>other args to be passed to the method called by the generic
+function.  <code>as.tis.default</code> passes <code>x</code> and ... to the
+constructor function <code>tis</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tif</code></td>
+<td>
+
+<p>a ti Frequency, given as either a numerical code or a string.
+<code>tif()</code> with no arguments returns a list of the allowable
+numerical codes and names.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frequency</code></td>
+<td>
+
+<p>As an alternative to supplying a <code>tif</code>, some <code>tif</code>s can
+alternatively be specified by their frequency, such as 1 (annual), 2
+(semiannual), 4 (quarterly), 6 (bimonthly), 12 (monthly), 24
+(semimonthly), 26 (biweekly), 36 (tenday), 52 (weekly), 262
+(business) and 365 (daily).  Many frequencies have multiple
+<code>tif</code>s associated with them.  For example, all of the
+<code>tif</code>s (wsunday, wmonday, ..., wsaturday) have frequency 52. In
+this case, specifying <code>freq</code> gets you the default weekly
+<code>tif</code> wmonday.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+
+<p>the time of the last observation, specified in the same way as <code>start</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>object to be tested (<code>is.tis</code>) or converted into a <code>tis</code>
+object.  As described in the details below, <code>as.tis</code> can deal with
+several different kinds of <code>x</code>.  
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>tis</code> is used to create <code>tis</code> objects, which
+are vectors or matrices with class of <code>"tis"</code> and a <code>start</code>
+attribute that is a <code>ti</code> (time index) object.  Time-indexed
+series are a form of time series that is more flexible
+than the standard <code>ts</code> time series. While observations for a
+<code>ts</code> object are supposed to have been sampled at equispaced
+points in time, the observation times for a <code>tis</code> object are the
+times given by successive increments of the more flexible time index
+contained in the series <code>start</code> attribute.  There is a close
+correspondence between Fame time series and <code>tis</code> objects, in
+that all of the Fame frequencies have corresponding <code>tif</code> codes.
+</p>
+<p><code>tis</code> objects operate much like vanilla R <code>ts</code> objects.
+Most of the methods implemented for <code>ts</code> objects have <code>tis</code>
+variants as well.  Evaluate <code>methods(class = "tis")</code> to see a
+list of them.
+</p>
+<p>One way or another, <code>tis</code> needs to figure out how to create a
+<code>start</code> attribute.  If <code>start</code> is supplied, the function
+<code>ti</code> is called with it, <code>tif</code> and <code>frequency</code> as
+arguments.  The same process is repeated for <code>end</code> if it was
+supplied. If only one of <code>start</code> and <code>end</code> was supplied, the
+other is inferred from it and the number of observations in <code>data</code>. If
+both <code>start</code> and <code>end</code> are supplied, the function <code>rep</code>
+is used to make <code>data</code> the length implied by <code>end - start + 1</code>.
+</p>
+<p><code>as.tis</code> is a generic function with specialized methods for other
+kinds of time series, including <code>zoo</code> series from <span class="pkg">zoo</span>.
+The fallback default method calls <code>tis(x, ...)</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>tis</code> and <code>as.tis</code> return time-indexed series.
+<code>is.tis</code> returns TRUE or FALSE.
+</p>
+
+
+<h3>Note</h3>
+
+<p>If the <code>index</code> of a <code>zoo</code> series is a <code>ti</code>,
+the coercion <code>as.tis.zoo</code> does is trivial.  For other kinds of
+<code>zoo</code> series, the function <code>inferTi</code> tries to figure out a time
+index that matches the times of the <code>index</code> of the zoo series.
+This may fail, as there are infinitely more possible kinds of zoo
+indexes than the finite number of time index frequencies.
+</p>
+
+
+<h3>See Also</h3>
+
+<p> Compare with <code>ts</code>.  See <code>ti</code> for
+details on time indexes.  <code>cbind.tis</code> combines several
+time indexed series into a multivariate <code>tis</code>, while
+<code>mergeSeries</code> merges series, and <code>convert</code> and
+<code>aggregate</code> convert series from one frequency to another.
+<code>start.tis</code> and <code>end.tis</code> return <code>ti</code>
+objects, while <code>ti.tis</code> returns a vector <code>ti</code>. There
+is a print method <code>print.tis</code> and several plotting
+methods, including <code>lines.tis</code> and <code>points.tis</code>.
+The <code>window.tis</code> method is also sufficiently different
+from the <code>ts</code> one to deserve its own documentation.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tis(1:48, start = c(2000, 1), freq = 12)
+tis(1:48, start = ti(20000101, tif = "monthly"))    ## same result
+tis(0, start = c(2000,1), end = c(2000,52), tif = "weekly")
+</code></pre>
+
+
+</div>

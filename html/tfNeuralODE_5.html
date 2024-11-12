@@ -1,0 +1,87 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>forward</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Forward pass of the Neural ODE network</h2>
+
+<h3>Description</h3>
+
+<p>Forward pass of the Neural ODE network
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">forward(model, inputs, tsteps, return_states = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A keras neural network that defines the Neural ODE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inputs</code></td>
+<td>
+<p>Matrix or vector inputs to the neural network.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tsteps</code></td>
+<td>
+<p>A vector of each time step upon which the Neural ODE is solved to get to the final solution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_states</code></td>
+<td>
+<p>A boolean which dictates whether the intermediary states between the input and the final solution are returned.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>solution of the forward pass of Neural ODE
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+reticulate::py_module_available("tensorflow")
+
+# example code
+
+library(tensorflow)
+library(keras)
+
+OdeModel(keras$Model) %py_class% {
+ initialize &lt;- function() {
+   super$initialize()
+   self$block_1 &lt;- layer_dense(units = 50, activation = 'tanh')
+   self$block_2 &lt;- layer_dense(units = 2, activation = 'linear')
+ }
+
+ call &lt;- function(inputs) {
+   x&lt;- inputs ^ 3
+   x &lt;- self$block_1(x)
+   self$block_2(x)
+ }
+}
+tsteps &lt;- seq(0, 2.5, by = 2.5/10)
+true_y0 = t(c(2., 0.))
+model&lt;- OdeModel()
+forward(model, true_y0, tsteps)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gaussmed1d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wasserstein Median of Gaussian Distributions in <code class="reqn">\mathbf{R}</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Given a collection of Gaussian distributions <code class="reqn">\mathcal{N}(\mu_i, \sigma_i^2)</code> for <code class="reqn">i=1,\ldots,n</code>,
+compute the Wasserstein median.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gaussmed1d(means, vars, weights = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>means</code></td>
+<td>
+<p>a length-<code class="reqn">n</code> vector of mean parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>a length-<code class="reqn">n</code> vector of variance parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>a weight of each image; if <code>NULL</code> (default), uniform weight is set. Otherwise, it should be a length-<code class="reqn">n</code> vector of nonnegative weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra parameters including </p>
+
+<dl>
+<dt>abstol</dt>
+<dd>
+<p>stopping criterion for iterations (default: 1e-8).</p>
+</dd>
+<dt>maxiter</dt>
+<dd>
+<p>maximum number of iterations (default: 496).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a named list containing </p>
+
+<dl>
+<dt>mean</dt>
+<dd>
+<p>mean of the estimated median distribution.</p>
+</dd>
+<dt>var</dt>
+<dd>
+<p>variance of the estimated median distribution.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>gaussmedpd()</code> for multivariate case.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#----------------------------------------------------------------------
+#                         Tree Gaussians
+#
+# Three Gaussian distributions are parametrized as follows.
+# Type 1 : (mean, sd) = (-4, 1)
+# Type 2 : (mean, sd) = ( 0, 1/5)
+# Type 3 : (mean, sd) = (+6, 1/2)
+#----------------------------------------------------------------------
+# GENERATE PARAMETERS
+par_mean = c(-4, 0, +6)
+par_vars = c(1, 0.04, 0.25)
+
+# COMPUTE THE WASSERSTEIN MEDIAN
+gmeds = gaussmed1d(par_mean, par_vars)
+
+# COMPUTE THE BARYCENTER 
+gmean = gaussbary1d(par_mean, par_vars)
+
+# QUANTITIES FOR PLOTTING
+x_grid  = seq(from=-6, to=8, length.out=1000)
+y_dist1 = stats::dnorm(x_grid, mean=par_mean[1], sd=sqrt(par_vars[1]))
+y_dist2 = stats::dnorm(x_grid, mean=par_mean[2], sd=sqrt(par_vars[2]))
+y_dist3 = stats::dnorm(x_grid, mean=par_mean[3], sd=sqrt(par_vars[3]))
+
+y_gmean = stats::dnorm(x_grid, mean=gmean$mean, sd=sqrt(gmean$var)) 
+y_gmeds = stats::dnorm(x_grid, mean=gmeds$mean, sd=sqrt(gmeds$var))
+
+# VISUALIZE
+opar &lt;- par(no.readonly=TRUE)
+plot(x_grid, y_gmeds, lwd=3, col="red", type="l",
+     main="Three Gaussians", xlab="x", ylab="density", 
+     xlim=range(x_grid), ylim=c(0,2.5))
+lines(x_grid, y_gmean, lwd=3, col="blue")
+lines(x_grid, y_dist1, lwd=1.5, lty=2)
+lines(x_grid, y_dist2, lwd=1.5, lty=2)
+lines(x_grid, y_dist3, lwd=1.5, lty=2)
+legend("topleft", legend=c("Median","Barycenter"),
+       col=c("red","blue"), lwd=c(3,3), lty=c(1,2))
+par(opar)
+
+
+</code></pre>
+
+
+</div>

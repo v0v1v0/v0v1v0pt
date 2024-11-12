@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>smooth_vec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Smoothing Transformation using Loess</h2>
+
+<h3>Description</h3>
+
+<p><code>smooth_vec()</code> applies a LOESS transformation to a numeric vector.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">smooth_vec(x, period = 30, span = NULL, degree = 2)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector to have a smoothing transformation applied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>The number of periods to include in the local smoothing.
+Similar to window size for a moving average.
+See details for an explanation <code>period</code> vs <code>span</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>span</code></td>
+<td>
+<p>The span is a percentage of data to be included
+in the smoothing window. Period is preferred for shorter windows
+to fix the window size.
+See details for an explanation <code>period</code> vs <code>span</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degree</code></td>
+<td>
+<p>The degree of the polynomials to be used.
+Accetable values (least to most flexible): 0, 1, 2.
+Set to 2 by default for 2nd order polynomial (most flexible).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Benefits:</strong>
+</p>
+
+<ul>
+<li>
+<p> When using <code>period</code>, the effect is
+<strong>similar to a moving average without creating missing values.</strong>
+</p>
+</li>
+<li>
+<p> When using <code>span</code>, the effect is to detect the trend in a series
+<strong>using a percentage of the total number of observations.</strong>
+</p>
+</li>
+</ul>
+<p><strong>Loess Smoother Algorithm</strong>
+This function is a simplified wrapper for the <code>stats::loess()</code>
+with a modification to set a fixed <code>period</code> rather than a percentage of
+data points via a <code>span</code>.
+</p>
+<p><strong>Why Period vs Span?</strong>
+The <code>period</code> is fixed whereas the <code>span</code> changes as the number of observations change.
+</p>
+<p><strong>When to use Period?</strong>
+The effect of using a <code>period</code> is similar to a Moving Average where the Window Size
+is the <em><strong>Fixed Period</strong></em>. This helps when you are trying to smooth local trends.
+If you want a 30-day moving average, specify <code>period = 30</code>.
+</p>
+<p><strong>When to use Span?</strong>
+Span is easier to specify when you want a <em><strong>Long-Term Trendline</strong></em> where the
+window size is unknown. You can specify <code>span = 0.75</code> to locally regress
+using a window of 75% of the data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric vector
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Loess Modeling Functions:
+</p>
+
+<ul><li> <p><code>step_smooth()</code> - Recipe for <code>tidymodels</code> workflow
+</p>
+</li></ul>
+<p>Additional Vector Functions:
+</p>
+
+<ul>
+<li>
+<p> Box Cox Transformation: <code>box_cox_vec()</code>
+</p>
+</li>
+<li>
+<p> Lag Transformation: <code>lag_vec()</code>
+</p>
+</li>
+<li>
+<p> Differencing Transformation: <code>diff_vec()</code>
+</p>
+</li>
+<li>
+<p> Rolling Window Transformation: <code>slidify_vec()</code>
+</p>
+</li>
+<li>
+<p> Loess Smoothing Transformation: <code>smooth_vec()</code>
+</p>
+</li>
+<li>
+<p> Fourier Series: <code>fourier_vec()</code>
+</p>
+</li>
+<li>
+<p> Missing Value Imputation for Time Series: <code>ts_impute_vec()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(ggplot2)
+
+# Training Data
+FB_tbl &lt;- FANG %&gt;%
+    filter(symbol == "FB") %&gt;%
+    select(symbol, date, adjusted)
+
+# ---- PERIOD ----
+
+FB_tbl %&gt;%
+    mutate(adjusted_30 = smooth_vec(adjusted, period = 30, degree = 2)) %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line() +
+    geom_line(aes(y = adjusted_30), color = "red")
+
+# ---- SPAN ----
+
+FB_tbl %&gt;%
+    mutate(adjusted_30 = smooth_vec(adjusted, span = 0.75, degree = 2)) %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line() +
+    geom_line(aes(y = adjusted_30), color = "red")
+
+# ---- Loess vs Moving Average ----
+# - Loess: Using `degree = 0` to make less flexible. Comperable to a moving average.
+
+FB_tbl %&gt;%
+    mutate(
+        adjusted_loess_30 = smooth_vec(adjusted, period = 30, degree = 0),
+        adjusted_ma_30    = slidify_vec(adjusted, .period = 30,
+                                        .f = mean, .partial = TRUE)
+    ) %&gt;%
+    ggplot(aes(date, adjusted)) +
+    geom_line() +
+    geom_line(aes(y = adjusted_loess_30), color = "red") +
+    geom_line(aes(y = adjusted_ma_30), color = "blue") +
+    labs(title = "Loess vs Moving Average")
+
+
+
+</code></pre>
+
+
+</div>

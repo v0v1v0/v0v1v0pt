@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_map</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Static branching.</h2>
+
+<h3>Description</h3>
+
+<p>Define multiple new targets based on existing target objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_map(
+  values,
+  ...,
+  names = tidyselect::everything(),
+  descriptions = tidyselect::everything(),
+  unlist = FALSE,
+  delimiter = "_"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>values</code></td>
+<td>
+<p>Named list or data frame with values to iterate over.
+The names are the names of symbols in the commands and pattern
+statements, and the elements are values that get substituted
+in place of those symbols. <code>tar_map()</code> uses these elements
+to create new R code, so they should be basic types, symbols,
+or R expressions. For objects even a little bit complicated,
+especially objects with attributes, it is not obvious how to
+convert the object into code that generates it.
+For complicated objects, consider using <code>quote()</code> when
+you define <code>values</code>, as shown at
+<a href="https://github.com/ropensci/tarchetypes/discussions/105">https://github.com/ropensci/tarchetypes/discussions/105</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more target objects or list of target objects.
+Lists can be arbitrarily nested, as in <code>list()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>Subset of <code>names(values)</code>
+used to generate the suffixes in the names of the new targets.
+The value of <code>names</code> should be a <code>tidyselect</code> expression
+such as a call to <code>any_of()</code> or <code>starts_with()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>descriptions</code></td>
+<td>
+<p>Names of a column in <code>values</code>
+to append to the custom description of each generated target.
+The value of <code>descriptions</code> should be a <code>tidyselect</code> expression
+such as a call to <code>any_of()</code> or <code>starts_with()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unlist</code></td>
+<td>
+<p>Logical, whether to flatten the returned list of targets.
+If <code>unlist = FALSE</code>, the list is nested and sub-lists
+are named and grouped by the original input targets.
+If <code>unlist = TRUE</code>, the return value is a flat list of targets
+named by the new target names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delimiter</code></td>
+<td>
+<p>Character of length 1, string to insert between
+other strings when creating names of targets.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_map()</code> creates collections of new
+targets by iterating over a list of arguments
+and substituting symbols into commands and pattern statements.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of new target objects. If <code>unlist</code> is <code>FALSE</code>,
+the list is nested and sub-lists are named and grouped by the original
+input targets. If <code>unlist = TRUE</code>, the return value is a flat list of
+targets named by the new target names.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other static branching: 
+<code>tar_combine()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+targets::tar_script({
+  list(
+    tarchetypes::tar_map(
+      list(a = c(12, 34), b = c(45, 78)),
+      targets::tar_target(x, a + b),
+      targets::tar_target(y, x + a, pattern = map(x))
+    )
+  )
+})
+targets::tar_manifest()
+})
+}
+</code></pre>
+
+
+</div>

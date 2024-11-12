@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>distance_matrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute a distance matrix from a list of persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the distance matrix <code class="reqn">d</code> for either a single list of persistence diagrams <code class="reqn">(D_1,D_2,\dots,D_n)</code>, i.e. <code class="reqn">d[i,j] = d(D_i,D_j)</code>, 
+or between two lists, <code class="reqn">(D_1,D_2,\dots,D_n)</code> and <code class="reqn">(D'_1,D'_2,\dots,D'_n)</code>, <code class="reqn">d[i,j] = d(D_i,D'_j)</code>, in parallel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">distance_matrix(
+  diagrams,
+  other_diagrams = NULL,
+  dim = 0,
+  distance = "wasserstein",
+  p = 2,
+  sigma = NULL,
+  rho = NULL,
+  num_workers = parallelly::availableCores(omit = 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diagrams</code></td>
+<td>
+<p>a list of persistence diagrams, either the output of persistent homology calculations like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>other_diagrams</code></td>
+<td>
+<p>either NULL (default) or another list of persistence diagrams to compute a cross-distance matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>the non-negative integer homological dimension in which the distance is to be computed, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>a character determining which metric to use, either "wasserstein" (default) or "fisher".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>a number representing the wasserstein power parameter, at least 1 and default 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a positive number representing the bandwidth of the Fisher information metric, default NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If not NULL then matrix is calculated sequentially, but functions in the "exec" directory
+of the package can be loaded to calculate distance matrices in parallel with approximation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Distance matrices of persistence diagrams are used in downstream analyses, like in the 
+<code>diagram_mds</code>, <code>permutation_test</code> and <code>diagram_ksvm</code> functions. 
+If 'distance' is "fisher" then 'sigma' must not be NULL. Since the matrix is computed sequentially when
+approximating the Fisher information metric this is only recommended when the persistence diagrams
+contain many points and when the number of available cores is small.
+</p>
+
+
+<h3>Value</h3>
+
+<p>the numeric distance matrix.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>diagram_distance</code> for individual distance calculations.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  g &lt;- list(D1,D2)
+
+  # calculate their distance matrix in dimension 0 with the persistence Fisher metric
+  # using 2 cores
+  D &lt;- distance_matrix(diagrams = g,dim = 0,distance = "fisher",sigma = 1,num_workers = 2)
+
+  # calculate their distance matrix in dimension 0 with the 2-wasserstein metric 
+  # using 2 cores
+  D &lt;- distance_matrix(diagrams = g,dim = 0,distance = "wasserstein",p = 2,num_workers = 2)
+
+  # now do the cross distance matrix, which is the same as the previous
+  D_cross &lt;- distance_matrix(diagrams = g,other_diagrams = g,
+                             dim = 0,distance = "wasserstein",
+                             p = 2,num_workers = 2)
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,490 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TemperedEstim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation function</h2>
+
+<h3>Description</h3>
+
+<p>Main estimation function for the tempered stabled distributions
+offered within this package. It allows the user to select the
+preferred estimation method and several related options.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TemperedEstim(
+  TemperedType = c("CTS", "TSS", "NTS", "MTS", "GTS", "KRTS", "RDTS"),
+  EstimMethod = c("ML", "GMM", "Cgmm", "GMC"),
+  data,
+  theta0 = NULL,
+  ComputeCov = FALSE,
+  HandleError = TRUE,
+  eps = 1e-06,
+  algo = NULL,
+  regularization = NULL,
+  WeightingMatrix = NULL,
+  t_scheme = NULL,
+  alphaReg = NULL,
+  t_free = NULL,
+  nb_t = NULL,
+  subdivisions = NULL,
+  IntegrationMethod = NULL,
+  randomIntegrationLaw = NULL,
+  s_min = NULL,
+  s_max = NULL,
+  ncond = NULL,
+  IterationControl = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>TemperedType</code></td>
+<td>
+<p>A String. Either "CTS", "TSS", "NTS", "MTS", "GTS",
+"KRTS", "RDTS".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>EstimMethod</code></td>
+<td>
+<p>A String. Either "ML", "GMM", "Cgmm", or "GMC".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data used to perform the estimation: numeric vector of length n.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta0</code></td>
+<td>
+<p>A vector of numeric values corresponding to the pattern of the
+<code>TemperedType</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ComputeCov</code></td>
+<td>
+<p>Logical flag: If set to TRUE, the asymptotic covariance
+matrix is computed. <code>FALSE</code> by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>HandleError</code></td>
+<td>
+<p>Logical flag: If set to <code>TRUE</code> and if an error occurs
+during the estimation procedure, the computation will carry on and NA will be
+returned. Useful for Monte Carlo simulations.<code>TRUE</code> by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Numerical error tolerance. <code>1e-06</code> by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>algo</code></td>
+<td>
+<p>algorithm: For GMM: <code>"2SGMM"</code> is the two step GMM proposed
+by Hansen (1982). <code>"CueGMM"</code> and <code>"ITGMM"</code> are respectively the
+continuous updated and the iterative GMM proposed by Hansen, Eaton et Yaron
+(1996) and adapted to the continuum case. For GMC: <code>"2SGMC", "CueGMC"</code>.
+For Cgmm: <code>"2SCgmm", "CueCgmm", ...</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regularization</code></td>
+<td>
+<p>regularization scheme to be used for moment methods,
+one of <code>"Tikhonov"</code> (Tikhonov), <code>"LF"</code> (Landweber-Fridmann) and
+<code>"cut-off"</code> (spectral cut-off).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>WeightingMatrix</code></td>
+<td>
+<p>type of weighting matrix used to compute the
+objective function for the GMM and GMC methods, one of <code>"OptAsym"</code> (the
+optimal asymptotic), <code>"DataVar"</code> (the data driven, only for GMM) and
+<code>"Id"</code> (the identity matrix).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t_scheme</code></td>
+<td>
+<p>scheme used to select the points for the GMM method where the
+moment conditions are evaluated, one of <code>"equally"</code> (equally placed),
+<code>"NonOptAr"</code> (non optimal arithmetic placement), <code>"uniformOpt"</code>
+(uniform optimal placement), <code>"ArithOpt"</code> (arithmetic optimal
+placement), <code>"Var Opt"</code> (optimal variance placement) and <code>"free"</code>
+(users need to pass their own set of points in ...).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alphaReg</code></td>
+<td>
+<p>value of the regularisation parameter; numeric. Example Value
+could be ==0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t_free</code></td>
+<td>
+<p>sequence, if <code>t_scheme=="free"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nb_t</code></td>
+<td>
+<p>integer, if you set <code>t_scheme &lt;- "equally"</code>. nb_t could be
+== 20 for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subdivisions</code></td>
+<td>
+<p>Number of subdivisions used to compute the different
+integrals involved in the computation of the objective function for the Cgmm
+method (to minimise); numeric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IntegrationMethod</code></td>
+<td>
+<p>Numerical integration method to be used to
+approximate the (vectorial) integrals for the Cgmm method. Users can choose
+between "Uniform" discretization or the "Simpson"'s rule (the 3-point
+Newton-Cotes quadrature rule).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>randomIntegrationLaw</code></td>
+<td>
+<p>Probability measure associated to the Hilbert
+space spanned by the moment conditions for the Cgmm method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s_min, s_max</code></td>
+<td>
+<p>Lower and Upper bounds of the interval where the moment
+conditions are considered for the Cgmm method; numeric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncond</code></td>
+<td>
+<p>Integer. Number of moment conditions (until order <code>ncond</code>)
+for the GMC method. Must not be less than 3 for TSS, 6 for CTS, 5 for NTS.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IterationControl</code></td>
+<td>
+<p>only used if algo = "IT..." or algo = "Cue..."
+to control the iterations. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to the estimation function or the
+asymptotic confidence level.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>TemperedType</strong> Detailed documentation of the individual tempered
+stable distributions can be viewed in the respective characteristic function.
+With the parameter 'TemperedTyp' you can choose the tempered stable
+distribution you want to use. Here is a list of distribution you can choose
+from:
+</p>
+
+<dl>
+<dt>TSS</dt>
+<dd>
+<p>Tempered stabel subordinator: See <code>charTSS()</code> for details.</p>
+</dd>
+<dt>CTS</dt>
+<dd>
+<p>Classical tempered stable distribution: See <code>charCTS()</code> for
+details.</p>
+</dd>
+<dt>GTS</dt>
+<dd>
+<p>Generalized classical tempered stable distribution: See
+<code>charGTS()</code> for details.</p>
+</dd>
+<dt>NTS</dt>
+<dd>
+<p>Normal tempered stable distribution: See <code>charNTS()</code> for
+details.</p>
+</dd>
+<dt>MTS</dt>
+<dd>
+<p>Modified tempered stable distribution: See <code>charMTS()</code> for
+details.</p>
+</dd>
+<dt>RDTS</dt>
+<dd>
+<p>Rapid decreasing tempered stable distribution: See <code>charRDTS()</code>
+for details.</p>
+</dd>
+<dt>KRTS</dt>
+<dd>
+<p>Kim-Rachev tempered stable distribution: See <code>charKRTS()</code> for
+details.</p>
+</dd>
+</dl>
+<p><strong>Estimfct</strong> Additional parameters are needed for different estimation
+functions. These are listed below for each function. The list of additional
+parameters starts after the parameter <code>eps</code> in the parameter list.
+</p>
+
+<dl>
+<dt>For ML:</dt>
+<dd>
+<p>See usage of Maximum likelihood estimation in Kim et al.
+(2008). No additional parameters are needed.</p>
+</dd>
+<dt>For GMM:</dt>
+<dd>
+<p>Generalized Method of Moments by Feuerverger (1981).
+The parameters <code>algo, alphaReg, regularization, WeightingMatrix, and
+  t_scheme</code> must be specified.
+</p>
+<p>Parameter <code>t_scheme</code>: One of the most important features of this
+method is that it allows the user to choose how to place the points where
+the moment conditions are evaluated. One can choose among 6 different
+options. Depending on the option, further parameters have to be passed.
+</p>
+
+<dl>
+<dt>"equally":</dt>
+<dd>
+<p>equally placed points in <code>min_t,max_t</code>. When
+provided, user's <code>min_t</code> and <code>max_t</code> will be used (when
+<code>Coinstrained == FALSE</code>).
+</p>
+</dd>
+<dt>"NonOptAr":</dt>
+<dd>
+<p>non optimal arithmetic placement.
+</p>
+</dd>
+<dt>"uniformOpt":</dt>
+<dd>
+<p>uniform optimal placement.
+</p>
+</dd>
+<dt>"ArithOpt":</dt>
+<dd>
+<p>arithmetic optimal placement.
+</p>
+</dd>
+<dt>"Var Opt":</dt>
+<dd>
+<p>optimal variance placement as explained above.
+</p>
+</dd>
+<dt>"free":</dt>
+<dd>
+<p>user needs to pass own set of points in <code>t_free</code>.
+</p>
+</dd>
+</dl>
+<p>Parameter <code>WeightingMatrix</code>: One can choose among 3 different options:
+</p>
+
+<dl>
+<dt>"OptAsym":</dt>
+<dd>
+<p>the optimal asymptotic choice.
+</p>
+</dd>
+<dt>"DataVar":</dt>
+<dd>
+<p>the covariance matrix of the data provided.
+</p>
+</dd>
+<dt>"Id":</dt>
+<dd>
+<p>the identity matrix.
+</p>
+</dd>
+</dl>
+</dd>
+<dt>For Cgmm:</dt>
+<dd>
+<p>Continuum Generalized Methods of Moments by Carrasco &amp;
+Kotchoni (2017). The parameters <code>algo, alphaReg, subdivisions,
+  IntegrationMethod, randomIntegrationLaw, s_min, and s_max</code> must be
+specified.
+</p>
+</dd>
+<dt>For GMC:</dt>
+<dd>
+<p>Generalized Method of Cumulants (GMC) by Massing, T.
+(2022). The parameters <code>algo, alphaReg, regularization,
+   WeightingMatrix, and ncond</code> must be specified.
+</p>
+</dd>
+</dl>
+<p><strong>Estim-Class</strong> Class storing all the information about the estimation
+method; output of this function.
+</p>
+<p><strong>Slots of the return class</strong>
+</p>
+
+<dl>
+<dt>par:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>"; Value of the estimated
+parameters.</p>
+</dd>
+<dt>par0:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>"; Initial guess for the
+parameters.</p>
+</dd>
+<dt>vcov:</dt>
+<dd>
+<p>Object of class "<code>matrix</code>" representing the covariance
+matrix.</p>
+</dd>
+<dt>confint:</dt>
+<dd>
+<p>Object of class "<code>matrix</code>" representing the confidence
+interval computed at a specific level (attribute of the object).</p>
+</dd>
+<dt>data:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>" used to compute the
+estimation.</p>
+</dd>
+<dt>sampleSize:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>" ; length of the data.</p>
+</dd>
+<dt>others:</dt>
+<dd>
+<p>Object of class "<code>list</code>" ; more information about the
+estimation method.</p>
+</dd>
+<dt>duration:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>" ; duration in seconds.</p>
+</dd>
+<dt>failure:</dt>
+<dd>
+<p>Object of class "<code>numeric</code>" representing the status of
+the procedure: 0 failure or 1 success.</p>
+</dd>
+<dt>method:</dt>
+<dd>
+<p>Object of class "<code>character</code>" description of the
+parameter used in the estimation.</p>
+</dd>
+</dl>
+<p><strong>IterationControl</strong> If <code>algo = "IT..."</code> or <code>algo =
+"Cue..."</code> the user can control each iteration by setting up the list
+IterationControl which contains the following elements:
+</p>
+
+<dl>
+<dt>NbIter</dt>
+<dd>
+<p>maximum number of iteration. The loop stops when NBIter is
+reached; default = 10.</p>
+</dd>
+<dt>PrintIterlogical</dt>
+<dd>
+<p>if set to TRUE, the value of the current parameter
+estimation is printed to the screen at each iteration; default = TRUE.</p>
+</dd>
+<dt>RelativeErrMax</dt>
+<dd>
+<p>the loop stops if the relative error between two
+consecutive estimation steps is smaller than RelativeErrMax;
+default = 1e-3.</p>
+</dd>
+</dl>
+<p>Since this package is structurally based on the <strong>"StableEstim"
+package by Tarak Kharrat and Georgi N. Boshnakov</strong>, more detailed
+documentation can be found in their documentation.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of a estim-class. See details for more information.
+</p>
+
+
+<h3>References</h3>
+
+<p>Massing, T. (2023), 'Parametric Estimation of Tempered Stable Laws'
+</p>
+<p>Kim, Y. s., Rachev, S. T., Bianchi, M. L. &amp; Fabozzi, F. J. (2008), 'Financial
+market models with levy processes and time-varying volatility'
+<a href="https://doi.org/10.1016/j.jbankfin.2007.11.004">doi:10.1016/j.jbankfin.2007.11.004</a>
+</p>
+<p>Hansen, L. P. (1982), 'Large sample properties of generalized method of
+moments estimators' <a href="https://doi.org/10.2307/1912775">doi:10.2307/1912775</a>
+</p>
+<p>Hansen, L. P.; Heaton, J. &amp; Yaron, A. (1996), 'Finite-Sample Properties of
+Some Alternative GMM Estimators' <a href="https://doi.org/10.1080/07350015.1996.10524656">doi:10.1080/07350015.1996.10524656</a>
+</p>
+<p>Carrasco, M. &amp; Kotchoni, R. (2017), 'Efficient estimation using the
+characteristic function' <a href="https://doi.org/10.1017/S0266466616000025">doi:10.1017/S0266466616000025</a>
+</p>
+<p>Kuechler, U. &amp; Tappe, S. (2013), 'Tempered stable distribution and processes'
+<a href="https://doi.org/10.1016/j.spa.2013.06.012">doi:10.1016/j.spa.2013.06.012</a>
+</p>
+<p>Feuerverger, A. &amp; McDunnough, P. (1981), 'On the efficiency of empirical
+characteristic function procedures'
+<a href="https://doi.org/10.1111/j.2517-6161.1981.tb01143.x">doi:10.1111/j.2517-6161.1981.tb01143.x</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><a href="https://github.com/GeoBosh/StableEstim/blob/master/R/Simulation.R">https://github.com/GeoBosh/StableEstim/blob/master/R/Simulation.R</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+TemperedEstim(TemperedType = "CTS", EstimMethod = "ML",
+               data = rCTS(2,1.5,1,1,1,1,0),
+               theta0 = c(1.5,1,1,1,1,0) - 0.1);
+TemperedEstim("TSS", "GMM", rTSS(20,0.5,1,1), algo = "2SGMM",
+              alphaReg = 0.01, regularization = "cut-off",
+              WeightingMatrix = "OptAsym", t_scheme = "free",
+              t_free = seq(0.1,2,length.out = 12));
+TemperedEstim("NTS", "Cgmm", rNTS(20,0.5,1,1,1,0), algo = "2SCgmm",
+              alphaReg = 0.01, subdivisions = 50,
+              IntegrationMethod = "Uniform", randomIntegrationLaw = "unif",
+              s_min = 0, s_max= 1);
+TemperedEstim("TSS", "GMC", rTSS(20, 0.5, 1, 1), algo = "2SGMC",
+              alphaReg = 0.01, WeightingMatrix = "OptAsym",
+              regularization = "cut-off", ncond = 8, theta0 = c(0.5,1,1));
+
+</code></pre>
+
+
+</div>

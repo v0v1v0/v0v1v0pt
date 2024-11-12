@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>regionalize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculation of regionalized TL-moments</h2>
+
+<h3>Description</h3>
+
+<p>regionalize takes the result of TLMoments and calculates a weighted mean
+of TL-moments and TL-moment ratios.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">regionalize(x, ...)
+
+## S3 method for class 'numeric'
+regionalize(x, ...)
+
+## S3 method for class 'matrix'
+regionalize(x, w = attr(x, "source")$n, reg.lambdas = TRUE, ...)
+
+## S3 method for class 'data.frame'
+regionalize(x, w = attr(x, "source")$n, reg.lambdas = TRUE, ...)
+
+## S3 method for class 'list'
+regionalize(x, w = attr(x, "source")$n, reg.lambdas = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>object returned by TLMoments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments, not used at the moment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>numeric vector giving the weights. Default: Sample lengths of corresponding
+data. Internally scaled so that it adds up to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg.lambdas</code></td>
+<td>
+<p>logical, if TRUE (default) regionalization is
+based upon TL-moments. If false it's based on TL-moment-ratios.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>list of two dimensions: <code>lambdas</code>/<code>ratios</code> are numeric vectors
+consisting of the regionalized TL-moments/TL-moment-ratios. The list has
+the class <code>TLMoments</code>. The object contains the following attributes: </p>
+
+<ul>
+<li> <p><code>leftrim</code>: a numeric giving the used leftrim-argument
+</p>
+</li>
+<li> <p><code>rightrim</code>: a numeric giving the used rightrim-argument
+</p>
+</li>
+<li> <p><code>order</code>: a integer vector with corresponding TL-moment orders
+</p>
+</li>
+<li> <p><code>source</code>: a list with background information (used function, data,
+n, formula, computation.method; mainly for internal purposes)
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">xmat &lt;- matrix(rgev(100), nc = 4)
+xvec &lt;- xmat[, 3]
+xlist &lt;- lapply(1L:ncol(xmat), function(i) xmat[, i])
+xdat &lt;- data.frame(
+ station = rep(letters[1:2], each = 50),
+ season = rep(c("S", "W"), 50),
+ hq = as.vector(xmat)
+)
+
+regionalize(TLMoments(xmat))
+regionalize(TLMoments(xlist))
+regionalize(TLMoments(xdat, hq ~ station))
+# For numeric vector TLMoments, nothing happens:
+regionalize(TLMoments(xvec))
+
+tlm &lt;- TLMoments(xmat)
+regionalize(tlm)
+regionalize(tlm, reg.lambdas = FALSE)
+
+parameters(regionalize(tlm), "gev")
+parameters(regionalize(tlm, reg.lambdas = FALSE), "gev")
+
+quantiles(parameters(regionalize(tlm), "gev"), c(.99, .999))
+quantiles(parameters(regionalize(tlm, reg.lambdas = FALSE), "gev"), c(.99, .999))
+
+
+# With magrittr
+library(magrittr)
+matrix(rgev(200, shape = .3), nc = 5) %&gt;%
+ TLMoments(rightrim = 1) %&gt;%
+ regionalize %&gt;%
+ parameters("gev") %&gt;%
+ quantiles(c(.99, .999))
+</code></pre>
+
+
+</div>

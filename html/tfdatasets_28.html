@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset_padded_batch</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Combines consecutive elements of this dataset into padded batches.</h2>
+
+<h3>Description</h3>
+
+<p>Combines consecutive elements of this dataset into padded batches.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset_padded_batch(
+  dataset,
+  batch_size,
+  padded_shapes = NULL,
+  padding_values = NULL,
+  drop_remainder = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_size</code></td>
+<td>
+<p>An integer, representing the number of
+consecutive elements of this dataset to combine in a single batch.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padded_shapes</code></td>
+<td>
+<p>(Optional.) A (nested) structure of
+<code>tf.TensorShape</code> (returned by <code>tensorflow::shape()</code>) or
+<code>tf$int64</code> vector tensor-like objects representing the shape to which
+the respective component of each input element should be padded prior
+to batching. Any unknown dimensions will be padded to the maximum size
+of that dimension in each batch. If unset, all dimensions of all
+components are padded to the maximum size in the batch. <code>padded_shapes</code>
+must be set if any component has an unknown rank.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding_values</code></td>
+<td>
+<p>(Optional.) A (nested) structure of scalar-shaped
+<code>tf.Tensor</code>, representing the padding values to use for the respective
+components. <code>NULL</code> represents that the (nested) structure should be padded
+with default values.  Defaults are <code>0</code> for numeric types and the empty
+string <code>""</code> for string types. The <code>padding_values</code> should have the same
+(nested) structure as the input dataset. If <code>padding_values</code> is a single
+element and the input dataset has multiple components, then the same
+<code>padding_values</code> will be used to pad every component of the dataset.
+If <code>padding_values</code> is a scalar, then its value will be broadcasted
+to match the shape of each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_remainder</code></td>
+<td>
+<p>(Optional.) A boolean scalar, representing
+whether the last batch should be dropped in the case it has fewer than
+<code>batch_size</code> elements; the default behavior is not to drop the smaller
+batch.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>(Optional.) A name for the tf.data operation. Requires tensorflow version &gt;= 2.7.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This transformation combines multiple consecutive elements of the input
+dataset into a single element.
+</p>
+<p>Like <code>dataset_batch()</code>, the components of the resulting element will
+have an additional outer dimension, which will be <code>batch_size</code> (or
+<code>N %% batch_size</code> for the last element if <code>batch_size</code> does not divide the
+number of input elements <code>N</code> evenly and <code>drop_remainder</code> is <code>FALSE</code>). If
+your program depends on the batches having the same outer dimension, you
+should set the <code>drop_remainder</code> argument to <code>TRUE</code> to prevent the smaller
+batch from being produced.
+</p>
+<p>Unlike <code>dataset_batch()</code>, the input elements to be batched may have
+different shapes, and this transformation will pad each component to the
+respective shape in <code>padded_shapes</code>. The <code>padded_shapes</code> argument
+determines the resulting shape for each dimension of each component in an
+output element:
+</p>
+
+<ul>
+<li>
+<p> If the dimension is a constant, the component will be padded out to that
+length in that dimension.
+</p>
+</li>
+<li>
+<p> If the dimension is unknown, the component will be padded out to the
+maximum length of all elements in that dimension.
+</p>
+</li>
+</ul>
+<p>See also <code>tf$data$experimental$dense_to_sparse_batch</code>, which combines
+elements that may have different shapes into a <code>tf$sparse$SparseTensor</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tf_dataset
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul><li> <p><a href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset#padded_batch">https://www.tensorflow.org/api_docs/python/tf/data/Dataset#padded_batch</a>
+</p>
+</li></ul>
+<p>Other dataset methods: 
+<code>dataset_batch()</code>,
+<code>dataset_cache()</code>,
+<code>dataset_collect()</code>,
+<code>dataset_concatenate()</code>,
+<code>dataset_decode_delim()</code>,
+<code>dataset_filter()</code>,
+<code>dataset_interleave()</code>,
+<code>dataset_map()</code>,
+<code>dataset_map_and_batch()</code>,
+<code>dataset_prefetch()</code>,
+<code>dataset_prefetch_to_device()</code>,
+<code>dataset_reduce()</code>,
+<code>dataset_repeat()</code>,
+<code>dataset_shuffle()</code>,
+<code>dataset_shuffle_and_repeat()</code>,
+<code>dataset_skip()</code>,
+<code>dataset_take()</code>,
+<code>dataset_take_while()</code>,
+<code>dataset_window()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+A &lt;- range_dataset(1, 5, dtype = tf$int32) %&gt;%
+  dataset_map(function(x) tf$fill(list(x), x))
+
+# Pad to the smallest per-batch size that fits all elements.
+B &lt;- A %&gt;% dataset_padded_batch(2)
+B %&gt;% as_array_iterator() %&gt;% iterate(print)
+
+# Pad to a fixed size.
+C &lt;- A %&gt;% dataset_padded_batch(2, padded_shapes=5)
+C %&gt;% as_array_iterator() %&gt;% iterate(print)
+
+# Pad with a custom value.
+D &lt;- A %&gt;% dataset_padded_batch(2, padded_shapes=5, padding_values = -1L)
+D %&gt;% as_array_iterator() %&gt;% iterate(print)
+
+# Pad with a single value and multiple components.
+E &lt;- zip_datasets(A, A) %&gt;%  dataset_padded_batch(2, padding_values = -1L)
+E %&gt;% as_array_iterator() %&gt;% iterate(print)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

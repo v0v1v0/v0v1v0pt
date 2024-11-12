@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>entirelogprofilelikelihood</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculating the entire profilel likelihood curve over the given grid values of the time delay</h2>
+
+<h3>Description</h3>
+
+<p><code>entirelogprofilelikelihood</code> calculates the entire profilel likelihood curve over the given grid values of the time delay. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">entirelogprofilelikelihood(data.lcA, data.lcB, grid, 
+                                  initial, data.flux, 
+                                  delta.uniform.range, micro)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data.lcA</code></td>
+<td>
+
+<p>A (<code class="reqn">n_1</code> by 3) matrix for image A (light curve A); the first column has <code class="reqn">n_1</code> observation times, the second column contains <code class="reqn">n_1</code> flux (or magnitude) values, the third column includes <code class="reqn">n_1</code> measurement errors.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.lcB</code></td>
+<td>
+
+<p>A (<code class="reqn">n_2</code> by 3) matrix for image B (light curve B); the first column has <code class="reqn">n_2</code> observation times, the second column contains <code class="reqn">n_2</code> flux (or magnitude) values, the third column includes <code class="reqn">n_2</code> measurement errors.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+
+<p>A vector containing values of the time delay on which the profile likelihood values are calculated. We recommend using the grid interval equal to 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial</code></td>
+<td>
+
+<p>The initial values of the other model parameters (mu, log(sigma), log(tau), beta). We take log on sigma and tau for numerical stability.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.flux</code></td>
+<td>
+
+<p>"True" if data are recorded on flux scale or "FALSE" if data are on magnitude scale.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.uniform.range</code></td>
+<td>
+
+<p>The range of the Uniform prior distribution for the time delay.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>micro</code></td>
+<td>
+
+<p>It determines the order of a polynomial regression model that accounts for the difference between microlensing trends. Default is 3. When zero is assigned, the Bayesian model fits a curve-shifted model.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>entirelogprofilelikelihood</code> is used to obtain the entire profile likelihood curve over the given grid values of the time delay. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>The outcome of <code>entirelogprofilelikelihood</code> is the values of the log profile likelihood function over the given grid values of the time delay.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hyungsuk Tak
+</p>
+
+
+<h3>References</h3>
+
+<p>Hyungsuk Tak, Kaisey Mandel, David A. van Dyk, Vinay L. Kashyap, Xiao-Li Meng, and Aneta Siemiginowska (2017). "Bayesian Estimates of Astronomical Time Delays between Gravitationally Lensed Stochastic Light Curves," The Annals of Applied Statistics, 11 (3), 1309-1348.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  # Loading datasets
+  data(simple)
+  head(simple)
+
+  ################################################
+  # Time delay estimation via profile likelihood #
+  ################################################
+
+
+  # Subset (data for image A) of the typical quasar data set
+  lcA &lt;- simple[, 1 : 3]
+
+  # Another subset (data for image B) of the typical quasar data set
+  # The observation times for image B are not necessarily the same as those for image A
+  lcB &lt;- simple[, c(1, 4, 5)]
+
+  # The two subsets do not need to have the same number of observations
+  # For example, here we add one more observation time for image B
+  lcB &lt;- rbind(lcB, c(290, 1.86, 0.006))
+
+  dim(lcA)
+  dim(lcB)
+
+  ###### The entire profile likelihood values on the grid of values of the time delay.
+
+  # Cubic microlensing model
+  ti1 &lt;- lcB[, 1]
+  ti2 &lt;- lcB[, 1]^2
+  ti3 &lt;- lcB[, 1]^3
+  ss &lt;- lm(lcB[, 2] - mean(lcA[, 2]) ~ ti1 + ti2 + ti3)
+
+  initial &lt;- c(mean(lcA[, 2]), log(0.01), log(200), ss$coefficients)
+  delta.uniform.range &lt;- c(0, 100)
+  grid &lt;- seq(0, 100, by = 0.1) 
+  # grid interval "by = 0.1" is recommended,
+  # but users can set a finer grid of values of the time delay.
+
+  
+  logprof &lt;- entirelogprofilelikelihood(data.lcA = lcA, data.lcB = lcB, grid = grid, 
+                                        initial = initial, data.flux = FALSE, 
+                                        delta.uniform.range = delta.uniform.range, micro = 3)
+  plot(grid, logprof, type = "l", 
+       xlab = expression(bold(Delta)),       
+       ylab = expression(bold(paste("log L"[prof], "(", Delta, ")"))))
+  prof &lt;- exp(logprof - max(logprof))  # normalization
+  plot(grid, prof, type = "l", 
+       xlab = expression(bold(Delta)),       
+       ylab = expression(bold(paste("L"[prof], "(", Delta, ")"))))
+  
+
+</code></pre>
+
+
+</div>

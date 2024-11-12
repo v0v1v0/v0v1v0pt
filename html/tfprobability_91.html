@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_sparse_linear_regression</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Formal representation of a sparse linear regression.</h2>
+
+<h3>Description</h3>
+
+<p>This model defines a time series given by a sparse linear combination of
+covariate time series provided in a design matrix:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_sparse_linear_regression(
+  design_matrix,
+  weights_prior_scale = 0.1,
+  weights_batch_shape = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>design_matrix</code></td>
+<td>
+<p>float <code>tensor</code> of shape <code>tf$concat(list(batch_shape, list(num_timesteps, num_features)))</code>.
+This may also optionally be an instance of <code>tf$linalg$LinearOperator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights_prior_scale</code></td>
+<td>
+<p>float <code>Tensor</code> defining the scale of the Horseshoe
+prior on regression weights. Small values encourage the weights to be
+sparse. The shape must broadcast with <code>weights_batch_shape</code>.
+Default value: <code>0.1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights_batch_shape</code></td>
+<td>
+<p>if <code>NULL</code>, defaults to
+<code>design_matrix.batch_shape_tensor()</code>. Must broadcast with the batch
+shape of <code>design_matrix</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>the name of this model component. Default value: 'LinearRegression'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<div class="sourceCode"><pre>observed_time_series &lt;- tf$matmul(design_matrix, weights)
+</pre></div>
+<p>This is identical to <code>sts_linear_regression</code>, except that
+<code>sts_sparse_linear_regression</code> uses a parameterization of a Horseshoe
+prior to encode the assumption that many of the <code>weights</code> are zero,
+i.e., many of the covariate time series are irrelevant. See the mathematical
+details section below for further discussion. The prior parameterization used
+by <code>sts_sparse_linear_regression</code> is more suitable for inference than that
+obtained by simply passing the equivalent <code>tfd_horseshoe</code> prior to
+<code>sts_linear_regression</code>; when sparsity is desired, <code>sts_sparse_linear_regression</code> will
+likely yield better results.
+</p>
+<p>This component does not itself include observation noise; it defines a
+deterministic distribution with mass at the point
+<code>tf$matmul(design_matrix, weights)</code>. In practice, it should be combined with
+observation noise from another component such as <code>sts_sum</code>.
+</p>
+<p>Mathematical Details
+</p>
+<p>The basic horseshoe prior Carvalho et al. (2009) is defined as a Cauchy-normal scale mixture:
+</p>
+<div class="sourceCode"><pre>scales[i] ~ HalfCauchy(loc=0, scale=1)
+weights[i] ~ Normal(loc=0., scale=scales[i] * global_scale)`
+</pre></div>
+<p>The Cauchy scale parameters puts substantial mass near zero, encouraging
+weights to be sparse, but their heavy tails allow weights far from zero to be
+estimated without excessive shrinkage. The horseshoe can be thought of as a
+continuous relaxation of a traditional 'spike-and-slab' discrete sparsity
+prior, in which the latent Cauchy scale mixes between 'spike'
+(<code style="white-space: pre;">⁠scales[i] ~= 0⁠</code>) and 'slab' (<code style="white-space: pre;">⁠scales[i] &gt;&gt; 0⁠</code>) regimes.
+</p>
+<p>Following the recommendations in Piironen et al. (2017), <code>SparseLinearRegression</code> implements
+a horseshoe with the following adaptations:
+</p>
+
+<ul>
+<li>
+<p> The Cauchy prior on <code>scales[i]</code> is represented as an InverseGamma-Normal
+compound.
+</p>
+</li>
+<li>
+<p> The <code>global_scale</code> parameter is integrated out following a <code>Cauchy(0., scale=weights_prior_scale)</code> hyperprior, which is also represented as an
+InverseGamma-Normal compound.
+</p>
+</li>
+<li>
+<p> All compound distributions are implemented using a non-centered
+parameterization.
+The compound, non-centered representation defines the same marginal prior as
+the original horseshoe (up to integrating out the global scale),
+but allows samplers to mix more efficiently through the heavy tails; for
+variational inference, the compound representation implicity expands the
+representational power of the variational model.
+</p>
+</li>
+</ul>
+<p>Note that we do not yet implement the regularized ('Finnish') horseshoe,
+proposed in Piironen et al. (2017) for models with weak likelihoods, because the likelihood
+in STS models is typically Gaussian, where it's not clear that additional
+regularization is appropriate. If you need this functionality, please
+email tfprobability@tensorflow.org.
+</p>
+<p>The full prior parameterization implemented in <code>SparseLinearRegression</code> is
+as follows:
+</p>
+<div class="sourceCode"><pre>Sample global_scale from Cauchy(0, scale=weights_prior_scale).
+global_scale_variance ~ InverseGamma(alpha=0.5, beta=0.5)
+global_scale_noncentered ~ HalfNormal(loc=0, scale=1)
+global_scale = (global_scale_noncentered *
+sqrt(global_scale_variance) *
+weights_prior_scale)
+Sample local_scales from Cauchy(0, 1).
+local_scale_variances[i] ~ InverseGamma(alpha=0.5, beta=0.5)
+local_scales_noncentered[i] ~ HalfNormal(loc=0, scale=1)
+local_scales[i] = local_scales_noncentered[i] * sqrt(local_scale_variances[i])
+weights[i] ~ Normal(loc=0., scale=local_scales[i] * global_scale)
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>StructuralTimeSeries</code>.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="http://proceedings.mlr.press/v5/carvalho09a/carvalho09a.pdf">Carvalho, C., Polson, N. and Scott, J. Handling Sparsity via the Horseshoe. AISTATS (2009).</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1707.01694">Juho Piironen, Aki Vehtari. Sparsity information and regularization in the horseshoe and other shrinkage priors (2017).</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>For usage examples see <code>sts_fit_with_hmc()</code>, <code>sts_forecast()</code>, <code>sts_decompose_by_component()</code>.
+</p>
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

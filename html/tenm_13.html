@@ -1,0 +1,104 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>inEllipsoid</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>inEllipsoid: Determine if a point is inside or outside an ellipsoid</h2>
+
+<h3>Description</h3>
+
+<p>Determine if a point is inside or outside an ellipsoid based on
+a confidence level.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">inEllipsoid(centroid, eShape, env_data, level)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>centroid</code></td>
+<td>
+<p>Numeric vector of centroids for each environmental variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eShape</code></td>
+<td>
+<p>Shape matrix of the ellipsoid (can be a covariance matrix or a
+minimum volume ellipsoid).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env_data</code></td>
+<td>
+<p>Data frame with the environmental data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>Proportion of points to be included in the ellipsoids,
+equivalent to the error (E) proposed by Peterson et al. (2008).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data.frame with 2 columns:
+</p>
+
+<ul>
+<li>
+<p> "in_Ellipsoid": Binary response indicating if each point is inside (1)
+or outside (0) the ellipsoid.
+</p>
+</li>
+<li>
+<p> "mh_dist": Mahalanobis distance from each point to the centroid.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(abtc,train_prop=0.7)
+varcorrs &lt;- tenm::correlation_finder(environmental_data = abex$env_data[,-ncol(abex$env_data)],
+                                     method = "spearman",
+                                     threshold = 0.8,
+                                     verbose = FALSE)
+future::plan("sequential")
+mod &lt;- tenm::cov_center(data = abex$env_data,
+                        mve = TRUE,
+                        level = 0.975,
+                        vars = c("bio_05","bio_06","bio_12"))
+in_elip &lt;- tenm::inEllipsoid(centroid = mod$centroid,
+                       eShape = mod$covariance,
+                       env_data = abex$env_data[,c("bio_05","bio_06","bio_12")],
+                       level = 0.975)
+# 1 = Inside the ellipsoid; 0 = Outside the ellipsoid
+print(in_elip)
+
+</code></pre>
+
+
+</div>

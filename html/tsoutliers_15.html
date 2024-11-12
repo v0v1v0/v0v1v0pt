@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>outliers.tstatistics</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Test Statistics for the Significance of Outliers</h2>
+
+<h3>Description</h3>
+
+<p>This function computes the <code class="reqn">t</code>-statistics to assess the significance 
+of different types of outliers at every possible time point. 
+The statistics can be based either on an ARIMA model, 
+<code>arima</code> or <code>auto.arima</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">outliers.tstatistics(pars, resid, types = c("AO", "LS", "TC"), 
+  sigma = NULL, delta = 0.7)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>a list containing the parameters of the model. 
+See details section in <code>locate.outliers</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resid</code></td>
+<td>
+<p>a time series. Residuals of the ARIMA model fitted to the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>types</code></td>
+<td>
+<p>a character vector indicating the types of outliers to be considered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a numeric or <code>NULL</code>. Standard deviation of residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>Five types of outliers can be considered. 
+By default: <code>"AO"</code> additive outliers, <code>"LS"</code> level shifts,
+and <code>"TC"</code> temporary changes are selected;
+<code>"IO"</code> innovative outliers and <code>"SLS"</code> seasonal level shifts 
+can also be selected.
+</p>
+<p>The test statistics are based on the second equation defined in <code>locate.outliers</code>.
+</p>
+<p>These functions are the called by <code>locate.outliers</code>.
+The approach described in Chen &amp; Liu (1993) is implemented to compute 
+the <code class="reqn">t</code>-statistics.
+</p>
+<p>By default (<code>sigma = NULL</code>), the standard deviation of residuals 
+is computed as the mean absolute deviation of <code>resid</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>For each function, a two-column matrix is returned.
+The first column contains the estimate of the coefficients related to the type of outlier 
+and the second column contains the <code class="reqn">t</code>-statistics.
+The value of these statistics for each time point is stored by rows, thus 
+the number of rows is equal to the length of <code>resid</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Gómez, V. and Maravall, A. (1996). 
+<em>Programs TRAMO and SEATS. Instructions for the user</em>.
+Banco de España, Servicio de Estudios. Working paper number 9628.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf</a>
+</p>
+<p>Gómez, V. and Taguas, D. (1995). 
+<em>Detección y Corrección Automática de Outliers con TRAMO: 
+Una Aplicación al IPC de Bienes Industriales no Energéticos</em>.
+Ministerio de Economía y Hacienda. Document number D-95006.
+<a href="https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf">https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/Presupuestos/DocumentacionEstadisticas/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf</a>
+</p>
+<p>Kaiser, R., and Maravall, A. (1999). 
+<em>Seasonal Outliers in Time Series</em>.
+Banco de España, Servicio de Estudios. Working paper number 9915.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers</code>, <code>outliers.regressors</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># given an ARIMA model detect potential outliers
+# for a critical value equal to 3.5
+data("hicp")
+y &lt;- log(hicp[["011600"]])
+fit &lt;- arima(y, order = c(1, 1, 0), seasonal = list(order = c(2, 0, 2)))
+resid &lt;- residuals(fit)
+pars &lt;- coefs2poly(fit)
+tstats &lt;- outliers.tstatistics(pars, resid)
+# potential observations affected by an additive outliers
+which(abs(tstats[,"AO","tstat"]) &gt; 3.5)
+# potential observations affected by a temporary change
+which(abs(tstats[,"TC","tstat"]) &gt; 3.5)
+# potential observations affected by a level shift
+which(abs(tstats[,"LS","tstat"]) &gt; 3.5)
+</code></pre>
+
+
+</div>

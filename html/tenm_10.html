@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ellipsoid_projection</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ellipsoid_projection: function to project an ellipsoid model</h2>
+
+<h3>Description</h3>
+
+<p>Function to project an ellipsoid model using the shape matrix
+(covariance matrix) of the niche variables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ellipsoid_projection(
+  envlayers,
+  centroid,
+  covar,
+  level = 0.95,
+  output = "suitability",
+  plot = TRUE,
+  size,
+  xlab1 = "niche var 1",
+  ylab1 = "niche var 2",
+  zlab1 = "S",
+  alpha = 0.1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>envlayers</code></td>
+<td>
+<p>A SpatRaster object of the niche variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>centroid</code></td>
+<td>
+<p>A vector with the values of the centers of the ellipsoid
+(see <code>cov_center</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covar</code></td>
+<td>
+<p>The shape matrix (covariance) of the ellipsoid
+(see <code>cov_center</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>The proportion of points  to be included inside the ellipsoid</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>The output distance: two possible values "suitability" or
+"mahalanobis". By default the function uses "suitability".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>Logical If <code>TRUE</code> a plot of the niche will be shown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>size</code></td>
+<td>
+<p>The size of the points of the niche plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab1</code></td>
+<td>
+<p>For x label for 2-dimensional histogram</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylab1</code></td>
+<td>
+<p>For y label for 2-dimensional histogram</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zlab1</code></td>
+<td>
+<p>For z label for 2-dimensional histogram</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Control the transparency of the 3-dimensional ellipsoid</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>plot3d</code> function from rgl</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a SpatRaster of suitability values.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(this_species = abtc,train_prop=0.7)
+abbg &lt;- tenm::bg_by_date(this_species = abex,
+                         buffer_ngbs=10,n_bg=50000)
+future::plan("sequential")
+mod &lt;- tenm::cov_center(data = abex$env_data,
+                        mve = TRUE,
+                        level = 0.975,
+                        vars = c("bio_05","bio_06","bio_12"))
+layers_path &lt;-   list.files(file.path(tempora_layers_dir,
+                                      "2016"),
+                            pattern = ".tif$",full.names = TRUE)
+elayers &lt;- terra::rast(layers_path)
+nmod &lt;- ellipsoid_projection(envlayers = elayers[[names(mod$centroid)]],
+                             centroid = mod$centroid,
+                             covar = mod$covariance,
+                             level = 0.99999,
+                             output = "suitability",
+                             size = 3,
+                             plot = TRUE)
+
+
+</code></pre>
+
+
+</div>

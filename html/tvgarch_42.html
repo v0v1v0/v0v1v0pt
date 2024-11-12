@@ -1,0 +1,204 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tvgarch</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate a TV-GARCH-X model</h2>
+
+<h3>Description</h3>
+
+ 
+<p>Quasi Maximum Likelihood (ML) estimation of a univariate multiplicative 
+TV(s)-GARCH(p,q,r)-X model, where s indicates the number and the shape of the 
+transition functions, r is the asymmetry order, p is the ARCH order, q is the 
+GARCH order, and 'X' indicates that covariates can be included. Any transition 
+variable, deterministic or stochastic, can be used to drive the transitions 
+between the variance states. The TV long-term component introduces 
+non-stationarity in the variance process, where the GARCH-X short-term component 
+describes conditional heteroscedasticity. Maximization by parts leads to 
+consistent and asymptotically normal estimates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tvgarch(y, order.g = 1, order.h = c(1,1,0), xtv = NULL, xreg = NULL, 
+        initial.values = list(), opt = 2, upper.speed = NULL, tvgarch = FALSE,
+        turbo = FALSE, trace = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>numeric <code>vector</code>, time series or <code>zoo</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order.g</code></td>
+<td>
+<p><code>integer</code> <code>vector</code> of length s indicating the number of 
+locations in each transition function of the TV component. Indicates whether a 
+stationary GARCH or a nonstationary GARCH, i.e., TV-GARCH, shall be estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order.h</code></td>
+<td>
+<p><code>integer</code> <code>vector</code> of the form c(p,q,r). The first 
+entry controls the GARCH order, the second the ARCH order and the third the 
+asymmetry order of the GARCH-X component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial.values</code></td>
+<td>
+<p>a list containing the initial parameter values passed on 
+to the optimisation routines (constrOptim for the TV component and 
+nlminb for the GARCH-X component). If list(), the default, then the 
+values are chosen automatically. TV component: <code>intercept.g</code> - <code>NULL</code> 
+or numeric, <code>size</code> - <code>NULL</code> or numeric <code>vector</code> containing the 
+size initial coefficients, <code>speed</code> - <code>NULL</code> or numeric <code>vector</code> 
+containing the speed initial coefficients, <code>location</code> - <code>NULL</code> or 
+numeric <code>vector</code> containing the location initial coefficients. GARCH-X or 
+GARCH-X component of TV-GARCH-X: <code>intercept.h</code> - numeric, <code>arch</code> - 
+<code>NULL</code> or numeric <code>vector</code> containing the ARCH initial coefficients, 
+<code>garch</code> - <code>NULL</code> or numeric <code>vector</code> containing the GARCH-type 
+initial coefficients, <code>asym</code> - <code>NULL</code> or numeric <code>vector</code> 
+containing the assymetry-type initial coefficients, and <code>par.xreg</code> - 
+<code>NULL</code> or numeric <code>vector</code> containing the X-type initial 
+coefficients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xtv</code></td>
+<td>
+<p><code>NULL</code> or numeric <code>vector</code>, time series or zoo object to 
+include as the transition variable in the TV component. If <code>NULL</code>, calendar 
+time, scaled between 0 and 1, is used as the transition variable. Not relevant 
+for stationary GARCH.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+<p>numeric <code>vector</code>, time series or zoo object to include as 
+covariates in the GARCH-X component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opt</code></td>
+<td>
+<p><code>integer</code> indicating whether the speed parameter in the TV 
+component should be scaled. If 0, no scaling; if 1, <code>speed</code>/sd(<code>xtv</code>); 
+if 2, exp(<code>speed</code>). Only relevant for TV-GARCH models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper.speed</code></td>
+<td>
+<p><code>NULL</code> or numeric <code>scalar</code> that sets 
+the upper bound for <code>speed</code> in each transition function. If <code>NULL</code>, 
+the default, the upper bound is 10000 for all transition functions. 
+If numeric <code>scalar</code>, <code>upper.speed</code> is used for all transition 
+functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tvgarch</code></td>
+<td>
+<p><code>logical</code>. If <code>TRUE</code>, the full parameter set
+is estimated in one final step as well as the standard errors. If <code>FALSE</code> 
+(default), estimates from last iteration are reported instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>turbo</code></td>
+<td>
+<p><code>logical</code>. If <code>FALSE</code> (default), then the coefficient 
+variance-covariance is computed during estimation, and the fitted values and 
+residuals are attached to the returned object. If <code>TRUE</code>, then these 
+operations are skipped, and hence estimation is faster. Note, however, that if 
+turbo is set to <code>TRUE</code>, then the coefficient-covariance, fitted values and 
+residuals can still be extracted subsequent to estimation with vcov.tvgarch(), 
+fitted.tvgarch() and residuals.tvgarch(), respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p><code>logical</code>. If <code>TRUE</code> all output is printed when 
+estimating a TV-GARCH.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class 'tvgarch'.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Susana Campos-Martins</p>
+
+
+<h3>References</h3>
+
+<p>Cristina Amado and Timo Terasvirta (2013) Modelling volatility by variance 
+decomposition, Journal of Econometrics 175, 142-153. 
+</p>
+<p>Cristina Amado and Timo Terasvirta (2014) Modelling changes in the 
+unconditional variance of long stock return series, Journal of Empirical Finance 
+25, 15-35. 
+</p>
+<p>Susana Campos-Martins and Genaro Sucarrat (2024) Modeling Nonstationary 
+Financial Volatility with the R Package tvgarch, Journal of Statistical 
+Software 108, 1-38.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>garchx</code>,
+<code>tvgarchSim</code>,
+<code>nlminb</code>,
+<code>constrOptim</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(123)
+
+## Simulate from a TV(1)-GARCH(1,1) model (default):
+ySim &lt;- tvgarchSim(n = 1500)
+
+## Estimate a TV(1)-GARCH(1,1) model:
+yEst &lt;- tvgarch(y = ySim)
+
+## Print estimation results:
+print(yEst)
+
+## Extract coefficients:
+coef(yEst)
+
+## Plot conditional volatilities:
+plot(yEst)
+
+## Extract log-likelihood:
+logLik(yEst)
+
+## Extract and store standardised residuals:
+etaEst &lt;- residuals(yEst)
+
+## Generate predictions:
+predict(yEst)
+</code></pre>
+
+
+</div>

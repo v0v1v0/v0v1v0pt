@@ -1,0 +1,221 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_time_delay</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get summary statistics of time delay</h2>
+
+<h3>Description</h3>
+
+<p>The output is a <code>list</code> containing summary statistics of time delay between two date/datetime vectors.
+This can be especially useful in estimating reporting delay for example.
+</p>
+
+<ul>
+<li> <p><b>data</b> - A data frame containing the origin, end and calculated time delay.
+</p>
+</li>
+<li> <p><b>unit</b> - The chosen time unit.
+</p>
+</li>
+<li> <p><b>num</b> - The number of time units.
+</p>
+</li>
+<li> <p><b>summary</b> - <code>tibble</code> with summary statistics.
+</p>
+</li>
+<li> <p><b>delay</b> - <code>tibble</code> containing the empirical cumulative distribution function
+values by time delay.
+</p>
+</li>
+<li> <p><b>plot</b> - A <code>ggplot</code> of the time delay distribution.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_time_delay(
+  data,
+  origin,
+  end,
+  time_by = 1L,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  min_delay = -Inf,
+  max_delay = Inf,
+  probs = c(0.25, 0.5, 0.75, 0.95),
+  .by = NULL,
+  include_plot = TRUE,
+  x_scales = "fixed",
+  bw = "sj",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>origin</code></td>
+<td>
+<p>Origin date variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+<p>End date variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_delay</code></td>
+<td>
+<p>The minimum acceptable delay,
+all delays less than this are removed before calculation.
+Default is <code>min_delay = -Inf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_delay</code></td>
+<td>
+<p>The maximum acceptable delay,
+all delays greater than this are removed before calculation.
+Default is <code>max_delay = Inf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs</code></td>
+<td>
+<p>Probabilities used in the quantile summary.
+Default is <code>probs = c(0.25, 0.5, 0.75, 0.95)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using tidy-select.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include_plot</code></td>
+<td>
+<p>Should a <code>ggplot</code> graph of delay distributions be included in the output?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_scales</code></td>
+<td>
+<p>Option to control how the x-axis is displayed for multiple facets.
+Choices are "fixed" or "free_x".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bw</code></td>
+<td>
+<p>The smoothing bandwidth selector for the Kernel Density estimator.
+If numeric, the standard deviation of the smoothing kernel.
+If character, a rule to choose the bandwidth. See <code>?stats::bw.nrd</code> for more details.
+The default has been set to "SJ" which implements the Sheather &amp; Jones (1991) method,
+as recommended by the R team <code>?stats::density</code>.
+This differs from the default implemented by <code>stats::density()</code>
+which uses Silverman's rule-of-thumb.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed on to <code>ggplot2::geom_density()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list containing summary data, summary statistics and an optional <code>ggplot</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(outbreaks)
+library(dplyr)
+
+ebola_linelist &lt;- ebola_sim_clean$linelist
+
+# Incubation period distribution
+
+# 95% of individuals experienced an incubation period of &lt;= 26 days
+inc_distr_days &lt;- ebola_linelist %&gt;%
+  get_time_delay(date_of_infection,
+                 date_of_onset,
+                 time_by = "days")
+head(inc_distr_days$data)
+inc_distr_days$unit
+inc_distr_days$num
+inc_distr_days$summary
+head(inc_distr_days$delay) # ECDF and freq by delay
+inc_distr_days$plot
+
+# Can change bandwidth selector
+inc_distr_days &lt;- ebola_linelist %&gt;%
+  get_time_delay(date_of_infection,
+                 date_of_onset,
+                 time_by = "day",
+                 bw = "nrd")
+inc_distr_days$plot
+
+# Can choose any time units
+inc_distr_weeks &lt;- ebola_linelist %&gt;%
+  get_time_delay(date_of_infection,
+                 date_of_onset,
+                 time_by = "weeks",
+                 bw = "nrd")
+inc_distr_weeks$plot
+
+</code></pre>
+
+
+</div>

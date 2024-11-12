@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>append_values</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Appends all JSON values with a specified type as a new column</h2>
+
+<h3>Description</h3>
+
+<p>The <code>append_values</code> functions let you take any scalar JSON values
+of a given type ("string", "number", "logical") and add them as a new
+column named <code>column.name</code>. This is particularly useful after using
+<code>gather_object</code> to gather an object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">append_values_string(.x, column.name = type, force = TRUE, recursive = FALSE)
+
+append_values_number(.x, column.name = type, force = TRUE, recursive = FALSE)
+
+append_values_logical(.x, column.name = type, force = TRUE, recursive = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a json string or <code>tbl_json</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column.name</code></td>
+<td>
+<p>the name of the column to append values as</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>force</code></td>
+<td>
+<p>should values be coerced to the appropriate type
+when possible, otherwise, types are checked first (requires more
+memory)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recursive</code></td>
+<td>
+<p>logical indicating whether to recurisvely extract a single
+value from a nested object. Only used when <code>force = TRUE</code>. If
+<code>force = FALSE</code>, and <code>recursive = TRUE</code>, throws an error.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Any values that can not be converted to the specified will be <code>NA</code> in
+the resulting column. This includes other scalar types (e.g., numbers or
+logicals if you are using <code>append_values_string</code>) and *also* any rows
+where the JSON is NULL or an object or array.
+</p>
+<p>Note that the <code>append_values</code> functions do not alter the JSON
+attribute of the <code>tbl_json</code> object in any way.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_json</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gather_object</code> to gather an object first,
+<code>spread_all</code> to spread values into new columns,
+<code>json_get_column</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Stack names
+'{"first": "bob", "last": "jones"}' %&gt;%
+  gather_object %&gt;%
+  append_values_string
+
+# This is most useful when data is stored in name-value pairs
+# For example, tags in recipes:
+recipes &lt;- c('{"name": "pie", "tags": {"apple": 10, "pie": 2, "flour": 5}}',
+             '{"name": "cookie", "tags": {"chocolate": 2, "cookie": 1}}')
+recipes %&gt;%
+  spread_values(name = jstring(name)) %&gt;%
+  enter_object(tags) %&gt;%
+  gather_object("tag") %&gt;%
+  append_values_number("count")
+</code></pre>
+
+
+</div>

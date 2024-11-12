@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tess.mcmc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tess.mcmc: Markov chain Monte Carlo simulation using a general Metropolis-Hastings algorithm.</h2>
+
+<h3>Description</h3>
+
+<p>tess.mcmc constructs a Markov chain Monte Carlo sampler (MCMC) by implementing a general Metropolis-Hastings algorithm. Any model can be used where the likelihood is known and thus can be passed in as an argument. The parameters have to be continuous. Proposals are taken from a normal distribution centered around the current value. The varaince of the new proposed values is initalized with 1 but can be automatically optimized when using the option adaptive = TRUE. The algorithm creates sampels from the posterior probility distribution and returns these a CODA mcmc object. More information can be obtained in the vignette about how to apply this method.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tess.mcmc(likelihoodFunction,priors,parameters,logTransforms,delta,
+             iterations,burnin=round(iterations/3),thinning=1,
+             adaptive=TRUE,verbose=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>likelihoodFunction</code></td>
+<td>
+<p>The log-likelihood function which will be called internally by likelihoodFunction(parameters).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priors</code></td>
+<td>
+<p>A list of functions of the log-prior-densities of each parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>The initial parameter value list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logTransforms</code></td>
+<td>
+<p>A vector of booleans telling if log-transform for the parameters should be used (e.g. for rates).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>The variance of new proposed values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>The number of iterations for the MCMC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>The number of iterations to burn before starting the MCMC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thinning</code></td>
+<td>
+<p>The frequency of taking a sample of the parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive</code></td>
+<td>
+<p>Should we use adaptive MCMC?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Do you want detailed information during the run?</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns the posterior samples for the parameters.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sebastian Hoehna</p>
+
+
+<h3>References</h3>
+
+<p>S. Hoehna: Fast simulation of reconstructed phylogenies under global, time-dependent birth-death processes. 2013, Bioinformatics, 29:1367-1374.
+</p>
+<p>S. Hoehna, MR May and BR Moore: TESS: Bayesian inference of lineage diversification rates from (incompletely sampled) molecular phylogenies in R. 2015, Bioinformatics.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load in a test data set
+data(cettiidae)
+
+# convert the phylogeny into the branching times
+times &lt;- as.numeric( branching.times(cettiidae) )
+
+# specify a likelihood function that takes in a vector of parameters
+likelihood &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  lnl &lt;- tess.likelihood(times,b,d,samplingProbability=1.0,log=TRUE)
+  return (lnl)
+}
+
+# specify a the prior functions
+prior.diversification &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+prior.turnover &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+priors &lt;- c(prior.diversification,prior.turnover)
+
+# Note, the number of iterations and the burnin is too small here
+# and should be adapted for real analyses
+samples &lt;- tess.mcmc( likelihood,
+		      priors,
+		      runif(2,0,1),
+		      logTransforms=c(TRUE,TRUE),
+		      delta=c(0.1,0.1),
+		      iterations=100,
+		      burnin=20)
+
+# now summarize and visualize the results
+#plot(samples)
+summary(samples)
+colMeans(samples)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.lda_topic_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get predictions from a Latent Dirichlet Allocation model</h2>
+
+<h3>Description</h3>
+
+<p>Obtains predictions of topics for new documents from a fitted LDA model
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'lda_topic_model'
+predict(
+  object,
+  newdata,
+  method = c("gibbs", "dot"),
+  iterations = NULL,
+  burnin = -1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>a fitted object of class <code>lda_topic_model</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>a DTM or TCM of class <code>dgCMatrix</code> or a numeric vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>one of either "gibbs" or "dot". If "gibbs" Gibbs sampling is used
+and <code>iterations</code> must be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>If <code>method = "gibbs"</code>, an integer number of iterations 
+for the Gibbs sampler to run. A future version may include automatic stopping criteria.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>If <code>method = "gibbs"</code>, an integer number of burnin iterations. 
+If <code>burnin</code> is greater than -1, the entries of the resulting "theta" matrix 
+are an average over all iterations greater than <code>burnin</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to <code>TmParallelApply</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a "theta" matrix with one row per document and one column per topic
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# load some data
+data(nih_sample_dtm)
+
+# fit a model 
+set.seed(12345)
+
+m &lt;- FitLdaModel(dtm = nih_sample_dtm[1:20,], k = 5,
+                 iterations = 200, burnin = 175)
+
+str(m)
+
+# predict on held-out documents using gibbs sampling "fold in"
+p1 &lt;- predict(m, nih_sample_dtm[21:100,], method = "gibbs",
+              iterations = 200, burnin = 175)
+
+# predict on held-out documents using the dot product method
+p2 &lt;- predict(m, nih_sample_dtm[21:100,], method = "dot")
+
+# compare the methods
+barplot(rbind(p1[1,],p2[1,]), beside = TRUE, col = c("red", "blue")) 
+
+## End(Not run)
+</code></pre>
+
+
+</div>

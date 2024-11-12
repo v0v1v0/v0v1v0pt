@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as_music_df</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Noteworthy string to data frame</h2>
+
+<h3>Description</h3>
+
+<p>Convert a noteworthy string to a tibble data frame and include additional
+derivative variables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">as_music_df(
+  notes,
+  info = NULL,
+  key = NULL,
+  scale = "diatonic",
+  chords = c("root", "list", "character"),
+  si_format = c("mmp_abb", "mmp", "ad_abb", "ad")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>notes</code></td>
+<td>
+<p>character, a noteworthy string. Alternatively, a music object
+or a phrase object, in which case <code>info</code> is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p><code>NULL</code> or character, a note info string.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>character, key signature, only required for inclusion of scale
+degrees.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>character, defaults to <code>"diatonic"</code>. Only used in conjunction
+with <code>key</code>, this can be used to alter scale degrees. Not any arbitrary
+combination of valid <code>key</code> and valid <code>scale</code> is valid. See <code>scale_degree()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chords</code></td>
+<td>
+<p>character, how to structure columns containing multiple values
+per chord/row of data frame. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>si_format</code></td>
+<td>
+<p>character, format for scale intervals. See
+<code>scale_interval()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>info</code> is provided or <code>notes</code> is a phrase object, the resulting data frame
+also contains note durations and other info variables. The <code>duration</code> column
+is always included in the output even as a vector of <code>NA</code>s when <code>info = NULL</code>.
+This makes it more explicit that a given music data frame was generated
+without any time information for the timesteps. Other note info columns are
+not included in this case.
+</p>
+<p>For some derived column variables the root note (lowest pitch) in chord is
+used. This is done for pitch intervals and scale intervals between adjacent
+timesteps. This also occurs for scale degrees.
+</p>
+<p><code>chord = "root"</code> additionally collapses columns like semitone, octave, and
+frequency to the value for the root note so that all rows contain one numeric
+value. <code>chord = "list"</code> retains full information as list columns.
+<code>chord = "character"</code> collapses into strings so that values are readily
+visible when printing the table, but information is not stripped and can be
+recovered without recomputing from the original pitches.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a tibble data frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- "a, b, c d e f g# a r ac'e' a c' e' c' r r r a"
+as_music_df(x, key = "c", scale = "major")
+as_music_df(x, key = "am", scale = "harmonic_minor", si_format = "ad_abb")
+
+a &lt;- notate("8", "Start here.")
+time &lt;- paste(a, "8^*2 16-_ 4.. 16( 16)( 2) 2 4. t8- t8 t8- 8[accent]*4 1")
+d1 &lt;- as_music_df(x, time)
+d1
+
+# Go directly from music object to data frame
+m1 &lt;- as_music(x, time)
+d2 &lt;- as_music_df(m1)
+identical(d1, d2)
+
+# Go directly from phrase object to data frame
+p1 &lt;- phrase("a b cgc'", "4-+ 4[accent] 2", 5)
+identical(as_music_df(as_music("a4-+;5 b[accent] cgc'2")), as_music_df(p1))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CreateDtm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert a character vector to a document term matrix.</h2>
+
+<h3>Description</h3>
+
+<p>This is the main document term matrix creating function for <code>textmineR</code>.
+In most cases, all you need to do is import documents as a character vector in R and then 
+run this function to get a document term matrix that is compatible with the 
+rest of <code>textmineR</code>'s functionality and many other libraries. <code>CreateDtm</code>
+is built on top of the excellent <code>text2vec</code> library.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CreateDtm(
+  doc_vec,
+  doc_names = names(doc_vec),
+  ngram_window = c(1, 1),
+  stopword_vec = c(stopwords::stopwords("en"), stopwords::stopwords(source = "smart")),
+  lower = TRUE,
+  remove_punctuation = TRUE,
+  remove_numbers = TRUE,
+  stem_lemma_function = NULL,
+  verbose = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>doc_vec</code></td>
+<td>
+<p>A character vector of documents.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>doc_names</code></td>
+<td>
+<p>A vector of names for your documents. Defaults to 
+<code>names(doc_vec)</code>. If NULL, then doc_names is set to be 
+<code>1:length(doc_vec)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngram_window</code></td>
+<td>
+<p>A numeric vector of length 2. The first entry is the minimum
+n-gram size; the second entry is the maximum n-gram size. Defaults to
+<code>c(1, 1)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopword_vec</code></td>
+<td>
+<p>A character vector of stopwords you would like to remove.
+Defaults to <code>c(stopwords::stopwords("en"), stopwords::stopwords(source = "smart"))</code>. 
+If you do not want stopwords removed, specify <code>stopword_vec = c()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>Do you want all words coerced to lower case? Defaults to <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove_punctuation</code></td>
+<td>
+<p>Do you want to convert all non-alpha numeric 
+characters to spaces? Defaults to <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove_numbers</code></td>
+<td>
+<p>Do you want to convert all numbers to spaces? Defaults 
+to <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stem_lemma_function</code></td>
+<td>
+<p>A function that you would like to apply to the 
+documents for stemming, lemmatization, or similar. See examples for
+usage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Defaults to <code>TRUE</code>. Do you want to see status during 
+vectorization?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to <code>TmParallelApply</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A document term matrix of class <code>dgCMatrix</code>. The rows index 
+documents. The columns index terms. The i, j entries represent the count of 
+term j appearing in document i.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The following transformations are applied to <code>stopword_vec</code> as 
+well as <code>doc_vec</code>: 
+<code>lower</code>, 
+<code>remove_punctuation</code>, 
+<code>remove_numbers</code>
+</p>
+<p>See <code>stopwords</code> for details on the default to the 
+<code>stopword_vec</code> argument.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data(nih_sample)
+
+# DTM of unigrams and bigrams
+dtm &lt;- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT,
+                 doc_names = nih_sample$APPLICATION_ID, 
+                 ngram_window = c(1, 2))
+
+# DTM of unigrams with Porter's stemmer applied
+dtm &lt;- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT,
+                 doc_names = nih_sample$APPLICATION_ID,
+                 stem_lemma_function = function(x) SnowballC::wordStem(x, "porter"))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

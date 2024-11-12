@@ -1,0 +1,227 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>GradeExams</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>GradeExams</h2>
+
+<h3>Description</h3>
+
+<p>Grades an exam given a parsed list by <code>WhichAnswerOriginal</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">GradeExams(
+  ExamAnswerParsedList,
+  name.ColCorrect,
+  name.ColIncorrect,
+  MaxOutputGrade = 100,
+  ExtraPoints = 0,
+  ExtraPointsForAll = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ExamAnswerParsedList</code></td>
+<td>
+<p>List parsed by <code>WhichAnswerOriginal</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name.ColCorrect, name.ColIncorrect</code></td>
+<td>
+<p>The names of the correct and incorrect columns in each answer sheet of the <code>ExamAnswerParsedList</code> respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MaxOutputGrade</code></td>
+<td>
+<p>Maximum score that one should get if you get a perfect score, before couning the <code>ExtraPoints</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ExtraPoints</code></td>
+<td>
+<p>Extra points to be added after scoring the exam. This points are added after the scaling is done with <code>MaxOutputGrade</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ExtraPointsForAll</code></td>
+<td>
+<p>Scalar numeric value, extra points to be given to all student.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The score is first added on the base of the number of questions that are found on every parsed list.
+</p>
+<p>If a question is removed from an exam, not all students may have that question as explained in the "Removing questions from the exam" section. If the total rows of a certain student list is <code class="reqn">n</code>, the score is </p>
+<p style="text-align: center;"><code class="reqn">c / n * MaxOutputGrade</code>
+</p>
+<p>, where <code class="reqn">c</code> is the number of correct answers.
+</p>
+<p>After that is done, the <code>ExtraPoints</code> are added.
+</p>
+
+
+<h3>Value</h3>
+
+<p>It returns the <code>StudentInfo</code> attribute of the parsed list adding the following columns to it
+</p>
+
+<dl>
+<dt><code>$addedPoints</code></dt>
+<dd>
+<p>Individual part of ExtraPoints</p>
+</dd>
+<dt><code>$addedAllPoints</code></dt>
+<dd>
+<p>Extra Points For All</p>
+</dd>
+<dt><code>$maxGrade</code></dt>
+<dd>
+<p> Max number of questions for the exam. (It would be different if when removing a question, some students didn't have a question in that exam)</p>
+</dd>
+<dt><code>$Grade</code></dt>
+<dd>
+<p>Number of correct answers that a student wrote in an exam</p>
+</dd>
+<dt><code>$Grade_Total_Exam</code></dt>
+<dd>
+<p>This is the <code>total_grade</code> as explained on the Extra Points section.</p>
+</dd>
+</dl>
+<h3>Extra Points</h3>
+
+<p>The structure of <code>ExtraPoints</code> and the convention on how the score is calculated taking it into account is worth mentioning in it's own section.
+The score is calculated as:
+</p>
+<p style="text-align: center;"><code class="reqn">total_{grade} = (c + extra_{all}) / (maxn + extra_{all}) * MaxOutputGrade + extra_{individual}</code>
+</p>
+
+<p>Where </p>
+
+<dl>
+<dt><code>c</code></dt>
+<dd>
+<p>Number of correct questions</p>
+</dd>
+<dt><code>extra_all</code></dt>
+<dd>
+<p>Number of extra points for all.
+</p>
+<p>This is thought of to be used as a question that you removed from the exam last minute,
+but that you want to actually count it as correct for every single student. I.e., a question that everyone got correct but it is not taken into consideration in the grading.</p>
+</dd>
+<dt><code>extra_individual</code></dt>
+<dd>
+<p>Number of extra points for that student.</p>
+</dd>
+<dt><code>max_n</code></dt>
+<dd>
+<p>Maximum number of questions in the students exam, which may differ from other students if you had to removed a bugged questions that not everyone had</p>
+</dd>
+<dt><code>MaxOutputGrade</code></dt>
+<dd>
+<p>The scaling to be done. This should be the maximum grade any student "should" get. (The individual extra points are added after the scaling is done)</p>
+</dd>
+</dl>
+<h3>Removing Questions from the exam</h3>
+
+<p>Note that if after creating the exam, you found that a question is bugged and can't be used to grade the exam, all you have to do is tell the student to answer "something" and you only have to remove it from the original/reference version in the Full Answer Sheet. When you apply the grading function, that question will then be ignored.
+</p>
+<p>Notice how this creates output lists with different lengths in the case that two students didn't have that same question in their exam.
+</p>
+<p>For example, if a exam has 15 questions out of a 50 question document. If student A has a bugged question and student B doesn't, the answer sheet produced for student A will have 14 rows while the one for student B will have 15 rows.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Grading Exams: 
+<code>ObtainExamStats()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#First part coming from FindMatchingRow example
+
+asheet_file &lt;-
+    system.file(
+        "extdata",
+        "ExampleTables",
+        "ExampleAnswerSheet.csv",
+        package = "TexExamRandomizer")
+responses_file &lt;-
+    system.file(
+        "extdata",
+        "ExampleTables",
+        "ExampleResponses.csv",
+        package = "TexExamRandomizer")
+FullAnswerSheet &lt;-
+    read.csv(
+        asheet_file,
+        header = TRUE,
+        stringsAsFactors = FALSE,
+        na.strings = c("", "NA", "Na"),
+        strip.white = TRUE)
+Responses &lt;- read.csv(
+    responses_file,
+    header = TRUE,
+    stringsAsFactors = FALSE,
+    na.strings = c("", "NA", "Na"),
+    strip.white = TRUE)
+compiledanswers &lt;-
+    WhichAnswerOriginal(
+        StudentAnswers = Responses,
+        FullExamAnswerSheet = FullAnswerSheet,
+        names.StudentAnswerQCols = grep(
+            names(Responses),
+            pattern = "^Q.*[[:digit:]]",
+            value = TRUE),
+        names.StudentAnswerExamVersion = grep(
+            names(Responses),
+            pattern = "Version",
+            value = TRUE),
+        OriginalExamVersion = 0,
+        names.FullExamVersion = "Version",
+        names.FullExamOriginalCols = grep(
+            names(FullAnswerSheet),
+            pattern = "_original",
+            value = TRUE),
+        names.CorrectAndIncorrectCols = c(
+            "choice",
+            "CorrectChoice")
+    )
+# Actual Code
+
+
+ExtraPoints_individual &lt;- runif(nrow(Responses), min = 1, max = 10)
+ExtraPoints_forall &lt;- 2
+GradedStudentTable &lt;-
+    GradeExams(
+        compiledanswers,
+        name.ColCorrect = "CorrectChoice",
+        name.ColIncorrect = "choice",
+        MaxOutputGrade = 100,
+        ExtraPoints = ExtraPoints_individual,
+        ExtraPointsForAll = ExtraPoints_forall
+    )
+
+
+
+
+</code></pre>
+
+
+</div>

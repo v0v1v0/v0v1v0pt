@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tf_where</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find out where functional data fulfills certain conditions.</h2>
+
+<h3>Description</h3>
+
+<p><code>tf_where</code> allows to define a logical expression about the function values
+and returns the argument values for which that condition is true.<br><code>tf_anywhere</code> is syntactic sugar for <code>tf_where</code> with <code>return = "any"</code> to
+get a logical flag for each function if the condition is <code>TRUE</code> <em>anywhere</em>,
+see below.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tf_where(f, cond, return = c("all", "first", "last", "range", "any"), arg)
+
+tf_anywhere(f, cond, arg)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p>a <code>tf</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cond</code></td>
+<td>
+<p>a logical expression about <code>value</code> (and/or <code>arg</code>) that defines a
+condition about the functions, see examples and details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return</code></td>
+<td>
+<p>for each entry in <code>f</code>, <code>tf_where</code> either returns <em>all</em> <code>arg</code>
+for which <code>cond</code> is true, the <em>first</em>, the <em>last</em> or their <em>range</em> or
+logical flags whether the functions fullfill the condition <em>any</em>where. For
+<code>"range"</code>, note that <code>cond</code> may not be true for all <code>arg</code> values in this
+range, though, this is not checked.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arg</code></td>
+<td>
+<p>optional <code>arg</code>-values on which to evaluate <code>f</code> and check <code>cond</code>,
+defaults to <code>tf_arg(f)</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Entries in <code>f</code> that do not fulfill <code>cond</code> anywhere yield <code>numeric(0)</code>.<br><code>cond</code>  is evaluated as a <code>base::subset()</code>-statement on a <code>data.frame</code>
+containing a single entry in <code>f</code> with columns <code>arg</code> and <code>value</code>, so most
+of the usual <code>dplyr</code> tricks are available as well, see examples.<br>
+Any <code>cond</code>ition evaluates to <code>NA</code> on <code>NA</code>-entries in <code>f</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>depends on  <code>return</code>:
+</p>
+
+<ul>
+<li> <p><code>return = "any"</code>, i.e, <code>anywhere</code>:
+a logical vector of the same length as <code>f</code>.
+</p>
+</li>
+<li> <p><code>return = "all"</code>: a list of vectors of the same length as <code>f</code>, with
+empty vectors for the functions that  never fulfill the <code>cond</code>ition.
+</p>
+</li>
+<li> <p><code>return = "range"</code>: a data frame with columns "begin" and "end".
+</p>
+</li>
+<li>
+<p> else, a numeric vector of the same length as <code>f</code> with <code>NA</code> for entries of
+<code>f</code> that nowhere fulfill the <code>cond</code>ition.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">lin &lt;- 1:4 * tfd(seq(-1, 1, length.out = 11), seq(-1, 1, length.out = 11))
+tf_where(lin, value %inr% c(-1, 0.5))
+tf_where(lin, value %inr% c(-1, 0.5), "range")
+a &lt;- 1
+tf_where(lin, value &gt; a, "first")
+tf_where(lin, value &lt; a, "last")
+tf_where(lin, value &gt; 2, "any")
+tf_anywhere(lin, value &gt; 2)
+
+set.seed(4353)
+f &lt;- tf_rgp(5, 11)
+plot(f, pch = as.character(1:5), points = TRUE)
+tf_where(f, value == max(value))
+# where is the function increasing/decreasing?
+tf_where(f, value &gt; dplyr::lag(value, 1, value[1]))
+tf_where(f, value &lt; dplyr::lead(value, 1, tail(value, 1)))
+# where are the (interior) extreme points (sign changes of `diff(value)`)?
+tf_where(
+  f,
+  sign(c(diff(value)[1], diff(value))) !=
+    sign(c(diff(value), tail(diff(value), 1)))
+)
+# where in its second half is the function positive?
+tf_where(f, arg &gt; 0.5 &amp; value &gt; 0)
+# does the function ever exceed?
+tf_anywhere(f, value &gt; 1)
+</code></pre>
+
+
+</div>

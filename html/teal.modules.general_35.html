@@ -1,0 +1,230 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_g_association</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Stack plots of variables and show association with reference variable</h2>
+
+<h3>Description</h3>
+
+<p>Module provides functionality for visualizing the distribution of variables and
+their association with a reference variable.
+It supports configuring the appearance of the plots, including themes and whether to show associations.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_g_association(
+  label = "Association",
+  ref,
+  vars,
+  show_association = TRUE,
+  plot_height = c(600, 400, 5000),
+  plot_width = NULL,
+  distribution_theme = c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic",
+    "void"),
+  association_theme = c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic",
+    "void"),
+  pre_output = NULL,
+  post_output = NULL,
+  ggplot2_args = teal.widgets::ggplot2_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Reference variable, must accepts a <code>data_extract_spec</code> with <code>select_spec(multiple = FALSE)</code>
+to ensure single selection option.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Variables to be associated with the reference variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_association</code></td>
+<td>
+<p>(<code>logical</code>) optional, whether show association of <code>vars</code>
+with reference variable. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot height as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> intended for use with a slider UI element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot width as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> for a slider encoding the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distribution_theme, association_theme</code></td>
+<td>
+<p>(<code>character</code>) optional, <code>ggplot2</code> themes to be used by default.
+Default to <code>"gray"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed before the module's output,
+providing context or a title.
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed after the module's output,
+adding context or further instructions. Elements like <code>shiny::helpText()</code> are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional, object created by <code>teal.widgets::ggplot2_args()</code>
+with settings for all the plots or named list of <code>ggplot2_args</code> objects for plot-specific settings.
+The argument is merged with options variable <code>teal.ggplot2_args</code> and default module setup.
+</p>
+<p>List names should match the following: <code>c("default", "Bivariate1", "Bivariate2")</code>.
+</p>
+<p>For more details see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For more examples, please see the vignette "Using association plot" via
+<code>vignette("using-association-plot", package = "teal.modules.general")</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(teal.widgets)
+
+# general data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  CO2 &lt;- CO2
+  factors &lt;- names(Filter(isTRUE, vapply(CO2, is.factor, logical(1L))))
+  CO2[factors] &lt;- lapply(CO2[factors], as.character)
+})
+datanames(data) &lt;- c("CO2")
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_g_association(
+      ref = data_extract_spec(
+        dataname = "CO2",
+        select = select_spec(
+          label = "Select variable:",
+          choices = variable_choices(data[["CO2"]], c("Plant", "Type", "Treatment")),
+          selected = "Plant",
+          fixed = FALSE
+        )
+      ),
+      vars = data_extract_spec(
+        dataname = "CO2",
+        select = select_spec(
+          label = "Select variables:",
+          choices = variable_choices(data[["CO2"]], c("Plant", "Type", "Treatment")),
+          selected = "Treatment",
+          multiple = TRUE,
+          fixed = FALSE
+        )
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Association Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  ADSL &lt;- rADSL
+})
+datanames(data) &lt;- "ADSL"
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_g_association(
+      ref = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          label = "Select variable:",
+          choices = variable_choices(
+            data[["ADSL"]],
+            c("SEX", "RACE", "COUNTRY", "ARM", "STRATA1", "STRATA2", "ITTFL", "BMRKR2")
+          ),
+          selected = "RACE",
+          fixed = FALSE
+        )
+      ),
+      vars = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          label = "Select variables:",
+          choices = variable_choices(
+            data[["ADSL"]],
+            c("SEX", "RACE", "COUNTRY", "ARM", "STRATA1", "STRATA2", "ITTFL", "BMRKR2")
+          ),
+          selected = "BMRKR2",
+          multiple = TRUE,
+          fixed = FALSE
+        )
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Association Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,120 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bg_by_date</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function to obtain environmental background organized by date</h2>
+
+<h3>Description</h3>
+
+<p>Function to retrieve background data from occurrence records.
+The background data is organized as a function of the dated
+environmental data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bg_by_date(
+  this_species,
+  buffer_ngbs = NULL,
+  buffer_distance = 1000,
+  n_bg = 50000,
+  process_ngbs_by = 100
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>this_species</code></td>
+<td>
+<p>An object of class sp.temporal.env representing species
+occurrence data organized by date. See <code>ex_by_date</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>buffer_ngbs</code></td>
+<td>
+<p>Number of pixel neighbors used to build the buffer around
+each occurrence point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>buffer_distance</code></td>
+<td>
+<p>Distance (in the same units as raster layers) used to
+create a buffer around occurrence points to sample background data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_bg</code></td>
+<td>
+<p>Number of background points to sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>process_ngbs_by</code></td>
+<td>
+<p>Numeric parameter to improve memory management.
+It process neighbor cells by a quantity specified by the user.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function retrieves background data around species occurrence points,
+sampled based on the dated environmental data provided in <code>this_species</code>.
+Background points are sampled within a buffer around each occurrence point.
+The function returns an object of class sp.temporal.bg, which contains
+background data organized by date. This object is the input of the function
+<code>tenm_selection</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class sp.temporal.bg containing background data
+organized by date. The object is a list with the following components:
+</p>
+
+<ul>
+<li>
+<p> "bg_df": A data.frame with columns for longitude, latitude, year,
+layer_date, layer_path, cell_ids_year, and environmental information.
+</p>
+</li>
+<li>
+<p> Other metadata relevant to background sampling.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+#This code is for running in parallel
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(this_species = abtc,train_prop=0.7)
+abbg &lt;- tenm::bg_by_date(this_species = abex,
+                         buffer_ngbs=10,n_bg=50000)
+future::plan("sequential")
+
+</code></pre>
+
+
+</div>

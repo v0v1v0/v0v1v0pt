@@ -1,0 +1,64 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>worldbank</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Projects funded by the World Bank</h2>
+
+<h3>Description</h3>
+
+<p>From: http://jsonstudio.com/resources/
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">worldbank
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>JSON
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+library(dplyr)
+
+# worldbank is a 500 length character vector of JSON
+length(worldbank)
+
+# Let's look at top level values
+worldbank %&gt;% spread_all %&gt;% glimpse
+
+# Are there any arrays?
+worldbank %&gt;% gather_object %&gt;% json_types %&gt;% count(name, type)
+
+# Get the top 10 sectors by funded project in Africa
+wb_sectors &lt;- worldbank %&gt;%   # 500 Projects funded by the world bank
+  spread_all %&gt;%
+  select(project_name, regionname) %&gt;%
+  enter_object(majorsector_percent) %&gt;% # Enter the 'sector' object
+  gather_array("sector.index") %&gt;%      # Gather the array
+  spread_values(sector = jstring(Name)) # Spread the sector name
+
+# Examine the structured data
+wb_sectors %&gt;% glimpse
+
+# Get the top 10 sectors by funded project in Africa
+wb_sectors %&gt;%
+  filter(regionname == "Africa") %&gt;% # Filter to just Africa
+  count(sector) %&gt;%              # Count by sector
+  arrange(desc(n)) %&gt;%           # Arrange descending
+  top_n(10)                      # Take the top 10
+
+## End(Not run)
+</code></pre>
+
+
+</div>

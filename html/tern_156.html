@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_survival_step</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subgroup treatment effect pattern (STEP) fit for survival outcome</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>This fits the subgroup treatment effect pattern (STEP) models for a survival outcome. The treatment arm
+variable must have exactly 2 levels, where the first one is taken as reference and the estimated
+hazard ratios are for the comparison of the second level vs. the first one.
+</p>
+<p>The model which is fit is:
+</p>
+<p><code>Surv(time, event) ~ arm * poly(biomarker, degree) + covariates + strata(strata)</code>
+</p>
+<p>where <code>degree</code> is specified by <code>control_step()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_survival_step(
+  variables,
+  data,
+  control = c(control_step(), control_coxph())
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>character</code>)<br> list of analysis variables: needs <code>time</code>, <code>event</code>,
+<code>arm</code>, <code>biomarker</code>, and optional <code>covariates</code> and <code>strata</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the dataset containing the variables to summarize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(named <code>list</code>)<br> combined control list from <code>control_step()</code> and <code>control_coxph()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A matrix of class <code>step</code>. The first part of the columns describe the subgroup intervals used
+for the biomarker variable, including where the center of the intervals are and their bounds. The
+second part of the columns contain the estimates for the treatment arm comparison.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For the default degree 0 the <code>biomarker</code> variable is not included in the model.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>control_step()</code> and <code>control_coxph()</code> for the available customization options.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Testing dataset with just two treatment arms.
+library(dplyr)
+
+adtte_f &lt;- tern_ex_adtte %&gt;%
+  filter(
+    PARAMCD == "OS",
+    ARM %in% c("B: Placebo", "A: Drug X")
+  ) %&gt;%
+  mutate(
+    # Reorder levels of ARM to display reference arm before treatment arm.
+    ARM = droplevels(forcats::fct_relevel(ARM, "B: Placebo")),
+    is_event = CNSR == 0
+  )
+labels &lt;- c("ARM" = "Treatment Arm", "is_event" = "Event Flag")
+formatters::var_labels(adtte_f)[names(labels)] &lt;- labels
+
+variables &lt;- list(
+  arm = "ARM",
+  biomarker = "BMRKR1",
+  covariates = c("AGE", "BMRKR2"),
+  event = "is_event",
+  time = "AVAL"
+)
+
+# Fit default STEP models: Here a constant treatment effect is estimated in each subgroup.
+step_matrix &lt;- fit_survival_step(
+  variables = variables,
+  data = adtte_f
+)
+dim(step_matrix)
+head(step_matrix)
+
+# Specify different polynomial degree for the biomarker interaction to use more flexible local
+# models. Or specify different Cox regression options.
+step_matrix2 &lt;- fit_survival_step(
+  variables = variables,
+  data = adtte_f,
+  control = c(control_coxph(conf_level = 0.9), control_step(degree = 2))
+)
+
+# Use a global model with cubic interaction and only 5 points.
+step_matrix3 &lt;- fit_survival_step(
+  variables = variables,
+  data = adtte_f,
+  control = c(control_coxph(), control_step(bandwidth = NULL, degree = 3, num_points = 5L))
+)
+
+</code></pre>
+
+
+</div>

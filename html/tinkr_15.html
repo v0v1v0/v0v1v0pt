@@ -1,0 +1,672 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>yarn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>R6 class containing XML representation of Markdown</h2>
+
+<h3>Description</h3>
+
+<p>Wrapper around an XML representation of a Markdown document. It contains four
+publicly accessible slots: path, yaml, body, and ns.
+</p>
+
+
+<h3>Details</h3>
+
+<p>This class is a fancy wrapper around the results of <code>to_xml()</code> and
+has methods that make it easier to add, analyze, remove, or write elements
+of your markdown document.
+</p>
+
+
+<h3>Public fields</h3>
+
+<div class="r6-fields">
+
+<dl>
+<dt><code>path</code></dt>
+<dd>
+<p>[<code>character</code>] path to file on disk</p>
+</dd>
+<dt><code>yaml</code></dt>
+<dd>
+<p>[<code>character</code>] text block at head of file</p>
+</dd>
+<dt><code>body</code></dt>
+<dd>
+<p>[<code>xml_document</code>] an xml document of the (R)Markdown file.</p>
+</dd>
+<dt><code>ns</code></dt>
+<dd>
+<p>[<code>xml_document</code>] an xml namespace object defining "md" to
+commonmark.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-yarn-new"><code>yarn$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-reset"><code>yarn$reset()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-write"><code>yarn$write()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-show"><code>yarn$show()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-head"><code>yarn$head()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-tail"><code>yarn$tail()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-add_md"><code>yarn$add_md()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-protect_math"><code>yarn$protect_math()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-protect_curly"><code>yarn$protect_curly()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-protect_unescaped"><code>yarn$protect_unescaped()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-yarn-clone"><code>yarn$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-yarn-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Create a new yarn document
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$new(path = NULL, encoding = "UTF-8", sourcepos = FALSE, ...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>path</code></dt>
+<dd>
+<p>[<code>character</code>] path to a markdown episode file on disk</p>
+</dd>
+<dt><code>encoding</code></dt>
+<dd>
+<p>[<code>character</code>] encoding passed to <code>readLines()</code></p>
+</dd>
+<dt><code>sourcepos</code></dt>
+<dd>
+<p>passed to <code>commonmark::markdown_xml()</code>. If <code>TRUE</code>, the
+source position of the file will be included as a "sourcepos" attribute.
+Defaults to <code>FALSE</code>.</p>
+</dd>
+<dt><code>...</code></dt>
+<dd>
+<p>arguments passed on to <code>to_xml()</code>.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>A new yarn object containing an XML representation of a
+(R)Markdown file.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+ex1
+path2 &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex2 &lt;- tinkr::yarn$new(path2)
+ex2
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-reset"></a>
+
+
+
+<h4>Method <code>reset()</code>
+</h4>
+
+<p>reset a yarn document from the original file
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$reset()</pre></div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>
+path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+# OH NO
+ex1$body
+ex1$body &lt;- xml2::xml_missing()
+ex1$reset()
+ex1$body
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-write"></a>
+
+
+
+<h4>Method <code>write()</code>
+</h4>
+
+<p>Write a yarn document to Markdown/R Markdown
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$write(path = NULL, stylesheet_path = stylesheet())</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>path</code></dt>
+<dd>
+<p>path to the file you want to write</p>
+</dd>
+<dt><code>stylesheet_path</code></dt>
+<dd>
+<p>path to the xsl stylesheet to convert XML to markdown.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+ex1
+tmp &lt;- tempfile()
+try(readLines(tmp)) # nothing in the file
+ex1$write(tmp)
+head(readLines(tmp)) # now a markdown file
+unlink(tmp)
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-show"></a>
+
+
+
+<h4>Method <code>show()</code>
+</h4>
+
+<p>show the markdown contents on the screen
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$show(stylesheet_path = stylesheet())</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>stylesheet_path</code></dt>
+<dd>
+<p>path to the xsl stylesheet to convert XML to markdown.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>a character vector with one line for each line in the output
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex2 &lt;- tinkr::yarn$new(path)
+ex2$head(5)
+ex2$tail(5)
+ex2$show()
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-head"></a>
+
+
+
+<h4>Method <code>head()</code>
+</h4>
+
+<p>show the head of the markdown contents on the screen
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$head(n = 6L, stylesheet_path = stylesheet())</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>n</code></dt>
+<dd>
+<p>the number of elements to show from the top. Negative numbers</p>
+</dd>
+<dt><code>stylesheet_path</code></dt>
+<dd>
+<p>path to the xsl stylesheet to convert XML to markdown.
+exclude lines from the bottom</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>a character vector with <code>n</code> elements
+</p>
+
+
+<hr>
+<a id="method-yarn-tail"></a>
+
+
+
+<h4>Method <code>tail()</code>
+</h4>
+
+<p>show the tail of the markdown contents on the screen
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$tail(n = 6L, stylesheet_path = stylesheet())</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>n</code></dt>
+<dd>
+<p>the number of elements to show from the bottom. Negative numbers</p>
+</dd>
+<dt><code>stylesheet_path</code></dt>
+<dd>
+<p>path to the xsl stylesheet to convert XML to markdown.
+exclude lines from the top</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>a character vector with <code>n</code> elements
+</p>
+
+
+<hr>
+<a id="method-yarn-add_md"></a>
+
+
+
+<h4>Method <code>add_md()</code>
+</h4>
+
+<p>add an arbitrary Markdown element to the document
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$add_md(md, where = 0L)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>md</code></dt>
+<dd>
+<p>a string of markdown formatted text.</p>
+</dd>
+<dt><code>where</code></dt>
+<dd>
+<p>the location in the document to add your markdown text.
+This is passed on to <code>xml2::xml_add_child()</code>. Defaults to 0, which
+indicates the very top of the document.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+# two headings, no lists
+xml2::xml_find_all(ex$body, "md:heading", ex$ns)
+xml2::xml_find_all(ex$body, "md:list", ex$ns)
+ex$add_md(
+  "# Hello\n\nThis is *new* formatted text from `{tinkr}`!",
+  where = 1L
+)$add_md(
+  " - This\n - is\n - a new list",
+  where = 2L
+)
+# three headings
+xml2::xml_find_all(ex$body, "md:heading", ex$ns)
+xml2::xml_find_all(ex$body, "md:list", ex$ns)
+tmp &lt;- tempfile()
+ex$write(tmp)
+readLines(tmp, n = 20)
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-protect_math"></a>
+
+
+
+<h4>Method <code>protect_math()</code>
+</h4>
+
+<p>Protect math blocks from being escaped
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$protect_math()</pre></div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "math-example.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+ex$tail() # math blocks are escaped :(
+ex$protect_math()$tail() # math blocks are no longer escaped :)
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-protect_curly"></a>
+
+
+
+<h4>Method <code>protect_curly()</code>
+</h4>
+
+<p>Protect curly phrases <code>{likethat}</code> from being escaped
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$protect_curly()</pre></div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "basic-curly.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+ex$protect_curly()$head()
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-protect_unescaped"></a>
+
+
+
+<h4>Method <code>protect_unescaped()</code>
+</h4>
+
+<p>Protect unescaped square braces from being escaped.
+</p>
+<p>This is applied by default when you use <code>yarn$new(sourcepos = TRUE)</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$protect_unescaped()</pre></div>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>path &lt;- system.file("extdata", "basic-curly.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path, sourcepos = TRUE, unescaped = FALSE)
+ex$tail()
+ex$protect_unescaped()$tail()
+</pre>
+</div>
+
+
+<hr>
+<a id="method-yarn-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>yarn$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+<h3>Note</h3>
+
+<p>this requires the <code>sourcepos</code> attribute to be recorded when the
+object is initialised. See <code>protect_unescaped()</code> for details.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## ------------------------------------------------
+## Method `yarn$new`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+ex1
+path2 &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex2 &lt;- tinkr::yarn$new(path2)
+ex2
+
+## ------------------------------------------------
+## Method `yarn$reset`
+## ------------------------------------------------
+
+
+path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+# OH NO
+ex1$body
+ex1$body &lt;- xml2::xml_missing()
+ex1$reset()
+ex1$body
+
+## ------------------------------------------------
+## Method `yarn$write`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "example1.md", package = "tinkr")
+ex1 &lt;- tinkr::yarn$new(path)
+ex1
+tmp &lt;- tempfile()
+try(readLines(tmp)) # nothing in the file
+ex1$write(tmp)
+head(readLines(tmp)) # now a markdown file
+unlink(tmp)
+
+## ------------------------------------------------
+## Method `yarn$show`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex2 &lt;- tinkr::yarn$new(path)
+ex2$head(5)
+ex2$tail(5)
+ex2$show()
+
+## ------------------------------------------------
+## Method `yarn$add_md`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "example2.Rmd", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+# two headings, no lists
+xml2::xml_find_all(ex$body, "md:heading", ex$ns)
+xml2::xml_find_all(ex$body, "md:list", ex$ns)
+ex$add_md(
+  "# Hello\n\nThis is *new* formatted text from `{tinkr}`!",
+  where = 1L
+)$add_md(
+  " - This\n - is\n - a new list",
+  where = 2L
+)
+# three headings
+xml2::xml_find_all(ex$body, "md:heading", ex$ns)
+xml2::xml_find_all(ex$body, "md:list", ex$ns)
+tmp &lt;- tempfile()
+ex$write(tmp)
+readLines(tmp, n = 20)
+
+## ------------------------------------------------
+## Method `yarn$protect_math`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "math-example.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+ex$tail() # math blocks are escaped :(
+ex$protect_math()$tail() # math blocks are no longer escaped :)
+
+## ------------------------------------------------
+## Method `yarn$protect_curly`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "basic-curly.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path)
+ex$protect_curly()$head()
+
+## ------------------------------------------------
+## Method `yarn$protect_unescaped`
+## ------------------------------------------------
+
+path &lt;- system.file("extdata", "basic-curly.md", package = "tinkr")
+ex &lt;- tinkr::yarn$new(path, sourcepos = TRUE, unescaped = FALSE)
+ex$tail()
+ex$protect_unescaped()$tail()
+</code></pre>
+
+
+</div>

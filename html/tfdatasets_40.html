@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset_snapshot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Persist the output of a dataset</h2>
+
+<h3>Description</h3>
+
+<p>Persist the output of a dataset
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset_snapshot(
+  dataset,
+  path,
+  compression = c("AUTO", "GZIP", "SNAPPY", "None"),
+  reader_func = NULL,
+  shard_func = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A tensorflow dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>Required. A directory to use for storing/loading the snapshot to/from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>compression</code></td>
+<td>
+<p>Optional. The type of compression to apply to the snapshot
+written to disk. Supported options are <code>"GZIP"</code>, <code>"SNAPPY"</code>, <code>"AUTO"</code> or
+<code>NULL</code> (values of <code>""</code>, <code>NA</code>, and <code>"None"</code> are synonymous with <code>NULL</code>)
+Defaults to <code>AUTO</code>, which attempts to pick an appropriate compression
+algorithm for the dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reader_func</code></td>
+<td>
+<p>Optional. A function to control how to read data from
+snapshot shards.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shard_func</code></td>
+<td>
+<p>Optional. A function to control how to shard data when writing
+a snapshot.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The snapshot API allows users to transparently persist the output of their
+preprocessing pipeline to disk, and materialize the pre-processed data on a
+different training run.
+</p>
+<p>This API enables repeated preprocessing steps to be consolidated, and allows
+re-use of already processed data, trading off disk storage and network
+bandwidth for freeing up more valuable CPU resources and accelerator compute
+time.
+</p>
+<p>https://github.com/tensorflow/community/blob/master/rfcs/20200107-tf-data-snapshot.md
+has detailed design documentation of this feature.
+</p>
+<p>Users can specify various options to control the behavior of snapshot,
+including how snapshots are read from and written to by passing in
+user-defined functions to the <code>reader_func</code> and <code>shard_func</code> parameters.
+</p>
+<p><code>shard_func</code> is a user specified function that maps input elements to
+snapshot shards.
+</p>
+<div class="sourceCode R"><pre>NUM_SHARDS &lt;- parallel::detectCores()
+dataset %&gt;%
+  dataset_enumerate() %&gt;%
+  dataset_snapshot(
+    "/path/to/snapshot/dir",
+    shard_func = function(index, ds_elem) x %% NUM_SHARDS) %&gt;%
+  dataset_map(function(index, ds_elem) ds_elem)
+</pre></div>
+<p><code>reader_func</code> is a user specified function that accepts a single argument:
+a Dataset of Datasets, each representing a "split" of elements of the
+original dataset. The cardinality of the input dataset matches the
+number of the shards specified in the <code>shard_func</code>. The function
+should return a Dataset of elements of the original dataset.
+</p>
+<p>Users may want specify this function to control how snapshot files should be
+read from disk, including the amount of shuffling and parallelism.
+</p>
+<p>Here is an example of a standard reader function a user can define. This
+function enables both dataset shuffling and parallel reading of datasets:
+</p>
+<div class="sourceCode R"><pre>user_reader_func &lt;- function(datasets) {
+  num_cores &lt;- parallel::detectCores()
+  datasets %&gt;%
+    dataset_shuffle(num_cores) %&gt;%
+    dataset_interleave(function(x) x, num_parallel_calls=AUTOTUNE)
+}
+
+dataset &lt;- dataset %&gt;%
+  dataset_snapshot("/path/to/snapshot/dir",
+                   reader_func = user_reader_func)
+</pre></div>
+<p>By default, snapshot parallelizes reads by the number of cores available on
+the system, but will not attempt to shuffle the data.
+</p>
+
+
+</div>

@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmc_replica_exchange_mc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Runs one step of the Replica Exchange Monte Carlo</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Parallel_tempering">Replica Exchange Monte Carlo</a>
+is a Markov chain Monte Carlo (MCMC) algorithm that is also known as Parallel Tempering.
+This algorithm performs multiple sampling with different temperatures in parallel,
+and exchanges those samplings according to the Metropolis-Hastings criterion.
+The <code>K</code> replicas are parameterized in terms of <code>inverse_temperature</code>'s,
+<code style="white-space: pre;">⁠(beta[0], beta[1], ..., beta[K-1])⁠</code>.  If the target distribution has
+probability density <code>p(x)</code>, the <code>kth</code> replica has density <code>p(x)**beta_k</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmc_replica_exchange_mc(
+  target_log_prob_fn,
+  inverse_temperatures,
+  make_kernel_fn,
+  swap_proposal_fn = tfp$mcmc$replica_exchange_mc$default_swap_proposal_fn(1),
+  state_includes_replicas = FALSE,
+  seed = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>target_log_prob_fn</code></td>
+<td>
+<p>Function which takes an argument like
+<code>current_state</code> (if it's a list <code>current_state</code> will be unpacked) and returns its
+(possibly unnormalized) log-density under the target distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inverse_temperatures</code></td>
+<td>
+<p><code style="white-space: pre;">⁠1D⁠</code> Tensor of inverse temperatures to perform
+samplings with each replica. Must have statically known <code>shape</code>.
+<code>inverse_temperatures[0]</code> produces the states returned by samplers,
+and is typically == 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>make_kernel_fn</code></td>
+<td>
+<p>Function which takes target_log_prob_fn and seed
+args and returns a TransitionKernel instance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>swap_proposal_fn</code></td>
+<td>
+<p>function which take a number of replicas, and
+return combinations of replicas for exchange.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state_includes_replicas</code></td>
+<td>
+<p>Boolean indicating whether the leftmost dimension
+of each state sample should index replicas. If <code>TRUE</code>, the leftmost
+dimension of the <code>current_state</code> kwarg to <code>tfp.mcmc.sample_chain</code> will
+be interpreted as indexing replicas.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>integer to seed the random number generator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to Ops created by this function.
+Default value: <code>NULL</code> (i.e., "remc_kernel").</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Typically <code>beta[0] = 1.0</code>, and <code style="white-space: pre;">⁠1.0 &gt; beta[1] &gt; beta[2] &gt; ... &gt; 0.0⁠</code>.
+</p>
+
+<ul>
+<li> <p><code>beta[0] == 1</code> ==&gt; First replicas samples from the target density, <code>p</code>.
+</p>
+</li>
+<li> <p><code>beta[k] &lt; 1</code>, for <code style="white-space: pre;">⁠k = 1, ..., K-1⁠</code> ==&gt; Other replicas sample from
+"flattened" versions of <code>p</code> (peak is less high, valley less low).  These
+distributions are somewhat closer to a uniform on the support of <code>p</code>.
+Samples from adjacent replicas <code>i</code>, <code>i + 1</code> are used as proposals for each
+other in a Metropolis step.  This allows the lower <code>beta</code> samples, which
+explore less dense areas of <code>p</code>, to occasionally be used to help the
+<code>beta == 1</code> chain explore new regions of the support.
+Samples from replica 0 are returned, and the others are discarded.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>list of
+<code>next_state</code> (Tensor or Python list of <code>Tensor</code>s representing the state(s)
+of the Markov chain(s) at each result step. Has same shape as
+and <code>current_state</code>.) and
+<code>kernel_results</code> (<code>collections$namedtuple</code> of internal calculations used to
+'advance the chain).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other mcmc_kernels: 
+<code>mcmc_dual_averaging_step_size_adaptation()</code>,
+<code>mcmc_hamiltonian_monte_carlo()</code>,
+<code>mcmc_metropolis_adjusted_langevin_algorithm()</code>,
+<code>mcmc_metropolis_hastings()</code>,
+<code>mcmc_no_u_turn_sampler()</code>,
+<code>mcmc_random_walk_metropolis()</code>,
+<code>mcmc_simple_step_size_adaptation()</code>,
+<code>mcmc_slice_sampler()</code>,
+<code>mcmc_transformed_transition_kernel()</code>,
+<code>mcmc_uncalibrated_hamiltonian_monte_carlo()</code>,
+<code>mcmc_uncalibrated_langevin()</code>,
+<code>mcmc_uncalibrated_random_walk()</code>
+</p>
+
+
+</div>

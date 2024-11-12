@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>count.SpatVector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Count the observations in each <code>SpatVector</code> group</h2>
+
+<h3>Description</h3>
+
+<p><code>count()</code> lets you quickly count the unique values of one or more variables:
+</p>
+
+<ul>
+<li> <p><code>df %&gt;% count(a, b)</code> is roughly equivalent to
+<code>df %&gt;% group_by(a, b) %&gt;% summarise(n = n())</code>.
+</p>
+</li>
+<li> <p><code>count()</code> is paired with <code>tally()</code>, a lower-level helper that is equivalent
+to <code>df %&gt;% summarise(n = n())</code>.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatVector'
+count(
+  x,
+  ...,
+  wt = NULL,
+  sort = FALSE,
+  name = NULL,
+  .drop = group_by_drop_default(x),
+  .dissolve = TRUE
+)
+
+## S3 method for class 'SpatVector'
+tally(x, wt = NULL, sort = FALSE, name = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>SpatVector</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Variables to group
+by.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wt</code></td>
+<td>
+<p>Not implemented on this method</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>If <code>TRUE</code>, will show the largest groups at the top.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>The name of the new column in the output.
+</p>
+<p>If omitted, it will default to <code>n</code>. If there's already a column called <code>n</code>,
+it will use <code>nn</code>. If there's a column called <code>n</code> and <code>nn</code>, it'll use
+<code>nnn</code>, and so on, adding <code>n</code>s until it gets a new name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.drop</code></td>
+<td>
+<p>Handling of factor levels that don't appear in the data, passed
+on to <code>group_by()</code>.
+</p>
+<p>For <code>count()</code>: if <code>FALSE</code> will include counts for empty groups (i.e. for
+levels of factors that don't exist in the data).
+</p>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> For <code>add_count()</code>: deprecated since it
+can't actually affect the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.dissolve</code></td>
+<td>
+<p>logical. Should borders between aggregated geometries
+be dissolved?</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>SpatVector</code> object with an additional attribute.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>terra::aggregate()</code>
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>dplyr::count()</code> family functions for
+<code>SpatVector</code> objects.
+</p>
+<p><code>tally()</code> will always return a disaggregated geometry while <code>count()</code> can
+handle this. See also <code>summarise.SpatVector()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dplyr::count()</code>, <code>dplyr::tally()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on group of rows:
+<code>group-by.SpatVector</code>,
+<code>rowwise.SpatVector()</code>,
+<code>summarise.SpatVector()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_cols.SpatVector</code>,
+<code>bind_rows.SpatVector</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>filter.Spat</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>rowwise.SpatVector()</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(terra)
+f &lt;- system.file("ex/lux.shp", package = "terra")
+p &lt;- vect(f)
+
+
+p %&gt;% count(NAME_1, sort = TRUE)
+
+p %&gt;% count(NAME_1, sort = TRUE)
+
+p %&gt;% count(pop = ifelse(POP &lt; 20000, "A", "B"))
+
+# tally() is a lower-level function that assumes you've done the grouping
+p %&gt;% tally()
+
+p %&gt;%
+  group_by(NAME_1) %&gt;%
+  tally()
+
+# Dissolve geometries by default
+
+library(ggplot2)
+p %&gt;%
+  count(NAME_1) %&gt;%
+  ggplot() +
+  geom_spatvector(aes(fill = n))
+
+# Opt out
+p %&gt;%
+  count(NAME_1, .dissolve = FALSE, sort = TRUE) %&gt;%
+  ggplot() +
+  geom_spatvector(aes(fill = n))
+
+</code></pre>
+
+
+</div>

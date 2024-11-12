@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>readflirJPG</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Reads an image from a FLIR JPG file into an integer array.
+</h2>
+
+<h3>Description</h3>
+
+<p>Reads an image from a FLIR JPG file into an integer matrix, w pixels wide x h pixels high, depending on image size.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">readflirJPG(imagefile, exiftoolpath = "installed", headerindex=1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>imagefile</code></td>
+<td>
+
+<p>Name of the FLIR JPG file to read from, as captured by the thermal camera.  A character string.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exiftoolpath</code></td>
+<td>
+
+<p>A character string that determines whether Exiftool has been "installed" (http://www.sno.phy.queensu.ca/~phil/exiftool/) or not.  If Exiftool has been installed in a specific location, use to direct to the folder location.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>headerindex</code></td>
+<td>
+
+<p>An integer defining which TIFF or PNG detected header to use as the thermal image data.  Default = 1, since most files will only have one detected header, but sometimes when exiftool extracts the raw thermal data, it produces more than one head in the tempfile.  This might be the case with FLIR cameras and files with fused digital and thermal image data.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Only tested on a select number of FLIR JPGs.  Usage depends on functionality provided by Exiftool.  At present this function first makes use of readBin to read in thermal image jpgs and searches for the magic start byte sequence ("54", "49", "46", "46","49", "49") for TIFF type images or ("89", "50", "4e", "47", "0d", "0a", "1a", "0a") for PNG type images, and then uses the readTIFF or readPNG functions to load into R.
+</p>
+<p>Exiftool should install on most operating systems.  Consult with http://www.sno.phy.queensu.ca/~phil/exiftool/ for information on installing Exiftool.  If trouble installing, download Exiftool and set exiftoolpath to the custom folder location.  To test if the custom path to Exiftool will work on your OS, try your own system or system2 call: system2("/custompath/exiftool") to see if you get an error or not.
+</p>
+<p>v 2.2.3: updated to fix a problem calling shell commands requiring folder write access on a windows OS (thanks to John Al-Alawneh)
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a matrix of integer values, corresponding the calibrated raw thermal image radiance values.  Can be converted to temperature estimates using the raw2temp() function.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Loading image files and manipulating them in R is slow.  Consider using command line tools like exiftool, imagemagick, and ffmpeg to convert the files into a format to analyse in ImageJ, where more powerful plug-ins can be accessed. 
+</p>
+<p>Alternatively, convertflirjpg and convertflirvid functions are wrappers that will call command line tools and convert flir files in the shell environment.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Glenn J Tattersall
+</p>
+
+
+<h3>References</h3>
+
+<p>1. Exiftool Command line tool: http://www.sno.phy.queensu.ca/~phil/exiftool/
+</p>
+<p>2. Simon Urbanek (2013). tiff: Read and write TIFF images. R package version
+0.1-5. https://CRAN.R-project.org/package=tiff
+</p>
+<p>3.  Simon Urbanek (2013). png: Read and write PNG images. R package version 0.1-7.
+https://CRAN.R-project.org/package=png
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>temp2raw</code>
+<code>raw2temp</code>
+<code>convertflirJPG</code>
+<code>convertflirVID</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+## Example using the flirsettings and readflirjpg functions
+
+library(Thermimage)
+## Sample flir jpg included with Thermimage package:
+
+imagefile&lt;-paste0(system.file("extdata/IR_2412.jpg", package="Thermimage"))
+
+## Extract meta-tags from thermal image file ##
+cams&lt;-flirsettings(imagefile, exiftool="installed", camvals="")
+cams
+
+## Set variables for calculation of temperature values from raw A/D sensor data  ####
+Emissivity&lt;-cams$Info$Emissivity      # Image Saved Emissivity - should be ~0.95 or 0.96
+ObjectEmissivity&lt;-0.96                # Object Emissivity - should be ~0.95 or 0.96
+dateOriginal&lt;-cams$Dates$DateTimeOriginal
+dateModif&lt;-   cams$Dates$FileModificationDateTime
+PlanckR1&lt;-    cams$Info$PlanckR1                      # Planck R1 constant for camera  
+PlanckB&lt;-     cams$Info$PlanckB                       # Planck B constant for camera  
+PlanckF&lt;-     cams$Info$PlanckF                       # Planck F constant for camera
+PlanckO&lt;-     cams$Info$PlanckO                       # Planck O constant for camera
+PlanckR2&lt;-    cams$Info$PlanckR2                      # Planck R2 constant for camera
+OD&lt;-          cams$Info$ObjectDistance                # object distance in metres
+FD&lt;-          cams$Info$FocusDistance                 # focus distance in metres
+ReflT&lt;-       cams$Info$ReflectedApparentTemperature  # Reflected apparent temperature
+AtmosT&lt;-      cams$Info$AtmosphericTemperature        # Atmospheric temperature
+IRWinT&lt;-      cams$Info$IRWindowTemperature           # IR Window Temperature
+IRWinTran&lt;-   cams$Info$IRWindowTransmission          # IR Window transparency
+RH&lt;-          cams$Info$RelativeHumidity              # Relative Humidity
+h&lt;-           cams$Info$RawThermalImageHeight         # sensor height (i.e. image height)
+w&lt;-           cams$Info$RawThermalImageWidth          # sensor width (i.e. image width)
+
+## Import image from flir jpg to obtain binary data
+img&lt;-readflirJPG(imagefile)
+
+## Rotate image before plotting
+imgr&lt;-rotate270.matrix(img)
+
+## Plot initial image of raw binary data
+library(fields)
+image.plot(imgr, useRaster=TRUE, col=ironbowpal)
+
+## Convert binary data to temperature
+
+## Consider whether you should change any of the following: 
+## ObjectEmissivity, OD, RH, ReflT, AtmosT, IRWinT, IRWinTran
+
+temperature&lt;-raw2temp(imgr,ObjectEmissivity,OD,ReflT,AtmosT,IRWinT,IRWinTran,RH,
+                      PlanckR1,PlanckB,PlanckF,PlanckO,PlanckR2)
+colnames(temperature)&lt;-NULL
+rownames(temperature)&lt;-NULL
+
+## Plot temperature image using fields package
+t&lt;-temperature
+image.plot(t, asp=h/w, bty="n", useRaster=TRUE, xaxt="n", yaxt="n", col=ironbowpal)
+
+## Plot temperature image using ggplot2
+library(ggplot2)
+library(reshape2)
+d&lt;-melt(temperature)
+
+p&lt;-ggplot(d, aes(Var1, Var2))+
+  geom_raster(aes(fill=value))+coord_fixed()+
+  scale_fill_gradientn(colours=ironbowpal)+
+  theme_void()+
+  theme(legend.key.height=unit(2, "cm"), legend.key.width=unit(0.5, "cm"))
+p
+
+
+## Export Temperature Data to CSV file
+## Must rotate image 90 degrees before exporting
+## This csv file can be imported into imageJ (File-Import-Text Image) for open source image
+## analysis options of accurate thermal image data.  If you have many csv files, consider
+## writing a macro, see:
+## http://imagej.1557.x6.nabble.com/open-text-image-sequence-td4999149.html
+
+
+f.temperature&lt;-"IR_2412.csv"
+write.csv(rotate90.matrix(temperature), f.temperature, row.names=FALSE)
+
+
+## End(Not run)
+
+## See also https://github.com/gtatters/Thermimage/README.md
+
+</code></pre>
+
+
+</div>

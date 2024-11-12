@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>create.diffsmatrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate Matrix of Distances between Peaks</h2>
+
+<h3>Description</h3>
+
+<p>Generate an array of goodness-of-fit (or distance) between samples and
+knowns based on the sizes (in base pairs) of TRFLP peaks.  For each
+sample/known combination, and for each enzyme/primer combination, this
+calculates the minimum distance between any peak in the sample and the
+single peak in the known.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">create.diffsmatrix(samples, knowns)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>samples</code></td>
+<td>
+<p>A <code>TRAMPsamples</code> object, containing
+unidentified samples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>knowns</code></td>
+<td>
+<p>A <code>TRAMPknowns</code> object, containing
+identified TRFLP patterns.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function will rarely need to be called directly, but does most of
+the calculations behind <code>TRAMP</code>, so it is useful to
+understand how this works.
+</p>
+<p>This function generates a three-dimensional <code class="reqn">s \times k \times
+    n</code> matrix of the (smallest, see below) distance in base
+pairs between peaks in a collection of unknowns (run data) and a
+database of knowns for several enzyme/primer combinations.  <code class="reqn">s</code> is
+the number of different samples in the samples data
+(<code>length(labels(samples))</code>), <code class="reqn">k</code> is the number of different
+types in the knowns database (<code>length(labels(knowns))</code>), and
+<code class="reqn">n</code> is the number of different enzyme/primer combinations.  The
+enzyme/primer combinations used are all combinations present in the
+knowns database; combinations present only in the samples will be
+ignored.  Not all samples need contain all enzyme/primer combinations
+present in the knowns.
+</p>
+<p>In the resulting array, <code>m[i,j,k]</code> is the difference (in base
+pairs) between the <code>i</code>th sample and the <code>j</code>th known for the
+<code>k</code>th enzyme/primer combination.  The ordering of the <code class="reqn">n</code>
+enzyme/primer combinations is arbitrary, so a data.frame of
+combinations is included as the attribute <code>enzyme.primer</code>, where
+<code>enzyme.primer$enzyme[k]</code> and <code>enzyme.primer$primer[k]</code>
+correspond to enzyme and primer used for the distances in
+<code>m[,,k]</code>.
+</p>
+<p>Each case in the knowns database has a single (or no) peak for each
+enzyme/primer combination, but each sample may contain multiple peaks
+for an enzyme/primer combination; the difference is always the
+smallest distance from the sample to the known peak.  Where a sample
+and/or a known lacks an enzyme/primer combination, the value of the
+difference is <code>NA</code>.  The smallest <em>absolute</em> distance is
+taken between sample and known peaks, but the sign of the difference
+is preserved (negative where the closest sample peak was less than the
+known peak, positive where greater; see <code>absolute.min</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A three-dimensional matrix, with an attribute <code>enzyme.primer</code>,
+described above.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TRAMP</code>, which uses output from
+<code>create.diffsmatrix</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(demo.samples)
+data(demo.knowns)
+
+s &lt;- length(labels(demo.samples))
+k &lt;- length(labels(demo.knowns))
+n &lt;- nrow(unique(demo.knowns$data[c("enzyme", "primer")]))
+
+m &lt;- create.diffsmatrix(demo.samples, demo.knowns)
+
+dim(m)
+identical(dim(m), c(s, k, n))
+
+## Maximum error for each sample/known (i.e. across all enzyme/primer
+## combinations), similar to how calculated by \link{TRAMP}
+error &lt;- apply(abs(m), 1:2, max, na.rm=TRUE)
+dim(error)
+
+## Euclidian error (see ?\link{TRAMP})
+error.euclid &lt;- sqrt(rowSums(m^2, TRUE, 2))/rowSums(!is.na(m), dims=2)
+
+## Euclidian and maximum error will require different values of
+## accept.error in TRAMP:
+plot(error, error.euclid, pch=".")
+</code></pre>
+
+
+</div>

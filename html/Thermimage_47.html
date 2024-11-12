@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>qabs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Estimates the absorbed solar and infrared radiation (W/m2)
+</h2>
+
+<h3>Description</h3>
+
+<p>Estimates the absorbed solar radiation and infrared radiation (W/m2) of an object using known physical relationships. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">qabs(Ta = 20, Tg = NULL, RH = 0.5, E = 0.96, rho = 0.1, cloud = 0, SE = 100)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Ta</code></td>
+<td>
+
+<p>Air temperature (degrees Celsius).  Default value is 20.  Used to estimate ground temperature if Tg is unavailable.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Tg</code></td>
+<td>
+
+<p>Ground temperature (degrees Celsius).  Default value is NULL, but a measured Tg can be substituted or estimated with other functions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RH</code></td>
+<td>
+
+<p>Relative humidity (fraction 0 to 1).  Default value is 0.5.  Used in call to Ld() to determine incoming radiation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>E</code></td>
+<td>
+
+<p>Emissivity (fraction 0 to 1) of the object absorbing longwave radiation.  According to Kirschoff's law, emissivity = absorptivity.  Absorptivity is multiplied by the average of the incoming longwave radiation to estimate absorbed radiation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+
+<p>Reflectivity (fraction 0 to 1) of the object absorbing solar radiation.  Used to modify absorbed solar energy.  Default is 0.1.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cloud</code></td>
+<td>
+
+<p>Fractional cloud cover (fraction from 0 to 1).  Used in call to Ld() to determine incoming radiation.  Default is 0.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SE</code></td>
+<td>
+
+<p>Solar energy (W/m2), usually measured.  Default is 100.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Total solar radiation must be supplied at this stage.  The calculation here provides the worst case scenario since since no profile/angle metrics are yet taken into account.  The animal could change orientation to/away from solar beam.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Glenn J Tattersall
+</p>
+
+
+<h3>References</h3>
+
+<p>Blaxter, 1986.  Energy metabolism in animals and man.  Cambridge University Press, Cambridge, UK, 340 pp.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Ld</code>
+<code>Lu</code>
+<code>Ld</code>
+<code>qrad</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## The function is currently defined as
+function (Ta = 25, Tg = NULL, RH = 0.5, E = 0.96, rho = 0.1, 
+    cloud = 0, SE = 100) 
+{
+    if (length(SE) == 1) 
+        SE &lt;- rep(SE, length(Ta))
+    if (is.null(Tg)) 
+        Tg &lt;- Tg(Ta, SE)
+    Ld &lt;- Ld(Ta, RH = RH, n = cloud)
+    Lu &lt;- Lu(Tg)
+    IR &lt;- E * (Lu + Ld)/2
+    qabs &lt;- (1 - rho) * SE + IR
+    qabs
+  }
+  
+# Example:
+Ta&lt;-25
+Tg&lt;-30
+RH&lt;-0.5
+E&lt;-0.96
+rho&lt;-0.1
+cloud=0
+SE&lt;-100
+qabs(Ta, Tg, RH, E, rho, cloud, SE)
+
+# If Tg is unknown it can be set to NULL, and the qabs function will estimate Tg from
+# an empirical relationship of Tg vs Ta and SE from the Tground() function
+
+qabs(Ta, Tg=NULL, RH, E, rho, cloud, SE)
+
+# For detailed examples and explanations, see:
+# https://github.com/gtatters/Thermimage/blob/master/HeatTransferCalculations.md
+  
+</code></pre>
+
+
+</div>

@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>teqrOCact</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Activity Constrained for Toxicity (ACT) design trial simulator</h2>
+
+<h3>Description</h3>
+
+<p>The activity constrained for toxicity (ACT) design implements a cumulative cohort design in conjunction with safety rules similar to those from the toxicity equivalence range design or the modified toxicity probability interval design. The unique feature of this design is that dose is escalated based on lack of activity rather than on lack of toxicity and is de-escalated only if an unacceptable level of toxicity is experienced.     
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">teqrOCact(sim,firstdose,proba,probc,cohortSize,MaxNoCohorts,
+RP2Dss,pTarget,eq1,eq2,tootoxic,toxcon,llactivity)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sim</code></td>
+<td>
+<p>Number of trial simulations desired. We recommend at least 1000. The example runs 500 to meet R package time limits.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>firstdose</code></td>
+<td>
+<p>Dose level where the trial will start. The default setting is 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proba</code></td>
+<td>
+<p>Vector of activities associated with the dose elvels from 1 to n</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probc</code></td>
+<td>
+<p>Vector of toxicities associated with the dose levels from 1 to n 
+(e.g probt=c(0.05,0.15,0.23,0.34,0.51,0.76) for dose levels 1 to 6.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cohortSize</code></td>
+<td>
+<p>Number of subjects per cohort. The default setting is 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MaxNoCohorts</code></td>
+<td>
+<p>Highest number of cohorts possible. The default setting is 30.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RP2Dss</code></td>
+<td>
+<p>Desired sample size at the recommended phase 2 dose (RP2D). The default setting is 12.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pTarget</code></td>
+<td>
+<p>Target activity probability at the RP2D.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eq1</code></td>
+<td>
+<p>Range subtracted from pTarget to achieve the lower boundary for the equivalence range.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eq2</code></td>
+<td>
+<p>Range added to pTarget to achieve the upper boundary for the equivalence range.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tootoxic</code></td>
+<td>
+<p>Toxicity probability deemed too high to allow further study at a dose level. Default is set to 1.01 and should not be changed in studing the ACT design.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>toxcon</code></td>
+<td>
+<p>toxicity constaint level</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>llactivity</code></td>
+<td>
+<p>Required lower limit of activity to end the trial</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>teqrOCact outputs the trial simulation operating characteristics, the simulation data sets, and all the simulation parameters.  The simulation operating characteristics include, i) the average number of subjects studied at each dose level, ii) the rate the dose level is chosen as the RP2D (including if there is no RP2D identified), iii) median study sample size, iv) mean study event rate, v) mean event rate at the RP2D, vi) mean 95% confidence interval length for the event rate at the RP2D, vii) mean toxicity rate at the the RP2D, viii) proportion of the trials with sample size at or above the level desired at the RP2D, viii) number of simulated trials that do not determine an RP2D and ix) number of simulated trials.
+</p>
+<p>Datasets:
+</p>
+<p>simData$simresults gives a line of data for each cohort.
+The columns are:
+simNo - simulation number, 
+doselevel - dose level, 
+act - the number of subjects that achieve the activity endpoint in the cohort,
+toxC - the number of subjects that experience a toxicity in the cohort,
+cumact - the cumulative rate of subjects achieving the activity endpoint at that dose level, and
+cumtoxC - the cumulative rate of subjects experiencing toxicity at that dose level.
+</p>
+<p>DLdata gives a line of data for each dose level. The columns are:
+simNo - simulation number,
+doselevel - dose level,
+sact - sum of the number of subjects that achieve the activity endpoint at that doselevel,
+stoxC - sum of the number of subjects that experience the toxicity endpoint at that dose level,  
+dllength - number of subjects studied at a doselevel,
+actl - lower limit of the 95% confidence limits for the activity rate,
+actu - upperlimit of the 95% confidence limits for the activity rate, 
+actest - activity rate estimate at that doselevel, and
+toxCests - toxicity rate estimate at that doselevel.
+</p>
+<p>RP2Ddata gives a line of data at the RP2D dose selected. The columns names are the same as for DLdata.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>M.S. Blanchard &lt;sblanchard@coh.org&gt;</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(1111)
+OperChar&lt;-teqrOCact(
+sim=500,
+firstdose=2,
+proba=c(0.65,0.75,0.85,1.00), 
+probc=c(0.10,0.20,0.30,0.40),
+cohortSize=3,
+MaxNoCohorts=30,
+RP2Dss=12,
+pTarget=1.00,  
+eq1=0.34,
+eq2=0.0,
+toxcon=0.34,
+llactivity=0.66)
+OperChar
+</code></pre>
+
+
+</div>

@@ -1,0 +1,248 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>run_law</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate mobility flows based on different trip distribution laws</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates mobility flows using different distribution laws.
+As described in Lenormand et al. (2016), we
+propose a two-step approach to generate mobility flows by separating the trip
+distribution law, gravity or intervening opportunities, from the modeling
+approach used to generate the flows from this law. This function only uses
+the first step to generate a probability distribution based on the different
+laws.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">run_law(
+  law = "Unif",
+  mass_origin,
+  mass_destination = mass_origin,
+  distance = NULL,
+  opportunity = NULL,
+  param = NULL,
+  check_names = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>law</code></td>
+<td>
+<p>a character indicating which law to use (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mass_origin</code></td>
+<td>
+<p>a numeric vector representing the mass at origin (i.e.
+demand).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mass_destination</code></td>
+<td>
+<p>a numeric vector representing the mass at
+destination (i.e. attractiveness).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>a squared matrix representing the distance between locations
+(see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opportunity</code></td>
+<td>
+<p>a squared matrix representing the number of opportunities
+between locations (see Details). Can be easily computed with
+<code>extract_opportunities()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>param</code></td>
+<td>
+<p>a vector of numeric value(s) used to adjust the importance of
+<code>distance</code> or <code>opportunity</code> associated with the chosen law. A single value or
+a vector of several parameter values can be used (see Return). Not necessary
+for the original radiation law or the uniform law (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check_names</code></td>
+<td>
+<p>a boolean indicating if the ID location are used as
+vector names, matrix rownames and colnames and if they should be checked
+(see Note).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<script id="MathJax-script" async src="../../mathjaxr/doc/mathjax/es5/tex-chtml-full.js"></script><p>We compute the matrix <code>proba</code> estimating the probability
+\(p_{ij}\) to observe a trip from location \(i\) to
+another location \(j\)
+(\(\sum_{i}\sum_{j} p_{ij}=1\)). This
+probability is based on the demand \(m_{i}\)
+(argument <code>mass_origin</code>) and the attractiveness
+\(m_{j}\) (argument <code>mass_destination</code>). Note that the population
+is typically used as a surrogate for both quantities (this is why
+<code>mass_destination = mass_origin</code> by default). It also depends on the
+distance \(d_{ij}\) between locations (argument <code>distance</code>) OR
+the number of opportunities \(s_{ij}\) between locations
+(argument <code>opportunity</code>) depending on the chosen law. Both the effect of the
+distance and the number of opportunities can be adjusted with a parameter
+(argument <code>param</code>) except for the original radiation law or the uniform law.
+</p>
+<p>In this package we consider eight probabilistic laws
+described in details in Lenormand et al. (2016). Four
+gravity laws
+(Carey 1858; Zipf 1946; Barthelemy 2011; Lenormand et al. 2016), three
+intervening opportunity laws
+(Schneider 1959; Simini et al. 2012; Yang et al. 2014) and a uniform law.
+</p>
+
+<ol>
+<li>
+<p> Gravity law with an exponential distance decay function
+(<code>law = "GravExp"</code>). The arguments <code>mass_origin</code>, <code>mass_destination</code>
+(optional), <code>distance</code> and <code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Normalized gravity law with an exponential distance decay function
+(<code>law = "NGravExp"</code>). The arguments <code>mass_origin</code>, <code>mass_destination</code>
+(optional), <code>distance</code> and <code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Gravity law with a power distance decay function
+(<code>law = "GravPow"</code>). The arguments <code>mass_origin</code>, <code>mass_destination</code>
+(optional), <code>distance</code> and <code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Normalized gravity law with a power distance decay function
+(<code>law = "NGravPow"</code>). The arguments <code>mass_origin</code>, <code>mass_destination</code>
+(optional), <code>distance</code> and <code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Schneider's intervening opportunities law (<code>law = "Schneider"</code>). The
+arguments <code>mass_origin</code>, <code>mass_destination</code> (optional), <code>opportunity</code> and
+<code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Radiation law (<code>law = "Rad"</code>). The arguments <code>mass_origin</code>,
+<code>mass_destination</code> (optional) and <code>opportunity</code> will be used.
+</p>
+</li>
+<li>
+<p> Extended radiation law (<code>law = "RadExt"</code>). The arguments <code>mass_origin</code>,
+<code>mass_destination</code> (optional), <code>opportunity</code> and <code>param</code> will be used.
+</p>
+</li>
+<li>
+<p> Uniform law (<code>law = "Unif"</code>). The argument <code>mass_origin</code> will be used to
+extract the number of locations.
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>An object of class <code>TDLM</code>. A list of list of matrices containing for each
+parameter value the matrix of probabilities (called <code>proba</code>). If
+<code>length(param) = 1</code> or <code>law = "Rad"</code> or <code style="white-space: pre;">⁠law = "Unif⁠</code> only a list of
+matrices will be returned.
+</p>
+
+
+<h3>Note</h3>
+
+<p>All the inputs should be based on the same number of
+locations sorted in the same order. It is recommended to use the location ID
+as vector names, matrix rownames and matrix colnames and to set
+<code>check_names = TRUE</code> to verify that everything is in order before running
+this function (<code>check_names = FALSE</code> by default). Note that the function
+<code>check_format_names()</code> can be used to control the validity of all the inputs
+before running the main package's functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Maxime Lenormand (<a href="mailto:maxime.lenormand@inrae.fr">maxime.lenormand@inrae.fr</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Lenormand M, Bassolas A, Ramasco JJ (2016).
+“Systematic comparison of trip distribution laws and models.”
+<em>Journal of Transport Geography</em>, <b>51</b>, 158-169.
+</p>
+<p>Carey HC (1858).
+<em>Principles of Social Science</em>.
+Lippincott.
+</p>
+<p>Zipf GK (1946).
+“The P1 P2/D Hypothesis: On the Intercity Movement of Persons.”
+<em>American Sociological Review</em>, <b>11</b>(6), 677–686.
+</p>
+<p>Barthelemy M (2011).
+“Spatial Networks.”
+<em>Physics Reports</em>, <b>499</b>, 1-101.
+</p>
+<p>Schneider M (1959).
+“Gravity models and trip distribution theory.”
+<em>Papers of the regional science association</em>, <b>5</b>, 51-58.
+</p>
+<p>Simini F, González MC, Maritan A, Barabasi A (2012).
+“A universal model for mobility and migration patterns.”
+<em>Nature</em>, <b>484</b>, 96-100.
+</p>
+<p>Yang Y, Herrera C, Eagle N, González MC (2014).
+“Limits of Predictability in Commuting Flows in the Absence of Data for Calibration.”
+<em>Scientific Reports</em>, <b>4</b>(5662), 5662.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gof()</code> <code>run_law_model()</code> <code>run_model()</code> <code>extract_opportunities()</code>
+<code>check_format_names()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(mass)
+data(distance)
+
+mi &lt;- as.numeric(mass[, 1])
+mj &lt;- mi
+
+res &lt;- run_law(
+  law = "GravExp", mass_origin = mi, mass_destination = mj,
+  distance = distance, opportunity = NULL, param = 0.01,
+  check_names = FALSE
+)
+
+# print(res)
+
+</code></pre>
+
+
+</div>

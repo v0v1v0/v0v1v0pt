@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ncbi_children</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Search NCBI for children of a taxon</h2>
+
+<h3>Description</h3>
+
+<p>Search the NCBI Taxonomy database for uids of children of taxa.
+Taxa can be referenced by name or uid. Referencing by name is faster
+</p>
+<p>In a few cases, different taxa have the same name (e.g. Satyrium; see
+examples). If one of these are searched for then the children of both taxa
+will be returned. This can be avoided by using a uid instead of the name or
+specifying an ancestor. If an ancestor is provided, only children of both
+the taxon and its ancestor are returned. This will only fail if there are
+two taxa with the same name and the same specified ancestor.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ncbi_children(
+  name = NULL,
+  id = NULL,
+  start = 0,
+  max_return = 1000,
+  ancestor = NULL,
+  out_type = c("summary", "uid"),
+  ambiguous = FALSE,
+  key = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>(<code>character</code>) The string to search for. Only exact matches
+found the name given will be returned. Not compatible with <code>id</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>(<code>character</code>/<code>numeric</code>) The uid to search for. Not compatible with
+<code>name</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>The first record to return. If omitted, the results are
+returned from the first record (start=0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_return</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠numeric; length=1⁠</code>) The maximum number of children
+to return.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ancestor</code></td>
+<td>
+<p>(<code>character</code>) The ancestor of the taxon being searched
+for. This is useful if there could be more than one taxon with the same
+name. Has no effect if <code>id</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out_type</code></td>
+<td>
+<p>(character) Currently either <code>"summary"</code> or <code>"uid"</code>:
+</p>
+
+<ul>
+<li> <p><code>summary</code> The output is a list of <code>data.frame</code> with children uid, name,
+and rank.
+</p>
+</li>
+<li> <p><code>uid</code> A list of character vectors of children uids
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ambiguous</code></td>
+<td>
+<p><code style="white-space: pre;">⁠logical; length 1⁠</code> If <code>FALSE</code>, children taxa
+with words like "unclassified", "unknown", "uncultured", or "sp." are
+removed from the output. NOTE: This option only applies when
+<code>out_type= "summary"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>(character) NCBI Entrez API key. optional. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Curl options passed on to crul::HttpClient</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The output type depends on the value of the <code>out_type</code>
+parameter. Taxa that cannot be found will result in <code>NA</code>s and a lack
+of children results in an empty data structure.
+</p>
+
+
+<h3>Authentication</h3>
+
+<p>See <code>taxize-authentication()</code> for help on authentication.
+We strongly recommend getting an API key
+</p>
+
+
+<h3>HTTP version</h3>
+
+<p>We hard code <code>http_version = 2L</code> to use HTTP/1.1 in HTTP requests to
+the Entrez API. See <code>curl::curl_symbols('CURL_HTTP_VERSION')</code>
+</p>
+
+
+<h3>Rate limits</h3>
+
+<p>In case you run into errors due to your rate limit being exceeded, see
+<code>taxize_options()</code>, where you can set <code>ncbi_sleep</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Zachary Foster <a href="mailto:zacharyfoster1989@gmail.com">zacharyfoster1989@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ncbi_get_taxon_summary()</code>, <code>children()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+ncbi_children(name="Satyrium") #Satyrium is the name of two different genera
+ncbi_children(name="Satyrium", ancestor="Eumaeini") # A genus of butterflies
+ncbi_children(name="Satyrium", ancestor="Orchidaceae") # A genus of orchids
+ncbi_children(id="266948") #"266948" is the uid for the butterfly genus
+ncbi_children(id="62858") #"62858" is the uid for the orchid genus
+
+# use curl options
+ncbi_children(name="Satyrium", ancestor="Eumaeini", verbose = TRUE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

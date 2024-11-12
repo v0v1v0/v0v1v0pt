@@ -1,0 +1,184 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summarise.SpatVector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarise each group of a <code>SpatVector</code> down to one geometry</h2>
+
+<h3>Description</h3>
+
+<p><code>summarise()</code> creates a new <code>SpatVector</code>. It returns one geometry for each
+combination of grouping variables; if there are no grouping variables, the
+output will have a single geometry summarising all observations in the input
+and combining all the geometries of the <code>SpatVector</code>. It will contain one
+column for each grouping variable and one column for each of
+the summary statistics that you have specified.
+</p>
+<p><code>summarise.SpatVector()</code> and <code>summarize.SpatVector()</code> are synonyms
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatVector'
+summarise(.data, ..., .by = NULL, .groups = NULL, .dissolve = TRUE)
+
+## S3 method for class 'SpatVector'
+summarize(.data, ..., .by = NULL, .groups = NULL, .dissolve = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>SpatVector</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Name-value pairs of
+summary functions. The name will be the name of the variable in the result.
+</p>
+<p>The value can be:
+</p>
+
+<ul>
+<li>
+<p> A vector of length 1, e.g. <code>min(x)</code>, <code>n()</code>, or <code>sum(is.na(y))</code>.
+</p>
+</li>
+<li>
+<p> A data frame, to add multiple columns from a single expression.
+</p>
+</li>
+</ul>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Returning values with size 0 or &gt;1 was
+deprecated as of 1.1.0. Please use <code>reframe()</code> for this instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>Ignored on this method (<a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+on <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.groups</code></td>
+<td>
+<p>See <code>dplyr::summarise()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.dissolve</code></td>
+<td>
+<p>logical. Should borders between aggregated geometries
+be dissolved?</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>SpatVector</code>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>terra::aggregate()</code>
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>dplyr::summarise()</code> function.
+</p>
+
+
+<h4><code>SpatVector</code></h4>
+
+<p>Similarly to the implementation on <a href="https://CRAN.R-project.org/package=sf"><span class="pkg">sf</span></a> this function can be used to
+dissolve geometries (with <code>.dissolve = TRUE</code>) or create <code>MULTI</code> versions of
+geometries (with <code>.dissolve = FALSE</code>). See <strong>Examples</strong>.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>dplyr::summarise()</code>, <code>terra::aggregate()</code>
+</p>
+<p>Other single table verbs: 
+<code>arrange.SpatVector()</code>,
+<code>filter.Spat</code>,
+<code>mutate.Spat</code>,
+<code>rename.Spat</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on group of rows:
+<code>count.SpatVector()</code>,
+<code>group-by.SpatVector</code>,
+<code>rowwise.SpatVector()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_cols.SpatVector</code>,
+<code>bind_rows.SpatVector</code>,
+<code>count.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>filter.Spat</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>rowwise.SpatVector()</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(terra)
+library(ggplot2)
+
+v &lt;- vect(system.file("extdata/cyl.gpkg", package = "tidyterra"))
+
+# Grouped
+gr_v &lt;- v %&gt;%
+  mutate(start_with_s = substr(name, 1, 1) == "S") %&gt;%
+  group_by(start_with_s)
+
+
+# Dissolving
+diss &lt;- gr_v %&gt;%
+  summarise(n = dplyr::n(), mean = mean(as.double(cpro)))
+
+diss
+
+autoplot(diss, aes(fill = start_with_s)) + ggplot2::ggtitle("Dissolved")
+
+# Not dissolving
+no_diss &lt;- gr_v %&gt;%
+  summarise(n = dplyr::n(), mean = mean(as.double(cpro)), .dissolve = FALSE)
+
+# Same statistic
+no_diss
+
+autoplot(no_diss, aes(fill = start_with_s)) +
+  ggplot2::ggtitle("Not Dissolved")
+</code></pre>
+
+
+</div>

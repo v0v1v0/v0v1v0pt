@@ -1,0 +1,114 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_seed_create</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a seed for a target.</h2>
+
+<h3>Description</h3>
+
+<p>Create a seed for a target.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_seed_create(name, global_seed = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Character of length 1, target name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global_seed</code></td>
+<td>
+<p>Integer of length 1, the overarching global
+pipeline seed which governs the seeds of all the targets.
+Set to <code>NULL</code> to default to <code>tar_option_get("seed")</code>.
+Set to <code>NA</code> to disable seed setting in <code>targets</code> and make
+<code>tar_seed_create()</code> return <code>NA_integer_</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Integer of length 1, the target seed.
+</p>
+
+
+<h3>Seeds</h3>
+
+<p>A target's random number generator seed
+is a deterministic function of its name and the global pipeline seed
+from <code>tar_option_get("seed")</code>. Consequently,
+</p>
+<div class="sourceCode"><pre>1. Each target runs with a reproducible seed so that
+   different runs of the same pipeline in the same computing
+   environment produce identical results.
+2. No two targets in the same pipeline share the same seed.
+   Even dynamic branches have different names and thus different seeds.
+</pre></div>
+<p>You can retrieve the seed of a completed target
+with <code>tar_meta(your_target, seed)</code>
+and run <code>tar_seed_set()</code> on the result to locally
+recreate the target's initial RNG state. <code>tar_workspace()</code>
+does this automatically as part of recovering a workspace.
+</p>
+
+
+<h3>RNG overlap</h3>
+
+<p>In theory, there is a risk that the pseudo-random number generator
+streams of different targets will overlap and produce statistically
+correlated results. (For a discussion of the motivating problem,
+see the Section 6: "Random-number generation" in the <code>parallel</code>
+package vignette: <code>vignette(topic = "parallel", package = "parallel")</code>.)
+However, this risk is extremely small in practice, as shown by
+L'Ecuyer et al. (2017) <a href="https://doi.org/10.1016/j.matcom.2016.05.005">doi:10.1016/j.matcom.2016.05.005</a>
+under "A single RNG with a 'random' seed for each stream" (Section 4:
+under "How to produce parallel streams and substreams").
+<code>targets</code> and <code>tarchetypes</code> take the approach discussed in the
+aforementioned section of the paper using the
+<code>secretbase</code> package by Charlie Gao (2024) <a href="https://doi.org/10.5281/zenodo.10553140">doi:10.5281/zenodo.10553140</a>.
+To generate the 32-bit integer <code>seed</code> argument of <code>set.seed()</code>
+for each target, <code>secretbase</code> generates a cryptographic hash using the
+SHAKE256 extendable output function (XOF). <code>secretbase</code> uses algorithms
+from the <code style="white-space: pre;">⁠Mbed TLS⁠</code> C library.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li>
+<p> Gao C (2024). <code>secretbase</code>: Cryptographic Hash and
+Extendable-Output Functions. R package version 0.1.0,
+<a href="https://doi.org/10.5281/zenodo.10553140">doi:10.5281/zenodo.10553140</a>.
+</p>
+</li>
+<li>
+<p> Pierre L'Ecuyer, David Munger, Boris Oreshkin, and Richard Simard
+(2017). Random numbers for parallel computers: Requirements and methods,
+with emphasis on GPUs. Mathematics and Computers in Simulation,
+135, 3-17. <a href="https://doi.org/10.1016/j.matcom.2016.05.005">doi:10.1016/j.matcom.2016.05.005</a>.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other pseudo-random number generation: 
+<code>tar_seed_get()</code>,
+<code>tar_seed_set()</code>
+</p>
+
+
+</div>

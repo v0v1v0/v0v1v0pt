@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bary15B</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Barycenter by Benamou et al. (2015)</h2>
+
+<h3>Description</h3>
+
+<p>Given <code class="reqn">K</code> empirical measures <code class="reqn">\mu_1, \mu_2, \ldots, \mu_K</code> of possibly different cardinalities,
+wasserstein barycenter <code class="reqn">\mu^*</code> is the solution to the following problem
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_{k=1}^K \pi_k \mathcal{W}_p^p (\mu, \mu_k)</code>
+</p>
+
+<p>where <code class="reqn">\pi_k</code>'s are relative weights of empirical measures. Here we assume
+either (1) support atoms in Euclidean space are given, or (2) all pairwise distances between
+atoms of the fixed support and empirical measures are given.
+Authors proposed iterative Bregman projections in conjunction with entropic regularization.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bary15B(
+  support,
+  atoms,
+  marginals = NULL,
+  weights = NULL,
+  lambda = 0.1,
+  p = 2,
+  ...
+)
+
+bary15Bdist(
+  distances,
+  marginals = NULL,
+  weights = NULL,
+  lambda = 0.1,
+  p = 2,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>support</code></td>
+<td>
+<p>an <code class="reqn">(N\times P)</code> matrix of rows being atoms for the fixed support.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>atoms</code></td>
+<td>
+<p>a length-<code class="reqn">K</code> list where each element is an <code class="reqn">(N_k \times P)</code> matrix of atoms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>marginals</code></td>
+<td>
+<p>marginal distribution for empirical measures; if <code>NULL</code> (default), uniform weights are set for all measures. Otherwise, it should be a length-<code class="reqn">K</code> list where each element is a length-<code class="reqn">N_i</code> vector of nonnegative weights that sum to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights for each individual measure; if <code>NULL</code> (default), each measure is considered equally. Otherwise, it should be a length-<code class="reqn">K</code> vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>regularization parameter (default: 0.1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>an exponent for the order of the distance (default: 2).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra parameters including </p>
+
+<dl>
+<dt>abstol</dt>
+<dd>
+<p>stopping criterion for iterations (default: 1e-10).</p>
+</dd>
+<dt>init.vec</dt>
+<dd>
+<p>an initial vector (default: uniform weight).</p>
+</dd>
+<dt>maxiter</dt>
+<dd>
+<p>maximum number of iterations (default: 496).</p>
+</dd>
+<dt>print.progress</dt>
+<dd>
+<p>a logical to show current iteration (default: FALSE).</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distances</code></td>
+<td>
+<p>a length-<code class="reqn">K</code> list where each element is an <code class="reqn">(N\times N_k)</code> pairwise distance between atoms of the fixed support and given measures.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a length-<code class="reqn">N</code> vector of probability vector.
+</p>
+
+
+<h3>References</h3>
+
+<p>Benamou J, Carlier G, Cuturi M, Nenna L, Peyré G (2015).
+“Iterative Bregman Projections for Regularized Transportation Problems.”
+<em>SIAM Journal on Scientific Computing</em>, <b>37</b>(2), A1111–A1138.
+ISSN 1064-8275, 1095-7197.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#-------------------------------------------------------------------
+#     Wasserstein Barycenter for Fixed Atoms with Two Gaussians
+#
+# * class 1 : samples from Gaussian with mean=(-4, -4)
+# * class 2 : samples from Gaussian with mean=(+4, +4)
+# * target support consists of 7 integer points from -6 to 6,
+#   where ideally, weight is concentrated near 0 since it's average!
+#-------------------------------------------------------------------
+## GENERATE DATA
+#  Empirical Measures
+set.seed(100)
+ndat = 500
+dat1 = matrix(rnorm(ndat*2, mean=-4, sd=0.5),ncol=2)
+dat2 = matrix(rnorm(ndat*2, mean=+4, sd=0.5),ncol=2) 
+
+myatoms = list()
+myatoms[[1]] = dat1
+myatoms[[2]] = dat2
+mydata = rbind(dat1, dat2)
+
+#  Fixed Support
+support = cbind(seq(from=-8,to=8,by=2),
+                seq(from=-8,to=8,by=2))
+## COMPUTE
+comp1 = bary15B(support, myatoms, lambda=0.5, maxiter=10)
+comp2 = bary15B(support, myatoms, lambda=1,   maxiter=10)
+comp3 = bary15B(support, myatoms, lambda=5,   maxiter=10)
+
+## VISUALIZE
+opar &lt;- par(no.readonly=TRUE)
+par(mfrow=c(1,3))
+barplot(comp1, main="lambda=0.5")
+barplot(comp2, main="lambda=1")
+barplot(comp3, main="lambda=5")
+par(opar)
+
+</code></pre>
+
+
+</div>

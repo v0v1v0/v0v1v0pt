@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>maxent</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>MaxEnt model</h2>
+
+<h3>Description</h3>
+
+<p><code>maxent</code> defines the MaxEnt model as used in Species
+Distribution Models.
+A good guide to how options of a MaxEnt model work can be found in
+https://onlinelibrary.wiley.com/doi/full/10.1111/j.1600-0587.2013.07872.x
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">maxent(
+  mode = "classification",
+  engine = "maxnet",
+  feature_classes = NULL,
+  regularization_multiplier = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>mode</code></td>
+<td>
+<p>A single character string for the type of model. The only
+possible value for this model is "classification".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>engine</code></td>
+<td>
+<p>A single character string specifying what computational engine
+to use for fitting. Currently only "maxnet" is available.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>feature_classes</code></td>
+<td>
+<p>character, continuous feature classes desired, either
+"default" or any subset of "lqpht" (for example, "lh")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regularization_multiplier</code></td>
+<td>
+<p>numeric, a constant to adjust regularization</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>parsnip::model_spec</code> for a <code>maxent</code> model
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# format the data
+data("bradypus", package = "maxnet")
+bradypus_tb &lt;- tibble::as_tibble(bradypus) %&gt;%
+  dplyr::mutate(presence = relevel(
+    factor(
+      dplyr::case_match(presence, 1 ~ "presence", 0 ~ "absence")
+    ),
+    ref = "presence"
+  )) %&gt;%
+  select(-ecoreg)
+
+# fit the model, and make some predictions
+maxent_spec &lt;- maxent(feature_classes = "lq")
+maxent_fitted &lt;- maxent_spec %&gt;%
+  fit(presence ~ ., data = bradypus_tb)
+pred_prob &lt;- predict(maxent_fitted, new_data = bradypus[, -1], type = "prob")
+pred_class &lt;- predict(maxent_fitted, new_data = bradypus[, -1], type = "class")
+
+# Now with tuning
+maxent_spec &lt;- maxent(
+  regularization_multiplier = tune(),
+  feature_classes = tune()
+)
+set.seed(452)
+cv &lt;- vfold_cv(bradypus_tb, v = 2)
+maxent_tune_res &lt;- maxent_spec %&gt;%
+  tune_grid(presence ~ ., cv, grid = 3)
+show_best(maxent_tune_res, metric = "roc_auc")
+
+</code></pre>
+
+
+</div>

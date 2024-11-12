@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fill_gaps</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Turn implicit missing values into explicit missing values</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fill_gaps(.data, ..., .full = FALSE, .start = NULL, .end = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A tsibble.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>A set of name-value pairs. The values provided will only replace
+missing values that were marked as "implicit", and will leave previously
+existing <code>NA</code> untouched.
+</p>
+
+<ul>
+<li>
+<p> empty: filled with default <code>NA</code>.
+</p>
+</li>
+<li>
+<p> filled by values or functions.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.full</code></td>
+<td>
+
+<ul>
+<li> <p><code>FALSE</code> inserts <code>NA</code> for each keyed unit within its own period.
+</p>
+</li>
+<li> <p><code>TRUE</code> fills <code>NA</code> over the entire time span of the data (a.k.a. fully balanced panel).
+</p>
+</li>
+<li> <p><code>start()</code> pad <code>NA</code> to the same starting point (i.e. <code style="white-space: pre;">⁠min(&lt;index&gt;)⁠</code>) across units.
+</p>
+</li>
+<li> <p><code>end()</code> pad <code>NA</code> to the same ending point (i.e. <code style="white-space: pre;">⁠max(&lt;index&gt;)⁠</code>) across units.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.start, .end</code></td>
+<td>
+<p>Set custom starting/ending time that allows to expand the
+existing time spans.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p>tidyr::fill, tidyr::replace_na for handling missing values <code>NA</code>.
+</p>
+<p>Other implicit gaps handling: 
+<code>count_gaps()</code>,
+<code>has_gaps()</code>,
+<code>scan_gaps()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">harvest &lt;- tsibble(
+  year = c(2010, 2011, 2013, 2011, 2012, 2014),
+  fruit = rep(c("kiwi", "cherry"), each = 3),
+  kilo = sample(1:10, size = 6),
+  key = fruit, index = year
+)
+
+# gaps as default `NA`
+fill_gaps(harvest, .full = TRUE)
+fill_gaps(harvest, .full = start())
+fill_gaps(harvest, .full = end())
+fill_gaps(harvest, .start = 2009, .end = 2016)
+full_harvest &lt;- fill_gaps(harvest, .full = FALSE)
+full_harvest
+
+# replace gaps with a specific value
+harvest %&gt;%
+  fill_gaps(kilo = 0L)
+
+# replace gaps using a function by variable
+harvest %&gt;%
+  fill_gaps(kilo = sum(kilo))
+
+# replace gaps using a function for each group
+harvest %&gt;%
+  group_by_key() %&gt;%
+  fill_gaps(kilo = sum(kilo))
+
+# leaves existing `NA` untouched
+harvest[2, 3] &lt;- NA
+harvest %&gt;%
+  group_by_key() %&gt;%
+  fill_gaps(kilo = sum(kilo, na.rm = TRUE))
+
+# replace NA
+pedestrian %&gt;%
+  group_by_key() %&gt;%
+  fill_gaps(Count = as.integer(median(Count)))
+
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  stop("Please install the 'tidyr' package to run these following examples.")
+}
+# use fill() to fill `NA` by previous/next entry
+pedestrian %&gt;%
+  group_by_key() %&gt;%
+  fill_gaps() %&gt;%
+  tidyr::fill(Count, .direction = "down")
+</code></pre>
+
+
+</div>

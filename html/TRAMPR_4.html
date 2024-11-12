@@ -1,0 +1,271 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>add.known</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add Knowns To TRAMPknowns Databases</h2>
+
+<h3>Description</h3>
+
+<p>Add a single known or many knowns to a knowns database in a
+<code>TRAMPknowns</code> object.  <code>add.known</code> takes a
+<code>TRAMPknowns</code> object, and adds the peak profile of a
+single sample from a <code>TRAMPsamples</code> object.
+<code>combine.TRAMPknowns</code> combines two <code>TRAMPknowns</code>
+objects (similar to <code>combine.TRAMPsamples</code>).
+<code>add.known</code> and <code>combine</code> are generic, so if <code>x</code>
+argument is a <code>TRAMP</code> object, then the <code>knowns</code>
+component of that object will be updated.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">add.known(x, ...)
+## S3 method for class 'TRAMPknowns'
+add.known(x, samples, sample.fk, prompt=TRUE, default.species=NULL, ...)
+## S3 method for class 'TRAMP'
+add.known(x, sample.fk, rebuild=TRUE, ...)
+
+## S3 method for class 'TRAMPknowns'
+combine(x, y, rewrite.knowns.pk=FALSE, ...)
+## S3 method for class 'TRAMP'
+combine(x, y, rebuild=TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>TRAMPknowns</code> or <code>TRAMP</code> object,
+containing identified TRFLP patterns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>samples</code></td>
+<td>
+<p>A <code>TRAMPsamples</code> object, containing
+unidentified samples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample.fk</code></td>
+<td>
+<p><code>sample.fk</code> of sample in <code>samples</code> to add
+to the knowns database.  If <code>x</code> is a <code>TRAMP</code>
+object, then <code>sample.fk</code> refers to a sample in the
+<code>TRAMPsamples</code> object used in the creation of that
+<code>TRAMP</code> object (stored as <code>x$samples</code>: see
+<code>labels(x$samples)</code> for codes).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prompt</code></td>
+<td>
+<p>Logical: Should the function interactively prompt for a
+new species name?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default.species</code></td>
+<td>
+<p>Default species name.  If <code>NULL</code> (the
+default), the name chosen will be the value of
+<code>samples$info$species</code> for the current sample.  Set to
+<code>NA</code> if no name is currently known (see
+<code>group.knowns</code> - identical non-<code>NA</code> names are
+considered related).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A second <code>TRAMPknowns</code> object, containing knowns
+to add to <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rewrite.knowns.pk</code></td>
+<td>
+<p>Logical: If the new knowns data contain
+<code>knowns.pk</code> values that conflict with those in the original
+<code>TRAMPknowns</code> object, should the new knowns be renumbered?  If
+this is <code>TRUE</code>, do not rely on <em>any</em> <code>knowns.pk</code>
+values staying the same for the newly added knowns.
+<code>knowns.pk</code> values in the original <code>TRAMPknowns</code> object
+will never be changed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rebuild</code></td>
+<td>
+<p>Logical: should the <code>TRAMP</code> object be
+rebuilt after adding knowns, by running <code>rebuild.TRAMP</code>
+on it?  This is important to determine if the new known(s) match any
+of the samples in the <code>TRAMP</code> object.  This should be left as
+<code>TRUE</code> unless you plan on manually rebuilding the object
+later.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to future methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>(<code>add.known</code> only): When adding the profile of a single
+individual via <code>add.known</code>, if more than one peak per
+enzyme/primer combination is present we select the most likely profile
+by picking the highest peak (largest <code>height</code> value) for each
+enzyme/primer combination (a warning will be given).  If two peaks are
+of the same <code>height</code>, then the peak taken is unspecified (similar
+to <code>build.knowns</code> with <code>min.ratio=0</code>).
+</p>
+<p>(<code>combine</code> only): <code>rewrite.knowns.pk</code> provides a
+simple way of merging knowns databases that use the same values of
+<code>knowns.pk</code>.  Because <code>knowns.pk</code> must be unique, if
+<code>y</code> (the new knowns database) uses <code>knowns.pk</code> values
+present in <code>x</code> (the original database), then the <code>knowns.pk</code>
+values in <code>y</code> must be rewritten.  This will be done by adding
+<code>max(labels(x))</code> to <em>every</em> <code>knowns.pk</code> value in
+<code>y$info</code> and <code>knowns.fk</code> value in <code>y$data</code>.
+</p>
+<p>If retaining <code>knowns.pk</code> information is important, we
+suggest saving the value of <code>knowns.pk</code> before running this
+function, e.g.
+</p>
+<p><code>info$knowns.pk.old &lt;- info$knowns.pk</code>
+</p>
+<p>If more control over the renaming process is required, manually adjust
+<code>y$info$knowns.pk</code> yourself before calling this function.
+However, by default no translation will be done, and an error will
+occur if <code>x</code> and <code>y</code> share <code>knowns.pk</code> values.
+</p>
+<p>For <code>add.known</code>, only a subset of columns are passed to the
+knowns object (a future version may be more inclusive):
+</p>
+
+<ul>
+<li>
+<p> From <code>samples$info</code>: <code>sample.pk</code> (as
+<code>knowns.pk</code>.)
+</p>
+</li>
+<li>
+<p> From <code>samples$data</code>: <code>sample.fk</code> (as
+<code>knowns.fk</code>), <code>primer</code>, <code>enzyme</code>, <code>size</code>.
+</p>
+</li>
+</ul>
+<p>For <code>combine</code>, the <code>data</code> and <code>info</code> elements of
+the resulting <code>TRAMPknowns</code> object will have the union of the
+columns present in both sets of knowns.  If any additional elements
+exist as part of the second <code>TRAMPknowns</code> object (e.g. passed as
+<code>...</code> to <code>TRAMPknowns</code> when creating <code>y</code>), these
+will be ignored.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of the same class as <code>x</code>: if a <code>TRAMP</code> object is
+supplied, a new <code>TRAMP</code> object with an updated <code>TRAMPknowns</code>
+component will be returned, and if the object is a <code>TRAMPknowns</code>
+object an updated <code>TRAMPknowns</code> object will be returned.
+</p>
+
+
+<h3>Note</h3>
+
+<p>If the <code>TRAMPknowns</code> object has a <code>file.pat</code> element (see
+<code>TRAMPknowns</code>), then the new knowns database will be
+written to file.  This may be confusing when operating on <code>TRAMP</code>
+objects directly, since both the <code>TRAMPknowns</code> object used in the
+<code>TRAMP</code> object and the original <code>TRAMPknowns</code> object will
+share the same <code>file.pat</code> argument, but contain different data as
+soon as <code>add.known</code> or <code>combine</code> is used.  In short -
+be careful!  To avoid this issue, either set <code>file.pat</code> to
+<code>NULL</code> before using <code>add.known</code> or <code>combine</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>build.knowns</code>, which automatically builds a knowns
+database, and <code>TRAMPknowns</code>, which documents the object
+containing the knowns database.
+</p>
+<p><code>combine.TRAMPsamples</code>, which combines a pair of
+<code>TRAMPsamples</code> objects.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(demo.knowns)
+data(demo.samples)
+
+## (1) Using add.known(), to add a single known:
+
+## Sample "101" looks like a potential known, add it to our knowns
+## database:
+plot(demo.samples, 101)
+
+## Add this to a knowns database:
+## Because there is more than one peak per enzyme/primer combination, a
+## warning will be given.  In this case, since there are clear peaks it
+## is harmless.
+demo.knowns.2 &lt;- add.known(demo.knowns, demo.samples, 101,
+                           prompt=FALSE)
+
+## The known has been added:
+demo.knowns.2[101]
+try(demo.knowns[101]) # error - known didn't exist in original knowns
+
+## Same, but adding to an existing TRAMP object.
+res &lt;- TRAMP(demo.samples, demo.knowns)
+plot(res, 101)
+res2 &lt;- add.known(res, 101, prompt=FALSE, default.species="New known")
+
+## Now the new known matches itself.
+plot(res2, 101)
+
+## (2) Using combine() to combine knowns databases.
+
+## Let's split the original knowns database in two:
+demo.knowns.a &lt;- demo.knowns[head(labels(demo.knowns), 10)]
+demo.knowns.b &lt;- demo.knowns[tail(labels(demo.knowns), 10)]
+
+## Combining these is easy:
+demo.knowns.c &lt;- combine(demo.knowns.a, demo.knowns.b)
+
+## Knowns from both the small database are present in the new one:
+identical(c(labels(demo.knowns.a), labels(demo.knowns.b)),
+          labels(demo.knowns.c))
+
+
+## Demonstration of knowns rewriting:
+demo.knowns.d &lt;- demo.knowns.a
+demo.knowns.a$info$from &lt;- "a"
+demo.knowns.d$info$from &lt;- "d"
+
+try(combine(demo.knowns.a, demo.knowns.d)) # error
+demo.knowns.e &lt;- combine(demo.knowns.a, demo.knowns.d,
+                         rewrite.knowns.pk=TRUE)
+
+## See that both data sets are here (check the "from" column).
+demo.knowns.e$info
+
+## Note that a better approach in might be to manually resolve
+## conficting knowns.pk values before combining.
+</code></pre>
+
+
+</div>

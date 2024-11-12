@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ri</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Title running integral</h2>
+
+<h3>Description</h3>
+
+<p>calculate the running integral for the selected peak
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ri(x, y, pks, TAP = FALSE, linear = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>x axis for the intergration</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>y axis for the intergration</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pks</code></td>
+<td>
+<p>selected peak</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TAP</code></td>
+<td>
+<p>if TRUE will apply a baseline using tangent area proportional (default=FALSE)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linear</code></td>
+<td>
+<p>if TRUE  will apply a linear baseline (default=FALSE)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>parameters in TAPPA function</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul>
+<li>
+<p> ds data frame containing original x and y given as input
+</p>
+</li>
+<li>
+<p> ri running integral
+</p>
+</li>
+<li>
+<p> b.tap baseline calculate if the switch TAP is TRUE
+</p>
+</li>
+<li>
+<p> y.tap = y - b.tap
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#' require(data.table)
+require(MASS)
+rates=c(0.5,1,2,5,10,20,50)
+a&lt;-lapply(rates, function(x) JMA(A=exp(35),Ea=120000,T0=0,T.end=300,q=x,npoints=5000,n=2))
+a&lt;-lapply(seq(1,length(a)), function(x) data.table(a[[x]]$time.s,a[[x]]$T.C,
+a[[x]]$dadT, rates[[x]]))
+lapply(seq(1,length(a)), function(x) setnames(a[[x]],
+c("time.seconds","temperature.s","heat.flow","rates") ) )
+a.dt &lt;-lapply(seq(1,length(a)), function(x) data.table(data.frame(a.check[[x]])))
+a&lt;-rbindlist(a.dt)
+a$rate&lt;-a$id
+a.peaks &lt;- a[,.(res.list = list(findpeaks(heat.flow,sortstr=TRUE,npeaks=2))),by=id]
+a.peaks$rate&lt;-a.peaks$id
+ref.peak=1
+a.peaks &lt;- data.table(data.table(a.peaks$rate),rbindlist((lapply(a.peaks$res.list,
+function(x) data.table(t(x[ref.peak,]))))))
+colnames(a.peaks)&lt;- c("rate","peak.value","ind.max","left.lim","right.lim")
+a.mat&lt;- lapply(unique(a$rate),function(x)
+ri(a[a$rate==x]$time.seconds,a[a$rate==x]$heat.flow,a.peaks[rate==x]))
+
+</code></pre>
+
+
+</div>

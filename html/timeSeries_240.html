@@ -1,0 +1,259 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>apply</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply functions over time windows</h2>
+
+<h3>Description</h3>
+
+<p>Applies a function to a <code>"timeSeries"</code> object over regular or
+irregular time windows, possibly overlapping.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'timeSeries'
+apply(X, MARGIN, FUN, ..., simplify = TRUE)
+
+fapply(x, from, to, FUN, ...)
+
+applySeries(x, from = NULL, to = NULL, by = c("monthly", "quarterly"), 
+            FUN = colMeans, units = NULL, format = x@format, 
+            zone = x@FinCenter, FinCenter = x@FinCenter, 
+            recordIDs = data.frame(), title = x@title, 
+            documentation = x@documentation, ...)
+
+rollDailySeries(x, period = "7d", FUN, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x,X</code></td>
+<td>
+
+<p>an object of class <code>timeSeries</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MARGIN</code></td>
+<td>
+
+<p>a vector giving the subscripts which the function will be
+applied over, see base R's <code>apply</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+
+<p>the function to be applied. For the function <code>applySeries</code> the
+default setting is <code>FUN = colMeans</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>simplify</code></td>
+<td>
+
+<p>simplify the result?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from, to</code></td>
+<td>
+
+<p>starting date and end date as <code>"timeDate"</code> objects. Note,
+<code>to</code> must be time ordered after <code>from</code>.  If <code>from</code>
+and <code>to</code> are missing in function <code>fapply</code> they are set by
+default to <code>from=start(x)</code>, and <code>to=end(x)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+
+<p>a character value either <code>"monthly"</code> or <code>"quarterly"</code> used
+in the function <code>applySeries</code>. The default value is
+<code>"monthly"</code>. Only operative when both arguments <code>from</code> and
+<code>to</code> have their default values <code>NULL</code>.  In this case the
+function <code>FUN</code> will be applied to monthly or quarterly periods.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+
+<p>an optional character string, which allows to overwrite the current
+column names of a <code>timeSeries</code> object. By default <code>NULL</code>
+which means that the column names are selected automatically.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+
+<p>the format specification of the input character vector in POSIX
+notation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zone</code></td>
+<td>
+
+<p>the time zone or financial center where the data were recorded.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FinCenter</code></td>
+<td>
+
+<p>a character value with the the location of the  financial center 
+named as "continent/city", or "city". 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recordIDs</code></td>
+<td>
+
+<p>a data frame which can be used for record identification
+information. Note, this is not yet handled by the apply functions,
+an empty data.frame will be returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+
+<p>an optional title string, if not specified the input's data name is
+deparsed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>documentation</code></td>
+<td>
+
+<p>optional documentation string, or a vector of character strings.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+
+<p>a character string specifying the rollling period composed by the
+length of the period and its unit, e.g. <code>"7d"</code> represents one
+week.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>arguments passed to other methods.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>"timeSeries"</code> method for <code>apply</code> extracts the core data
+(a matrix) from <code>X</code> and calls <code>apply</code>, passing on all the
+remaining arguments. If the result is suitable, it converts it to
+<code>"timeSeries"</code>, otherwise returns it as is. ‘Suitable’
+here means that it is a matrix or a vector (which is converted to a
+matrix) and the number of observations is the same as <code>X</code>.
+</p>
+<p>Like <code>apply</code> applies a function to the margins of an array, the
+function <code>fapply</code> applies a function to the time stamps or signal
+counts of a financial (therefore the “f” in front of the
+function name) time series of class <code>"timeSeries"</code>.
+</p>
+<p><code>applySeries</code> takes a <code>"timeSeries"</code> object as input and
+applies <code>FUN</code> to windows of <code>x</code>.  The windows are specified
+by <code>from</code> and <code>to</code>, which need to have the same length. Then
+<code>from[i], to[i]</code> specifies the <code>i</code>-th window.  If
+<code>time(x)</code> is a <code>"timeDate"</code> object, then <code>from</code> and
+<code>to</code> are converted to <code>"timeDate"</code> (if they are not already
+such objects), otherwise they are converted to integers.
+</p>
+<p>An alternative way to specify the window(s) on which
+<code>applySeries</code> operates is with argument <code>by</code>. It is used
+only if <code>from</code> and <code>to</code> are missing or <code>NULL</code>. <code>by
+  = "monthly"</code> or <code>by = "quarterly"</code> applies <code>FUN</code> to the data
+for each year-month or year-quarter, respectively. By year-month we
+mean that there are separate windows for the months in different
+years.
+</p>
+<p>The resulting time stamps are the time stamps of the <code>to</code>
+vector. The periods can be regular or irregular, and they can even
+overlap.
+</p>
+<p>If <code>from = start(x)</code> and <code>to = end(x)</code>, then the function
+behaves like <code>apply</code> on the column margin.
+</p>
+<p><code>fapply</code> is the same as <code>applySeries</code> (in fact, the former
+calls the latter), except that the defaults for <code>from</code> and
+<code>to</code> are <code>start(x)</code> and <code>end(x)</code>, respectively. (GNB:
+in addition, <code>fapply</code> throws error if <code>x</code> is a
+‘signal series’.)
+</p>
+<p><code>rollDailySeries</code> rolls a daily 'timeSeries' on a given period.
+</p>
+
+
+<h3>Value</h3>
+
+<p>for <code>rollDailySeries</code>, an object of class <code>"timeSeries"</code> with
+rolling values, computed from the function <code>FUN</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Percentual Returns of Swiss Bond Index and Performance Index - 
+   LPP &lt;- 100 * LPP2005REC[, c("SBI", "SPI")]
+   head(LPP, 20)
+   
+## Aggregate Quarterly Returns -
+   applySeries(LPP, by = "quarterly", FUN = colSums)
+   
+## Aggregate Quarterly every last Friday in Quarter -
+   oneDay &lt;- 24*3600
+   from &lt;- unique(timeFirstDayInQuarter(time(LPP))) - oneDay
+   from &lt;- timeLastNdayInMonth(from, nday = 5)
+   to &lt;- unique(timeLastDayInQuarter(time(LPP)))
+   to &lt;- timeLastNdayInMonth(to, nday = 5)
+   data.frame(from = as.character(from), to = as.character(to))
+
+   applySeries(LPP, from, to, FUN = colSums)
+## Alternative Use - 
+   fapply(LPP, from, to, FUN = colSums)
+   
+## Count Trading Days per Month - 
+   colCounts &lt;- function(x) rep(NROW(x), times = NCOL(x))
+   applySeries(LPP, FUN = colCounts, by = "monthly")
+
+
+## TODO: examples for rollDailySeries()
+</code></pre>
+
+
+</div>

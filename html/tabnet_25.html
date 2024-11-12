@@ -1,0 +1,257 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tabnet_fit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tabnet model</h2>
+
+<h3>Description</h3>
+
+<p>Fits the <a href="https://arxiv.org/abs/1908.07442">TabNet: Attentive Interpretable Tabular Learning</a> model
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tabnet_fit(x, ...)
+
+## Default S3 method:
+tabnet_fit(x, ...)
+
+## S3 method for class 'data.frame'
+tabnet_fit(
+  x,
+  y,
+  tabnet_model = NULL,
+  config = tabnet_config(),
+  ...,
+  from_epoch = NULL,
+  weights = NULL
+)
+
+## S3 method for class 'formula'
+tabnet_fit(
+  formula,
+  data,
+  tabnet_model = NULL,
+  config = tabnet_config(),
+  ...,
+  from_epoch = NULL,
+  weights = NULL
+)
+
+## S3 method for class 'recipe'
+tabnet_fit(
+  x,
+  data,
+  tabnet_model = NULL,
+  config = tabnet_config(),
+  ...,
+  from_epoch = NULL,
+  weights = NULL
+)
+
+## S3 method for class 'Node'
+tabnet_fit(
+  x,
+  tabnet_model = NULL,
+  config = tabnet_config(),
+  ...,
+  from_epoch = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Depending on the context:
+</p>
+
+<ul>
+<li>
+<p> A <strong>data frame</strong> of predictors.
+</p>
+</li>
+<li>
+<p> A <strong>matrix</strong> of predictors.
+</p>
+</li>
+<li>
+<p> A <strong>recipe</strong> specifying a set of preprocessing steps
+created from <code>recipes::recipe()</code>.
+</p>
+</li>
+</ul>
+<p>The predictor data should be standardized (e.g. centered or scaled).
+The model treats categorical predictors internally thus, you don't need to
+make any treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Model hyperparameters.
+Any hyperparameters set here will update those set by the config argument.
+See <code>tabnet_config()</code> for a list of all possible hyperparameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>When <code>x</code> is a <strong>data frame</strong> or <strong>matrix</strong>, <code>y</code> is the outcome
+specified as:
+</p>
+
+<ul>
+<li>
+<p> A <strong>data frame</strong> with 1 or many numeric column (regression) or 1 or many categorical columns (classification) .
+</p>
+</li>
+<li>
+<p> A <strong>matrix</strong> with 1 column.
+</p>
+</li>
+<li>
+<p> A <strong>vector</strong>, either numeric or categorical.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tabnet_model</code></td>
+<td>
+<p>A previously fitted TabNet model object to continue the fitting on.
+if <code>NULL</code> (the default) a brand new model is initialized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>config</code></td>
+<td>
+<p>A set of hyperparameters created using the <code>tabnet_config</code> function.
+If no argument is supplied, this will use the default values in <code>tabnet_config()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from_epoch</code></td>
+<td>
+<p>When a <code>tabnet_model</code> is provided, restore the network weights from a specific epoch.
+Default is last available checkpoint for restored model, or last epoch for in-memory model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Unused.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>A formula specifying the outcome terms on the left-hand side,
+and the predictor terms on the right-hand side.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>When a <strong>recipe</strong> or <strong>formula</strong> is used, <code>data</code> is specified as:
+</p>
+
+<ul><li>
+<p> A <strong>data frame</strong> containing both the predictors and the outcome.
+</p>
+</li></ul>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A TabNet model object. It can be used for serialization, predictions, or further fitting.
+</p>
+
+
+<h3>Fitting a pre-trained model</h3>
+
+<p>When providing a parent <code>tabnet_model</code> parameter, the model fitting resumes from that model weights
+at the following epoch:
+</p>
+
+<ul>
+<li>
+<p> last fitted epoch for a model already in torch context
+</p>
+</li>
+<li>
+<p> Last model checkpoint epoch for a model loaded from file
+</p>
+</li>
+<li>
+<p> the epoch related to a checkpoint matching or preceding the <code>from_epoch</code> value if provided
+The model fitting metrics append on top of the parent metrics in the returned TabNet model.
+</p>
+</li>
+</ul>
+<h3>Multi-outcome</h3>
+
+<p>TabNet allows multi-outcome prediction, which is usually named <a href="https://en.wikipedia.org/wiki/Multi-label_classification">multi-label classification</a>
+or multi-output classification when outcomes are categorical.
+Multi-outcome currently expect outcomes to be either all numeric or all categorical.
+</p>
+
+
+<h3>Threading</h3>
+
+<p>TabNet uses <code>torch</code> as its backend for computation and <code>torch</code> uses all
+available threads by default.
+</p>
+<p>You can control the number of threads used by <code>torch</code> with:
+</p>
+<div class="sourceCode"><pre>torch::torch_set_num_threads(1)
+torch::torch_set_num_interop_threads(1)
+</pre></div>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+data("ames", package = "modeldata")
+data("attrition", package = "modeldata")
+ids &lt;- sample(nrow(attrition), 256)
+
+## Single-outcome regression using formula specification
+fit &lt;- tabnet_fit(Sale_Price ~ ., data = ames, epochs = 1)
+
+## Single-outcome classification using data-frame specification
+attrition_x &lt;- attrition[,-which(names(attrition) == "Attrition")]
+fit &lt;- tabnet_fit(attrition_x, attrition$Attrition, epochs = 1, verbose = TRUE)
+
+## Multi-outcome regression on `Sale_Price` and `Pool_Area` in `ames` dataset using formula,
+ames_fit &lt;- tabnet_fit(Sale_Price + Pool_Area ~ ., data = ames[ids,], epochs = 2, valid_split = 0.2)
+
+## Multi-label classification on `Attrition` and `JobSatisfaction` in
+## `attrition` dataset using recipe
+library(recipes)
+rec &lt;- recipe(Attrition + JobSatisfaction ~ ., data = attrition[ids,]) %&gt;%
+  step_normalize(all_numeric(), -all_outcomes())
+
+attrition_fit &lt;- tabnet_fit(rec, data = attrition[ids,], epochs = 2, valid_split = 0.2)
+
+## Hierarchical classification on  `acme`
+data(acme, package = "data.tree")
+
+acme_fit &lt;- tabnet_fit(acme, epochs = 2, verbose = TRUE)
+
+# Note: Dataset number of rows and model number of epochs should be increased
+# for publication-level results.
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tprDiameter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Functions to extract diameters from Taper curve</h2>
+
+<h3>Description</h3>
+
+<p>Function evaluates TapeR taper curve models for given trees
+according to species, required height and optionally substracts double bark
+thickness.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tprDiameter(
+  obj,
+  Hx,
+  bark = TRUE,
+  interval = "none",
+  cp = TRUE,
+  mono = TRUE,
+  Rfn = NULL
+)
+
+## S4 method for signature 'tprTrees'
+tprDiameter(
+  obj,
+  Hx,
+  bark = TRUE,
+  interval = "none",
+  cp = TRUE,
+  mono = TRUE,
+  Rfn = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>object of class 'tprTrees'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Hx</code></td>
+<td>
+<p>vector of heights for which diameter w/ or w/0 bark are required</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bark</code></td>
+<td>
+<p>should diameter over or under bark be returned?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interval</code></td>
+<td>
+<p>indicator about whether 'confidence' or 'prediction'
+intervals are required (defaults to 'none'), optionally function returns the
+mean squared error of the mean and predictions ('MSE').</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cp</code></td>
+<td>
+<p>cartesian product, i.e. apply all <code>Hx</code> to all trees, defaults
+to TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mono</code></td>
+<td>
+<p>logical, defaults to true. If calibrated taper curve is
+non-monotonic at stem base, a support diameter is added.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Rfn</code></td>
+<td>
+<p>Rfn setting for residuals error matrix, defaults to
+<code>list(fn="sig2")</code>, see <code>resVar</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Function evaluates taper curves at required height <code>Hx</code>. By
+default (<code>cp==TRUE</code>), the taper curve is evaluated at <code>Hx</code> for each
+tree. If <code>cp==FALSE</code>, each tree is evaluated at exactly one Hx (recycled
+if necessary). This feature is intended for situations where diameter in
+relative heights are required. Then, the recycling of one height Hx (e.g.
+1.3m) is not possible, since relative heights depend on absolute tree height,
+which might be different for each tree. Hence a call like
+<code>tprDiameter(obj, Hx=0.3*Ht(obj), cp=FALSE)</code> is necessary.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a matrix or data.frame depending on value of <code>interval</code>. If
+'none' (the default), a matrix of size [length(obj@Ht), length(Hx)] is
+returned, otherwise a data.frame of size [length(obj@Ht) * length(Hx), 5].
+The five columns hold a tree identifier, Hx, lower confidence/prediction
+interval, the estimated diameter and the upper confidence/prediction
+interval. In case 'interval=MSE' the returned columns contain a tree
+identifier, Hx, the estimated diameter and mean squared error (MSE) of the
+mean and of the prediction. Estimates and intervals include bark or not,
+depending on <code>bark</code>.
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul><li> <p><code>tprDiameter(tprTrees)</code>: method for class 'tprTrees'
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p><code>tprDiameterCpp</code> for a faster implementation if no
+confidence or prediction information are required and <code>tprBark</code>
+for the applied bark reduction.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## prediction for new tree using implemented 'TapeR' taper curve model
+obj &lt;- tprTrees(spp=c(1, 3),
+                Hm=list(c(1.3, 5), c(1.3, 5)),
+                Dm=list(c(27, 25), c(27, 25)),
+                Ht=c(27, 27))
+hx &lt;- c(1.3, 5, 7)
+## by default, Hx applied on each tree, i.e. result is a 2x3 matrix
+tprDiameter(obj, Hx = hx)
+
+## if cp=FALSE, each tree only 'sees' one Hx, i.e. results is a vector
+## (obs: length of Hx must be identical to length of obj)
+tprDiameter(obj, Hx = c(1.3, 5), cp=FALSE)
+tprDiameter(obj, Hx = hx, bark = FALSE)
+tprDiameter(obj, Hx = hx, interval = "confidence")
+tprDiameter(obj, Hx = hx, bark = FALSE, interval = "prediction")
+tprDiameter(obj, Hx = hx, interval = "MSE")
+tprDiameter(obj, Hx = hx, bark=FALSE, interval = "MSE")
+
+## here same behaviour, if cp=FALSE
+tprDiameter(obj, Hx = c(1.3, 5), bark = FALSE,
+            interval = "prediction", cp=FALSE)
+## using Cpp-implementation
+## faster, but no intervals available
+tprDiameterCpp(obj, Hx = hx)
+tprDiameterCpp(obj, Hx = c(1.3, 5), cp=FALSE)
+
+## prediction for objects of class 'datBDAT':
+if(require(rBDAT)){
+  tree &lt;- rBDAT::buildTree(list(spp=1, D1=20:30, H1=1.3, H2=50, H=20:30))
+  tree &lt;- bdat_as_tprtrees(tree)
+  tprDiameter(tree, Hx = 1.3)
+}
+</code></pre>
+
+
+</div>

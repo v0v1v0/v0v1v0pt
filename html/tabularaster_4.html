@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cellnumbers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract cell numbers from a Raster object.</h2>
+
+<h3>Description</h3>
+
+<p>Provide the 'cellnumbers' capability of raster::extract and friends
+directly, returning a data frame of query-object identifiers 'object_'
+and the cell number.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cellnumbers(x, query, ...)
+
+## Default S3 method:
+cellnumbers(x, query, ...)
+
+## S3 method for class 'SpatialLines'
+cellnumbers(x, query, ...)
+
+## S3 method for class 'sfc'
+cellnumbers(x, query, ...)
+
+## S3 method for class 'sf'
+cellnumbers(x, query, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Raster object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>query</code></td>
+<td>
+<p>Spatial object or matrix of coordinates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>unused</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Raster data is inherently 2-dimensional, with a time or 'level' dimension
+treated like a layers of these 2D forms. The 'raster' package cell number
+is counted from 1 at the top-left, across the rows and down. This corresponds
+the the standard "raster graphics" convention used by 'GDAL' and the 'sp'
+package, and many other implementations. Note that this is different to the
+convention used by the graphics::image function.
+</p>
+<p>Currently this function only operates as if the input is a single layer objects, it's not clear if adding
+an extra level of grouping for layers would be sensible.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a data frame (tibble) with columns
+</p>
+
+<ul>
+<li> <p><code>object_</code> - the object ID (what row is it from the spatial object)
+</p>
+</li>
+<li> <p><code>cell_</code>   - the cell number of the raster
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(raster)
+library(dplyr)
+r &lt;- raster(volcano) %&gt;% aggregate(fact = 4)
+cellnumbers(r, rasterToContour(r, level = 120))
+library(dplyr)
+
+cr &lt;- cut(r,  pretty(values(r)))
+
+suppressWarnings(tt &lt;- cellnumbers(cr, polycano))
+library(dplyr)
+tt %&gt;% mutate(v = extract(r, cell_)) %&gt;% 
+group_by(object_) %&gt;% 
+summarize(mean(v)) 
+head(pretty(values(r)), -1)
+</code></pre>
+
+
+</div>

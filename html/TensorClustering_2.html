@@ -1,0 +1,194 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TEMM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit the Tensor Envelope Mixture Model (TEMM)</h2>
+
+<h3>Description</h3>
+
+<p>Fit the Tensor Envelope Mixture Model (TEMM)</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TEMM(Xn, u, K, initial = "kmeans", iter.max = 500, 
+stop = 1e-3, trueY = NULL, print = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Xn</code></td>
+<td>
+<p>The tensor for clustering, should be array type, the last dimension is the sample size <code>n</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u</code></td>
+<td>
+<p>A vector of envelope dimension</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>Number of clusters, greater than or equal to <code>2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial</code></td>
+<td>
+<p>Initialization meth0d for the regularized EM algorithm. Default value is "kmeans".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter.max</code></td>
+<td>
+<p>Maximum number of iterations. Default value is <code>500</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop</code></td>
+<td>
+<p>Convergence threshold of relative change in cluster means. Default value is <code>1e-3</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trueY</code></td>
+<td>
+<p>A vector of true cluster labels of each observation. Default value is NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print</code></td>
+<td>
+<p>Whether to print information including current iteration number, relative change in cluster means 
+and clustering error (<code>%</code>) in each iteration.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>TEMM</code> function fits the Tensor Envelope Mixture Model (TEMM) through a subspace-regularized EM algorithm. For mode <code class="reqn">m</code>, let <code class="reqn">(\bm{\Gamma}_m,\bm{\Gamma}_{0m})\in R^{p_m\times p_m}</code> be an orthogonal matrix where <code class="reqn">\bm{\Gamma}_{m}\in R^{p_{m}\times u_{m}}</code>, <code class="reqn">u_{m}\leq p_{m}</code>, represents the material part. Specifically, the material part <code class="reqn">\mathbf{X}_{\star,m}=\mathbf{X}\times_{m}\bm{\Gamma}_{m}^{T}</code> follows a tensor normal mixture distribution, while the immaterial part <code class="reqn">\mathbf{X}_{\circ,m}=\mathbf{X}\times_{m}\bm{\Gamma}_{0m}^{T}</code> is unimodal, independent of the material part and hence can be eliminated without loss of  clustering information. Dimension reduction is achieved by focusing on the material part <code class="reqn">\mathbf{X}_{\star,m}=\mathbf{X}\times_{m}\bm{\Gamma}_{m}^{T}</code>. Collectively, the joint reduction from each mode is
+</p>
+<p style="text-align: center;"><code class="reqn">
+\mathbf{X}_{\star}=[\![\mathbf{X};\bm{\Gamma}_{1}^{T},\dots,\bm{\Gamma}_{M}^{T}]\!]\sim\sum_{k=1}^{K}\pi_{k}\mathrm{TN}(\bm{\alpha}_{k};\bm{\Omega}_{1},\dots,\bm{\Omega}_{M}),\quad \mathbf{X}_{\star}\perp\!\!\!\perp\mathbf{X}_{\circ,m},
+</code>
+</p>
+
+<p>where <code class="reqn">\bm{\alpha}_{k}\in R^{u_{1}\times\cdots\times u_{M}}</code> and <code class="reqn">\bm{\Omega}_m\in R^{u_m\times u_m}</code> are the dimension-reduced clustering parameters and <code class="reqn">\mathbf{X}_{\circ,m}</code> does not vary with cluster index <code class="reqn">Y</code>. In the E-step, the membership weights are evaluated as
+</p>
+<p style="text-align: center;"><code class="reqn">
+\widehat{\eta}_{ik}^{(s)}=\frac{\widehat{\pi}_{k}^{(s-1)}f_{k}(\mathbf{X}_i;\widehat{\bm{\theta}}^{(s-1)})}{\sum_{k=1}^{K}\widehat{\pi}_{k}^{(s-1)}f_{k}(\mathbf{X}_i;\widehat{\bm{\theta}}^{(s-1)})},
+</code>
+</p>
+
+<p>where <code class="reqn">f_k</code> denotes the conditional probability density function of <code class="reqn">\mathbf{X}_i</code> within the <code class="reqn">k</code>-th cluster. In the subspace-regularized M-step, the envelope subspace is iteratively estimated through a Grassmann manifold optimization that minimize the following log-likelihood-based objective function:
+</p>
+<p style="text-align: center;"><code class="reqn">
+G_m^{(s)}(\bm{\Gamma}_m) = \log|\bm{\Gamma}_m^T \mathbf{M}_m^{(s)} \bm{\Gamma}_m|+\log|\bm{\Gamma}_m^T (\mathbf{N}_m^{(s)})^{-1} \bm{\Gamma}_m|,
+</code>
+</p>
+
+<p>where <code class="reqn">\mathbf{M}_{m}^{(s)}</code> and <code class="reqn">\mathbf{N}_{m}^{(s)}</code> are given by
+</p>
+<p style="text-align: center;"><code class="reqn">
+\mathbf{M}_m^{(s)} = \frac{1}{np_{-m}}\sum_{i=1}^{n} \sum_{k=1}^{K}\widehat{\eta}_{ik}^{(s)} (\bm{\epsilon}_{ik}^{(s)})_{(m)}(\widehat{\bm{\Sigma}}_{-m}^{(s-1)})^{-1}  (\bm{\epsilon}_{ik}^{(s)})_{(m)}^T,
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">
+\mathbf{N}_m^{(s)} = \frac{1}{np_{-m}}\sum_{i=1}^{n} (\mathbf{X}_i)_{(m)}(\widehat{\bm{\Sigma}}_{-m}^{(s-1)})^{-1}(\mathbf{X}_i)_{(m)}^T.
+</code>
+</p>
+
+<p>The intermediate estimators <code class="reqn">\mathbf{M}_{m}^{(s)}</code> can be viewed the mode-<code class="reqn">m</code> conditional variation estimate of <code class="reqn">\mathbf{X}\mid Y</code> and <code class="reqn">\mathbf{N}_{m}^{(s)}</code> is the mode-<code class="reqn">m</code> marginal variation estimate of <code class="reqn">\mathbf{X}</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A vector of estimated labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pi</code></td>
+<td>
+<p>A vector of estimated prior probabilities for clusters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>A <code>n</code> by <code>K</code> matrix of estimated membership weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Mu.est</code></td>
+<td>
+<p>A list of estimated cluster means.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SIG.est</code></td>
+<td>
+<p>A list of estimated covariance matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Mm</code></td>
+<td>
+<p>Estimation of <code>Mm</code> defined in paper.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nm</code></td>
+<td>
+<p>Estimation of <code>Nm</code> defined in paper.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Gamma.est</code></td>
+<td>
+<p>A list of estimated envelope basis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PGamma.est</code></td>
+<td>
+<p>A list of envelope projection matrices.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Kai Deng, Yuqing Pan, Xin Zhang and Qing Mai</p>
+
+
+<h3>References</h3>
+
+<p>Deng, K. and Zhang, X. (2021). Tensor Envelope Mixture Model for Simultaneous Clustering and Multiway Dimension Reduction. <em>Biometrics</em>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TGMM</code>, <code>tune_u_sep</code>, <code>tune_u_joint</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  A = array(c(rep(1,20),rep(2,20))+rnorm(40),dim=c(2,2,10))
+  myfit = TEMM(A,u=c(2,2),K=2)
+</code></pre>
+
+
+</div>

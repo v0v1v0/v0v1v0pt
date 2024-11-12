@@ -1,0 +1,216 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sampleLCA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Telescoping sampling of the LCA model where a prior on the number
+of components K is specified.</h2>
+
+<h3>Description</h3>
+
+
+<ul>
+<li>
+<p> The MCMC scheme is implemented as suggested in Frühwirth-Schnatter et al (2021).
+</p>
+</li>
+<li>
+<p> The priors on the model parameters are specified as in Frühwirth-Schnatter et al (2021),
+see the vignette for details and notation.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">sampleLCA(
+  y,
+  S,
+  pi,
+  eta,
+  a0,
+  M,
+  burnin,
+  thin,
+  Kmax,
+  G = c("MixDynamic", "MixStatic"),
+  priorOnK,
+  priorOnWeights,
+  verbose = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A numeric matrix; containing the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>A numeric matrix; containing the initial cluster
+assignments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pi</code></td>
+<td>
+<p>A numeric vector; containing the initial cluster-specific
+success probabilities.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>A numeric vector; containing the initial cluster sizes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a0</code></td>
+<td>
+<p>A numeric vector; containing the parameters of the prior on the
+cluster-specific success probabilities.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M</code></td>
+<td>
+<p>A numeric scalar; specifying the number of recorded
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>A numeric scalar; specifying the number of burn-in
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thin</code></td>
+<td>
+<p>A numeric scalar; specifying the thinning used for the
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Kmax</code></td>
+<td>
+<p>A numeric scalar; the maximum number of components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>G</code></td>
+<td>
+<p>A character string; either <code>"MixDynamic"</code> or <code>"MixStatic"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorOnK</code></td>
+<td>
+<p>A named list; providing the prior on the number of components K, see <code>priorOnK_spec()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorOnWeights</code></td>
+<td>
+<p>A named list; providing the prior on the mixture weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical; indicating if some intermediate clustering
+results should be printed.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named list containing:
+</p>
+
+<ul>
+<li> <p><code>"Pi"</code>: sampled component-specific success probabilities.
+</p>
+</li>
+<li> <p><code>"Eta"</code>: sampled weights.
+</p>
+</li>
+<li> <p><code>"S"</code>: sampled assignments.
+</p>
+</li>
+<li> <p><code>"Nk"</code>: number of observations assigned to the different components, for each iteration.
+</p>
+</li>
+<li> <p><code>"K"</code>: sampled number of components.
+</p>
+</li>
+<li> <p><code>"Kplus"</code>: number of filled, i.e., non-empty components, for each iteration.
+</p>
+</li>
+<li> <p><code>"e0"</code>: sampled Dirichlet parameter of the prior on the weights (if <code class="reqn">e_0</code> is random).
+</p>
+</li>
+<li> <p><code>"alpha"</code>: sampled Dirichlet parameter of the prior on the weights (if <code class="reqn">\alpha</code> is random).
+</p>
+</li>
+<li> <p><code>"acc"</code>: logical vector indicating acceptance in the Metropolis-Hastings step when sampling either <code class="reqn">e_0</code> or <code class="reqn">\alpha</code>.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (requireNamespace("poLCA", quietly = TRUE)) {
+    data("carcinoma", package = "poLCA")
+    y &lt;- carcinoma
+    N &lt;- nrow(y)
+    r &lt;- ncol(y)
+    
+    Mmax &lt;- 200
+    thin &lt;- 1
+    burnin &lt;- 100
+    M &lt;- Mmax/thin
+    Kmax &lt;- 50  
+    Kinit &lt;- 10
+    
+    G &lt;- "MixDynamic"
+    priorOnAlpha &lt;- priorOnAlpha_spec("gam_1_2")
+    priorOnK &lt;- priorOnK_spec("Pois_1")
+    
+    cat &lt;- apply(y, 2, max)
+    a0 &lt;- rep(1, sum(cat))
+
+    cl_y &lt;- kmeans(y, centers = Kinit, iter.max = 20)
+    S_0 &lt;- cl_y$cluster
+    eta_0 &lt;- cl_y$size/N
+
+    pi_0 &lt;- do.call("cbind", lapply(1:r, function(j) {
+        prop.table(table(S_0, y[, j]), 1)
+    }))
+
+    result &lt;- sampleLCA(
+        y, S_0, pi_0, eta_0, a0, 
+        M, burnin, thin, Kmax, 
+        G, priorOnK, priorOnAlpha)
+
+    K &lt;- result$K
+    Kplus &lt;- result$Kplus   
+    
+    plot(seq_along(K), K, type = "l", ylim = c(0, max(K)),  
+         xlab = "iteration", main = "",
+         ylab = expression("K" ~ "/" ~ K["+"]), col = 1)
+    lines(seq_along(Kplus), Kplus, col = 2)
+    legend("topright", legend = c("K", expression(K["+"])),
+           col = 1:2, lty = 1, box.lwd = 0)
+}
+
+</code></pre>
+
+
+</div>

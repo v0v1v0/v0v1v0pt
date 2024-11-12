@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update_base_models</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Update the base models of an ensemble</h2>
+
+<h3>Description</h3>
+
+<p>This is a generic function for updating the base models
+comprising an ensemble.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">update_base_models(object, newdata, num_cores = 1)
+
+## S4 method for signature 'ADE'
+update_base_models(object, newdata, num_cores = 1)
+
+## S4 method for signature 'DETS'
+update_base_models(object, newdata, num_cores = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an ensemble object, of class <code>DETS-class</code> or
+<code>ADE-class</code>;</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>new data used to update the models. Each base model
+is retrained, so <code>newdata</code> should be the past data used for initially training
+the models along with any further available observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_cores</code></td>
+<td>
+<p>A numeric value to specify the number of cores used to
+train base and meta models. num_cores = 1
+leads to sequential training of models. num_cores &gt; 1
+splits the training of the base models across num_cores cores.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>update_base_models</strong> function receives a
+model object and a new dataset for retraining
+the base models. This new data should
+have the same structure as the one used to build the
+ensemble.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ADE-class</code> for the ADE model information, and
+<code>DETS-class</code> for the DETS model information;
+<code>update_ade_meta</code> for updating the meta models of an ADE ensemble.
+See <code>update_weights</code> for the method used to update
+the weights of the ensemble. Updating the weights only changes the information
+about the recent observations for computing the weights of the base models,
+while updating the model uses that information to retrain the models.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("water_consumption")
+dataset &lt;- embed_timeseries(water_consumption, 5)
+# toy size for checks execution time
+train &lt;- dataset[1:300,]
+test &lt;- dataset[301:305, ]
+
+specs &lt;- model_specs(c("bm_ppr","bm_glm","bm_mars"), NULL)
+
+model &lt;- ADE(target ~., train, specs)
+
+predictions &lt;- numeric(nrow(test))
+for (i in seq_along(predictions)) {
+  predictions[i] &lt;- predict(model, test[i, ])@y_hat
+  model &lt;-
+    update_base_models(model,
+                       rbind.data.frame(train, test[seq_len(i), ]))
+}
+
+####
+
+specs2 &lt;- model_specs(c("bm_ppr","bm_randomforest","bm_svr"), NULL)
+
+modeldets &lt;- DETS(target ~., train, specs2)
+
+predictions &lt;- numeric(nrow(test))
+# predict new data and update models every three points
+# in the remaining points, the only the weights are updated
+for (i in seq_along(predictions)) {
+  predictions[i] &lt;- predict(modeldets, test[i, ])@y_hat
+
+  if (i %% 3 == 0)
+    modeldets &lt;-
+      update_base_models(modeldets,
+                         rbind.data.frame(train, test[seq_len(i), ]))
+  else
+    modeldets &lt;- update_weights(modeldets, test[seq_len(i), ])
+}
+
+
+</code></pre>
+
+
+</div>

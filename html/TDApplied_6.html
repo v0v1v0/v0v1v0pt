@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>diagram_distance</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate distance between a pair of persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>Calculates the distance between a pair of persistence diagrams, either the output from a <code>diagram_to_df</code> function call
+or from a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>,
+in a particular homological dimension.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">diagram_distance(
+  D1,
+  D2,
+  dim = 0,
+  p = 2,
+  distance = "wasserstein",
+  sigma = NULL,
+  rho = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>D1</code></td>
+<td>
+<p>the first persistence diagram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D2</code></td>
+<td>
+<p>the second persistence diagram.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>the non-negative integer homological dimension in which the distance is to be computed, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>a number representing the wasserstein power parameter, at least 1 and default 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>a string which determines which type of distance calculation to carry out, either "wasserstein" (default) or "fisher".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>either NULL (default) or a positive number representing the bandwidth for the Fisher information metric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>either NULL (default) or a positive number. If NULL then the exact calculation of the Fisher information metric is returned and otherwise a fast approximation, see details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The most common distance calculations between persistence diagrams
+are the wasserstein and bottleneck distances, both of which "match" points between
+their two input diagrams and compute the "loss" of the optimal matching 
+(see <a href="https://dl.acm.org/doi/10.1145/3064175">https://dl.acm.org/doi/10.1145/3064175</a> for details). Another 
+method for computing distances, the Fisher information metric, 
+converts the two diagrams into distributions
+defined on the plane, and calculates a distance between the resulting two distributions
+(<a href="https://proceedings.neurips.cc/paper/2018/file/959ab9a0695c467e7caf75431a872e5c-Paper.pdf">https://proceedings.neurips.cc/paper/2018/file/959ab9a0695c467e7caf75431a872e5c-Paper.pdf</a>).
+If the 'distance' parameter is "fisher" then 'sigma' must not be NULL. As noted in the Persistence Fisher paper,
+there is a fast speed-up approximation which has been implemented from <a href="https://github.com/vmorariu/figtree">https://github.com/vmorariu/figtree</a> 
+and can be accessed by setting the 'rho' parameter. Smaller
+values of 'rho' will result in tighter approximations at the expense of longer runtime, and vice versa.
+</p>
+
+
+<h3>Value</h3>
+
+<p>the numeric value of the distance calculation.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Kerber M, Morozov D and Nigmetov A (2017). "Geometry Helps to Compare Persistence Diagrams." <a href="https://dl.acm.org/doi/10.1145/3064175">https://dl.acm.org/doi/10.1145/3064175</a>.
+</p>
+<p>Le T, Yamada M (2018). "Persistence fisher kernel: a riemannian manifold kernel for persistence diagrams." <a href="https://proceedings.neurips.cc/paper/2018/file/959ab9a0695c467e7caf75431a872e5c-Paper.pdf">https://proceedings.neurips.cc/paper/2018/file/959ab9a0695c467e7caf75431a872e5c-Paper.pdf</a>.
+</p>
+<p>Vlad I. Morariu, Balaji Vasan Srinivasan, Vikas C. Raykar, Ramani Duraiswami, and Larry S. Davis. Automatic online tuning for fast Gaussian summation. Advances in Neural Information Processing Systems (NIPS), 2008.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>distance_matrix</code> for distance matrix calculations.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,size = 20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,size = 20),],
+                      dim = 1,threshold = 2)
+
+  # calculate 2-wasserstein distance between D1 and D2 in dimension 1
+  diagram_distance(D1,D2,dim = 1,p = 2,distance = "wasserstein")
+
+  # calculate bottleneck distance between D1 and D2 in dimension 0
+  diagram_distance(D1,D2,dim = 0,p = Inf,distance = "wasserstein")
+
+  # Fisher information metric calculation between D1 and D2 for sigma = 1 in dimension 1
+  diagram_distance(D1,D2,dim = 1,distance = "fisher",sigma = 1)
+  
+  # repeat but with fast approximation
+  ## Not run: 
+  diagram_distance(D1,D2,dim = 1,distance = "fisher",sigma = 1,rho = 0.001)
+  
+## End(Not run)
+}
+</code></pre>
+
+
+</div>

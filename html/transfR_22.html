@@ -1,0 +1,207 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mixr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transfer of net rainfall to ungauged catchments</h2>
+
+<h3>Description</h3>
+
+<p>Combine the net rainfall of gauged catchments to simulate the net rainfall
+of an ungauged catchment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mixr(
+  obs,
+  sim,
+  mdist,
+  distance = "rghosh",
+  gres = 5,
+  weightO = 0.8,
+  weightC = 0.2,
+  parallel = FALSE,
+  cores = NULL,
+  power = 1,
+  ndonors = 5,
+  donors = NULL,
+  maxdist = 50000,
+  flexible_donor = TRUE,
+  cv = FALSE,
+  save_donor = FALSE,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obs</code></td>
+<td>
+<p>"transfR" object of the gauged catchments</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim</code></td>
+<td>
+<p>"transfR" object of the ungauged catchments</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mdist</code></td>
+<td>
+<p>the distance matrix between gauged and ungauged catchments as computed by
+the function hdist</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>the method to use for computing distance matrix if <code>mdist</code> is not provided.
+Possible values are "ghosh", "rghosh", "points", "centroids", "combined" as available
+in the function hdist</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gres</code></td>
+<td>
+<p>resolution of spatial discretisation (number of points by km²) for Ghosh
+distance (see the function hdist)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weightO</code></td>
+<td>
+<p>weight given to the distance between outlets if <code>distance</code> is "combined"
+(see the function hdist)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weightC</code></td>
+<td>
+<p>weight given to the distance between centroids if <code>distance</code> is "combined"
+(see the function hdist)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>logical indicating if the computation should be parallelised</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>the number of cores to use for parallel execution if <code>parallel</code> is TRUE.
+If not specified, the number of cores is set to the value of <code>parallel::detectCores()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>power</code></td>
+<td>
+<p>exponent applied in the inverse distance weighting strategy as defined by the function
+weightr</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ndonors</code></td>
+<td>
+<p>maximum number of catchments to be used to simulate discharge of an ungauged
+catchment as defined by the function weightr</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>donors</code></td>
+<td>
+<p>vector of catchments id from which donors are selected. If empty, the <code>ndonors</code> closest
+catchments are used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxdist</code></td>
+<td>
+<p>maximum distance between a gauged and an ungauged catchment to allow the net rainfall
+to be transfered. This threshold is applied on the <code>mdist</code> distance matrix. If no units is provided,
+<code>maxdist</code> is assumed to be in [m].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flexible_donor</code></td>
+<td>
+<p>boolean indicating if the donor catchments can change during the simulation period
+according to the availability of discharge observations. See weightr for more details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cv</code></td>
+<td>
+<p>boolean indicating if cross validation evaluation should be done. If true, it will estimate
+the net rainfall of every gauged catchments (<code>obs</code>) as if they were ungauged (leave-one-out evaluation)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>save_donor</code></td>
+<td>
+<p>boolean indicating if the net rainfall of each of the <code>ndonors</code> catchments
+should be stored in the sim object for further analysis. If true, it is adding three new space-time attributes
+in the <code>sim</code> object called "RnDonor", "Idonor" and "Wdonor" describing the net rainfall, the id and
+the weight of the donor catchments respectively</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>boolean indicating if information messages should be written to the console</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is a wrapper function for hdist and weightr to directly estimate
+the net rainfall on a set of ungauged catchments (<code>sim</code>) from a set of gauged catchments (<code>obs</code>).
+It returns the simulated net rainfall as a new space-time attribute in the <code>sim</code> object called "RnSim".
+The simulated net rainfall of a given ungauged catchment <code class="reqn">i</code> is a weighted average of the net rainfalls
+of <code>ndonors</code> gauged catchments <code class="reqn">j</code>:
+</p>
+<p style="text-align: center;"><code class="reqn">R_n^i =\Sigma_{j=1}^{ndonors} R_n^j \cdot \lambda_j</code>
+</p>
+
+<p>where <code class="reqn">\lambda_j</code> are defined by an inverse distance weighting function (see weightr).
+</p>
+
+
+<h3>Value</h3>
+
+<p>The <code>sim</code> object incremented by the new computed attributes.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>hdist, weightr
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(Oudon)
+object &lt;- as_transfr(st = Oudon$obs, hl = Oudon$hl)
+object &lt;- velocity(object)
+object &lt;- uh(object)
+object &lt;- lagtime(object)
+object &lt;- rapriori(object)
+object &lt;- inversion(object, parallel = TRUE, cores = 2)
+mdist  &lt;- hdist(x = object, y = object, method = "rghosh")
+object &lt;- mixr(obs = object, mdist = mdist, parallel = TRUE, cores=2,
+cv = TRUE, flexible_donor = TRUE, save_donor = FALSE)
+object &lt;- convolution(object, save_donor = FALSE)
+plot(object, i = 1, attribute = c("Qobs", "Qsim"))
+</code></pre>
+
+
+</div>

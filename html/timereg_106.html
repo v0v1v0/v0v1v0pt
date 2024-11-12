@@ -1,0 +1,210 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>prop.excess</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fits Proportional excess hazards model</h2>
+
+<h3>Description</h3>
+
+<p>Fits proportional excess hazards model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">prop.excess(
+  formula = formula(data),
+  data = parent.frame(),
+  excess = 1,
+  tol = 1e-04,
+  max.time = NULL,
+  n.sim = 1000,
+  alpha = 1,
+  frac = 1
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula object, with the response on the left of a ‘~’
+operator, and the terms on the right.  The response must be a survival
+object as returned by the ‘Surv’ function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with the variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>excess</code></td>
+<td>
+<p>specifies for which of the subjects the excess term is
+present. Default is that the term is present for all subjects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>tolerance for numerical procedure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.time</code></td>
+<td>
+<p>stopping considered time-period if different from 0.
+Estimates thus computed from [0,max.time] if max.time&gt;0. Default is max of
+data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.sim</code></td>
+<td>
+<p>number of simulations in re-sampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>tuning paramter in Newton-Raphson procedure. Value smaller than
+one may give more stable convergence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frac</code></td>
+<td>
+<p>number between 0 and 1.  Is used in supremum test where observed
+jump times t1, ..., tk is replaced by t1, ..., tl with l=round(frac*k).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The models are written using the survival modelling given in the survival
+package.
+</p>
+<p>The program assumes that there are no ties, and if such are present random
+noise is added to break the ties.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of type "prop.excess". With the following
+arguments: </p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>cum</code></td>
+<td>
+<p>estimated cumulative regression functions. First
+column contains the jump times, then follows the estimated components of
+additive part of model and finally the excess cumulative baseline. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.cum</code></td>
+<td>
+<p>robust pointwise variance estimates for estimated
+cumulatives. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>estimate of parametric components of model. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.gamma</code></td>
+<td>
+<p>robust variance estimate for gamma. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval</code></td>
+<td>
+<p>p-value
+of Kolmogorov-Smirnov test (variance weighted) for excess baseline and Aalen
+terms, H: B(t)=0. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.HW</code></td>
+<td>
+<p>p-value of supremum test (corresponding
+to Hall-Wellner band) for excess baseline and Aalen terms, H: B(t)=0.
+Reported in summary. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.CM</code></td>
+<td>
+<p>p-value of Cramer von Mises test for
+excess baseline and Aalen terms, H: B(t)=0. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quant</code></td>
+<td>
+<p>95 percent
+quantile in distribution of resampled Kolmogorov-Smirnov test statistics for
+excess baseline and Aalen terms. Used to construct 95 percent simulation
+band.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quant95HW</code></td>
+<td>
+<p>95 percent quantile in distribution of resampled
+supremum test statistics corresponding to Hall-Wellner band for excess
+baseline and Aalen terms. Used to construct 95 percent Hall-Wellner band.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>simScoreProp</code></td>
+<td>
+<p>observed scoreprocess and 50 resampled scoreprocesses
+(under model). List with 51 elements. </p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Torben Martinussen
+</p>
+
+
+<h3>References</h3>
+
+<p>Martinussen and Scheike, Dynamic Regression Models for Survival
+Data, Springer Verlag (2006).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+###working on memory leak issue, 3/3-2015
+###data(melanoma)
+###lt&lt;-log(melanoma$thick)          # log-thickness 
+###excess&lt;-(melanoma$thick&gt;=210)    # excess risk for thick tumors
+###
+#### Fits Proportional Excess hazards model 
+###fit&lt;-prop.excess(Surv(days/365,status==1)~sex+ulc+cox(sex)+
+###                 cox(ulc)+cox(lt),melanoma,excess=excess,n.sim=100)
+###summary(fit)
+###par(mfrow=c(2,3))
+###plot(fit)
+
+</code></pre>
+
+
+</div>

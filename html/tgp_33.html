@@ -1,0 +1,283 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim.tgp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Surrogate-based optimization of noisy black-box function </h2>
+
+<h3>Description</h3>
+
+<p>Optimize (minimize) a noisy black-box function (i.e., a function which
+may not be differentiable, and may not execute deterministically).
+A <code>b*</code> <span class="pkg">tgp</span> model is used as a surrogate for
+adaptive sampling via improvement (and other) statistics.  Note that
+this function is intended as a skeleton to be tailored as required
+for a particular application
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim.step.tgp(f, rect, model = btgp, prev = NULL, X = NULL,
+     Z = NULL, NN = 20 * length(rect), improv = c(1, 5), cands = c("lhs", "tdopt"),
+     method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",  "optimize"), ...)
+optim.ptgpf(start, rect, tgp.obj,
+     method=c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "optimize"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p> A function to be optimized, having only one free argument </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rect</code></td>
+<td>
+ <p><code>matrix</code> indicating the domain of the argument of
+<code>f</code> over which an optimal should be searched; must have
+<code>ncol(rect) = 2</code> and <code>nrow</code> agreeing with the argument
+of <code>f</code> indicating the dimension of the data. For 1-d data,
+a vector of length 2 is allowed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p> The <code>b*</code> regression model used as a surrogate
+for optimization; see <code>btgp</code>, and others,
+for more detail </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prev</code></td>
+<td>
+<p> The output from a previous call to <code>optim.step.tgp</code>;
+this should be a <code>list</code> with entries as described the “Value”
+section below </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p><code>data.frame</code>, <code>matrix</code>, or vector of current
+inputs <code>X</code>, to be augmented </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p> Vector of current output responses <code>Z</code> of length
+equal to the leading dimension (rows) of <code>X</code>, i.e.,
+<code>length(Z) ==  nrow(X)</code>, to be augmented</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NN</code></td>
+<td>
+<p> Number of candidate locations (<code>XX</code>) at which to
+sample from the improvement statistic </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>improv</code></td>
+<td>
+<p> Indicates the <code>improv</code> argument provided
+to a <code>b*</code> <code>model</code> function for sampling from the
+improvement statistic at the <code>NN</code> candidate locations
+(<code>XX</code>); see <code>btgp</code>, and others, for more detail</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cands</code></td>
+<td>
+<p> The type of candidates (<code>XX</code>)
+at which samples from the improvement statistics are gathered.
+The default setting  of <code>"lhs"</code> is recommended.  However,
+a sequential treed D-optimal design can be used with <code>"tdopt"</code>
+for a more global exploration; see <code>tgp.design</code> for
+more details </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p> A method from <code>optim</code>, or <code>"optimize"</code>
+which uses <code>optimize</code> as appropriate (when the
+input-space is 1-d)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p> Further arguments to the <code>b*</code> <code>model</code>
+function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p> A starting value for optimization of the MAP predictive
+(kriging) surface of a <code>"tgp"</code>-class object.  A good starting
+value is the <code>X</code> or <code>XX</code> location found to be a minimum
+in the mean predictive surface contained in <code>"tgp"</code>-class
+object </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tgp.obj</code></td>
+<td>
+<p> A <code>"tgp"</code>-class object that is the output of one of
+the <code>b*</code> functions: <code>blm</code>, <code>btlm</code>
+<code>bgp</code>, <code>bgpllm</code>, <code>btgp</code>, or 
+<code>btgpllm</code>, as can be used by <code>predict.tgp</code>
+for optimizing on the MAP predictive (surrogate) kriging surface </p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>optim.step.tgp</code> executes one step in a search for the global
+optimum (minimum) of a noisy function (<code>Z~f(X)</code>) in a bounded
+rectangle (<code>rect</code>). The procedure essentially fits a tgp
+<code>model</code> and samples from
+the posterior distribution of improvement
+statistics at <code>NN+1</code> candidates locations.
+<code>NN</code> of the candidates come from
+<code>cands</code>, i.e., <code>"lhs"</code> or <code>"tdopt"</code>, plus one which
+is the location of the minima found in a previous run via
+<code>prev</code> by using <code>optim</code> (with a particular
+<code>method</code> or <code>optimize</code> instead) on the MAP
+<code>model</code> predictive surface using the <code>"tgp"</code>-class object
+contained therein.
+The <code>improv[2]</code> with the the highest expected improvement are
+recommended for adding into the design on output.
+</p>
+<p><code>optim.ptgpf</code> is the subroutine used by
+<code>optim.step.tgp</code> to find optimize on the MAP (surrogate)
+predictive surface for the <code>"tgp"</code>-class object contained in
+<code>prev</code>.
+</p>
+<p>Please see <code>vignette("tgp2")</code> for a detailed illustration
+</p>
+
+
+<h3>Value</h3>
+
+<p>The <code>list</code> return has the following components.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>X </code></td>
+<td>
+<p> A <code>matrix</code> with <code>nrow(rect)</code> columns whose
+rows contain recommendations for input locations to add into
+the design </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress </code></td>
+<td>
+<p> A one-row <code>data.frame</code> indicating the
+the <code>X</code>-location and objective value of the current best guess
+of the solution to the (kriging) surrogate optimization along with the
+maximum values of the improvement statistic </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obj </code></td>
+<td>
+<p> the <code>"tgp"</code>-class object output from the
+<code>model</code> function </p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>The ellipses (<code>...</code>) argument is used differently here, as
+compared to <code>optim</code>, and <code>optimize</code>.  It
+allows further arguments to be passed to the  <code>b*</code> <code>model</code>
+function, whereas for <code>optim</code> it would describe
+further (static) arguments to the function <code>f</code> to be optimized.
+If static arguments need to be set for <code>f</code>, then we recommend
+setting defaults via the <code>formals</code> of <code>f</code>
+</p>
+
+
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gramacy, R. B. (2020) <em>Surrogates: Gaussian Process Modeling,
+Design and Optimization for the Applied Sciences</em>. Boca Raton,
+Florida: Chapman Hall/CRC.  (See Chapter 7.)
+<a href="https://bobby.gramacy.com/surrogates/">https://bobby.gramacy.com/surrogates/</a>
+</p>
+<p>Matthew Taddy, Herbert K.H. Lee, Genetha A. Gray, and Joshua
+D. Griffin. (2009) <em>Bayesian guided pattern search for
+robust local optimization.</em>  Technometrics, 51(4), pp. 389-401
+</p>
+<p><a href="https://bobby.gramacy.com/r_packages/tgp/">https://bobby.gramacy.com/r_packages/tgp/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>btgp</code>, etc., <code>optim</code>,
+<code>optimize</code>, <code>tgp.design</code>,
+<code>predict.tgp</code>, <code>dopt.gp</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## optimize the simple exponential function 
+f &lt;- function(x) { exp2d.Z(x)$Z }
+
+## create the initial design with D-optimal candidates
+rect &lt;- rbind(c(-2,6), c(-2,6))
+Xcand &lt;- lhs(500, rect)
+X &lt;- dopt.gp(50, X=NULL, Xcand)$XX
+Z &lt;- f(X)
+
+## do 10 rounds of adaptive sampling
+out &lt;- progress &lt;- NULL
+for(i in 1:10) {
+
+  ## get recommendations for the next point to sample
+  out &lt;- optim.step.tgp(f, X=X, Z=Z, rect=rect, prev=out)
+
+  ## add in the inputs, and newly sampled outputs
+  X &lt;- rbind(X, out$X)
+  Z &lt;- c(Z, f(out$X))
+
+  ## keep track of progress and best optimum
+  progress &lt;- rbind(progress, out$progress)
+  print(progress[i,])
+}
+
+## plot the progress so far
+par(mfrow=c(2,2))
+plot(out$obj, layout="surf")
+plot(out$obj, layout="as", as="improv")
+matplot(progress[,1:nrow(rect)], main="optim results",
+        xlab="rounds", ylab="x[,1:2]", type="l", lwd=2)
+plot(log(progress$improv), type="l", main="max log improv",
+     xlab="rounds", ylab="max log(improv)")
+
+</code></pre>
+
+
+</div>

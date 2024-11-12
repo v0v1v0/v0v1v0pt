@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_get_frequency</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Automatic frequency and trend calculation from a time series index</h2>
+
+<h3>Description</h3>
+
+<p>Automatic frequency and trend calculation from a time series index
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_get_frequency(idx, period = "auto", message = TRUE)
+
+tk_get_trend(idx, period = "auto", message = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>idx</code></td>
+<td>
+<p>A date or datetime index.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>Either "auto", a time-based definition (e.g. "2 weeks"),
+or a numeric number of observations per frequency (e.g. 10).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>message</code></td>
+<td>
+<p>A boolean. If <code>message = TRUE</code>, the frequency or trend is output
+as a message along with the units in the scale of the data.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A <em>frequency</em> is loosely defined as the number of observations that comprise a cycle
+in a data set. The <em>trend</em> is loosely defined as time span that can
+be aggregated across to visualize the central tendency of the data.
+It's often easiest to think of frequency and trend in terms of the time-based units
+that the data is already in. <strong>This is what <code>tk_get_frequency()</code> and <code>time_trend()</code>
+enable: using time-based periods to define the frequency or trend.</strong>
+</p>
+<p><strong>Frequency</strong>:
+</p>
+<p>As an example, a weekly cycle is often 5-days (for working
+days) or 7-days (for calendar days). Rather than specify a frequency of 5 or 7,
+the user can specify <code>period = "1 week"</code>, and
+<code>tk_get_frequency()</code> will detect the scale of the time series and return 5 or 7
+based on the actual data.
+</p>
+<p>The <code>period</code> argument has three basic options for returning a frequency.
+Options include:
+</p>
+
+<ul>
+<li> <p><code>"auto"</code>: A target frequency is determined using a pre-defined template (see <code>template</code> below).
+</p>
+</li>
+<li> <p><code style="white-space: pre;">⁠time-based duration⁠</code>: (e.g. "1 week" or "2 quarters" per cycle)
+</p>
+</li>
+<li> <p><code style="white-space: pre;">⁠numeric number of observations⁠</code>: (e.g. 5 for 5 observations per cycle)
+</p>
+</li>
+</ul>
+<p>When <code>period = "auto"</code>, the <code>tk_time_scale_template()</code> is used to calculate the frequency.
+</p>
+<p><strong>Trend</strong>:
+</p>
+<p>As an example, the trend of daily data is often best aggregated by evaluating
+the moving average over a quarter or a month span. Rather than specify the number
+of days in a quarter or month, the user can specify "1 quarter" or "1 month",
+and the <code>time_trend()</code> function will return the correct number of observations
+per trend cycle. In addition, there is an option, <code>period = "auto"</code>, to
+auto-detect an appropriate trend span depending on the data. The <code>template</code>
+is used to define the appropriate trend span.
+</p>
+<p><strong>Time Scale Template</strong>
+</p>
+<p>The <code>tk_time_scale_template()</code> is a Look-Up Table used by the trend and period to find the
+appropriate time scale. It contains three features: <code>time_scale</code>, <code>frequency</code>, and <code>trend</code>.
+</p>
+<p>The algorithm will inspect
+the scale of the time series and select the best frequency or trend that matches the scale and
+number of observations per target frequency. A frequency is then chosen on be the
+best match.
+</p>
+<p>The predefined template is stored in a function <code>tk_time_scale_template()</code>.
+You can modify the template with <code>set_tk_time_scale_template()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a scalar numeric value indicating the number of observations in the frequency or trend span.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul><li>
+<p> Time Scale Template Modifiers: <code>get_tk_time_scale_template()</code>, <code>set_tk_time_scale_template()</code>
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+
+idx_FB &lt;- FANG %&gt;%
+    filter(symbol == "FB") %&gt;%
+    pull(date)
+
+# Automated Frequency Calculation
+tk_get_frequency(idx_FB, period = "auto")
+
+# Automated Trend Calculation
+tk_get_trend(idx_FB, period = "auto")
+
+# Manually Override Trend
+tk_get_trend(idx_FB, period = "1 year")
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>track_</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Build a Track Table</h2>
+
+<h3>Description</h3>
+
+<p><code>track</code> constructs track tables based on <code>data.frame</code>
+(the default), <code>tibble</code>, or <code>data.table</code>.
+<code>track</code> is a convenience function that executes <code>track_df</code>,
+<code>track_tbl</code>, or <code>track_dt</code> based on the value of the 'table'
+parameter. Track tables can be used like the data structure they are build
+upon but with a notable difference: they have an extra attribute to store
+the projection of the track coordinates, and modifying the projection will
+automatically trigger the appropriate conversion of the coordinates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">track(x, y, z, t, id, ..., proj, origin, period, tz, format, table = "df")
+
+track_df(x, y, z, t, id, ..., proj, origin, period, tz, format)
+
+track_tbl(x, y, z, t, id, ..., proj, origin, period, tz, format)
+
+track_dt(x, y, z, t, id, ..., proj, origin, period, tz, format)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x, y, z</code></td>
+<td>
+<p>Numeric vectors representing the coordinates of the locations.
+<code>x</code> and <code>y</code> are required. <code>z</code> can be ignored if the
+trajectories are 2-dimensional. Note: if the vectors are not of the same
+length, the shorter ones will be recycled to match the length of the longer
+one.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>A numeric vector or a vector of objects that can be coerced to
+date-time objects by <code>as_datetime</code> representing the
+times (or frames) at which each location was recorded. If numeric, the
+origin and period of the time points can be set using <code>origin</code> and
+<code>period</code> below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A vector that can be coerced to a character vector by
+<code>as.character</code> representing the identity of the individual to
+which each location belong.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>A set of name-value pairs. Arguments are evaluated sequentially,
+so you can refer to previously created elements. These arguments are
+processed with <code>rlang::quos()</code> and support
+unquote via <code>!!</code> and unquote-splice via <code>!!!</code>. Use <code>:=</code> to
+create columns that start with a dot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proj</code></td>
+<td>
+<p>A character string or a <code>crs</code> object (see
+<code>st_crs</code> for more information) representing the projection
+of the coordinates. Leave empty if the coordinates are not projected (e.g.,
+output of video tracking). <code>"+proj=longlat"</code> is suitable for the output
+of most GPS trackers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>origin</code></td>
+<td>
+<p>Something that can be coerced to a date-time object by
+<code>as_datetime</code> representing the start date and time of
+the observations when <code>t</code> is a numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>A character vector in a shorthand format (e.g. "1 second") or
+ISO 8601 specification. This is used when <code>t</code> is a numeric vector to
+represent time unit of the observations. All unambiguous name units and
+abbreviations are supported, "m" stands for months, "M" for minutes unless
+ISO 8601 "P" modifier is present (see examples). Fractional units are
+supported but the fractional part is always converted to seconds. See
+<code>period</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tz</code></td>
+<td>
+<p>A time zone name. See <code>OlsonNames</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>A character string indicating the formatting of 't'. See
+<code>strptime</code> for how to specify this parameter.
+</p>
+<p>When supplied parsing is performed by strptime(). For this reason consider using specialized parsing functions in lubridate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table</code></td>
+<td>
+<p>A string indicating the class of the table on which the track
+table should be built. It can be a <code>data.frame</code> ("df", the default),
+a <code>tibble</code> ("tbl"), or a <code>data.table</code>
+("dt").</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A track table, which is a colloquial term for an object of class
+<code>track</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Simon Garnier, <a href="mailto:garnier@njit.edu">garnier@njit.edu</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(short_tracks)
+
+t_df &lt;- track(x = short_tracks$x, y = short_tracks$y, t = short_tracks$t,
+  id = short_tracks$id, proj = "+proj=longlat", tz = "Africa/Windhoek", table = "df")
+
+t_df &lt;- track_df(x = short_tracks$x, y = short_tracks$y, t = short_tracks$t,
+  id = short_tracks$id, proj = "+proj=longlat", tz = "Africa/Windhoek")
+
+t_tbl &lt;- track_tbl(x = short_tracks$x, y = short_tracks$y, t = short_tracks$t,
+id = short_tracks$id, proj = "+proj=longlat", tz = "Africa/Windhoek")
+
+t_dt &lt;- track_dt(x = short_tracks$x, y = short_tracks$y, t = short_tracks$t,
+  id = short_tracks$id, proj = "+proj=longlat", tz = "Africa/Windhoek")
+
+</code></pre>
+
+
+</div>

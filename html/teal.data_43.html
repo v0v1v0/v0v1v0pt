@@ -1,0 +1,167 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_code,teal_data-method</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get code from <code>teal_data</code> object</h2>
+
+<h3>Description</h3>
+
+<p>Retrieve code from <code>teal_data</code> object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'teal_data'
+get_code(object, deparse = TRUE, datanames = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>(<code>teal_data</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deparse</code></td>
+<td>
+<p>(<code>logical</code>) flag specifying whether to return code as <code>character</code> (<code>deparse = TRUE</code>) or as
+<code>expression</code> (<code>deparse = FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datanames</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a> (<code>character</code>) vector of dataset names to return the code for.
+For more details see the "Extracting dataset-specific code" section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Parameters passed to internal methods. Currently, the only supported parameter is <code>check_names</code>
+(<code>logical(1)</code>) flag,  which is <code>TRUE</code> by default. Function warns about missing objects, if they do not exist in
+<code>code</code> but are passed in <code>datanames</code>. To remove the warning, set <code>check_names = FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Retrieve code stored in <code style="white-space: pre;">⁠@code⁠</code>, which (in principle) can be used to recreate all objects found in <code style="white-space: pre;">⁠@env⁠</code>.
+Use <code>datanames</code> to limit the code to one or more of the datasets enumerated in <code style="white-space: pre;">⁠@datanames⁠</code>.
+If the code has not passed verification (with <code>verify()</code>), a warning will be prepended.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Either a character string or an expression. If <code>datanames</code> is used to request a specific dataset,
+only code that <em>creates</em> that dataset (not code that uses it) is returned. Otherwise, all contents of <code style="white-space: pre;">⁠@code⁠</code>.
+</p>
+
+
+<h3>Extracting dataset-specific code</h3>
+
+<p>When <code>datanames</code> is specified, the code returned will be limited  to the lines needed to <em>create</em>
+the requested datasets. The code stored in the <code style="white-space: pre;">⁠@code⁠</code> slot is analyzed statically to determine
+which lines the datasets of interest depend upon. The analysis works well when objects are created
+with standard infix assignment operators (see <code>?assignOps</code>) but it can fail in some situations.
+</p>
+<p>Consider the following examples:
+</p>
+<p><em>Case 1: Usual assignments.</em>
+</p>
+<div class="sourceCode r"><pre>data &lt;- teal_data() |&gt;
+  within({
+    foo &lt;- function(x) {
+      x + 1
+    }
+    x &lt;- 0
+    y &lt;- foo(x)
+  })
+get_code(data, datanames = "y")
+</pre></div>
+<p><code>x</code> has no dependencies, so <code>get_code(data, datanames = "x")</code> will return only the second call.<br><code>y</code> depends on <code>x</code> and <code>foo</code>, so <code>get_code(data, datanames = "y")</code> will contain all three calls.
+</p>
+<p><em>Case 2: Some objects are created by a function's side effects.</em>
+</p>
+<div class="sourceCode r"><pre>data &lt;- teal_data() |&gt;
+  within({
+    foo &lt;- function() {
+      x &lt;&lt;- x + 1
+    }
+    x &lt;- 0
+    foo()
+    y &lt;- x
+  })
+get_code(data, datanames = "y")
+</pre></div>
+<p>Here, <code>y</code> depends on <code>x</code> but <code>x</code> is modified by <code>foo</code> as a side effect (not by reassignment)
+and so <code>get_code(data, datanames = "y")</code> will not return the <code>foo()</code> call.<br>
+To overcome this limitation, code dependencies can be specified manually.
+Lines where side effects occur can be flagged by adding "<code style="white-space: pre;">⁠# @linksto &lt;object name&gt;⁠</code>" at the end.<br>
+Note that <code>within</code> evaluates code passed to <code>expr</code> as is and comments are ignored.
+In order to include comments in code one must use the <code>eval_code</code> function instead.
+</p>
+<div class="sourceCode r"><pre>data &lt;- teal_data() |&gt;
+  eval_code("
+    foo &lt;- function() {
+      x &lt;&lt;- x + 1
+    }
+    x &lt;- 0
+    foo() # @linksto x
+    y &lt;- x
+  ")
+get_code(data, datanames = "y")
+</pre></div>
+<p>Now the <code>foo()</code> call will be properly included in the code required to recreate <code>y</code>.
+</p>
+<p>Note that two functions that create objects as side effects, <code>assign</code> and <code>data</code>, are handled automatically.
+</p>
+<p>Here are known cases where manual tagging is necessary:
+</p>
+
+<ul>
+<li>
+<p> non-standard assignment operators, <em>e.g.</em> <code style="white-space: pre;">⁠%&lt;&gt;%⁠</code>
+</p>
+</li>
+<li>
+<p> objects used as conditions in <code>if</code> statements: <code style="white-space: pre;">⁠if (&lt;condition&gt;)⁠</code>
+</p>
+</li>
+<li>
+<p> objects used to iterate over in <code>for</code> loops: <code style="white-space: pre;">⁠for(i in &lt;sequence&gt;)⁠</code>
+</p>
+</li>
+<li>
+<p> creating and evaluating language objects, <em>e.g.</em> <code style="white-space: pre;">⁠eval(&lt;call&gt;)⁠</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">tdata1 &lt;- teal_data()
+tdata1 &lt;- within(tdata1, {
+  a &lt;- 1
+  b &lt;- a^5
+  c &lt;- list(x = 2)
+})
+get_code(tdata1)
+get_code(tdata1, datanames = "a")
+get_code(tdata1, datanames = "b")
+
+tdata2 &lt;- teal_data(x1 = iris, code = "x1 &lt;- iris")
+get_code(tdata2)
+get_code(verify(tdata2))
+
+</code></pre>
+
+
+</div>

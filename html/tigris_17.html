@@ -1,0 +1,94 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>erase_water</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Erase water area from an input polygon dataset</h2>
+
+<h3>Description</h3>
+
+<p>This function 'erases' water area from an input polygon dataset (typically a Census dataset).
+'Erase' is defined in the traditional GIS sense as the removal of areas in an input layer
+from an erase layer, returning the modified input layer. A common use-case is to improve
+cartographic representation of locations where US Census polygons include more water area
+than desired (e.g. New York City, Seattle) or to support contiguity-based spatial analyses that
+might otherwise incorrectly assume that polygons across bodies of water are neighbors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">erase_water(input_sf, area_threshold = 0.75, year = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_sf</code></td>
+<td>
+<p>An input sf object, ideally obtained with the tigris package or through tidycensus.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>area_threshold</code></td>
+<td>
+<p>The percentile rank cutoff of water areas to use in the erase operation, ranked by size. Defaults to 0.75, representing the water areas in the 75th percentile and up (the largest 25 percent of areas).  This value may need to be modified by the user to achieve optimal results for a given location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>year</code></td>
+<td>
+<p>The year to use for the water layer; defaults to 2020 unless the <code>tigris_year</code> option is otherwise set.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function works by identifying US counties that intersect the input polygon layer,
+then requesting water polygons (using <code>tigris::area_water()</code>) to be erased from
+those input polygons. The <code>area_threshold</code> parameter can be tuned to determine the
+percentile ranking of bodies of water (by area) to use;
+the default is a percentile ranking of 0.75, erasing the largest 25 percent of water
+bodies in the region.
+</p>
+<p>Analysts will ideally have transformed the input coordinate reference system (CRS) of their data
+to a projected CRS to improve performance; see <a href="https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#coordinate-reference-systems">https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#coordinate-reference-systems</a> for more information on
+how to perform CRS transformations.  Analysts should also use this function with caution;
+the function may generate sliver polygons or irregular geometries in the output layer,
+especially if the input sf object was not obtained with the tigris package.  Also, the operation
+may be quite slow for large input areas.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An output sf object representing the polygons in <code>input_sf</code> with water areas erased.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+library(tigris)
+library(sf)
+options(tigris_use_cache = TRUE)
+
+king_tracts &lt;- tracts(state = "WA", county = "King", year = 2020)
+
+# CRS: NAD 1983 / Washington North (State Plane)
+king_erased &lt;- king_tracts %&gt;%
+  st_transform(32148) %&gt;%
+  erase_water(area_threshold = 0.9)
+
+plot(king_erased$geometry)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

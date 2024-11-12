@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrackReconstruction-package</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Reconstruct Animal Tracks from Biologger Data.  
+</h2>
+
+<h3>Description</h3>
+
+<p>Given accelerometer, magnetometer, depth and optional speed data, this package will reconstruct animal paths.  Given GPS data, 
+pseudotracks can be geolocated.  The package was designed using northern fur seals (<code>Callorhinus ursinus</code>) but is probably suitable as a launching 
+pad for other animals.
+</p>
+
+
+<h3>Details</h3>
+
+
+<table>
+<tr>
+<td style="text-align: left;">
+Package: </td>
+<td style="text-align: left;"> TrackReconstruction</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+Type: </td>
+<td style="text-align: left;"> Package</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+Version: </td>
+<td style="text-align: left;"> 1.3</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+Date: </td>
+<td style="text-align: left;"> 2021-12-10</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+License: </td>
+<td style="text-align: left;"> GPL (&gt;=2)</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<p>Includes functions to Standardize logger data, format GPS data, find gaps in the raw data, navigation functions to 
+calculate distance, bearing, latitude and longitude, functions to calculate pseudotracks, to georeference the tracks
+and finally to plot the tracks with color bathymetry.  A vignette includes some additional Perl code to deal with large data files as well
+as additional plotting code to make 3D plots and 2D animations.
+</p>
+<p>DeadReckoning
+</p>
+<p>GapFinder
+</p>
+<p>GeoReference
+</p>
+<p>GeoRef (a wrapper for GeoReference)
+</p>
+<p>GPStable
+</p>
+<p>GraphLimits
+</p>
+<p>Mapper
+</p>
+<p>Navigation Functions (CalcBearing CalcLatitude CalcLongitude CalcDistance)
+</p>
+<p>Splitter
+</p>
+<p>Standardize
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Brian Battaile
+</p>
+<p>Maintainer:Brian Battaile &lt;brian.battaile@gmail.com&gt;
+</p>
+
+
+<h3>References</h3>
+
+<p>Wilson R.P., Liebsch,N., Davies,I.M., Quintana,F., Weimerskirch,H., Storch,S., Lucke,K., Siebert,U., Zankl,S., 
+Muller,G., Zimmer,I., Scolaro,A., Campagna,C., Plotz,J., Bornemann,H., Teilmann,J. and Mcmahon,C.R. (2007) 
+All at sea with animal tracks; methodological and analytical solutions for the resolution of movement.  
+Deep-Sea Research II 54:193-210
+</p>
+<p>Shepard E.L.C., Wilson, R.P., Halsey, L.G., Quintana, F., Laich, A.G., Gleiss, A.C., Liebsch, N., Myers, A.E., 
+Norman, B.  (2008)  Derivation of body motion via appropriate smoothing of acceleration data.  
+Aquatic Biology 4:235-241
+</p>
+<p>Wilson R.P., Wilson M.P. (1988)  Dead reckoning: a new technique for determining penguim movements at sea.
+Meeresforschung 32:2 155-158
+</p>
+
+
+<h3>See Also</h3>
+
+<p>R packages diveMove, adehabitat, animalTrack, argosfilter and crawl
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">betas&lt;-Standardize(1,1,-1,1,1,1,-57.8,68.76,-61.8,64.2,-70.16,58.08,
+	-10.1,9.55,-9.75,9.72, -9.91,9.43)
+#get declination and inclination data for study area
+decinc&lt;-c(10.228,65.918)
+#data set with 6 associated GPS fixes in the "gpsdata" data set
+data(rawdata)
+DRoutput&lt;-DeadReckoning(rawdata,betas,decinc,Hz=16,RmL=2,DepthHz=1,SpdCalc=3,MaxSpd=3.5)
+#prepare GPS data
+data(gpsdata02)
+gpsformat&lt;-GPStable(gpsdata02)
+Georeferenced&lt;-GeoRef(DRoutput,gpsformat)
+plot(Georeferenced$Longitude,Georeferenced$Latitude,pch=".")
+points(gpsformat$Longitude[2],gpsformat$Latitude[2],pch="S",col="Red") #Start
+points(gpsformat$Longitude[7],gpsformat$Latitude[7],pch="F",col="Blue") #Finish
+#Intermediate GPS points
+points(gpsformat$Longitude[3:6],gpsformat$Latitude[3:6],pch="*",col="Red")
+
+## Not run: 
+#plot the data with a bathymetric background, note how the axis dimensions have changed to 
+#give a more realistic path relative to that produced in the simple plot call.  See the vignette
+#or ?bathymetry for information on how to get bathymetric data for your study area.
+data(bathymetry)
+#This may take a minute or two
+image.xyz=tapply(bathymetry$Depth, list(bathymetry$Long, bathymetry$Lat), unique)
+Mapper(Georeferenced, gpsformat[2:7,], image.xyz, ExpFact = 500, minlat = 51, maxlat = 60,
+minlong = -177, maxlong = -163, Title = "Fun Graph!!!")
+#That entire animals trip plotted
+data(georef1min02)
+data(gpsdata02)
+Mapper(georef1min02, gpsdata02, image.xyz, ExpFact = 500, minlat = 51, maxlat = 60,
+minlong = -177, maxlong = -163, Title = "Fun Graph!!!")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

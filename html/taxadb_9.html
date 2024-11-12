@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fuzzy_filter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Match names that start or contain a specified text string</h2>
+
+<h3>Description</h3>
+
+<p>Match names that start or contain a specified text string
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fuzzy_filter(
+  name,
+  by = c("scientificName", "vernacularName"),
+  provider = getOption("taxadb_default_provider", "itis"),
+  match = c("contains", "starts_with"),
+  version = latest_version(),
+  db = td_connect(),
+  ignore_case = TRUE,
+  collect = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>vector of names (scientific or common, see <code>by</code>)
+to be matched against.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>a column name in the taxa_tbl (following Darwin Core Schema terms).
+The filtering join is executed with this column as the joining variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>provider</code></td>
+<td>
+<p>from which provider should the hierarchy be returned?
+Default is 'itis', which can also be configured using <code style="white-space: pre;">⁠options(default_taxadb_provider=...")⁠</code>.
+See <code style="white-space: pre;">⁠[td_create]⁠</code> for a list of recognized providers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match</code></td>
+<td>
+<p>should we match by names starting with the term or containing
+the term anywhere in the name?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>version</code></td>
+<td>
+<p>Which version of the taxadb provider database should we use?
+defaults to latest.  See tl_import for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>db</code></td>
+<td>
+<p>a connection to the taxadb database. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_case</code></td>
+<td>
+<p>should we ignore case (capitalization) in matching names?
+Can be significantly slower to run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>collect</code></td>
+<td>
+<p>logical, default <code>TRUE</code>. Should we return an in-memory
+data.frame (default, usually the most convenient), or a reference to
+lazy-eval table on disk (useful for very large tables on which we may
+first perform subsequent filtering operations.)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that fuzzy filter will be fast with an single or small number
+of names, but will be slower if given a very large vector of
+names to match, as unlike other <code>filter_</code> commands,
+fuzzy matching requires separate SQL calls for each name.
+As fuzzy matches should all be confirmed manually in any event, e.g.
+not every common name containing "monkey" belongs to a primate species.
+</p>
+<p>This method utilizes the database operation <code style="white-space: pre;">⁠%like%⁠</code> to filter tables without
+loading into memory.  Note that this does not support the use of regular
+expressions at this time.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  
+
+## match any common name containing:
+name &lt;- c("woodpecker", "monkey")
+fuzzy_filter(name, "vernacularName")
+
+## match scientific name
+fuzzy_filter("Chera", "scientificName",
+             match = "starts_with")
+
+
+</code></pre>
+
+
+</div>

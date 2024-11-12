@@ -1,0 +1,339 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sq</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Construct sq object from character vector</h2>
+
+<h3>Description</h3>
+
+<p>This function allows the user to construct objects of 
+<code>class sq</code> from a character vector.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sq(
+  x,
+  alphabet = NULL,
+  NA_letter = getOption("tidysq_NA_letter"),
+  safe_mode = getOption("tidysq_safe_mode"),
+  on_warning = getOption("tidysq_on_warning"),
+  ignore_case = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>[<code>character</code>]<br>
+Vector to construct <code>sq</code> object from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alphabet</code></td>
+<td>
+<p>[<code>character</code>]<br>
+If provided value is a single string, it will be interpreted as type (see
+details). If provided value has length greater than one, it will be treated
+as atypical alphabet for <code>sq</code> object and <code>sq</code> type will be
+<code>atp</code>. If provided value is <code>NULL</code>, type
+guessing will be performed (see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NA_letter</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+A string that is used to interpret and display <code>NA</code> value in the
+context of <code>sq class</code>. Default value equals to
+"<code>!</code>".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>safe_mode</code></td>
+<td>
+<p>[<code>logical(1)</code>]<br>
+Default value is <code>FALSE</code>. When turned on, safe mode guarantees that
+<code>NA</code> appears within a sequence if and only if input sequence contains
+value passed with <code>NA_letter</code>. This means that resulting type might be
+different to the one passed as argument, if there are letters in a sequence
+that does not appear in the original alphabet.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>on_warning</code></td>
+<td>
+<p>[<code>"silent" || "message" || "warning" || "error"</code>]<br>
+Determines the method of handling warning message. Default value is
+<code>"warning"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_case</code></td>
+<td>
+<p>[<code>logical(1)</code>]<br>
+If turned on, lowercase letters are turned into respective uppercase ones
+and interpreted as such. If not, either <code>sq</code> object must be of type
+<strong>unt</strong> or all lowercase letters are interpreted as <code>NA</code> values.
+Default value is <code>FALSE</code>. Ignoring case does not work with <strong>atp</strong>
+alphabets.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Function <code>sq</code> covers all possibilities of standard and non-standard
+types and alphabets. You can check what 'type' and 'alphabet' exactly are in
+<code>sq class</code> documentation. There is a guide below on
+how function operates and how the program behaves depending on arguments
+passed and letters in the sequences.
+</p>
+<p><code>x</code> parameter should be a character vector. Each element of this vector
+is a biological sequence. If this parameter has length 0, object of class
+<code>sq</code> with 0 sequences will be created (if not specified, it will have
+<strong>dna_bsc</strong> type, which is a result of rules written below). If it
+contains sequences of length 0, <code>NULL</code> sequences will be introduced (see
+<em>NULL (empty) sequences</em> section in <code>sq class</code>).
+</p>
+<p><strong>Important note:</strong> in all below cases word 'letter' stands for an
+element of an alphabet. Letter might consist of more than one character, for
+example "<code>Ala</code>" might be a single letter. However, if the user wants to
+construct or read sequences with multi-character letters, one has to specify
+all letters in <code>alphabet</code> parameter. Details of letters, alphabet and
+types can be found in <code>sq class</code> documentation.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of <code>class sq</code> with appropriate type.
+</p>
+
+
+<h3>Simple guide to construct</h3>
+
+<p>In many cases, just the <code>x</code> parameter needs to be specified - type of
+sequences will be guessed according to rules described below. The user needs
+to pay attention, however, because for short sequences type may be guessed
+incorrectly - in this case they should specify type in <code>alphabet</code>
+parameter.
+</p>
+<p>If your sequences contain non-standard letters, where each non-standard
+letter is one character long (that is, any character that is not an uppercase
+letter), you also don't need to specify any parameter. Optionally, you can
+explicitly do it by setting <code>alphabet</code> to <code>"unt"</code>.
+</p>
+<p>In <code>safe mode</code> it is guaranteed that only letters which are equal to
+<code>NA_letter</code> argument are interpreted as <code>NA</code> values. Due to that,
+resulting alphabet might be different from the <code>alphabet</code> argument.
+</p>
+
+
+<h3>Detailed guide to construct</h3>
+
+<p>Below are listed all possibilities that can occur during the construction of
+a <code>sq</code> object:
+</p>
+
+<ul>
+<li>
+<p> If you don't specify any other parameter than <code>x</code>, function will
+try to guess sequence type (it will check in exactly this order):
+</p>
+
+<ol>
+<li>
+<p> If it contains only ACGT- letters, type will be set to
+<strong>dna_bsc</strong>.
+</p>
+</li>
+<li>
+<p> If it contains only ACGU- letters, type will be set to
+<strong>rna_bsc</strong>.
+</p>
+</li>
+<li>
+<p> If it contains any letters from 1. and 2. and additionally letters
+DEFHIKLMNPQRSVWY*, type will be set to <strong>ami_bsc</strong>.
+</p>
+</li>
+<li>
+<p> If it contains any letters from 1. and additionally letters
+WSMKRYBDHVN, type will be set to <strong>dna_ext</strong>.
+</p>
+</li>
+<li>
+<p> If it contains any letters from 2. and additionally letters
+WSMKRYBDHVN, type will be set to <strong>rna_ext</strong>.
+</p>
+</li>
+<li>
+<p> If it contains any letters from previous points and additionally
+letters JOUXZ, type will be set to <strong>ami_ext</strong>.
+</p>
+</li>
+<li>
+<p> If it contains any letters that exceed all groups mentioned above,
+type will be set to <strong>unt</strong>.
+</p>
+</li>
+</ol>
+</li>
+<li>
+<p> If you specify <code>alphabet</code> parameter as any of <code>"dna_bsc"</code>,
+<code>"dna_ext"</code>, <code>"rna_bsc"</code>, <code>"rna_ext"</code>, <code>"ami_bsc"</code>,
+<code>"ami_ext"</code>; then:
+</p>
+
+<ul>
+<li>
+<p> If <code>safe_mode</code> is <code>FALSE</code>, then sequences will be built
+with standard alphabet for given type.
+</p>
+</li>
+<li>
+<p> If <code>safe_mode</code> is <code>TRUE</code>, then sequences will be scanned
+for letters not in standard alphabet:
+</p>
+
+<ul>
+<li>
+<p> If no such letters are found, then sequences will be built with
+standard alphabet for given type.
+</p>
+</li>
+<li>
+<p> If at least one such letter is found, then sequences are built with
+real alphabet and with type set to <strong>unt</strong>.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p> If you specify <code>alphabet</code> parameter as <code>"unt"</code>, then
+sequences are scanned for alphabet and subsequently built with obtained
+alphabet and type <strong>unt</strong>.
+</p>
+</li>
+<li>
+<p> If you specify <code>alphabet</code> parameter as <code>character</code> vector
+longer than 1, then type is set to <strong>atp</strong> and alphabet is equal to
+letters in said parameter.
+</p>
+</li>
+</ul>
+<p>If <code>ignore_case</code> is set to <code>TRUE</code>, then lowercase letters are
+turned into uppercase during their interpretation, unless type is set to
+<strong>atp</strong>.
+</p>
+
+
+<h3>Handling <strong>unt</strong> and <strong>atp</strong> types and <code>NA</code> values</h3>
+
+<p>You can convert letters into another using <code>substitute_letters</code>
+and then use <code>typify</code> or <code>sq_type&lt;-</code> function to set type of
+<code>sq</code> to <strong>dna_bsc</strong>, <strong>dna_ext</strong>, <strong>rna_bsc</strong>,
+<strong>rna_ext</strong>, <strong>ami_bsc</strong> or <strong>ami_ext</strong>. If your sequences
+contain <code>NA</code> values, use <code>remove_na</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Functions from input module:
+<code>import_sq()</code>,
+<code>random_sq()</code>,
+<code>read_fasta()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># constructing sq without specifying alphabet:
+# Correct sq type will be guessed from appearing letters
+## dna_bsc
+sq(c("ATGC", "TCGTTA", "TT--AG"))
+
+## rna_bsc
+sq(c("CUUAC", "UACCGGC", "GCA-ACGU"))
+
+## ami_bsc
+sq(c("YQQPAVVM", "PQCFL"))
+
+## ami cln sq can contain "*" - a letter meaning end of translation:
+sq(c("MMDF*", "SYIHR*", "MGG*"))
+
+## dna_ext
+sq(c("TMVCCDA", "BASDT-CNN"))
+
+## rna_ext
+sq(c("WHDHKYN", "GCYVCYU"))
+
+## ami_ext
+sq(c("XYOQWWKCNJLO"))
+
+## unt - assume that one wants to mark some special element in sequence with "%"
+sq(c("%%YAPLAA", "PLAA"))
+
+# passing type as alphabet parameter:
+# All above examples yield an identical result if type specified is the same as guessed
+sq(c("ATGC", "TCGTTA", "TT--AG"), "dna_bsc")
+sq(c("CUUAC", "UACCGGC", "GCA-ACGU"), "rna_bsc")
+sq(c("YQQPAVVM", "PQCFL"), "ami_bsc")
+sq(c("MMDF*", "SYIHR*", "MGG*"), "ami_bsc")
+sq(c("TMVCCDA", "BASDT-CNN"), "dna_ext")
+sq(c("WHDHKYN", "GCYVCYU"), "rna_ext")
+sq(c("XYOQWWKCNJLO"), "ami_ext")
+sq(c("%%YAPLAA", "PLAA"), "unt")
+
+# Type doesn't have to be the same as the guessed one if letters fit in the destination alphabet
+sq(c("ATGC", "TCGTTA", "TT--AG"), "dna_ext")
+sq(c("ATGC", "TCGTTA", "TT--AG"), "ami_bsc")
+sq(c("ATGC", "TCGTTA", "TT--AG"), "ami_ext")
+sq(c("ATGC", "TCGTTA", "TT--AG"), "unt")
+
+# constructing sq with specified letters of alphabet:
+# In sequences below "mA" denotes methyled alanine - two characters are treated as single letter
+sq(c("LmAQYmASSR", "LmASMKLKFmAmA"), alphabet = c("mA", LETTERS))
+# Order of alphabet letters are not meaningful in most cases
+sq(c("LmAQYmASSR", "LmASMKLKFmAmA"), alphabet = c(LETTERS, "mA"))
+
+# reading sequences with three-letter names:
+sq(c("ProProGlyAlaMetAlaCys"), alphabet = c("Pro", "Gly", "Ala", "Met", "Cys"))
+
+# using safe mode:
+# Safe mode guarantees that no element is read as NA
+# But resulting alphabet might be different to the passed one (albeit with warning/error)
+sq(c("CUUAC", "UACCGGC", "GCA-ACGU"), alphabet = "dna_bsc", safe_mode = TRUE)
+sq(c("CUUAC", "UACCGGC", "GCA-ACGU"), alphabet = "dna_bsc")
+
+# Safe mode guesses alphabet based on whole sequence
+long_sequence &lt;- paste0(paste0(rep("A", 4500), collapse = ""), "N")
+sq(long_sequence, safe_mode = TRUE)
+sq(long_sequence)
+
+# ignoring case:
+# By default, lower- and uppercase letters are treated separately
+# This behavior can be changed by setting ignore_case = TRUE
+sq(c("aTGc", "tcgTTA", "tt--AG"), ignore_case = TRUE)
+sq(c("XYOqwwKCNJLo"), ignore_case = TRUE)
+
+# It is possible to construct sq with length 0
+sq(character())
+
+# As well as sq with empty sequences
+sq(c("AGTGGC", "", "CATGA", ""))
+
+</code></pre>
+
+
+</div>

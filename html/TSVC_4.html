@@ -1,0 +1,346 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TSVC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tree-Structured Modelling of Varying Coefficients</h2>
+
+<h3>Description</h3>
+
+<p>A function to fit tree-structured varying coefficient (TSVC) models. By recursive splitting the method allows to simultaneously detect covariates 
+with varying coefficients and the effect modifiers that induce varying coefficients if they are present. The basic method is described in 
+Berger, Tutz and Schmid (2018).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TSVC(
+  formula,
+  data,
+  family = gaussian,
+  alpha = 0.05,
+  nperm = 1000,
+  nodesize_min = 5,
+  bucket_min = 1,
+  depth_max = NULL,
+  splits_max = NULL,
+  perm_test = TRUE,
+  test_linear = TRUE,
+  effmod = NULL,
+  notmod = NULL,
+  only_effmod = NULL,
+  smooth = NULL,
+  split_intercept = FALSE,
+  sb_slope = NULL,
+  trace = FALSE,
+  ...
+)
+
+## S3 method for class 'TSVC'
+print(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>object of class <code>formula</code>: a symbolic description of the (linear) model to be fit. See also details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data frame of class <code>data.frame</code> containing the variables in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>a description of the error distribution and link function to be used in the model (as for <code>glm</code>). 
+This can be a character string naming a family function, a family function or the result of a call to a family function. 
+See <code>family</code> for details of family functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>significance level <code class="reqn">alpha</code> for the permutation tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nperm</code></td>
+<td>
+<p>number of permutations used for the permutation tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodesize_min</code></td>
+<td>
+<p>minimum number of observations that must exist in a node in order for a split to be attempted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bucket_min</code></td>
+<td>
+<p>the minimum number of observations in any terminal node.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>depth_max</code></td>
+<td>
+<p>maximum depth of any node in each tree, with the root node counted as depth 0. If <code>NULL</code> (default), the size of the trees is not restricted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splits_max</code></td>
+<td>
+<p>maximum number of splits performed. If <code>NULL</code> (default), the number of splits is not restricted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perm_test</code></td>
+<td>
+<p>if <code>FALSE</code>, no permutation tests are performed, but each tree is grown until the minimum node size constraint is reached.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test_linear</code></td>
+<td>
+<p>should linear effects that were not modified during iteration tested for significance?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>effmod</code></td>
+<td>
+<p>optional vector of covariates that serve as effect modifier. If <code>NULL</code> (default), all covariates are considered as potential effect modifiers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>notmod</code></td>
+<td>
+<p>optional list of class <code>list</code> containing pairs of covariate/effect modifier that are not considered as candidates for splitting during iteration.
+If <code>NULL</code> (default), all combinations of covariates and potential effect modifiers are considered for splitting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>only_effmod</code></td>
+<td>
+<p>optional vector of covariates that serve as effect modifier, only. If <code>NULL</code> (default), all effect modifiers are included in the predictor of the model and 
+are allowed to be modified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smooth</code></td>
+<td>
+<p>optional vector of covariates with a smooth effect on the response. The (smooth) effects fo these variables are not allowed to be modified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split_intercept</code></td>
+<td>
+<p>if <code>TRUE</code>, the intercept is allowed to be modified by the covariates. If <code>FALSE</code> (default), the intercept is set constant.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sb_slope</code></td>
+<td>
+<p>optional vector of covariates that are allowed to be modified by itself. Such an effect corresponds to a structural break in the slope.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>if <code>TRUE</code>, information about the estimation progress is printed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>object of class <code>TSVC</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A typical formula has the form <code>response ~ covariates</code>, where <code>response</code> is the name of the response variable and <code>covariates</code> is a
+series of variables that are incorporated in the model. 
+</p>
+<p>With p covariates, <code>TSVC</code> expects a formula of the form <code class="reqn">y ~ x_1+...+x_p</code>. If no further specifications are made (<code>effmod=NULL</code>, <code>notmod=NULL</code>, <code>only_effmod=NULL</code>) it is assumed that each covariate <code class="reqn">x_j, j = {1,...,p}</code> 
+can be modified by all the other variables <code class="reqn">x_m, m = {1,...,p} \ j</code>. 
+</p>
+<p>Remark: Significance of each split is verified by permutation tests. The result of the permutation tests 
+can strongly depend on the number of permutations <code>nperm</code>.
+</p>
+<p>Note: The algorithm currently does not support splitting of/by factor variables. If a factor variable is included in the formula of the model, the variable will not serve as 
+effect modifier and its effect will not be modified.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of class <code>"TSVC"</code>. An object of class <code>"TSVC"</code> is a list containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>splits</code></td>
+<td>
+<p>matrix with detailed information about all executed splits during the fitting process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefficients</code></td>
+<td>
+<p>list of estimated coefficients for covariates with and without varying coefficients (including a non-varying intercept).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalues</code></td>
+<td>
+<p>p-values of each permuation test during the fitting process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalues_linear</code></td>
+<td>
+<p>p-values of the permutation tests on the linear effects in the last step of the algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>devs</code></td>
+<td>
+<p>maximal value statistics <code class="reqn">T_m</code> of the selected effect modifier in each iteration during the fitting process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crit</code></td>
+<td>
+<p>critical values of each permutation test during the fitting process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>response vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>matrix of all the variables (covariates and effect modifiers) for model fitting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sb</code></td>
+<td>
+<p>variables for which a structural break in the slope was allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>internally fitted model in the last iteration of class <code>glm</code> or <code>gam</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>all_models</code></td>
+<td>
+<p>list of internally fitted models of class <code>glm</code> or <code>gam</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Moritz Berger &lt;Moritz.Berger@imbie.uni-bonn.de&gt; <br><a href="https://www.imbie.uni-bonn.de/people/dr-moritz-berger/">https://www.imbie.uni-bonn.de/people/dr-moritz-berger/</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Berger, M., G. Tutz and M. Schmid (2019). Tree-Structured Modelling of Varying Coefficients. Statistics and Computing 29, 217-229,
+https://doi.org/10.1007/s11222-018-9804-8.
+</p>
+<p>Hastie, T. and R. Tibshirani (1993). Varying-coefficient models. Journal of the Royal Statistical Society B 55, 757-796.
+</p>
+<p>Hothorn T., K. Hornik and A. Zeileis (2006). Unbiased recursive partitioning: A conditional inference framework. Journal of Computational 
+and Graphical Statistics 15(3), 651-674.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.TSVC</code>, <code>predict.TSVC</code>, <code>summary.TSVC</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Swiss Labour Market 
+library(AER)
+data("SwissLabor")
+
+# recode factors
+sl &lt;- SwissLabor
+sl$participation &lt;- as.numeric(sl$participation)-1
+sl$foreign       &lt;- as.numeric(sl$foreign)-1
+
+## Not run: 
+fit1 &lt;- TSVC(participation~income+age, data=sl, family=binomial(link="logit"), 
+             nperm=300, trace=TRUE)
+print(fit1)
+class(fit$model) # glm 
+
+# In fit2, variable 'foreign' does not serve as effect modifier 
+# and the effect of 'foreign' is not modified by the other variables.
+# That means 'foreign' is assumed to only have simple linear effect on the response. 
+fit2 &lt;- TSVC(participation~income+age+foreign, data=sl, family=binomial(link="logit"), 
+             nperm=300, trace=TRUE, effmod=c("income","age"), 
+             notmod=list(c("foreign","income"),c("foreign","age")))
+print(fit2)
+
+# In fit3, variable 'age' does only serve as effect modifier. That means the effect of 'age' 
+# is not included in the predictor of the model.    
+fit3 &lt;- TSVC(participation~income+age+foreign, data=sl, family=binomial(link="logit"),
+             nperm=300, trace=TRUE, only_effmod="age")
+print(fit3)  
+
+# In fit4, the intercept is allowed to be modified by 'age' and 'income'. 
+# The two covariates, however, are not allowed to modify each other. 
+fit4 &lt;- TSVC(participation~income+age, data=sl, family=binomial(link="logit"),
+             nperm=300, trace=TRUE, split_intercept=TRUE,
+             notmod=list(c("income","age"), c("age", "income")))
+print(fit4)    
+
+
+# In fit5, variable 'age' has a smooth effect on the response. 
+# Hence, the (smooth) effect of 'age' will not be modified by the other variables.  
+fit5 &lt;- TSVC(participation~income+age+foreign, data=sl, family=binomial(link="logit"),
+             nperm=300, trace=TRUE, smooth="age")                     
+print(fit5)
+class(fit5$model) # gam      
+
+# In fit6, the intercept is allowed to be modified by 'age' and 'income', but the two variables are 
+# not included in the predictor of the model. Here, no permutation tests are performed, but the 
+# tree is pruned by a minimum node size constraint. 
+fit6 &lt;- TSVC(participation~income+age, data=sl, family=binomial(link="logit"),
+             perm_test=FALSE, nodesize_min=100, bucket_min=100, trace=TRUE, split_intercept=TRUE,
+             effmod=c("income","age"), only_effmod = c("income", "age"))   
+print(fit6)                          
+
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

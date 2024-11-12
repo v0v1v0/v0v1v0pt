@@ -1,0 +1,440 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_download</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Target that downloads URLs.</h2>
+
+<h3>Description</h3>
+
+<p>Create a target that downloads file from one or more URLs
+and automatically reruns when the remote data changes
+(according to the ETags or last-modified time stamps).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_download(
+  name,
+  urls,
+  paths,
+  method = NULL,
+  quiet = TRUE,
+  mode = "w",
+  cacheOK = TRUE,
+  extra = NULL,
+  headers = NULL,
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  deployment = targets::tar_option_get("deployment"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  storage = targets::tar_option_get("storage"),
+  retrieval = targets::tar_option_get("retrieval"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Symbol, name of the target.
+In <code>tar_target()</code>, <code>name</code> is an unevaluated symbol, e.g.
+<code>tar_target(name = data)</code>.
+In <code>tar_target_raw()</code>, <code>name</code> is a character string, e.g.
+<code>tar_target_raw(name = "data")</code>.
+</p>
+<p>A target name must be a valid name for a symbol in R, and it
+must not start with a dot. Subsequent targets
+can refer to this name symbolically to induce a dependency relationship:
+e.g. <code>tar_target(downstream_target, f(upstream_target))</code> is a
+target named <code>downstream_target</code> which depends on a target
+<code>upstream_target</code> and a function <code>f()</code>. In addition, a target's
+name determines its random number generator seed. In this way,
+each target runs with a reproducible seed so someone else
+running the same pipeline should get the same results,
+and no two targets in the same pipeline share the same seed.
+(Even dynamic branches have different names and thus different seeds.)
+You can recover the seed of a completed target
+with <code>tar_meta(your_target, seed)</code> and run <code>tar_seed_set()</code>
+on the result to locally recreate the target's initial RNG state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>urls</code></td>
+<td>
+<p>Character vector of URLs to track and download.
+Must be known and declared before the pipeline runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paths</code></td>
+<td>
+<p>Character vector of local file paths to
+download each of the URLs.
+Must be known and declared before the pipeline runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Method to be used for downloading files.  Current
+download methods are <code>"internal"</code>, <code>"libcurl"</code>,
+<code>"wget"</code>, <code>"curl"</code> and <code>"wininet"</code> (Windows
+only), and there is a value <code>"auto"</code>: see ‘Details’ and
+‘Note’.
+</p>
+<p>The method can also be set through the option
+<code>"download.file.method"</code>: see <code>options()</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quiet</code></td>
+<td>
+<p>If <code>TRUE</code>, suppress status messages (if any), and
+the progress bar.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode</code></td>
+<td>
+<p>character.  The mode with which to write the file.  Useful
+values are <code>"w"</code>, <code>"wb"</code> (binary), <code>"a"</code> (append) and
+<code>"ab"</code>.  Not used for methods <code>"wget"</code> and <code>"curl"</code>.
+See also ‘Details’, notably about using <code>"wb"</code> for Windows.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cacheOK</code></td>
+<td>
+<p>logical.  Is a server-side cached value acceptable?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extra</code></td>
+<td>
+<p>character vector of additional command-line arguments for
+the <code>"wget"</code> and <code>"curl"</code> methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>headers</code></td>
+<td>
+<p>named character vector of additional HTTP headers to
+use in HTTP[S] requests.  It is ignored for non-HTTP[S] URLs.  The
+<code>User-Agent</code> header taken from the <code>HTTPUserAgent</code> option
+(see <code>options</code>) is automatically used as the first header.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iteration</code></td>
+<td>
+<p>Character of length 1, name of the iteration mode
+of the target. Choices:
+</p>
+
+<ul>
+<li> <p><code>"vector"</code>: branching happens with <code>vctrs::vec_slice()</code> and
+aggregation happens with <code>vctrs::vec_c()</code>.
+</p>
+</li>
+<li> <p><code>"list"</code>, branching happens with <code style="white-space: pre;">⁠[[]]⁠</code> and aggregation happens with
+<code>list()</code>.
+</p>
+</li>
+<li> <p><code>"group"</code>: <code>dplyr::group_by()</code>-like functionality to branch over
+subsets of a non-dynamic data frame.
+For <code>iteration = "group"</code>, the target must not by dynamic
+(the <code>pattern</code> argument of <code>tar_target()</code> must be left <code>NULL</code>).
+The target's return value must be a data
+frame with a special <code>tar_group</code> column of consecutive integers
+from 1 through the number of groups. Each integer designates a group,
+and a branch is created for each collection of rows in a group.
+See the <code>tar_group()</code> function to see how you can
+create the special <code>tar_group</code> column with <code>dplyr::group_by()</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error</code></td>
+<td>
+<p>Character of length 1, what to do if the target
+stops and throws an error. Options:
+</p>
+
+<ul>
+<li> <p><code>"stop"</code>: the whole pipeline stops and throws an error.
+</p>
+</li>
+<li> <p><code>"continue"</code>: the whole pipeline keeps going.
+</p>
+</li>
+<li> <p><code>"null"</code>: The errored target continues and returns <code>NULL</code>.
+The data hash is deliberately wrong so the target is not
+up to date for the next run of the pipeline.
+</p>
+</li>
+<li> <p><code>"abridge"</code>: any currently running targets keep running,
+but no new targets launch after that.
+</p>
+</li>
+<li> <p><code>"trim"</code>: all currently running targets stay running. A queued
+target is allowed to start if:
+</p>
+
+<ol>
+<li>
+<p> It is not downstream of the error, and
+</p>
+</li>
+<li>
+<p> It is not a sibling branch from the same <code>tar_target()</code> call
+(if the error happened in a dynamic branch).
+</p>
+</li>
+</ol>
+<p>The idea is to avoid starting any new work that the immediate error
+impacts. <code>error = "trim"</code> is just like <code>error = "abridge"</code>,
+but it allows potentially healthy regions of the dependency graph
+to begin running.
+(Visit <a href="https://books.ropensci.org/targets/debugging.html">https://books.ropensci.org/targets/debugging.html</a>
+to learn how to debug targets using saved workspaces.)
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>memory</code></td>
+<td>
+<p>Character of length 1, memory strategy.
+If <code>"persistent"</code>, the target stays in memory
+until the end of the pipeline (unless <code>storage</code> is <code>"worker"</code>,
+in which case <code>targets</code> unloads the value from memory
+right after storing it in order to avoid sending
+copious data over a network).
+If <code>"transient"</code>, the target gets unloaded
+after every new target completes.
+Either way, the target gets automatically loaded into memory
+whenever another target needs the value.
+For cloud-based dynamic files
+(e.g. <code>format = "file"</code> with <code>repository = "aws"</code>),
+this memory strategy applies to the
+temporary local copy of the file:
+<code>"persistent"</code> means it remains until the end of the pipeline
+and is then deleted,
+and <code>"transient"</code> means it gets deleted as soon as possible.
+The former conserves bandwidth,
+and the latter conserves local storage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical, whether to run <code>base::gc()</code>
+just before the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deployment</code></td>
+<td>
+<p>Character of length 1. If <code>deployment</code> is
+<code>"main"</code>, then the target will run on the central controlling R process.
+Otherwise, if <code>deployment</code> is <code>"worker"</code> and you set up the pipeline
+with distributed/parallel computing, then
+the target runs on a parallel worker. For more on distributed/parallel
+computing in <code>targets</code>, please visit
+<a href="https://books.ropensci.org/targets/crew.html">https://books.ropensci.org/targets/crew.html</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priority</code></td>
+<td>
+<p>Numeric of length 1 between 0 and 1. Controls which
+targets get deployed first when multiple competing targets are ready
+simultaneously. Targets with priorities closer to 1 get dispatched earlier
+(and polled earlier in <code>tar_make_future()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resources</code></td>
+<td>
+<p>Object returned by <code>tar_resources()</code>
+with optional settings for high-performance computing
+functionality, alternative data storage formats,
+and other optional capabilities of <code>targets</code>.
+See <code>tar_resources()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>storage</code></td>
+<td>
+<p>Character of length 1, only relevant to
+<code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+Must be one of the following values:
+</p>
+
+<ul>
+<li> <p><code>"main"</code>: the target's return value is sent back to the
+host machine and saved/uploaded locally.
+</p>
+</li>
+<li> <p><code>"worker"</code>: the worker saves/uploads the value.
+</p>
+</li>
+<li> <p><code>"none"</code>: almost never recommended. It is only for
+niche situations, e.g. the data needs to be loaded
+explicitly from another language. If you do use it,
+then the return value of the target is totally ignored
+when the target ends, but
+each downstream target still attempts to load the data file
+(except when <code>retrieval = "none"</code>).
+</p>
+<p>If you select <code>storage = "none"</code>, then
+the return value of the target's command is ignored,
+and the data is not saved automatically.
+As with dynamic files (<code>format = "file"</code>) it is the
+responsibility of the user to write to
+the data store from inside the target.
+</p>
+<p>The distinguishing feature of <code>storage = "none"</code>
+(as opposed to <code>format = "file"</code>)
+is that in the general case,
+downstream targets will automatically try to load the data
+from the data store as a dependency. As a corollary, <code>storage = "none"</code>
+is completely unnecessary if <code>format</code> is <code>"file"</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>retrieval</code></td>
+<td>
+<p>Character of length 1, only relevant to
+<code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+Must be one of the following values:
+</p>
+
+<ul>
+<li> <p><code>"main"</code>: the target's dependencies are loaded on the host machine
+and sent to the worker before the target runs.
+</p>
+</li>
+<li> <p><code>"worker"</code>: the worker loads the targets dependencies.
+</p>
+</li>
+<li> <p><code>"none"</code>: the dependencies are not loaded at all.
+This choice is almost never recommended. It is only for
+niche situations, e.g. the data needs to be loaded
+explicitly from another language.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cue</code></td>
+<td>
+<p>An optional object from <code>tar_cue()</code> to customize the
+rules that decide whether the target is up to date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>description</code></td>
+<td>
+<p>Character of length 1, a custom free-form human-readable
+text description of the target. Descriptions appear as target labels
+in functions like <code>tar_manifest()</code> and <code>tar_visnetwork()</code>,
+and they let you select subsets of targets for the <code>names</code> argument of
+functions like <code>tar_make()</code>. For example,
+<code>tar_manifest(names = tar_described_as(starts_with("survival model")))</code>
+lists all the targets whose descriptions start with the character
+string <code>"survival model"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_download()</code> creates a pair of targets, one upstream
+and one downstream. The upstream target uses <code>format = "url"</code>
+(see <code>targets::tar_target()</code>) to track files at one or more URLs,
+and automatically invalidate the target if the ETags
+or last-modified time stamps change. The downstream target
+depends on the upstream one, downloads the files,
+and tracks them using <code>format = "file"</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of two target objects, one upstream and one downstream.
+The upstream one watches a URL for changes, and the downstream one
+downloads it.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other targets with custom invalidation rules: 
+<code>tar_change()</code>,
+<code>tar_force()</code>,
+<code>tar_skip()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+targets::tar_script({
+  list(
+    tarchetypes::tar_download(
+      x,
+      urls = c("https://httpbin.org/etag/test", "https://r-project.org"),
+      paths = c("downloaded_file_1", "downloaded_file_2")
+    )
+  )
+})
+targets::tar_make()
+targets::tar_read(x)
+})
+}
+</code></pre>
+
+
+</div>

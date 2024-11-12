@@ -1,0 +1,242 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_make_future_timeseries</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Make future time series from existing</h2>
+
+<h3>Description</h3>
+
+<p>Make future time series from existing
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_make_future_timeseries(
+  idx,
+  length_out,
+  inspect_weekdays = FALSE,
+  inspect_months = FALSE,
+  skip_values = NULL,
+  insert_values = NULL,
+  n_future = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>idx</code></td>
+<td>
+<p>A vector of dates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>length_out</code></td>
+<td>
+<p>Number of future observations. Can be numeric number or a phrase
+like "1 year".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inspect_weekdays</code></td>
+<td>
+<p>Uses a logistic regression algorithm to inspect
+whether certain weekdays (e.g. weekends) should be excluded from the future dates.
+Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inspect_months</code></td>
+<td>
+<p>Uses a logistic regression algorithm to inspect
+whether certain days of months (e.g. last two weeks of year or seasonal days)
+should be excluded from the future dates.
+Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_values</code></td>
+<td>
+<p>A vector of same class as <code>idx</code> of timeseries
+values to skip.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insert_values</code></td>
+<td>
+<p>A vector of same class as <code>idx</code> of timeseries
+values to insert.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_future</code></td>
+<td>
+<p>(DEPRECATED) Number of future observations. Can be numeric number or a phrase
+like "1 year".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Future Sequences</strong>
+</p>
+<p><code>tk_make_future_timeseries</code> returns a time series based
+on the input index frequency and attributes.
+</p>
+<p><strong>Specifying Length of Future Observations</strong>
+</p>
+<p>The argument <code>length_out</code> determines how many future index observations to compute. It can be specified
+as:
+</p>
+
+<ul>
+<li> <p><strong>A numeric value</strong> - the number of future observations to return.
+</p>
+
+<ul>
+<li>
+<p> The number of observations returned is <em>always</em> equal to the value the user inputs.
+</p>
+</li>
+<li>
+<p> The <strong>end date can vary</strong> based on the number of timestamps chosen.
+</p>
+</li>
+</ul>
+</li>
+<li> <p><strong>A time-based phrase</strong> - The duration into the future to include (e.g. "6 months" or "30 minutes").
+</p>
+
+<ul>
+<li>
+<p> The <em>duration</em> defines the <em>end date</em> for observations.
+</p>
+</li>
+<li>
+<p> The <strong>end date will not change</strong> and those timestamps that fall within the end date will be returned
+(e.g. a quarterly time series will return 4 quarters if <code>length_out = "1 year"</code>).
+</p>
+</li>
+<li>
+<p> The number of observations will vary to fit within the end date.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Weekday and Month Inspection</strong>
+</p>
+<p>The <code>inspect_weekdays</code> and <code>inspect_months</code> arguments apply to "daily" (scale = "day") data
+(refer to <code>tk_get_timeseries_summary()</code> to get the index scale).
+</p>
+
+<ul>
+<li>
+<p> The <code>inspect_weekdays</code> argument is useful in determining missing days of the week
+that occur on a weekly frequency such as every week, every other week, and so on.
+It's recommended to have at least 60 days to use this option.
+</p>
+</li>
+<li>
+<p> The <code>inspect_months</code> argument is useful in determining missing days of the month, quarter
+or year; however, the algorithm can inadvertently select incorrect dates if the pattern
+is erratic.
+</p>
+</li>
+</ul>
+<p><strong>Skipping / Inserting Values</strong>
+</p>
+<p>The <code>skip_values</code> and <code>insert_values</code> arguments can be used to remove and add
+values into the series of future times. The values must be the same format as the <code>idx</code> class.
+</p>
+
+<ul>
+<li>
+<p> The <code>skip_values</code> argument useful for passing holidays or special index values that should
+be excluded from the future time series.
+</p>
+</li>
+<li>
+<p> The <code>insert_values</code> argument is useful for adding values back that the algorithm may have
+excluded.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A vector containing future index of the same class as the incoming index <code>idx</code>
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li>
+<p> Making Time Series: <code>tk_make_timeseries()</code>
+</p>
+</li>
+<li>
+<p> Working with Holidays &amp; Weekends: <code>tk_make_holiday_sequence()</code>, <code>tk_make_weekend_sequence()</code>, <code>tk_make_weekday_sequence()</code>
+</p>
+</li>
+<li>
+<p> Working with Timestamp Index: <code>tk_index()</code>, <code>tk_get_timeseries_summary()</code>, <code>tk_get_timeseries_signature()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# Basic example - By 3 seconds
+idx &lt;- tk_make_timeseries("2016-01-01 00:00:00", by = "3 sec", length_out = 3)
+idx
+
+# Make next three timestamps in series
+idx %&gt;% tk_make_future_timeseries(length_out = 3)
+
+# Make next 6 seconds of timestamps from the next timestamp
+idx %&gt;% tk_make_future_timeseries(length_out = "6 sec")
+
+
+# Basic Example - By 1 Month
+idx &lt;- tk_make_timeseries("2016-01-01", by = "1 month",
+                          length_out = "12 months")
+idx
+
+# Make 12 months of timestamps from the next timestamp
+idx %&gt;% tk_make_future_timeseries(length_out = "12 months")
+
+
+
+# --- APPLICATION ---
+# - Combine holiday sequences with future sequences
+
+# Create index of days that FB stock will be traded in 2017 based on 2016 + holidays
+FB_tbl &lt;- FANG %&gt;% dplyr::filter(symbol == "FB")
+
+holidays &lt;- tk_make_holiday_sequence(
+    start_date = "2017-01-01",
+    end_date   = "2017-12-31",
+    calendar   = "NYSE")
+
+# Remove holidays with skip_values, and remove weekends with inspect_weekdays = TRUE
+FB_tbl %&gt;%
+    tk_index() %&gt;%
+    tk_make_future_timeseries(length_out       = "1 year",
+                              inspect_weekdays = TRUE,
+                              skip_values      = holidays)
+
+
+
+
+</code></pre>
+
+
+</div>

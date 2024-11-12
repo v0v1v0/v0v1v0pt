@@ -1,0 +1,260 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>PCATE_cfg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Configuration of Partial CATEs</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+<code>PCATE_cfg</code> is a configuration class for estimating marginal
+response surfaces based on heterogeneous treatment effect estimates.
+"Partial" in this context is used similarly to the use in partial
+dependence plots or in partial regression. In essence, a PCATE
+attempts to partial out the contribution to the CATE from all other
+covariates. Two highly correlated variables may have very different
+PCATE surfaces.
+</p>
+
+
+<h3>Public fields</h3>
+
+<div class="r6-fields">
+
+<dl>
+<dt><code>cfgs</code></dt>
+<dd>
+<p>Named list of covariates names to a <code>Model_cfg</code> object defining
+how to present that covariate's CATE surface.</p>
+</dd>
+<dt><code>model_covariates</code></dt>
+<dd>
+<p>A character vector of all the covariates
+to be included in the second-level effect regression.</p>
+</dd>
+<dt><code>num_mc_samples</code></dt>
+<dd>
+<p>A named list from covariate name to the number
+of Monte Carlo samples to take to calculate the double integral (See Details).</p>
+</dd>
+<dt><code>estimand</code></dt>
+<dd>
+<p>String indicating the estimand to target.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-PCATE_cfg-new"><code>PCATE_cfg$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-PCATE_cfg-add_moderator"><code>PCATE_cfg$add_moderator()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-PCATE_cfg-clone"><code>PCATE_cfg$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-PCATE_cfg-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Create a new <code>PCATE_cfg</code> object with specified model name and hyperparameters.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>PCATE_cfg$new(model_covariates, cfgs, num_mc_samples = 100)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>model_covariates</code></dt>
+<dd>
+<p>A character vector of all the covariates to be
+included in the second-level effect regression.</p>
+</dd>
+<dt><code>cfgs</code></dt>
+<dd>
+<p>Named list from moderator name to a <code>Model_cfg</code> object defining how to
+present that covariate's CATE surface.</p>
+</dd>
+<dt><code>num_mc_samples</code></dt>
+<dd>
+<p>A named list from covariate name to the number of Monte Carlo
+samples to take to calculate the double integral (See Details). If all covariates
+should use the same number of samples, simply pass the (integer) number of samples.</p>
+</dd>
+<dt><code>effect_cfg</code></dt>
+<dd>
+<p>A <code>Model_cfg</code> object indicating how to fit the second level effect
+regression (joint across all selected covariates).</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>A new <code>PCATE_cfg</code> object.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>PCATE_cfg$new(
+   cfgs = list(x1 = KernelSmooth_cfg$new(neval = 100)),
+   model_covariates = c("x1", "x2", "x3"),
+   num_mc_samples = list(x1 = 100)
+)
+</pre>
+</div>
+
+
+<hr>
+<a id="method-PCATE_cfg-add_moderator"></a>
+
+
+
+<h4>Method <code>add_moderator()</code>
+</h4>
+
+<p>Add a moderator to the <code>PCATE_cfg</code> object. This entails adding it to the joint
+model of effects and defines a configuration for displaying the effect surface
+for that moderator.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>PCATE_cfg$add_moderator(var_name, cfg)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>var_name</code></dt>
+<dd>
+<p>The name of the moderator to add (and the name of the column in
+the dataset).</p>
+</dd>
+<dt><code>cfg</code></dt>
+<dd>
+<p>A <code>Model_cfg</code> defining how to display the selected moderator's effect
+surface.</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>An updated <code>PCATE_cfg</code> object.
+</p>
+
+
+
+<h5>Examples</h5>
+
+<div class="r example copy">
+<pre>cfg &lt;- PCATE_cfg$new(
+   cfgs = list(x1 = KernelSmooth_cfg$new(neval = 100)),
+   model_covariates = c("x1", "x2", "x3"),
+   num_mc_samples = list(x1 = 100)
+)
+cfg &lt;- cfg$add_moderator("x2", KernelSmooth_cfg$new(neval = 100))
+</pre>
+</div>
+
+
+<hr>
+<a id="method-PCATE_cfg-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>PCATE_cfg$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">PCATE_cfg$new(
+   cfgs = list(x1 = KernelSmooth_cfg$new(neval = 100)),
+   model_covariates = c("x1", "x2", "x3"),
+   num_mc_samples = list(x1 = 100)
+)
+
+## ------------------------------------------------
+## Method `PCATE_cfg$new`
+## ------------------------------------------------
+
+PCATE_cfg$new(
+   cfgs = list(x1 = KernelSmooth_cfg$new(neval = 100)),
+   model_covariates = c("x1", "x2", "x3"),
+   num_mc_samples = list(x1 = 100)
+)
+
+## ------------------------------------------------
+## Method `PCATE_cfg$add_moderator`
+## ------------------------------------------------
+
+cfg &lt;- PCATE_cfg$new(
+   cfgs = list(x1 = KernelSmooth_cfg$new(neval = 100)),
+   model_covariates = c("x1", "x2", "x3"),
+   num_mc_samples = list(x1 = 100)
+)
+cfg &lt;- cfg$add_moderator("x2", KernelSmooth_cfg$new(neval = 100))
+</code></pre>
+
+
+</div>

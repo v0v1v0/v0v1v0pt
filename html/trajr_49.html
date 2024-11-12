@@ -1,0 +1,189 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrajsBuild</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Construct multiple trajectories</h2>
+
+<h3>Description</h3>
+
+<p>Reads multiple trajectories from files, performs some basic sanity checks on
+them, and optionally smooths and scales them. Attempts to collect and report
+errors for multiple trajectories in a single call.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TrajsBuild(
+  fileNames,
+  fps = NULL,
+  scale = NULL,
+  spatialUnits = NULL,
+  timeUnits = NULL,
+  csvStruct = list(x = 1, y = 2, time = NULL),
+  smoothP = 3,
+  smoothN = 41,
+  translateToOrigin = FALSE,
+  rootDir = NULL,
+  csvReadFn = function(filename, ...) utils::read.csv(filename, stringsAsFactors = FALSE,
+    ...),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fileNames</code></td>
+<td>
+<p>Vector of the names of CSV files containing trajectory
+coordinates. All of the files must have the same columns. All file names
+must be unique. If <code>rootDir</code> is not <code>NULL</code>, then the file names
+are treated as regular expressions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fps</code></td>
+<td>
+<p>Vector of frames-per-second values corresponding to the
+trajectories in <code>fileNames</code>. If length is 1, it is repeated to
+length(fileNames).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>Vector of scale values corresponding to the trajectories in
+<code>fileNames</code>. May be specified as character expressions (e.g. "1 /
+1200") rather than numeric values. If NULL, the trajectories will not be
+scaled. If length is 1, it is repeated to length(fileNames).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spatialUnits</code></td>
+<td>
+<p>Abbreviated name of spatial coordinate units after
+scaling, e.g. "m".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeUnits</code></td>
+<td>
+<p>Abbreviated name of temporal units, e.g. "s".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>csvStruct</code></td>
+<td>
+<p>A list which identifies the columns in each CSV file which
+contain x-, y-, and optionally time-values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smoothP</code></td>
+<td>
+<p>Filter order to be used for Savitzky-Golay smoothing (see
+<code>TrajSmoothSG</code>). If <code>NA</code>, no smoothing is performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smoothN</code></td>
+<td>
+<p>Filter length to be used for Savitzky-Golay smoothing (must be
+odd, see <code>TrajSmoothSG</code>). If <code>NA</code>, no smoothing is
+performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>translateToOrigin</code></td>
+<td>
+<p>If TRUE, each trajectory is translated so that its
+starting point is at (0, 0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rootDir</code></td>
+<td>
+<p>Optional name of a top level directory which contains the CSV
+files. If <code>rootDir</code> is not NULL, the CSV files may be located anywhere
+within <code>rootDir</code> or its sub-directories.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>csvReadFn</code></td>
+<td>
+<p>Function used to read the CSV files. Required to accept
+arguments <code>filename, ...</code>, and return a data frame of coordinates, or
+a list of multiple data frames (see <code>read.csv</code>,
+<code>read.csv2</code>). The default function calls
+<code>read.csv</code> with argument <code>stringsAsFactors =
+FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>csvReadFn</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>rootDir</code> is not null, it should be the name of a directory which is
+searched for the files in <code>fileNames</code>. The found files are then used as
+the list of files to be read in. This may be useful when the names of the
+files are known, but their exact location within a directory structure is not
+known.
+</p>
+<p>For each file name in <code>fileNames</code>, reads the file by calling
+<code>csvReadFn</code> to obtain a set of coordinates and optionally times. A
+Trajectory is then constructed by passing the coordinates to
+<code>TrajFromCoords</code>, passing in the appropriate <code>fps</code> value,
+and x, y and time column names/indices from <code>csvStruct</code>. If <code>scale</code>
+is not <code>NULL</code>, the trajectory is scaled by calling
+<code>TrajScale</code>. If <code>smoothP</code> and <code>smoothN</code> are not
+<code>NULL</code>, the trajectory is smoothed by calling
+<code>TrajSmoothSG</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of trajectories.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>read.csv</code>, <code>TrajFromCoords</code>,
+<code>TrajScale</code>, <code>TrajSmoothSG</code>,
+<code>TrajTranslate</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Names of CSV files containing trajectory coordinates
+fileNames &lt;- c('xy001.csv', 'xy003.csv', 'xy004.csv')
+# The files are all located somewhere under this directory
+rootDir &lt;- '.'
+# Scale for these files is 1 / pixels per metre
+scale &lt;- c('1/1200', '1/1350', '1/1300')
+# Files have columns y, x
+csvStruct &lt;- list(x = 2, y = 1)
+# Apply default smoothing, and the files are formatted as conventional CSV,
+# so there's no need to specify csvReadFn
+trjs &lt;- TrajsBuild(fileNames, fps = 50, scale = scale, units = "m",
+                   csvStruct = csvStruct, rootDir = rootDir)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

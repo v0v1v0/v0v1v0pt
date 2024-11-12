@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqdomassoc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Measures of association between domains of sequence data</h2>
+
+<h3>Description</h3>
+
+<p>The function computes pairwise domain association based on cross-tabulation of the states observed in the sequences of the two domains involved. The association measure returned can be Cramer's V or the likelihood ratio (LRT).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqdomassoc(
+  seqdata.dom,
+  rep.method = "overall",
+  assoc = c("LRT", "V"),
+  diss.dom = NULL,
+  wrange = NULL,
+  p.value = TRUE,
+  struct.zero = TRUE,
+  cross.table = FALSE,
+  with.missing = FALSE,
+  weighted = TRUE,
+  seqrep.args = list(coverage = 0.8, pradius = 0.1),
+  seqrf.args = list(k = 20),
+  dnames = names(seqdata.dom)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata.dom</code></td>
+<td>
+<p>List of <code>stslist</code> objects (one per dimension)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rep.method</code></td>
+<td>
+<p>Character string. Method for determining the sequences on which the association is computed. One of "rep" (representative sequences), "eq.group" (medoids of equally spaced groups), or "overall".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assoc</code></td>
+<td>
+<p>Character string. The association measure to be computed. One of "V" (Cramer V) or "LRT" or a vector with both.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diss.dom</code></td>
+<td>
+<p>List of dissimilarity matrices used for selecting representatives. Ignored when <code>rep.method="overall"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wrange</code></td>
+<td>
+<p>Vector of two integers. Window range for count of co-occurrences. A state at <code>p</code> in the first domain is compared with states in [<code>p+wrange[1]</code>, <code>p+wrange[2]</code>] in the second domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p.value</code></td>
+<td>
+<p>Logical. Should p-values be returned?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>struct.zero</code></td>
+<td>
+<p>Logical. Should zeros in cross tables be treated as structural zeros?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cross.table</code></td>
+<td>
+<p>Logical. Should cross tables be returned? If <code>TRUE</code>, cross tables are returned as the list attribute <code>cross.tables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should missing be treated as a regular state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. Should sequence weights be taken into account when present in the sequence objects? When applicable, weights of the first domain are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seqrep.args</code></td>
+<td>
+<p>List of arguments passed to <code>seqrep</code> when <code>rep.method="rep"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seqrf.args</code></td>
+<td>
+<p>List of arguments passed to <code>seqrf</code> when <code>rep.method="eq.group"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dnames</code></td>
+<td>
+<p>String vector: names of dimensions.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each pair of domains, <code>seqdomassoc</code> cross-tabulates the position-wise states across domains using all sequences when <code>rep.method = "overall"</code>.  When <code>rep.method = "rep"</code>, each observed sequence is first replaced by the closest representative sequence and, when <code>rep.method = "eq.group"</code>, each observed sequence is replaced by the group medoid of its group. Then, the selected association measures are computed on the resulting cross-tables.
+</p>
+<p>The <code>"overall"</code> method implies a strong position-wise association and will not detect association occurring after a small time warp. With representative sequences, the same holds, but for representatives only. Using dissimilarity measures that allow for time warp for identifying representatives, observed sequences may differ from their representatives in the timing of the states. Therefore, using representatives instead of all sequences relaxes somewhat the strong timing constraint.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>sdomassoc</code>, which is the table (matrix) of association statistics with the list of cross tables in attribute <code>cross.tables</code>.
+</p>
+<p>The print method for objects <code>sdomassoc</code> prints only the table of association statistics.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard
+</p>
+
+
+<h3>References</h3>
+
+<p>Ritschard, G., T.F. Liao, and E. Struffolino (2023). Strategies for
+multidomain sequence analysis in social research.
+<em>Sociological Methodology</em>, 53(2), 288-322. <a href="https://doi.org/10.1177/00811750231163833">doi:10.1177/00811750231163833</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dissdomassoc</code>
+
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(biofam)
+
+## Building one channel per type of event (left, children or married)
+cases &lt;- 1:50
+bf &lt;- as.matrix(biofam[cases, 10:25])
+children &lt;-  bf==4 | bf==5 | bf==6
+married &lt;- bf == 2 | bf== 3 | bf==6
+left &lt;- bf==1 | bf==3 | bf==5 | bf==6
+
+## Building sequence objects
+child.seq &lt;- seqdef(children, weights = biofam[cases,'wp00tbgs'])
+marr.seq &lt;- seqdef(married, weights = biofam[cases,'wp00tbgs'])
+left.seq &lt;- seqdef(left, weights = biofam[cases,'wp00tbgs'])
+
+## distances by channel
+dchild &lt;- seqdist(child.seq, method="OM", sm="INDELSLOG")
+dmarr &lt;- seqdist(marr.seq, method="OM", sm="INDELSLOG")
+dleft &lt;- seqdist(left.seq, method="OM", sm="INDELSLOG")
+dbiofam &lt;- list(dchild,dmarr,dleft)
+dnames &lt;- names(dbiofam) &lt;- c("child","marr","left")
+
+
+seqdomassoc(list(child.seq,marr.seq,left.seq), dnames=dnames)
+seqdomassoc(list(child.seq,marr.seq,left.seq), diss.dom=dbiofam,
+            rep.method="rep", assoc="V", dnames=dnames)
+seqdomassoc(list(child.seq,marr.seq,left.seq), diss.dom=dbiofam,
+            rep.method="eq.group", assoc="V", dnames=dnames)
+
+
+</code></pre>
+
+
+</div>

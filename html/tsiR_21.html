@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predicttsir</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>predicttsir</h2>
+
+<h3>Description</h3>
+
+<p>function to predict incidence and susceptibles using the tsir model. This is different than
+simulatetsir as you are inputting parameters as vectors. The output is a data frame I and S with mean and confidence intervals of predictions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">predicttsir(times, births, beta, alpha, S0, I0, nsim, stochastic)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>The time vector to predict the model from. This assumes that the time step is equal to IP</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>births</code></td>
+<td>
+<p>The birth vector (of length length(times) or a single element) where each element is the births in that given (52/IP) time step</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>The length(52/IP) beta vector of contact.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>A single numeric which acts as the homogeniety parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S0</code></td>
+<td>
+<p>The starting initial condition for S. This should be greater than one, i.e. not a fraction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>I0</code></td>
+<td>
+<p>The starting initial condition for I. This should be greater than one, i.e. not a fraction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>The number of simulations to perform.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stochastic</code></td>
+<td>
+<p>A TRUE / FALSE argument where FALSE is the deterministic model, and TRUE is a negative binomial distribution.</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+require(kernlab)
+require(ggplot2)
+require(kernlab)
+require(tsiR)
+London &lt;- twentymeas$London
+
+London &lt;- subset(London, time &gt; 1950)
+
+IP &lt;- 2
+## first estimate paramters from the London data
+parms &lt;- estpars(data=London, IP=2, regtype='gaussian')
+
+plotbeta(parms)
+
+## now lets predict forward 20 years using the mean birth rate,
+## starting from rough initial conditions
+births &lt;- min(London$births)
+times &lt;- seq(1965,1985, by = 1/ (52/IP))
+S0 &lt;- parms$sbar
+I0 &lt;- 1e-5*mean(London$pop)
+
+pred &lt;- predicttsir(times=times,births=births,
+                    beta=parms$contact$beta,alpha=parms$alpha,
+                    S0=S0,I0=I0,
+                    nsim=50,stochastic=T)
+
+## plot this prediction
+ggplot(pred$I,aes(time,mean))+geom_line()+geom_ribbon(aes(ymin=low,ymax=high),alpha=0.3)
+
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

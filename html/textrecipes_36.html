@@ -1,0 +1,204 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_lda</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate LDA Dimension Estimates of Tokens</h2>
+
+<h3>Description</h3>
+
+<p><code>step_lda()</code> creates a <em>specification</em> of a recipe step that will return the
+lda dimension estimates of a text variable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_lda(
+  recipe,
+  ...,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  lda_models = NULL,
+  num_topics = 10L,
+  prefix = "lda",
+  keep_original_cols = FALSE,
+  skip = FALSE,
+  id = rand_id("lda")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>recipes::selections()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new columns created by the original variables will be
+used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument. This is <code>NULL</code>
+until the step is trained by <code>recipes::prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lda_models</code></td>
+<td>
+<p>A WarpLDA model object from the text2vec package. If left
+to NULL, the default, will it train its model based on the training data.
+Look at the examples for how to fit a WarpLDA model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_topics</code></td>
+<td>
+<p>integer desired number of latent topics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A prefix for generated column names, default to "lda".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_original_cols</code></td>
+<td>
+<p>A logical to keep the original variables in the
+output. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>recipes::bake.recipe()</code>? While all operations are baked
+when <code>recipes::prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step added
+to the sequence of existing steps (if any).
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) and <code>num_topics</code> (number of topics).
+</p>
+
+
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>Source</h3>
+
+<p><a href="https://arxiv.org/abs/1301.3781">https://arxiv.org/abs/1301.3781</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Steps for Numeric Variables From Tokens: 
+<code>step_texthash()</code>,
+<code>step_tfidf()</code>,
+<code>step_tf()</code>,
+<code>step_word_embeddings()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+
+
+library(recipes)
+library(modeldata)
+data(tate_text)
+
+tate_rec &lt;- recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium) %&gt;%
+  step_lda(medium)
+
+tate_obj &lt;- tate_rec %&gt;%
+  prep()
+
+bake(tate_obj, new_data = NULL) %&gt;%
+  slice(1:2)
+tidy(tate_rec, number = 2)
+tidy(tate_obj, number = 2)
+
+# Changing the number of topics.
+recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium, artist) %&gt;%
+  step_lda(medium, artist, num_topics = 20) %&gt;%
+  prep() %&gt;%
+  bake(new_data = NULL) %&gt;%
+  slice(1:2)
+
+# Supplying A pre-trained LDA model trained using text2vec
+library(text2vec)
+tokens &lt;- word_tokenizer(tolower(tate_text$medium))
+it &lt;- itoken(tokens, ids = seq_along(tate_text$medium))
+v &lt;- create_vocabulary(it)
+dtm &lt;- create_dtm(it, vocab_vectorizer(v))
+lda_model &lt;- LDA$new(n_topics = 15)
+
+recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium, artist) %&gt;%
+  step_lda(medium, artist, lda_models = lda_model) %&gt;%
+  prep() %&gt;%
+  bake(new_data = NULL) %&gt;%
+  slice(1:2)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>extract_mmrm_subgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extraction of MMRM Subgroup Results based on Population Model Definition</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>This prepares LS mean estimates and contrasts for a specific visit and treatment
+arm relative to the reference arm, along with a list of subgroup variables and corresponding
+(grouped) factor levels.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">extract_mmrm_subgroups(
+  fit,
+  visit,
+  subgroups = NULL,
+  groups_lists = list(),
+  treatment_arm = fit$treatment_levels[1L],
+  label_all = "All Patients"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fit</code></td>
+<td>
+<p>(<code>tern_mmrm</code>)<br> model fit on the total population.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>visit</code></td>
+<td>
+<p>(<code>string</code>)<br> single visit or name of averages of visits (referring
+to the averages specified when creating the <code>fit</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subgroups</code></td>
+<td>
+<p>(<code>character</code> or <code>NULL</code>)<br> names of subgroup variables to use in the
+forest plot, these need to be factors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups_lists</code></td>
+<td>
+<p>(named <code>list</code> of <code>list</code>)<br> optionally contains for each
+<code>subgroups</code> variable a list, which specifies groups of factor levels, see
+details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment_arm</code></td>
+<td>
+<p>(<code>string</code>)<br> single treatment arm to compare with the reference
+arm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_all</code></td>
+<td>
+<p>(<code>string</code>)<br> label for the total population analysis.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>groups_lists</code> argument is handy when you don't want to have
+subgroups identical to the original levels of the factor variable. This might
+be the case when you want to merge levels into a single subgroup, define
+overlapping subgroups or omit levels completely. Then you insert an element into
+<code>groups_lists</code> with the name of the <code>subgroups</code> variable and containing
+as a named list the subgroup definitions. See the example below.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with two elements:
+</p>
+
+<ul>
+<li> <p><code>estimates</code>: <code>data.frame</code> with columns <code>arm</code>, <code>n</code>, <code>lsmean</code>, <code>subgroup</code>,
+<code>var</code>, <code>var_label</code>, <code>row_type</code>, containing the LS means results for
+the overall population and the specified subgroups.
+</p>
+</li>
+<li> <p><code>contrasts</code>: <code>data.frame</code> with columns <code>n_tot</code>, <code>diff</code>, <code>lcl</code>, <code>ucl</code>,
+<code>pval</code>, <code>subgroup</code>, <code>var</code>, <code>var_label</code>, <code>row_type</code>. Note
+that this has half the number of rows as <code>estimates</code>.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>If the original model <code>vars</code> include <code>covariates</code> which are used here in
+<code>subgroups</code> then these are dropped from <code>covariates</code> before the corresponding
+model is fitted.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">mmrm_results &lt;- fit_mmrm(
+  vars = list(
+    response = "FEV1",
+    covariates = "RACE",
+    id = "USUBJID",
+    arm = "ARMCD",
+    visit = "AVISIT"
+  ),
+  data = mmrm_test_data,
+  cor_struct = "compound symmetry",
+  weights_emmeans = "equal",
+  averages_emmeans = list(
+    "VIS1+2" = c("VIS1", "VIS2")
+  )
+)
+
+extract_mmrm_subgroups(
+  fit = mmrm_results,
+  visit = "VIS3",
+  subgroups = c("RACE", "SEX"),
+  groups_lists = list(
+    RACE = list(
+      A = c("Asian", "White"),
+      B = c("Black or African American", "White")
+    )
+  )
+)
+</code></pre>
+
+
+</div>

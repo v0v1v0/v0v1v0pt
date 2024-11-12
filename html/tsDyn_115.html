@@ -1,0 +1,192 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>llar</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Locally linear model</h2>
+
+<h3>Description</h3>
+
+<p>Casdagli test of nonlinearity via locally linear forecasts
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">llar(x, m, d = 1, steps = d, series, eps.min = sd(x)/2,
+	eps.max = diff(range(x)), neps = 30, trace = 0)
+
+llar.predict(x, m, d=1, steps=d, series, n.ahead=1, 
+eps=stop("you must specify a window value"),
+onvoid=c("fail","enlarge"), r = 20, trace=1)
+
+llar.fitted(x, m, d=1, steps=d, series, eps, trace=0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p> time series </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m, d, steps</code></td>
+<td>
+<p> embedding dimension, time delay, forecasting steps </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>series</code></td>
+<td>
+<p>time series name (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ahead</code></td>
+<td>
+<p> n. of steps ahead to forecast </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps.min, eps.max</code></td>
+<td>
+<p> min and max neighbourhood size </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>neps</code></td>
+<td>
+<p>number of neighbourhood levels along which iterate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>neighbourhood size </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>onvoid</code></td>
+<td>
+<p>what to do in case of an isolated point: stop or enlarge neighbourhood size by an r%</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>if an isolated point is found, enlarge neighbourhood window by r%</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>tracing level: 0, 1 or more than 1 for <code>llar</code>, 0 or
+1 for <code>llar.forecast</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>llar</code> does the Casdagli test of non-linearity. Given the embedding state-space (of dimension <code>m</code> and time delay <code>d</code>) obtained from time series <code>series</code>, for a sequence of distance values <code>eps</code>, the relative error made by forecasting time series values with a linear autoregressive model estimated on points closer than <code>eps</code> is computed. 
+If minimum error is reached at relatively small length scales, a global linear model may be inappropriate (using current embedding parameters).
+This was suggested by Casdagli(1991) as a test for non-linearity.
+</p>
+<p><code>llar.predict</code> tries to extend the given time series by
+<code>n.ahead</code> points by iteratively 
+fitting locally (in the embedding space of dimension m and time delay d)
+a linear model. If the spatial neighbourhood window is too small, your
+time series last point would be probably isolated. You can ask to
+automatically enlarge the window <code>eps</code> by a factor of r%
+sequentially, until enough neighbours are found for fitting the linear
+model.
+</p>
+<p><code>llar.fitted</code> gives out-of-sample fitted values from locally linear
+models.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>llar</code> gives an object of class 'llar'. I.e., a list of components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>RMSE</code></td>
+<td>
+<p>vector of relative errors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>vector of neighbourhood sizes (in the same order of RMSE)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frac</code></td>
+<td>
+<p>vector of fractions of the time series used for RMSE computation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>avfound</code></td>
+<td>
+<p>vector of average number of neighbours for each point in the time series 
+which can be plotted using the <code>plot</code> method, and transformed to a regular <code>data.frame</code> with the <code>as.data.frame</code> function.</p>
+</td>
+</tr>
+</table>
+<p>Function <code>llar.forecast</code> gives the vector of n steps ahead locally linear iterated
+forecasts.
+</p>
+<p>Function <code>llar.fitted</code> gives out-of-sample fitted values from locally linear
+models.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>For long time series, this can be slow, especially for relatively big neighbourhood sizes.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The C implementation was re-adapted from that in the TISEAN package ("ll-ar" routine, see references). However, here the euclidean norm is used, in place of the max-norm.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p> Antonio, Fabio Di Narzo </p>
+
+
+<h3>References</h3>
+
+<p>M. Casdagli, Chaos and deterministic versus stochastic nonlinear modelling, J. Roy. Stat. Soc. 54, 303 (1991)
+</p>
+<p>Hegger, R., Kantz, H., Schreiber, T., Practical implementation of nonlinear time series methods: The TISEAN package; CHAOS 9, 413-435 (1999)
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">res &lt;- llar(log(lynx), m=3, neps=7)
+plot(res)
+
+x.new &lt;- llar.predict(log(lynx),n.ahead=20, m=3, eps=1, onvoid="enlarge", r=5)
+lag.plot(x.new, labels=FALSE)
+
+x.fitted &lt;-  llar.fitted(log(lynx), m=3, eps=1)
+lag.plot(x.fitted, labels=FALSE)
+
+
+</code></pre>
+
+
+</div>

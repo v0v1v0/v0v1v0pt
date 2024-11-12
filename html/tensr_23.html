@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lrt_null_dist_dim_same</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Draw from null distribution of likelihood ratio test statistic.</h2>
+
+<h3>Description</h3>
+
+<p>When testing for the covariance structure of modes, this function may be used
+to draw a sample from the null distribution of the likelihood ratio test
+stistics, whose distribution doesn't depend on any unknown parameters under
+the null.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lrt_null_dist_dim_same(p, null_ident = NULL, alt_ident = NULL,
+  null_diag = NULL, alt_diag = NULL, reference_dist = "normal",
+  t_df = NULL, itermax = 100, holq_itermax = 100, holq_tol = 10^-9)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>A vector of integers. The dimensions of the array.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>null_ident</code></td>
+<td>
+<p>A vector of integers. The modes that under the null have
+identity covariance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alt_ident</code></td>
+<td>
+<p>A vector of integers. The modes that under the alternative
+have the identity covariance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>null_diag</code></td>
+<td>
+<p>A vector of integers. The modes that under the null have
+diagonal covariance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alt_diag</code></td>
+<td>
+<p>A vector of integers. The modes that under the alternative
+have diagonal covariance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reference_dist</code></td>
+<td>
+<p>Two options are supported, 'normal' and 't'. If 't' is
+specified, you have to specify <code>t_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t_df</code></td>
+<td>
+<p>A numeric. If <code>reference_dist</code> is 't', then this is the
+degrees of freedom of the t_distribution that the array is distributed
+under.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itermax</code></td>
+<td>
+<p>An integer. The number of draws from the null distribution of
+the likelihood ratio test statistic that is to be performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>holq_itermax</code></td>
+<td>
+<p>An integer. The maximum number of block coordinate ascent
+iterations to perform when calculating the MLE at each step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>holq_tol</code></td>
+<td>
+<p>A numeric. The stopping criterion when calculating the MLE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Let <code class="reqn">vec(X)</code> be <code class="reqn">N(0,\Sigma)</code>. Given two nested hypotheses, </p>
+<p style="text-align: center;"><code class="reqn">H_1:
+\Sigma = \Psi_K\otimes\cdots\otimes\Psi_1</code>
+</p>
+<p> versus </p>
+<p style="text-align: center;"><code class="reqn">H_0: \Sigma =
+\Omega_K\otimes\cdots\otimes\Omega_1,</code>
+</p>
+<p> this function will draw from the null
+distribution of the likelihood ratio test statistic. The possible options are
+that <code class="reqn">\Psi_i</code> or <code class="reqn">\Omega_i</code> are the identity matrix, a diagonal
+matrix, or any positive definite matrix. By default, it's assumed that these
+matrices are any positive definite matrix.
+</p>
+<p>Unfortunately, this fuction does not support testing for the hypothesis of
+modeling the covariance between two modes with a single covariance matrix. I
+might code this up in later versions.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A vector of draws from the null distribution of the likelihood ratio
+test statistic.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Gerard, D., &amp; Hoff, P. (2016). A higher-order LQ
+decomposition for separable covariance models.
+<em>Linear Algebra and its Applications</em>, 505, 57-84.
+<a href="https://doi.org/10.1016/j.laa.2016.04.033">https://doi.org/10.1016/j.laa.2016.04.033</a>
+<a href="http://arxiv.org/pdf/1410.1094v1.pdf">http://arxiv.org/pdf/1410.1094v1.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>lrt_stat</code> for calculating the likelihood ratio test
+statistic.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Test for all identity versus all unconstrained.
+p = c(4,4,4)
+null1 &lt;- lrt_null_dist_dim_same(p,null_ident = 1:3)
+
+#Generate Null Data
+X &lt;- array(stats::rnorm(prod(p)), dim = p)
+sig_null &lt;- holq(X, mode_rep = 1:3)$sig
+sig_alt &lt;- holq(X)$sig
+lrt_x &lt;- lrt_stat(sig_null, sig_alt, p = p)
+p_value &lt;- mean(null1 &gt; lrt_x)
+
+hist(null1,main = 'Null Distribution of LRT', xlab = 'LRT Statistic')
+abline(v = lrt_x, lty = 2, col = 2, lwd = 2)
+legend('topleft', 'Observed LRT Statistic', lty = 2, col = 2, lwd = 2)
+mtext(side = 1, paste('P-value = ', round(p_value, digits = 2), sep = ''),
+      line = 2)
+
+#-------------------------------------------------------------------------
+
+#Test for all identity versus all mode 1 identity,
+#  mode 2 diagonal, mode 3 unconstrained.
+p = c(4,4,4)
+null2 &lt;- lrt_null_dist_dim_same(p,null_ident = 1:3,
+                                alt_ident = 1, alt_diag = 2)
+
+#Generate Null Data
+X &lt;- array(stats::rnorm(prod(p)), dim = p)
+sig_null &lt;- holq(X, mode_rep = 1:3)$sig
+sig_alt &lt;- holq(X, mode_rep = 1, mode_diag = 2)$sig
+lrt_x &lt;- lrt_stat(sig_null, sig_alt, p = p)
+p_value &lt;- mean(null2 &gt; lrt_x)
+
+hist(null2,main = 'Null Distribution of LRT', xlab = 'LRT Statistic')
+abline(v = lrt_x, lty = 2, col = 2, lwd = 2)
+legend('topleft', 'Observed LRT Statistic', lty = 2, col = 2, lwd = 2)
+mtext(side = 1, paste('P-value = ', round(p_value, digits = 2), sep = ''),
+      line = 2)
+</code></pre>
+
+
+</div>

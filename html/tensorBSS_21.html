@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tgJADE</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>gJADE for Tensor-Valued Time Series</h2>
+
+<h3>Description</h3>
+
+<p>Computes the tensorial gJADE for time series where at each time point a tensor of order <code class="reqn">r</code> is observed. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tgJADE(x, lags = 0:12, maxiter = 100, eps = 1e-06)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric array of an order at least two. It is assumed that the last dimension corresponds to the time.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lags</code></td>
+<td>
+<p>Vector of integers. Defines the lags used for the computations of the autocovariances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>Maximum number of iterations. Passed on to <code>rjd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Convergence tolerance. Passed on to <code>rjd</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is assumed that <code class="reqn">S</code> is a tensor (array) of size <code class="reqn">p_1 \times p_2 \times \ldots \times p_r</code> measured at time points <code class="reqn">1, \ldots, T</code>.
+The assumption is that the elements of <code class="reqn">S</code> are mutually independent, centered and weakly stationary time series and are mixed from each mode
+<code class="reqn">m</code> by the mixing matrix <code class="reqn">A_m</code>, <code class="reqn">m = 1, \ldots, r</code>, yielding the observed time series <code class="reqn">X</code>. In R the sample of <code class="reqn">X</code> is saved as an <code>array</code> of dimensions
+<code class="reqn">p_1, p_2, \ldots, p_r, T</code>.
+</p>
+<p><code>tgJADE</code> recovers then based on <code>x</code> the underlying independent time series <code class="reqn">S</code> by estimating the <code class="reqn">r</code> unmixing matrices 
+<code class="reqn">W_1, \ldots, W_r</code> using the lagged fourth joint moments specified by <code>lags</code>. This reliance on higher order moments makes the method especially suited for stochastic volatility models.
+</p>
+<p>If <code>x</code> is a matrix, that is, <code class="reqn">r = 1</code>, the method reduces to gJADE and the function calls <code>gJADE</code>.
+</p>
+<p>If <code>lags = 0</code> the method reduces to <code>tJADE</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with class 'tbss', inheriting from class 'bss', containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>Array of the same size as x containing the estimated uncorrelated sources.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W </code></td>
+<td>
+<p>List containing all the unmixing matrices</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xmu </code></td>
+<td>
+<p>The data location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datatype</code></td>
+<td>
+<p>Character string with value "ts". Relevant for <code>plot.tbss</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Joni Virta
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Virta, J. and Nordhausen, K., (2017), Blind source separation of tensor-valued time series. Signal Processing 141, 204-216, <a href="https://doi.org/10.1016/j.sigpro.2017.06.008">doi:10.1016/j.sigpro.2017.06.008</a></cite>  
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gJADE</code>, <code>rjd</code>, <code>tJADE</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("stochvol")
+n &lt;- 1000
+S &lt;- t(cbind(svsim(n, mu = -10, phi = 0.98, sigma = 0.2, nu = Inf)$y,
+             svsim(n, mu = -5, phi = -0.98, sigma = 0.2, nu = 10)$y,
+             svsim(n, mu = -10, phi = 0.70, sigma = 0.7, nu = Inf)$y,
+             svsim(n, mu = -5, phi = -0.70, sigma = 0.7, nu = 10)$y,
+             svsim(n, mu = -9, phi = 0.20, sigma = 0.01, nu = Inf)$y,
+             svsim(n, mu = -9, phi = -0.20, sigma = 0.01, nu = 10)$y))
+dim(S) &lt;- c(3, 2, n)
+
+A1 &lt;- matrix(rnorm(9), 3, 3)
+A2 &lt;- matrix(rnorm(4), 2, 2)
+
+X &lt;- tensorTransform(S, A1, 1)
+X &lt;- tensorTransform(X, A2, 2)
+
+tgjade &lt;- tgJADE(X)
+
+MD(tgjade$W[[1]], A1)
+MD(tgjade$W[[2]], A2) 
+tMD(tgjade$W, list(A1, A2))
+
+</code></pre>
+
+
+</div>

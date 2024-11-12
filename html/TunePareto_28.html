@@ -1,0 +1,221 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>precalculation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Predefined precalculation functions for objectives
+</h2>
+
+<h3>Description</h3>
+
+<p>These predefined precalculation functions can be employed to create own objectives using <code>createObjective</code>. They perform a reclassification or a cross-validation and return the true labels and the predictions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">reclassification(data, labels, 
+                 classifier, classifierParams, predictorParams)
+
+crossValidation(data, labels, 
+                classifier, classifierParams, predictorParams, 
+                ntimes = 10, nfold = 10, 
+                leaveOneOut = FALSE, stratified = FALSE,
+                foldList = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+
+<p>The data set to be used for the precalculation. This is usually a matrix or data frame with the samples in the rows and the features in the columns.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+
+<p>A vector of class labels for the samples in <code>data</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classifier</code></td>
+<td>
+
+<p>A <code>TuneParetoClassifier</code> wrapper object containing the classifier to tune. A number of state-of-the-art classifiers are included in <span class="pkg">TunePareto</span>  (see <code>predefinedClassifiers</code>). Custom classifiers can be employed using <code>tuneParetoClassifier</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classifierParams</code></td>
+<td>
+
+<p>A named list of parameter assignments for the training routine of the classifier.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>predictorParams</code></td>
+<td>
+
+<p>If the classifier consists of separate training and prediction functions, a named list of parameter assignments for the predictor function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfold</code></td>
+<td>
+
+<p>The number of groups of the cross-validation. Ignored if <code>leaveOneOut=TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ntimes</code></td>
+<td>
+
+<p>The number of repeated runs of the cross-validation. Ignored if <code>leaveOneOut=TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>leaveOneOut</code></td>
+<td>
+
+<p>If this is true, a leave-one-out cross-validation is performed, i.e. each sample is left out once in the training phase and used as a test sample
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stratified</code></td>
+<td>
+
+<p>If set to true, a stratified cross-validation is carried out. That is, the percentage of samples from different classes in the cross-validation folds corresponds to the class sizes in the complete data set. If set to false, the folds may be unbalanced.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>foldList</code></td>
+<td>
+
+<p>If this parameter is set, the other cross-validation parameters (<code>ntimes</code>, <code>nfold</code>, <code>leaveOneOut</code>, <code>stratified</code>) are ignored. Instead, the precalculated cross-validation partition supplied in <code>foldList</code> is used. This allows for using the same cross-validation experiment in multiple <code>tunePareto</code> calls. Partitions can be generated using <code>generateCVRuns</code>. 
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>reclassification</code> trains the classifier with the full data set. Afterwards, the classifier is applied to the same data set. 
+</p>
+<p><code>crossValidate</code> partitions the samples in the data set into a number of groups (depending on <code>nfold</code> and <code>leaveOneOut</code>). Each of these groups is left out once in the training phase and used for prediction. The whole procedure is repeated several times (as specified in <code>ntimes</code>). 
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>reclassification</code> returns a list with the following components:
+</p>
+
+<dl>
+<dt>trueLabels</dt>
+<dd>
+<p>The original labels of the dataset as supplied in <code>labels</code></p>
+</dd>
+<dt>predictedLabels</dt>
+<dd>
+<p>A vector of predicted labels of the data set</p>
+</dd>
+<dt>model</dt>
+<dd>
+<p>The <code>TuneParetoModel</code> object resulting from the classifier training</p>
+</dd>
+</dl>
+<p><code>crossValidation</code> returns a nested list structure. At the top level, there is one list element for each run of the cross-validation. Each of these elements consists of a list of sub-structures for each fold. The sub-structures have the following components:
+</p>
+
+<dl>
+<dt>trueLabels</dt>
+<dd>
+<p>The original labels of the test samples in the fold</p>
+</dd>
+<dt>predictedLabels</dt>
+<dd>
+<p>A vector of predicted labels of the test samples in the fold</p>
+</dd>
+<dt>model</dt>
+<dd>
+<p>The <code>TuneParetoModel</code> object resulting from the classifier training in the fold</p>
+</dd>
+</dl>
+<p>That is, for a cross-validation with <code>n</code> runs and <code>m</code> folds, there are <code>n</code> top-level lists, each having <code>m</code> sub-lists comprising the true labels and the predicted labels.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>createObjective</code>, <code>generateCVRuns</code>. 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# create new objective minimizing the
+# false positives of a reclassification
+
+cvFalsePositives &lt;- function(nfold=10, ntimes=10, leaveOneOut=FALSE, foldList=NULL, caseClass)
+{
+  return(createObjective(
+            precalculationFunction = "crossValidation",
+            precalculationParams = list(nfold=nfold, 
+                                        ntimes=ntimes, 
+                                        leaveOneOut=leaveOneOut,
+                                        foldList=foldList),
+            objectiveFunction = 
+            function(result, caseClass)
+            {
+             
+              # take mean value over the cv runs
+              return(mean(sapply(result,
+                    function(run)
+                    # iterate over runs of cross-validation
+                    {
+                      # extract all predicted labels in the folds
+                      predictedLabels &lt;- 
+                            unlist(lapply(run,
+                                         function(fold)fold$predictedLabels))
+    
+                      # extract all true labels in the folds
+                      trueLabels &lt;- 
+                            unlist(lapply(run,
+                                          function(fold)fold$trueLabels))
+                      
+                      # calculate number of false positives in the run
+                      return(sum(predictedLabels == caseClass &amp; 
+                                 trueLabels != caseClass))
+                    })))
+            },
+            objectiveFunctionParams = list(caseClass=caseClass),
+            direction = "minimize",        
+            name = "CV.FalsePositives"))                  
+}
+
+# use the objective in an SVM cost parameter tuning on the 'iris' data set
+r &lt;- tunePareto(data = iris[, -ncol(iris)], 
+                labels = iris[, ncol(iris)],
+                classifier = tunePareto.svm(),
+                cost = c(0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50),
+                objectiveFunctions=list(cvFalsePositives(10, 10, caseClass="setosa")))
+print(r)
+
+</code></pre>
+
+
+</div>

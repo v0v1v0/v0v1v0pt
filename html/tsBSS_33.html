@@ -1,0 +1,253 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gJADE</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Generalized JADE
+</h2>
+
+<h3>Description</h3>
+
+<p>The gJADE (generalized Joint Approximate Diagonalization of Eigenmatrices) method for blind source separation of time series with stochastic volatility.
+The method is a generalization of JADE, which is a method for blind source separation problem using only marginal information.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gJADE(X, ...)
+
+## Default S3 method:
+gJADE(X, k = 0:12, eps = 1e-06, maxiter = 100, method = c("frjd", "rjd"),
+      na.action = na.fail, weight = NULL, ordered = FALSE,
+      acfk = NULL, original = TRUE, alpha = 0.05, ...)
+## S3 method for class 'ts'
+gJADE(X, ...)
+## S3 method for class 'xts'
+gJADE(X, ...)
+## S3 method for class 'zoo'
+gJADE(X, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A numeric matrix or a multivariate time series object of class <code>ts</code>, <code>xts</code> or <code>zoo</code>. Missing values are not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>A vector of lags. It can be any non-negative integer, or a vector consisting of them. Default is <code>0:12</code>. If <code class="reqn">k = 0</code>, this method reduces to <code>JADE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Convergence tolerance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>The maximum number of iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The method to use for the joint diagonalization. The options are <code>"rjd"</code> and <code>"frjd"</code>. Default is <code>"frjd"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>A function which indicates what should happen when the data contain 'NA's. Default is to fail.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>A vector of length k to give weight to the different matrices in joint diagonalization. If NULL, all matrices have equal weight.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ordered</code></td>
+<td>
+<p>Whether to order components according to their volatility. Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>acfk</code></td>
+<td>
+<p>A vector of lags to be used in testing the presence of serial autocorrelation. Applicable only if <code>ordered = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>original</code></td>
+<td>
+<p>Whether to return the original components or their residuals based on ARMA fit. Default is <code>TRUE</code>, i.e. the original components are returned. Applicable only if <code>ordered = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Alpha level for linear correlation detection. Default is 0.05.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to or from methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume that a <code class="reqn">p</code>-variate <code class="reqn">{\bf Y}</code> with <code class="reqn">T</code> observations is whitened, i.e. <code class="reqn">{\bf Y}={\bf S}^{-1/2}({\bf X}_t - \frac{1}{T}\sum_{t=1}^T {\bf X}_{t})</code>, for <code class="reqn">t = 1, \ldots, T</code>,
+where <code class="reqn">{\bf S}</code> is the sample covariance matrix of <code class="reqn">{\bf X}</code>. The matrix <code class="reqn">{\bf \widehat{C}}^{ij}_k({\bf Y})</code> is of the form
+</p>
+<p style="text-align: center;"><code class="reqn">{\bf \widehat{C}}^{ij}_k({\bf Y}) = {\bf \widehat{B}}^{ij}_k({\bf Y}) - {\bf S}_k({\bf Y}) ({\bf E}^{ij} + {\bf E}^{ji}) {\bf S}_k({\bf Y})' - \textrm{trace}({\bf E}^{ij}) {\bf I}_p,</code>
+</p>
+
+<p>for <code class="reqn">i, j = 1, \ldots, p</code>, where <code class="reqn">{\bf S}_k({\bf Y})</code> is the lagged sample covariance matrix of <code class="reqn">{\bf Y}</code> for lag <code class="reqn">k = 1, \ldots, K</code>, <code class="reqn">{\bf E}^{ij}</code> is a matrix where element <code class="reqn">(i,j)</code> equals to 1 and all other elements are 0, <code class="reqn">{\bf I}_p</code> is an identity matrix of order <code class="reqn">p</code> and <code class="reqn">{\bf \widehat{B}}^{ij}_k({\bf Y})</code> is as in <code>gFOBI</code>.
+</p>
+<p>The algorithm finds an orthogonal matrix <code class="reqn">{\bf U}</code> by maximizing 
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_{i = 1}^p \sum_{j = 1}^p \sum_{k = 0}^K ||diag({\bf U \widehat{C}}^{ij}_k({\bf Y}) {\bf U}')||^2.</code>
+</p>
+
+<p>where <code class="reqn">k = 1, \ldots, K</code>.
+The final unmixing matrix is then <code class="reqn">{\bf W} = {\bf US}^{-1/2}</code>.
+</p>
+<p>For <code>ordered = TRUE</code> the function orders the sources according to their volatility. First a possible linear autocorrelation is removed using <code>auto.arima</code>. Then a squared autocorrelation test is performed for the sources (or for their residuals, when linear correlation is present). The sources are then put in a decreasing order according to the value of the test statistic of the squared autocorrelation test. For more information, see <code>lbtest</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class 'bssvol', inheriting from class 'bss', containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>W </code></td>
+<td>
+<p>The estimated unmixing matrix. If <code>ordered = TRUE</code>, the rows are ordered according to the order of the components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k </code></td>
+<td>
+<p>The vector of the used lags.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>The estimated sources as time series object standardized to have mean 0 and unit variances. If <code>ordered = TRUE</code>, then components are ordered according to their volatility. If <code>original = FALSE</code>, the sources with linear autocorrelation are replaced by their ARMA residuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MU </code></td>
+<td>
+<p>The mean vector of <code>X</code>.</p>
+</td>
+</tr>
+</table>
+<p>If <code>ordered = TRUE</code>, then also the following components included in the list:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>Sraw </code></td>
+<td>
+<p>The ordered original estimated sources as time series object standardized to have mean 0 and unit variances. Returned only if <code>original = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fits </code></td>
+<td>
+<p>The ARMA fits for the components with linear autocorrelation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>armaeff </code></td>
+<td>
+<p>A logical vector. Is TRUE if ARMA fit was done to the corresponding component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linTS </code></td>
+<td>
+<p>The value of the modified Ljung-Box test statistic for each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linP </code></td>
+<td>
+<p>p-value based on the modified Ljung-Box test statistic for each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>volTS </code></td>
+<td>
+<p>The value of the volatility clustering test statistic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>volP </code></td>
+<td>
+<p>p-value based on the volatility clustering test statistic.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen, Markus Matilainen
+</p>
+
+
+<h3>References</h3>
+
+<p>Cardoso, J.-F., Souloumiac, A. (1993), <em>Blind Beamforming for Non-Gaussian Signals</em>, in: IEE-Proceedings-F, volume 140, pp. 362–370.
+</p>
+<p>Matilainen, M., Nordhausen, K. and Oja, H. (2015), <em>New Independent Component Analysis Tools for Time Series</em>, Statistics &amp; Probability Letters, 105, 80–87.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>frjd</code>, <code>JADE</code>, <code>gFOBI</code>, <code>lbtest</code>, <code>auto.arima</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if(require("stochvol")) {
+n &lt;- 10000
+A &lt;- matrix(rnorm(9), 3, 3)
+
+# simulate SV models
+s1 &lt;- svsim(n, mu = -10, phi = 0.8, sigma = 0.1)$y
+s2 &lt;- svsim(n, mu = -10, phi = 0.9, sigma = 0.2)$y
+s3 &lt;- svsim(n, mu = -10, phi = 0.95, sigma = 0.4)$y
+
+X &lt;- cbind(s1, s2, s3) %*% t(A)
+
+res &lt;- gJADE(X)
+res
+coef(res)
+plot(res)
+head(bss.components(res))
+
+MD(res$W, A) # Minimum Distance Index, should be close to zero
+}
+</code></pre>
+
+
+</div>

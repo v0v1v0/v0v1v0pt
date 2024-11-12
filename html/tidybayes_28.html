@@ -1,0 +1,165 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compose_data</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compose data for input into a Bayesian model</h2>
+
+<h3>Description</h3>
+
+<p>Compose data into a list suitable to be passed into a Bayesian model (JAGS,
+BUGS, Stan, etc).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compose_data(..., .n_name = n_prefix("n"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Data to be composed into a list suitable for being passed into
+Stan, JAGS, etc. Named arguments will have their name used as the <code>name</code>
+argument to <code>as_data_list</code> when translated; unnamed arguments that are
+not lists or data frames will have their bare value (passed through
+<code>make.names</code>) used as the <code>name</code> argument to <code>as_data_list</code>.
+Each argument is evaluated using <code>eval_tidy</code> in an environment that
+includes all list items composed so far.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.n_name</code></td>
+<td>
+<p>A function that is used to form dimension index variables (a variable
+whose value is number of levels in a factor or the length of a data frame in
+<code>...</code>). For example, if a data frame with 20 rows and a factor <code>"foo"</code>
+(having 3 levels) is passed to <code>compose_data</code>, the list returned by
+<code>compose_data</code> will include an element named <code>.n_name("foo")</code>, which
+by default would be "n_foo", containing the value 3, and a column named "n"
+containing the value 20. See <code>n_prefix()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function recursively translates each argument into list elements using
+<code>as_data_list()</code>, merging all resulting lists together. By
+default this means that:
+</p>
+
+<ul>
+<li>
+<p> numerics are included as-is.
+</p>
+</li>
+<li>
+<p> logicals are translated into numeric using <code>as.numeric()</code>.
+</p>
+</li>
+<li>
+<p> factors are translated into numeric using <code>as.numeric()</code>,
+and an additional element named <code>.n_name(argument_name)</code> is added
+with the number of levels in the factor. The default <code>.n_name</code>
+function prefixes <code>"n_"</code> before the factor name; e.g. a factor
+named <code>foo</code> will have an element named <code>n_foo</code> added containing
+the number of levels in <code>foo</code>.
+</p>
+</li>
+<li>
+<p> character vectors are converted into factors then translated into numeric
+in the same manner as factors are.
+</p>
+</li>
+<li>
+<p> lists are translated by translating all elements of the list
+(recursively) and adding them to the result.
+</p>
+</li>
+<li>
+<p> data.frames are translated by translating every column of the data.frame
+and adding them to the result.  A variable named <code>"n"</code> (or
+<code>.n_name(argument_name)</code> if the data.frame is passed as a named
+argument <code>argument_name</code>) is also added containing the number of rows
+in the data frame.
+</p>
+</li>
+<li> <p><code>NULL</code> values are dropped. Setting a named argument to <code>NULL</code>
+can be used to drop that item from the resulting list (if an unwanted
+element was added to the list by a previous argument, such as a column
+from a data frame that is not needed in the model).
+</p>
+</li>
+<li>
+<p> all other types are dropped (and a warning given)
+</p>
+</li>
+</ul>
+<p>As in functions like <code>dplyr::mutate()</code>, each expression is evaluated in an
+environment containing the data list built up so far.
+</p>
+<p>For example, this means that if the first argument to <code>compose_data</code>
+is a data frame, subsequent arguments can include direct references to columns
+from that data frame. This allows you, for example, to easily use
+<code>x_at_y()</code> to generate indices for nested models.
+</p>
+<p>If you wish to add support for additional types not described above,
+provide an implementation of <code>as_data_list()</code> for the type. See
+the implementations of <code>as_data_list.numeric</code>,
+<code>as_data_list.logical</code>, etc for examples.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list where each element is a translated variable as described above.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>x_at_y()</code>, <code>spread_draws()</code>,
+<code>gather_draws()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(magrittr)
+
+df = data.frame(
+  plot = factor(paste0("p", rep(1:8, times = 2))),
+  site = factor(paste0("s", rep(1:4, each = 2, times = 2)))
+)
+
+# without changing `.n_name`, compose_data() will prefix indices
+# with "n" by default
+df %&gt;%
+  compose_data()
+
+# you can use n_prefix() to define a different prefix (e.g. "N"):
+df %&gt;%
+  compose_data(.n_name = n_prefix("N"))
+
+# If you have nesting, you may want a nested index, which can be generated using x_at_y()
+# Here, site[p] will give the site for plot p
+df %&gt;%
+  compose_data(site = x_at_y(site, plot))
+
+</code></pre>
+
+
+</div>

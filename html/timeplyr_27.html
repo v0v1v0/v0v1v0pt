@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fexpand</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fast versions of <code>tidyr::expand()</code> and <code>tidyr::complete()</code>.</h2>
+
+<h3>Description</h3>
+
+<p>Fast versions of <code>tidyr::expand()</code> and <code>tidyr::complete()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fexpand(
+  data,
+  ...,
+  expand_type = c("crossing", "nesting"),
+  sort = FALSE,
+  .by = NULL
+)
+
+fcomplete(
+  data,
+  ...,
+  expand_type = c("crossing", "nesting"),
+  sort = FALSE,
+  .by = NULL,
+  fill = NA
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Variables to expand</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expand_type</code></td>
+<td>
+<p>Type of expansion to use where "nesting"
+finds combinations already present in the data
+(exactly the same as using <code>distinct()</code> but <code>fexpand()</code>
+allows new variables to be created on the fly
+and columns are sorted in the order given.
+"crossing" finds all combinations of values in the group variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> expanded/completed variables are sorted.
+The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using tidy-select.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>A named list containing value-name pairs
+to fill the named implicit missing values.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For un-grouped data <code>fexpand()</code> is similar in speed to <code>tidyr::expand()</code>.
+When the data contain many groups, <code>fexpand()</code> is much much faster (see examples).
+</p>
+<p>The 2 main differences between <code>fexpand()</code> and <code>tidyr::expand()</code> are that:
+</p>
+
+<ul>
+<li>
+<p> tidyr style helpers like <code>nesting()</code> and <code>crossing()</code> are ignored.
+The type of expansion used is controlled through <code>expand_type</code> and applies to
+all supplied variables.
+</p>
+</li>
+<li>
+<p> Expressions are first calculated on the entire ungrouped dataset before being
+expanded but within-group expansions will work on variables that already exist
+in the dataset.
+For example, <code>iris %&gt;% group_by(Species) %&gt;% fexpand(Sepal.Length, Sepal.Width)</code>
+will perform a grouped expansion but
+<code>iris %&gt;% group_by(Species) %&gt;% fexpand(range(Sepal.Length))</code>
+will not.
+</p>
+</li>
+</ul>
+<p>For efficiency, when supplying groups, expansion is done on a by-group basis only if
+there are 2 or more variables that aren't part of the grouping.
+The reason is that a by-group calculation does not need to be done with 1 expansion variable
+as all combinations across groups already exist against that 1 variable.
+When <code>expand_type = "nesting"</code> groups are ignored for speed purposes as the result is the same.
+</p>
+<p>An advantage of <code>fexpand()</code> is that it returns a data frame with the same class
+as the input. It also uses <code>data.table</code> for memory efficiency and <code>collapse</code> for speed.
+</p>
+<p>A future development for <code>fcomplete()</code> would be to only fill values of variables that
+correspond only to both additional completed rows and rows that match the expanded rows, are
+filled in. For example,
+<code>iris %&gt;% mutate(test = NA_real_) %&gt;% complete(Sepal.Length = 0:100, fill = list(test = 0))</code>
+fills in all <code>NA</code> values of test, whereas
+<code>iris %&gt;% mutate(test = NA_real_) %&gt;% fcomplete(Sepal.Length = 0:100, fill = list(test = 0))</code>
+should only fill in values of test that correspond to Sepal.Length values of <code>0:100</code>.
+</p>
+<p>An additional note to add when <code>expand_type = "nesting"</code> is that if one of the
+supplied variables in <code>...</code> does not exist in the data, but can be recycled
+to the length of the data, then it is added and treated as a data variable.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> of expanded groups.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(lubridate)
+library(nycflights13)
+
+flights %&gt;%
+  fexpand(origin, dest)
+flights %&gt;%
+  fexpand(origin, dest, sort = FALSE)
+
+# Grouped expansions example
+# 1 extra group (carrier) this is very quick
+flights %&gt;%
+  group_by(origin, dest, tailnum) %&gt;%
+  fexpand(carrier)
+
+</code></pre>
+
+
+</div>

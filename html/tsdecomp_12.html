@@ -1,0 +1,181 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ARIMAdec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ARIMA-Model-Based Decomposition of Time Series</h2>
+
+<h3>Description</h3>
+
+<p>This is the main function for the ARIMA-model-based decomposition of a time series.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ARIMAdec(x, mod, width = c(0.035, 0.035), min.modulus = 0.4, 
+  extend = 16, drift = FALSE, optim.tol = 1e-04, ...)
+## S3 method for class 'ARIMAdec'
+print(x, units = c("radians", "degrees", "pi"), digits = 4, ...)
+## S3 method for class 'ARIMAdec'
+plot(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>for <code>ARIMAdec</code>, a univariate time series; 
+for <code>plot.ARIMAdec</code> and <code>print.ARIMAdec</code>, 
+an object of class <code>ARIMAdec</code> returned by <code>ARIMAdec</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mod</code></td>
+<td>
+<p>an object of class <code>Arima</code>. See <code>arima</code>.</p>
+</td>
+</tr>
+</table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>numeric of length two, width of the interval of frequencies allocated to the trend 
+and the seasonal components (measured in radians). If a numeric of length one is passed as argument, the same 
+width is used for both components. See <code>roots.allocation</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.modulus</code></td>
+<td>
+<p>numeric, minimum modulus of the roots assigned to the trend component. 
+See <code>roots.allocation</code>.</p>
+</td>
+</tr>
+</table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>extend</code></td>
+<td>
+<p>integer; if greater than zero, the series is extended by means of forecasts 
+and backcasts based on the fitted model <code>mod</code>.
+See <code>filtering</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drift</code></td>
+<td>
+<p>logical, if <code>TRUE</code> the <code>intercept</code> in the fitted model <code>mod</code> or an 
+external regressor named <code>"drift"</code> is treated as a deterministic linear trend.
+See <code>filtering</code>.</p>
+</td>
+</tr>
+</table>
+<table><tr style="vertical-align: top;">
+<td><code>optim.tol</code></td>
+<td>
+<p>numeric, the convergence tolerance to be used by <code>optimize</code>.</p>
+</td>
+</tr></table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+<p>character, the units in which the argument of the roots are printed. <code>units="pi"</code> prints the 
+argument in radians as multiples of <code class="reqn">\pi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>numeric, the number of significant digits to be used by <code>print</code>.</p>
+</td>
+</tr>
+</table>
+<table><tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments to be passed to <code>poly2acgf</code> or to 
+<code>plot.tsdecFilter</code> and <code>print</code> methods.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>This function is a wrapper to the sequence of calls to 
+<code>roots.allocation</code>, <code>pseudo.spectrum</code>, 
+<code>canonical.decomposition</code> and <code>filtering</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>ARIMAdec</code> containing the following:
+1) <code>ar</code>: the output from <code>{roots.allocation}</code>,
+2) <code>spectrum</code>: the output from <code>{pseudo.spectrum}</code>,
+3) <code>ma</code>:  the output from <code>{canonical.decomposition}</code>,
+4) <code>xextended</code>: the series extended with backcasts and forecasts (if <code>extend &gt; 0</code>),
+5) <code>filters</code>: the filters returned by <code>{filtering}</code>,
+6) <code>components</code>: the estimated components returned by <code>{filtering}</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Burman, J. P. (1980) 
+‘Seasonal Adjustment by Signal Extraction’.
+<em>Journal of the Royal Statistical Society. Series A (General)</em>,
+<b>143</b>(3), pp. 321-337.
+<a href="http://doi.org/10.2307/2982132">doi: 10.2307/2982132</a>
+</p>
+<p>Hillmer, S. C. and Tiao, G. C. (1982) 
+‘An ARIMA-Model-Based Approach to Seasonal Adjustment’.
+<em>Journal of the American Statistical Association</em>,
+<b>77</b>(377), pp. 63-70.
+<a href="http://doi.org/10.1080/01621459.1982.10477767">doi: 10.1080/01621459.1982.10477767</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>canonical.decomposition</code>,
+<code>filtering</code>,
+<code>pseudo.spectrum</code>,
+<code>roots.allocation</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Airlines model and monthly data
+y &lt;- log(AirPassengers)
+fit &lt;- arima(y, order=c(0,1,1), seasonal=list(order=c(0,1,1)))
+dec &lt;- ARIMAdec(y, fit, extend=72)
+dec
+plot(dec)
+
+# JohnsonJohnson quarterly data
+y &lt;- log(JohnsonJohnson)
+fit &lt;- arima(y, order=c(0,1,1), seasonal=list(order=c(0,1,1)))
+dec &lt;- ARIMAdec(y, fit, extend=16)
+dec
+plot(dec)
+
+# Nile annual data
+# this series is better modelled as a level shift at 
+# observation 29 and a mean (no ARMA structure),
+# here the shift is ignored for illustration of the 
+# decomposition of the fitted ARIMA(0,1,1) model
+y &lt;- Nile
+fit &lt;- arima(y, order=c(0,1,1))
+dec &lt;- ARIMAdec(y, fit, extend=72)
+dec
+plot(dec, overlap.trend=TRUE, args.trend=list(col="blue"))
+</code></pre>
+
+
+</div>

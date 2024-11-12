@@ -1,0 +1,115 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_equi_bayes</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get the Bayes rule under multiway Stein's loss.</h2>
+
+<h3>Description</h3>
+
+<p>Given the output of <code>equi_mcmc</code>, this function will calculate the Bayes
+rule under multiway Stein's loss.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_equi_bayes(psi_inv, sigma, burnin = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>psi_inv</code></td>
+<td>
+<p>A list of arrays where <code>psi_inv[[i]][[, , j]]</code> is the
+<code class="reqn">j</code>th update of the <code>i</code>th component. These components are the
+inverses of the lower-triangular Cholesky square roots of the component
+covariance matrices. You can just use the <code>Phi_inv</code> output from
+<code>equi_mcmc</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>A vector of posteior draws of the total variation parameter.
+This is just <code>sigma</code> from the output of <code>equi_mcmc</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>A numeric between 0 and 1. What proportion of the posterior
+samples do you want to discard as burnin? The default is 0.25.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Multiway Stein's loss is a generalization of Stein's loss to more than two
+dimensions. The Bayes rule under this loss is simply represented in terms of
+the posterior moments of the component precision matrices. These moments can
+be approximated by using the output of <code>equi_mcmc</code>. When using the
+invariant prior that is used in <code>equi_mcmc</code>, the resulting Bayes rule is
+the uniformly minimum risk equivariant estimator.
+</p>
+<p>More details on multiway Stein's loss and the Bayes rules under it can be
+found in
+<a href="https://doi.org/10.1016/j.jmva.2015.01.020">
+Gerard and Hoff (2015)</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>Sig_hat</code> A list of the Bayes rules of the component covariance
+matrices under multiway Stein's loss.
+</p>
+<p><code>B</code> A list of the lower-triangular Cholesky square roots of the Bayes
+rules of the component covariance matrices under multiway Stein's loss. We
+have that <code>Sig_hat[[i]]</code> is equal to <code>B[[i]] %*% t(B[[i]])</code>.
+</p>
+<p><code>b</code> A numeric. This is the bayes rule of the total variation
+parameter. This is the 'standard deviation' version. That is, the <code>b ^
+  2</code> would be used to calculate the overall covariance matrix.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Gerard, D., &amp; Hoff, P. (2015). Equivariant minimax
+dominators of the MLE in the array normal model.
+<em>Journal of Multivariate Analysis</em>, 137, 32-49.
+<a href="https://doi.org/10.1016/j.jmva.2015.01.020">https://doi.org/10.1016/j.jmva.2015.01.020</a>
+<a href="http://arxiv.org/pdf/1408.0424.pdf">http://arxiv.org/pdf/1408.0424.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>equi_mcmc</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Generate data whose true covariance is just the identity.
+p &lt;- c(4,4,4)
+X &lt;- array(stats::rnorm(prod(p)),dim = p)
+#Then run the Gibbs sampler.
+mcmc_out &lt;- equi_mcmc(X)
+bayes_rules &lt;- get_equi_bayes(mcmc_out$Phi_inv, mcmc_out$sigma)
+bayes_rules$Sig_hat[[1]]
+</code></pre>
+
+
+</div>

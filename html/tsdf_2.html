@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dec.sim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>run dose-finding simulations</h2>
+
+<h3>Description</h3>
+
+<p>Run dose-finding simulations based on a customized decision table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dec.sim(truep, decTable, start.level = 1, nsim = 1000)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>truep</code></td>
+<td>
+<p>a vector of length k (the number of doses being considered in the trial), with values equal to the true probabilities of toxicity at the dose levels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decTable</code></td>
+<td>
+<p>a customized decision table. (same format as output of <code>dec.table</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.level</code></td>
+<td>
+<p>starting dose level. Defaults to 1, i.e. the lowest dose level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>the number of simulation trials. Defaults to 1000.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume there are $d$ dose levels to be studied. Denote the cumulative number of patients treated and cumulative number of DLTs at the current dose level are $n_i$ and $m_i$, respectively. $n_max$ is the maximum number of patients permitted to be treated at each dose level. The procedure is as follows
+</p>
+
+<ul>
+<li>
+<p>Step 1 : Update cumulative number of DLTs $m_i$ and total number of patients $n_i$ treated at the current dose and use the decision table to make a decision: if decision is “S" –&gt; step 2; if decision is “D" or “DU” –&gt; step 3; if decision is “E” –&gt; step 4
+</p>
+</li>
+<li>
+<p>Step 2 : If $n_i = n_max$, declare dose i as the MTD; otherwise, update $m_i$ and $n_i$ with additional cohort of patients and go to Step 1.
+</p>
+</li>
+<li>
+<p>Step 3 : If the current dose level is the highest dose level, then: if n_i &lt; n_max, update $m_i$ and $n_i$ with additional cohort of patients and go to Step 1; otherwise, stop the trial and declare that the MTD is higher than the highest dose level (inconclusive); If the current dose is not the lowest dose, then: if $n_i-1 &lt; n_max$, update $m_i-1$ and $n_i-1$ with additional cohort of patients and set the current dose level to be the next lower dose level, and go to Step 1; otherwise, stop the trial and declare the next lower dose level is the MTD; Additionally, if the decision is “DU”, record this dose level as DU and never treat additional patients at the current dose level again.
+</p>
+</li>
+<li>
+<p>Step 4 : If the current dose level is the highest dose level, then: if $n_i &lt; n_max$, update $m_i$ and $n_i$ with additional cohort of patients and go to Step 1; otherwise, stop the trial and declare that the MTD is higher than the highest dose level (inconclusive); If the next higher dose level is of status DU, then: if $n_i &lt; n_max$, update $m_i$ and $n_i$ with additional cohort of patients and go to step 1; otherwise stop, the current dose level is MTD; Otherwise: if $n_i+1 &lt; n_max$, update $m_i+1$ and  $n_i+1$ with additional cohort of patients, set the current dose level to be next higher dose level, and go to step 1; else, the current dose level is the MTD. 
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>the functions <code>summary.dec.sim</code> is used to obtain and print a summary table of the results (recommended). An object of class <code>"dec.sim"</code> is a list containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mtd</code></td>
+<td>
+<p>a vector of dose levels giving the recommended maximum tolerated dose (MTD) at the end of the trial.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mtd.prob</code></td>
+<td>
+<p>a vector of length <code>k</code> giving the average proportions of selected as MTD at each dose level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>over.prob</code></td>
+<td>
+<p>a vector of length <code>k</code> giving the average proportions of selected as over the MTD at each dose level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.patients</code></td>
+<td>
+<p>the average number of patients dosed at each level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dlt</code></td>
+<td>
+<p>the average number of DLTs experienced at each dose level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>truep</code></td>
+<td>
+<p>input; true probabilities of toxicity.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.level</code></td>
+<td>
+<p>input; starting dose level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>input; number of simulated trails.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Wenchuan Guo &lt;wguo1017@gmail.com&gt;
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">truep &lt;- c(0.3, 0.45, 0.5, 0.6)
+res &lt;- dec.table(0.6,0.4,0.2,0.3,c(3,3,3))
+out &lt;- dec.sim(truep, res$table, start.level = 2, nsim = 1000)
+summary(out, pt = 0.3)
+</code></pre>
+
+
+</div>

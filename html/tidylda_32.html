@@ -1,0 +1,209 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidylda</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit a Latent Dirichlet Allocation topic model</h2>
+
+<h3>Description</h3>
+
+<p>Fit a Latent Dirichlet Allocation topic model using collapsed Gibbs sampling.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tidylda(
+  data,
+  k,
+  iterations = NULL,
+  burnin = -1,
+  alpha = 0.1,
+  eta = 0.05,
+  optimize_alpha = FALSE,
+  calc_likelihood = TRUE,
+  calc_r2 = FALSE,
+  threads = 1,
+  return_data = FALSE,
+  verbose = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A document term matrix or term co-occurrence matrix. The preferred
+class is a <code>dgCMatrix-class</code>. However there is support
+for any <code>Matrix-class</code> object as well as several other
+commonly-used classes such as <code>matrix</code>,
+<code>dfm</code>, <code>DocumentTermMatrix</code>, and
+<code>simple_triplet_matrix</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>Integer number of topics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>Integer number of iterations for the Gibbs sampler to run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>Integer number of burnin iterations. If <code>burnin</code> is greater than -1,
+the resulting "beta" and "theta" matrices are an average over all iterations
+greater than <code>burnin</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Numeric scalar or vector of length <code>k</code>. This is the prior
+for topics over documents.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>Numeric scalar, numeric vector of length <code>ncol(data)</code>,
+or numeric matrix with <code>k</code> rows and <code>ncol(data)</code> columns.
+This is the prior for words over topics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize_alpha</code></td>
+<td>
+<p>Logical. Do you want to optimize alpha every iteration?
+Defaults to <code>FALSE</code>. See 'details' below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_likelihood</code></td>
+<td>
+<p>Logical. Do you want to calculate the log likelihood every iteration?
+Useful for assessing convergence. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_r2</code></td>
+<td>
+<p>Logical. Do you want to calculate R-squared after the model is trained?
+Defaults to <code>FALSE</code>. See <code>calc_lda_r2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>Number of parallel threads, defaults to 1. See Details, below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_data</code></td>
+<td>
+<p>Logical. Do you want <code>data</code> returned as part of the model object?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical. Do you want to print a progress bar out to the console?
+Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments, currently unused</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function calls a collapsed Gibbs sampler for Latent Dirichlet Allocation
+written using the excellent Rcpp package. Some implementation notes follow:
+</p>
+<p>Topic-token and topic-document assignments are not initialized based on a
+uniform-random sampling, as is common. Instead, topic-token probabilities
+(i.e. <code>beta</code>) are initialized by sampling from a Dirichlet distribution
+with <code>eta</code> as its parameter. The same is done for topic-document
+probabilities (i.e. <code>theta</code>) using <code>alpha</code>. Then an internal
+function is called (<code>initialize_topic_counts</code>) to run
+a single Gibbs iteration to initialize assignments of tokens to topics and
+topics to documents.
+</p>
+<p>When you use burn-in iterations (i.e. <code>burnin = TRUE</code>), the resulting
+<code>beta</code> and <code>theta</code> matrices are calculated by averaging over every
+iteration after the specified  number of burn-in iterations. If you do not
+use burn-in iterations, then the matrices are calculated from the last run
+only. Ideally, you'd burn in every iteration before convergence, then average
+over the chain after its converged (and thus every observation is independent).
+</p>
+<p>If you set <code>optimize_alpha</code> to <code>TRUE</code>, then each element of <code>alpha</code>
+is proportional to the number of times each topic has be sampled that iteration
+averaged with the value of <code>alpha</code> from the previous iteration. This lets
+you start with a symmetric <code>alpha</code> and drift into an asymmetric one.
+However, (a) this probably means that convergence will take longer to happen
+or convergence may not happen at all. And (b) I make no guarantees that doing this
+will give you any benefit or that it won't hurt your model. Caveat emptor!
+</p>
+<p>The log likelihood calculation is the same that can be found on page 9 of
+<a href="https://arxiv.org/pdf/1510.08628.pdf">https://arxiv.org/pdf/1510.08628.pdf</a>. The only difference is that the
+version in <code>tidylda</code> allows <code>eta</code> to be a
+vector or matrix. (Vector used in this function, matrix used for model
+updates in <code>refit.tidylda</code>. At present, the
+log likelihood function appears to be ok for assessing convergence. i.e. It
+has the right shape. However, it is, as of this writing, returning positive
+numbers, rather than the expected negative numbers. Looking into that, but
+in the meantime caveat emptor once again.
+</p>
+<p>Parallelism, is not currently implemented. The <code>threads</code> argument is a
+placeholder for planned enhancements.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an S3 object of class <code>tidylda</code>. See <code>new_tidylda</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load some data
+data(nih_sample_dtm)
+
+# fit a model
+set.seed(12345)
+m &lt;- tidylda(
+  data = nih_sample_dtm[1:20, ], k = 5,
+  iterations = 200, burnin = 175
+)
+
+str(m)
+
+# predict on held-out documents using gibbs sampling "fold in"
+p1 &lt;- predict(m, nih_sample_dtm[21:100, ],
+  method = "gibbs",
+  iterations = 200, burnin = 175
+)
+
+# predict on held-out documents using the dot product method
+p2 &lt;- predict(m, nih_sample_dtm[21:100, ], method = "dot")
+
+# compare the methods
+barplot(rbind(p1[1, ], p2[1, ]), beside = TRUE, col = c("red", "blue"))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dist_profile</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculates the distance profile using MASS algorithms</h2>
+
+<h3>Description</h3>
+
+<p>Mueen's Algorithm for Similarity Search is The Fastest Similarity Search Algorithm for Time
+Series Subsequences under Euclidean Distance and Correlation Coefficient.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dist_profile(
+  data,
+  query,
+  ...,
+  window_size = NULL,
+  method = "v3",
+  index = 1,
+  k = NULL,
+  weight = NULL,
+  paa = 1
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>matrix</code> or a <code>vector</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>query</code></td>
+<td>
+<p>a <code>matrix</code> or a <code>vector</code>. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Precomputed values from the first iteration. If not supplied, these values will be computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window_size</code></td>
+<td>
+<p>an <code>int</code> or <code>NULL</code>. Sliding window size. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>method that will be used to calculate the distance profile. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index</code></td>
+<td>
+<p>an <code>int</code>. Index of query window. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>an <code>int</code> or <code>NULL</code>. Default is <code>NULL</code>. Defines the size of batch for MASS V3. Prefer to
+use a power of 2. If <code>NULL</code>, it will be set automatically.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>a <code>vector</code> of <code>numeric</code> or <code>NULL</code> with the same length of the <code>window_size</code>. This is
+a MASS extension to weight the query.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paa</code></td>
+<td>
+<p>a <code>numeric</code>. Default is <code>1</code>. Factor of PAA reduction (2 == half of size). This is a
+MASS extension.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function has several ways to work:
+</p>
+<p>Case 1: You have a small sized query and the data. In this case you only have to provide the first two
+parameters <code>data</code> and <code>query</code>. Internally the <code>window_size</code> will be get from the query length.
+</p>
+<p>Case 2: You have one or two data vectors and want to compute the join or self-similarity. In this case
+you need to use the recursive solution. The parameters are <code>data</code>, <code>query</code>, <code>window_size</code> and <code>index</code>.
+The first iteration don't need the <code>index</code> unless you are starting somewhere else. The <code>query</code> will be
+the source of a <code>query_window</code>, starting on <code>index</code>, with length of <code>window_size</code>.
+</p>
+<p>The <code>method</code> defines which MASS will be used. Current supported values are: <code>v2</code>, <code>v3</code>, <code>weighted</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns the <code>distance_profile</code> for the given query and the <code>last_product</code> for STOMP
+algorithm and the parameters for recursive call. See details.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> Abdullah Mueen, Yan Zhu, Michael Yeh, Kaveh Kamgar, Krishnamurthy Viswanathan,
+Chetan Kumar Gupta and Eamonn Keogh (2015), The Fastest Similarity Search Algorithm for Time
+Series Subsequences under Euclidean Distance
+</p>
+</li></ul>
+<p>Website: <a href="https://www.cs.unm.edu/~mueen/FastestSimilaritySearch.html">https://www.cs.unm.edu/~mueen/FastestSimilaritySearch.html</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+w &lt;- mp_toy_data$sub_len
+ref_data &lt;- mp_toy_data$data[, 1]
+# minimum example, data and query
+nn &lt;- dist_profile(ref_data, ref_data[1:w])
+distance_profile &lt;- sqrt(nn$distance_profile)
+
+# data and indexed query
+nn &lt;- dist_profile(ref_data, ref_data, window_size = w, index = 10)
+distance_profile &lt;- sqrt(nn$distance_profile)
+
+# recursive
+nn &lt;- NULL
+
+for (i in seq_len(10)) {
+  nn &lt;- dist_profile(ref_data, ref_data, nn, window_size = w, index = i)
+}
+
+# weighted
+weight &lt;- c(rep(1, w / 3), rep(0.5, w / 3), rep(0.8, w / 3)) # just an example
+
+nn &lt;- dist_profile(ref_data, ref_data,
+  window_size = w, index = 1, method = "weighted",
+  weight = weight
+)
+distance_profile &lt;- sqrt(nn$distance_profile)
+</code></pre>
+
+
+</div>

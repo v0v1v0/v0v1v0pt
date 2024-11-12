@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lapp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply a function to layers of a SpatRaster, or sub-datasets of a SpatRasterDataset</h2>
+
+<h3>Description</h3>
+
+<p>Apply a function to a SpatRaster, using layers as arguments.
+</p>
+<p>The number of arguments in function <code>fun</code> must match the number of layers in the SpatRaster (or the number of sub-datasets in the SpatRasterDataset). For example, if you want to multiply two layers, you could use this function: <code>fun=function(x,y){return(x*y)}</code> percentage: <code>fun=function(x,y){return(100 * x / y)}</code>. If you combine three layers you could use <code>fun=function(x,y,z){return((x + y) * z)}</code>
+</p>
+<p>Before you use the function, test it to make sure that it is vectorized. That is, it should work for vectors longer than one, not only for single numbers. Or if the input SpatRaster(s) have multiple layers, it should work for a matrix (multiple cells) of input data (or matrices in the case of a SpatRasterDataSet). The function must return the same number of elements as its input vectors, or multiples of that. Also make sure that the function is <code>NA</code>-proof: it should returns the same number of values when some or all input values are <code>NA</code>. And the function must return a vector or a matrix, not a <code>data.frame</code>. To test it, run it with <code>do.call(fun, data)</code> (see examples). 
+</p>
+<p>Use <code>app</code> for summarize functions such as <code>sum</code>, that take any number of arguments; and <code>tapp</code> to do so for groups of layers. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+lapp(x, fun, ..., usenames=FALSE, cores=1, filename="", overwrite=FALSE, wopt=list())
+
+## S4 method for signature 'SpatRasterDataset'
+lapp(x, fun, ..., usenames=FALSE, recycle=FALSE, 
+    filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster or SpatRasterDataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>a function that takes a vector and can be applied to each cell of <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to be passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usenames</code></td>
+<td>
+<p>logical. Use the layer names (or dataset names if <code>x</code> is a SpatRasterDataset) to match the function arguments? If <code>FALSE</code>, argument matching is by position</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>positive integer. If <code>cores &gt; 1</code>, a 'parallel' package cluster with that many cores is created and used. You can also supply a cluster object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recycle</code></td>
+<td>
+<p>logical. Recycle layers to match the subdataset with the largest number of layers</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>Note</h3>
+
+<p>Use <code>sapp</code> or <code>lapply</code> to apply a function that takes a SpatRaster as argument to each layer of a SpatRaster (that is rarely necessary).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code> app, tapp,  math</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">s &lt;- rast(system.file("ex/logo.tif", package="terra")) + 1  
+ss &lt;- s[[2:1]]
+
+fvi &lt;- function(x, y){ (x - y ) / (x + y) } 
+# test the function
+data &lt;- list(c(1:5,NA), 6:1)
+do.call(fvi, data)
+
+x &lt;- lapp(ss, fun=fvi )
+
+# which is the same as supplying the layers to "fun"
+# in some cases this will be much faster 
+y &lt;- fvi(s[[2]], s[[1]])
+
+f2 &lt;- function(x, y, z){ (z - y + 1) / (x + y + 1) } 
+p1 &lt;- lapp(s, fun=f2 )
+
+p2 &lt;- lapp(s[[1:2]], f2, z=200)
+
+# the usenames argument
+
+fvi2 &lt;- function(red, green){ (red - green ) / (red + green) } 
+names(s)
+x1 &lt;- lapp(s[[1:2]], fvi2, usenames=TRUE)
+x2 &lt;- lapp(s[[2:1]], fvi2, usenames=TRUE)
+# x1 and x2 are the same, despite the change in the order of the layers
+# x4 is also the same, but x3 is not
+x3 &lt;- lapp(s[[2:1]], fvi2, usenames=FALSE)
+x4 &lt;- lapp(s, fvi2, usenames=TRUE)
+
+# while this would fail because 
+# there are too many layers in s
+# x5 &lt;- lapp(s, fvi2, usenames=FALSE)
+
+pairs(c(x1, x2, x3, x4))
+
+## SpatRasterDataset
+x &lt;- sds(s, s[[1]]+50)
+fun &lt;- function(x, y) { x/y }
+
+# test "fun"
+data &lt;- list(matrix(1:9, ncol=3), matrix(9:1, ncol=3))
+do.call(fun, data)
+
+lapp(x, fun, recycle=TRUE)
+
+# the same, more concisely
+z &lt;- s / (s[[1]]+50)
+</code></pre>
+
+
+</div>

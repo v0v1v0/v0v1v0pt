@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aberrantscores</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert outcome to aberrant ranks</h2>
+
+<h3>Description</h3>
+
+<p>Replaces non-aberrant responses by 0 and ranks the aberrant responses by severity.
+The more aberrant responses have the highest ranks.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">aberrantscores(ymat, cutoff, cutoff_dir = "less", tau = 0, treated1 = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ymat</code></td>
+<td>
+<p>A matrix of outcomes. Rows correspond to matched triples and
+the three columns correspond to the three units in the match. The first unit
+is the one treated unit if 'treated1 == TRUE' or the one control unit if
+'treated1 == FALSE'. The other two columns contain the remaining two units in
+the match. These are control units if 'treated1 == TRUE' or treated units if
+'treated1 == FALSE'. This can easily be created from the triples match using
+the [formattrip()] function with 'type == "wide"'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff</code></td>
+<td>
+<p>The cutoff for whether an outcome is aberrant. Any outcome more extreme
+then this cutoff will be considered aberrant</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff_dir</code></td>
+<td>
+<p>Either 'less' or 'greater', indicating whether outcomes should be
+aberrant if they are less than the 'cutoff' or greater than the 'cutoff', respectively</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>The null treatment effect to be subtracted from all treated units
+before aberrant ranking commences. If 'tau != 0', then 'treated1' is required</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treated1</code></td>
+<td>
+<p>A logical vector with length equal to the number of triples.
+'TRUE' if there is only one treated unit in the matched triple; 'FALSE' if
+there are two treated units and only one control unit.
+This can easily be created from the triples match using
+the [formattrip()] function with 'type == "wide"'</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This can be useful for creating 'scores' in [sentrip()] for an aberrant rank test.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A matrix similar to 'ymat' in all regards other than the outcomes being
+converted to aberrant ranks
+</p>
+
+
+<h3>See Also</h3>
+
+<p>aberrantscoreslong for the same function with inputs given in the long format as opposed to the wide format
+</p>
+<p>formattrip for formatting the triples match into long or wide format
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate some data
+set.seed(246)
+n &lt;- 30
+x &lt;- rnorm(n, 0, 3)
+nt &lt;- floor(n * 0.5)
+nc &lt;- n - nt
+z &lt;- c(rep(1, nt), rep(0, nc))
+# Create a distance matrix, everything in one stratum
+dist &lt;- dist_mahal(data.frame(x = x), z, rep(1, n))[[1]]
+# Create the triples match
+triplesm &lt;- triples_st(cost = dist, z = z, solver = "rlemon")
+# Create an outcome
+y &lt;- 1:40
+# Give the outcome some random unit names
+names(y) &lt;- sample(1:40)
+# Reformat the triples match
+ywide &lt;- formattrip(m = triplesm, y = y, type = "wide")
+# Turn the outcome into scores, in this case aberrant ranks
+ab &lt;- aberrantscores(ywide$ymat, 15, cutoff_dir = "less", tau = 0, treated1 = NULL)
+# Conduct a one-sided hypothesis test with a bias of gamma = 1.25
+sentrip(scores = ab, treated1 = ywide$treated1, gamma = 1.25, alternative = "greater")
+
+</code></pre>
+
+
+</div>

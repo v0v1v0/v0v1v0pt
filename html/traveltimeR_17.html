@@ -1,0 +1,121 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_map</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Isochrones (Time Map)</h2>
+
+<h3>Description</h3>
+
+<p>Given origin coordinates, find shapes of zones reachable within corresponding travel time.
+Find unions/intersections between different searches
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_map(
+  departure_searches = NULL,
+  arrival_searches = NULL,
+  unions = NULL,
+  intersections = NULL,
+  format = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>departure_searches</code></td>
+<td>
+<p>One or more objects created by <code>make_search</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arrival_searches</code></td>
+<td>
+<p>One or more objects created by <code>make_search</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unions</code></td>
+<td>
+<p>One or more objects created by <code>make_union_intersect</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>intersections</code></td>
+<td>
+<p>One or more objects created by <code>make_union_intersect</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>time-map response format. See <a href="https://docs.traveltime.com/api/reference/isochrones#Response-Body">https://docs.traveltime.com/api/reference/isochrones#Response-Body</a> for details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <a href="https://docs.traveltime.com/api/reference/isochrones/">https://docs.traveltime.com/api/reference/isochrones/</a> for details
+</p>
+
+
+<h3>Value</h3>
+
+<p>API response parsed as a list and as a raw json
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+dateTime &lt;- strftime(as.POSIXlt(Sys.time(), "UTC"), "%Y-%m-%dT%H:%M:%SZ")
+
+departure_search1 &lt;-
+  make_search(id = "public transport from Trafalgar Square",
+              departure_time = dateTime,
+              travel_time = 900,
+              coords = list(lat = 51.507609, lng = -0.128315),
+              transportation = list(type = "public_transport"),
+              properties = list('is_only_walking'))
+
+departure_search2 &lt;-
+  make_search(id = "driving from Trafalgar Square",
+              departure_time = dateTime,
+              travel_time = 900,
+              coords = list(lat = 51.507609, lng = -0.128315),
+              transportation = list(type = "driving"))
+
+arrival_search &lt;-
+  make_search(id = "public transport to Trafalgar Square",
+              arrival_time = dateTime,
+              travel_time = 900,
+              coords = list(lat = 51.507609, lng = -0.128315),
+              transportation = list(type = "public_transport"),
+              range = list(enabled = TRUE, width = 3600))
+
+union &lt;- make_union_intersect(id = "union of driving and public transport",
+                               search_ids = list('driving from Trafalgar Square',
+                                                 'public transport from Trafalgar Square'))
+intersection &lt;- make_union_intersect(id = "intersection of driving and public transport",
+                               search_ids = list('driving from Trafalgar Square',
+                                                 'public transport from Trafalgar Square'))
+result &lt;-
+  time_map(
+    departure_searches = c(departure_search1, departure_search2),
+    arrival_searches = arrival_search,
+    unions = union,
+    intersections = intersection
+  )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

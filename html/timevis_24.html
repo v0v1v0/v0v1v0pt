@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>timevis-shiny</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Shiny bindings for timevis</h2>
+
+<h3>Description</h3>
+
+<p>Output and render functions for using timevis within Shiny
+applications and interactive Rmd documents.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">timevisOutput(outputId, width = "100%", height = "auto")
+
+renderTimevis(expr, env = parent.frame(), quoted = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>outputId</code></td>
+<td>
+<p>output variable to read from</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width, height</code></td>
+<td>
+<p>Must be a valid CSS unit (like <code>'100%'</code>,
+<code>'400px'</code>, <code>'auto'</code>) or a number, which will be coerced to a
+string and have <code>'px'</code> appended. <code>height</code> will probably not
+have an effect; instead, use the <code>height</code> parameter in
+<code>timevis</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>An expression that generates a timevis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env</code></td>
+<td>
+<p>The environment in which to evaluate <code>expr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quoted</code></td>
+<td>
+<p>Is <code>expr</code> a quoted expression (with <code>quote()</code>)? This
+is useful if you want to save an expression in a variable.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>timevis</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (interactive()) {
+library(shiny)
+
+#----------------------- Most basic example -----------------
+shinyApp(
+  ui = fluidPage(timevisOutput("timeline")),
+  server = function(input, output) {
+    output$timeline &lt;- renderTimevis(
+      timevis()
+    )
+  }
+)
+
+
+#----------------------- More advanced example -----------------
+data &lt;- data.frame(
+  id = 1:3,
+  start = c("2015-04-04", "2015-04-05 11:00:00", "2015-04-06 15:00:00"),
+  end = c("2015-04-08", NA, NA),
+  content = c("&lt;h2&gt;Vacation!!!&lt;/h2&gt;", "Acupuncture", "Massage"),
+  style = c("color: red;", NA, NA)
+)
+
+ui &lt;- fluidPage(
+  timevisOutput("appts"),
+  div("Selected items:", textOutput("selected", inline = TRUE)),
+  div("Visible window:", textOutput("window", inline = TRUE)),
+  tableOutput("table")
+)
+
+server &lt;- function(input, output) {
+  output$appts &lt;- renderTimevis(
+    timevis(
+      data,
+      options = list(editable = TRUE, multiselect = TRUE, align = "center")
+    )
+  )
+
+  output$selected &lt;- renderText(
+    paste(input$appts_selected, collapse = " ")
+  )
+
+  output$window &lt;- renderText(
+    paste(input$appts_window[1], "to", input$appts_window[2])
+  )
+
+  output$table &lt;- renderTable(
+    input$appts_data
+  )
+}
+shinyApp(ui, server)
+}
+
+</code></pre>
+
+
+</div>

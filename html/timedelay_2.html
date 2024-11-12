@@ -1,0 +1,361 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bayesian</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimating the time delay via the Bayesian method</h2>
+
+<h3>Description</h3>
+
+<p><code>bayesian</code> produces posterior samples of all the model parameters including the time delay. This function has options for three Markov chain Monte Carlo (MCMC) techniques; (i) ancillarity-sufficiency interweaving strategy (ASIS) and (ii) adaptive MCMC to improve the convergence rate, and (iii) repelling-attracting Metropolis for multimodality. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bayesian(data.lcA, data.lcB, data.flux, theta.ini, 
+   delta.ini, delta.uniform.range, delta.proposal.scale, 
+   tau.proposal.scale, tau.prior.shape = 1, tau.prior.scale = 1,
+   sigma.prior.shape = 1, sigma.prior.scale = 1e-7, 
+   asis = TRUE, micro, multimodality = FALSE, 
+   adaptive.frequency, adaptive.delta =  TRUE, adaptive.delta.factor,
+   adaptive.tau = TRUE, adaptive.tau.factor,
+   sample.size, warmingup.size)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data.lcA</code></td>
+<td>
+
+<p>A (<code class="reqn">n_1</code> by 3) matrix for image A (light curve A); the first column has <code class="reqn">n_1</code> observation times, the second column contains <code class="reqn">n_1</code> flux (or magnitude) values, the third column includes <code class="reqn">n_1</code> measurement errors.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.lcB</code></td>
+<td>
+
+<p>A (<code class="reqn">n_2</code> by 3) matrix for image B (light curve B); the first column has <code class="reqn">n_2</code> observation times, the second column contains <code class="reqn">n_2</code> flux (or magnitude) values, the third column includes <code class="reqn">n_2</code> measurement errors.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.flux</code></td>
+<td>
+
+<p>"True" if data are recorded on flux scale or "FALSE" if data are on magnitude scale. Simply speaking, if your observed time series can take on negative values, then data.flux = FALSE.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.ini</code></td>
+<td>
+
+<p>Initial values of the OU parameters, (<code class="reqn">\mu</code>, <code class="reqn">\sigma</code>, <code class="reqn">\tau</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.ini</code></td>
+<td>
+
+<p>Initial value of the time delay, <code class="reqn">\Delta</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.uniform.range</code></td>
+<td>
+
+<p>The range of the Uniform prior distribution for the time delay.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis step for the time delay.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis-Hastings step for <code class="reqn">\tau</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.prior.shape</code></td>
+<td>
+
+<p>The shape parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\tau</code>. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.prior.scale</code></td>
+<td>
+
+<p>The scale parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\tau</code>. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma.prior.shape</code></td>
+<td>
+
+<p>The shape parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\sigma^2</code>.  Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma.prior.scale</code></td>
+<td>
+
+<p>The scale parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\sigma^2</code>. Default is 1e-7.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>asis</code></td>
+<td>
+
+<p>(Optional) "TRUE" if we use the ancillarity-sufficiency interweaving strategy (ASIS) for c (always recommended). Default is "TRUE".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>micro</code></td>
+<td>
+
+<p>It determines the order of a polynomial regression model that accounts for the difference between microlensing trends. Default is 3. When zero is assigned, the Bayesian model fits a curve-shifted model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multimodality</code></td>
+<td>
+
+<p>(Optional) "TRUE" if we use a repelling-attracting Metropolis algorithm for sampling Delta. When it is "TRUE" it is recommended that adaptive.delta = FALSE so that the adaptive MCMC is not used in the presence of multimodality. Default is "FALSE". 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.frequency</code></td>
+<td>
+
+<p>(If "adaptive.delta = TRUE" or "adaptive.tau = TRUE") The adaptive MCMC is applied for every specified frequency. If it is specified as 500, the adaptive MCMC is applied to every 500th iterstion.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.delta</code></td>
+<td>
+
+<p>(Optional) "TRUE" if we use the adaptive MCMC for the time delay. Default is "TRUE".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.delta.factor</code></td>
+<td>
+
+<p>(If "adaptive.delta = TRUE") The factor, exp(<code class="reqn">\pm</code>adaptive.delta.factor), multiplied by the proposal scale of the time delay for adaptive MCMC.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.tau</code></td>
+<td>
+
+<p>(Optional) "TRUE" if we use the adaptive MCMC for tau. Default is "TRUE".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.tau.factor</code></td>
+<td>
+
+<p>(If "adaptive.tau = TRUE") The factor, exp(<code class="reqn">\pm</code>adaptive.tau.factor), multiplied by the proposal scale of tau for adaptive MCMC.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample.size</code></td>
+<td>
+
+<p>The number of the posterior samples of each model parameter.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warmingup.size</code></td>
+<td>
+
+<p>The number of burn-in posterior samples.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>bayesian</code> produces posterior samples of the model parameters one of which is the time delay. Please note that when astronomical time series data are loaded on R by <code>read.table</code>, <code>read.csv</code>, etc., some decimal places of the the observation times are automatically rounded because R's default is to load seven effective digits. For example, R will load the observation time 51075.412789 as 51075.41. This default will produce many ties in observation times even though there is actually no tie in observation times. To prevent this, please type "<code>options(digits = 11)</code>" before loading the data if the observation times are in seven effective digits.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The outcome of <code>bayesian</code> comprises of:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>Posterior samples of the time delay</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>Posterior samples of the latent magnitudes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>Posterior samples of the polynomial regression coefficients, beta</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu</code></td>
+<td>
+<p>Posterior samples of the mean parameter of the O-U process, mu</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>Posterior samples of the short term variability of the O-U process, sigma</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>Posterior samples of the mean reversion time of the O-U process, tau</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for tau</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for the time delay</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Hyungsuk Tak
+</p>
+
+
+<h3>References</h3>
+
+<p>Hyungsuk Tak, Kaisey Mandel, David A. van Dyk, Vinay L. Kashyap, Xiao-Li Meng, and Aneta Siemiginowska (2017). "Bayesian Estimates of Astronomical Time Delays between Gravitationally Lensed Stochastic Light Curves," The Annals of Applied Statistics, 11 (3), 1309-1348.
+Hyungsuk Tak, Xiao-Li Meng, and David A. van Dyk (2018), "A Repelling-Attracting Metropolis Algorithm for Multimodality", Journal of Computational and Graphical Statistics, 27 (3), 479-490.
+Zhirui Hu and Hyungsuk Tak (2020+), "Modeling Stochastic Variability in  Multi-Band Time Series Data," arXiv:2005.08049.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  # Loading datasets
+  data(simple)
+
+  # A typical quasar data set  
+  head(simple)
+
+  # Subset (data for image A) of the typical quasar data set
+  lcA &lt;- simple[, 1 : 3]
+
+  # Another subset (data for image B) of the typical quasar data set
+  # The observation times for image B are not necessarily the same as those for image A
+  lcB &lt;- simple[, c(1, 4, 5)]
+
+  # The two subsets do not need to have the same number of observations
+  # For example, here we add one more observation time for image B
+  lcB &lt;- rbind(lcB, c(290, 1.86, 0.006))
+
+  dim(lcA)
+  dim(lcB)
+
+  ###############################################
+  # Time delay estimation via Bayesian approach #
+  ###############################################
+
+  # Cubic microlensing model (m = 3)
+  
+  output = bayesian(data.lcA = lcA, data.lcB = lcB, 
+                    data.flux = FALSE, theta.ini = c(0, 0.01, 200), 
+                    delta.ini = 50, delta.uniform.range = c(0, 100), 
+                    delta.proposal.scale = 1, 
+                    tau.proposal.scale = 3, 
+                    tau.prior.shape = 1, tau.prior.scale = 1,
+                    sigma.prior.shape = 1, sigma.prior.scale = 2 / 10^7, 
+                    asis = TRUE, micro = 3,
+                    sample.size = 10, warmingup.size = 10)
+  names(output)
+  
+  # hist(output$delta, 20)
+  # plot(output$delta, type = "l")
+  # acf(output$delta)
+  # output$delta.accept
+  # output$tau.accept
+
+  # If multimodality exists, then please add two arguments:
+  # multimodality = TRUE, adaptive.delta = FALSE
+  # This is to prevent the Markov chain from adapting to a local mode.
+  # If we know the distance between the most distant modes,
+  # try the smallest value of delta.proposal.scale that still makes 
+  # the Markov chain jump between those modes frequently.
+  # For example, when the distance is d, then try 
+  # delta.proposal.scale = d * 0.7, decreasing or increasing 0.7.
+
+  # Graphical model checking 
+  # beta.hat &lt;- colMeans(output$beta)
+  # delta.hat &lt;- mean(output$delta)
+  # time.x &lt;- lcB[, 1] - delta.hat
+  # time.covariate &lt;- cbind(rep(1, length(time.x)), time.x, time.x^2, time.x^3)
+  ##### This time.covariate is when micro = 3, a third-order polynomial regression.
+  ##### With micro = 0, "time.covariate &lt;- rep(1, length(time.x))" is used.
+  # predicted &lt;- time.covariate %*% beta.hat
+  # plot(lcA[, 1], lcA[, 2], col = 2)     
+  ##### Adjust the range of the x-axis by the argument of plot.
+  ##### For example "xlim = c(-1, 2)" 
+  # points(lcB[, 1] - delta.hat, lcB[, 2] - predicted, col = 4, pch = 1)
+  # for (i in 1 : length(output$delta)) {
+  #   temp.time &lt;- c(lcA[, 1], lcB[, 1] - output$delta[i])
+  #   points(sort(temp.time), output$X[i, ], 
+  #          col = "gray", cex = 0.5, pch = 1, lwd = 0.01)
+  # }
+  # points(lcA[, 1], lcA[, 2], pch = 0, col = 2, lwd = 1)
+  # points(lcB[, 1] - delta.hat, lcB[, 2] - predicted, 
+  #        col = 4, pch = 1, lwd = 1)
+
+
+</code></pre>
+
+
+</div>

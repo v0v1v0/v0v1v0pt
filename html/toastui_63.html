@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>grid_proxy_delete_row</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Delete row in an existent grid</h2>
+
+<h3>Description</h3>
+
+<p>Delete row in an existent grid
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">grid_proxy_delete_row(proxy, rowKey)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>proxy</code></td>
+<td>
+<p>A <code>datagrid_proxy()</code> or <code>outputId</code> of the grid.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rowKey</code></td>
+<td>
+<p>Row key of the row to delete, you can find the <code>rowKey</code> value in <code style="white-space: pre;">⁠input$&lt;outputId&gt;_data⁠</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>datagrid_proxy</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other datagrid proxy methods: 
+<code>datagrid_proxy()</code>,
+<code>grid_proxy_add_row()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(toastui)
+library(shiny)
+
+ui &lt;- fluidPage(
+  tags$h2("Delete row in grid via proxy"),
+  fluidRow(
+    column(
+      width = 6,
+      datagridOutput("grid"),
+      verbatimTextOutput("clicks")
+    ),
+    column(
+      width = 6,
+      verbatimTextOutput("output_data")
+    )
+  )
+)
+
+server &lt;- function(input, output, session) {
+
+  dat &lt;- data.frame(
+    index = 1:26,
+    letter = sample(letters),
+    remove = 1:26
+  )
+
+  output$grid &lt;- renderDatagrid({
+    datagrid(dat, data_as_input = TRUE) %&gt;%
+      grid_columns("remove", width = 120) %&gt;%
+      grid_col_button(
+        column = "remove",
+        inputId = "remove_row",
+        label = "Remove",
+        icon = icon("trash"),
+        status = "danger",
+        btn_width = "115px",
+        align = "left"
+      )
+  })
+
+  output$clicks &lt;- renderPrint({
+    cat(
+      "Removed: ", input$remove_row,
+      "\n"
+    )
+  })
+
+  observeEvent(input$remove_row, {
+    data &lt;- input$grid_data
+    rowKey &lt;- data$rowKey[data$remove == input$remove_row]
+    grid_proxy_delete_row("grid", rowKey)
+  })
+
+  output$output_data &lt;- renderPrint({
+    input$grid_data
+  })
+
+}
+
+if (interactive())
+  shinyApp(ui, server)
+</code></pre>
+
+
+</div>

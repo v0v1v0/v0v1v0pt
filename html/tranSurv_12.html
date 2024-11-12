@@ -1,0 +1,216 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trSurvfit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimating survival curves via structural transformation model</h2>
+
+<h3>Description</h3>
+
+<p><code>trSurvfit</code> estimates survival curves under dependent truncation and independent censoring via a structural transformation model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trSurvfit(
+  trun,
+  obs,
+  delta = NULL,
+  tFun = "linear",
+  plots = FALSE,
+  control = trSurv.control(),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>trun</code></td>
+<td>
+<p>left truncation time satisfying <code>trun</code> &lt;= <code>obs</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs</code></td>
+<td>
+<p>observed failure time, must be the same length as <code>trun</code>, might be right-censored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>an optional 0-1 vector of censoring indicator (0 = censored, 1 = event) for <code>obs</code>.
+If this vector is not specified, <code>cKendall</code> assumes no censoring and all observed failure time
+denote events.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tFun</code></td>
+<td>
+<p>a character string specifying the transformation function or a user specified function indicating the relationship
+between <code class="reqn">X</code>, <code class="reqn">T</code>, and <code class="reqn">a</code>.
+When <code>tFun</code> is a character, the following are permitted:
+</p>
+
+<dl>
+<dt>linear</dt>
+<dd>
+<p>linear transformation structure;</p>
+</dd>
+<dt>log</dt>
+<dd>
+<p>log-linear transformation structure;</p>
+</dd>
+<dt>exp</dt>
+<dd>
+<p>exponential transformation structure.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plots</code></td>
+<td>
+<p>an optional logical value; if TRUE, a series of diagnostic plots as well as the survival curve for the observed failure time will be plotted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>controls the lower and upper bounds when <code>trans</code> is an user specified function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>for future methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A structural transformation model assumes there is a latent, quasi-independent truncation time
+that is associated with the observed dependent truncation time, the event time, and an unknown dependence parameter
+through a specified funciton.
+The dependence parameter is chosen to either minimize the absolute value of the restricted inverse probability weighted Kendall's tau or maximize the corresponding <code class="reqn">p</code>-value.
+The marginal distribution for the truncation time and the event time are completely left unspecified.
+</p>
+<p>The structure of the transformation model is of the form:
+</p>
+<p style="text-align: center;"><code class="reqn">h(U) = (1 + a)^{-1} \times (h(T) + ah(X)),</code>
+</p>
+<p> where <code class="reqn">T</code> is the truncation time, <code class="reqn">X</code> is the observed failure time,
+<code class="reqn">U</code> is the transformed truncation time that is quasi-independent from <code class="reqn">X</code> and <code class="reqn">h(\cdot)</code> is a monotonic transformation function.
+The condition, <code class="reqn">T &lt; X</code>, is assumed to be satisfied.
+The quasi-independent truncation time, <code class="reqn">U</code>, is obtained by inverting the test for quasi-independence by either minimizing
+the absolute value of the restricted inverse probability weighted Kendall's tau or maximize the corresponding <code class="reqn">p</code>-value.
+</p>
+<p>At the current version, three transformation structures can be specified. <code>trans = "linear"</code> corresponds to </p>
+<p style="text-align: center;"><code class="reqn">h(X) = 1;</code>
+</p>
+
+<p><code>trans = "log"</code> corresponds to </p>
+<p style="text-align: center;"><code class="reqn">h(X) = log(X);</code>
+</p>
+
+<p><code>trans = "exp"</code> corresponds to </p>
+<p style="text-align: center;"><code class="reqn">h(X) = exp(X).</code>
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>The output contains the following components:
+</p>
+
+<dl>
+<dt><code>surv</code></dt>
+<dd>
+<p>is a <code>data.frame</code> contains the survival probabilities estimates.</p>
+</dd>
+<dt><code>byTau</code></dt>
+<dd>
+<p>a list contains the estimator of transformation parameter:
+</p>
+
+<dl>
+<dt><code>par</code></dt>
+<dd>
+<p>is the best set of transformation parameter found;</p>
+</dd>
+<dt><code>obj</code></dt>
+<dd>
+<p>is the value of the inverse probability weighted Kendall's tau corresponding to 'par'.</p>
+</dd>
+</dl>
+</dd>
+<dt><code>byP</code></dt>
+<dd>
+<p>a list contains the estimator of transformation parameter:
+</p>
+
+<dl>
+<dt><code>par</code></dt>
+<dd>
+<p>is the best set of transformation parameter found;</p>
+</dd>
+<dt><code>obj</code></dt>
+<dd>
+<p>is the value of the inverse probability weighted Kendall's tau corresponding to 'par'.</p>
+</dd>
+</dl>
+</dd>
+<dt><code>qind</code></dt>
+<dd>
+<p>a data frame consists of two quasi-independent variables:
+</p>
+
+<dl>
+<dt><code>trun</code></dt>
+<dd>
+<p> is the transformed truncation time;</p>
+</dd>
+<dt><code>obs</code></dt>
+<dd>
+<p> is the corresponding uncensored failure time.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Martin E. and Betensky R. A. (2005), Testing quasi-independence of failure and truncation times via conditional Kendall's tau,
+<em>Journal of the American Statistical Association</em>, <b>100</b> (470): 484-492.
+</p>
+<p>Austin, M. D. and Betensky R. A. (2014), Eliminating bias due to censoring in Kendall's tau estimators for quasi-independence of truncation and failure,
+<em>Computational Statistics &amp; Data Analysis</em>, <b>73</b>: 16-26.
+</p>
+<p>Chiou, S., Austin, M., Qian, J. and Betensky R. A. (2018), Transformation model estimation of survival under dependent truncation and independent censoring,
+<em>Statistical Methods in Medical Research</em>, <b>28</b> (12): 3785-3798.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(channing, package = "boot")
+chan &lt;- subset(channing, sex == "Male" &amp; entry &lt; exit)
+
+## No display
+(fit &lt;- with(chan, trSurvfit(entry, exit, cens)))
+
+## With diagnostic plots and the survival estimate
+with(chan, trSurvfit(entry, exit, cens, plots = TRUE))
+
+## Plots survival estimate
+
+plot(fit)
+</code></pre>
+
+
+</div>

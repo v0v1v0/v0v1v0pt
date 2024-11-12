@@ -1,0 +1,179 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>qenv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Code tracking with <code>qenv</code> object</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Create a <code>qenv</code> object and evaluate code in it to track code history.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">qenv()
+
+new_qenv(env = new.env(parent = parent.env(.GlobalEnv)), code = character())
+
+eval_code(object, code)
+
+get_code(object, deparse = TRUE, ...)
+
+## S3 method for class 'qenv'
+within(data, expr, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>env</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> (<code>environment</code>)
+Environment being a result of the <code>code</code> evaluation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>code</code></td>
+<td>
+<p>(<code>character</code> or <code>language</code>) code to evaluate. If <code>character</code>, comments are retained.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>(<code>qenv</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deparse</code></td>
+<td>
+<p>(<code>logical(1)</code>) flag specifying whether to return code as <code>character</code> or <code>expression</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>see <code>Details</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>qenv</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>(<code>expression</code>) to evaluate. Must be inline code, see <code style="white-space: pre;">⁠Using language objects...⁠</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>qenv()</code> instantiates a <code>qenv</code> with an empty environment.
+Any changes must be made by evaluating code in it with <code>eval_code</code> or <code>within</code>, thereby ensuring reproducibility.
+</p>
+<p><code>new_qenv()</code> (<a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> and not recommended)
+can instantiate a <code>qenv</code> object with data in the environment and code registered.
+</p>
+<p><code>eval_code</code> evaluates given code in the <code>qenv</code> environment and appends it to the <code>code</code> slot.
+Thus, if the <code>qenv</code> had been instantiated empty, contents of the environment are always a result of the stored code.
+</p>
+<p><code>get_code</code> retrieves the code stored in the <code>qenv</code>. <code>...</code> passes arguments to methods.
+</p>
+<p><code>within</code> is a convenience function for evaluating inline code inside the environment of a <code>qenv</code>.
+It is a method for the <code>base</code> generic that wraps <code>eval_code</code> to provide a simplified way of passing code.
+<code>within</code> accepts only inline expressions (both simple and compound) and allows for injecting values into <code>expr</code>
+through the <code>...</code> argument:
+as <code>name:value</code> pairs are passed to <code>...</code>, <code>name</code> in <code>expr</code> will be replaced with <code>value</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>qenv</code> and <code>new_qenv</code> return a <code>qenv</code> object.
+</p>
+<p><code>eval_code</code> returns a <code>qenv</code> object with <code>expr</code> evaluated or <code>qenv.error</code> if evaluation fails.
+</p>
+<p><code>get_code</code> returns the traced code (from <code style="white-space: pre;">⁠@code⁠</code> slot) in the form specified by <code>deparse</code>.
+</p>
+<p><code>within</code> returns a <code>qenv</code> object with <code>expr</code> evaluated or <code>qenv.error</code> if evaluation fails.
+</p>
+
+
+<h3>Using language objects with <code>within</code>
+</h3>
+
+<p>Passing language objects to <code>expr</code> is generally not intended but can be achieved with <code>do.call</code>.
+Only single <code>expression</code>s will work and substitution is not available. See examples.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>base::within()</code>, <code>get_var()</code>, <code>get_env()</code>, <code>get_warnings()</code>, <code>join()</code>, <code>concat()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># create empty qenv
+qenv()
+
+# create qenv with data and code (deprecated)
+new_qenv(env = list2env(list(a = 1)), code = quote(a &lt;- 1))
+new_qenv(env = list2env(list(a = 1)), code = parse(text = "a &lt;- 1", keep.source = TRUE))
+new_qenv(env = list2env(list(a = 1)), code = "a &lt;- 1")
+
+# evaluate code in qenv
+q &lt;- qenv()
+q &lt;- eval_code(q, "a &lt;- 1")
+q &lt;- eval_code(q, quote(library(checkmate)))
+q &lt;- eval_code(q, expression(assert_number(a)))
+
+# retrieve code
+get_code(q)
+get_code(q, deparse = FALSE)
+
+# evaluate code using within
+q &lt;- qenv()
+q &lt;- within(q, {
+  i &lt;- iris
+})
+q &lt;- within(q, {
+  m &lt;- mtcars
+  f &lt;- faithful
+})
+q
+get_code(q)
+
+# inject values into code
+q &lt;- qenv()
+q &lt;- within(q, i &lt;- iris)
+within(q, print(dim(subset(i, Species == "virginica"))))
+within(q, print(dim(subset(i, Species == species)))) # fails
+within(q, print(dim(subset(i, Species == species))), species = "versicolor")
+species_external &lt;- "versicolor"
+within(q, print(dim(subset(i, Species == species))), species = species_external)
+
+# pass language objects
+expr &lt;- expression(i &lt;- iris, m &lt;- mtcars)
+within(q, expr) # fails
+do.call(within, list(q, expr))
+
+exprlist &lt;- list(expression(i &lt;- iris), expression(m &lt;- mtcars))
+within(q, exprlist) # fails
+do.call(within, list(q, do.call(c, exprlist)))
+
+</code></pre>
+
+
+</div>

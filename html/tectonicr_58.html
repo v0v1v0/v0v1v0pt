@@ -1,0 +1,169 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rolling_test_dist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply Rolling Functions using Circular Statistics</h2>
+
+<h3>Description</h3>
+
+<p>A generic function for applying a function to rolling margins of an array
+along an additional value.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">distroll_circstats(
+  x,
+  distance,
+  FUN,
+  width = NULL,
+  min_n = 2,
+  align = c("right", "center", "left"),
+  w = NULL,
+  sort = TRUE,
+  ...
+)
+
+distroll_confidence(
+  x,
+  distance,
+  w = NULL,
+  width = NULL,
+  min_n = 2,
+  align = c("right", "center", "left"),
+  sort = TRUE,
+  ...
+)
+
+distroll_dispersion(
+  x,
+  y,
+  w = NULL,
+  w.y = NULL,
+  distance,
+  width = NULL,
+  min_n = 2,
+  align = c("right", "center", "left"),
+  sort = TRUE,
+  ...
+)
+
+distroll_dispersion_sde(
+  x,
+  y,
+  w = NULL,
+  w.y = NULL,
+  distance,
+  width = NULL,
+  min_n = 2,
+  align = c("right", "center", "left"),
+  sort = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x, y</code></td>
+<td>
+<p>vectors of numeric values in degrees. <code>length(y)</code> is either 1 or
+<code>length(x)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>numeric. the independent variable along the values in <code>x</code>
+are sorted, e.g. the plate boundary distances</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+<p>the function to be applied</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>numeric. the range across <code>distance</code> on which <code>FUN</code> should be
+applied on <code>x</code>. If <code>NULL</code>, then width is a number that separates the
+distances in 10 equal groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_n</code></td>
+<td>
+<p>integer. The minimum values that should be considered in <code>FUN</code>
+(2 by default), otherwise <code>NA</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>align</code></td>
+<td>
+<p>specifies whether the index of the result should be left- or
+right-aligned or centered (default) compared to the rolling window of
+observations. This argument is only used if width represents widths.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>numeric. the weighting for <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>logical. Should the values be sorted after <code>distance</code> prior to
+applying the function (<code>TRUE</code> by default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>optional arguments to <code>FUN</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w.y</code></td>
+<td>
+<p>numeric. the weighting for <code>y</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>two-column vectors of (sorted) <code>x</code> and the rolled statistics along
+<code>distance</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("plates")
+plate_boundary &lt;- subset(plates, plates$pair == "na-pa")
+data("san_andreas")
+PoR &lt;- subset(nuvel1, nuvel1$plate.rot == "na")
+san_andreas$distance &lt;- distance_from_pb(
+  x = san_andreas,
+  PoR = PoR,
+  pb = plate_boundary,
+  tangential = TRUE
+)
+dat &lt;- san_andreas |&gt; cbind(PoR_shmax(san_andreas, PoR, "right"))
+
+distroll_circstats(dat$azi.PoR, distance = dat$distance, w = 1 / dat$unc, FUN = circular_mean)
+distroll_confidence(dat$azi.PoR, distance = dat$distance, w = 1 / dat$unc)
+distroll_dispersion(dat$azi.PoR, y = 135, distance = dat$distance, w = 1 / dat$unc)
+distroll_dispersion_sde(dat$azi.PoR, y = 135, distance = dat$distance, w = 1 / dat$unc, R = 100)
+</code></pre>
+
+
+</div>

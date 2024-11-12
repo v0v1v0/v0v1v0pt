@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot Effective Image Pixels for A <kbd>"tsglm"</kbd> Object</h2>
+
+<h3>Description</h3>
+
+<p><kbd>plot</kbd> method for self-defined class <kbd>"tsglm"</kbd>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+plot(
+  x,
+  method = p.adjust.methods,
+  alpha = NULL,
+  type = c("coef", "tval"),
+  background = NULL,
+  showlabels = TRUE,
+  plot.legend = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class <kbd>"tsglm"</kbd>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>p-value correction method. See <code>p.adjust</code>.
+Its default value is <code>"none"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>double. The value of significance level.
+Its default value is <code>NULL</code>. If specify real-valued <code>alpha</code>, for example 0.05,
+the image plot marks the pixels with p-values smaller than <code>alpha</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>string. The type of values shown on the image pixels when <code>background = NULL</code>.
+Set <code>type = 'coef'</code> for showing the values of estimated coefficients of the \(B\) matrix.
+Set <code>type = 'tval'</code> for showing the t-statistics of the coefficients of the \(B\) matrix.
+If <code>background</code> is not <code>NULL</code>, the plot will neglect the choice for
+<code>type</code> and show the background image as per user's interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>background</code></td>
+<td>
+<p>an image data that used as the background of the effectiveness markers.
+If <code>background = NULL</code>, the background color shows the effect size of
+the each pixel according to the setting in <code>type</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>showlabels</code></td>
+<td>
+<p>boolean. For <code>showlabels = TRUE</code>, if the row and column names of the image exist, the row and column names are
+shown on the sides of the image plot; otherwise, the row and column indices are shown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot.legend</code></td>
+<td>
+<p>boolean. Set <code>plot.legend = TRUE</code> if the colorbar legend is needed. The default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to the <code>image</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Ping-Yang Chen
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tensorReg2D, draw.coef</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Simulation data
+n &lt;- 500 # number of observations
+n_P &lt;- 3; n_G &lt;- 16 # dimension of 3-D tensor variables.
+n_d &lt;- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
+beta_True &lt;- rep(1, n_d)
+B_True &lt;- c(1, 1, 1)%*%t(rnorm(n_G)) + c(0, .5, .5)%*%t(rnorm(n_G))
+B_True &lt;- B_True / 10
+W &lt;- matrix(rnorm(n*n_d), n, n_d); W[,1] &lt;- 1
+X &lt;- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
+
+# Binomial Responses
+p_B &lt;- exp(W%*%beta_True + X%hp%B_True); p_B &lt;- p_B/(1+p_B)
+y_B &lt;- rbinom(n, 1, p_B)
+DATA_B &lt;- list(y = y_B, W = W, X = X)
+
+# Binomial Model
+result_B &lt;- tensorReg2D(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1,
+family = "binomial", opt = 1, max_ite = 100, tol = 10^(-7) )
+
+# Plot the effect size of the pixels
+plot(result_B, method = "fdr", alpha = 0.05, type = "coef")
+# Plot the t-statistics of the coefficients of the pixels
+plot(result_B, method = "fdr", alpha = 0.05, type = "tval")
+
+# Plot the effective pixels with data image as the background
+x0 &lt;- DATA_B$X[,,which(DATA_B$y == 0)]
+x1 &lt;- DATA_B$X[,,which(DATA_B$y == 1)]
+m0 &lt;- m1 &lt;- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
+for (i in 1:dim(x0)[3]) m0 &lt;- m0 + x0[,,i]/dim(x0)[3]
+for (i in 1:dim(x1)[3]) m1 &lt;- m1 + x1[,,i]/dim(x1)[3]
+par(mfrow = c(1, 2), mar = c(2, 2, 2, 2))
+plot(result_B, method = "fdr", alpha = 0.05,
+background = m0, col = gray(seq(0, 1, 0.05)))
+title("Category 0")
+plot(result_B, method = "fdr", alpha = 0.05,
+background = m1, col = gray(seq(0, 1, 0.05)))
+title("Category 1")
+
+</code></pre>
+
+
+</div>

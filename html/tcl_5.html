@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>post_hocChange</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Power analysis of tests in context of measurement of change using LLTM</h2>
+
+<h3>Description</h3>
+
+<p>Returns post hoc power of Wald (W), likelihood ratio (LR), Rao score (RS)
+and gradient (GR) test given data and probability of error of first kind <code class="reqn">\alpha</code>.
+The hypothesis to be tested states that the shift parameter quantifying the constant change
+for all items between time points 1 and 2 equals 0. The alternative states that the
+shift parameter is not equal to 0. It is assumed that the same items are presented at both
+time points. See function <code>change_test</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">post_hocChange(data, alpha = 0.05)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data matrix as required for function <code>change_test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Probability of error of first kind.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The power of the tests (Wald, LR, score, and gradient) is determined from the assumption that the
+approximate distributions of the four test statistics are from the family of noncentral <code class="reqn">\chi^2</code>
+distributions with <code class="reqn">df = 1</code> and noncentrality parameter <code class="reqn">\lambda</code>. In case of evaluating the post hoc power,
+<code class="reqn">\lambda</code> is assumed to be given by the observed value of the test statistic. Given the probability of the
+error of the first kind <code class="reqn">\alpha</code> the post hoc power of the tests can be determined from <code class="reqn">\lambda</code>.
+More details about the distributions of the test statistics and the relationship between <code class="reqn">\lambda</code>, power, and
+sample size can be found in Draxler and Alexandrowicz (2015).
+</p>
+<p>In particular, let <code class="reqn">q_{\alpha}</code> be the <code class="reqn">1- \alpha</code> quantile of the central <code class="reqn">\chi^2</code> distribution with df = 1. Then,
+</p>
+<p style="text-align: center;"><code class="reqn">power = 1 - F_{df, \lambda} (q_{\alpha}),</code>
+</p>
+
+<p>where <code class="reqn">F_{df, \lambda}</code> is the cumulative distribution function of the noncentral <code class="reqn">\chi^2</code> distribution with
+<code class="reqn">df = 1</code> and <code class="reqn">\lambda</code> equal to the observed value of the test statistic.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of results.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>test</code></td>
+<td>
+<p>A numeric vector of Wald (W), likelihood ratio (LR), Rao score (RS), and gradient (GR)  test statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>power</code></td>
+<td>
+<p>Posthoc power value for each test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observed deviation</code></td>
+<td>
+<p>CML estimate of shift parameter expressing observed deviation from hypothesis to be tested.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>person score distribution</code></td>
+<td>
+<p>Relative frequencies of person scores. Uninformative scores, i.e., minimum and maximum score,
+are omitted. Note that the person score distribution does also have an influence on the power of the tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degrees of freedom</code></td>
+<td>
+<p>Degrees of freedom <code class="reqn">df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noncentrality parameter</code></td>
+<td>
+<p>Noncentrality parameter <code class="reqn">\lambda</code> of <code class="reqn">\chi^2</code> distribution from which power is determined.
+It equals observed value of test statistic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>The matched call.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+
+<p>Draxler, C., &amp; Alexandrowicz, R. W. (2015). Sample size determination within the scope of conditional
+maximum likelihood estimation with special focus on testing the Rasch model. Psychometrika, 80(4), 897-919.
+</p>
+<p>Fischer, G. H. (1995). The Linear Logistic Test Model. In G. H. Fischer &amp; I. W. Molenaar (Eds.),
+Rasch models: Foundations, Recent Developments, and Applications (pp. 131-155). New York: Springer.
+</p>
+<p>Fischer, G. H. (1983). Logistic Latent Trait Models with Linear Constraints. Psychometrika, 48(1), 3-26.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>sa_sizeChange</code>, and <code>powerChange</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Numerical example with 200 persons and 4 items
+# presented twice, thus 8 virtual items
+
+# Data y generated under the assumption that shift parameter equals 0.5
+# (change from time point 1 to 2)
+
+# design matrix W used only for exmaple data generation
+#     (not used for estimating in change_test function)
+W &lt;- rbind(c(1,0,0,0,0), c(0,1,0,0,0), c(0,0,1,0,0), c(0,0,0,1,0),
+           c(1,0,0,0,1), c(0,1,0,0,1), c(0,0,1,0,1), c(0,0,0,1,1))
+
+# eta parameter vector, first 4 are nuisance, i.e., item parameters at time point 1.
+# (easiness parameters of the 4 items at time point 1),
+# last one is the shift parameter
+eta &lt;- c(-2,-1,1,2,0.5)
+
+y &lt;- eRm::sim.rasch(persons=rnorm(150), items=colSums(-eta*t(W)))
+
+res &lt;- post_hocChange(data = y, alpha = 0.05)
+
+# &gt; res
+# $test
+#     W     LR     RS     GR
+# 9.822 10.021  9.955 10.088
+#
+# $power
+#     W    LR    RS    GR
+# 0.880 0.886 0.884 0.888
+#
+# $`observed deviation (estimate of shift parameter)`
+# [1] 0.504
+#
+# $`person score distribution`
+#
+#     1     2     3     4     5     6     7
+# 0.047 0.047 0.236 0.277 0.236 0.108 0.047
+#
+# $`degrees of freedom`
+# [1] 1
+#
+# $`noncentrality parameter`
+#     W     LR     RS     GR
+# 9.822 10.021  9.955 10.088
+#
+# $call
+# post_hocChange(alpha = 0.05, data = y)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sys</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Call Stack Inspection</h2>
+
+<h3>Description</h3>
+
+<p><code>sys.srcref()</code> is the R-level version of the function that implements
+<code>this.path()</code>. It retrieves the
+<code>srcref</code> of the call <code>n</code> generations back from
+itself.
+</p>
+<p><code>sys.whiches()</code> is the R-level version of the function that implements
+<code>sys.srcref()</code>. It returns the frame numbers of all calls with a common
+parent frame <code>n</code> generations back from itself.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sys.srcref(n = 1, which = if (n) sys.parent(n) else 0)
+sys.whiches(n = 1, which = if (n) sys.parent(n) else 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>See <code>?this.path()</code>. However, note that <code>n</code> defaults
+to <code>0</code> in <code>this.path()</code> but defaults to <code>1</code> here.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>frame number to inspect. An alternative to specifying <code>n</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>for <code>sys.srcref()</code>, a <code>srcref</code> object or <code>NULL</code>.
+</p>
+<p>for <code>sys.whiches()</code>, an integer vector.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## this example will not work with 'Run examples'
+## which uses 'package:knitr' since knitted
+## documents do not store source references
+fun &lt;- function ()
+{
+    list(
+        `sys.srcref()` = this.path::sys.srcref(),
+        ## while this might seem like a simpler alternative,
+        ## you will see it does not work in a couple cases below
+        `attr(sys.call(sys.parent()), "srcref")` =
+            attr(sys.call(sys.parent()), "srcref")
+    )
+}
+
+
+## the braces are unnecessary when using example("sys.srcref"),
+## but are needed when copied into the R Console
+{ fun() }
+{ print(fun()) }
+{ try(print(fun())) }
+
+
+
+
+
+fun2 &lt;- function ()
+{
+    list(
+        ## if copied directly into the R Console,
+        ## should be 1 6 7
+        ## 1 is the frame number associated with 'try'
+        ## 6                                     'force'
+        ## 7                                     'fun2'
+        this.path::sys.whiches(),
+
+
+        ## if copied directly into the R Console,
+        ## should be  8 12 13
+        ##  8 is the frame number associated with 'tryCatch'
+        ## 12                                     'identity'
+        ## 13                                     'sys.whiches'
+        tryCatch(identity(this.path::sys.whiches(0)),
+            error = function(e) NULL)
+    )
+}
+
+
+try(force(fun2()))
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tntp_style</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create TNTP themed ggplot2 charts</h2>
+
+<h3>Description</h3>
+
+<p>A custom theme including TNTP fonts and other defaults for styling ggplot2 charts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tntp_style(
+  family = "Halyard Display",
+  header_family = family,
+  base_size = 28,
+  text_color = "#222222",
+  caption_color = "#7D7E81",
+  show_legend_title = FALSE,
+  show_axis_titles = FALSE,
+  grid = FALSE,
+  grid_color = "#CBCBCB",
+  title_align = "left",
+  legend_align = "left",
+  caption_align = "right"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>Base font family. Defaults to "Halyard Display".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>header_family</code></td>
+<td>
+<p>Font family for title and subtitle. Defaults to the base font family.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base_size</code></td>
+<td>
+<p>Base font size. Recommended minimum value of 15.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>text_color</code></td>
+<td>
+<p>Text color for titles, axes, legends, and facets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>caption_color</code></td>
+<td>
+<p>Text color for caption.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_legend_title</code></td>
+<td>
+<p>Logical. Should the legend title be shown?  Leave as <code>TRUE</code> if you want to change the legend title with a subsequent line <code>+ labs(...)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_axis_titles</code></td>
+<td>
+<p>Which axis titles should be shown? Use <code>TRUE</code> or <code>FALSE</code> for toggle both titles, or <code>x</code> or <code>y</code> to show just that axis title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>Which grid lines should be shown? Use <code>TRUE</code> or <code>FALSE</code> to toggle all grid lines, or a string combination of <code>X</code>, <code>x</code>, <code>Y</code>, <code>y</code> for major and minor x and y grid lines.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid_color</code></td>
+<td>
+<p>Grid line color.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title_align, legend_align, caption_align</code></td>
+<td>
+<p>Alignment of title, legend, and caption. Accepts <code>left</code>, <code>right</code>, or <code>center</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a ggplot theme object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(ggplot2)
+
+fake_county |&gt;
+  filter(t_salary &gt; 0) |&gt;
+  ggplot(aes(t_experience, t_salary)) +
+  geom_point() +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(
+    title = "Salary Increases with Experience",
+    subtitle = "With significant variation at all levels",
+    x = "Years of Experience",
+    caption = "Data from the Fake County Data Set"
+  ) +
+  tntp_style(family = 'sans', show_axis_titles = "x")
+
+frpl_experience &lt;- fake_county |&gt;
+  mutate(frpl_bucket = cut(sch_frpl_pct,
+    breaks = c(0, 20, 40, 60, 80, 100),
+    labels = c("0-20%", "20-40%", "40-60%", "60-80%", "80-100%")
+  )) |&gt;
+  group_by(frpl_bucket) |&gt;
+  summarize(avg_experience = mean(t_experience, na.rm = TRUE)) |&gt;
+  mutate(
+    label = as.character(round(avg_experience, digits = 1)),
+    label = if_else(frpl_bucket == "0-20%", paste0(label, "\nYears of\nExperience"), label)
+  )
+
+frpl_experience |&gt;
+  ggplot(aes(frpl_bucket, avg_experience)) +
+  geom_col(fill = if_else(frpl_experience$frpl_bucket == "60-80%",
+    tntp_colors("tangerine"),
+    tntp_colors("medium_gray")
+  )) +
+  geom_text(aes(label = label),
+    nudge_y = -0.25, vjust = 1,
+    color = "white", size = 5, lineheight = 1
+  ) +
+  labs(
+    title = "High Poverty Schools have Less Experienced Teachers",
+    x = "% of Student Body Receiving Free/Reduced Lunch"
+  ) +
+  scale_y_continuous(breaks = seq(0, 20, 4)) +
+  tntp_style(
+    family = "sans",
+    base_size = 20,
+    show_axis_titles = "x"
+  )
+  
+
+</code></pre>
+
+
+</div>

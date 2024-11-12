@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mdb_proxy</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Proxy values</h2>
+
+<h3>Description</h3>
+
+<p>Proxy object.  These exist to try and exploit LMDB's copy-free
+design.  LMDB can pass back a read-only pointer to memory without
+copying it.  So rather than immediately trying to read the whole
+thing in, this class provides a "proxy" to the data.  At the
+moment they're not terribly useful - all you can do is get the
+length, and peek at the first bytes!  They are used internally in
+the package to support cursors.
+</p>
+
+
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>data</code></dt>
+<dd>
+<p>Return the value from a proxy object
+</p>
+<p><em>Usage:</em>
+<code>data(as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>as_raw</code>:   Return the value as a raw vector?  This has the same semantics as <code>mdb_env$get</code> - if <code>NULL</code> then the value will be returned as a string as possible, otherwise as a raw vector.  If <code>TRUE</code> then the value is always returned as a raw vector, and if <code>FALSE</code> then the value is always returned as a string (or an error is thrown if that is not possible).
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+A string or raw vector
+</p>
+</dd>
+<dt><code>head</code></dt>
+<dd>
+<p>Read the first <code>n</code> bytes from a proxy
+</p>
+<p><em>Usage:</em>
+<code>head(n = 6L, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>n</code>:   The number of bytes to read.  If <code>n</code> is greater than the length of the object the whole object is returned (same behaviour as <code>head</code>
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   As for <code>$data()</code>
+
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>is_raw</code></dt>
+<dd>
+<p>Return whether we know a value to be raw or not.  This is affected by whether we have successfully turned the value into a string (in which case we can return <code>FALSE</code>) or if any <code>NULL</code> bytes have been detected.  The latter condition may be satisfied by reading the first bit of the proxy with <code>$head()</code>
+</p>
+<p><em>Usage:</em>
+<code>is_raw()</code>
+</p>
+<p><em>Value</em>:
+A logical if we can, otherwise <code>NULL</code> (for symmetry with <code>as_raw</code>)
+</p>
+</dd>
+<dt><code>is_valid</code></dt>
+<dd>
+<p>Test if a proxy object is still valid.  Once the proxy is invalid, it cannot be read from any more.  Proxies are invalidated if their parent transaction is closed, or if any write operations (e.g., <code>put</code>, <code>del</code>) have occurred.
+</p>
+<p><em>Usage:</em>
+<code>is_valid()</code>
+</p>
+<p><em>Value</em>:
+Scalar logical
+</p>
+</dd>
+<dt><code>size</code></dt>
+<dd>
+<p>The size of the data - the number of characters in the string, or number of bytes in the raw vector.
+</p>
+<p><em>Usage:</em>
+<code>size()</code>
+</p>
+<p><em>Value</em>:
+Scalar integer
+</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Start with a write transaction that has written a little data:
+env &lt;- thor::mdb_env(tempfile())
+txn &lt;- env$begin(write = TRUE)
+txn$put("a", "apple")
+txn$put("b", "banana")
+
+# We can get a proxy object back by passing as_proxy = TRUE
+p &lt;- txn$get("a", as_proxy = TRUE)
+p
+
+# Without copying anything we can get the length of the data
+p$size() # == nchar("apple")
+
+# And of course we can get the data
+p$data()
+p$data(as_raw = TRUE)
+
+# Referencing an invalid proxy is an error, but you can use
+# "is_valid()" check to see if it is valid
+p$is_valid()
+
+txn$put("c", "cabbage")
+p$is_valid()
+try(p$data())
+
+# It is possible to read the first few bytes; this might be useful
+# to determine if (say) a value is a serialised R object:
+txn$put("d", serialize(mtcars, NULL))
+
+# The first 6 bytes of a binary serialised rds object is always
+#
+#   0x58 0x0a 0x00 0x00 0x00 0x02
+#
+# for XDR serialisation, or
+#
+#   0x42 0x0a 0x02 0x00 0x00 0x00
+#
+# for native little-endian serialisation.
+#
+# So with a little helper function
+is_rds &lt;- function(x) {
+  h_xdr &lt;- as.raw(c(0x58, 0x0a, 0x00, 0x00, 0x00, 0x02))
+  h_bin &lt;- as.raw(c(0x42, 0x0a, 0x02, 0x00, 0x00, 0x00))
+  x6 &lt;- head(x, 6L)
+  identical(x6, h_xdr) || identical(x6, h_bin)
+}
+
+# We can see that the value stored at 'a' is not rds
+p1 &lt;- txn$get("a", as_proxy = TRUE)
+is_rds(p1$head(6, as_raw = TRUE))
+
+# But the value stored at 'd' is:
+p2 &lt;- txn$get("d", as_proxy = TRUE)
+is_rds(p2$head(6, as_raw = TRUE))
+
+# Retrieve and unserialise the value:
+head(unserialize(p2$data()))
+</code></pre>
+
+
+</div>

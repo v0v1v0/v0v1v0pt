@@ -1,0 +1,190 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CompParaSurv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compare Parametric Survival Distribution</h2>
+
+<h3>Description</h3>
+
+<p>Compares the means and medians of parametric survival distributions fit to
+two treatment arms. Available distributions include: exponential, gamma,
+generalized gamma, log-normal, and Weibull.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CompParaSurv(
+  data,
+  arm_name = "arm",
+  dist1 = "weibull",
+  dist0 = NULL,
+  eps = 1e-06,
+  init1 = NULL,
+  init0 = NULL,
+  maxit = 10,
+  report = FALSE,
+  reps = NULL,
+  sig = 0.05,
+  status_name = "status",
+  tau = NULL,
+  time_name = "time"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data.frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_name</code></td>
+<td>
+<p>Name of the column containing the treatment group, coded as 1 for
+treatment, 0 for reference.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist1</code></td>
+<td>
+<p>Distribution to fit for the target group. Selected from among:
+exp, gamma, gengamma, log-normal, and weibull.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist0</code></td>
+<td>
+<p>Distribution to fit for the reference group. Same choices as for
+the target group. If omitted, defaults to the distribution specified for
+the target group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Tolerance for Newton-Raphson iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init1</code></td>
+<td>
+<p>Initial parameter values for the target group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init0</code></td>
+<td>
+<p>Initial parameter values for the reference group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>Maximum number of Newton-Raphson iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>report</code></td>
+<td>
+<p>Report fitting progress?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reps</code></td>
+<td>
+<p>Number of permutation replicates, if requesting permutation
+p-values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sig</code></td>
+<td>
+<p>Significance level, for constructing confidence intervals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>status_name</code></td>
+<td>
+<p>Name of the status indicator, 1 if observed, 0 if
+censored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>Optional truncation times for calculating RMST.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_name</code></td>
+<td>
+<p>Name of column containing the time to event.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Status should be coded as 0 for censored and 1 for observed. Arm is coded as
+0 for reference, 1 for target. Tau is an optional numeric vector of
+truncation times for calculating restricted mean survival time, which is the
+area under the survival curve up to the specified truncation point.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>contrast</code> containing the following:
+</p>
+
+<dl>
+<dt>Model1</dt>
+<dd>
+<p>The fitted model for the target group.</p>
+</dd>
+<dt>Model0</dt>
+<dd>
+<p>The fitted model for the reference group.</p>
+</dd>
+<dt>Contrast</dt>
+<dd>
+<p>Contrasts of means and medians.</p>
+</dd>
+<dt>RMST</dt>
+<dd>
+<p>Contrasts of the RMSTs, if 'tau' was specified.</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+set.seed(100)
+# Weibull and Weibull, different means and medians.
+n &lt;- 1e3
+
+# Generate data.
+df1 &lt;- GenData(n = n, dist = "weibull", theta = c(1, 1), p = 0.2)
+df1$arm &lt;- 1
+df0 &lt;- GenData(n = n, dist = "weibull", theta = c(1, 2), p = 0.2)
+df0$arm &lt;- 0
+data &lt;- rbind(df1, df0)
+
+# Comparison.
+comp &lt;- CompParaSurv(data, dist1 = "weibull")
+
+# Add RMST at time 1.
+comp &lt;- CompParaSurv(data, dist1 = "weibull", tau = 1)
+
+# Calculate permutation p-values (slow).
+comp &lt;-  CompParaSurv(data, dist1 = "weibull", tau = 1, reps = 100)
+
+</code></pre>
+
+
+</div>

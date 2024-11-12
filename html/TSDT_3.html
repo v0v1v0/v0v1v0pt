@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bootstrap</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>bootstrap</h2>
+
+<h3>Description</h3>
+
+<p>Generate a vector of bootstrap samples.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bootstrap(
+  x,
+  trt = NULL,
+  trt_control = "Control",
+  FUN = NULL,
+  varname = NULL,
+  varcol = NULL,
+  arglist = NULL,
+  n_samples = 1
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Source data to bootstrap.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt</code></td>
+<td>
+<p>Treatment variable. (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt_control</code></td>
+<td>
+<p>Value for treatment control arm. Default value is 'Control'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+<p>Function to compute statistic for each bootstrap sample. (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varname</code></td>
+<td>
+<p>Name of variable in x on which to compute FUN. If x has only
+one column varname is not needed. If x has more than one column then either
+varname or varcol must be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varcol</code></td>
+<td>
+<p>Column index of x on which to compute FUN. If x has only one
+column varcol is not needed. If x has more than one column then either varname
+or varcol must be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arglist</code></td>
+<td>
+<p>List of additional arguments to pass to FUN.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_samples</code></td>
+<td>
+<p>Number of bootstrap samples to generate.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Each bootstrap sample will retain the in-bag and out-of-bag data.
+Optionally, the user may specify a function to compute a statistic for each
+in-bag and out-of-bag sample. This function may be a built-in R function
+(e.g. mean, median, etc.) or a user-defined function (see Examples). If no
+statistic function is provided bootstrap returns a vector of objects of class
+Bootstrap. If a statistic function is provided bootstrap
+returns a vector of objects of class BootstrapStatistic,
+which in addition to the in-bag and out-of-bag samples contains the name of
+the statistic, variable on which the statistic is computed, and the numerical
+result of the statistic for each in-bag and out-of-bag sample.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If FUN is NULL returns a vector of objects of class
+Bootstrap. If FUN is non-NULL returns a vector of objects
+of class BootstrapStatistic
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Bootstrap, BootstrapStatistic
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Generate example data frame containing response and treatment
+N &lt;- 20
+x &lt;- data.frame( runif( N ) )
+names( x ) &lt;- "response"
+x$treatment &lt;- factor( sample( c("Control","Experimental"), size = N,
+                       prob = c(0.8,0.2), replace = TRUE ) )
+
+## Generate two bootstrap samples without regard to treatment
+ex1 &lt;- bootstrap( x, n_samples = 2 )
+
+## Generate two bootstrap samples stratified by treatment
+ex2 &lt;- bootstrap( x, trt = x$treatment, trt_control = "Control", n_samples = 2 )
+
+## For each bootstrap sample compute a statistic on the in-bag and out-of-bag data
+ex3 &lt;- bootstrap( x, FUN = mean, varname = "response", n_samples = 2 )
+
+## Specify a user-defined function that takes a numeric vector input and
+## returns a numeric result
+sort_and_rank &lt;- function( z, rank ){
+  z &lt;- sort( z )
+  return( z[rank] )
+}
+
+ex4 &lt;- bootstrap( x, FUN = sort_and_rank, arglist = list( rank = 1 ),
+                  varname = "response", n_samples = 2 )
+</code></pre>
+
+
+</div>

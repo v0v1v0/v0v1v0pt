@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rasterize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Rasterize vector data</h2>
+
+<h3>Description</h3>
+
+<p>Transfer values associated with the geometries of vector data to a raster
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatVector,SpatRaster'
+rasterize(x, y, field="", fun, ..., background=NA, touches=FALSE, update=FALSE, 
+	cover=FALSE, by=NULL, filename="", overwrite=FALSE, wopt=list())
+
+## S4 method for signature 'matrix,SpatRaster'
+rasterize(x, y, values=1, fun, ..., background=NA, update=FALSE, 
+	by=NULL, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatVector or a two-column matrix (point coordinates)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>field</code></td>
+<td>
+<p>character or numeric. If <code>field</code> is a character, it should a variable name in <code>x</code>. If <code>field</code> is numeric it typically is a single number or a vector of length <code>nrow(x)</code>. The values are recycled to <code>nrow(x)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>values</code></td>
+<td>
+<p>typically a numeric vector of length <code>1</code> or <code>nrow(x)</code>. If the length is below <code>nrow(x)</code> the values will be recycled to <code>nrow(x)</code>. Only used when <code>x</code> is a matrix. Can also be a matrix or data.frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>summarizing function for when there are multiple geometries in one cell. For lines and polygons you can only use  <code>"min"</code>, <code>"max"</code>, <code>"mean"</code>, <code>"count"</code> and <code>"sum"</code>
+For points you can use any function that returns a single number; for example <code>mean</code>, <code>length</code> (to get a count), <code>min</code> or <code>max</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>background</code></td>
+<td>
+<p>numeric. Value to put in the cells that are not covered by any of the features of <code>x</code>. Default is <code>NA</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>touches</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, all cells touched by lines or polygons are affected, not just those on the line render path, or whose center point is within the polygon. If <code>touches=TRUE</code>, <code>add</code> cannot be <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>update</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the values of the input SpatRaster are updated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cover</code></td>
+<td>
+<p>logical. If <code>TRUE</code> and the geometry of <code>x</code> is polygons, the fraction of a cell that is covered by the polygons is returned. This is estimated by determining presence/absence of the polygon in at least 100 sub-cells (more of there are very few cells)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>character or numeric value(s) to split <code>x</code> into multiple groups. There will be a separate layer for each group returned. If <code>x</code> is a SpatVector, <code>by</code> can be a column number or name. If <code>x</code> is a matrix, <code>by</code> should be a vector that identifies group membership for each row in <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with additional arguments for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>rasterizeGeom</code>, <code>rasterizeWin</code>, <code>mask</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(xmin=0, ncols=18, nrows=18)
+
+# generate points
+set.seed(1)
+p &lt;- spatSample(r, 1000, xy=TRUE, replace=TRUE)
+
+# rasterize points as a matrix
+x &lt;- rasterize(p, r, fun=sum)
+y &lt;- rasterize(p, r, value=1:nrow(p), fun=max)
+
+# rasterize points as a SpatVector
+pv &lt;- vect(p)
+xv &lt;- rasterize(pv, r, fun=sum)
+
+# Polygons
+f &lt;- system.file("ex/lux.shp", package="terra")
+v &lt;- vect(f)
+r &lt;- rast(v, ncols=75, nrows=100)
+z &lt;- rasterize(v, r, "NAME_2")
+plot(z)
+lines(v)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TAAG</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transformed Approximately Additive Gaussian Process</h2>
+
+<h3>Description</h3>
+
+<p>This function fits the Transformed Approximately Additive Gaussian (TAAG) process.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TAAG(parTAG, nu.est, adj.nu = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>parTAG</code></td>
+<td>
+<p>object of class inheriting from "TAG".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu.est</code></td>
+<td>
+<p>the estimates of the length scale parameters from a standard GP.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj.nu</code></td>
+<td>
+<p>logical. If FALSE, the proportional parameter <code class="reqn">\eta</code> is estimated; otherwise, both <code class="reqn">\eta</code> and the multiplication factor <code class="reqn">\phi</code> are estimated. Default is FALSE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The details of TAAG process can be found in Lin and Joseph (2019).
+</p>
+<p>When the input dimension is high, set adj.nu = TRUE and nu.est = s0, where s0 is the initial values of the length scale parameters from the function initial.TAG. Then, the length scale parameter  <code class="reqn">\nu</code> is set to  <code class="reqn">\phi \times</code> s0, and <code class="reqn">\phi</code> is estimated through function TAAG.. This is useful especially when the input dimension is high.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The values returned from the function is a list containing the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>omega</code></td>
+<td>
+<p>The estimates of the weight parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s</code></td>
+<td>
+<p>The estimates of the length scale parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+<p>The estimates of the length scale parameter <code class="reqn">\nu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>The estimate of the Box-Cox transformation parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>The estimate of the proportion parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>phi</code></td>
+<td>
+<p>The estimate of the multiplication factor for <code class="reqn">\nu</code>, used for high dimensional data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obj.fun</code></td>
+<td>
+<p>The negative of log-unnormalized posterior value (value of the objective function)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ty</code></td>
+<td>
+<p>The transformed response vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>The n by p input design matrix.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Lin, L.-H. and Joseph,  V. R. (2020) "Transformation and Additivity in Gaussian Processes",<em>Technometrics</em>, 62, 525-535.  DOI:10.1080/00401706.2019.1665592.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TAG</code> for the estimates of the TAG parameters, and <code>pred.TAAG</code> for predictions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 20
+p &lt;- 2
+library(randtoolbox)
+X &lt;-  sobol(n, dim = p, init = TRUE, scrambling = 2, seed = 20, normal = FALSE)
+y &lt;- exp(2*sin(0.5*pi*X[,1]) + 0.5*cos(2.5*pi*X[,2]))
+ini.TAG &lt;- initial.TAG(y, X)
+par.TAG &lt;- TAG(ini.TAG)
+N &lt;- 1000
+X.test &lt;- sobol(N, dim = p, init = TRUE, scrambling = 2, seed = 5, normal = FALSE)
+ytrue  &lt;- exp(2*sin(0.5*pi*X.test[,1]) + 0.5*cos(2.5*pi*X.test[,2]))
+pre.TAG &lt;- pred.TAG(par.TAG, X.test)
+library(DiceKriging)
+set.seed(2)
+temp.m &lt;- km(formula=~1, design=X, response=par.TAG$ty,
+             covtype="gauss",nugget = (10^-15), multistart = 4,
+             control = list(trace = FALSE, verbose = FALSE))
+nu.est &lt;- sqrt(2*(coef(temp.m)$range^2))
+par.TAAG &lt;- TAAG(par.TAG, nu.est)
+</code></pre>
+
+
+</div>

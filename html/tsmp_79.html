@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pmp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Pan-Matrix Profile</h2>
+
+<h3>Description</h3>
+
+<p>Computes the Pan-Matrix Profile (PMP) for the given time series.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pmp(
+  data,
+  window_sizes = seq.int(from = 10, to = length(data)/2, length.out = 20),
+  plot = FALSE,
+  pmp_obj = NULL,
+  n_workers = 1,
+  verbose = getOption("tsmp.verbose", 2)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>matrix</code> or a <code>vector</code> of <code>numeric</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window_sizes</code></td>
+<td>
+<p>a <code>vector</code> of the window sizes that will be evaluated. They will be rounded to the lower integer
+and sorted. (Default is a sequence of 20 values from 10 to half data size).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>a <code>logical</code>. If <code>TRUE</code>, every new computation will be plotted. (Default is <code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pmp_obj</code></td>
+<td>
+<p>a <code>PMP</code> object that may or not contain an upper bound value, and previous computed profiles. The function will
+add new profiles, not replace. (Default is <code>NULL</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_workers</code></td>
+<td>
+<p>an <code>int</code>. Number of workers for parallel. (Default is <code>1</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>an <code>int</code>. See details. (Default is <code>2</code>).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The work closest in spirit to ours is VALMOD. The idea of VALMOD is to compute the MP for
+the shortest length of interest, then use the information gleaned from it to guide a search
+through longer subsequence lengths, exploiting lower bounds to prune off some calculations.
+This idea works well for the first few of the longer subsequence lengths, but the lower bounds
+progressively weaken, making the pruning ineffective. Thus, in the five case studies they
+presented, the mean value of U/L was just 1.24. In contrast, consider that our termite example
+in Fig. 15 has a U/L ratio of 240, more than two orders of magnitude larger. Thus, VALMOD is
+perhaps best seen as finding motifs with some tolerance for a slightly (~25%) too short
+user-specified query length, rather than a true "motif-of-all-lengths" algorithm. Also note
+that apart from the shortest length, VALMOD only gives some information for the other lengths,
+unlike pmp, which contains exact distances for all subsequences of all lengths.
+</p>
+<p>When just the <code>data</code> is provided, the exploration will be done using the default <code>window_sizes</code> that is a sequence
+of 20 values between 10 and the half data size and the resulting object will have an <code>upper_bound</code> equals to <code>Inf</code>.
+If an object is provided by the argument <code>pmp_obj</code>, this function will add more information to the resulting object,
+never changing the values already computed.
+<code>verbose</code> changes how much information is printed by this function; <code>0</code> means nothing, <code>1</code> means text, <code>2</code>
+adds the progress bar, <code>3</code> adds the finish sound.
+</p>
+<p>Talk about upper bound and window sizes
+</p>
+
+<ol>
+<li>
+<p> upper_window will be set to Inf on new objects
+1.1. upper_window will also be used for plot, and for discovery, it must not remove any existing data from the object
+</p>
+</li>
+<li>
+<p> window_sizes is used for plot, it must not remove any mp inside the object
+2.1. window_sizes tells the function what mp are stored, it may be updated with as.numeric(names(pmp))
+</p>
+</li>
+<li>
+<p> the functions must be capable to handle the data without need to sort by window_size, but sort may be useful later(?)
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>Returns a <code>PMP</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Just compute
+pan &lt;- pmp(mp_gait_data)
+# Compute the upper bound, than add new profiles
+pan &lt;- pmp_upper_bound(mp_gait_data)
+pan &lt;- pmp(mp_gait_data, pmp_obj = pan)
+
+</code></pre>
+
+
+</div>

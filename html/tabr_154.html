@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>read_midi</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read, inspect and convert MIDI file contents</h2>
+
+<h3>Description</h3>
+
+<p>Read MIDI file into a data frame and inspect the music data with supporting
+functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">read_midi(file, ticks_per_qtr = 480)
+
+midi_metadata(x)
+
+midi_notes(x, channel = NULL, track = NULL, noteworthy = TRUE)
+
+midi_time(x)
+
+midi_key(x)
+
+ticks_to_duration(x, ticks_per_qtr = 480)
+
+duration_to_ticks(x, ticks_per_qtr = 480)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>character, path to MIDI file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ticks_per_qtr</code></td>
+<td>
+<p>ticks per quarter note. Used to compute durations from
+MIDI file ticks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a data frame returned by <code>read_midi()</code>. An integer vector for
+<code>ticks_to_duration()</code>; a character vector (may be a space-delimited string)
+for <code>duration_to_ticks()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>channel, track</code></td>
+<td>
+<p>integer, filter rows on channel or track.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noteworthy</code></td>
+<td>
+<p>logical, convert to <code>noteworthy</code> and <code>noteinfo</code> data.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>read_midi()</code> function wraps around <code>tuneR::readMidi()</code> by Uwe Ligges and
+Johanna Mielke. <code>midi_notes()</code> is a work in progress, but converts MIDI data
+to noteworthy strings and note info formats. This makes it easy to analyze,
+transform and edit the music data as well as render it to sheet music and a
+new MIDI file.
+</p>
+<p><code>read_midi()</code> does not parse the ticks per quarter note from the MIDI file
+input at this time. It must be specified with <code>ticks_per_qtr</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a tibble data frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">ticks_to_duration(c(120, 160))
+ticks_to_duration(c(128, 192, 512), ticks_per_qtr = 384)
+duration_to_ticks(c("t8", "8", "8.", "8.."))
+duration_to_ticks(c("t8 8 8. 8.."), ticks_per_qtr = 384)
+
+file &lt;- system.file("example2.mid", package = "tabr")
+if(require("tuneR")){
+  x &lt;- read_midi(file, ticks_per_qtr = 384)
+  midi_metadata(x)
+  midi_time(x)
+  midi_key(x)
+  midi_notes(x, channel = 0, noteworthy = FALSE)
+
+  (x &lt;- midi_notes(x, channel = 0))
+  (x &lt;- as_music(x$pitch, x$duration))
+
+  # requires LilyPond installation
+  if(tabr_options()$lilypond != ""){
+    out &lt;- file.path(tempdir(), "out.pdf")
+    phrase(x) |&gt; track_bc() |&gt; score() |&gt; tab(out, details = FALSE)
+  }
+}
+</code></pre>
+
+
+</div>

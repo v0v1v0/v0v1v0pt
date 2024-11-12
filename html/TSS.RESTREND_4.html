@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>AnnualClim.Cal</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Antecedental accumulation calculator for the annual max VI time series</h2>
+
+<h3>Description</h3>
+
+<p>Takes the Annual Max VI Time Series, the VI.index and tables of every possible accumulation
+period and offset period for preciptation and Temperature (optional).  A OLS is calculated
+<code>lm</code> for every combination of VI ~ rainfall. If temperature is provided
+The formula is (VI ~ rainfall + temperature).  By defualt, this function preferences those results where
+slope&gt;0 (increase in rainfall causes an increase in vegetation), returning the rainfall accumulation
+that has the highest R-squared and a positive slope. If no combinations produce a positive slope then the
+one with the highest Rsquared is returned.
+TO DO: non peramtric and other variables
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">AnnualClim.Cal(
+  anu.VI,
+  VI.index,
+  ACP.table,
+  ACT.table = NULL,
+  Breakpoint = FALSE,
+  allow.negative = FALSE,
+  allowneg.retest = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>anu.VI</code></td>
+<td>
+<p>The annual (Growing season) max VI. Must be a object of class <code>'ts'</code> without NA's.
+if anu.VI=FALSE, it will be calculated from the CTSR.VI using <code>AnMaxVI</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>VI.index</code></td>
+<td>
+<p>the index of the CTSR.VI ts that the anu.VI values occur at. Must be the same length
+as anu.VI. NOTE. R indexs from 1 rather than 0.
+if VI.index=FALSE, it will be calculated from the CTSR.VI using <code>AnMaxVI</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ACP.table</code></td>
+<td>
+<p>A table of every combination of offset period and accumulation period.for precipitation
+ACP.table can be calculated using the <code>climate.accumulator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ACT.table</code></td>
+<td>
+<p>A table of every combination of offset period and accumulation period.for temperature
+ACP.table can be calculated using the <code>climate.accumulator</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Breakpoint</code></td>
+<td>
+<p>Used when calcualting rf.bf and rf.af for ts with breakpoints in the VPR.  See <code>CHOW</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.negative</code></td>
+<td>
+<p>If true, will not preference positive slope in either CTSR or VI calculations. default=FALSE is set
+because negative associations between rainfall and vegetation in water limited ecosystems is unexpected
+If temperature data is included then this paramter is forced to TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allowneg.retest</code></td>
+<td>
+<p>default=FALSE
+If temperature data is provided but found to not be significant then a retest is performed.
+This paramter is to allow negative on re-test.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><b>summary</b>
+a Matrix containing "slope", "intercept", "p.value", "R^2.Value", "Break.Height", "Slope.Change"
+of the <code>lm</code> of VI ~ rainfall. If Breakpoint, summary covers both rf.b4 and rf.af.
+</p>
+<p><b>acu.RF</b>
+(aka. annual.precip)The optimal accumulated rainfall for anu.VI. Mut be a object of class 'ts'
+and of equal length to anu.VI. It is caculated from the ACP.table by finding the acp and osp
+that has the largest R^2 value. <code>lm</code>(anu.VI ~ rainfall)
+</p>
+<p><b>acu.TM</b>
+(aka, annual.temp) The optimal accumulated rainfall for anu.T&lt;. Mut be a object of class 'ts'
+and of equal length to anu.VI. It is caculated from the ACT.table by finding the tacp and tosp
+that has the largest R^2 value. <code>lm</code>(anu.VI ~ rainfall+temperature)
+</p>
+<p><b>rf.b4</b>
+The optimal acumulated rainfall before the Breakpoint
+</p>
+<p><b>rf.af</b>
+The Optimally accumulated rainfall after the Breakpoint
+</p>
+<p><b>tm.b4</b>
+The optimal acumulated temperature before the Breakpoint
+</p>
+<p><b>tm.af</b>
+The Optimally accumulated temperature after the Breakpoint
+</p>
+<p><b>osp</b>
+The offest period for the annual max time series rainfall
+</p>
+<p><b>acp</b>
+The accumulation period for the annual max time series rainfall
+</p>
+<p><b>tosp</b>
+The offest period for the annual max time series temperature
+</p>
+<p><b>tacp</b>
+The accumulation period for the annual max time series temperature
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Arden Burrell, arden.burrell@unsw.edu.au
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">ARC &lt;- AnnualClim.Cal(stdRESTREND$max.NDVI, stdRESTREND$index, stdRESTRENDrfTab)
+print(ARC)
+## Not run: 
+
+#Test the complete time series for breakpoints
+VPRBFdem &lt;- VPR.BFAST(segVPRCTSR$cts.NDVI, segVPRCTSR$cts.precip)
+bp&lt;-as.numeric(VPRBFdem$bkps)
+
+#test the significance of the breakpoints
+reschow &lt;- CHOW(segVPR$max.NDVI, segVPR$acum.RF, segVPR$index, bp)
+brkp &lt;- as.integer(reschow$bp.summary["yr.index"])
+ARCseg &lt;-AnnualClim.Cal(segVPR$max.NDVI, segVPR$index, segVPRrfTab, Breakpoint = brkp)
+print(ARCseg)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

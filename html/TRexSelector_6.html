@@ -1,0 +1,155 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lm_dummy</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Perform one random experiment</h2>
+
+<h3>Description</h3>
+
+<p>Run one random experiment of the T-Rex selector (<a href="https://doi.org/10.48550/arXiv.2110.06048">doi:10.48550/arXiv.2110.06048</a>), i.e., generates dummies, appends them to the predictor matrix, and runs
+the forward selection algorithm until it is terminated after T_stop dummies have been selected.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lm_dummy(
+  X,
+  y,
+  model_tlars,
+  T_stop = 1,
+  num_dummies = ncol(X),
+  method = "trex",
+  GVS_type = "IEN",
+  type = "lar",
+  corr_max = 0.5,
+  lambda_2_lars = NULL,
+  early_stop = TRUE,
+  verbose = TRUE,
+  intercept = FALSE,
+  standardize = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>Real valued predictor matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Response vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_tlars</code></td>
+<td>
+<p>Object of the class tlars_cpp. It contains all state variables of the previous T-LARS step (necessary for warm-starts, i.e., restarting
+the forward selection process exactly where it was previously terminated).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T_stop</code></td>
+<td>
+<p>Number of included dummies after which the random experiments (i.e., forward selection processes) are stopped.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_dummies</code></td>
+<td>
+<p>Number of dummies that are appended to the predictor matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>'trex' for the T-Rex selector (<a href="https://doi.org/10.48550/arXiv.2110.06048">doi:10.48550/arXiv.2110.06048</a>),
+'trex+GVS' for the T-Rex+GVS selector (<a href="https://doi.org/10.23919/EUSIPCO55093.2022.9909883">doi:10.23919/EUSIPCO55093.2022.9909883</a>),
+'trex+DA+AR1' for the T-Rex+DA+AR1 selector,
+'trex+DA+equi' for the T-Rex+DA+equi selector,
+'trex+DA+BT' for the T-Rex+DA+BT selector (<a href="https://doi.org/10.48550/arXiv.2401.15796">doi:10.48550/arXiv.2401.15796</a>),
+'trex+DA+NN' for the T-Rex+DA+NN selector (<a href="https://doi.org/10.48550/arXiv.2401.15139">doi:10.48550/arXiv.2401.15139</a>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GVS_type</code></td>
+<td>
+<p>'IEN' for the Informed Elastic Net (<a href="https://doi.org/10.1109/CAMSAP58249.2023.10403489">doi:10.1109/CAMSAP58249.2023.10403489</a>),
+'EN' for the ordinary Elastic Net (<a href="https://doi.org/10.1111/j.1467-9868.2005.00503.x">doi:10.1111/j.1467-9868.2005.00503.x</a>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>'lar' for 'LARS' and 'lasso' for Lasso.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>corr_max</code></td>
+<td>
+<p>Maximum allowed correlation between any two predictors from different clusters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda_2_lars</code></td>
+<td>
+<p>lambda_2-value for LARS-based Elastic Net.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>early_stop</code></td>
+<td>
+<p>Logical. If TRUE, then the forward selection process is stopped after T_stop dummies have been included. Otherwise
+the entire solution path is computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical. If TRUE progress in computations is shown when performing T-LARS steps on the created model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>intercept</code></td>
+<td>
+<p>Logical. If TRUE an intercept is included.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>standardize</code></td>
+<td>
+<p>Logical. If TRUE the predictors are standardized and the response is centered.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of the class tlars_cpp.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(123)
+eps &lt;- .Machine$double.eps
+n &lt;- 75
+p &lt;- 100
+X &lt;- matrix(stats::rnorm(n * p), nrow = n, ncol = p)
+beta &lt;- c(rep(3, times = 3), rep(0, times = 97))
+y &lt;- X %*% beta + rnorm(n)
+res &lt;- lm_dummy(X = X, y = y, T_stop = 1, num_dummies = 5 * p)
+beta_hat &lt;- res$get_beta()[seq(p)]
+support &lt;- abs(beta_hat) &gt; eps
+support
+</code></pre>
+
+
+</div>

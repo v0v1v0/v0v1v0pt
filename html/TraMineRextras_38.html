@@ -1,0 +1,227 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqpolyads</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Measuring the Degree of Within-Polyadic Similarities</h2>
+
+<h3>Description</h3>
+
+<p>The function computes measures of the degree of similarities within polyadic member sequences compared to randomly assigned polyadic member sequences.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqpolyads(seqlist, a=1, method="HAM", ...,
+    w=rep(1,ncol(combn(1:length(seqlist),2))),
+    s=36963, T=1000, core=1, replace=TRUE, weighted=TRUE,
+    with.missing=FALSE, rand.weight.type=1, role.weights=NULL,
+    show.time=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqlist</code></td>
+<td>
+<p>A list of <var>J&gt;1</var> state sequence <code>stslist</code> objects. List of input sets (polyads) of polyadic sequences. The state sequence objects in the list must all have the same number <var>N</var> of sequences and the same alphabet.  The state sequence objects should be created with <code>seqdef</code> and the list with <code>list</code>. E.g., <code>list(gen1.seq,</code><code>gen2.seq,</code><code>gen3.seq)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>Integer, 1 or 2. Random generation mechanism. If 1 (default), draws from the observed set of sequences, and if 2, in addition random draws of states from each randomly drawn sequence. See reference below for detail.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>String. Method for computing sequence distances. See <code>seqdist</code>. Additional arguments may be required depending on the method chosen.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>seqdist</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s</code></td>
+<td>
+<p>Integer. Default 36963. Using the same seed number on the same computer guarantees the same results each time. Set <code>s=NULL</code> if you don't want to set a seed. The random generator can be chosen with <code>RNGkind</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>Integer vector. Default 1. The weights assigned to between-polyadic member sets in the weight matrix. For example, for dyadic sequences, no weight is necessary and the distance computation takes on the default of 1. For triadic sequences, there are three weights between the first and the second members, the first and the third members, and the second and the third members, in a row-wise order. See reference below.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T</code></td>
+<td>
+<p>Integer. Default 1,000. The number of randomized computations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>core</code></td>
+<td>
+<p>Integer. Default 1. Number of cores for the computation. When greater than 1, the procedure utilizes parallel processing.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replace</code></td>
+<td>
+<p>Logical. When <code>a=2</code>, should state sampling in each sequence be done with replacement? Default is <code>TRUE</code>. Ignored when <code>a=1</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. Should we account for the weights when present in the sequence objects? See details. Default is <code>TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should the missing state be considered as a regular state? Default is <code>FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rand.weight.type</code></td>
+<td>
+<p>Integer, 1 or 2. Ignored when <code>weighted=FALSE</code>. If 1 (default), weight of each randomized polyad is the average of original weights of its members. If 2, member weights are adjusted by dividing them by the sum of weights of all drawn members of the same type.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role.weights</code></td>
+<td>
+<p><code>NULL</code> or vector of non-negative weights of same length as the list <code>seqlist</code>. Ignored when <code>weighted=FALSE</code>. If non null, role weights for determining the weights of the randomized polyads.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show.time</code></td>
+<td>
+<p>Logical. Should elapsed time be displayed? Default is <code>FALSE</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function computes the polyadic distance of the observed polyads, i.e., the (weighted) mean of the pairwise distances between members of the polyad. In addition, the following statistics are computed:
+</p>
+<p>The <var>U</var> statistic measures for each observed polyad by how much its polyadic distance differs from the mean polyadic distance of <code>T</code> randomized polyads. <var>U.tp</var> is the <var>p</var>-value for a two-tailed <var>t</var>-test of the <var>U</var> statistic.
+</p>
+<p>The <var>V</var> statistic is, for each observed polyad, the proportion of <code>T</code> randomized polyads that have a greater polyadic distance. <var>V.95</var> is an associated dummy that takes value 1 when the proportion <var>V</var> is greater than 95% and 0 otherwise.
+</p>
+<p>When the sequence objects in <code>seqlist</code> have weights and <code>weighted=TRUE</code>, the randomized sequences are sampled using the weights of the first element in the list. Each member of an observed polyad is supposed to have the same weight. This does not hold for the randomized polyads that are obtained by sampling their members independently. The weights of each randomized sequence is set as the average of the weights of its members.  When role weights are provided with <code>role.weights</code>, a weighted average of the member weights is used. When <code>rand.weight.type=1</code>, original member weights are used. When <code>rand.weight.type=2</code>, the weights of randomly selected members are adjusted by the sum of weights of all randomly drawn members of the same type.
+</p>
+<p>When <code>core &gt; 1</code>, the function uses the <code>doParallel</code> package for parallel computation.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function outputs a list of seven objects:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mean.dist</code></td>
+<td>
+<p>Vector of length 2 with the average observed and random within-polyadic distances.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>U</code></td>
+<td>
+<p>Vector of <var>N</var> number of <var>U</var> statistics (see reference).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>U.tp</code></td>
+<td>
+<p>Vector of <var>N</var> number of <var>p</var>-values for a two-tailed <var>t</var>-test of the <var>U</var> statistic.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+<p>Vector of <var>N</var> number of <var>V</var> statistics (see reference).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.95</code></td>
+<td>
+<p>Vector of <var>N</var> number of 1s or 0s: 1 if a <var>V</var> value is at least 95 percent confident, 0 otherwise.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observed.dist</code></td>
+<td>
+<p>Vector of within-polyadic distances for the observed  polyadic members.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>random.dist</code></td>
+<td>
+<p>Vector of within-polyadic distances for the <var>T</var> number of randomly matched polyadic members.
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tim Liao and Gilbert Ritschard</p>
+
+
+<h3>References</h3>
+
+<p>Tim F. Liao (2021), "Using Sequence Analysis to Quantify How Strongly Life Courses Are Linked.” <em>Sociological Science</em> <b>8</b>, 48-72, <a href="https://doi.org/10.15195/v8.a3">doi:10.15195/v8.a3</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(polyads)
+Gen &lt;- polyads$Gen
+seqGrandP &lt;- seqdef(polyads[Gen=="1st Generation",2:11])
+seqParent &lt;- seqdef(polyads[Gen=="2nd Generation",2:11])
+seqChild &lt;- seqdef(polyads[Gen=="3rd Generation",2:11])
+Seq &lt;- rbind(seqGrandP,seqParent,seqChild)
+slgth &lt;- ncol(Seq)
+colnames(Seq) &lt;- 21:30
+seqIplot(Seq,group=Gen,idxs=10:1,ylab="Triad",xlab="Age")
+seqL &lt;- list(seqGrandP,seqParent,seqChild)
+core=1
+seqG2.Tim &lt;- seqpolyads(seqL[1:2],method="HAM",a=1,core=core,T=100)
+seqG3.Tim &lt;- seqpolyads(seqL,method="HAM",a=1,core=core,T=100)
+seqG2.Dur &lt;- seqpolyads(seqL[1:2],method="CHI2",step=slgth,core=core,T=100)
+seqG3.Dur &lt;- seqpolyads(seqL,method="CHI2",step=slgth,core=core,T=100)
+
+</code></pre>
+
+
+</div>

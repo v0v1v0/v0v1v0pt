@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>calc_densities</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate densities</h2>
+
+<h3>Description</h3>
+
+<p>Transpose quantitative variables to densitiy variables, which are often needed for choroplets. For example, the colors of a population density map should correspond population density counts rather than absolute population numbers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">calc_densities(
+  shp,
+  var,
+  target = "metric",
+  total.area = NULL,
+  suffix = NA,
+  drop = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>shp</code></td>
+<td>
+<p>a shape object, i.e., an <code>sf</code> object or a <code>SpatialPolygons(DataFrame)</code> from the <code>sp</code> package.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var</code></td>
+<td>
+<p>name(s) of a qualtity variable name contained in the <code>shp</code> data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>the target unit, see <code>approx_areas</code>. Density values are calculated in <code>var/target^2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total.area</code></td>
+<td>
+<p>total area size of <code>shp</code> in number of target units (defined by <code>unit</code>), <code>approx_areas</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>suffix</code></td>
+<td>
+<p>character that is appended to the variable names. The resulting names are used as column names of the returned data.frame. By default, <code>_sq_&lt;target&gt;</code>, where target corresponds to the target unit, e.g. <code>_sq_km</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>boolean that determines whether an one-column data-frame should be returned as a vector</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Vector or data.frame (depending on whether <code>length(var)==1</code> with density values.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (require(tmap) &amp;&amp; packageVersion("tmap") &gt;= "2.0") {
+    data(NLD_muni)
+
+    NLD_muni_pop_per_km2 &lt;- calc_densities(NLD_muni,
+        target = "km km", var = c("pop_men", "pop_women"))
+    NLD_muni &lt;- sf::st_sf(data.frame(NLD_muni, NLD_muni_pop_per_km2))
+
+    tm_shape(NLD_muni) +
+    	tm_polygons(c("pop_men_km.2", "pop_women_km.2"),
+            title=expression("Population per " * km^2), style="quantile") +
+    tm_facets(free.scales = FALSE) +
+    tm_layout(panel.show = TRUE, panel.labels=c("Men", "Women"))
+}
+</code></pre>
+
+
+</div>

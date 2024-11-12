@@ -1,0 +1,361 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ithresh</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Threshold selection in the i.i.d. case (peaks over threshold)</h2>
+
+<h3>Description</h3>
+
+<p>Produces a diagnostic plot to assist in the selection of an extreme value
+threshold in the case where the data can be treated as independent and
+identically distributed (i.i.d.) observations.  For example, it could be
+that these observations are the cluster maxima resulting from the
+declustering of time series data.  The predictive ability of models
+fitted using each of a user-supplied set of thresholds is assessed using
+leave-one-out cross-validation in a Bayesian setup.
+These models are based on a Generalized Pareto (GP) distribution for
+threshold excesses and a binomial model for the probability of threshold
+exceedance.  See Northrop et al. (2017) for details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ithresh(data, u_vec, ..., n_v = 1, npy = NULL, use_rcpp = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A numeric vector of observations.  Any missing values will
+be removed.  The argument <code>npy</code> (see below) may be supplied
+as an attribute of <code>data</code> using <code>attr(data, "npy") &lt;- value</code>,
+where <code>value</code> is the value of <code>npy</code> (see <code>attr</code>).
+If <code>npy</code> is supplied twice, as both <code>attr(data, "npy")</code>)
+and using the <code>npy</code> argument, then the former is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u_vec</code></td>
+<td>
+<p>A numeric vector. A vector of <em>training</em> thresholds
+at which inferences are made from a binomial-GP model.  These could be
+set at sample quantiles of  <code>data</code> using
+<code>quantile</code>.  Any duplicated values will be removed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further (optional) arguments to be passed to the
+<code>revdbayes</code> function
+<code>rpost_rcpp</code> (or <code>rpost</code>),
+which use the generalized ratio-of-uniforms method to simulate from
+extreme value posterior distributions.
+In particular:
+</p>
+
+<ul>
+<li> <p><code>n</code>. The size of the posterior sample used to perform
+predictive inference.  Default: <code>n = 1000</code>.
+</p>
+</li>
+<li> <p><code>prior</code>. A prior for GP parameters to be passed to the
+<strong>revdbayes</strong> function <code>set_prior</code>.
+Can be either a character scalar that chooses an in-built prior,
+or a user-supplied R function or pointer to a compiled C++ function.
+See the <code>set_prior</code> documentation for details
+of the in-built priors.
+See the <strong>revdbayes</strong> vignette
+<a href="https://cran.r-project.org/package=revdbayes">Faster simulation
+using revdbayes</a> for information about creating
+a pointer to a C++ function.  See also the <strong>Examples</strong> section.
+</p>
+<p>If the user supplies an R function then <code>rpost</code>
+will be used for posterior simulation, rather than (the faster)
+<code>rpost_rcpp</code>, regardless of the input value of
+<code>use_rcpp</code>.
+</p>
+<p>Default: <code>prior = "mdi"</code> with <code>a = 0.6</code> and <code>min_xi = -1</code>.
+This particular prior is studied in Northrop et al. (2017).
+</p>
+</li>
+<li> <p><code>h_prior</code>. A <em>list</em> of further arguments
+(hyperparameters) for the GP prior specified in <code>prior</code>.
+</p>
+</li>
+<li> <p><code>bin_prior</code>. A prior for the threshold exceedance probability
+<code class="reqn">p</code> to be passed to the <strong>revdbayes</strong> function
+<code>set_bin_prior</code>.
+Can either be a character scalar that chooses an in-built prior,
+or a user_supplied R function.
+</p>
+<p>Default: <code>prior = "jeffreys"</code>, i.e. Beta(1/2, 1/2).
+</p>
+</li>
+<li> <p><code>h_bin_prior</code>. A <em>list</em> of further arguments
+(hyperparameters) for the binomial prior specified in <code>bin_prior</code>.
+See the <code>set_bin_prior</code> documentation for details
+of the in-built priors.
+</p>
+</li>
+<li> <p><code>trans</code>. A character scalar: either <code>"none"</code> or
+<code>"BC"</code>.  See <code>rpost_rcpp</code> for details.
+The default is <code>"none"</code>, which is usually faster than <code>"BC"</code>.
+However, if there are very few threshold excesses then using
+<code>trans = "BC"</code> can make the optimizations involved in the
+generalized ratio-of-uniforms algorithm more stable.  If using
+<code>trans = "none"</code> produces an error for a particular posterior
+simulation then <code>trans = "BC"</code> is used instead.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_v</code></td>
+<td>
+<p>A numeric scalar.
+Each of the <code>n_v</code> largest values in <code>u_vec</code> will be used
+(separately) as a <em>validation</em> threshold for the training thresholds
+in <code>u_vec</code> that lie at or below that validation threshold.
+If <code>n_v = 1</code> then all the training thresholds are used with
+validation performed using the threshold <code>u_vec[length(u_vec)]</code>.
+If <code>n_v = 2</code> then, in addition, the assessment is performed using
+<code>u_vec[1], ..., u_vec[length(u_vec) - 1]</code> with
+validation threshold <code>u_vec[length(u_vec) - 1]</code>,
+and so on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>npy</code></td>
+<td>
+<p>A numeric scalar. The mean number of observations per year
+of data, after excluding any missing values, i.e. the number of
+non-missing observations divided by total number of years of non-missing
+data.  May be supplied using as an attribute <code>attr(data, "npy")</code>
+of <code>data</code> instead.
+</p>
+<p>The value of <code>npy</code> does not affect any calculation in
+<code>ithresh</code>, it only affects subsequent extreme value inferences using
+<code>predict.ithresh</code>.  However, setting <code>npy</code> in the call to
+<code>rpost</code>, or as an attribute of <code>data</code> avoids the need to
+supply <code>npy</code> when calling <code>predict.ithresh</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_rcpp</code></td>
+<td>
+<p>A logical scalar.  If <code>TRUE</code> (the default) the
+revdbayes function <code>rpost_rcpp</code> is used for
+posterior simulation.  If <code>FALSE</code>, or if the user supplies an R
+function to set the prior for GP parameters,
+the (slower) function <code>rpost</code> is used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For a given threshold in <code>u_vec</code>:
+</p>
+
+<ul>
+<li>
+<p> the number of values in <code>data</code> that exceed the threshold,
+and the amounts (the <em>threshold excesses</em>) by which these value
+exceed the threshold are calculated;
+</p>
+</li>
+<li> <p><code>rpost_rcpp</code>
+(or <code>rpost</code>) is used to sample from the posterior
+distributions of the parameters of a GP model for the threshold
+excesses and a binomial model for the probability of threshold
+exceedance;
+</p>
+</li>
+<li>
+<p> the ability of this binomial-GP model to predict data
+thresholded at the validation threshold(s) specified by <code>n_v</code> is
+assessed using leave-one-out cross-validation (the measure of
+this is given in equation (7) of Northrop et al. (2017).
+</p>
+</li>
+</ul>
+<p>See Northrop et al. (2017) and the introductory threshr vignette for
+further details and examples.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object (list) of class <code>"ithresh"</code>, containing the
+components
+</p>
+
+<ul>
+<li> <p><code>pred_perf</code>: A numeric matrix with <code>length(u_vec)</code>
+rows and <code>n_v</code> columns.  Each column contains the values of
+the measure of predictive performance.  Entries corresponding
+to cases where the training threshold is above the validation
+threshold will be <code>NA</code>.
+</p>
+</li>
+<li> <p><code>u_vec</code>: The argument <code>u_vec</code> to <code>ithresh</code>.
+</p>
+</li>
+<li> <p><code>v_vec</code>: A numeric vector.  The validation thresholds
+implied by the argument <code>n_v</code> to <code>ithresh</code>.
+</p>
+</li>
+<li> <p><code>u_ps</code>: A numeric vector. The approximate levels of the
+sample quantiles to which the values in <code>u_vec</code> correspond,
+i.e. the approximate percentage of the data the lie at or below
+each element in <code>u_vec</code>.
+</p>
+</li>
+<li> <p><code>v_ps</code>: A numeric vector.  The values in <code>u_ps</code>
+that correspond to the validation thresholds.
+</p>
+</li>
+<li> <p><code>sim_vals</code>: A numeric matrix with 4 columns and
+<code>n</code> x <code>length(u_vec)</code> rows.  The <code class="reqn">j</code>th block of
+<code>n</code> rows contains in columns 1-3 the posterior samples of
+the threshold exceedance probability, the GP scale
+parameter and the GP shape parameter respectively,
+based on training threshold <code>u_vec[i]</code>,
+and in column 4 the value of <code class="reqn">j</code>.
+</p>
+</li>
+<li> <p><code>n</code>: A numeric scalar.  The value of <code>n</code>.
+</p>
+</li>
+<li> <p><code>npy</code>: A numeric scalar.  The value of <code>npy</code>.
+</p>
+</li>
+<li> <p><code>data</code>: The argument <code>data</code> to <code>ithresh</code>
+detailed above, with any missing values removed.
+</p>
+</li>
+<li> <p><code>use_rcpp</code>: A logical scalar indicating whether
+<code>rpost_rcpp</code> (<code>use_rcpp = TRUE</code>) or
+<code>rpost</code> (<code>use_rcpp = FALSE</code>)
+was used for posterior simulation.
+</p>
+</li>
+<li> <p><code>for_post</code>: A list containing arguments with which
+<code>rpost_rcpp</code>
+(or <code>rpost</code>) was called, including
+any user-supplied arguments to these functions.
+</p>
+</li>
+<li> <p><code>call:</code> The call to <code>ithresh</code>.
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Northrop, P.J. and Attalides, N. (2016) Posterior propriety in
+Bayesian extreme value analyses using reference priors
+<em>Statistica Sinica</em>, <strong>26</strong>(2), 721–743
+<a href="https://doi.org/10.5705/ss.2014.034">doi:10.5705/ss.2014.034</a>.
+</p>
+<p>Northrop, P. J., Attalides, N. and Jonathan, P. (2017)
+Cross-validatory extreme value threshold selection and uncertainty
+with application to ocean storm severity.
+<em>Journal of the Royal Statistical Society Series C: Applied
+Statistics</em>, <strong>66</strong>(1), 93-120.
+<a href="https://doi.org/10.1111/rssc.12159">doi:10.1111/rssc.12159</a>
+</p>
+<p>Jonathan, P. and Ewans, K. (2013) Statistical modelling
+of extreme ocean environments for marine design : a review.
+<em>Ocean Engineering</em>, <strong>62</strong>, 91-109.
+<a href="https://doi.org/10.1016/j.oceaneng.2013.01.004">doi:10.1016/j.oceaneng.2013.01.004</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.ithresh</code> for the S3 plot method for objects of
+class <code>ithresh</code>.
+</p>
+<p><code>summary.ithresh</code> Summarizing measures of threshold
+predictive performance.
+</p>
+<p><code>predict.ithresh</code> for predictive inference for the
+largest value observed in N years.
+</p>
+<p><code>rpost</code> in the
+<code>revdbayes</code> package for details of the arguments
+that can be passed to
+<code>rpost_rcpp</code>/<code>rpost</code>.
+</p>
+<p><code>set_prior</code> and
+<code>set_bin_prior</code> in the
+<code>revdbayes</code> package for details of how to set a
+prior distributions for GP parameters and for the exceedance probability
+<code class="reqn">p</code>.
+</p>
+<p><code>quantile</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Note:
+# 1. Smoother plots result from making n larger than the default n = 1000.
+# 2. In some examples below validation thresholds rather higher than is
+#    advisable have been used, with far fewer excesses than the minimum of
+#    50 suggested by Jonathan and Ewans (2013).
+
+## North Sea significant wave heights, default prior -----------------------
+#' # A plot akin to the top left of Figure 7 in Northrop et al. (2017)
+#' # ... but with fewer training thresholds
+
+u_vec_ns &lt;- quantile(ns, probs = seq(0.1, 0.9, by = 0.1))
+ns_cv &lt;- ithresh(data = ns, u_vec = u_vec_ns, n_v = 2)
+plot(ns_cv, lwd = 2, add_legend = TRUE, legend_pos = "topright")
+mtext("significant wave height / m", side = 3, line = 2.5)
+
+## Gulf of Mexico significant wave heights, default prior ------------------
+
+u_vec_gom &lt;- quantile(gom, probs = seq(0.2, 0.9, by = 0.1))
+# Setting a prior using its name and parameter value(s) --------------------
+# This example gives the same prior as the default
+gom_cv &lt;- ithresh(data = gom, u_vec = u_vec_gom, n_v = 2, prior = "mdi",
+                  h_prior = list(a = 0.6))
+
+## Setting a user-defined (log-)prior R function ---------------------------
+# This example also gives the same prior as the default
+# (It will take longer to run than the example above because ithresh detects
+#  that the prior is an R function and sets use_rcpp to FALSE.)
+
+user_prior &lt;- function(pars, a, min_xi = -1) {
+  if (pars[1] &lt;= 0 | pars[2] &lt; min_xi) {
+    return(-Inf)
+  }
+  return(-log(pars[1]) - a * pars[2])
+}
+user_bin_prior &lt;- function(p, ab) {
+  return(stats::dbeta(p, shape1 = ab[1], shape2 = ab[2], log = TRUE))
+}
+gom_cv &lt;- ithresh(data = gom, u_vec = u_vec_gom, n_v = 2, prior = user_prior,
+                  h_prior = list(a = 0.6), bin_prior = user_bin_prior,
+                  h_bin_prior = list(ab = c(1 / 2, 1 / 2)))
+
+## Setting a user-defined (log-)prior (pointer to a) C++ function ----------
+# We make use of a C++ function and function create_prior_xptr() to create
+# the required pointer from the revdbayes package
+
+prior_ptr &lt;- revdbayes::create_prior_xptr("gp_flat")
+gom_cv &lt;- ithresh(data = gom, u_vec = u_vec_gom, n_v = 2, prior = prior_ptr,
+                  h_prior = list(min_xi = -1))
+</code></pre>
+
+
+</div>

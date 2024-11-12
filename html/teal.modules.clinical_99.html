@@ -1,0 +1,250 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_g_barchart_simple</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>teal Module: Simple Bar Chart and Table of Counts per Category</h2>
+
+<h3>Description</h3>
+
+<p>This module produces a <code>ggplot2::ggplot()</code> type bar chart and summary table of counts per category.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_g_barchart_simple(
+  x = NULL,
+  fill = NULL,
+  x_facet = NULL,
+  y_facet = NULL,
+  label = "Count Barchart",
+  plot_options = NULL,
+  plot_height = c(600L, 200L, 2000L),
+  plot_width = NULL,
+  pre_output = NULL,
+  post_output = NULL,
+  ggplot2_args = teal.widgets::ggplot2_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>data_extract_spec</code>)<br> variable on the x-axis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>(<code>data_extract_spec</code>)<br> grouping variable to determine bar colors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_facet</code></td>
+<td>
+<p>(<code>data_extract_spec</code>)<br> row-wise faceting groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_facet</code></td>
+<td>
+<p>(<code>data_extract_spec</code>)<br> column-wise faceting groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>)<br> menu item label of the module in the teal app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_options</code></td>
+<td>
+<p>(<code>list</code>)<br> list of plot options.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional<br> vector of length three with <code>c(value, min, max)</code>. Specifies the
+height of the main plot and renders a slider on the plot to interactively adjust the plot height.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional<br> vector of length three with <code>c(value, min, max)</code>. Specifies the width
+of the main plot and renders a slider on the plot to interactively adjust the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed before the output to put the output into context.
+For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed after the output to put the output into context.
+For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional<br> object created by <code>teal.widgets::ggplot2_args()</code> with settings
+for the module plot. The argument is merged with option <code>teal.ggplot2_args</code> and with default module arguments
+(hard coded in the module body).
+For more details, see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Categories can be defined up to four levels deep and are defined through the <code>x</code>, <code>fill</code>,
+<code>x_facet</code>, and <code>y_facet</code> parameters. Any parameters set to <code>NULL</code> (default) are ignored.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>teal_module</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>The <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a> where additional example
+apps implementing this module can be found.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(nestcolor)
+library(dplyr)
+
+ADSL &lt;- tmc_ex_adsl %&gt;%
+  mutate(ITTFL = factor("Y") %&gt;%
+    with_label("Intent-To-Treat Population Flag"))
+ADAE &lt;- tmc_ex_adae %&gt;%
+  filter(!((AETOXGR == 1) &amp; (AESEV == "MILD") &amp; (ARM == "A: Drug X")))
+
+app &lt;- init(
+  data = cdisc_data(
+    ADSL = ADSL,
+    ADAE = ADAE,
+    code = "ADSL &lt;- tmc_ex_adsl %&gt;%
+              mutate(ITTFL = factor(\"Y\") %&gt;%
+              with_label(\"Intent-To-Treat Population Flag\"))
+            ADAE &lt;- tmc_ex_adae %&gt;%
+              filter(!((AETOXGR == 1) &amp; (AESEV == \"MILD\") &amp; (ARM == \"A: Drug X\")))"
+  ),
+  modules = modules(
+    tm_g_barchart_simple(
+      label = "ADAE Analysis",
+      x = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          choices = variable_choices(
+            ADSL,
+            c(
+              "ARM", "ACTARM", "SEX",
+              "RACE", "ITTFL", "SAFFL", "STRATA2"
+            )
+          ),
+          selected = "ACTARM",
+          multiple = FALSE
+        )
+      ),
+      fill = list(
+        data_extract_spec(
+          dataname = "ADSL",
+          select = select_spec(
+            choices = variable_choices(
+              ADSL,
+              c(
+                "ARM", "ACTARM", "SEX",
+                "RACE", "ITTFL", "SAFFL", "STRATA2"
+              )
+            ),
+            selected = "SEX",
+            multiple = FALSE
+          )
+        ),
+        data_extract_spec(
+          dataname = "ADAE",
+          select = select_spec(
+            choices = variable_choices(ADAE, c("AETOXGR", "AESEV", "AESER")),
+            selected = NULL,
+            multiple = FALSE
+          )
+        )
+      ),
+      x_facet = list(
+        data_extract_spec(
+          dataname = "ADAE",
+          select = select_spec(
+            choices = variable_choices(ADAE, c("AETOXGR", "AESEV", "AESER")),
+            selected = "AETOXGR",
+            multiple = FALSE
+          )
+        ),
+        data_extract_spec(
+          dataname = "ADSL",
+          select = select_spec(
+            choices = variable_choices(
+              ADSL,
+              c(
+                "ARM", "ACTARM", "SEX",
+                "RACE", "ITTFL", "SAFFL", "STRATA2"
+              )
+            ),
+            selected = NULL,
+            multiple = FALSE
+          )
+        )
+      ),
+      y_facet = list(
+        data_extract_spec(
+          dataname = "ADAE",
+          select = select_spec(
+            choices = variable_choices(ADAE, c("AETOXGR", "AESEV", "AESER")),
+            selected = "AESEV",
+            multiple = FALSE
+          )
+        ),
+        data_extract_spec(
+          dataname = "ADSL",
+          select = select_spec(
+            choices = variable_choices(
+              ADSL,
+              c(
+                "ARM", "ACTARM", "SEX",
+                "RACE", "ITTFL", "SAFFL", "STRATA2"
+              )
+            ),
+            selected = NULL,
+            multiple = FALSE
+          )
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

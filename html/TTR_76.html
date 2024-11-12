@@ -1,0 +1,245 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>stoch</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Stochastic Oscillator / Stochastic Momentum Index</h2>
+
+<h3>Description</h3>
+
+<p>The stochastic oscillator is a momentum indicator that relates the location
+of each day's close relative to the high/low range over the past <code>n</code>
+periods.  Developed by George C.  Lane in the late 1950s.  The SMI relates
+the close to the midpoint of the high/low range.  Developed by William Blau
+in 1993.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">stoch(
+  HLC,
+  nFastK = 14,
+  nFastD = 3,
+  nSlowD = 3,
+  maType,
+  bounded = TRUE,
+  smooth = 1,
+  ...
+)
+
+SMI(HLC, n = 13, nFast = 2, nSlow = 25, nSig = 9, maType, bounded = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>HLC</code></td>
+<td>
+<p>Object that is coercible to xts or matrix and contains
+High-Low-Close prices.  If only a univariate series is given, it will be
+used.  See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nFastK</code></td>
+<td>
+<p>Number of periods for fast %K (i.e. the number of past periods
+to use).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nFastD</code></td>
+<td>
+<p>Number of periods for fast %D (i.e. the number smoothing
+periods to apply to fast %K).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nSlowD</code></td>
+<td>
+<p>Number of periods for slow %D (i.e. the number smoothing
+periods to apply to fast %D).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maType</code></td>
+<td>
+<p>Either:
+</p>
+
+<ol>
+<li>
+<p> A function or a string naming the function to be called.
+</p>
+</li>
+<li>
+<p> A <em>list</em> with the first component like (1) above, and
+additional parameters specified as <em>named</em> components.
+See Examples.
+</p>
+</li>
+</ol>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bounded</code></td>
+<td>
+<p>Logical, should current period's values be used in the
+calculation?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smooth</code></td>
+<td>
+<p>Number of internal smoothing periods to be applied before
+calculating FastK. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to be passed to the <code>maType</code> function in
+case (1) above.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of periods to use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nFast</code></td>
+<td>
+<p>Number of periods for initial smoothing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nSlow</code></td>
+<td>
+<p>Number of periods for double smoothing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nSig</code></td>
+<td>
+<p>Number of periods for signal line.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If a High-Low-Close series is provided, the indicator is calculated using the
+high/low values.  If a vector is provided, the calculation only uses that
+series.  This allows stochastics to be calculated for: (1) series that have
+no HLC definition (e.g. foreign exchange), and (2) stochastic indicators
+(e.g. stochastic RSI - see examples).
+</p>
+<p>The <code>smooth</code> argument is the number of periods of internal smoothing to
+apply to the differences in the high-low-close range before calculating Fast
+K.  Thanks to Stanley Neo for the suggestion.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A object of the same class as <code>HLC</code> or a matrix (if
+<code>try.xts</code> fails) containing the columns:
+</p>
+
+<dl>
+<dt> fastK </dt>
+<dd>
+<p> Stochastic Fast %K </p>
+</dd>
+<dt> fastD </dt>
+<dd>
+<p> Stochastic Fast %D </p>
+</dd>
+<dt> slowD </dt>
+<dd>
+<p> Stochastic Slow %D </p>
+</dd>
+<dt> SMI </dt>
+<dd>
+<p> Stochastic Momentum Index </p>
+</dd>
+<dt> signal </dt>
+<dd>
+<p> Stochastic Momentum Index signal line </p>
+</dd>
+</dl>
+<h3>Note</h3>
+
+<p>The calculation for William's %R is similar to that of stochastics'
+fast %K.
+</p>
+<p>The value for fast %K will be 0.5 whenever the highest high and
+lowest low are the same over the last <code>n</code> periods.
+</p>
+<p>The stochastic oscillator and SMI calculate relative value of the close
+versus the high/low range and the midpoint of the high/low range,
+respectively.
+</p>
+<p>The stochastic oscillator and the stochastic momentum index are interpreted
+similarly.  Readings below 20 (above 80) are considered oversold
+(overbought).  However, readings below 20 (above 80) are not necessarily
+bearish (bullish).  Lane believed some of the best sell (buy) signals
+occurred when the oscillator moved from overbought (oversold) back below 80
+(above 20).
+</p>
+<p>For the stochastic oscillator, buy (sell) signals can also be given when %K
+crosses above (below) %D.  Crossover signals are quite frequent however,
+which may result in whipsaws.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Joshua Ulrich
+</p>
+
+
+<h3>References</h3>
+
+<p>The following site(s) were used to code/document these
+indicators:
+<br> Stochastic Oscillator:<br><a href="https://www.fmlabs.com/reference/StochasticOscillator.htm">https://www.fmlabs.com/reference/StochasticOscillator.htm</a><br><a href="https://www.metastock.com/Customer/Resources/TAAZ/?p=106">https://www.metastock.com/Customer/Resources/TAAZ/?p=106</a><br><a href="https://www.linnsoft.com/techind/stochastics">https://www.linnsoft.com/techind/stochastics</a><br><a href="https://school.stockcharts.com/doku.php?id=technical_indicators:stochastic_oscillator_fast_slow_and_full">https://school.stockcharts.com/doku.php?id=technical_indicators:stochastic_oscillator_fast_slow_and_full</a><br><br> SMI:<br><a href="https://www.fmlabs.com/reference/default.htm?url=SMI.htm">https://www.fmlabs.com/reference/default.htm?url=SMI.htm</a><br></p>
+
+
+<h3>See Also</h3>
+
+<p>See <code>EMA</code>, <code>SMA</code>, etc. for moving average
+options; and note Warning section.  See <code>WPR</code> to compare it's
+results to fast %K.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ data(ttrc)
+ stochOSC &lt;- stoch(ttrc[,c("High","Low","Close")])
+ stochWPR &lt;- WPR(ttrc[,c("High","Low","Close")])
+
+ plot(tail(stochOSC[,"fastK"], 100), type="l",
+     main="Fast %K and Williams %R", ylab="",
+     ylim=range(cbind(stochOSC, stochWPR), na.rm=TRUE) )
+ lines(tail(stochWPR, 100), col="blue")
+ lines(tail(1-stochWPR, 100), col="red", lty="dashed")
+
+ stoch2MA &lt;- stoch( ttrc[,c("High","Low","Close")],
+     maType=list(list(SMA), list(EMA, wilder=TRUE), list(SMA)) )
+
+ SMI3MA &lt;- SMI(ttrc[,c("High","Low","Close")],
+     maType=list(list(SMA), list(EMA, wilder=TRUE), list(SMA)) )
+
+ stochRSI &lt;- stoch( RSI(ttrc[,"Close"]) )
+</code></pre>
+
+
+</div>

@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cluster_stops</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cluster nearby stops within a group</h2>
+
+<h3>Description</h3>
+
+<p>Finds clusters of stops for each unique value in <code>group_col</code> (e.g. stop_name). Can
+be used to find different groups of stops that share the same name but are located more
+than <code>max_dist</code> apart. <code>gtfs_stops</code> is assigned a new column (named <code>cluster_colname</code>)
+which contains the <code>group_col</code> value and the cluster number.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cluster_stops(
+  gtfs_stops,
+  max_dist = 300,
+  group_col = "stop_name",
+  cluster_colname = "stop_name_cluster"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>gtfs_stops</code></td>
+<td>
+<p>Stops table of a gtfs object. It is also possible to pass a
+tidygtfs object to enable piping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_dist</code></td>
+<td>
+<p>Only stop groups that have a maximum distance among them above this
+threshold (in meters) are clustered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_col</code></td>
+<td>
+<p>Clusters for are calculated for each set of stops with the same value
+in this column (default: stop_name)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cluster_colname</code></td>
+<td>
+<p>Name of the new column name. Can be the same as group_col to overwrite.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>stats::kmeans()</code> is used for clustering.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a stops table with an added cluster column. If <code>gtfs_stops</code> is a tidygtfs object, a
+modified tidygtfs object is return
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+nyc_path &lt;- system.file("extdata", "google_transit_nyc_subway.zip", package = "tidytransit")
+nyc &lt;- read_gtfs(nyc_path)
+nyc &lt;- cluster_stops(nyc)
+
+# There are 6 stops with the name "86 St" that are far apart
+stops_86_St = nyc$stops %&gt;% 
+  filter(stop_name == "86 St")
+
+table(stops_86_St$stop_name_cluster)
+#&gt; 86 St [1] 86 St [2] 86 St [3] 86 St [4] 86 St [5] 86 St [6] 
+#&gt;         3         3         3         3         3         3 
+
+stops_86_St %&gt;% select(stop_id, stop_name, parent_station, stop_name_cluster) %&gt;% head()
+#&gt; # A tibble: 6 × 4
+#&gt;   stop_id stop_name parent_station stop_name_cluster
+#&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;            
+#&gt; 1 121     86 St     ""             86 St [3]        
+#&gt; 2 121N    86 St     "121"          86 St [3]        
+#&gt; 3 121S    86 St     "121"          86 St [3]        
+#&gt; 4 626     86 St     ""             86 St [4]        
+#&gt; 5 626N    86 St     "626"          86 St [4]        
+#&gt; 6 626S    86 St     "626"          86 St [4]
+
+library(ggplot2)
+ggplot(stops_86_St) +
+  geom_point(aes(stop_lon, stop_lat, color = stop_name_cluster))
+
+</code></pre>
+
+
+</div>

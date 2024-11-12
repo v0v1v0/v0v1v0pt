@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>roll_lag</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fast rolling grouped lags and differences</h2>
+
+<h3>Description</h3>
+
+<p>Inspired by 'collapse', <code>roll_lag</code> and <code>roll_diff</code> operate similarly to
+<code>flag</code> and <code>fdiff</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">roll_lag(x, n = 1L, ...)
+
+## Default S3 method:
+roll_lag(x, n = 1L, g = NULL, fill = NULL, ...)
+
+## S3 method for class 'ts'
+roll_lag(x, n = 1L, g = NULL, fill = NULL, ...)
+
+## S3 method for class 'zoo'
+roll_lag(x, n = 1L, g = NULL, fill = NULL, ...)
+
+roll_diff(x, n = 1L, ...)
+
+## Default S3 method:
+roll_diff(x, n = 1L, g = NULL, fill = NULL, differences = 1L, ...)
+
+## S3 method for class 'ts'
+roll_diff(x, n = 1L, g = NULL, fill = NULL, differences = 1L, ...)
+
+## S3 method for class 'zoo'
+roll_diff(x, n = 1L, g = NULL, fill = NULL, differences = 1L, ...)
+
+diff_(
+  x,
+  n = 1L,
+  differences = 1L,
+  order = NULL,
+  run_lengths = NULL,
+  fill = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A vector or data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Lag. This will be recycled to match the length of x and can be negative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed onto appropriate method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Grouping vector. This can be a vector, data frame or <code>GRP</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>Value to fill the first <code>n</code> elements.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>differences</code></td>
+<td>
+<p>Number indicating the number of times to recursively apply
+the differencing algorithm. If <code>length(n) == 1</code>, i.e the lag is a scalar integer,
+an optimised method is used which avoids recursion entirely.
+If <code>length(n) != 1</code> then simply recursion is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>Optionally specify an ordering with which to
+apply the lags/differences.
+This is useful for example when applying lags chronologically
+using an unsorted time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>run_lengths</code></td>
+<td>
+<p>Optional integer vector of run lengths that defines
+the size of each lag run. For example, supplying <code>c(5, 5)</code> applies
+lags to the first 5 elements and then essentially resets the bounds and
+applies lags to the next 5 elements as if
+they were an entirely separate and standalone vector. <br>
+This is particularly useful in conjunction with the order argument to
+perform a by-group lag.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>While these may not be as fast the 'collapse' equivalents,
+they are adequately fast and efficient. <br>
+A key difference between <code>roll_lag</code> and <code>flag</code> is that <code>g</code> does not need
+to be sorted for the result to be correct. <br>
+Furthermore, a vector of lags can be supplied for a custom rolling lag.
+</p>
+<p><code>roll_diff()</code> silently returns <code>NA</code> when there is integer overflow.
+Both <code>roll_lag()</code> and <code>roll_diff()</code> apply recursively to list elements.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A vector the same length as <code>x</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+
+x &lt;- 1:10
+
+roll_lag(x) # Lag
+roll_lag(x, -1) # Lead
+roll_diff(x) # Lag diff
+roll_diff(x, -1) # Lead diff
+
+# Using cheapr::lag_sequence()
+# Differences lagged at 5, first 5 differences are compared to x[1]
+roll_diff(x, cheapr::lag_sequence(length(x), 5, partial = TRUE))
+
+# Like diff() but x/y instead of x-y
+quotient &lt;- function(x, n = 1L){
+  x / roll_lag(x, n)
+}
+# People often call this a growth rate
+# but it's just a percentage difference
+# See ?roll_growth_rate for growth rate calculations
+quotient(1:10)
+
+</code></pre>
+
+
+</div>

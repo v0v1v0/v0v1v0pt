@@ -1,0 +1,136 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>utils_split_funs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Custom split functions</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Collection of useful functions that are expanding on the core list of functions
+provided by <code>rtables</code>. See rtables::custom_split_funs and <code>rtables::make_split_fun()</code>
+for more information on how to make a custom split function. All these functions
+work with <code>rtables::split_rows_by()</code> argument <code>split_fun</code> to modify the way the split
+happens. For other split functions, consider consulting <code>rtables::split_funcs</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ref_group_position(position = "first")
+
+level_order(order)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>position</code></td>
+<td>
+<p>(<code>string</code> or <code>integer</code>)<br> position to use for the reference group facet. Can be <code>"first"</code>,
+<code>"last"</code>, or a specific position.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>(<code>character</code> or <code>numeric</code>)<br> vector of ordering indices for the split facets.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>ref_group_position()</code> returns an utility function that puts the reference group
+as first, last or at a certain position and needs to be assigned to <code>split_fun</code>.
+</p>
+</li></ul>
+<ul><li> <p><code>level_order()</code> returns an utility function that changes the original levels' order,
+depending on input <code>order</code> and split levels.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>ref_group_position()</code>: Split function to place reference group facet at a specific position
+during post-processing stage.
+</p>
+</li>
+<li> <p><code>level_order()</code>: Split function to change level order based on an <code>integer</code>
+vector or a <code>character</code> vector that represent the split variable's factor levels.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>rtables::make_split_fun()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+dat &lt;- data.frame(
+  x = factor(letters[1:5], levels = letters[5:1]),
+  y = 1:5
+)
+
+# With rtables layout functions
+basic_table() %&gt;%
+  split_cols_by("x", ref_group = "c", split_fun = ref_group_position("last")) %&gt;%
+  analyze("y") %&gt;%
+  build_table(dat)
+
+# With tern layout funcitons
+adtte_f &lt;- tern_ex_adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  mutate(
+    AVAL = day2month(AVAL),
+    is_event = CNSR == 0
+  )
+
+basic_table() %&gt;%
+  split_cols_by(var = "ARMCD", ref_group = "ARM B", split_fun = ref_group_position("first")) %&gt;%
+  add_colcounts() %&gt;%
+  surv_time(
+    vars = "AVAL",
+    var_labels = "Survival Time (Months)",
+    is_event = "is_event",
+  ) %&gt;%
+  build_table(df = adtte_f)
+
+basic_table() %&gt;%
+  split_cols_by(var = "ARMCD", ref_group = "ARM B", split_fun = ref_group_position(2)) %&gt;%
+  add_colcounts() %&gt;%
+  surv_time(
+    vars = "AVAL",
+    var_labels = "Survival Time (Months)",
+    is_event = "is_event",
+  ) %&gt;%
+  build_table(df = adtte_f)
+
+# level_order --------
+# Even if default would bring ref_group first, the original order puts it last
+basic_table() %&gt;%
+  split_cols_by("Species", split_fun = level_order(c(1, 3, 2))) %&gt;%
+  analyze("Sepal.Length") %&gt;%
+  build_table(iris)
+
+# character vector
+new_order &lt;- level_order(levels(iris$Species)[c(1, 3, 2)])
+basic_table() %&gt;%
+  split_cols_by("Species", ref_group = "virginica", split_fun = new_order) %&gt;%
+  analyze("Sepal.Length") %&gt;%
+  build_table(iris)
+
+</code></pre>
+
+
+</div>

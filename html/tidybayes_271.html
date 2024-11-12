@@ -1,0 +1,88 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nest_rvars</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nest and unnest <code>rvar</code> columns in data frames</h2>
+
+<h3>Description</h3>
+
+<p>Converts between data-frame-of-<code>rvar</code>s format and long-data-frame-of-draws
+formats by nesting or unnesting all columns containing <code>posterior::rvar</code>
+objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nest_rvars(data)
+
+unnest_rvars(data)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame to nest or unnest.
+</p>
+
+<ul>
+<li>
+<p> For <code>nest_rvars()</code>, the data frame should be in long-data-frame-of-draws
+format; i.e. it should contain a <code>.draw</code> column (and optionally <code>.chain</code>
+and <code>.iteration</code> columns) indexing draws. It should be a grouped by any
+columns that are not intended to be nested.
+</p>
+</li>
+<li>
+<p> For <code>unnest_rvars()</code>, the data frame should have at least one column that
+is an <code>rvar</code>; all <code>rvar</code> columns will be unnested.
+</p>
+</li>
+</ul>
+</td>
+</tr></table>
+<h3>Value</h3>
+
+<p>For <code>nest_rvars()</code>, returns a data frame without <code>.chain</code>, <code>.iteration</code>, and
+<code>.draw</code> columns, where all non-grouped columns have been converted to <code>rvar</code>s.
+</p>
+<p>For <code>unnest_rvars()</code>, returns a data frame with <code>.chain</code>, <code>.iteration</code>, and
+<code>.draw</code> columns added, where every <code>rvar</code> column in the input has been
+converted to (one or more) columns containing draws from those <code>rvar</code>s
+in long format. The result is grouped by all non-<code>rvar</code> columns in the
+input; this ensures that <code>nest_rvars(unnest_rvars(x))</code> returns <code>x</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+
+data(RankCorr, package = "ggdist")
+
+# here's a data frame with some rvars
+rvar_df = RankCorr %&gt;%
+  spread_rvars(b[i,], tau[i])
+rvar_df
+
+# we can unnest it into long format.
+# note how the result is grouped by all non-rvar input columns,
+# and nested indices in `b` are converted into columns.
+draws_df = rvar_df %&gt;%
+  unnest_rvars()
+draws_df
+
+# calling nest_rvars() again on the result of unnest_rvars()
+# recovers the original data frame
+nest_rvars(draws_df)
+
+</code></pre>
+
+
+</div>

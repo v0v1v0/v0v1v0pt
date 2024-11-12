@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>computeVPB</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A Vector Summary of the Persistence Block</h2>
+
+<h3>Description</h3>
+
+<p>For a given persistence diagram <code class="reqn">D=\{(b_i,p_i)\}_{i=1}^N</code>, <code>computeVPB()</code> vectorizes the persistence block </p>
+<p style="text-align: center;"><code class="reqn">f(x,y)=\sum_{i=1}^N \bold 1_{E(b_i,p_i)}(x,y),</code>
+</p>
+<p> where <code class="reqn">E(b_i,p_i)=[b_i-\frac{\lambda_i}{2},b_i+\frac{\lambda_i}{2}]\times [p_i-\frac{\lambda_i}{2},p_i+\frac{\lambda_i}{2}]</code> and <code class="reqn">\lambda_i=2\tau p_i</code> with <code class="reqn">\tau\in (0,1]</code>. Points of <code class="reqn">D</code> with infinite persistence value are ignored
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">computeVPB(D, homDim, xSeq, ySeq, tau)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+<p>matrix with three columns containing the dimension, birth and persistence values respectively</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>homDim</code></td>
+<td>
+<p>homological dimension (0 for <code class="reqn">H_0</code>, 1 for <code class="reqn">H_1</code>, etc.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xSeq</code></td>
+<td>
+<p>numeric vector of increasing x (birth) values used for vectorization</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ySeq</code></td>
+<td>
+<p>numeric vector of increasing y (persistence) values used for vectorization</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>parameter (between 0 and 1) controlling block size. By default, <code>tau=0.3</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A numeric vector whose elements are the weighted averages of the persistence block computed over each cell of the two-dimensional grid constructred from <code>xSeq</code>=<code class="reqn">\{x_1,x_2,\ldots,x_n\}</code> and <code>ySeq</code>=<code class="reqn">\{y_1,y_2,\ldots,y_m\}</code>:
+</p>
+<p style="text-align: center;"><code class="reqn">\Big(\frac{1}{\Delta x_1\Delta y_1}\int_{[x_1,x_2]\times [y_1,y_2]}f(x,y)wdA,\ldots,\frac{1}{\Delta x_{n-1}\Delta y_{m-1}}\int_{[x_{n-1},x_n]\times [y_{m-1},y_m]}f(x,y)wdA\Big),</code>
+</p>
+
+<p>where <code class="reqn">wdA=(x+y)dxdy</code>, <code class="reqn">\Delta x_k=x_{k+1}-x_k</code> and <code class="reqn">\Delta y_j=y_{j+1}-y_j</code>
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Umar Islambekov, Aleksei Luchinsky</p>
+
+
+<h3>References</h3>
+
+<p>1. Chan, K. C., Islambekov, U., Luchinsky, A., &amp; Sanders, R. (2022). A computationally efficient framework for vector representation of persistence diagrams. Journal of Machine Learning Research 23, 1-33.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">N &lt;- 100 
+set.seed(123)
+# sample N points uniformly from unit circle and add Gaussian noise
+X &lt;- TDA::circleUnif(N,r=1) + rnorm(2*N,mean = 0,sd = 0.2)
+
+# compute a persistence diagram using the Rips filtration built on top of X
+D &lt;- TDA::ripsDiag(X,maxdimension = 1,maxscale = 2)$diagram 
+
+# switch from the birth-death to the birth-persistence coordinates
+D[,3] &lt;- D[,3] - D[,2] 
+colnames(D)[3] &lt;- "Persistence"
+
+# construct one-dimensional grid of scale values
+ySeqH0 &lt;- unique(quantile(D[D[,1]==0,3],probs = seq(0,1,by=0.2))) 
+tau &lt;- 0.3 # parameter in [0,1] which controls the size of blocks around each point of the diagram 
+# compute VPB for homological dimension H_0
+computeVPB(D,homDim = 0,xSeq=NA,ySeqH0,tau)
+
+xSeqH1 &lt;- unique(quantile(D[D[,1]==1,2],probs = seq(0,1,by=0.2)))
+ySeqH1 &lt;- unique(quantile(D[D[,1]==1,3],probs = seq(0,1,by=0.2)))
+# compute VPB for homological dimension H_1
+computeVPB(D,homDim = 1,xSeqH1,ySeqH1,tau) 
+</code></pre>
+
+
+</div>

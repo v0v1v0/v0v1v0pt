@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tess.pathSampling</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tess.pathSampling: Marginal likelihood estimation via Path-Sampling.</h2>
+
+<h3>Description</h3>
+
+<p>tess.pathSampling uses a power posterior series and path-sampling to estimate the marginal likelihood of a model. This is a very general implementation of this algorithm which can be applied basically to any model. More information can be obtained in the vignette about how to apply this method.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tess.pathSampling(likelihoodFunction,priorFunction,parameters,logTransforms,
+                           iterations,burnin=round(iterations/3),K=50)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>likelihoodFunction</code></td>
+<td>
+<p>The log-likelihood function which will be called internally by likelihoodFunction(parameters).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorFunction</code></td>
+<td>
+<p>A list of functions of the log-prior-densities of each parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>The initial parameter value list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logTransforms</code></td>
+<td>
+<p>A vector of booleans telling if log-transform for the parameters should be used (e.g. for rates).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>The number of iterations for the MCMC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>The number of iterations to burn before starting the MCMC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The number of stepping stones.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns the posterior samples for the parameters.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sebastian Hoehna</p>
+
+
+<h3>References</h3>
+
+<p>Lartillot, N. and Philippe, H., 2006: Computing Bayes factors using thermodynamic integration. Systematic Biology, 55, 195
+</p>
+<p>Baele et al., 2012: Improving the accuracy of demographic and molecular clock model comparison while accommodating phylogenetic uncertainty
+</p>
+<p>Baele et al., 2013: Accurate Model Selection of Relaxed Molecular Clocks in Bayesian Phylogenetics 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load a test data set
+data(cettiidae)
+# convert the phylogeny into the branching times
+times &lt;- as.numeric( branching.times(cettiidae) )
+
+# construct a likelihood function taking in a vector of parameters
+likelihood &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  lnl &lt;- tess.likelihood(times,b,d,samplingProbability=1.0,log=TRUE)
+  return (lnl)
+}
+
+# next, create the prior density functions
+prior_diversification &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+prior_turnover &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+priors &lt;- c(prior_diversification,prior_turnover)
+
+# Note, the number of iterations, the burnin
+# and the number of stepping stones is too small here
+# and should be adapted for real analyses
+marginalLikelihood &lt;- tess.pathSampling( likelihood,
+						  priors,
+						  runif(2,0,1),
+						  c(TRUE,TRUE),
+						  10,
+						  10,
+						  K=4)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,153 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_lbfgs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>LBFGS optimizer</h2>
+
+<h3>Description</h3>
+
+<p>Implements L-BFGS algorithm, heavily inspired by
+<a href="https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html">minFunc</a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_lbfgs(
+  params,
+  lr = 1,
+  max_iter = 20,
+  max_eval = NULL,
+  tolerance_grad = 1e-07,
+  tolerance_change = 1e-09,
+  history_size = 100,
+  line_search_fn = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>(iterable): iterable of parameters to optimize or dicts defining
+parameter groups</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>(float): learning rate (default: 1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_iter</code></td>
+<td>
+<p>(int): maximal number of iterations per optimization step
+(default: 20)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_eval</code></td>
+<td>
+<p>(int): maximal number of function evaluations per optimization
+step (default: max_iter * 1.25).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolerance_grad</code></td>
+<td>
+<p>(float): termination tolerance on first order optimality
+(default: 1e-5).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolerance_change</code></td>
+<td>
+<p>(float): termination tolerance on function
+value/parameter changes (default: 1e-9).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>history_size</code></td>
+<td>
+<p>(int): update history size (default: 100).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>line_search_fn</code></td>
+<td>
+<p>(str): either 'strong_wolfe' or None (default: None).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This optimizer is different from the others in that in <code>optimizer$step()</code>,
+it needs to be passed a closure that (1) calculates the loss, (2) calls
+<code>backward()</code> on it, and (3) returns it. See example below.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>This optimizer doesn't support per-parameter options and parameter
+groups (there can be only one).
+</p>
+<p>Right now all parameters have to be on a single device. This will be
+improved in the future.
+</p>
+<p>If you need to move a model to GPU via <code style="white-space: pre;">⁠$cuda()⁠</code>, please do so before
+constructing optimizers for it. Parameters of a model after <code style="white-space: pre;">⁠$cuda()⁠</code>
+will be different objects from those before the call. In general, you
+should make sure that the objects pointed to by model parameters subject
+to optimization remain the same over the whole lifecycle of optimizer
+creation and usage.
+</p>
+
+
+<h3>Note</h3>
+
+<p>This is a very memory intensive optimizer (it requires additional
+<code>param_bytes * (history_size + 1)</code> bytes). If it doesn't fit in memory
+try reducing the history size, or use a different algorithm.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+a &lt;- 1
+b &lt;- 5
+rosenbrock &lt;- function(x) {
+  x1 &lt;- x[1]
+  x2 &lt;- x[2]
+  (a - x1)^2 + b * (x2 - x1^2)^2
+}
+ 
+x &lt;- torch_tensor(c(-1, 1), requires_grad = TRUE)
+
+optimizer &lt;- optim_lbfgs(x)
+calc_loss &lt;- function() {
+  optimizer$zero_grad()
+  value &lt;- rosenbrock(x)
+  value$backward()
+  value
+}
+  
+num_iterations &lt;- 2
+for (i in 1:num_iterations) {
+  optimizer$step(calc_loss)
+}
+    
+rosenbrock(x)
+
+}
+</code></pre>
+
+
+</div>

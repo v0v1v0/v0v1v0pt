@@ -1,0 +1,238 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trtsel</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>create a trtsel object</h2>
+
+<h3>Description</h3>
+
+<p>Creates an object of class "trtsel" given a data.frame containing marker,
+treatment, and adverse event status information.  The functions "plot.trtsel",
+"evaluate.trtsel", and "calibrate.trtsel" can then be used to plot risk and treatment
+effect curves, estimate summary measures, and check model calibration. The
+function "compare.trtsel" can also be used to compare two treatment selection
+markers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trtsel(formula, treatment.name, data, fittedrisk.t0 = NULL,
+  fittedrisk.t1 = NULL, thresh = 0, prediction.time = NULL,
+  study.design = c("RCT", "nested case-control",
+  "stratified nested case-control"), cohort.attributes = NULL, family,
+  default.trt = c("trt all", "trt none"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a 'formula' object consisting of outcome ~ markers and marker by treatment interactions for
+the treatment selection model to be evaluated. The outcome can be continuous, binary or a
+'Surv' object for time-to-event outcomes. Binary variable should equal 1 for cases and 0 for controls. For continuous outcomes, we assume that larger values are associated with worse outcomes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment.name</code></td>
+<td>
+<p>Name of the treatment variable in data.frame "data". The treatment variable must be coded 1 for
+"treated" and 0 for "un-treated."</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame object used to fit and evaluate the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fittedrisk.t0</code></td>
+<td>
+<p>Instead of providing a marker, fitted risks for T=0 and
+T=1 may be provided. This should be the column name of the fitted risk for
+T=0 that can be found in 'data'. If fitted risks are provided, a model will
+not be fit, and all bootstrap confidence intervals will be conditional on
+the model fit provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fittedrisk.t1</code></td>
+<td>
+<p>Name of for the fitted risks given treatment = 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thresh</code></td>
+<td>
+<p>The treatment effect threshold used to define the treatment
+rule: Do not treat if the marker-specific treatment effect is less than
+"thresh". This is a numeric constant with a default value of 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prediction.time</code></td>
+<td>
+<p>a landmark prediction time used only when the outcome is a time-to-event Surv object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>study.design</code></td>
+<td>
+<p>Character string indicating the study design used to
+collect the data. The three options are "RCT" (default),
+"nested case-control", or "stratified nested case-control".  A "RCT" design is simply a randomized trial comparing T = 0 to T = 1 with
+the marker measured at baseline.  A nested case-control or stratified nested
+case-control study samples cases and controls for marker measurement,
+perhaps stratified on treatment assignment, from a randomized trial
+comparing T = 0 to T = 1.  See Janes et al. (2013) for a full description of
+these designs.
+</p>
+<p>If a "nested case-control" or "stratified nested case-control" design is
+specified, "cohort.attributes"" must be provided (see below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cohort.attributes</code></td>
+<td>
+<p>If a "nested case-control" or "stratified nested
+case-control" design is specified, "cohort.attributes" must be provided.
+Order does matter.
+</p>
+<p>For the "nested case-control" design, specify the following attributes of
+the randomized trial "cohort" from which the case-control sample was
+selected: <br><br> cohort.attributes = c(cohort sample size, <br> proportion
+treated in cohort (Pr(trt==1)), <br> adverse event prevalance in cohort
+(Pr(event==1)), <br> fraction of cases sampled from cohort) <br><br></p>
+<p>For the "stratitified nested case-control" design, specify the following
+attributes of the randomized trial "cohort" from which the stratified
+case-control sample was selected: <br><br> cohort.attributes = c(cohort
+sample size, <br> Pr(trt==0 &amp; event==0) in cohort, <br> Pr(trt==0 &amp; event==1)
+in cohort, <br> Pr(trt==1 &amp; event==0) in cohort, <br> fraction of cases with
+trt == 0 sampled from cohort, <br> fraction of cases with trt == 1 sampled
+from cohort )<br><br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>function passed to 'glm' describing the error distribution and link 
+function to be used in the model. Defaults to binomial(link = "logit") when the outcome is
+numeric with two values 0,1 and gaussian(link = "identity") otherwise.
+Ignored for time-to-event outcomes.
+For non RCT study designs, methods only exist for family = binomial(link = "logit").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default.trt</code></td>
+<td>
+<p>The default treatment assignment to compare with
+marker-based treatment. Can either be set at "trt all" (default) or "trt
+none". Use "trt all" if everyone is treated and the aim is to discover those
+who would benefit from no treatment, but use "trt none" if the common
+practice is to treat no-one and the goal is to discover those who would
+benefit from treatment.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class "trtsel," which is a list containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>model.fit </code></td>
+<td>
+<p> A list containing "coefficients" – a 4 x 4 matrix with
+columns for coefficient estimates, standard errors, t-statistics, and
+two-sided p-values.  "cohort.attributes" – the vector of cohort.attributes
+provided "study.design" – character string of study.design provided </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>derived.data </code></td>
+<td>
+<p> A data.frame with event, trt, and marker information along with
+"fittedrisk.t0" (risk estimates given no treatment), "fittedrisk.t1" (risk
+estimates given treatment), "trt.effect" (treatment effect estimates), and
+"trt.rec" (indicator of trt recommendation) columns.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>functions</code></td>
+<td>
+<p> For internal package use only </p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Janes, Holly; Brown, Marshall D; Pepe, Margaret; Huang, Ying;
+"An Approach to Evaluating and Comparing Biomarkers for Patient Treatment
+Selection" The International Journal of Biostatistics. Volume 0, Issue 0,
+ISSN (Online) 1557-4679, ISSN (Print) 2194-573X, DOI: 10.1515/ijb-2012-0052,
+April 2014
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.trtsel</code> for plotting risk curves and more,
+<code>evaluate.trtsel</code> for evaluating marker performance,
+<code>calibrate.trtsel</code> for assessing model calibration, and
+<code>compare.trtsel</code> to compare two trtsel object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+data(tsdata)
+
+###########################
+## Create trtsel objects 
+###########################
+
+trtsel.Y1 &lt;- trtsel(event ~ Y1*trt, 
+                   treatment.name = "trt", 
+                   data = tsdata, 
+                   study.design = "RCT",
+                   family = binomial("logit"), 
+                   default.trt = "trt all")
+
+trtsel.Y1
+
+trtsel.Y2 &lt;- trtsel(event ~ Y2*trt, 
+                   treatment.name = "trt", 
+                   data = tsdata, 
+                   default.trt = "trt all")
+trtsel.Y2
+
+
+# calculate fitted risks using a logistic model 
+#(one can use any model here, the point is that the fitted risks are provided )
+mymod &lt;- glm(event~trt*Y2, data= tsdata, family = binomial("logit"))
+
+tsdata$fitted.t0 &lt;- predict(mymod, newdata=data.frame(trt = 0, Y2 = tsdata$Y2), type = "response")
+tsdata$fitted.t1 &lt;- predict(mymod, newdata=data.frame(trt = 1, Y2 = tsdata$Y2), type = "response")
+
+#all bootstrapping done using this object will be conditional on the model fit. 
+
+myfitted.trtsel &lt;- trtsel( event~trt, treatment.name = "trt", 
+                           data = tsdata,
+                           fittedrisk.t0 = "fitted.t0",
+                           fittedrisk.t1 = "fitted.t1",
+                           default.trt = "trt all")
+
+
+
+</code></pre>
+
+
+</div>

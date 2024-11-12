@@ -1,0 +1,239 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_tf</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Term frequency of Tokens</h2>
+
+<h3>Description</h3>
+
+<p><code>step_tf()</code> creates a <em>specification</em> of a recipe step that will convert a
+<code>token</code> variable into multiple variables containing the token
+counts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_tf(
+  recipe,
+  ...,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  weight_scheme = "raw count",
+  weight = 0.5,
+  vocabulary = NULL,
+  res = NULL,
+  prefix = "tf",
+  keep_original_cols = FALSE,
+  skip = FALSE,
+  id = rand_id("tf")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>recipes::selections()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new columns created by the original variables will be
+used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument. This is <code>NULL</code>
+until the step is trained by <code>recipes::prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_scheme</code></td>
+<td>
+<p>A character determining the weighting scheme for the
+term frequency calculations. Must be one of "binary", "raw count", "term
+frequency", "log normalization" or "double normalization". Defaults to "raw
+count".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>A numeric weight used if <code>weight_scheme</code> is set to "double
+normalization". Defaults to 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vocabulary</code></td>
+<td>
+<p>A character vector of strings to be considered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res</code></td>
+<td>
+<p>The words that will be used to calculate the term frequency will
+be stored here once this preprocessing step has be trained by
+<code>prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A character string that will be the prefix to the
+resulting new variables. See notes below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_original_cols</code></td>
+<td>
+<p>A logical to keep the original variables in the
+output. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>recipes::bake.recipe()</code>? While all operations are baked
+when <code>recipes::prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is strongly advised to use step_tokenfilter before using step_tf to
+limit the number of variables created, otherwise you might run into memory
+issues. A good strategy is to start with a low token count and go up
+according to how much RAM you want to use.
+</p>
+<p>Term frequency is a weight of how many times each token appear in each
+observation. There are different ways to calculate the weight and this step
+can do it in a couple of ways. Setting the argument <code>weight_scheme</code> to
+"binary" will result in a set of binary variables denoting if a token is
+present in the observation. "raw count" will count the times a token is
+present in the observation. "term frequency" will divide the count with the
+total number of words in the document to limit the effect of the document
+length as longer documents tends to have the word present more times but not
+necessarily at a higher percentage. "log normalization" takes the log of 1
+plus the count, adding 1 is done to avoid taking log of 0. Finally "double
+normalization" is the raw frequency divided by the raw frequency of the most
+occurring term in the document. This is then multiplied by <code>weight</code> and
+<code>weight</code> is added to the result. This is again done to prevent a bias towards
+longer documents.
+</p>
+<p>The new components will have names that begin with <code>prefix</code>, then
+the name of the variable, followed by the tokens all separated by
+<code>-</code>. The variable names are padded with zeros. For example if
+<code>prefix = "hash"</code>, and if <code>num_terms &lt; 10</code>, their names will be
+<code>hash1</code> - <code>hash9</code>. If <code>num_terms = 101</code>, their names will be
+<code>hash001</code> - <code>hash101</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step added
+to the sequence of existing steps (if any).
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) and <code>value</code> (the weighting scheme).
+</p>
+
+
+<h3>Tuning Parameters</h3>
+
+<p>This step has 2 tuning parameters:
+</p>
+
+<ul>
+<li> <p><code>weight_scheme</code>: Term Frequency Weight Method (type: character, default: raw count)
+</p>
+</li>
+<li> <p><code>weight</code>: Weight (type: double, default: 0.5)
+</p>
+</li>
+</ul>
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>step_tokenize()</code> to turn characters into <code>tokens</code>
+</p>
+<p>Other Steps for Numeric Variables From Tokens: 
+<code>step_lda()</code>,
+<code>step_texthash()</code>,
+<code>step_tfidf()</code>,
+<code>step_word_embeddings()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(recipes)
+library(modeldata)
+data(tate_text)
+
+tate_rec &lt;- recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium) %&gt;%
+  step_tf(medium)
+
+tate_obj &lt;- tate_rec %&gt;%
+  prep()
+
+bake(tate_obj, tate_text)
+
+tidy(tate_rec, number = 2)
+tidy(tate_obj, number = 2)
+
+
+</code></pre>
+
+
+</div>

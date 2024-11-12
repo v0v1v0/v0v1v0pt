@@ -1,0 +1,190 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.tidylda</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get predictions from a Latent Dirichlet Allocation model</h2>
+
+<h3>Description</h3>
+
+<p>Obtains predictions of topics for new documents from a fitted LDA model
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tidylda'
+predict(
+  object,
+  new_data,
+  type = c("prob", "class", "distribution"),
+  method = c("gibbs", "dot"),
+  iterations = NULL,
+  burnin = -1,
+  no_common_tokens = c("default", "zero", "uniform"),
+  times = 100,
+  threads = 1,
+  verbose = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>a fitted object of class <code>tidylda</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>new_data</code></td>
+<td>
+<p>a DTM or TCM of class <code>dgCMatrix</code> or a numeric vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>one of "prob", "class", or "distribution". Defaults to "prob".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>one of either "gibbs" or "dot". If "gibbs" Gibbs sampling is used
+and <code>iterations</code> must be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>If <code>method = "gibbs"</code>, an integer number of iterations
+for the Gibbs sampler to run. A future version may include automatic stopping criteria.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>If <code>method = "gibbs"</code>, an integer number of burnin iterations.
+If <code>burnin</code> is greater than -1, the entries of the resulting "theta" matrix
+are an average over all iterations greater than <code>burnin</code>.
+Behavior is the same as documented in <code>tidylda</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>no_common_tokens</code></td>
+<td>
+<p>behavior when encountering documents that have no tokens
+in common with the model. Options are "<code>default</code>", "<code>zero</code>",
+or "<code>uniform</code>". See 'details', below for explanation of behavior.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>Integer, number of samples to draw if <code>type = "distribution"</code>.
+Ignored if <code>type</code> is "class" or "prob". Defaults to 100.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>Number of parallel threads, defaults to 1. Note: currently
+ignored; only single-threaded prediction is implemented.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical. Do you want to print a progress bar out to the console?
+Only active if <code>method = "gibbs"</code>. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments, currently unused</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>predict.tidylda</code> encounters documents that have no tokens in common
+with the model in <code>object</code> it will engage in one of three behaviors based
+on the setting of <code>no_common_tokens</code>.
+</p>
+<p><code>default</code> (the default) sets all topics to 0 for offending documents. This 
+enables continued computations downstream in a way that <code>NA</code> would not.
+However, if <code>no_common_tokens == "default"</code>, then <code>predict.tidylda</code>
+will emit a warning for every such document it encounters.
+</p>
+<p><code>zero</code> has the same behavior as <code>default</code> but it emits a message
+instead of a warning.
+</p>
+<p><code>uniform</code> sets all topics to 1/k for every topic for offending documents.
+it does not emit a warning or message.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>type</code> gives different outputs depending on whether the user selects
+"prob", "class", or "distribution". If "prob", the default, returns a
+a "theta" matrix with one row per document and one column per topic. If
+"class", returns a vector with the topic index of the most likely topic in
+each document. If "distribution", returns a tibble with one row per
+parameter per sample. Number of samples is set by the <code>times</code> argument.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# load some data
+data(nih_sample_dtm)
+
+# fit a model
+set.seed(12345)
+
+m &lt;- tidylda(
+  data = nih_sample_dtm[1:20, ], k = 5,
+  iterations = 200, burnin = 175
+)
+
+str(m)
+
+# predict on held-out documents using gibbs sampling "fold in"
+p1 &lt;- predict(m, nih_sample_dtm[21:100, ],
+  method = "gibbs",
+  iterations = 200, burnin = 175
+)
+
+# predict on held-out documents using the dot product
+p2 &lt;- predict(m, nih_sample_dtm[21:100, ], method = "dot")
+
+# compare the methods
+barplot(rbind(p1[1, ], p2[1, ]), beside = TRUE, col = c("red", "blue"))
+
+# predict classes on held out documents
+p3 &lt;- predict(m, nih_sample_dtm[21:100, ],
+  method = "gibbs",
+  type = "class",
+  iterations = 100, burnin = 75
+)
+
+# predict distribution on held out documents
+p4 &lt;- predict(m, nih_sample_dtm[21:100, ],
+  method = "gibbs",
+  type = "distribution",
+  iterations = 100, burnin = 75,
+  times = 10
+)
+
+</code></pre>
+
+
+</div>

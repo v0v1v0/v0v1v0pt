@@ -1,0 +1,493 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Count Time Series Following Generalised Linear Models
+</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>tsglm</code> fits a generalised linear model (GLM) for time series of counts.
+The specification of the linear predictor allows for regressing on past observations, past values of the linear predictor and covariates as defined in the Details section.
+There is the so-called INGARCH model with the identity link (see for example Ferland et al., 2006, Fokianos et al., 2009) and another model with the logarithmic link (see for example Fokianos and Tjostheim, 2011), which also differ in the specification of the linear predictor.
+The conditional distribution can be chosen to be either Poisson or negative binomial.
+</p>
+<p>Estimation is done by conditional maximum likelihood for the Poisson distribution or by a conditional quasi-likelihood approach based on the Poisson likelihood function for the negative binomial distribution.
+</p>
+<p>There is a vignette available which introduces the functionality of <code>tsglm</code> and related functions of this package and its underlying statistical methods (<code>vignette("tsglm", package="tscount")</code>).
+</p>
+<p>The function <code>tsglm.meanfit</code> is a lower level function to fit the mean specification of such a model assuming a Poisson distribution. It is called by <code>tsglm</code>. It has additional arguments allowing for a finer control of the fitting procedure, which can be handed over from the function <code>tsglm</code> by its <code>...</code> argument. Note that it is usually not necessary for a user to call this lower level functions nor to worry about the additional arguments provided by this function. The defaults of these arguments have been chosen wisely by the authors of this package and should perform well in most applications.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tsglm(ts, model = list(past_obs = NULL, past_mean = NULL,
+            external = NULL), xreg = NULL, link = c("identity", "log"),
+            distr = c("poisson", "nbinom"), ...)
+
+tsglm.meanfit(ts, model, xreg, link, score = TRUE,
+            info = c("score", "none", "hessian", "sandwich"),
+            init.method=c("marginal", "iid", "firstobs", "zero"),
+            init.drop = FALSE, epsilon = 1e-06, slackvar = 1e-06,
+            start.control = list(), final.control = list(),
+            inter.control = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts</code></td>
+<td>
+
+<p>a univariate time series.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+
+<p>a named list specifying the model for the linear predictor, which can be of the following elements:
+</p>
+  
+<dl>
+<dt><code>past_obs</code></dt>
+<dd>
+<p>integer vector giving the previous observations to be regressed on (autoregression). This is a vector with the elements <code class="reqn">i_1,\ldots,i_p</code> (see Details). If omitted, or of length zero, there will be no regression on previous observations.</p>
+</dd>    
+<dt><code>past_mean</code></dt>
+<dd>
+<p>integer vector giving the previous conditional means to be regressed on. This is a vector with the elements <code class="reqn">j_1,\ldots,j_q</code> (see Details). If omitted, or of length zero, there will be no regression on previous conditional means.</p>
+</dd> 
+<dt><code>external</code></dt>
+<dd>
+<p>logical vector of length <code>ncol(xreg)</code> specifying for each covariate wether its effect should be external or not (see Details). If this is a scalar this choice will be used for all covariates. If omitted, all covariates will have an internal effect (i.e. <code>external=FALSE</code>).</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+
+<p>matrix with covariates in the columns, i.e. its number of rows must be <code>length(ts)</code>. This is the matrix <code class="reqn">X</code> (see Details). If omitted no covariates will be included. For the identity link the covariates have to be non-negative.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link</code></td>
+<td>
+
+<p>character giving the link function. Default is <code>"identity"</code>, fitting an INGARCH model. Another possible choice is <code>"log"</code>, fitting a log-linear model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+
+<p>character giving the conditional distribution. Default is <code>"poisson"</code>, i.e. a Poisson distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>additional arguments to be passed to the lower level fitting function <code>tsglm.meanfit</code>. See below.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>score</code></td>
+<td>
+
+<p>logical value indicating whether the score vector should be computed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+
+<p>character that determines if and how to compute the information matrix. Can be set to <code>"score"</code> (the default) for calculation via the outer product of the score vector, or to <code>"hessian"</code> for calculation via the Hessian matrix of second derivatives. For <code>info="sandwich"</code> the information matrix is estimated by a sandwich formula using both the outer score product and the Hessian matrix. If set to <code>"none"</code>, no information matrix is computed. For <code>distr="nbinom"</code> one can only use <code>info="score"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.method</code></td>
+<td>
+
+<p>character that determines how the recursion of the conditional mean (and possibly of its derivatives) is initialised. If set to <code>"marginal"</code> (the default), the marginal mean of a model without covariates and its derivatives are used. If set to <code>"iid"</code>, all values are initialised by the marginal mean under the assumption of i.i.d. data, which depends on the intercept only. If set to <code>"firstobs"</code> the first obersvation is used. If set to <code>"zero"</code>, the recursions are initialised by the value zero.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.drop</code></td>
+<td>
+
+<p>logical value that determines which observations are considered for computation of the log-likelihood, the score vector and, if applicable, the information matrix. If <code>TRUE</code>, the first <code>max(model$past_obs)</code> observations, which are needed for the autoregression, are not considered. If <code>FALSE</code> (the default), all observations are considered and pre-sample values determined by the method specified by the argument <code>itit.method</code> are used for the autoregression. Note that in the first case the effective number of observations used for maximum likelihood estimation is lower than the total number of observations of the original time series. Consequently only this lower number of observations is considered in the output. Note that for <code>init.drop=TRUE</code> the log-likelihood function for models of different orders might not be comparable if the effective number of observations is different.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>epsilon</code></td>
+<td>
+
+<p>numeric positive but small value determining how close the parameters may come to the limits of the parameter space.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>slackvar</code></td>
+<td>
+
+<p>numeric positive but small value determining how true inequalities among the parameter restrictions are treated; a true inequality <code>x &lt; y</code> will be transformed to <code>x + slackvar &lt;= y</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.control</code></td>
+<td>
+
+<p>named list with optional elements that determine how to make the start estimation. Possible list elements are:
+</p>
+  
+<dl>
+<dt><code>use</code></dt>
+<dd>
+<p>integer vector of length one or two giving the number of observations from the beginning (if of length one) or the range of observations (if of length two) used for start estimation. For <code>use = Inf</code> all observations are used, which is the default.</p>
+</dd>
+<dt><code>method</code></dt>
+<dd>
+<p>character specifying how start estimators should be estimated. Possible values are <code>"iid"</code>, <code>"CSS"</code>, <code>"CSS-ML"</code>, <code>"ML"</code>, <code>"MM"</code>, <code>"GLM"</code> and <code>"fixed"</code>. 
+If <code>method</code> is <code>"iid"</code> (the default), a moment estimator assuming an iid model without covariates is used.
+If <code>method="MM"</code>, the start estimate is an ARMA(1,1) fit by moment estimators and parameters of higher order than one are set to zero. For this method the starting parameter values for the covariates are zero by default and can be set by the list element <code>xreg</code>.
+If <code>method</code> is <code>"CSS"</code>, <code>"CSS-ML"</code> or <code>"ML"</code>, the start estimate is based on an ARMA fit using the function <code>arima</code>, and list element <code>method</code> is passed to its argument of the same name.  
+If <code>method="GLM"</code>, the estimated parameters of a generalised linear model with regression on the specified past observations and covariates, but not on past conditional means, are used as start estimates. Initial estimates for the coefficients of past conditional means are set to zero.
+If <code>method="fixed"</code>, parameters given in further named list elements of <code>start.control</code> are used when available, else the predefined values given in the following are used.</p>
+</dd>
+<dt><code>intercept</code></dt>
+<dd>
+<p>numeric value with the start value for the intercept parameter. Default value is 1.</p>
+</dd>
+<dt><code>past_obs</code></dt>
+<dd>
+<p>numeric vector with the start values for parameters for regression on previous observations. Default values are zero.</p>
+</dd>
+<dt><code>past_mean</code></dt>
+<dd>
+<p>numeric vector with the start values for parameters for regression on previous conditional means. Default values are zero.</p>
+</dd>
+<dt><code>xreg</code></dt>
+<dd>
+<p>numeric vector with the start values for the regression parameters. These values will also be used if <code>method="MM"</code>. Default values are zero.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final.control</code></td>
+<td>
+
+<p>named list with optional elements that determine how to make the final maximum likelihood estimation. If <code>final.control=NULL</code>, only start estimates are computed and a list with fewer elements which has not the class <code>"tsglm"</code> is returned. Possible list elements of this argument are:
+</p>
+  
+<dl>
+<dt><code>constrained</code></dt>
+<dd>
+<p>named list whose elements are passed to function <code>constrOptim</code> with possible elements <code>mu</code>, <code>outer.iterations</code> and <code>outer.eps</code> (see <code>constrOptim</code> for details). If <code>constrained=NULL</code>, an unconstrained optimisation is made with function <code>optim</code>. Note that this is likely to result in a fitted model which is non-stationary, which might cause further problems.</p>
+</dd>
+<dt><code>optim.method</code></dt>
+<dd>
+<p>character which is passed to functions <code>constrOptim</code> or <code>optim</code> as argument <code>method</code>. The default is <code>"BFGS"</code>.</p>
+</dd>
+<dt><code>optim.control</code></dt>
+<dd>
+<p>named list which is passed to function <code>constrOptim</code> or <code>optim</code> as the argument <code>control</code>. Must not contain the list element <code>fnscale</code>. The default is <code>list(maxit=20, reltol=1e-8)</code>.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inter.control</code></td>
+<td>
+
+<p>named list determining how to maximise the log-likelihood function in a first step. This intermediate optimisation will start from the start estimation and be followed by the final optimisation, which will in turn start from the intermediate optimisation result. This intermediate optimisation is intended to use a very quick but imprecise optimisation algorithm. Possible elements are the same as for <code>final.control</code>. The default is <code>inter.control=NULL</code>, which skips this intermediate optimisation step. 
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The INGARCH model (argument <code>link="identity"</code>) used here follows the definition
+</p>
+<p style="text-align: center;"><code class="reqn">Z_{t}|{\cal{F}}_{t-1} \sim \mathrm{Poi}(\nu_{t}) \quad \mathrm{or} \quad Z_{t}|{\cal{F}}_{t-1} \sim \mathrm{NegBin}(\nu_{t}, \phi),</code>
+</p>
+
+<p>where <code class="reqn">{\cal{F}}_{t-1}</code> denotes the history of the process up to time <code class="reqn">t-1</code>, <code class="reqn">\mathrm{Poi}</code> and <code class="reqn">\mathrm{NegBin}</code> is the Poisson respectively the negative binomial distribution with the parametrisation as specified below.
+For the model with covariates having an internal effect (the default) the linear predictor of the INGARCH model (which is in that case identical to the conditional mean) is given by
+</p>
+<p style="text-align: center;"><code class="reqn">\nu_t = \beta_0 + \beta_1 Z_{t-i_1} + \ldots + \beta_p Z_{t-i_p}
+    + \alpha_1 \nu_{t-j_1} + \ldots  + \alpha_q \nu_{t-j_q}
+    + \eta_1 X_{t,1} + \ldots + \eta_r X_{t,r}.</code>
+</p>
+
+<p>The log-linear model (argument <code>link="log"</code>) used here follows the definition
+</p>
+<p style="text-align: center;"><code class="reqn">Z_{t}|{\cal{F}}_{t-1} \sim \mathrm{Poi}(\lambda_{t}) \quad \mathrm{or} \quad Z_{t}|{\cal{F}}_{t-1} \sim \mathrm{NegBin}(\lambda_{t}, \phi),</code>
+</p>
+
+<p>with <code class="reqn">\lambda_t = \exp(\nu_t)</code> and <code class="reqn">{\cal{F}}_{t-1}</code> as above.
+For the model with covariates having an internal effect (the default) the linear predictor <code class="reqn">\nu_t = \log(\lambda_t)</code> of the log-linear model is given by
+</p>
+<p style="text-align: center;"><code class="reqn">\nu_t = \beta_0 + \beta_1 \log(Z_{t-i_1}+1) + \ldots + \beta_p \log(Z_{t-i_p}+1)
+    + \alpha_1 \nu_{t-j_1} + \ldots  + \alpha_q \nu_{t-j_q}
+    + \eta_1 X_{t,1} + \ldots + \eta_r X_{t,r}.</code>
+</p>
+
+<p>Note that because of the logarithmic link function the effect of single summands in the linear predictor on the conditional mean is multiplicative and hence the parameters play a different role than in the INGARCH model, although they are denoted by the same letters.
+</p>
+<p>The Poisson distribution is parametrised by the mean <code>lambda</code> according to the definition in <code>Poisson</code>.
+The negative binomial distribution is parametrised by the mean <code>mu</code> with an additional dispersion parameter <code>size</code> according to the definition in <code>NegBinomial</code>. In the notation above its mean parameter <code>mu</code> is <code class="reqn">\nu_{t}</code> and its dispersion parameter <code>size</code> is <code class="reqn">\phi</code>.
+</p>
+<p>This function allows to include covariates in two different ways. A covariate can have a so-called internal effect as defined above, where its effect propagates via the regression on past values of the linear predictor and on past observations. Alternatively, it can have a so-called external effect, where its effect does not directly propagates via the feedback on past values of the linear predictor, but only via past observations.
+For external effects of the covariates, the linear predictor for the model with identity link is given by
+</p>
+<p style="text-align: center;"><code class="reqn">\nu_t = \mu_t + \eta_1 X_{t,1} + \ldots + \eta_r X_{t,r},</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\mu_t = \beta_0 + \beta_1 Z_{t-i_1} + \ldots + \beta_p Z_{t-i_p}
+    + \alpha_1 \mu{t-j_1} + \ldots  + \alpha_q \mu{t-j_q},</code>
+</p>
+ 
+<p>and analoguesly for the model with logarithmic link by
+</p>
+<p style="text-align: center;"><code class="reqn">\nu_t = \mu_t + \eta_1 X_{t,1} + \ldots + \eta_r X_{t,r},</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\mu_t = \beta_0 + \beta_1 \log(Z_{t-i_1}+1) + \ldots + \beta_p \log(Z_{t-i_p}+1)
+    + \alpha_1 \mu{t-j_1} + \ldots  + \alpha_q \mu{t-j_q}.</code>
+</p>
+ 
+<p>This is described in more detail by Liboschik et al. (2014) for the case of deterministic covariates for modelling interventions.
+It is also possible to model a combination of external and internal covariates, which can be defined straightforwardly by adding each covariate either to the linear predictor <code class="reqn">\nu_t</code> itself (for an internal effect) or to <code class="reqn">\mu_t</code> defined above (for an external effect).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>"tsglm"</code>, which is a list with at least the following elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>coefficients</code></td>
+<td>
+<p>a named vector of the maximum likelihood estimated coefficients, which can be extracted by the <code>coef</code> method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>a named vector of the start estimation for the coefficients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>a vector of residuals, which can be extracted by the <code>residuals</code> method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fitted.values</code></td>
+<td>
+<p>the fitted values, which can be extracted by the <code>fitted</code> method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linear.predictors</code></td>
+<td>
+<p>the linear fit on link scale.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response</code></td>
+<td>
+<p>a vector of the response values (this is usually the original time series but  possibly without the first few observations used for initialization if argument <code>init.drop=TRUE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logLik</code></td>
+<td>
+<p>the log-likelihood of the fitted model, which can be extracted by the <code>logLik</code> method. This is the complete log-likelihood including all constant terms. It is based on <code>n_eff</code> observations (see below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>score</code></td>
+<td>
+<p>the score vector at the maximum likelihood estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info.matrix</code></td>
+<td>
+<p>the information matrix at the maximum likelihood estimation assuming a Poisson distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info.matrix_corrected</code></td>
+<td>
+<p>the information matrix at the maximum likelihood estimation assuming the distribution specified in <code>distr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>the matched call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_obs</code></td>
+<td>
+<p>the number of observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_eff</code></td>
+<td>
+<p>the effective number of observations used for maximum likelihood estimation (might be lower than <code>n_obs</code> if argument <code>init.drop=TRUE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ts</code></td>
+<td>
+<p>the original time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>the model specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+<p>the given covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+<p>a character giving the fitted conditional distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distrcoefs</code></td>
+<td>
+<p>a named vector of the estimated additional coefficients specifying the conditional distribution. Is <code>NULL</code> in case of a Poisson distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigmasq</code></td>
+<td>
+<p>the estimated overdispersion coefficient. Is zero in case of a Poisson distribution.</p>
+</td>
+</tr>
+</table>
+<p>The function <code>tsglm.meanfit</code> has the same output except the elements <code>distr</code>, <code>distrcoefs</code> and <code>sigmasq</code>. In addition, they return the following list elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>inter</code></td>
+<td>
+<p>some details on the intermediate estimation of the coefficients as returned by <code>constrOptim</code> or <code>optim</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final</code></td>
+<td>
+<p>some details on the final estimation of the coefficients as returned by <code>constrOptim</code> or <code>optim</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>durations</code></td>
+<td>
+<p>named vector of the durations of the model fit (in seconds).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outerscoreprod</code></td>
+<td>
+<p>array of outer products of score vectors at each time point.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tobias Liboschik, Philipp Probst, Konstantinos Fokianos and Roland Fried
+</p>
+
+
+<h3>References</h3>
+
+<p>Christou, V. and Fokianos, K. (2014) Quasi-likelihood inference for negative binomial time series models. <em>Journal of Time Series Analysis</em> <b>35(1)</b>, 55–78, <a href="http://dx.doi.org/10.1002/jtsa.12050">http://dx.doi.org/10.1002/jtsa.12050</a>.
+</p>
+<p>Christou, V. and Fokianos, K. (2015) Estimation and testing linearity for non-linear mixed poisson autoregressions. <em>Electronic Journal of Statistics</em> <b>9</b>, 1357–1377, <a href="http://dx.doi.org/10.1214/15-EJS1044">http://dx.doi.org/10.1214/15-EJS1044</a>.
+</p>
+<p>Ferland, R., Latour, A. and Oraichi, D. (2006) Integer-valued GARCH process. <em>Journal of Time Series Analysis</em> <b>27(6)</b>, 923–942, <a href="http://dx.doi.org/10.1111/j.1467-9892.2006.00496.x">http://dx.doi.org/10.1111/j.1467-9892.2006.00496.x</a>.
+</p>
+<p>Fokianos, K. and Fried, R. (2010) Interventions in INGARCH processes. <em>Journal of Time Series Analysis</em> <b>31(3)</b>, 210–225, <a href="http://dx.doi.org/10.1111/j.1467-9892.2010.00657.x">http://dx.doi.org/10.1111/j.1467-9892.2010.00657.x</a>.
+</p>
+<p>Fokianos, K., and Fried, R. (2012) Interventions in log-linear Poisson autoregression. <em>Statistical Modelling</em> <b>12(4)</b>, 299–322. <a href="http://dx.doi.org/10.1177/1471082X1201200401">http://dx.doi.org/10.1177/1471082X1201200401</a>.
+</p>
+<p>Fokianos, K., Rahbek, A. and Tjostheim, D. (2009) Poisson autoregression. <em>Journal of the American Statistical Association</em> <b>104(488)</b>, 1430–1439, <a href="http://dx.doi.org/10.1198/jasa.2009.tm08270">http://dx.doi.org/10.1198/jasa.2009.tm08270</a>.
+</p>
+<p>Fokianos, K. and Tjostheim, D. (2011) Log-linear Poisson autoregression. <em>Journal of Multivariate Analysis</em> <b>102(3)</b>, 563–578, <a href="http://dx.doi.org/10.1016/j.jmva.2010.11.002">http://dx.doi.org/10.1016/j.jmva.2010.11.002</a>.
+</p>
+<p>Liboschik, T., Fokianos, K. and Fried, R. (2017) tscount: An R package for analysis of count time series following generalized linear models. <em>Journal of Statistical Software</em> <b>82(5)</b>, 1–51, <a href="http://dx.doi.org/10.18637/jss.v082.i05">http://dx.doi.org/10.18637/jss.v082.i05</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>S3 methods <code>print</code>, <code>summary</code>, <code>residuals</code>, <code>plot</code>, <code>fitted</code>, <code>coef</code>, <code>predict</code>, <code>logLik</code>, <code>vcov</code>, <code>AIC</code>, <code>BIC</code> and <code>QIC</code> for the class <code>"tsglm"</code>.
+The S3 method <code>se</code> computes the standard errors of the parameter estimates.
+Additionally, there are the S3 methods <code>pit</code>, <code>marcal</code> and <code>scoring</code> for predictive model assessment.
+</p>
+<p>S3 methods <code>interv_test</code>, <code>interv_detect</code> and <code>interv_multiple</code> for tests and detection procedures for intervention effects.
+<code>tsglm.sim</code> for simulation from GLM-type model for time series of counts. <code>ingarch.mean</code>, <code>ingarch.var</code> and <code>ingarch.acf</code> for calculation of analytical mean, variance and autocorrelation function of an INGARCH model (i.e. with identity link) without covariates.
+</p>
+<p>Example time series of counts are <code>campy</code>, <code>ecoli</code>, <code>ehec</code>, <code>influenza</code>, <code>measles</code> in this package, <code>polio</code> in package <code>gamlss.data</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###Campylobacter infections in Canada (see help("campy"))
+interventions &lt;- interv_covariate(n=length(campy), tau=c(84, 100),
+  delta=c(1, 0)) #detected by Fokianos and Fried (2010, 2012)
+#Linear link function with Negative Binomial distribution:
+campyfit &lt;- tsglm(campy, model=list(past_obs=1, past_mean=13),
+  xreg=interventions, distr="nbinom")
+campyfit
+plot(campyfit)
+
+###Road casualties in Great Britain (see help("Seatbelts"))
+timeseries &lt;- Seatbelts[, "VanKilled"]
+regressors &lt;- cbind(PetrolPrice=Seatbelts[, c("PetrolPrice")],
+                    linearTrend=seq(along=timeseries)/12)
+#Logarithmic link function with Poisson distribution:                    
+seatbeltsfit &lt;- tsglm(ts=timeseries, link="log",
+  model=list(past_obs=c(1, 12)), xreg=regressors, distr="poisson")
+summary(seatbeltsfit)
+</code></pre>
+
+
+</div>

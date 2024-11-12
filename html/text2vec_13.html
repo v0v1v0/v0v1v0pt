@@ -1,0 +1,143 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>create_tcm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Term-co-occurence matrix construction</h2>
+
+<h3>Description</h3>
+
+<p>This is a function for constructing a
+term-co-occurrence matrix(TCM). TCM matrix usually used with GloVe word embedding model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">create_tcm(it, vectorizer, skip_grams_window = 5L,
+  skip_grams_window_context = c("symmetric", "right", "left"),
+  weights = 1/seq_len(skip_grams_window), binary_cooccurence = FALSE,
+  ...)
+
+## S3 method for class 'itoken'
+create_tcm(it, vectorizer, skip_grams_window = 5L,
+  skip_grams_window_context = c("symmetric", "right", "left"),
+  weights = 1/seq_len(skip_grams_window), binary_cooccurence = FALSE,
+  ...)
+
+## S3 method for class 'itoken_parallel'
+create_tcm(it, vectorizer,
+  skip_grams_window = 5L, skip_grams_window_context = c("symmetric",
+  "right", "left"), weights = 1/seq_len(skip_grams_window),
+  binary_cooccurence = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>it</code></td>
+<td>
+<p><code>list</code> of iterators over tokens from itoken.
+Each element is a list of tokens, that is, tokenized and normalized
+strings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vectorizer</code></td>
+<td>
+<p><code>function</code> vectorizer function. See
+vectorizers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_grams_window</code></td>
+<td>
+<p><code>integer</code> window for term-co-occurence matrix
+construction. <code>skip_grams_window</code> should be &gt; 0 if you plan to use
+<code>vectorizer</code> in create_tcm function.
+Value of <code>0L</code> means to not construct the TCM.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_grams_window_context</code></td>
+<td>
+<p>one of <code>c("symmetric", "right", "left")</code> -
+which context words to use when count co-occurence statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights for context/distant words during co-occurence statistics calculation.
+By default we are setting <code>weight = 1 / distance_from_current_word</code>.
+Should have length equal to skip_grams_window.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>binary_cooccurence</code></td>
+<td>
+<p><code>FALSE</code> by default. If set to <code>TRUE</code> then function only counts first
+appearence of the context word and remaining occurrence are ignored. Useful when creating TCM for evaluation
+of coherence of topic models.
+<code>"symmetric"</code> by default - take into account <code>skip_grams_window</code> left and right.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>placeholder for additional arguments (not used at the moment).
+<code>it</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If a parallel backend is registered, it will construct the TCM in multiple threads.
+The user should keep in mind that he/she should split data and provide a list
+of itoken iterators. Each element of <code>it</code> will be handled
+in a separate thread combined at the end of processing.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>TsparseMatrix</code> TCM matrix
+</p>
+
+
+<h3>See Also</h3>
+
+<p>itoken create_dtm
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("movie_review")
+
+# single thread
+
+tokens = word_tokenizer(tolower(movie_review$review))
+it = itoken(tokens)
+v = create_vocabulary(jobs)
+vectorizer = vocab_vectorizer(v)
+tcm = create_tcm(itoken(tokens), vectorizer, skip_grams_window = 3L)
+
+# parallel version
+
+# set to number of cores on your machine
+it = token_parallel(movie_review$review[1:N], tolower, word_tokenizer, movie_review$id[1:N])
+v = create_vocabulary(jobs)
+vectorizer = vocab_vectorizer(v)
+dtm = create_dtm(it, vectorizer, type = 'TsparseMatrix')
+tcm = create_tcm(jobs, vectorizer, skip_grams_window = 3L, skip_grams_window_context = "symmetric")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

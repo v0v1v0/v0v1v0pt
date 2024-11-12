@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>linearSplineIntegration</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Linear Spline Integration</h2>
+
+<h3>Description</h3>
+
+<p><code>lintegrate</code> gives the values resulting from integrating a linear
+spline, while <code>ilspline</code> returns linear splines that
+integrate to given values. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lintegrate(x, y, xint, stepfun = F, rule = 0)
+ilspline(xint, w)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>x coordinates of the linear spline F defined by <code>(x, y)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>y coordinates of the linear spline F defined by <code>(x, y)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xint</code></td>
+<td>
+<p>x intervals, i.e. <code>[x[1], x[2]]</code> is the first interval,
+<code>[x[2], x[3]]</code> is the second interval, and so on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stepfun</code></td>
+<td>
+<p>if <code>TRUE</code>,  F is a left-continuous step function.
+The default (<code>FALSE</code>) says F is continuous.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rule</code></td>
+<td>
+<p>one of {0, 1, NA} to specify the behavior of F outside the
+range of <code>x</code>.  Use zero if F is zero outside the range of <code>x</code>,
+<code>NA</code> if F is NA outside the range of <code>x</code>, and one if F is to
+be linearly extended outside the range of <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>values the linear spline must integrate to</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>lintegrate</code> integrates the linear spline F defined by
+<code>(x,y)</code> over the <code>xint</code> intervals.  The value of F outside
+the range of <code>x</code> is specified by the <code>rule</code> argument:
+</p>
+<pre>
+    rule == 0  --&gt; F(z) = 0 for z outside the range of x
+    rule == NA --&gt; F(z) = NA for z outside the range of x
+    rule == 1  --&gt; F(z) extended for z outside the range of x
+</pre>
+<p>If <code>stepfun</code> is <code>TRUE</code>, F(z) is assumed to be a
+left-continuous step function and the last value of <code>y</code> is never
+accessed.
+</p>
+<p><code>(x[i], y[i])</code> pairs with NA values in either x[i] or y[i] NA are
+ignored in constructing F.
+</p>
+<p><code>ilspline</code> finds linear splines that integrate over the N
+intervals specified by the monotonically increasing N+1 vector
+<code>xint</code> to the N values given in <code>w</code>.  The function finds
+N-vectors x and y such that:
+</p>
+<pre>
+  (i)  x[j] = (xint[j-1] + xint[j])/2, i.e., the values of x are the
+       midpoints of the intervals specified by xint, and
+
+  (ii) the linear spline that passes through the (x[i], y[i]) pairs (and
+       is extended to xint[1] and xint[N+1] by linear
+       extrapolation) integrates over each interval [xint[j],xint[j+1]]
+       to w[j]. 
+</pre>
+<p>In fact, <code>w</code> can actually be an M by N matrix, in which case the
+y found by the function is also an M by N matrix, with each column of
+y giving the y coordinates of a linear spline that integrates to the
+corresponding column of <code>w</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>lintegrate</code> returns a vector of length <code>length(xint) - 1</code>.
+</p>
+<p><code>ilspline</code> returns a list with components named 'x' and 'y'.
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>spline</code>, <code>approx</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">w &lt;- 10 + cumsum(rnorm(10))
+blah &lt;- ilspline(1:11, w)
+ww &lt;- lintegrate(blah$x, blah$y, 1:11, rule = 1)
+w - ww  ## should be all zeroes (or very close to zero)
+</code></pre>
+
+
+</div>

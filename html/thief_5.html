@@ -1,0 +1,177 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thief</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Temporal hierarchical forecasting</h2>
+
+<h3>Description</h3>
+
+<p>Takes a time series as input and produces forecasts using
+the temporal hierarchical approach of Athanasopoulos et al (2016).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thief(y, m = frequency(y), h = m * 2, comb = c("struc", "mse", "ols",
+  "bu", "shr", "sam"), usemodel = c("ets", "arima", "theta", "naive",
+  "snaive"), forecastfunction = NULL, aggregatelist = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Time series input</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>Seasonal period</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>Forecast horizon</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>comb</code></td>
+<td>
+<p>Combination method of temporal hierarchies, taking one of the following values:
+</p>
+
+<dl>
+<dt>"struc"</dt>
+<dd>
+<p>Structural scaling - weights from temporal hierarchy</p>
+</dd>
+<dt>"mse"</dt>
+<dd>
+<p>Variance scaling - weights from in-sample MSE</p>
+</dd>
+<dt>"ols"</dt>
+<dd>
+<p>Unscaled OLS combination weights</p>
+</dd>
+<dt>"bu"</dt>
+<dd>
+<p>Bottom-up combination – i.e., all aggregate forecasts are ignored.</p>
+</dd>
+<dt>"shr"</dt>
+<dd>
+<p>GLS using a shrinkage (to block diagonal) estimate of residuals</p>
+</dd>
+<dt>"sam"</dt>
+<dd>
+<p>GLS using sample covariance matrix of residuals</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usemodel</code></td>
+<td>
+<p>Model used for forecasting each aggregation level:
+</p>
+
+<dl>
+<dt>"ets"</dt>
+<dd>
+<p>exponential smoothing, using the <code>ets</code> function.</p>
+</dd>
+<dt>"arima"</dt>
+<dd>
+<p>arima, using the <code>auto.arima</code> function.</p>
+</dd>
+<dt>"theta"</dt>
+<dd>
+<p>theta method, using the <code>thetaf</code> function.</p>
+</dd>
+<dt>"naive"</dt>
+<dd>
+<p>random walk forecasts</p>
+</dd>
+<dt>"snaive"</dt>
+<dd>
+<p>seasonal naive forecasts, based on the last year of observed data.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>forecastfunction</code></td>
+<td>
+<p>User-defined function to be used instead of <code>usemodel</code>. The
+function must take a time series as the first argument, and the forecast horizon
+as the second argument. It must return an object of class <code>forecast</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggregatelist</code></td>
+<td>
+<p>User-selected list of forecast aggregates to consider</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments to be passed to the time series modelling function
+(such as <code>ets</code> or <code>auto.arima</code>), or to <code>forecastfunction</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function computes the temporal aggregates of <code>y</code> using
+<code>tsaggregates</code>, then calculates all forecasts using the model function
+specified by <code>usemodel</code> or <code>forecastfunction</code>, and finally reconciles the
+forecasts using <code>reconcilethief</code>. The reconciled forecasts of <code>y</code>
+are returned.
+</p>
+
+
+<h3>Value</h3>
+
+<p>forecast object.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Rob J Hyndman and Nikolaos Kourentzes
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>reconcilethief</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+# Select ARIMA models for all series using auto.arima()
+z &lt;- thief(AEdemand[,12], usemodel='arima')
+plot(z)
+
+# Use your own function
+ftbats &lt;- function(y,h,...){forecast(tbats(y),h,...)}
+z &lt;- thief(AEdemand[,12], forecastfunction=ftbats)
+plot(z)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,214 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TimeSeriesClass</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create objects from class 'timeSeries'</h2>
+
+<h3>Description</h3>
+
+<p><code>timeSeries</code> creates a <code>"timeSeries"</code> object from scratch.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">timeSeries(data, charvec, units = NULL, format = NULL, zone = "", 
+           FinCenter = "", recordIDs = data.frame(), title = NULL, 
+           documentation = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+
+<p>a <code>matrix</code> object or any objects which can be coerced to a matrix.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>charvec</code></td>
+<td>
+
+<p>a character vector of dates and times or any objects which can
+be coerced to a <code>"timeDate"</code> object.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+
+<p>an optional character string, which allows to overwrite the 
+current column names of a <code>"timeSeries"</code> object. By default 
+<code>NULL</code> which means that the column names are selected
+automatically. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+
+<p>the format specification of the input character vector,
+a character string with the format in POSIX notation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zone</code></td>
+<td>
+
+<p>the time zone or financial center where the data were recorded.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FinCenter</code></td>
+<td>
+
+<p>a character with the the location of the  financial center named 
+as "continent/city". 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recordIDs</code></td>
+<td>
+
+<p>for <code>timeSeries</code>, a data frame which can be used for record
+identification.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+
+<p>an optional title string, if not specified the input's data 
+name is deparsed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>documentation</code></td>
+<td>
+
+<p>optional documentation string, or a vector of character strings.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>arguments passed to other methods.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><b>Generation of Time Series Objects:</b>
+<br></p>
+<p>We have defined a <code>"timeSeries"</code> class which is in many aspects
+similar to the S-Plus class with the same name, but has also some
+important differences. The class has seven Slots, the 'Data' slot
+which holds the time series data in matrix form, the 'position' slot
+which holds the time/date as a character vector, the 'format' and
+'FinCenter' slots which are the same as for the 'timeDate' object, the
+'units' slot which holds the column names of the data matrix, and a
+'title' and a 'documentation' slot which hold descriptive character
+strings.  Date and time is managed in the same way as for
+<code>timeDate</code> objects.
+</p>
+<p><code>as.timeSeries</code> also creates <code>"timeSeries"</code> objects.
+<code>as.timeSeries(x)</code> is mostly equivalent to <code>timeSeries(x)</code>
+but the two functions have different methods. Beside that, the main
+difference between the two functions is that <code>as.timeSeries</code>
+doesn't accept additional arguments. The one argument call is
+naturally interpreted as ‘convert to’, so
+<code>as.timeSeries</code> is more expressive and is recommended in
+that case.
+</p>
+<p><code>"timeSeries"</code> methods are provided for many base R functions,
+including arithmetic operations, mathematical functions, <code>print</code>,
+<code>summary</code>, and time series functions. Not all are explicitly
+documented, since they can just be used. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>an S4 object of class <code>"timeSeries"</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>as.timeSeries</code>,
+class <code>timeSeries</code>,
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Load Microsoft data -
+   # Microsoft Data: 
+   setRmetricsOptions(myFinCenter = "GMT")
+   data(MSFT)
+   head(MSFT)
+
+## Create a 'timeSeries' object, the direct Way ...
+   Close &lt;- MSFT[, 5]
+   head(Close)
+   
+## Create a 'timeSeries' object from scratch - 
+   data &lt;- as.matrix(MSFT[, 4])
+   charvec &lt;- rownames(MSFT)
+   Close &lt;- timeSeries(data, charvec, units = "Close")
+   head(Close)
+   c(start(Close), end(Close))
+
+## Cut out April data from 2001 - 
+   tsApril01 &lt;- window(Close, "2001-04-01", "2001-04-30") 
+   tsApril01
+
+## Compute Continuous Returns - 
+   returns(tsApril01)
+   
+## Compute Discrete Returns - 
+   returns(tsApril01, type = "discrete")
+   
+## Compute Discrete Returns, Don't trim -
+   returns(tsApril01, trim = FALSE)
+   
+## Compute Discrete Returns, Use Percentage Values - 
+   tsRet &lt;- returns(tsApril01, percentage = TRUE, trim = FALSE)
+   tsRet
+     
+## Aggregate Weekly - 
+   GoodFriday(2001)
+   to &lt;- timeSequence(from = "2001-04-11", length.out = 3, by = "week") 
+   from &lt;- to - 6*24*3600
+   from
+   to
+   applySeries(tsRet, from, to, FUN = sum)
+
+## Create large 'timeSeries' objects with different 'charvec' object classes - 
+   # charvec is a 'timeDate' object
+   head(timeSeries(1:1e6L, timeSequence(length.out = 1e6L, by = "sec")))
+   head(timeSeries(1:1e6L, seq(Sys.timeDate(), length.out = 1e6L, by = "sec")))
+   # 'charvec' is a 'POSIXt' object
+   head(timeSeries(1:1e6L, seq(Sys.time(), length.out = 1e6L, by = "sec")))
+   # 'charvec' is a 'numeric' object
+   head(timeSeries(1:1e6L, 1:1e6L))
+</code></pre>
+
+
+</div>

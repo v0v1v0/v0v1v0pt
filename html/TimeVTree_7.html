@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bootstrap</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Bootstrap to Correct for Over-optimism due to Adaptive Splitting
+</h2>
+
+<h3>Description</h3>
+
+<p>This function is used to obtain the bias-corrected cost.
+One may select the final subtree with the lowest bootstrap estimated cost, with or without the additional AIC/BIC as in Xu and Adak (2002).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bootstrap(B = 20, nodetree, subtrees, survtime, survstatus, 
+          x, D = 4, minfail = 30, alphac = 2)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>Number of bootstrap samples. Default is 20.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodetree</code></td>
+<td>
+
+<p>Full grown tree with original data. Output from <code>output.coxphout</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtrees</code></td>
+<td>
+
+<p>Pruned subtrees with original data. Output from <code>prune</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survtime</code></td>
+<td>
+
+<p>survival time/follow up time of subjects
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survstatus</code></td>
+<td>
+
+<p>survival status of subjects.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>a data frame of covariates. In case of single covariate, use [,,drop =FALSE] to keep the data frame structure
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+
+<p>maximum depth the tree will grow. Default depth is 4.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minfail</code></td>
+<td>
+
+<p>minimum number of unique event required in each block. Default is 10
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alphac</code></td>
+<td>
+
+<p>Predetermined penalty parameter
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The implemented cost here is the negative log partial likelihood. Each 
+bootstrap sample is used to grow a full tree and then pruned to obtain the set of subtrees. The bias is estimated by the average of the differences between the cost of a bootstrapped subtree itself and the cost of sending the original data down the bootstrapped subtree. The bias-corrected cost is then obtained by subtracting this bias from the original cost.  
+Predetermined penalty parameter can be used to account for the dimension of covariates, via Akaike information criteria (AIC), Schwarz Bayesian information criteria (BIC), or the 0.95 quantile of the chi-square distribution.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>bcoef </code></td>
+<td>
+<p>coefficient values from each bootstrap sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>btree </code></td>
+<td>
+<p>Tree related information from each bootstrapped sample. Types of information are the same as the ones from <code>output.coxphout</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bomega </code></td>
+<td>
+<p>Bias at each subtree for each bootstrapped data, the average of which gives the overall bootstrap estimated bias</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bootcost</code></td>
+<td>
+<p>cost based on the bootstrapped data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ori.boot</code></td>
+<td>
+<p>negative log partial likelihood of the original data fitted to the model given by bootstrapped data</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Xu, R. and Adak, S. (2002), Survival Analysis with Time-Varying Regression Effects Using a Tree-Based Approach. Biometrics, 58: 305-315.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data('alcohol')
+require(survival)
+
+coxtree &lt;- coxph.tree(alcohol[,'time'], alcohol[,'event'], 
+                      x = alcohol[,'alc', drop = FALSE], D = 4)
+nodetree &lt;- output.coxphout(coxtree)
+
+subtrees &lt;- prune(nodetree)
+
+#This function requires output from output.coxphout, prune, and the original data set.
+
+store.mult.cont &lt;- bootstrap(B=20, nodetree, subtrees, alcohol[,'time'],
+                                alcohol[,'event'], x = alcohol[,'alc', drop = FALSE], 
+                                D=4,minfail=20, alphac=2)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

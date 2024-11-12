@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.BTM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot function for a BTM object</h2>
+
+<h3>Description</h3>
+
+<p>Plot biterms as a clustered graph.
+The graph is constructed by assigning each word to a topic and within a topic of words biterm frequencies are shown.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'BTM'
+plot(
+  x,
+  biterms = terms(x, type = "biterms")$biterms,
+  top_n = 7,
+  which,
+  labels = seq_len(x$K),
+  title = "Biterm topic model",
+  subtitle = list(),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class <code>BTM</code> with a biterm topic model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>biterms</code></td>
+<td>
+<p>a data.frame with columns term1, term2, topic with all biterms and the topic these were assigned to. Defaults to the biterms used to construct the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>top_n</code></td>
+<td>
+<p>integer indicating to limit to displaying the top_n terms for each topic. Defaults to 7.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>integer vector indicating to display only these topics. See the examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>a character vector of names. Should be of the same length as the number of topics in the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>character string with the title to use in the plot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle</code></td>
+<td>
+<p>character string with the subtitle to use in the plot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not used</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>an object of class ggplot
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>BTM</code>, <code>textplot_bitermclusters.default</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(igraph)
+library(BTM)
+library(ggraph)
+library(ggforce)
+library(concaveman)
+data(example_btm, package = 'textplot')
+
+model &lt;- example_btm
+
+plot(model, title = "BTM model", top_n = 3)
+plot(model, title = "BTM model", top_n = 3, labels = 1:model$K)
+plot(model, title = "BTM model", which = 7:15)
+plot(model, title = "BTM model", subtitle = "First 5 topics",
+     which = 1:5, top_n = 10)
+plot(model, title = "Biterm topic model", subtitle = "First 8 topics",
+     which = 1:8, top_n = 7)
+
+
+topiclabels &lt;- c("Garbage",
+  "Data Mining", "Gradient descent", "API's",
+  "Random Forests", "Stat models", "Text Mining / NLP",
+  "GLM / GAM / Bayesian", "Machine learning", "Variable selection",
+  "Regularisation techniques", "Optimisation", "Fuzzy logic",
+  "Classification/Regression trees", "Text frequencies",
+  "Neural / Deep learning", "Variable selection",
+  "Text file handling", "Text matching", "Topic modelling")
+plot(model, title = "Biterm topic model", subtitle = "some topics",
+     top_n = 7,
+     which = c(3, 4, 5, 6, 7, 9, 12, 16, 20),
+     labels = topiclabels)
+
+
+library(BTM)
+library(data.table)
+library(udpipe)
+## Annotate text with parts of speech tags
+data("brussels_reviews", package = "udpipe")
+anno &lt;- subset(brussels_reviews, language %in% "nl")
+anno &lt;- data.frame(doc_id = anno$id, text = anno$feedback, stringsAsFactors = FALSE)
+anno &lt;- udpipe(anno, "dutch", trace = 10)
+## Get cooccurrences of nouns / adjectives and proper nouns
+biterms &lt;- as.data.table(anno)
+biterms &lt;- biterms[, cooccurrence(x = lemma,
+                                  relevant = upos %in% c("NOUN", "PROPN", "ADJ"),
+                                  skipgram = 2),
+                     by = list(doc_id)]
+## Build the BTM model
+set.seed(123456)
+x &lt;- subset(anno, upos %in% c("NOUN", "PROPN", "ADJ"))
+x &lt;- x[, c("doc_id", "lemma")]
+model &lt;- BTM(x, k = 5, beta = 0.01, iter = 2000, background = TRUE,
+             biterms = biterms, trace = 100)
+plot(model)
+
+
+
+</code></pre>
+
+
+</div>

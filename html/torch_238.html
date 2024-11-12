@@ -1,0 +1,221 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_conv1d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Conv1D module</h2>
+
+<h3>Description</h3>
+
+<p>Applies a 1D convolution over an input signal composed of several input
+planes.
+In the simplest case, the output value of the layer with input size
+<code class="reqn">(N, C_{\mbox{in}}, L)</code> and output <code class="reqn">(N, C_{\mbox{out}}, L_{\mbox{out}})</code> can be
+precisely described as:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_conv1d(
+  in_channels,
+  out_channels,
+  kernel_size,
+  stride = 1,
+  padding = 0,
+  dilation = 1,
+  groups = 1,
+  bias = TRUE,
+  padding_mode = "zeros"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>in_channels</code></td>
+<td>
+<p>(int): Number of channels in the input image</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out_channels</code></td>
+<td>
+<p>(int): Number of channels produced by the convolution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_size</code></td>
+<td>
+<p>(int or tuple): Size of the convolving kernel</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stride</code></td>
+<td>
+<p>(int or tuple, optional): Stride of the convolution. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding</code></td>
+<td>
+<p>(int, tuple or str, optional) – Padding added to both sides of
+the input. Default: 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dilation</code></td>
+<td>
+<p>(int or tuple, optional): Spacing between kernel
+elements. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups</code></td>
+<td>
+<p>(int, optional): Number of blocked connections from input
+channels to output channels. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+<p>(bool, optional): If <code>TRUE</code>, adds a learnable bias to the
+output. Default: <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding_mode</code></td>
+<td>
+<p>(string, optional): <code>'zeros'</code>, <code>'reflect'</code>,
+<code>'replicate'</code> or <code>'circular'</code>. Default: <code>'zeros'</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn">
+\mbox{out}(N_i, C_{\mbox{out}_j}) = \mbox{bias}(C_{\mbox{out}_j}) +
+  \sum_{k = 0}^{C_{in} - 1} \mbox{weight}(C_{\mbox{out}_j}, k)
+\star \mbox{input}(N_i, k)
+</code>
+</p>
+
+<p>where <code class="reqn">\star</code> is the valid
+<a href="https://en.wikipedia.org/wiki/Cross-correlation">cross-correlation</a> operator,
+<code class="reqn">N</code> is a batch size, <code class="reqn">C</code> denotes a number of channels,
+<code class="reqn">L</code> is a length of signal sequence.
+</p>
+
+<ul>
+<li> <p><code>stride</code> controls the stride for the cross-correlation, a single
+number or a one-element tuple.
+</p>
+</li>
+<li> <p><code>padding</code> controls the amount of implicit zero-paddings on both sides
+for <code>padding</code> number of points.
+</p>
+</li>
+<li> <p><code>dilation</code> controls the spacing between the kernel points; also
+known as the à trous algorithm. It is harder to describe, but this
+<a href="https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md">link</a>
+has a nice visualization of what <code>dilation</code> does.
+</p>
+</li>
+<li> <p><code>groups</code> controls the connections between inputs and outputs.
+<code>in_channels</code> and <code>out_channels</code> must both be divisible by
+<code>groups</code>. For example,
+</p>
+
+<ul>
+<li>
+<p> At groups=1, all inputs are convolved to all outputs.
+</p>
+</li>
+<li>
+<p> At groups=2, the operation becomes equivalent to having two conv
+layers side by side, each seeing half the input channels,
+and producing half the output channels, and both subsequently
+concatenated.
+</p>
+</li>
+<li>
+<p> At groups= <code>in_channels</code>, each input channel is convolved with
+its own set of filters,
+of size <code class="reqn">\left\lfloor\frac{out\_channels}{in\_channels}\right\rfloor</code>.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>Depending of the size of your kernel, several (of the last)
+columns of the input might be lost, because it is a valid
+<code>cross-correlation</code><em>, and not a full <code>cross-correlation</code></em>.
+It is up to the user to add proper padding.
+</p>
+<p>When <code>groups == in_channels</code> and <code>out_channels == K * in_channels</code>,
+where <code>K</code> is a positive integer, this operation is also termed in
+literature as depthwise convolution.
+In other words, for an input of size <code class="reqn">(N, C_{in}, L_{in})</code>,
+a depthwise convolution with a depthwise multiplier <code>K</code>, can be constructed by arguments
+<code class="reqn">(C_{\mbox{in}}=C_{in}, C_{\mbox{out}}=C_{in} \times K, ..., \mbox{groups}=C_{in})</code>.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, C_{in}, L_{in})</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, C_{out}, L_{out})</code> where
+</p>
+</li>
+</ul>
+<p style="text-align: center;"><code class="reqn">
+  L_{out} = \left\lfloor\frac{L_{in} + 2 \times \mbox{padding} - \mbox{dilation}
+    \times (\mbox{kernel\_size} - 1) - 1}{\mbox{stride}} + 1\right\rfloor
+</code>
+</p>
+
+
+
+<h3>Attributes</h3>
+
+
+<ul>
+<li>
+<p> weight (Tensor): the learnable weights of the module of shape
+<code class="reqn">(\mbox{out\_channels}, \frac{\mbox{in\_channels}}{\mbox{groups}}, \mbox{kernel\_size})</code>.
+The values of these weights are sampled from
+<code class="reqn">\mathcal{U}(-\sqrt{k}, \sqrt{k})</code> where
+<code class="reqn">k = \frac{groups}{C_{\mbox{in}} * \mbox{kernel\_size}}</code>
+</p>
+</li>
+<li>
+<p> bias (Tensor): the learnable bias of the module of shape
+(out_channels). If <code>bias</code> is <code>TRUE</code>, then the values of these weights are
+sampled from <code class="reqn">\mathcal{U}(-\sqrt{k}, \sqrt{k})</code> where
+<code class="reqn">k = \frac{groups}{C_{\mbox{in}} * \mbox{kernel\_size}}</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+m &lt;- nn_conv1d(16, 33, 3, stride = 2)
+input &lt;- torch_randn(20, 16, 50)
+output &lt;- m(input)
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,143 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>IbasedI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculation of the I-based indices for rooted trees</h2>
+
+<h3>Description</h3>
+
+<p>This function calculates <code class="reqn">I</code>-based indices <code class="reqn">I(T)</code> for a given rooted
+tree <code class="reqn">T</code>. Note that the leaves of the tree may represent single species or
+groups of more than one species. Thus, a vector is required that contains for
+each leaf the number of species that it represents.
+The tree may contain few polytomies, which are not allowed to concentrate in
+a particular region of the tree (see p. 238 in Fusco and Cronk (1995)).<br><br>
+Let <code class="reqn">v</code> be a vertex of <code class="reqn">T</code> that fulfills the following criteria: a)
+The number of descendant (terminal) species of <code class="reqn">v</code> is <code class="reqn">k_v&gt;3</code>
+(note that if each leaf represents only one species <code class="reqn">k_v</code> is simply the
+number of leaves in the pending subtree rooted at <code class="reqn">v</code>), and
+b) <code class="reqn">v</code> has exactly two children.<br><br>
+Then, we can calculate the <code class="reqn">I_v</code> value as follows:
+</p>
+<p style="text-align: center;"><code class="reqn">I_v=\frac{k_{v_a}-\left\lceil\frac{k_v}{2}\right\rceil}{k_v-1-\left\lceil\frac{k_v}{2}\right\rceil}</code>
+</p>
+
+<p>in which <code class="reqn">k_{v_a}</code> denotes the number of descendant (terminal) species
+in the bigger one of the two pending subtrees rooted at <code class="reqn">v</code>.<br><br>
+As the expected value of <code class="reqn">I_v</code> under the Yule model depends on <code class="reqn">k_v</code>,
+Purvis et al. (2002) suggested to take the corrected values <code class="reqn">I'_v</code> or <code class="reqn">I_v^w</code> instead.<br>
+The <code class="reqn">I'_v</code> value of <code class="reqn">v</code> is defined as follows: <code class="reqn">I'_v=I_v</code> if <code class="reqn">k_v</code> is odd and <code class="reqn">I'_v=\frac{k_v-1}{k_v}\cdot I_v</code>
+if <code class="reqn">k_v</code> is even.<br>
+The <code class="reqn">I_v^w</code> value of <code class="reqn">v</code> is defined as follows: </p>
+<p style="text-align: center;"><code class="reqn">I_v^w=\frac{w(I_v)\cdot I_v}{mean_{V'(T)} w(I_v)}</code>
+</p>
+
+<p>where <code class="reqn">V'(T)</code> is the set of inner vertices of <code class="reqn">T</code> that have precisely
+two children and <code class="reqn">k_v\geq 4</code>, and <code class="reqn">w(I_v)</code> is a weight function with
+<code class="reqn">w(I_v)=1</code> if <code class="reqn">k_v</code> is odd and <code class="reqn">w(I_v)=\frac{k_v-1}{k_v}</code> if <code class="reqn">k_v</code>
+is even and <code class="reqn">I_v&gt;0</code>, and <code class="reqn">w(I_v)=\frac{2\cdot(k_v-1)}{k_v}</code>
+if <code class="reqn">k_v</code> is even and <code class="reqn">I_v=0</code>. <br><br>
+The <code class="reqn">I</code>-based index of <code class="reqn">T</code> can now be calculated using different methods.
+Here, we only state the version for the <code class="reqn">I'</code> correction method, but the non-corrected
+version or the <code class="reqn">I_v^w</code> corrected version works analoguously.
+1) root: The <code class="reqn">I'</code> index of <code class="reqn">T</code> equals the <code class="reqn">I'_v</code> value of the root of
+<code class="reqn">T</code>, i.e. <code class="reqn">I'(T)=I'_{\rho}</code>, provided that the root fulfills the two
+criteria. Note that this method does not fulfil the definition of an (im)balance index.
+2) median: The <code class="reqn">I'</code> index of <code class="reqn">T</code> equals the median <code class="reqn">I'_v</code> value of all
+vertices <code class="reqn">v</code> that fulfill the two criteria.
+3) total: The <code class="reqn">I'</code> index of <code class="reqn">T</code> equals the summarised <code class="reqn">I'_v</code> values of all
+vertices <code class="reqn">v</code> that fulfill the two criteria.
+4) mean: The <code class="reqn">I'</code> index of <code class="reqn">T</code> equals the mean <code class="reqn">I'_v</code> value of all
+vertices <code class="reqn">v</code> that fulfill the two criteria.
+5) quartile deviation: The <code class="reqn">I'</code> index of <code class="reqn">T</code> equals the quartile
+deviation (half the difference between third and first quartile) of the <code class="reqn">I'_v</code> values of all
+vertices <code class="reqn">v</code> that fulfill the two criteria. <br><br>
+For details on the family of I-based indices, see 
+also Chapter 17 in "Tree balance indices: a comprehensive survey" (https://doi.org/10.1007/978-3-031-39800-1_17).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">IbasedI(
+  tree,
+  specnum = rep(1, length(tree$tip.label)),
+  method = "mean",
+  correction = "none",
+  logs = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A rooted tree in phylo format (with possibly few polytomies).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>specnum</code></td>
+<td>
+<p>A vector whose <code class="reqn">i</code>-th entry is the number of species that
+the <code class="reqn">i</code>-th leaf represents. (default is 1,...,1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>A character string specifying the method that shall be used to
+calculate <code class="reqn">I(T)</code>. It can be one of the following: "root", "median",
+"total", "mean", "quartdev".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correction</code></td>
+<td>
+<p>A character string specifying the correction method that
+shall be applied to the I values. It can be one of the following:
+"none", "prime", "w".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logs</code></td>
+<td>
+<p>Boolean value, (default true), determines if the number of suitable
+nodes (i.e. nodes that fulfill the criteria) and polytomies in the tree should be printed.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>IbasedI</code> returns an <code class="reqn">I</code>-based balance index of the given tree according to the chosen (correction and) method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Luise Kuehn and Sophie Kersting
+</p>
+
+
+<h3>References</h3>
+
+<p>G. Fusco and Q. C. Cronk. A new method for evaluating the shape of large phylogenies. Journal of Theoretical Biology, 1995. doi: 10.1006/jtbi.1995.0136. URL https://doi.org/10.1006/jtbi.1995.0136.
+</p>
+<p>A. Purvis, A. Katzourakis, and P.-M. Agapow. Evaluating Phylogenetic Tree Shape: Two Modifications to Fusco &amp; Cronks Method. Journal of Theoretical Biology, 2002. doi: 10.1006/jtbi.2001.2443. URL https://doi.org/10.1006/jtbi.2001.2443.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tree &lt;- ape::read.tree(text="(((((,),),),),);")
+IbasedI(tree, method="mean")
+IbasedI(tree, method="mean", correction="prime", specnum=c(1,1,2,1,1,1))
+
+</code></pre>
+
+
+</div>

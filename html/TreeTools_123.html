@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SplitFrequency</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Frequency of splits</h2>
+
+<h3>Description</h3>
+
+<p><code>SplitFrequency()</code> provides a simple way to count the number of times that
+bipartition splits, as defined by a reference tree, occur in a forest of
+trees. May be used to calculate edge ("node") support for majority consensus
+or bootstrap trees.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">SplitFrequency(reference, forest)
+
+SplitNumber(tips, tree, tipIndex, powersOf2)
+
+ForestSplits(forest, powersOf2)
+
+TreeSplits(tree)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>reference</code></td>
+<td>
+<p>A tree of class <code>phylo</code>, a <code>Splits</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>forest</code></td>
+<td>
+<p>a list of trees of class <code>phylo</code>, or a <code>multiPhylo</code> object; or a
+<code>Splits</code> object. See
+<a href="https://ms609.github.io/TreeTools/articles/load-trees.html">vignette</a> for
+possible methods of loading trees into R.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tips</code></td>
+<td>
+<p>Integer vector specifying the tips of the tree within the chosen
+split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A tree of class <code>phylo</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tipIndex</code></td>
+<td>
+<p>Character vector of tip names, in a fixed order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>powersOf2</code></td>
+<td>
+<p>Integer vector of same length as <code>tipIndex</code>, specifying a
+power of 2 to be associated with each tip in turn.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If multiple calculations are required, some time can be saved by using the
+constituent functions (see examples)
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>SplitFrequency()</code> returns the number of trees in <code>forest</code> that
+contain each split in <code>reference</code>.
+If <code>reference</code> is a tree of class <code>phylo</code>, then the sequence will correspond
+to the order of nodes (use <code>ape::nodelabels()</code> to view).
+Note that the three nodes at the root of the tree correspond to a single
+split; see the example for how these might be plotted on a tree.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>SplitNumber()</code>: Assign a unique integer to each split
+</p>
+</li>
+<li> <p><code>ForestSplits()</code>: Frequency of splits in a given forest of trees
+</p>
+</li>
+<li> <p><code>TreeSplits()</code>: Deprecated. Listed the splits in a given tree.
+Use as.Splits instead.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Splits operations: 
+<code>LabelSplits()</code>,
+<code>NSplits()</code>,
+<code>NTip()</code>,
+<code>PolarizeSplits()</code>,
+<code>Splits</code>,
+<code>SplitsInBinaryTree()</code>,
+<code>TipLabels()</code>,
+<code>TipsInSplits()</code>,
+<code>match.Splits</code>,
+<code>xor()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># An example forest of 100 trees, some identical
+forest &lt;- as.phylo(c(1, rep(10, 79), rep(100, 15), rep(1000, 5)), nTip = 9)
+
+# Generate an 80% consensus tree
+cons &lt;- ape::consensus(forest, p = 0.8)
+plot(cons)
+
+# Calculate split frequencies
+splitFreqs &lt;- SplitFrequency(cons, forest)
+
+# Optionally, colour edges by corresponding frequency.
+# Note that not all edges are associated with a unique split
+# (and two root edges may be associated with one split - not handled here)
+edgeSupport &lt;- rep(1, nrow(cons$edge)) # Initialize trivial splits to 1
+childNode &lt;- cons$edge[, 2]
+edgeSupport[match(names(splitFreqs), childNode)] &lt;- splitFreqs / 100
+
+plot(cons, edge.col = SupportColour(edgeSupport), edge.width = 3)
+
+# Annotate nodes by frequency 
+LabelSplits(cons, splitFreqs, unit = "%",
+            col = SupportColor(splitFreqs / 100),
+            frame = "none", pos = 3L)
+
+</code></pre>
+
+
+</div>

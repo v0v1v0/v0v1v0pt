@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>benchmark</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Benchmarking a time series prediction process</h2>
+
+<h3>Description</h3>
+
+<p><code>benchmark</code> is a generic function for benchmarking results based on particular metrics.
+The function invokes particular <em>methods</em> which
+depend on the class of the first argument.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">benchmark(obj, ...)
+
+## S3 method for class 'tspred'
+benchmark(obj, bmrk_objs, rank.by = c("MSE"), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>An object of class <code>tspred</code> defining a particular time series prediction process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Ignored</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bmrk_objs</code></td>
+<td>
+<p>A list of objects of class <code>tspred</code> to be compared against <code>obj</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank.by</code></td>
+<td>
+<p>A vector of the given names of the metrics that should base the ranking.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>benchmark.tspred</code> benchmarks a time series prediction process
+defined by a <code>tspred</code> object based on a particular metric. The metrics resulting
+from its execution are compared against the ones produced by other time series prediction
+processes (defined in a list of <code>tspred</code> objects).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>rank</code></td>
+<td>
+<p>A data.frame with the ranking of metrics computed for the benchmarked <code>tspred</code> objects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ranked_tspred_objs</code></td>
+<td>
+<p>A list of the benchmarked <code>tspred</code> objects ordered according to the produced rank.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Rebecca Pontes Salles
+</p>
+
+
+<h3>See Also</h3>
+
+<p>[tspred()] for defining a particular time series prediction process.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#Obtaining objects of the processing class
+proc1 &lt;- subsetting(test_len=20)
+proc2 &lt;- BoxCoxT(lambda=NULL)
+proc3 &lt;- WT(level=1, filter="bl14")
+
+#Obtaining objects of the modeling class
+modl1 &lt;- ARIMA()
+
+#Obtaining objects of the evaluating class
+eval1 &lt;- MSE_eval()
+eval2 &lt;- MAPE_eval()
+
+#Defining a time series prediction process
+tspred_1 &lt;- tspred(subsetting=proc1,
+                   processing=list(BCT=proc2,
+                                   WT=proc3),
+                   modeling=modl1,
+                   evaluating=list(MSE=eval1,
+                                   MAPE=eval2)
+                  )
+summary(tspred_1)
+
+#Obtaining objects of the processing class
+proc4 &lt;- SW(window_len = 6)
+proc5 &lt;- MinMax()
+
+#Obtaining objects of the modeling class
+modl2 &lt;- NNET(size=5,sw=proc4,proc=list(MM=proc5))
+
+#Defining a time series prediction process
+tspred_2 &lt;- tspred(subsetting=proc1,
+                   processing=list(BCT=proc2,
+                                   WT=proc3),
+                   modeling=modl2,
+                   evaluating=list(MSE=eval1,
+                                   MAPE=eval2)
+                  )
+summary(tspred_2)
+
+data("CATS")
+data &lt;- CATS[3]
+
+tspred_1_run &lt;- workflow(tspred_1,data=data,prep_test=TRUE,onestep=TRUE)
+tspred_2_run &lt;- workflow(tspred_2,data=data,prep_test=TRUE,onestep=TRUE)
+
+b &lt;- benchmark(tspred_1_run,list(tspred_2_run),rank.by=c("MSE"))
+
+
+</code></pre>
+
+
+</div>

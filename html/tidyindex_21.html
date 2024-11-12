@@ -1,0 +1,225 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trans_thornthwaite</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Drought-related index functions</h2>
+
+<h3>Description</h3>
+
+<p>The functions are used for quick computing of some common drought indexes
+built from wrappers of the underlying modules. For more customised needs,
+users may build their own indexes from the modules.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trans_thornthwaite(var, lat, na.rm = FALSE, verbose = TRUE)
+
+idx_spi(data, .prcp, .dist = dist_gamma(), .scale = 12)
+
+idx_spei(
+  data,
+  .tavg,
+  .lat,
+  .prcp,
+  .pet_method = trans_thornthwaite(),
+  .scale = 12,
+  .dist = dist_glo()
+)
+
+idx_rdi(
+  data,
+  .tavg,
+  .lat,
+  .prcp,
+  .pet_method = trans_thornthwaite(),
+  .scale = 12
+)
+
+idx_edi(data, .tavg, .lat, .prcp, .scale = 12)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>var</code></td>
+<td>
+<p>the variable to be transformed, see [tidyindex::variable_trans()]
+and [SPEI::thornthwaite()]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lat, na.rm, verbose</code></td>
+<td>
+<p>see [SPEI::thornthwaite]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an <code>id_tbl</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.dist</code></td>
+<td>
+<p>the distribution used for distribution fit, see
+[tidyindex::distribution_fit()]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.scale</code></td>
+<td>
+<p>the temporal aggregation scale, see
+[tidyindex::temporal_aggregation()]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.tavg, .lat, .prcp</code></td>
+<td>
+<p>variables to be used in the index calculation, see Details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.pet_method</code></td>
+<td>
+<p>the method used for calculating potential
+evapotranspitation, currently only <code>trans_thornthwaite()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Below explains the steps wrapped in each index and the intermediate
+variables created.
+</p>
+<p>The <code>idx_spi()</code> function performs
+</p>
+
+<ol>
+<li>
+<p>a temporal aggregation on the input precipitation series,
+<code>.prcp</code>, as <code>.agg</code>,
+</p>
+</li>
+<li>
+<p>a distribution fit step on the aggregated precipitation
+, <code>.agg</code>, as <code>.fit</code>, and
+</p>
+</li>
+<li>
+<p>a normalising step on the fitted values, <code>.fit</code>, as
+<code>.index</code>
+</p>
+</li>
+</ol>
+<p>The <code>idx_spei()</code> function performs
+</p>
+
+<ol>
+<li>
+<p>a variable transformation step on the inut average temperature,
+<code>.tavg</code>, to obtain the potential evapotranspiration, <code>.pet</code>,
+</p>
+</li>
+<li>
+<p>a dimension reduction step to calculate difference series,
+<code>.diff</code>, between the input precipitation series, <code>.prcp</code>,
+and <code>.pet</code>,
+</p>
+</li>
+<li>
+<p>a temporal aggregation step on the difference series, <code>.diff</code>,
+as <code>.agg</code>, 
+</p>
+</li>
+<li>
+<p>a distribution fit step on the aggregated series, <code>.agg</code>,
+as <code>.fit</code>, and
+</p>
+</li>
+<li>
+<p>a normalising step on the fitted value, <code>.fit</code>, to
+obtain <code>.index</code>.
+</p>
+</li>
+</ol>
+<p>The <code>idx_rdi()</code> function performs
+</p>
+
+<ol>
+<li>
+<p>a variable transformation step on the input average temperature,
+<code>.tavg</code>, to obtain potential evapotranspiration <code>.pet</code>,
+</p>
+</li>
+<li>
+<p>a dimension reduction step to calculate the ratio of input
+precipitation, <code>.prcp</code>, to <code>.pet</code> as <code>.ratio</code>,
+</p>
+</li>
+<li>
+<p>a temporal aggregation step on the ratio series, <code>.ratio</code>, as
+<code>.agg</code>
+</p>
+</li>
+<li>
+<p>a variable transformation step to take the log10 of the aggregated
+series, <code>.agg</code>, as <code>.y</code>, and
+</p>
+</li>
+<li>
+<p>a rescaling step to rescale <code>.y</code> by zscore to obtain
+<code>.index</code>.
+</p>
+</li>
+</ol>
+<p>The <code>idx_edi()</code> function performs
+</p>
+
+<ol>
+<li>
+<p>a dimension reduction step to aggregate the input precipitation
+series, <code>prcp</code>, as <code>.mult</code>,
+</p>
+</li>
+<li>
+<p>a temporal aggregation step on the aggregated precipitation series
+(<code>.mult</code>) as <code>.ep</code>, and
+</p>
+</li>
+<li>
+<p>a rescaling step to rescale <code>.ep</code> by zscore to obtain
+<code>.index</code>.
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>an index table object
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(lmomco)
+dt &lt;- tenterfield |&gt;
+  mutate(month = lubridate::month(ym)) |&gt;
+  init(id = id, time = ym, group = month)
+
+dt |&gt; idx_spi()
+dt |&gt; idx_spi(.scale = c(12, 24))
+dt |&gt; idx_spei(.lat = lat, .tavg = tavg)
+dt |&gt; idx_rdi(.lat = lat, .tavg = tavg)
+dt |&gt; idx_edi(.lat = lat, .tavg = tavg)
+
+</code></pre>
+
+
+</div>

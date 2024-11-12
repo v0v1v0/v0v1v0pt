@@ -1,0 +1,178 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_softplus</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computes <code>Y = g(X) = Log[1 + exp(X)]</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>The softplus Bijector has the following two useful properties:
+</p>
+
+<ul>
+<li>
+<p> The domain is the positive real numbers
+</p>
+</li>
+<li>
+<p> softplus(x) approx x, for large x, so it does not overflow as easily as the Exp Bijector.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_softplus(
+  hinge_softness = NULL,
+  low = NULL,
+  validate_args = FALSE,
+  name = "softplus"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>hinge_softness</code></td>
+<td>
+<p>Nonzero floating point Tensor.  Controls the softness of what
+would otherwise be a kink at the origin.  Default is 1.0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>low</code></td>
+<td>
+<p>Nonzero floating point tensor, lower bound on output values.
+Implicitly zero if <code>NULL</code>. Otherwise, the
+transformation <code>y = softplus(x) + low</code> is implemented. This
+is equivalent to a <code>tfb_chain(list(tfb_shift(low), tfb_softplus()))</code> bijector
+and is provided for convenience.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. Whether to validate input with asserts. If validate_args is
+FALSE, and the inputs are invalid, correct behavior is not guaranteed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The optional nonzero hinge_softness parameter changes the transition at zero.
+With hinge_softness = c, the bijector is:
+</p>
+<div class="sourceCode"><pre>f_c(x) := c * g(x / c) = c * Log[1 + exp(x / c)].
+```
+
+For large x &gt;&gt; 1,
+
+```
+c * Log[1 + exp(x / c)] approx c * Log[exp(x / c)] = x
+```
+
+so the behavior for large x is the same as the standard softplus.
+As c &gt; 0 approaches 0 from the right, f_c(x) becomes less and less soft,
+approaching max(0, x).
+* c = 1 is the default.
+* c &gt; 0 but small means f(x) approx ReLu(x) = max(0, x).
+* c &lt; 0 flips sign and reflects around the y-axis: f_{-c}(x) = -f_c(-x).
+* c = 0 results in a non-bijective transformation and triggers an exception.
+Note: log(.) and exp(.) are applied element-wise but the Jacobian is a reduction over the event space.
+
+[1 + exp(x / c)]: R:1%20+%20exp(x%20/%20c)
+[1 + exp(x / c)]: R:1%20+%20exp(x%20/%20c)
+[exp(x / c)]: R:exp(x%20/%20c)
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p>a bijector instance.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see <code>tfb_forward()</code>, <code>tfb_inverse()</code>, <code>tfb_inverse_log_det_jacobian()</code>.
+</p>
+<p>Other bijectors: 
+<code>tfb_absolute_value()</code>,
+<code>tfb_affine_linear_operator()</code>,
+<code>tfb_affine_scalar()</code>,
+<code>tfb_affine()</code>,
+<code>tfb_ascending()</code>,
+<code>tfb_batch_normalization()</code>,
+<code>tfb_blockwise()</code>,
+<code>tfb_chain()</code>,
+<code>tfb_cholesky_outer_product()</code>,
+<code>tfb_cholesky_to_inv_cholesky()</code>,
+<code>tfb_correlation_cholesky()</code>,
+<code>tfb_cumsum()</code>,
+<code>tfb_discrete_cosine_transform()</code>,
+<code>tfb_expm1()</code>,
+<code>tfb_exp()</code>,
+<code>tfb_ffjord()</code>,
+<code>tfb_fill_scale_tri_l()</code>,
+<code>tfb_fill_triangular()</code>,
+<code>tfb_glow()</code>,
+<code>tfb_gompertz_cdf()</code>,
+<code>tfb_gumbel_cdf()</code>,
+<code>tfb_gumbel()</code>,
+<code>tfb_identity()</code>,
+<code>tfb_inline()</code>,
+<code>tfb_invert()</code>,
+<code>tfb_iterated_sigmoid_centered()</code>,
+<code>tfb_kumaraswamy_cdf()</code>,
+<code>tfb_kumaraswamy()</code>,
+<code>tfb_lambert_w_tail()</code>,
+<code>tfb_masked_autoregressive_default_template()</code>,
+<code>tfb_masked_autoregressive_flow()</code>,
+<code>tfb_masked_dense()</code>,
+<code>tfb_matrix_inverse_tri_l()</code>,
+<code>tfb_matvec_lu()</code>,
+<code>tfb_normal_cdf()</code>,
+<code>tfb_ordered()</code>,
+<code>tfb_pad()</code>,
+<code>tfb_permute()</code>,
+<code>tfb_power_transform()</code>,
+<code>tfb_rational_quadratic_spline()</code>,
+<code>tfb_rayleigh_cdf()</code>,
+<code>tfb_real_nvp_default_template()</code>,
+<code>tfb_real_nvp()</code>,
+<code>tfb_reciprocal()</code>,
+<code>tfb_reshape()</code>,
+<code>tfb_scale_matvec_diag()</code>,
+<code>tfb_scale_matvec_linear_operator()</code>,
+<code>tfb_scale_matvec_lu()</code>,
+<code>tfb_scale_matvec_tri_l()</code>,
+<code>tfb_scale_tri_l()</code>,
+<code>tfb_scale()</code>,
+<code>tfb_shifted_gompertz_cdf()</code>,
+<code>tfb_shift()</code>,
+<code>tfb_sigmoid()</code>,
+<code>tfb_sinh_arcsinh()</code>,
+<code>tfb_sinh()</code>,
+<code>tfb_softmax_centered()</code>,
+<code>tfb_softsign()</code>,
+<code>tfb_split()</code>,
+<code>tfb_square()</code>,
+<code>tfb_tanh()</code>,
+<code>tfb_transform_diagonal()</code>,
+<code>tfb_transpose()</code>,
+<code>tfb_weibull_cdf()</code>,
+<code>tfb_weibull()</code>
+</p>
+
+
+</div>

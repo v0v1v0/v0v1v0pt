@@ -1,0 +1,176 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>decimal_truth</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Safer Decimal Number (In)Equality Testing Operators</h2>
+
+<h3>Description</h3>
+
+<p>The <code>%d==%, %d!=% %d&lt;%, %d&gt;%, %d&lt;=%, %d&gt;=%</code> (in)equality operators
+perform decimal (type "double") number truth testing. <br>
+They are virtually equivalent to the regular (in)equality operators, <br><code>==, !=, &lt;, &gt;, &lt;=, &gt;=</code>, <br>
+except for 2 aspects:
+</p>
+
+<ol>
+<li>
+<p> The decimal number (in)equality operators assume that
+if the absolute difference between any 2 numbers
+<code>x</code> and <code>y</code>
+is smaller than the Machine tolerance,
+<code>sqrt(.Machine$double.eps)</code>,
+then <code>x</code> and <code>y</code>
+should be consider to be equal. <br>
+For example: <code>(0.1 * 7) == 0.7</code> returns <code>FALSE</code>, even though they are equal,
+due to the way decimal numbers are stored in programming languages like 'R' and  'Python'. <br>
+But <code>(0.1 * 7) %d==% 0.7</code> returns <code>TRUE</code>. <br></p>
+</li>
+<li>
+<p> Only numeric input is allowed, so characters are not coerced to numbers. <br>
+I.e. <code>1 &lt; "a"</code> gives <code>TRUE</code>, whereas <code>1 %d&lt;% "a"</code> gives an error. <br>
+For character equality testing, see %s==% from the 'stringi' package. <br></p>
+</li>
+</ol>
+<p>Thus these operators provide safer decimal number (in)equality tests. <br><br>
+There are also the <code>x %d{}% bnd</code> and <code>x %d!{}% bnd</code> operators,
+where <code>bnd</code> is a vector of length 2,
+or a 2-column matrix (<code>nrow(bnd)==length(x)</code> or <code>nrow(bnd)==1</code>). <br>
+The <code>x %d{}% bnd</code> operator checks if <code>x</code>
+is within the closed interval with bounds defined by <code>bnd</code>. <br>
+The <code>x %d!{}% bnd</code> operator checks if <code>x</code>
+is outside the closed interval with bounds defined by <code>bnd</code>. <br><br>
+Moreover, the function <code>is_wholenumber()</code> is added, to safely test for whole numbers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">x %d==% y
+
+x %d!=% y
+
+x %d&lt;% y
+
+x %d&gt;% y
+
+x %d&lt;=% y
+
+x %d&gt;=% y
+
+x %d{}% bnd
+
+x %d!{}% bnd
+
+is_wholenumber(x, tol = sqrt(.Machine$double.eps))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x, y</code></td>
+<td>
+<p>numeric vectors, matrices, or arrays.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bnd</code></td>
+<td>
+<p>either a vector of length 2, or a matrix with 2 columns and 1 row,
+or else a matrix with 2 columns where <code>nrow(bnd)==length(x)</code>
+(or can be recycled to be <code>nrow(bnd)==length(x)</code>). <br>
+The first element/column of <code>bnd</code> gives the lower bound of the closed interval; <br>
+The second element/column of <code>bnd</code> gives the upper bound of the closed interval. <br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>a single, strictly positive number close to zero, giving the tolerance.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>For the <code>%d...%</code> operators: <br>
+A logical vector with the same dimensions as <code>x</code>,
+indicating the result of the element by element comparison. <br>
+NOTE: <code>Inf</code> by <code>Inf</code> and <code>-Inf</code> by <code>-Inf</code> comparisons with
+the <code>%d...%</code> operators return <code>NA</code>. <br><br>
+For <code>is_wholenumber()</code>: <br>
+A logical vector with the same dimensions as <code>x</code>,
+indicating the result of the element by element comparison. <br>
+NOTE: <code>Inf</code>, <code>-Inf</code>, <code>NaN</code> and <code>NA</code> all return <code>NA</code> for <code>is_wholenumber()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_safer
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+x &lt;- c(0.3, 0.6, 0.7)
+y &lt;- c(0.1 * 3, 0.1 * 6, 0.1 * 7)
+print(x)
+print(y)
+
+x == y # gives FALSE, but should be TRUE
+x != y # gives TRUE, should be FALSE
+x &gt; y # not wrong
+x &lt; y # gives TRUE, should be FALSE
+
+# same as above, but here the results are correct:
+x %d==% y # correct
+x %d!=% y # correct
+x %d&lt;% y # correct
+x %d&gt;% y # correct
+x %d&lt;=% y # correct
+x %d&gt;=% y # correct
+
+# check if numbers are in closed interval:
+x &lt;- c(0.3, 0.6, 0.7)
+bnd &lt;- cbind(x - 0.1, x + 0.1)
+x %d{}% bnd
+x %d!{}% bnd
+
+# These operators work for integers also:
+x &lt;- 1L:5L
+y &lt;- 1L:5L
+x %d==% y
+x %d!=% y
+x %d&lt;% y
+x %d&gt;% y
+x %d&lt;=% y
+x %d&gt;=% y
+
+x &lt;- 1L:5L
+y &lt;- x + 1L
+x %d==% y
+x %d!=% y
+x %d&lt;% y
+x %d&gt;% y
+x %d&lt;=% y
+x %d&gt;=% y
+
+x &lt;- 1L:5L
+y &lt;- x - 1L
+x %d==% y
+x %d!=% y
+x %d&lt;% y
+x %d&gt;% y
+x %d&lt;=% y
+x %d&gt;=% y
+
+# is_wholenumber:
+is_wholenumber(1:10 + c(0, 0.1))
+</code></pre>
+
+
+</div>

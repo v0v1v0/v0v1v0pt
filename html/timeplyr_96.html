@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_diff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Time differences by any time unit</h2>
+
+<h3>Description</h3>
+
+<p>The time difference between 2 date or date-time vectors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_diff(
+  x,
+  y,
+  time_by = 1L,
+  time_type = getOption("timeplyr.time_type", "auto")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Start date or datetime.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>End date or datetime.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Must be one of the three (Default is 1):
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>Time difference type: "auto", "duration" or "period".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When <code>time_by</code> is a numeric vector, e.g <code>time_by = 1</code> then
+base arithmetic using <code>base::`-`</code> is used, otherwise 'lubridate' style
+durations and periods are used.<br>
+Some more exotic time units such as quarters, fortnights, etcetera
+can be specified. See <code>.time_units</code> for more choices.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric vector recycled to the length of <code>max(length(x), length(y))</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(lubridate)
+
+time_diff(today(), today() + days(10),
+          time_by = "days")
+time_diff(today(), today() + days((0:3) * 7),
+          time_by = weeks(1))
+time_diff(today(), today() + days(100),
+          time_by = list("days" = 1:100))
+time_diff(1, 1 + 0:100, time_by = 3)
+
+library(nycflights13)
+library(bench)
+
+# Period differences are much faster
+# check = FALSE because the results are fractionally different.
+# lubridate:::adjust_estimate likely has a typo in the first while loop
+
+mark(timeplyr = time_diff(flights$time_hour, today(), "weeks", time_type = "period"),
+     lubridate = interval(flights$time_hour, today()) / weeks(1),
+     check = FALSE)
+
+
+</code></pre>
+
+
+</div>

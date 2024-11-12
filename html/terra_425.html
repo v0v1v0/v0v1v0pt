@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>inset</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Make an inset map</h2>
+
+<h3>Description</h3>
+
+<p>Make an inset map or scale the extent of a SpatVector
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatVector'
+inset(x, e, loc="", scale=0.2, background="white", 
+	perimeter=TRUE, box=NULL, pper, pbox, offset=0.1, add=TRUE, ...)
+
+## S4 method for signature 'SpatRaster'
+inset(x, e, loc="", scale=0.2, background="white", 
+	perimeter=TRUE, box=NULL, pper, pbox, offset=0.1, add=TRUE, ...)
+
+## S4 method for signature 'SpatVector'
+inext(x, e, y=NULL, gap=0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatVector, SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>e</code></td>
+<td>
+<p>SpatExtent to set the size and location of the inset. Or missing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loc</code></td>
+<td>
+<p>character. One of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right", "center"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>numeric. The relative size of the inset, used when x is missing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>background</code></td>
+<td>
+<p>color for the background of the inset. Use <code>NA</code> for no background color</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perimeter</code></td>
+<td>
+<p>logical. If <code>TRUE</code> a perimeter (border) is drawn around the inset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>box</code></td>
+<td>
+<p>SpatExtent or missing, to draw a box on the inset, e.g. to show where the map is located in a larger area</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pper</code></td>
+<td>
+<p>list with graphical parameters (arguments) such as <code>col</code> and <code>lwd</code> for the perimeter line</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pbox</code></td>
+<td>
+<p>list with graphical parameters (arguments) such as <code>col</code> and <code>lwd</code> for the box (line)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>numeric. Value between 0.1 and 1 to indicate the relative distance between what is mapped and the bounding box</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+<p>logical. Add the inset to the map?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to plot for the drawing of <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>SpatVector. If not NULL, <code>y</code> is scaled based with the parameters for <code>x</code>. This is useful, for example, when <code>x</code> represent boundaries, and <code>y</code> points within these boundaries</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gap</code></td>
+<td>
+<p>numeric to add space between the SpatVector and the SpatExtent</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>scaled and shifted SpatVector or SpatRaster (returned invisibly)</p>
+
+
+<h3>See Also</h3>
+
+<p><code>sbar</code>, <code>rescale</code>, <code>shift</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> 
+f &lt;- system.file("ex/lux.shp", package="terra")
+v &lt;- vect(f)
+x &lt;- v[v$NAME_2 == "Diekirch", ]
+
+plot(x, density=10, col="blue")
+inset(v)
+
+# more elaborate
+plot(x, density=10, col="blue")
+inset(v, col = "brown", border="lightgrey", perimeter=TRUE, 
+		pper=list(col="orange", lwd=3, lty=2), 
+		box=ext(x), pbox=list(col="blue", lwd=2))
+
+cols &lt;- rep("light grey", 12)
+cols[2] &lt;- "red"
+e &lt;- ext(c(6.2, 6.3, 49.9, 50))
+b &lt;- ext(x)+0.02
+inset(v, e=e, col=cols, box=b)
+
+# with a SpatRaster
+ff &lt;- system.file("ex/elev.tif", package="terra")
+r &lt;- rast(ff)
+r &lt;- crop(r, ext(x) + .01)
+plot(r, type="int", mar=c(2,2,2,2), plg=list(x="topright"))
+lines(v, lwd=1.5)
+lines(x, lwd=2.5)
+inset(v, col=cols, loc="topleft", scale=0.15)
+
+# a more complex one
+plot(r, plg=list(title="meter\n", shrink=.2, cex=.8))
+lines(v, lwd=4, col="white")
+lines(v, lwd=1.5)
+lines(x, lwd=2.5)
+text(x, "NAME_2", cex=1.5, halo=TRUE)
+sbar(6, c(6.04, 49.785), type="bar", below="km", label=c(0,3,6), cex=.8)
+s &lt;- inset(v, col=cols, box=b, scale=.2, loc="topright", background="light yellow",
+	pbox=list(lwd=2, lty=5, col="blue"))
+
+# note the returned inset SpatVector
+s
+lines(s, col="orange")
+</code></pre>
+
+
+</div>

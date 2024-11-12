@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_aggregate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Aggregate time to a higher unit</h2>
+
+<h3>Description</h3>
+
+<p>Aggregate time to a higher unit for possibly many groups
+with respect to a time index.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_aggregate(
+  x,
+  time_by = NULL,
+  from = NULL,
+  to = NULL,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA"),
+  time_floor = FALSE,
+  week_start = getOption("lubridate.week.start", 1),
+  as_interval = getOption("timeplyr.use_intervals", TRUE)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Time vector. <br>
+Can be a <code>Date</code>, <code>POSIXt</code>, <code>numeric</code>, <code>integer</code>,
+<code>yearmon</code>, or <code>yearqtr</code> vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time unit. <br>
+Must be one of the following:
+</p>
+
+<ul>
+<li>
+<p> string, e.g <code>time_by = "day"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> lubridate duration or period object, e.g. <code>days(1)</code> or <code>ddays(1)</code>.
+</p>
+</li>
+<li>
+<p> named list of length one, e.g. <code>list("days" = 7)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector, e.g. <code>time_by = 7</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>Start.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>End.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_month</code></td>
+<td>
+<p>Control how impossible dates are handled when
+month or year arithmetic is involved.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_dst</code></td>
+<td>
+<p>See <code>?timechange::time_add</code> for the full list of details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_floor</code></td>
+<td>
+<p>Should <code>from</code> be floored to the nearest unit specified
+through the <code>time_by</code> argument?
+This is particularly useful for starting sequences at the
+beginning of a week or month for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>week_start</code></td>
+<td>
+<p>day on which week starts following ISO conventions - 1
+means Monday (default), 7 means Sunday.
+This is only used when <code>time_floor = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as_interval</code></td>
+<td>
+<p>Should result be a <code>time_interval</code>?
+Default is <code>TRUE</code>. <br>
+This can be controlled globally through <code>options(timeplyr.use_intervals)</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>time_aggregate</code> aggregates time using
+distinct moving time range blocks of a specified time unit.
+</p>
+<p>The actual calculation is extremely simple and essentially requires
+a subtraction, a rounding and an addition.
+</p>
+<p>To perform a by-group time aggregation, simply supply
+<code>collapse::fmin(x, g = groups, TRA = "replace_fill")</code> as the
+<code>from</code> argument.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>time_interval</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>time_summarisev time_cut
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(nycflights13)
+library(lubridate)
+library(dplyr)
+
+sunique &lt;- function(x) sort(unique(x))
+
+hours &lt;- sunique(flights$time_hour)
+days &lt;- as_date(hours)
+
+# Aggregate by week or any time unit easily
+sunique(time_aggregate(hours, "week"))
+sunique(time_aggregate(hours, ddays(14)))
+sunique(time_aggregate(hours, "month"))
+sunique(time_aggregate(days, "month"))
+
+# Left aligned
+sunique(time_aggregate(days, "quarter"))
+
+# Very fast by group aggregation
+start &lt;- collapse::fmin(flights$time_hour, g = flights$tailnum,
+                        TRA = "replace_fill")
+flights %&gt;%
+  mutate(start = collapse::fmin(time_hour, g = list(origin, dest), TRA = "replace_fill")) %&gt;%
+  mutate(week = time_aggregate(time_hour, dweeks(1), from = start)) %&gt;%
+  select(origin, dest, time_hour, week)
+
+</code></pre>
+
+
+</div>

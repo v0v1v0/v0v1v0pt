@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dicp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Model-based causal feature selection for general response types</h2>
+
+<h3>Description</h3>
+
+<p>Function 'dicp()' implements invariant causal prediction (ICP) for
+transformation and generalized linear models, including binary logistic
+regression, Weibull regression, the Cox model, linear regression and many
+others. The aim of ICP is to discover the direct causes of a response given
+data from heterogeneous experimental settings and a potentially large pool of
+candidate predictors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dicp(
+  formula,
+  data,
+  env,
+  modFUN,
+  verbose = TRUE,
+  type = c("residual", "wald", "partial"),
+  test = "gcm.test",
+  controls = NULL,
+  alpha = 0.05,
+  baseline_fixed = TRUE,
+  greedy = FALSE,
+  max_size = NULL,
+  mandatory = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>A <code>formula</code> including response and covariate terms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>data.frame</code> containing response and explanatory variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>env</code></td>
+<td>
+<p>A <code>formula</code> specifying the environment variables (see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modFUN</code></td>
+<td>
+<p>Model function from 'tram' (or other packages), e.g.,
+<code>BoxCox</code>, <code>Colr</code>,
+<code>Polr</code>, <code>Lm</code>,
+<code>Coxph</code>, <code>Survreg</code>,
+<code>Lehmann</code>. Standard implementations
+<code>lm</code>, <code>glm</code>,
+<code>survreg</code>, <code>coxph</code>,
+and <code>polr</code> are also supported. See the corresponding
+alias <code>&lt;model_name&gt;ICP</code>, e.g., <code>PolrICP</code> or
+<code>?implemented_model_classes</code>. Models from 'lme4', 'tramME',
+'glmnet' and 'mgcv' are also supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical, whether output should be verbose (default <code>TRUE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character, type of invariance (<code>"residual"</code> or <code>"wald"</code>);
+see <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test</code></td>
+<td>
+<p>Character, specifies the invariance test to be used when
+<code>type = "residual"</code>. The default is <code>"gcm.test"</code>. Other
+implemented tests are <code>"HSIC"</code>, <code>"t.test"</code>, <code>"var.test"</code>,
+and <code>"combined"</code>. Alternatively, a custom function for testing
+invariance of the form <code>\(r, e, controls) {...}</code> can be supplied,
+which outputs a list with entry <code>"p.value"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>controls</code></td>
+<td>
+<p>Controls for the used tests and the overall procedure,
+see <code>dicp_controls</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Level of invariance test, default <code>0.05</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline_fixed</code></td>
+<td>
+<p>Fixed baseline transformation, see
+<code>dicp_controls</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>greedy</code></td>
+<td>
+<p>Logical, whether to perform a greedy version of ICP (default is
+<code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_size</code></td>
+<td>
+<p>Numeric; maximum support size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mandatory</code></td>
+<td>
+<p>A <code>formula</code> containing mandatory covariates, i.e.,
+covariates which by domain knowledge are believed to be parents
+of the response or are in another way required for the environment or
+model to be valid (for instance, conditionally valid environments or
+random effects in a mixed model).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed to <code>modFUN</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>TRAMICP iterates over all subsets of covariates provided in <code>formula</code>
+and performs an invariance test based on the conditional covariance between
+score residuals and environments in <code>env</code> (<code>type = "residual"</code>) or
+the Wald statistic testing for the presence of main and interaction effects
+of the environments (<code>type = "wald"</code>). The algorithm outputs the
+intersection over all non-rejected sets as an estimate of the causal parents.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of class <code>"dICP"</code>, containing
+</p>
+
+<ul>
+<li>
+<p><code>candidate_causal_predictors</code>: Character; intersection of all
+non-rejected sets,
+</p>
+</li>
+<li>
+<p><code>set_pvals</code>: Numeric vector; set-specific p-values of the invariance
+test,
+</p>
+</li>
+<li>
+<p><code>predictor_pvals</code>: Numeric vector; predictor-specific p-values,
+</p>
+</li>
+<li>
+<p><code>tests</code>: List of invariance tests.
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Kook, L., Saengkyongam, S., Lundborg, A. R., Hothorn, T., &amp; Peters, J. (2023).
+Model-based causal feature selection for general response types. arXiv
+preprint. <a href="https://doi.org/10.48550/arXiv.2309.12833">doi:10.48550/arXiv.2309.12833</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(12)
+d &lt;- dgp_dicp(n = 1e3, mod = "binary")
+dicp(Y ~ X1 + X2 + X3, data = d, env = ~ E, modFUN = "glm",
+     family = "binomial", type = "wald")
+
+</code></pre>
+
+
+</div>

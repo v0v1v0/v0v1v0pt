@@ -1,0 +1,565 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tam.jml</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Joint Maximum Likelihood Estimation
+</h2>
+
+<h3>Description</h3>
+
+<p>This function estimate unidimensional
+item response models with joint maximum likelihood (JML,
+see e.g. Linacre, 1994).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tam.jml(resp, group=NULL, adj=.3, disattenuate=FALSE, bias=TRUE,
+    xsi.fixed=NULL, xsi.inits=NULL, theta.fixed=NULL, A=NULL, B=NULL, Q=NULL,
+    ndim=1, pweights=NULL, constraint="cases", verbose=TRUE, control=list(), version=3)
+
+## S3 method for class 'tam.jml'
+summary(object, file=NULL, ...)
+
+## S3 method for class 'tam.jml'
+logLik(object, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>resp</code></td>
+<td>
+
+<p>A matrix of item responses. Missing responses must be declared
+as <code>NA</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+
+<p>An optional vector of group identifier
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>disattenuate</code></td>
+<td>
+
+<p>An optional logical indicating whether the person parameters
+should be disattenuated due to unreliability?
+The disattenuation is conducted by applying the Kelley formula.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj</code></td>
+<td>
+<p>Adjustment constant which is subtracted or added to extreme
+scores (score of zero or maximum score). The default is a value of 0.3</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+
+<p>A logical which indicates if JML bias should be reduced
+by multiplying item parameters by the adjustment factor
+of <code class="reqn">(I-1)/I</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xsi.fixed</code></td>
+<td>
+
+<p>An optional matrix with two columns for fixing some of the
+basis parameters <code class="reqn">\xi</code> of item intercepts.
+1st column: Index of <code class="reqn">\xi</code> parameter, 2nd column:
+Fixed value of <code class="reqn">\xi</code> parameter
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xsi.inits</code></td>
+<td>
+
+<p>An optional vector of initial <code class="reqn">\xi</code> parameters. Note that
+all parameters must be specified and the vector is not of the
+same format as <code>xsi.fixed</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.fixed</code></td>
+<td>
+<p>Matrix for fixed person parameters <code class="reqn">\theta</code>. The first
+column includes the index whereas the second column includes
+the fixed value. This argument can only be applied for <code>version=1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+
+<p>A design array <code class="reqn">A</code> for item category intercepts.
+For item <code class="reqn">i</code> and category <code class="reqn">k</code>, the threshold is
+specified as <code class="reqn"> \sum _j a_{ikj}   \xi_j</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>A design array for scoring item category responses.
+Entries in <code class="reqn">B</code> represent item loadings on
+abilities <code class="reqn">\theta</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q</code></td>
+<td>
+
+<p>A Q-matrix which defines loadings of items on dimensions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ndim</code></td>
+<td>
+
+<p>Number of dimensions in the model. The default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pweights</code></td>
+<td>
+
+<p>An optional vector of person weights.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constraint</code></td>
+<td>
+<p>Type of constraint for means. Either <code>"cases"</code>
+(set mean of person parameters to zero)
+or <code>"items"</code> (set mean of item parameters to zero).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical indicating whether output should
+be printed during iterations. This argument replaces <code>control$progress</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+
+<p>A list of control arguments. See <code>tam.mml</code>
+for more details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>version</code></td>
+<td>
+<p>Version function which should be used. <code>version=2</code>
+is the former <code>tam.jml2</code> function in <span class="pkg">TAM</span> (&lt;2.0).
+The default <code>version=3</code> allows efficient handling in case of missing
+data.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>Object of class <code>tam.jml</code> (only for <code>summary.tam</code>
+function)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+
+<p>A file name in which the summary output will be written
+(only for <code>summary.tam.jml</code> function)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Further arguments to be passed
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>item1</code></td>
+<td>
+<p>Data frame with item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xsi</code></td>
+<td>
+<p>Vector of item parameters <code class="reqn">\xi</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errorP</code></td>
+<td>
+<p>Standard error of item parameters <code class="reqn">\xi</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>MLE in final step</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errorWLE</code></td>
+<td>
+<p>Standard error of WLE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>WLE</code></td>
+<td>
+<p>WLE in last iteration</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>WLEreliability</code></td>
+<td>
+<p>WLE reliability</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PersonScores</code></td>
+<td>
+<p>Scores for each person (sufficient statistic)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ItemScore</code></td>
+<td>
+<p>Sufficient statistic for each item parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PersonMax</code></td>
+<td>
+<p>Maximum person score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ItemMax</code></td>
+<td>
+<p>Maximum item score</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deviance</code></td>
+<td>
+<p>Deviance</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deviance.history</code></td>
+<td>
+<p>Deviance history in iterations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp</code></td>
+<td>
+<p>Original data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp.ind</code></td>
+<td>
+<p>Response indicator matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>Vector of group identifiers (if provided as an argument)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pweights</code></td>
+<td>
+<p>Vector of person weights</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>Design matrix <code class="reqn">A</code> of item intercepts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>Loading (or scoring) matrix <code class="reqn">B</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nitems</code></td>
+<td>
+<p>Number of items</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxK</code></td>
+<td>
+<p>Maximum number of categories</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nstud</code></td>
+<td>
+<p>Number of persons in <code>resp</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp.ind.list</code></td>
+<td>
+<p>Like <code>resp.ind</code>, only in the format of a list</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xsi.fixed</code></td>
+<td>
+<p>Fixed <code class="reqn">\xi</code> item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>Control list</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>item</code></td>
+<td>
+<p>Extended data frame of item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta_summary</code></td>
+<td>
+<p>Summary of person parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>This joint maximum likelihood estimation procedure should be
+compatible with Winsteps and Facets software, see also
+<em>http://www.rasch.org/software.htm</em>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Linacre, J. M. (1994). <em>Many-Facet Rasch Measurement</em>.
+Chicago: MESA Press.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For estimating the same class of models with marginal
+maximum likelihood estimation see <code>tam.mml</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: Dichotomous data
+#############################################################################
+data(data.sim.rasch)
+resp &lt;- data.sim.rasch[1:700, seq( 1, 40, len=10)  ]  # subsample
+# estimate the Rasch model with JML (function 'tam.jml')
+mod1a &lt;- TAM::tam.jml(resp=resp)
+summary(mod1a)
+itemfit &lt;- TAM::tam.fit(mod1a)$fit.item
+
+# compare results with Rasch model estimated by MML
+mod1b &lt;- TAM::tam.mml(resp=resp )
+
+# constrain item difficulties to zero
+mod1c &lt;- TAM::tam.jml(resp=resp, constraint="items")
+
+# plot estimated parameters
+plot( mod1a$xsi, mod1b$xsi$xsi, pch=16,
+    xlab=expression( paste( xi[i], " (JML)" )),
+    ylab=expression( paste( xi[i], " (MML)" )),
+    main="Item Parameter Estimate Comparison")
+lines( c(-5,5), c(-5,5), col="gray" )
+
+# Now, the adjustment pf .05 instead of the default .3 is used.
+mod1d &lt;- TAM::tam.jml(resp=resp, adj=.05)
+# compare item parameters
+round( rbind( mod1a$xsi, mod1d$xsi ), 3 )
+  ##          [,1]   [,2]   [,3]   [,4]   [,5]  [,6]  [,7]  [,8]  [,9] [,10]
+  ##   [1,] -2.076 -1.743 -1.217 -0.733 -0.338 0.147 0.593 1.158 1.570 2.091
+  ##   [2,] -2.105 -1.766 -1.233 -0.746 -0.349 0.139 0.587 1.156 1.574 2.108
+
+# person parameters for persons with a score 0, 5 and 10
+pers1 &lt;- data.frame( "score_adj0.3"=mod1a$PersonScore, "theta_adj0.3"=mod1a$theta,
+           "score_adj0.05"=mod1d$PersonScore, "theta_adj0.05"=mod1d$theta  )
+round( pers1[ c(698, 683, 608), ],3  )
+  ##       score_adj0.3 theta_adj0.3 score_adj0.05 theta_adj0.05
+  ##   698          0.3       -4.404          0.05        -6.283
+  ##   683          5.0       -0.070          5.00        -0.081
+  ##   608          9.7        4.315          9.95         6.179
+
+## Not run: 
+#*** item fit and person fit statistics
+fmod1a &lt;- TAM::tam.jml.fit(mod1a)
+head(fmod1a$fit.item)
+head(fmod1a$fit.person)
+
+#*** Models in which some item parameters are fixed
+xsi.fixed &lt;- cbind( c(1,3,9,10), c(-2, -1.2, 1.6, 2 ) )
+mod1e &lt;- TAM::tam.jml( resp=resp, xsi.fixed=xsi.fixed )
+summary(mod1e)
+
+#*** Model in which also some person parameters theta are fixed
+# fix theta parameters of persons 2, 3, 4 and 33 to values -2.9, ...
+theta.fixed &lt;- cbind( c(2,3,4,33), c( -2.9, 4, -2.9, -2.9 ) )
+mod1g &lt;- TAM::tam.jml( resp=resp, xsi.fixed=xsi.fixed, theta.fixed=theta.fixed )
+# look at estimated results
+ind.person &lt;- c( 1:5, 30:33 )
+cbind( mod1g$WLE, mod1g$errorWLE )[ind.person,]
+
+#############################################################################
+# EXAMPLE 2: Partial credit model
+#############################################################################
+
+data(data.gpcm, package="TAM")
+dat &lt;- data.gpcm
+
+# JML estimation
+mod2 &lt;- TAM::tam.jml(resp=dat)
+mod2$xsi     # extract item parameters
+summary(mod2)
+TAM::tam.fit(mod2)    # item and person infit/outfit statistic
+
+#* estimate rating scale model
+A &lt;- TAM::designMatrices(resp=dat, modeltype="RSM")$A
+#* estimate model with design matrix A
+mod3 &lt;- TAM::tam.jml(dat, A=A)
+summary(mod3)
+
+#############################################################################
+# EXAMPLE 3: Facet model estimation using joint maximum likelihood
+#            data.ex10; see also Example 10 in ?tam.mml
+#############################################################################
+
+data(data.ex10)
+dat &lt;- data.ex10
+  ## &gt; head(dat)
+  ##  pid rater I0001 I0002 I0003 I0004 I0005
+  ##    1     1     0     1     1     0     0
+  ##    1     2     1     1     1     1     0
+  ##    1     3     1     1     1     0     1
+  ##    2     2     1     1     1     0     1
+  ##    2     3     1     1     0     1     1
+
+facets &lt;- dat[, "rater", drop=FALSE ] # define facet (rater)
+pid &lt;- dat$pid      # define person identifier (a person occurs multiple times)
+resp &lt;- dat[, -c(1:2) ]        # item response data
+formulaA &lt;- ~ item * rater      # formula
+
+# use MML function only to restructure data and input obtained design matrices
+# and processed response data to tam.jml (-&gt; therefore use only 2 iterations)
+mod3a &lt;- TAM::tam.mml.mfr( resp=resp, facets=facets, formulaA=formulaA,
+             pid=dat$pid,  control=list(maxiter=2) )
+
+# use modified response data mod3a$resp and design matrix mod3a$A
+resp1 &lt;- mod3a$resp
+# JML
+mod3b &lt;- TAM::tam.jml( resp=resp1, A=mod3a$A, control=list(maxiter=200) )
+
+#############################################################################
+# EXAMPLE 4: Multi faceted model with some anchored item and person parameters
+#############################################################################
+
+data(data.exJ03)
+resp &lt;- data.exJ03$resp
+X &lt;- data.exJ03$X
+
+#*** (0) preprocess data with TAM::tam.mml.mfr
+mod0 &lt;- TAM::tam.mml.mfr( resp=resp, facets=X, pid=X$rater,
+                formulaA=~ leader + item + step,
+                control=list(maxiter=2) )
+summary(mod0)
+
+#*** (1) estimation with tam.jml (no parameter fixings)
+
+# extract processed data and design matrix from tam.mml.mfr
+resp1 &lt;- mod0$resp
+A1 &lt;- mod0$A
+# estimate model with tam.jml
+mod1 &lt;- TAM::tam.jml( resp=resp1, A=A1, control=list( Msteps=4, maxiter=100 ) )
+summary(mod1)
+
+#*** (2) fix some parameters (persons and items)
+
+# look at indices in mod1$xsi
+mod1$xsi
+# fix step parameters
+xsi.index1 &lt;- cbind( 21:25, c( -2.44, 0.01, -0.15, 0.01,  1.55 ) )
+# fix some item parameters of items 1,2,3,6 and 13
+xsi.index2 &lt;- cbind( c(1,2,3,6,13), c(-2,-1,-1,-1.32, -1 ) )
+xsi.index &lt;- rbind( xsi.index1, xsi.index2 )
+# fix some theta parameters of persons 1, 15 and 20
+theta.fixed &lt;- cbind(  c(1,15,20), c(0.4, 1, 0 ) )
+# estimate model, theta.fixed only works for version=1
+mod2 &lt;- TAM::tam.jml( resp=resp1, A=A1, xsi.fixed=xsi.fixed, theta.fixed=theta.fixed,
+            control=list( Msteps=4, maxiter=100) )
+summary(mod2)
+cbind( mod2$WLE, mod2$errorWLE )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

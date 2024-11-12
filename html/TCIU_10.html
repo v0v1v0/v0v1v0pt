@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fmri_ROI_phase2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tensor-on-tensor regression on region of interest(ROI) of the brain</h2>
+
+<h3>Description</h3>
+
+<p>This function takes a 4d fMRI data and detects locations where stimulus occurs
+on each region of interest(ROI) of the brain using <code>MultiwayRegression</code>. This function could be used as
+an intermediate step of a three-phase analytics protocol to detect motor areas. The functions to implement this 
+three-phase protocol in a consecutive order is <code>fmri_ROI_phase2</code>, <code>fmri_ROI_phase3</code> and <code>fmri_post_hoc</code> respectively.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fmri_ROI_phase2(
+  fmridata,
+  label_mask,
+  label_dict,
+  stimulus_idx,
+  stimulus_dur,
+  fmri.design_order = 2,
+  fmri.stimulus_TR = 3,
+  rrr_rank = 3,
+  method = "t_test",
+  parallel_computing = FALSE,
+  ncor = max(detectCores() - 2, 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fmridata</code></td>
+<td>
+<p>a 4d array which contains the spatial and temporal record of fmri result.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_mask</code></td>
+<td>
+<p>a 3d nifti or 3d array of data that shows the labeled brain atlas.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_dict</code></td>
+<td>
+<p>a dataframe or array or matrix to specify the indices and corresponding
+names of the ROI. The input of this parameter could take one of the list outputs of the <code>fmri_ROI_phase2</code> function as a following step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stimulus_idx</code></td>
+<td>
+<p>a vector of the start time points of the time period when the fMRI data receives stimulation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stimulus_dur</code></td>
+<td>
+<p>a vector of the time period when the fMRI data receives stimulation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fmri.design_order</code></td>
+<td>
+<p>a parameter to specify the order of the polynomial drift terms in <code>fmri.design</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fmri.stimulus_TR</code></td>
+<td>
+<p>a parameter to specify the time between scans in seconds in <code>fmri.stimulus</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rrr_rank</code></td>
+<td>
+<p>a parameter to specify the assumed rank of the coefficient array in <code>rrr</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>a string that represents method for calculating p-values from tensor-on-tensor regression coefficients. 
+There are 2 options: 't_test' and 'corrected_t_test'. The default is 't_test'.
+'t_test' is to calculate the test statistics 't-value' across all voxels in the bounding box of ROI; 
+'corrected_t_test' is to calculate the test statistics 't-value' by first across each voxel on a temporal basis,
+and then across all voxels in the bounding box of ROI.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel_computing</code></td>
+<td>
+<p>a logical parameter to determine whether to use parallel computing to speed up the function or not.
+The default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncor</code></td>
+<td>
+<p>number of cores for parallel computing. The default is the number of cores of the computer minus 2.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>fmri_ROI_phase2</code> is used to detect locations where stimulus occurs by calculating the p-values
+of the ROI-based tensor-on-tensor regression. Two methods can be chosen to calculate the p-values from the regression coefficients.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a 3d array storing ROI-based tensor regression p-values for the 4d fMRI data
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>SOCR team &lt;<a href="http://socr.umich.edu/people/">http://socr.umich.edu/people/</a>&gt;
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# sample 3D data of labeled brain atlas provided by the package
+# this example will use parallel computing and take about ten minutes to finish
+dim(mask_label)
+# sample dataframe of ROI-based indices and names provided by the package
+dim(mask_dict)
+# sample 3D data of mask provided by the package
+dim(mask)
+
+# calculated p-values 
+set.seed(1)
+fmri_generate = fmri_simulate_func(dim_data = c(64, 64, 40), mask = mask)
+fmridata = fmri_generate$fmri_data
+stimulus_idx = fmri_generate$ons
+stimulus_dur = fmri_generate$dur
+# the function will may take a long time, see examples in demo function or vignettes       
+
+
+</code></pre>
+
+
+</div>

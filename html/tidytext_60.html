@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>unnest_tokens</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Split a column into tokens</h2>
+
+<h3>Description</h3>
+
+<p>Split a column into tokens, flattening the table into one-token-per-row.
+This function supports non-standard evaluation through the tidyeval framework.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">unnest_tokens(
+  tbl,
+  output,
+  input,
+  token = "words",
+  format = c("text", "man", "latex", "html", "xml"),
+  to_lower = TRUE,
+  drop = TRUE,
+  collapse = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tbl</code></td>
+<td>
+<p>A data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>Output column to be created as string or symbol.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>input</code></td>
+<td>
+<p>Input column that gets split as string or symbol.
+</p>
+<p>The output/input arguments are passed by expression and support
+quasiquotation; you can unquote strings and symbols.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>token</code></td>
+<td>
+<p>Unit for tokenizing, or a custom tokenizing function. Built-in
+options are "words" (default), "characters", "character_shingles", "ngrams",
+"skip_ngrams", "sentences", "lines", "paragraphs", "regex", and
+"ptb" (Penn Treebank). If a function, should take a character vector and
+return a list of character vectors of the same length.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Either "text", "man", "latex", "html", or "xml". When the
+format is "text", this function uses the tokenizers package. If not "text",
+this uses the hunspell tokenizer, and can tokenize only by "word".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to_lower</code></td>
+<td>
+<p>Whether to convert tokens to lowercase.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>Whether original input column should get dropped. Ignored
+if the original input and new output column have the same name.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>collapse</code></td>
+<td>
+<p>A character vector of variables to collapse text across,
+or <code>NULL</code>.
+</p>
+<p>For tokens like n-grams or sentences, text can be collapsed across rows
+within variables specified by <code>collapse</code> before tokenization. At tidytext
+0.2.7, the default behavior for <code>collapse = NULL</code> changed to be more
+consistent. The new behavior is that text is <em>not</em> collapsed for <code>NULL</code>.
+</p>
+<p>Grouping data specifies variables to collapse across in the same way as
+<code>collapse</code> but you <strong>cannot</strong> use both the <code>collapse</code> argument and
+grouped data. Collapsing applies mostly to <code>token</code> options of "ngrams",
+"skip_ngrams", "sentences", "lines", "paragraphs", or "regex".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Extra arguments passed on to tokenizers, such
+as <code>strip_punct</code> for "words", <code>n</code> and <code>k</code> for "ngrams" and "skip_ngrams",
+and <code>pattern</code> for "regex".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If format is anything other than "text", this uses the
+<code>hunspell::hunspell_parse()</code> tokenizer instead of the tokenizers package.
+This does not yet have support for tokenizing by any unit other than words.
+</p>
+<p>Support for <code>token = "tweets"</code> was removed in tidytext 0.4.0 because of
+changes in upstream dependencies.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(dplyr)
+library(janeaustenr)
+
+d &lt;- tibble(txt = prideprejudice)
+d
+
+d %&gt;%
+  unnest_tokens(output = word, input = txt)
+
+d %&gt;%
+  unnest_tokens(output = sentence, input = txt, token = "sentences")
+
+d %&gt;%
+  unnest_tokens(output = ngram, input = txt, token = "ngrams", n = 2)
+
+d %&gt;%
+  unnest_tokens(chapter, txt, token = "regex", pattern = "Chapter [\\\\d]")
+
+d %&gt;%
+  unnest_tokens(shingle, txt, token = "character_shingles", n = 4)
+
+# custom function
+d %&gt;%
+  unnest_tokens(word, txt, token = stringr::str_split, pattern = " ")
+
+# tokenize HTML
+h &lt;- tibble(row = 1:2,
+                text = c("&lt;h1&gt;Text &lt;b&gt;is&lt;/b&gt;", "&lt;a href='example.com'&gt;here&lt;/a&gt;"))
+
+h %&gt;%
+  unnest_tokens(word, text, format = "html")
+
+</code></pre>
+
+
+</div>

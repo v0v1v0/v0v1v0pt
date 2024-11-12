@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mergeTracks</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merge track records</h2>
+
+<h3>Description</h3>
+
+<p><code>mergeTracks</code> attempts to merge to two track objects as obtained by
+<code>trackParticles</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mergeTracks(records1, records2, L = NULL, weight = NULL, logsizes = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>records1</code></td>
+<td>
+<p>Object of class 'tracked',
+obtained using <code>trackParticles</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>records2</code></td>
+<td>
+<p>Object of class 'tracked',
+obtained using <code>trackParticles</code> that should be linked to
+<code>records1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>L</code></td>
+<td>
+<p>Numeric. Maximum cost for linking a particle to another particle.
+When the cost is larger,
+particles will be not be linked (resulting in the begin or end of a segment).
+If <code>NULL</code>, the same <code>L</code> as used to create
+<code>records2</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>Vector containing 3 weights to calculate costs. Depending
+on the study system user may want to value certain elements over others.
+Weights are ordered as follows;
+first number gives the weight for differences in x and y coordinates;
+second number
+gives the weight for particle size differences. Note that the
+difference between the predicted location and the observed location is
+not taken into account in this function. If <code>NULL</code>, the same weights as
+used to create <code>records2</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logsizes</code></td>
+<td>
+<p>Logical. Default is <code>FALSE</code>. Set to <code>TRUE</code> to take the
+natural logarithm of body sizes, when calculating the cost of linking two particles.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of class 'TrDm' and 'records'. Use 'summary' and 'plot'.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Marjolein Bruijning, Caspar A. Hallmann &amp; Marco D. Visser
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+## Create image sequence
+dir.create("images")
+traj &lt;- simulTrajec(path="images",
+                    nframes=60,nIndividuals=20,domain="square",
+                    h=0.01,rho=0.9,sizes=runif(20,0.004,0.006))
+## Analyse first part
+dir &lt;- "images"
+allFullImages1 &lt;- loadImages (dirPictures=dir,nImages=1:30)
+stillBack1 &lt;- createBackground(allFullImages1)
+allImages1 &lt;- subtractBackground(bg=stillBack1)
+partIden1 &lt;- identifyParticles(sbg=allImages1,
+                              pixelRange=c(1,500),
+                              threshold=-0.1)
+records1 &lt;- trackParticles(partIden1,L=20,R=2)
+## Analyse second part
+allFullImages2 &lt;- loadImages (dirPictures=dir,nImages=31:60)
+stillBack2 &lt;- createBackground(allFullImages2)
+allImages2 &lt;- subtractBackground(bg=stillBack2)
+partIden2 &lt;- identifyParticles(sbg=allImages2,
+                              pixelRange=c(1,500),
+                              threshold=-0.1)
+records2 &lt;- trackParticles(partIden2,L=20,R=2)
+## Merge tracks
+records &lt;- mergeTracks(records1,records2)
+plot(records,colorimages=allFullImages1,type="trajectories",incThres=10)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

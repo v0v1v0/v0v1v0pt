@@ -1,0 +1,89 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>log_likelihood</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Evaluate the log likelihood of a vector of parameter values</h2>
+
+<h3>Description</h3>
+
+<p>Evaluate the log liklihood of parameters given observed data. Can be applied to PK or PK-PD models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">log_likelihood(lpars, pkmod, inf, tms, obs)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lpars</code></td>
+<td>
+<p>Named vector of logged parameter values to be evaluated. This should include any PK or PD parameters,
+as well as residual error standard deviations (sigma_add or sigma_mult) that are to be evaluated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pkmod</code></td>
+<td>
+<p>'pkmod' object. Mean values are a subset of log(pars_pk), log(pars_pd),
+log(sigma_add), log(sigma_mult). PK-PD parameter values not specified in 'lpars' will be inferred from 'pkmod'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inf</code></td>
+<td>
+<p>Infusion schedule</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tms</code></td>
+<td>
+<p>Times associated with observations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs</code></td>
+<td>
+<p>Observed values (concentrations or PD response values)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Numeric value of length 1
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">my_mod &lt;- pkmod(pars_pk = c(cl = 10, q2 = 2, q3 =20, v = 15, v2 = 30, v3 = 50,
+ ke0 = 1.2), sigma_mult = 0.2)
+inf &lt;- inf_manual(inf_tms = 0, inf_rate = 80, duration = 2)
+tms &lt;- c(1,2,4,8,12)
+obs &lt;- simulate(my_mod, inf = inf, tms = tms)
+# evaluate log-likelihood at a new set of parameters
+lpars = log(c(cl=11,q2=3,q3=25,v=15,v2=30,v3=50,ke0=1.15,sigma_mult=0.3))
+log_likelihood(lpars, my_mod, inf, tms, obs)
+
+# estimate for a subset of parameters (exclude q2, v2, v3)
+lpars_sub = log(c(cl=11,q3=25,v=15,ke0=1.15,sigma_mult=0.3))
+log_likelihood(lpars_sub, my_mod, inf, tms, obs)
+
+# add a pd response and replace multiplicative error with additive error
+my_mod_pd &lt;- update(my_mod, pars_pd = c(c50 = 2.8, gamma = 1.47, e0 = 93,
+emx = 93), pdfn = emax, pdinv = emax_inv, ecmpt = 4, sigma_mult = 0, sigma_add = 4)
+# simulate observations
+obs_pd &lt;- simulate(my_mod_pd, inf = inf, tms = seq(0,12,0.5))
+# evaluate likelihood at new parameters
+lpars_pd &lt;- log(c(cl=11,q3=25,v=15,ke0=1.15,sigma_add=4,c50=5,gamma=1))
+log_likelihood(lpars_pd, my_mod_pd, inf, tms = seq(0,12,0.5), obs_pd)
+</code></pre>
+
+
+</div>

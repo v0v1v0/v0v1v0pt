@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>countBars</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Progress bars with labels</h2>
+
+<h3>Description</h3>
+
+<p><code>shiny</code> element displaying a series of progress bars and observation counts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">countBars(inputId, choices, countsmax, countsnow = NULL)
+
+updateCountBars(
+  session = getDefaultReactiveDomain(),
+  inputId,
+  choices,
+  countsmax,
+  countsnow = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>inputId</code></td>
+<td>
+<p>(<code>character(1)</code>) <code>shiny</code> id of the parent element (e.g. a check-box group input).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choices</code></td>
+<td>
+<p>(<code>vector</code>) Available values. Used to determine label text.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>countsmax</code></td>
+<td>
+<p>(<code>numeric</code>) Maximum counts of each element. Must be the same length <code>choices</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>countsnow</code></td>
+<td>
+<p>(<code>numeric</code>) Current counts of each element. Must be the same length <code>choices</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>session</code></td>
+<td>
+<p>(<code>session</code>) <code>shiny</code> <code>session</code> object passed to function given to <code>shinyServer</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>List of <code>shiny.tag</code>s.
+</p>
+<p>Creates a number of progress bar elements, one for each value of <code>choices</code>.
+The widths of all progress bars add up to the full width of the container.
+Each progress bar has a text label that contains the name of the value and the number of counts.
+</p>
+<p>If the filter panel is used with <code>count_type = "all"</code>, the progress bars will be filled
+according to the number of counts remaining in the current selection and the label will show
+both the current and the total number of counts.
+</p>
+<p>Each child element can have a unique <code>id</code> attribute to be used independently.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># use non-exported function from teal.slice
+include_js_files &lt;- getFromNamespace("include_js_files", "teal.slice")
+include_css_files &lt;- getFromNamespace("include_css_files", "teal.slice")
+countBars &lt;- getFromNamespace("countBars", "teal.slice")
+updateCountBars &lt;- getFromNamespace("updateCountBars", "teal.slice")
+
+library(shiny)
+
+choices &lt;- sample(as.factor(c("a", "b", "c")), size = 20, replace = TRUE)
+counts &lt;- table(choices)
+labels &lt;- countBars(
+  inputId = "counts",
+  choices = c("a", "b", "c"),
+  countsmax = counts,
+  countsnow = unname(counts)
+)
+
+ui &lt;- fluidPage(
+  tags$div(
+    class = "choices_state",
+    include_js_files("count-bar-labels.js"),
+    include_css_files(pattern = "filter-panel"),
+    checkboxGroupInput(
+      inputId = "choices",
+      selected = levels(choices),
+      choiceNames = labels,
+      choiceValues = levels(choices),
+      label = NULL
+    )
+  )
+)
+server &lt;- function(input, output, session) {
+  observeEvent(input$choices, {
+    new_counts &lt;- counts
+    new_counts[!names(new_counts) %in% input$choices] &lt;- 0
+    updateCountBars(
+      inputId = "counts",
+      choices = levels(choices),
+      countsmax = counts,
+      countsnow = unname(new_counts)
+    )
+  })
+}
+
+if (interactive()) {
+  shinyApp(ui, server)
+}
+
+</code></pre>
+
+
+</div>

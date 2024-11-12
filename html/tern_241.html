@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_km_layout</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to prepare a KM layout</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a>
+</p>
+<p>Prepares a (5 rows) x (2 cols) layout for the Kaplan-Meier curve.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_km_layout(
+  data,
+  g_el,
+  title,
+  footnotes,
+  annot_at_risk = TRUE,
+  annot_at_risk_title = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> survival data as pre-processed by <code>h_data_plot</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g_el</code></td>
+<td>
+<p>(<code>list</code> of <code>gtable</code>)<br> list as obtained by <code>h_decompose_gg()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>string</code>)<br> plot title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>footnotes</code></td>
+<td>
+<p>(<code>string</code>)<br> plot footnotes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>annot_at_risk</code></td>
+<td>
+<p>(<code>flag</code>)<br> compute and add the annotation table reporting the number of
+patient at risk matching the main grid of the Kaplan-Meier curve.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>annot_at_risk_title</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether the "Patients at Risk" title should be added above the <code>annot_at_risk</code>
+table. Has no effect if <code>annot_at_risk</code> is <code>FALSE</code>. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The layout corresponds to a grid of two columns and five rows of unequal dimensions. Most of the
+dimension are fixed, only the curve is flexible and will accommodate with the remaining free space.
+</p>
+
+<ul>
+<li>
+<p> The left column gets the annotation of the <code>ggplot</code> (y-axis) and the names of the strata for the patient
+at risk tabulation. The main constraint is about the width of the columns which must allow the writing of
+the strata name.
+</p>
+</li>
+<li>
+<p> The right column receive the <code>ggplot</code>, the legend, the x-axis and the patient at risk table.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A grid layout.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(survival)
+library(grid)
+
+fit_km &lt;- tern_ex_adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  survfit(formula = Surv(AVAL, 1 - CNSR) ~ ARMCD, data = .)
+data_plot &lt;- h_data_plot(fit_km = fit_km)
+xticks &lt;- h_xticks(data = data_plot)
+gg &lt;- h_ggkm(
+  data = data_plot,
+  censor_show = TRUE,
+  xticks = xticks, xlab = "Days", ylab = "Survival Probability",
+  title = "tt", footnotes = "ff", yval = "Survival"
+)
+g_el &lt;- h_decompose_gg(gg)
+lyt &lt;- h_km_layout(data = data_plot, g_el = g_el, title = "t", footnotes = "f")
+grid.show.layout(lyt)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,314 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>powerRM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Power analysis of tests of invariance of item parameters between two groups
+of persons in binary Rasch model</h2>
+
+<h3>Description</h3>
+
+<p>Returns power of Wald (W), likelihood ratio (LR), Rao score (RS)
+and gradient (GR) test given probability of error of first kind
+<code class="reqn">\alpha</code>, sample size, and a deviation from the hypothesis to be tested.
+The latter assumes equality of the item parameters in the Rasch model
+between two predetermined groups of persons. The alternative states that at least
+one of the parameters differs between the two groups.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">powerRM(
+  n_total,
+  local_dev,
+  alpha = 0.05,
+  persons1 = rnorm(10^6),
+  persons2 = rnorm(10^6)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n_total</code></td>
+<td>
+<p>Total sample size for which power shall be determined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>local_dev</code></td>
+<td>
+<p>A list of two vectors containing item parameters for the two person groups representing
+a deviation from the hypothesis to be tested locally per item.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Probability of error of first kind.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>persons1</code></td>
+<td>
+<p>A vector of person parameters in group 1 (drawn from a specified distribution).
+By default <code class="reqn">10^6</code> parameters are drawn at random from the standard normal distribution. The larger
+this number the more accurate are the computations. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>persons2</code></td>
+<td>
+<p>A vector of person parameters in group 2 (drawn from a specified distribution).
+By default <code class="reqn">10^6</code> parameters are drawn at random from the standard normal distribution. The larger
+this number the more accurate are the computations. See Details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In general, the power of the tests is determined from the assumption that the
+approximate distributions of the four test statistics are from the family of
+noncentral <code class="reqn">\chi^2</code> distributions with <code class="reqn">df</code> equal to the number of items
+minus 1 and noncentrality parameter <code class="reqn">\lambda</code>.
+The latter depends on a scenario of deviation from the hypothesis to be tested
+and a specified sample size. Given the probability of the error of the first
+kind <code class="reqn">\alpha</code> the power of the tests can be determined from <code class="reqn">\lambda</code>.
+More details about the distributions of the test statistics and the relationship
+between <code class="reqn">\lambda</code>, power, and sample size can be found in Draxler and
+Alexandrowicz (2015).
+</p>
+<p>As regards the concept of sample size a distinction between informative and total
+sample size has to be made since the power of the tests depends only on the informative
+sample size. In the conditional maximum likelihood context, the responses of persons
+with minimum or maximum person score are completely uninformative. They do not contribute
+to the value of the test statistic. Thus, the informative sample size does not include
+these persons. The total sample size is composed of all persons.
+</p>
+<p>In particular, the determination of <code class="reqn">\lambda</code> and the power of the tests, respectively,
+is based on a simple Monte Carlo approach. Data (responses of a large number of persons
+to a number of items) are generated given a user-specified scenario of a deviation from
+the hypothesis to be tested. A scenario of a deviation is given by a choice of the
+item parameters and the person parameters (to be drawn randomly from a specified
+distribution) for each of the two groups. Such a scenario may be called local deviation
+since deviations can be specified locally for each item. The relative group
+sizes are determined by the choice of the number of person parameters for each of the
+two groups. For instance, by default <code class="reqn">10^6</code> person parameters are selected randomly for
+each group. In this case, it is implicitly assumed that the two groups of persons are
+of equal size. The user can specify the relative group sizes by choosing the length of
+the arguments persons1 and persons2 appropriately. Note that the relative group sizes
+do have an impact on power and sample size of the tests. The next step is to compute a
+test statistic <code class="reqn">T</code> (Wald, LR, score, or gradient) from the simulated data. The observed
+value <code class="reqn">t</code> of the test statistic is then divided by the informative sample size
+<code class="reqn">n_{infsim}</code> observed in the simulated data. This yields the so-called global deviation
+<code class="reqn">e = t / n_{infsim}</code>, i.e., the chosen scenario of a deviation from the hypothesis to
+be tested being represented by a single number. The power of the tests can be determined
+given a user-specified total sample size denoted by <code>n_total</code>. The noncentrality
+parameter <code class="reqn">\lambda</code> can then be expressed by
+<code class="reqn">\lambda = n_{total}* (n_{infsim} / n_{totalsim}) * e</code>, where <code class="reqn">n_{totalsim}</code> denotes
+the total number of persons in the simulated data and <code class="reqn">n_{infsim} / n_{totalsim}</code> is
+the proportion of informative persons in the sim. data. Let <code class="reqn">q_{\alpha}</code> be the
+<code class="reqn">1 - \alpha</code> quantile of the central <code class="reqn">\chi^2</code> distribution with df equal to the
+number items minus 1. Then,
+</p>
+<p style="text-align: center;"><code class="reqn">power = 1 - F_{df, \lambda} (q_{\alpha}),</code>
+</p>
+
+<p>where <code class="reqn">F_{df, \lambda}</code> is the cumulative distribution function of the noncentral
+<code class="reqn">\chi^2</code> distribution with <code class="reqn">df</code> equal to the number of items minus 1
+and <code class="reqn">\lambda = n_{total}  (n_{infsim} / n_{totalsim}) * e</code>. Thereby, it is assumed that
+<code class="reqn">n_{total}</code> is composed of a frequency distribution of person scores that is proportional
+to the observed distribution of person scores in the simulated data. The same holds
+true in respect of the relative group sizes, i.e., the relative frequencies of the two
+person groups in a sample of size <code class="reqn">n_{total}</code> are assumed to be equal to the relative
+frequencies of the two groups in the simulated data.
+</p>
+<p>Note that in this approach the data have to be generated only once. There are no
+replications needed. Thus, the procedure is computationally not very time-consuming.
+</p>
+<p>Since <code class="reqn">e</code> is determined from the value of the test statistic observed in the simulated
+data it has to be treated as a realized value of a random variable <code class="reqn">E</code>. The same holds
+true for <code class="reqn">\lambda</code> as well as the power of the tests. Thus, the power is a realized
+value of a random variable that shall be denoted by <code class="reqn">P</code>. Consequently, the (realized)
+value of the power of the tests need not be equal to the exact power that follows from the
+user-specified <code class="reqn">n_{total}</code>, <code class="reqn">\alpha</code>, and the chosen item parameters used
+for the simulation of the data. If the CML estimates of these parameters computed from the
+simulated data are close to the predetermined parameters the power of the tests will be
+close to the exact value. This will generally be the case if the number of person parameters
+used for simulating the data is large, e.g., <code class="reqn">10^5</code> or even <code class="reqn">10^6</code> persons. In such cases,
+the possible random error of the computation procedure based on the sim. data may not be of
+practical relevance any more. That is why a large number (of persons for the simulation process)
+is generally recommended.
+</p>
+<p>For theoretical reasons, the random error involved in computing the power of the tests can
+be pretty well approximated. A suitable approach is the well-known delta method. Basically,
+it is a Taylor polynomial of first order, i.e., a linear approximation of a function.
+According to it the variance of a function of a random variable can be linearly approximated
+by multiplying the variance of this random variable with the square of the first derivative
+of the respective function. In the present problem, the variance of the test statistic <code class="reqn">T</code>
+is (approximately) given by the variance of a noncentral <code class="reqn">\chi^2</code> distribution with <code class="reqn">df</code>
+equal to the number of free item parameters and noncentrality parameter <code class="reqn">\lambda</code>.
+Thus,  <code class="reqn">Var(T) = 2 (df + 2 \lambda)</code>, with <code class="reqn">\lambda = t</code>. Since the global
+deviation <code class="reqn">e = (1 / n_{infsim}) * t</code> it follows for the variance of the corresponding random
+variable <code class="reqn">E</code> that <code class="reqn">Var(E) = (1 / n_{infsim})^2 * Var(T)</code>.
+The power of the tests is a function of <code class="reqn">e</code> which is given by <code class="reqn">F_{df, \lambda} (q_{\alpha})</code>,
+where <code class="reqn">\lambda = n_{total} * (n_{infsim} / n_{totalsim}) * e</code> and <code class="reqn">df</code> equal to the
+number of free item parameters. Then, by the delta method one obtains (for the variance of P).
+</p>
+<p style="text-align: center;"><code class="reqn">Var(P) = Var(E) * (F'_{df, \lambda} (q_{\alpha}))^2,</code>
+</p>
+
+<p>where <code class="reqn">F'_{df, \lambda}</code> is the derivative of <code class="reqn">F_{df, \lambda}</code> with respect to <code class="reqn">e</code>.
+This derivative is determined numerically and evaluated at <code class="reqn">e</code> using the package numDeriv.
+The square root of <code class="reqn">Var(P)</code> is then used to quantify the random error of the suggested
+Monte Carlo computation procedure. It is called Monte Carlo error of power.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of results.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>power</code></td>
+<td>
+<p>Power value for each test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MC error of power</code></td>
+<td>
+<p>Monte Carlo error of power computation for each test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global deviation</code></td>
+<td>
+<p>Global deviation computed from simulated data for each test. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>local deviation</code></td>
+<td>
+<p>CML estimates of item parameters in both groups of persons
+obtained from the simulated data expressing a deviation from the hypothesis to be tested locally per item.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>person score distribution in group 1</code></td>
+<td>
+<p>Relative frequencies of person scores in group 1 observed in
+simulated data. Uninformative scores, i.e., minimum and maximum score, are omitted.
+Note that the person score distribution does also have an influence on the power of the tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>person score distribution in group 2</code></td>
+<td>
+<p>Relative frequencies of person scores in group 2 observed in
+simulated data. Uninformative scores, i.e., minimum and maximum score, are omitted.
+Note that the person score distribution does also have an influence on the power of the tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degrees of freedom</code></td>
+<td>
+<p>Degrees of freedom <code class="reqn">df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noncentrality parameter</code></td>
+<td>
+<p>Noncentrality parameter <code class="reqn">\lambda</code> of <code class="reqn">\chi^2</code> distribution from which power is determined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>The matched call.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+
+<p>Draxler, C. (2010). Sample Size Determination for Rasch Model Tests. Psychometrika, 75(4), 708–724.
+</p>
+<p>Draxler, C., &amp; Alexandrowicz, R. W. (2015). Sample Size Determination Within the Scope of Conditional Maximum Likelihood Estimation
+with Special Focus on Testing the Rasch Model. Psychometrika, 80(4), 897–919.
+</p>
+<p>Draxler, C., Kurz, A., &amp; Lemonte, A. J. (2020). The Gradient Test and its Finite Sample Size Properties in a Conditional Maximum Likelihood
+and Psychometric Modeling Context. Communications in Statistics-Simulation and Computation, 1-19.
+</p>
+<p>Glas, C. A. W., &amp; Verhelst, N. D. (1995a). Testing the Rasch Model. In G. H. Fischer &amp; I. W. Molenaar (Eds.),
+Rasch Models: Foundations, Recent Developments, and Applications (pp. 69–95). New York: Springer.
+</p>
+<p>Glas, C. A. W., &amp; Verhelst, N. D. (1995b). Tests of Fit for Polytomous Rasch Models. In G. H. Fischer &amp; I. W. Molenaar (Eds.),
+Rasch Models: Foundations, Recent Developments, and Applications (pp. 325-352). New York: Springer.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>sa_sizeRM</code>, and <code>post_hocRM</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Numerical example
+
+res &lt;-  powerRM(n_total = 130, local_dev = list( c(0, -0.5, 0, 0.5, 1) , c(0, 0.5, 0, -0.5, 1)))
+
+# &gt; res
+# $power
+#     W    LR    RS    GR
+# 0.824 0.840 0.835 0.845
+#
+# $`MC error of power`
+#     W    LR    RS    GR
+# 0.002 0.002 0.002 0.002
+#
+# $`global deviation`
+#     W    LR    RS    GR
+# 0.118 0.122 0.121 0.124
+#
+# $`local deviation`
+#         Item2 Item3  Item4 Item5
+# group1 -0.499 0.005  0.500 1.001
+# group2  0.501 0.003 -0.499 1.003
+#
+# $`person score distribution in group 1`
+#
+#     1     2     3     4
+# 0.249 0.295 0.269 0.187
+#
+# $`person score distribution in group 2`
+#
+#     1     2     3     4
+# 0.249 0.295 0.270 0.186
+#
+# $`degrees of freedom`
+# [1] 4
+#
+# $`noncentrality parameter`
+#      W     LR     RS     GR
+# 12.619 13.098 12.937 13.264
+#
+# $call
+# powerRM(n_total = 130, local_dev = list(c(0, -0.5, 0, 0.5, 1),
+#                                         c(0, 0.5, 0, -0.5, 1)))
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nested.cv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimating predictive performance via nested cross-validation</h2>
+
+<h3>Description</h3>
+
+<p>Performs a nested cross-validation to assess the predictive performance. The inner loop is used to determine the optimal lambda
+(as in cv.glmnet) and the outer loop is used to asses the predictive performance in an unbiased way.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nested.cv(
+  x,
+  y,
+  upstream,
+  method = "tandem",
+  family = "gaussian",
+  nfolds = 10,
+  nfolds_inner = 10,
+  foldid = NULL,
+  lambda_upstream = "lambda.1se",
+  lambda_downstream = "lambda.1se",
+  lambda_glmnet = "lambda.1se",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A feature matrix, where the rows correspond to samples and the columns to features.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A vector containing the response.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upstream</code></td>
+<td>
+<p>A logical index vector that indicates for each feature whether it's upstream (TRUE) or downstream (FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Indicates whether the nested cross-validation is performed on TANDEM or on the classic approach (glmnet). Should be either "tandem" or "glmnet".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>The family parameter that's passed to cv.glmnet(). Currently, only family='gaussian' is supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfolds</code></td>
+<td>
+<p>Number of cross-validation folds (default is 10) used in the outer cross-validation loop.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfolds_inner</code></td>
+<td>
+<p>Number of cross-validation folds (default is 10) used to determine the optimal lambda in the inner cross-validation loop.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>foldid</code></td>
+<td>
+<p>An optional vector indicating in which cross-validation fold each sample should be in the outer cross-validation loop. Overrides nfolds when used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda_upstream</code></td>
+<td>
+<p>Only used when method='tandem'. For the first stage (using the upstream features), should glmnet use lambda.min or lambda.1se? Default is lambda.1se.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda_downstream</code></td>
+<td>
+<p>Only used when method='tandem'. For the second stage (using the downstream features), should glmnet use lambda.min or lambda.1se? Default is lambda.1se.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda_glmnet</code></td>
+<td>
+<p>Only used when method='glmnet'. Should glmnet use lambda.min or lambda.1se? Default is lambda.1se.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters that are passed to cv.glmnet().</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The predicted response vector y_hat and the mean-squared error (MSE).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># unpack example data
+x = example_data$x
+y = example_data$y
+upstream = example_data$upstream
+
+# assess the prediction error in a nested cv-loop
+# fix the seed to have the same foldids between the two methods
+set.seed(1)
+cv_tandem = nested.cv(x, y, upstream, method="tandem", alpha=0.5)
+set.seed(1)
+cv_glmnet = nested.cv(x, y, upstream, method="glmnet", alpha=0.5)
+barplot(c(cv_tandem$mse, cv_glmnet$mse), ylab="MSE", names=c("TANDEM", "Classic approach"))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,74 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>choose_from_datasets</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates a dataset that deterministically chooses elements from datasets.</h2>
+
+<h3>Description</h3>
+
+<p>Creates a dataset that deterministically chooses elements from datasets.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">choose_from_datasets(datasets, choice_dataset, stop_on_empty_dataset = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>A non-empty list of tf.data.Dataset objects with compatible
+structure.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choice_dataset</code></td>
+<td>
+<p>A <code>tf.data.Dataset</code> of scalar <code>tf.int64</code> tensors
+between <code>0</code> and <code>length(datasets) - 1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_on_empty_dataset</code></td>
+<td>
+<p>If <code>TRUE</code>, selection stops if it encounters an
+empty dataset. If <code>FALSE</code>, it skips empty datasets. It is recommended to
+set it to <code>TRUE</code>. Otherwise, the selected elements start off as the user
+intends, but may change as input datasets become empty. This can be
+difficult to detect since the dataset starts off looking correct. Defaults
+to <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a dataset that interleaves elements from datasets according
+to the values of choice_dataset.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+datasets &lt;- list(tensors_dataset("foo") %&gt;% dataset_repeat(),
+                 tensors_dataset("bar") %&gt;% dataset_repeat(),
+                 tensors_dataset("baz") %&gt;% dataset_repeat())
+
+# Define a dataset containing `[0, 1, 2, 0, 1, 2, 0, 1, 2]`.
+choice_dataset &lt;- range_dataset(0, 3) %&gt;% dataset_repeat(3)
+result &lt;- choose_from_datasets(datasets, choice_dataset)
+result %&gt;% as_array_iterator() %&gt;% iterate(function(s) s$decode()) %&gt;% print()
+# [1] "foo" "bar" "baz" "foo" "bar" "baz" "foo" "bar" "baz"
+
+## End(Not run)
+</code></pre>
+
+
+</div>

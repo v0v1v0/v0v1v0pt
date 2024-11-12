@@ -1,0 +1,250 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Predicts Method for Time Series of Counts Following Generalised Linear Models
+</h2>
+
+<h3>Description</h3>
+
+<p>Predict future observations based on a fitted GLM-type model for time series of counts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+predict(object, n.ahead=1, newobs=NULL, newxreg=NULL, level=0.95,
+        global=FALSE, type=c("quantiles", "shortest", "onesided"),
+        method=c("conddistr", "bootstrap"), B=1000,
+        estim=c("ignore", "bootstrap", "normapprox", "given"), B_estim=B,
+        coefs_given, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>an object of class <code>"tsglm"</code>. Usually the result of a call to <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ahead</code></td>
+<td>
+
+<p>positive integer value giving the number of steps ahead for which predictions should be made.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newobs</code></td>
+<td>
+
+<p>integer vector of known future observations of the time series. This argument is only relevant if more than one observation ahead is to be predicted (<code>n.ahead</code> greater than 1). The <code class="reqn">h</code>-step-ahead prediction for <code class="reqn">h&gt;1</code> is computed as a 1-step-ahead prediction given all previous values, which can be observations of the original time series or new observations provided in this argument. Previous observations which are not available are replaced by their respective 1-step-ahead prediction.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newxreg</code></td>
+<td>
+
+<p>matrix or vector containing new values for the covariates to be used for prediction. If <code>newxreg</code> is omitted or contains less rows than the value of <code>n.ahead</code>, the last known values of the covariates are used for prediction. This is usually not reasonable and it is strongly advised to explicitely make assumptions on future covariates and to specify the argument <code>xreg</code> accordingly. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+
+<p>numeric value determining the desired coverage rate of prediction intervals. If <code>level=0</code> no prediction intervals are computed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global</code></td>
+<td>
+
+<p>logical value saying whether the coverage rate for <code class="reqn">Y_{n+1},...,Y_{n+h}</code> specified by argument <code>level</code> holds globally (<code>global=TRUE</code>) or for each of the <code>n.ahead</code> prediction intervals individually (<code>global=FALSE</code>, the default). In the former case the individual coverage rate for a single prediction interval is Bonferroni adjusted to a level of <code>1-(1-level)/n.ahead</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+
+<p>character value saying how the prediction interval shall be constructed. If <code>type="quantiles"</code> (the default), its limits are chosen to be the <code>a</code>- and <code>(1-a)</code>-quantiles of the respective (approximated) distribution, with <code>a=(1-level)/2</code>. If <code>type="shortest"</code> it is chosen such that it has minimal length. Note that these two types of construction principles frequently lead to the same result. If <code>type="onesided"</code> a one-sided prediction interval is constructed where the lower boundary is always zero.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>character value saying which method to be used for computing the prediction intervals. If <code>method="conddistr"</code> the prediction intervals are based on the conditional distribution given by the model with the unknown parameters being replaced by their respective estimations. This is only possible if only 1-step-ahead predictions are to be computed (possibly recursively using the new observations given in argument <code>newobs</code>). If <code>method="bootstrap"</code> the predictive distribution is approximated by a parametric bootstrap where <code>B</code> trajectories of the process are simulated from the fitted model. This is currently only possible if no new observations are given in argument <code>newobs</code>. By default the method <code>"conddistr"</code> is prefered whenever it is appliccable.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>positive integer value giving the number of samples of a parametric bootstrap to use for numerical determination of prediction intervals (only necessary if argument <code>method="bootstrap"</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estim</code></td>
+<td>
+
+<p>character value saying how the prediction intervals shall account for the additional uncertainty induced by the parameter estimation. This is particularly important if the model was fitted on a short time series. If <code>estim="ignore"</code> (the default), this additional uncertainty is ignored. The other two options (<code>estim="bootstrap"</code> and <code>estim="normapprox"</code>) are only possible if <code>method="bootstrap"</code>. If these are selected the bootstrap samples are not generated from a model with the parameters of the original fit. Instead, each of the <code>B</code> bootstrap samples is generated from a model with parameters which are itself randomly generated. This two-stage approach should take into account the additional estimation uncertainty.
+If <code>estim="bootstrap"</code>, the parameters are obtained from a fit to a parametric bootstrap replication of the original time series.
+If <code>estim="normapprox"</code>, the regression parameters are generated from a multivariate normal distribution which is based on the normal approximation of the original quasi maximum likelihood estimator and reflects the estimation uncertainty. In that case the additional distribution coefficients are not randomly generated such that their estimation uncertainty is ignored.
+If <code>estim="given"</code>, the parameters are resampled from a table of possible parameters which need to be given in argument <code>coefs_given</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B_estim</code></td>
+<td>
+
+<p>positive integer value giving the number of parameters used for resampling to account for estimation uncertainty. Only necessary for <code>estim="bootstrap"</code> and <code>estim="normapprox"</code>. If <code>B_estim</code> is smaller than <code>B</code>, the parameters are resampled with replacement.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefs_given</code></td>
+<td>
+
+<p>table with parameters in the rows. Only necessary for <code>estim="given"</code>). If <code>nrow(coefs_given)</code> is smaller than <code>B</code>, the parameters are resampled with replacement.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>further arguments are currently ignored. Only for compatibility with generic function.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Returns predictions for the <code>n.ahead</code> observations following the fitted time series contained in argument <code>object</code>. The 1-step-ahead prediction is the conditional expectation of the observation to be predicted given the past. The true parameters are replaced by their estimations given in argument <code>object</code>. For a 2-step-ahead-prediction the true previous observation is used when given in argument <code>newobs</code>, otherwise it is replaced by the 1-step-ahead prediction computed before. For a 3-step-prediction this holds for the previous two observations, which are replaced by their respective predictions if not available, and so on.
+</p>
+<p>Unless <code>level=0</code>, the function also returns prediction intervals. Read the description of the arguments <code>type</code> and<code>method</code> for further details on the computation. Note that the prediction intervals do not reflect the additional uncertainty induced by the parameter estimation. However, for sufficiently long time series used for model fitting, it is expected that this uncertainty is negligible compared to the uncertainty of the predictive distribution. The argument <code>estim</code> allows to account fot this additional estimation uncertainty if <code>method="bootstrap"</code>, see the description of this argument.
+</p>
+<p>If prediction intervals are computed the function additionally returns the median of the predictive distribution. If <code>method="conddistr"</code> this is the analytical median of the conditional distribution, otherwise the empirical median of the simulated distribution.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with at least the following element:
+</p>
+<table><tr style="vertical-align: top;">
+<td><code>pred</code></td>
+<td>
+<p>a numeric vector of the predictions. Has class <code>"ts"</code> if the response used for fitting has this class.</p>
+</td>
+</tr></table>
+<p>If prediction intervals are calculated, the list has the additional element:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>interval</code></td>
+<td>
+<p>a matrix with the columns <code>"lower"</code> and <code>"upper"</code> giving the lower and upper boundaries of prediction intervals for the future time points, each with an intended coverage rate as given in argument <code>level</code>. Has class <code>"ts"</code> if the response used for fitting has this class.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>a numeric value determining the desired coverage rate of prediction intervals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global</code></td>
+<td>
+<p>a logical value saying whether the coverage rate <code>level</code> holds globally or for each of the prediction intervals individually.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>a character value saying how the prediction intervals were computed. Possible values are <code>"quantiles"</code> and <code>"shortest"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>a character value saying which method were used for computation of prediction intervals. Possible values are <code>"conddistr"</code> and <code>"bootstrap"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>an integer value giving the number of bootstrap samples which were used for computing prediction intervals. Is <code>NULL</code> if computation was done by <code>method="conddistr"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estim</code></td>
+<td>
+<p>a character value saying how the prediction intervals account for estimation uncertainty of the model parameters. Possible values are <code>"ignore"</code>, <code>"bootstrap"</code>, <code>"normapprox"</code> and <code>"given"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B_estim</code></td>
+<td>
+<p>an integer value giving the number of parameter values used for resampling to account for estimation uncertainty. This value is zero if the estimation uncertainty is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warning_messages</code></td>
+<td>
+<p>a character vector containing warning messages. This should be <code>NULL</code> if no warning messages occured.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>median</code></td>
+<td>
+<p>a vector giving the median of the predictive distribution for each of the future time points. Has class <code>"ts"</code> if the response used for fitting has this class.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tobias Liboschik and Philipp Probst
+</p>
+
+
+<h3>References</h3>
+
+<p>Liboschik, T., Fokianos, K. and Fried, R. (2017) tscount: An R package for analysis of count time series following generalized linear models. <em>Journal of Statistical Software</em> <b>82(5)</b>, 1–51, <a href="http://dx.doi.org/10.18637/jss.v082.i05">http://dx.doi.org/10.18637/jss.v082.i05</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tsglm</code> for fitting a GLM for time series of counts.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###Campylobacter infections in Canada (see help("campy"))
+campyfit &lt;- tsglm(ts=campy, model=list(past_obs=1, past_mean=c(7,13)))
+predict(campyfit, n.ahead=1) #prediction interval using conditional distribution
+predict(campyfit, n.ahead=5, global=TRUE) #prediction intervals using parametric bootstrap
+</code></pre>
+
+
+</div>

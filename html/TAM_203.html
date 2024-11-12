@@ -1,0 +1,753 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tam.pv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Plausible Value Imputation
+</h2>
+
+<h3>Description</h3>
+
+<p>Plausible value imputation for objects of the classes <code>tam</code> and <code>tam.mml</code>
+(Adams &amp; Wu, 2007). For converting generated plausible values into
+a list of multiply imputed datasets see <code>tampv2datalist</code>
+and the Examples 2 and 3 of this function.
+</p>
+<p>The function <code>tam.pv.mcmc</code> employs fully Bayesian estimation for drawing
+plausible values and is recommended in cases when the latent regression model
+is unreliably estimated (multidimensional model with stochastic nodes).
+The parameters of the latent regression (regression coefficients and
+residual covariance matrices) are drawn by Bayesian bootstrap (Rubin, 1981).
+Either case probabilities (i.e., non-integer weights for cases in resampling;
+argument <code>sample_integers=FALSE</code>) or ordinary
+bootstrap (i.e., sampling cases with replacement; argument <code>sample_integers=TRUE</code>)
+can be used for the Bootstrap step by obtaining posterior draws of regression parameters.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tam.pv(tamobj, nplausible=10, ntheta=2000, normal.approx=FALSE,
+    samp.regr=FALSE, theta.model=FALSE, np.adj=8, na.grid=5, verbose=TRUE)
+
+tam.pv.mcmc( tamobj, Y=NULL, group=NULL, beta_groups=TRUE, nplausible=10, level=.95,
+    n.iter=1000, n.burnin=500, adj_MH=.5, adj_change_MH=.05, refresh_MH=50,
+    accrate_bound_MH=c(.45, .55), sample_integers=FALSE, theta_init=NULL,
+    print_iter=20, verbose=TRUE, calc_ic=TRUE)
+
+## S3 method for class 'tam.pv.mcmc'
+summary(object, file=NULL, ...)
+
+## S3 method for class 'tam.pv.mcmc'
+plot(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tamobj</code></td>
+<td>
+
+<p>Object of class <code>tam</code> or <code>tam.mml</code>. For <code>tam.pv.mcmc</code>, it must not
+be an object of this class but rather a list with (at least the)
+entries <code>AXsi</code>, <code>B</code>, <code>resp</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nplausible</code></td>
+<td>
+
+<p>Number of plausible values to be drawn
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ntheta</code></td>
+<td>
+
+<p>Number of ability nodes for plausible value imputation. Note
+that in this function ability nodes are simulated for the
+whole sample, not for every person (contrary to the software ConQuest).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normal.approx</code></td>
+<td>
+
+<p>An optional logical indicating whether the individual posterior distributions
+should be approximated by a normal distribution?
+The default is <code>FALSE</code>. In the case <code>normal.approx=TRUE</code>
+(normal distribution approximation), the number of ability nodes
+<code>ntheta</code> can be substantially smaller than 2000, say 200 or 500.
+The normal approximation is implemented for unidimensional and
+multidimensional models.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>samp.regr</code></td>
+<td>
+
+<p>An optional logical indicating whether regression coefficients
+should be fixed in the plausible value imputation or
+also sampled from their posterior distribution?
+The default is <code>FALSE</code>. Sampled regression coefficients are
+obtained by nonparametric bootstrap.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.model</code></td>
+<td>
+<p>Logical indicating whether the theta grid from the
+<code>tamobj</code> object should be used for plausible value
+imputation. In case of <code>normal.approx=TRUE</code>, this should
+be sufficient in many applications.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>np.adj</code></td>
+<td>
+
+<p>This parameter defines the "spread" of the random theta values
+for drawing plausible values when <code>normal.approx=FALSE</code>.
+If <code class="reqn">s_{EAP}</code> denotes the standard deviation of the posterior
+distribution of theta (in the one-dimensional case), then theta
+is simulated from a normal distribution with standard deviation
+<code>np.adj</code> times <code class="reqn">s_{EAP}</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.grid</code></td>
+<td>
+<p>Range of the grid in normal approximation. Default is from
+-5 to 5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>Optional matrix of regressors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>Optional vector of group identifiers</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta_groups</code></td>
+<td>
+<p>Logical indicating whether group specific beta coefficients
+shall be estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>Confidence level</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.iter</code></td>
+<td>
+<p>Number of iterations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.burnin</code></td>
+<td>
+<p>Number of burnin-iterations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj_MH</code></td>
+<td>
+<p>Adjustment factor for Metropolis-Hastings (MH) steps which controls
+the variance of the proposal distribution for <code class="reqn">\theta</code>. Can be also
+a vector of length equal to the number of persons.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj_change_MH</code></td>
+<td>
+<p>Allowed change for MH adjustment factor after refreshing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>refresh_MH</code></td>
+<td>
+<p>Number of iterations after which the variance of the proposal
+distribution should be updated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>accrate_bound_MH</code></td>
+<td>
+<p>Bounds for target acceptance rates of sampled <code class="reqn">\theta</code>
+values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample_integers</code></td>
+<td>
+<p>Logical indicating whether weights for complete cases
+should be sampled in bootstrap</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta_init</code></td>
+<td>
+<p>Optional matrix with initial <code class="reqn">\bold{\theta}</code> values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print_iter</code></td>
+<td>
+<p>Print iteration progress every <code>print_iter</code>th iteration</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical indicating whether iteration progress should be displayed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_ic</code></td>
+<td>
+<p>Logical indicating whether information criteria should be computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class <code>tam.pv.mcmc</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Object of class <code>tam.pv.mcmc</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>A file name in which the summary output will be written</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The value of <code>tam.pv</code> is a list with following entries:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>pv</code></td>
+<td>
+
+<p>A data frame containing a person identifier (<code>pid</code>)
+and plausible values denoted by <code>PVxx.Dimyy</code> which
+is the <code>xx</code>th plausible value of
+dimension <code>yy</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hwt</code></td>
+<td>
+<p>Individual posterior distribution evaluated at
+the ability grid <code>theta</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hwt1</code></td>
+<td>
+<p>Cumulated individual posterior distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Simulated ability nodes</p>
+</td>
+</tr>
+</table>
+<p>The value of <code>tam.pv.mcmc</code> is a list containing entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>pv</code></td>
+<td>
+<p>Data frame containing plausible values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameter_samples</code></td>
+<td>
+<p>Sampled regression parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ic</code></td>
+<td>
+<p>Information criteria</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>Estimate of regression parameters <code class="reqn">\bold{\beta}</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variance</code></td>
+<td>
+<p>Estimate of residual variance matrix <code class="reqn">\bold{\Sigma}</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correlation</code></td>
+<td>
+<p>Estimate of residual correlation matrix corresponding to
+<code>variance</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta_acceptance_MH</code></td>
+<td>
+<p>Acceptance rates and acceptance MH factors for each
+individual</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta_last</code></td>
+<td>
+<p>Last sampled <code class="reqn">\bold{\theta}</code> value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further values</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Adams, R. J., &amp; Wu, M. L. (2007). The mixed-coefficients multinomial logit model.
+A generalized form of the Rasch model. In M. von Davier &amp; C. H. Carstensen (Eds.):
+<em>Multivariate and mixture distribution Rasch models: Extensions and applications</em>
+(pp. 55-76). New York: Springer.
+<a href="https://doi.org/10.1007/978-0-387-49839-3_4">doi:10.1007/978-0-387-49839-3_4</a>
+</p>
+<p>Rubin, D. B. (1981). The Bayesian bootstrap. <em>The Annals of Statistics, 9</em>(1),
+130-134.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See <code>tam.latreg</code> for further examples of
+fitting latent regression models and drawing plausible values
+from models which provides an individual likelihood as an input.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: Dichotomous unidimensional data sim.rasch
+#############################################################################
+
+data(data.sim.rasch)
+resp &lt;- data.sim.rasch[ 1:500, 1:15 ]  # select subsample of students and items
+
+# estimate Rasch model
+mod &lt;- TAM::tam.mml(resp)
+
+# draw 5 plausible values without a normality
+# assumption of the posterior and 2000 ability nodes
+pv1a &lt;- TAM::tam.pv( mod, nplausible=5, ntheta=2000 )
+
+# draw 5 plausible values with a normality
+# assumption of the posterior and 500 ability nodes
+pv1b &lt;- TAM::tam.pv( mod, nplausible=5, ntheta=500, normal.approx=TRUE )
+
+# distribution of first plausible value from imputation pv1
+hist(pv1a$pv$PV1.Dim1 )
+# boxplot of all plausible values from imputation pv2
+boxplot(pv1b$pv[, 2:6 ] )
+
+## Not run: 
+# draw plausible values with tam.pv.mcmc function
+Y &lt;- matrix(1, nrow=500, ncol=1)
+pv2 &lt;- TAM::tam.pv.mcmc( tamobj=mod, Y=Y, nplausible=5 )
+str(pv2)
+
+# summary output
+summary(pv2)
+# assessing convergence with traceplots
+plot(pv2, ask=TRUE)
+
+# use starting values for theta and MH factors which fulfill acceptance rates
+# from previously fitted model
+pv3 &lt;- TAM::tam.pv.mcmc( tamobj=mod, Y=Y, nplausible=5, theta_init=pv2$theta_last,
+            adj_MH=pv2$theta_acceptance_MH$adj_MH )
+
+#############################################################################
+# EXAMPLE 2: Unidimensional plausible value imputation with
+#            background variables; dataset data.pisaRead from sirt package
+#############################################################################
+
+data(data.pisaRead, package="sirt")
+dat &lt;- data.pisaRead$data
+  ##   &gt; colnames(dat)
+  ##    [1] "idstud"   "idschool" "female"   "hisei"    "migra"    "R432Q01"
+  ##    [7] "R432Q05"  "R432Q06"  "R456Q01"  "R456Q02"  "R456Q06"  "R460Q01"
+  ##   [13] "R460Q05"  "R460Q06"  "R466Q02"  "R466Q03"  "R466Q06"
+
+## Note that reading items have variable names starting with R4
+
+# estimate 2PL model without covariates
+items &lt;- grep("R4", colnames(dat) )    # select test items from data
+mod2a &lt;- TAM::tam.mml.2pl( resp=dat[,items] )
+summary(mod2a)
+
+# fix item parameters for plausible value imputation
+   # fix item intercepts by defining xsi.fixed
+xsi0 &lt;- mod2a$xsi$xsi
+xsi.fixed &lt;- cbind( seq(1,length(xsi0)), xsi0 )
+   # fix item slopes using mod2$B
+# matrix of latent regressors female, hisei and migra
+Y &lt;- dat[, c("female", "hisei", "migra") ]
+mod2b &lt;- TAM::tam.mml( resp=dat[,items], B=mod2a$B, xsi.fixed=xsi.fixed, Y=Y,
+            pid=dat$idstud)
+
+# plausible value imputation with normality assumption
+# and ignoring uncertainty about regression coefficients
+#    -&gt; the default is samp.regr=FALSE
+pv2c &lt;- TAM::tam.pv( mod2b, nplausible=10, ntheta=500, normal.approx=TRUE )
+# sampling of regression coefficients
+pv2d &lt;- TAM::tam.pv( mod2b, nplausible=10, ntheta=500, samp.regr=TRUE)
+# sampling of regression coefficients, normal approximation using the
+# theta grid from the model
+pv2e &lt;- TAM::tam.pv( mod2b, samp.regr=TRUE, theta.model=TRUE, normal.approx=TRUE)
+
+#--- create list of multiply imputed datasets with plausible values
+# define dataset with covariates to be matched
+Y &lt;- dat[, c("idstud", "idschool", "female", "hisei", "migra") ]
+
+# define plausible value names
+pvnames &lt;- c("PVREAD")
+# create list of imputed datasets
+datlist1 &lt;- TAM::tampv2datalist( pv2e, pvnames=pvnames, Y=Y, Y.pid="idstud")
+str(datlist1)
+
+# create a matrix of covariates with different set of students than in pv2e
+Y1 &lt;- Y[ seq( 1, 600, 2 ), ]
+# create list of multiply imputed datasets
+datlist2 &lt;- TAM::tampv2datalist( pv2e, pvnames=c("PVREAD"), Y=Y1, Y.pid="idstud")
+
+#--- fit some models in lavaan and semTools
+library(lavaan)
+library(semTools)
+
+#*** Model 1: Linear regression
+lavmodel &lt;- "
+   PVREAD ~ migra + hisei
+   PVREAD ~~ PVREAD
+        "
+mod1 &lt;- semTools::lavaan.mi( lavmodel, data=datlist1, m=0)
+summary(mod1, standardized=TRUE, rsquare=TRUE)
+
+# apply lavaan for third imputed dataset
+mod1a &lt;- lavaan::lavaan( lavmodel, data=datlist1[[3]] )
+summary(mod1a, standardized=TRUE, rsquare=TRUE)
+
+# compare with mod1 by looping over all datasets
+mod1b &lt;- lapply( datlist1, FUN=function(dat0){
+    mod1a &lt;- lavaan( lavmodel, data=dat0 )
+    coef( mod1a)
+        } )
+mod1b
+mod1b &lt;- matrix( unlist( mod1b ), ncol=length( coef(mod1)), byrow=TRUE )
+mod1b
+round( colMeans(mod1b), 3 )
+coef(mod1)   # -&gt; results coincide
+
+#*** Model 2: Path model
+lavmodel &lt;- "
+   PVREAD ~ migra + hisei
+   hisei ~ migra
+   PVREAD ~~ PVREAD
+   hisei ~~ hisei
+        "
+mod2 &lt;- semTools::lavaan.mi( lavmodel, data=datlist1 )
+summary(mod2, standardized=TRUE, rsquare=TRUE)
+# fit statistics
+inspect( mod2, what="fit")
+
+#--- using mitools package
+library(mitools)
+# convert datalist into an object of class imputationList
+datlist1a &lt;- mitools::imputationList( datlist1 )
+# fit linear regression
+mod1c &lt;- with( datlist1a, stats::lm( PVREAD ~ migra + hisei ) )
+summary( mitools::MIcombine(mod1c) )
+
+#--- using mice package
+library(mice)
+library(miceadds)
+# convert datalist into a mids object
+mids1 &lt;- miceadds::datalist2mids( datlist1 )
+# fit linear regression
+mod1c &lt;- with( mids1, stats::lm( PVREAD ~ migra + hisei ) )
+summary( mice::pool(mod1c) )
+
+#############################################################################
+# EXAMPLE 3: Multidimensional plausible value imputation
+#############################################################################
+
+# (1) simulate some data
+set.seed(6778)
+library(mvtnorm)
+N &lt;- 1000
+Y &lt;- cbind( stats::rnorm(N), stats::rnorm(N) )
+theta &lt;- mvtnorm::rmvnorm( N, mean=c(0,0), sigma=matrix( c(1,.5,.5,1), 2, 2 ))
+theta[,1] &lt;- theta[,1] + .4 * Y[,1] + .2 * Y[,2]  # latent regression model
+theta[,2] &lt;- theta[,2] + .8 * Y[,1] + .5 * Y[,2]  # latent regression model
+I &lt;- 20
+p1 &lt;- stats::plogis( outer( theta[,1], seq( -2, 2, len=I ), "-" ) )
+resp1 &lt;- 1 * ( p1 &gt; matrix( stats::runif( N*I ), nrow=N, ncol=I ) )
+p1 &lt;- stats::plogis( outer( theta[,2], seq( -2, 2, len=I ), "-" ) )
+resp2 &lt;- 1 * ( p1 &gt; matrix( stats::runif( N*I ), nrow=N, ncol=I ) )
+resp &lt;- cbind(resp1,resp2)
+colnames(resp) &lt;- paste("I", 1:(2*I), sep="")
+
+# (2) define loading Matrix
+Q &lt;- array( 0, dim=c( 2*I, 2 ))
+Q[cbind(1:(2*I), c( rep(1,I), rep(2,I) ))] &lt;- 1
+
+# (3) fit latent regression model
+mod &lt;- TAM::tam.mml( resp=resp, Y=Y, Q=Q )
+
+# (4) draw plausible values
+pv1 &lt;- TAM::tam.pv( mod, theta.model=TRUE )
+
+# (5) convert plausible values to list of imputed datasets
+Y1 &lt;- data.frame(Y)
+colnames(Y1) &lt;- paste0("Y",1:2)
+pvnames &lt;- c("PVFA","PVFB")
+# create list of imputed datasets
+datlist1 &lt;- TAM::tampv2datalist( pv1, pvnames=pvnames, Y=Y1 )
+str(datlist1)
+
+# (6) apply statistical models
+library(semTools)
+# define linear regression
+lavmodel &lt;- "
+   PVFA ~ Y1 + Y2
+   PVFA ~~ PVFA
+        "
+mod1 &lt;- semTools::lavaan.mi( lavmodel, data=datlist1 )
+summary(mod1, standardized=TRUE, rsquare=TRUE)
+
+# (7) draw plausible values with tam.pv.mcmc function
+Y1 &lt;- cbind( 1, Y )
+pv2 &lt;- TAM::tam.pv.mcmc( tamobj=mod, Y=Y1, n.iter=1000, n.burnin=200 )
+
+# (8) group-specific plausible values
+set.seed(908)
+# create artificial grouping variable
+group &lt;- sample( 1:3, N, replace=TRUE )
+pv3 &lt;- TAM::tam.pv.mcmc( tamobj, Y=Y1, n.iter=1000, n.burnin=200, group=group )
+
+# (9) plausible values with no fitted object in TAM
+
+# fit IRT model without covariates
+mod4a &lt;- TAM::tam.mml( resp=resp, Q=Q )
+# define input for tam.pv.mcmc
+tamobj1 &lt;- list( AXsi=mod4a$AXsi, B=mod4a$B, resp=mod4a$resp )
+pmod4 &lt;- TAM::tam.pv.mcmc( tamobj1, Y=Y1 )
+
+#############################################################################
+# EXAMPLE 4: Plausible value imputation with measurement errors in covariates
+#############################################################################
+
+library(sirt)
+set.seed(7756)
+N &lt;- 2000    # number of persons
+I &lt;- 10     # number of items
+
+# simulate covariates
+X &lt;- mvrnorm( N, mu=c(0,0), Sigma=matrix( c(1,.5,.5,1),2,2 ) )
+colnames(X) &lt;- paste0("X",1:2)
+# second covariate with measurement error with variance var.err
+var.err &lt;- .3
+X.err &lt;- X
+X.err[,2] &lt;-X[,2] + rnorm(N, sd=sqrt(var.err) )
+# simulate theta
+theta &lt;- .5*X[,1] + .4*X[,2] + rnorm( N, sd=.5 )
+# simulate item responses
+itemdiff &lt;- seq( -2, 2, length=I)  # item difficulties
+dat &lt;- sirt::sim.raschtype( theta, b=itemdiff )
+
+#***********************
+#*** Model 0: Regression model with true variables
+mod0 &lt;- stats::lm( theta ~ X )
+summary(mod0)
+
+#***********************
+#*** Model 1: latent regression model with true covariates X
+xsi.fixed &lt;- cbind( 1:I, itemdiff )
+mod1 &lt;- TAM::tam.mml( dat, xsi.fixed=xsi.fixed, Y=X)
+summary(mod1)
+
+# draw plausible values
+res1a &lt;- TAM::tam.pv( mod1, normal.approx=TRUE, ntheta=200, samp.regr=TRUE)
+# create list of multiply imputed datasets
+library(miceadds)
+datlist1a &lt;- TAM::tampv2datalist( res1a, Y=X )
+imp1a &lt;- miceadds::datalist2mids( datlist1a )
+
+# fit linear model
+# linear regression with measurement errors in X
+lavmodel &lt;- "
+   PV.Dim1 ~ X1 + X2true
+   X2true=~ 1*X2
+   X2 ~~ 0.3*X2  #=var.err
+   PV.Dim1 ~~ PV.Dim1
+   X2true ~~ X2true
+        "
+mod1a &lt;- semTools::lavaan.mi( lavmodel, datlist1a)
+summary(mod1a, standardized=TRUE, rsquare=TRUE)
+
+#***********************
+#*** Model 2: latent regression model with error-prone covariates X.err
+mod2 &lt;- TAM::tam.mml( dat, xsi.fixed=xsi.fixed, Y=X.err)
+summary(mod2)
+
+#***********************
+#*** Model 3: Adjustment of covariates
+
+cov.X.err &lt;- cov( X.err )
+# matrix of variance of measurement errors
+measerr &lt;- diag( c(0,var.err) )
+# true covariance matrix
+cov.X &lt;- cov.X.err - measerr
+# mean of X.err
+mu &lt;- colMeans(X.err)
+muM &lt;- matrix( mu, nrow=nrow(X.err), ncol=ncol(X.err), byrow=TRUE)
+# reliability matrix
+W &lt;- solve( cov.X.err ) %*% cov.X
+ident &lt;- diag(2)
+# adjusted scores of X
+X.adj &lt;- ( X.err - muM ) %*% W   + muM %*% ( ident - W )
+
+# fit latent regression model
+mod3 &lt;- TAM::tam.mml( dat, xsi.fixed=xsi.fixed, Y=X.adj)
+summary(mod3)
+
+# draw plausible values
+res3a &lt;- TAM::tam.pv( mod3, normal.approx=TRUE, ntheta=200, samp.regr=TRUE)
+
+# create list of multiply imputed datasets
+library(semTools)
+
+#*** PV dataset 1
+# datalist with error-prone covariates
+datlist3a &lt;- TAM::tampv2datalist( res3a, Y=X.err )
+# datalist with adjusted covariates
+datlist3b &lt;- TAM::tampv2datalist( res3a, Y=X.adj )
+
+# linear regression with measurement errors in X
+lavmodel &lt;- "
+   PV.Dim1 ~ X1 + X2true
+   X2true=~ 1*X2
+   X2 ~~ 0.3*X2  #=var.err
+   PV.Dim1 ~~ PV.Dim1
+   X2true ~~ X2true
+        "
+mod3a &lt;- semTools::lavaan.mi( lavmodel, datlist3a)
+summary(mod3a, standardized=TRUE, rsquare=TRUE)
+
+lavmodel &lt;- "
+   PV.Dim1 ~ X1 + X2
+   PV.Dim1 ~~ PV.Dim1
+        "
+mod3b &lt;- semTools::lavaan.mi( lavmodel, datlist3b)
+summary(mod3b, standardized=TRUE, rsquare=TRUE)
+#=&gt; mod3b leads to the correct estimate.
+
+#*********************************************
+# plausible value imputation for abilities and error-prone
+# covariates using the mice package
+
+library(mice)
+library(miceadds)
+
+# creating the likelihood for plausible value for abilities
+mod11 &lt;- TAM::tam.mml( dat, xsi.fixed=xsi.fixed )
+likePV &lt;- IRT.likelihood(mod11)
+# creating the likelihood for error-prone covariate X2
+lavmodel &lt;- "
+  X2true=~ 1*X2
+  X2 ~~ 0.3*X2
+    "
+mod12 &lt;- lavaan::cfa( lavmodel, data=as.data.frame(X.err) )
+summary(mod12)
+likeX2 &lt;- TAM::IRTLikelihood.cfa( data=X.err, cfaobj=mod12)
+str(likeX2)
+
+#-- create data input for mice package
+data &lt;- data.frame( "PVA"=NA, "X1"=X[,1], "X2"=NA  )
+vars &lt;- colnames(data)
+V &lt;- length(vars)
+predictorMatrix &lt;- 1 - diag(V)
+rownames(predictorMatrix) &lt;- colnames(predictorMatrix) &lt;- vars
+imputationMethod &lt;- rep("norm", V )
+names(imputationMethod) &lt;- vars
+imputationMethod[c("PVA","X2")] &lt;- "plausible.values"
+
+#-- create argument lists for plausible value imputation
+# likelihood and theta grid of plausible value derived from IRT model
+like &lt;- list( "PVA"=likePV, "X2"=likeX2 )
+theta &lt;- list( "PVA"=attr(likePV,"theta"), "X2"=attr(likeX2, "theta") )
+#-- initial imputations
+data.init &lt;- data
+data.init$PVA &lt;- mod11$person$EAP
+data.init$X2 &lt;- X.err[,"X2"]
+
+#-- imputation using the mice and miceadds package
+imp1 &lt;- mice::mice( as.matrix(data), predictorMatrix=predictorMatrix, m=4, maxit=6,
+             method=imputationMethod,  allow.na=TRUE,
+             theta=theta, like=like, data.init=data.init )
+summary(imp1)
+
+# compute linear regression
+mod4a &lt;- with( imp1, stats::lm( PVA ~ X1 + X2 ) )
+summary( mice::pool(mod4a) )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

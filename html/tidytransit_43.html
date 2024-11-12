@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>validate_gtfs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Validate GTFS file</h2>
+
+<h3>Description</h3>
+
+<p>Validates the GTFS object against GTFS specifications and raises warnings if
+required files/fields are not found. This function is called in <code>read_gtfs</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">validate_gtfs(gtfs_obj, files = NULL, warnings = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>gtfs_obj</code></td>
+<td>
+<p>gtfs object (i.e. a list of tables, not necessary a tidygtfs object)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>files</code></td>
+<td>
+<p>A character vector containing the text files to be validated
+against the GTFS specification (without the <code>.txt</code> extension). If
+<code>NULL</code> (the default) the provided GTFS is validated against all
+possible GTFS text files.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warnings</code></td>
+<td>
+<p>Whether to display warning messages (defaults to TRUE).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that this function just checks if required files or fields are missing. There's no
+validation for internal consistency (e.g. no departure times before arrival times or
+calendar covering a reasonable period).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>validation_result</code> tibble containing the validation summary of all
+possible fields from the specified files.
+</p>
+
+
+<h3>Details</h3>
+
+<p>GTFS object's files and fields are validated against the GTFS specifications
+as documented in <a href="https://gtfs.org/schedule/reference/">
+GTFS Schedule Reference</a>:
+</p>
+
+<ul>
+<li>
+<p> GTFS feeds are considered valid if they include all required files
+and fields. If a required file/field is missing the function (optionally)
+raises a warning.
+</p>
+</li>
+<li>
+<p> Optional files/fields are listed in the reference above but are not
+required, thus no warning is raised if they are missing.
+</p>
+</li>
+<li>
+<p> Extra files/fields are those who are not listed in the reference
+above (either because they refer to a specific GTFS extension or due to
+any other reason).
+</p>
+</li>
+</ul>
+<p>Note that some files (<code>calendar.txt</code>, <code>calendar_dates.txt</code> and
+<code>feed_info.txt</code>) are conditionally required. This means that:
+</p>
+
+<ul>
+<li> <p><code>calendar.txt</code> is initially set as a required file. If it's not
+present, however, it becomes optional and <code>calendar_dates.txt</code>
+(originally set as optional) becomes required.
+</p>
+</li>
+<li> <p><code>feed_info.txt</code> is initially set as an optional file. If
+<code>translations.txt</code> is present, however, it becomes required.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">validate_gtfs(gtfs_duke)
+#&gt; # A tibble: 233 × 8
+#&gt;    file   file_spec file_provided_status field  field_spec field_provided_status
+#&gt;    &lt;chr&gt;  &lt;chr&gt;     &lt;lgl&gt;                &lt;chr&gt;  &lt;chr&gt;      &lt;lgl&gt;                
+#&gt;  1 agency req       TRUE                 agenc… opt        TRUE                 
+#&gt;  2 agency req       TRUE                 agenc… req        TRUE                 
+#&gt;  3 agency req       TRUE                 agenc… req        TRUE                 
+#&gt;  4 agency req       TRUE                 agenc… req        TRUE                 
+#&gt;  5 agency req       TRUE                 agenc… opt        TRUE                 
+#&gt;  6 agency req       TRUE                 agenc… opt        TRUE                 
+#&gt;  7 agency req       TRUE                 agenc… opt        TRUE                 
+#&gt;  8 agency req       TRUE                 agenc… opt        FALSE                
+#&gt;  9 stops  req       TRUE                 stop_… req        TRUE                 
+#&gt; 10 stops  req       TRUE                 stop_… opt        TRUE                 
+#&gt; # 223 more rows
+#&gt; # 2 more variables: validation_status &lt;chr&gt;, validation_details &lt;chr&gt;
+
+## Not run: 
+local_gtfs_path &lt;- system.file("extdata", "google_transit_nyc_subway.zip", package = "tidytransit")
+gtfs &lt;- read_gtfs(local_gtfs_path)
+attr(gtfs, "validation_result")
+
+gtfs$shapes &lt;- NULL
+validation_result &lt;- validate_gtfs(gtfs)
+
+# should raise a warning
+gtfs$stop_times &lt;- NULL
+validation_result &lt;- validate_gtfs(gtfs)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

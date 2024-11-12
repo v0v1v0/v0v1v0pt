@@ -1,0 +1,361 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>render_music</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Render sheet music snippet with LilyPond</h2>
+
+<h3>Description</h3>
+
+<p>Render a sheet music/tablature snippet from a music object with LilyPond.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">render_music(
+  music,
+  file,
+  clef = "treble",
+  tab = FALSE,
+  tuning = "standard",
+  string_names = NULL,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+
+render_music_tc(
+  music,
+  file,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+
+render_music_bc(
+  music,
+  file,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+
+render_music_tab(
+  music,
+  file,
+  clef = NA,
+  tuning = "standard",
+  string_names = NULL,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+
+render_music_guitar(
+  music,
+  file,
+  tuning = "standard",
+  string_names = NULL,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+
+render_music_bass(
+  music,
+  file,
+  tuning = "bass",
+  string_names = NULL,
+  header = NULL,
+  paper = NULL,
+  midi = FALSE,
+  colors = NULL,
+  transparent = FALSE,
+  res = 150,
+  keep_ly = FALSE,
+  simplify = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>music</code></td>
+<td>
+<p>a music object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>character, output file ending in .pdf or .png.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clef</code></td>
+<td>
+<p>character, include a music staff with the given clef. <code>NA</code> to
+suppress. See <code>track()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tab</code></td>
+<td>
+<p>logical, include tablature staff. <code>NA</code> to suppress. See <code>track()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tuning</code></td>
+<td>
+<p>character, string tuning, only applies to tablature. See
+<code>track()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>string_names</code></td>
+<td>
+<p>label strings at beginning of tab staff. <code>NULL</code> (default)
+for non-standard tunings only, <code>TRUE</code> or <code>FALSE</code> for force on or off
+completely.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>header</code></td>
+<td>
+<p>a named list of arguments passed to the header of the LilyPond
+file. See <code>lilypond()</code> details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paper</code></td>
+<td>
+<p>a named list of arguments for the LilyPond file page layout. See
+<code>lilypond()</code> details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>midi</code></td>
+<td>
+<p>logical, also output an corresponding MIDI file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colors</code></td>
+<td>
+<p>a named list of LilyPond element color global overrides. See
+<code>lilypond()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transparent</code></td>
+<td>
+<p>logical, transparent background, png only.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res</code></td>
+<td>
+<p>numeric, resolution, png only. <code>transparent = TRUE</code> may fail when
+<code>res</code> exceeds ~150.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_ly</code></td>
+<td>
+<p>logical, keep the intermediary LilyPond file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>simplify</code></td>
+<td>
+<p>logical, uses <code>simplify_phrase()</code> to convert to simpler, more
+efficient LilyPond syntax.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions allow you to render short, simple snippets of sheet music
+directly from a <code>music</code> object. This is useful when you do not need to
+build up from phrases to tracks to a full score. They treat <code>music</code> objects
+as a single voice for a single track. This simplifies the possible output but
+is very convenient when this is all you need.
+</p>
+<p>These functions abstract the following pipeline,
+</p>
+<p><code style="white-space: pre;">⁠music |&gt; phrase() |&gt; track() |&gt; score() |&gt; render_*()⁠</code>
+</p>
+<p>for this simple edge case and directly expose the most relevant arguments.
+</p>
+<p>All <code>header</code> list elements are character strings. The options for
+<code>header</code> include the following.
+</p>
+
+<ul>
+<li> <p><code>title</code>
+</p>
+</li>
+<li> <p><code>subtitle</code>
+</p>
+</li>
+<li> <p><code>composer</code>
+</p>
+</li>
+<li> <p><code>album</code>
+</p>
+</li>
+<li> <p><code>arranger</code>
+</p>
+</li>
+<li> <p><code>instrument</code>
+</p>
+</li>
+<li> <p><code>meter</code>
+</p>
+</li>
+<li> <p><code>opus</code>
+</p>
+</li>
+<li> <p><code>piece</code>
+</p>
+</li>
+<li> <p><code>poet</code>
+</p>
+</li>
+<li> <p><code>copyright</code>
+</p>
+</li>
+<li> <p><code>tagline</code>
+</p>
+</li>
+</ul>
+<p>All <code>paper</code> list elements are numeric except <code>page_numbers</code> and
+<code>print_first_page_number</code>, which are logical. <code>page_numbers = FALSE</code>
+suppresses all page numbering. When <code>page_numbers = TRUE</code>, you can set
+<code>print_first_page_number = FALSE</code> to suppress printing of only the first
+page number. <code>first_page_number</code> is the number of the first page,
+defaulting to 1, and determines all subsequent page numbers. These arguments
+correspond to LilyPond paper block variables.
+</p>
+<p>The options for <code>paper</code> include the following and have the following default
+values if not provided.
+</p>
+
+<ul>
+<li> <p><code>textheight = 220</code>
+</p>
+</li>
+<li> <p><code>linewidth = 150</code>
+</p>
+</li>
+<li> <p><code>indent = 0</code>
+</p>
+</li>
+<li> <p><code>fontsize = 20</code>
+</p>
+</li>
+<li> <p><code>page_numbers = FALSE</code>
+</p>
+</li>
+<li> <p><code>print_first_page_number = TRUE</code>
+</p>
+</li>
+<li> <p><code>first_page_number = 1</code>
+</p>
+</li>
+</ul>
+<p><code>textheight = 150</code> is the default, but for music snippet rendering, a value
+must be provided explicitly via <code>paper</code> when rendering to png. Otherwise for
+png outputs the height is cropped automatically rather than remaining a full
+page. See <code>lilypond()</code> for details.
+</p>
+<p>Passing arguments to <code>header</code> can completely or partially prevent cropping in
+both directions, which must then be done manually with <code>linewidth</code> and
+<code>textheight</code>. This is all based on underlying LilyPond behavior.
+</p>
+<p>If <code>music</code> contains lyrics and there are rests in the note sequence,
+note-lyric alignment is maintained automatically when these functions
+remove the lyric timesteps corresponding to the rests prior to sending to
+LilyPond. LilyPond skips rests when engraving lyrics and expects a shortened
+lyrics sequence in comparison to how <code>tabr</code> matches by timestep including
+rests. This is in contrast to <code>track()</code>, for which you have to shorten the
+lyrics object yourself prior to combining with a phrase object that has rests.
+</p>
+
+
+<h3>Value</h3>
+
+<p>nothing returned; a file is written.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot_music()</code>, <code>phrase()</code>, <code>track()</code>, <code>score()</code>, <code>lilypond()</code>,
+<code>tab()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- "a,4;5*5 b,- c cgc'e'~ cgc'e'1 e'4;2 c';3 g;4 c;5 ce'1;51"
+x &lt;- as_music(x)
+
+y &lt;- "a,,4;3*5 b,,- c, c,g,c~ c,g,c1 c4;1 g,;2 c,;3 g,;2 c,c1;31"
+y &lt;- as_music(y)
+
+z &lt;- as_music("a,4 b, r c~ c2 d", lyrics = as_lyrics("A2 B2 . C3 . D3"))
+
+## Not run: 
+if(tabr_options()$lilypond != ""){ # requires LilyPond installation
+  outfile &lt;- file.path(tempdir(), "out.pdf")
+  render_music(x, outfile)
+
+  outfile &lt;- file.path(tempdir(), "out.png")
+  render_music(x, outfile, "treble_8", tab = TRUE)
+
+  render_music_tc(x, outfile)
+  render_music_bc(x, outfile)
+
+  render_music_tab(x, outfile)
+  render_music_guitar(x, outfile)
+  render_music_bass(y, outfile)
+
+  # lyrics example
+  render_music_guitar(z, outfile)
+}
+
+## End(Not run)
+</code></pre>
+
+
+</div>

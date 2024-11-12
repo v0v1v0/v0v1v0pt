@@ -1,0 +1,73 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>check.TAAG</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Check TAAG</h2>
+
+<h3>Description</h3>
+
+<p>This function provides a table for checking whther the TAAG process fits the data well better than an ordinary kriging model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">check.TAAG(object)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>object of class inheriting from "TAAG".</p>
+</td>
+</tr></table>
+<h3>Value</h3>
+
+<p>A table of the fitted negative likelihood values and cross validation errors obtained from TAAG and the ordinary kriging models from dicekriging and mlegp is returned. Note that, for both criteria, the model with a smaller value are a better model.
+</p>
+
+
+<h3>References</h3>
+
+<p>Lin, L.-H. and Joseph,  V. R. (2020) "Transformation and Additivity in Gaussian Processes",<em>Technometrics</em>, 62, 525-535.  DOI:10.1080/00401706.2019.1665592.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TAAG</code> for the estimates of the parameters in the TAG and TAAG, respectively.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 20
+p &lt;- 2
+library(randtoolbox)
+X &lt;-  sobol(n, dim = p, init = TRUE, scrambling = 2, seed = 20, normal = FALSE)
+y &lt;- exp(2*sin(0.5*pi*X[,1]) + 0.5*cos(2.5*pi*X[,2]))
+ini.TAG &lt;- initial.TAG(y, X)
+par.TAG &lt;- TAG(ini.TAG)
+N &lt;- 1000
+X.test &lt;- sobol(N, dim = p, init = TRUE, scrambling = 2, seed = 5, normal = FALSE)
+ytrue  &lt;- exp(2*sin(0.5*pi*X.test[,1]) + 0.5*cos(2.5*pi*X.test[,2]))
+pre.TAG &lt;- pred.TAG(par.TAG, X.test)
+library(DiceKriging)
+set.seed(2)
+temp.m &lt;- km(formula=~1, design=X, response=par.TAG$ty,
+             covtype="gauss",nugget = (10^-15), multistart = 4,
+             control = list(trace = FALSE))
+nu.est &lt;- sqrt(2*(coef(temp.m)$range^2))
+par.TAAG &lt;- TAAG(par.TAG, nu.est)
+
+check.table &lt;- check.TAAG(par.TAAG)
+check.table
+</code></pre>
+
+
+</div>

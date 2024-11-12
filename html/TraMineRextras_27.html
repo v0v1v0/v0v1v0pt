@@ -1,0 +1,181 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqemlt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Euclidean Coordinates for Longitudinal Timelines</h2>
+
+<h3>Description</h3>
+
+<p>Computes the Euclidean coordinates of sequences from which we get the EMLT  distance between sequences introduced in Rousset et al (2012).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqemlt(seqdata, a = 1, b = 1, weighted = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p> a state sequence object defined with the <code>seqdef</code> function.
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>optional argument for the weighting mechanism that controls the balancing between short term/long term transitions. The weighting function is <code class="reqn">1/(a*s+b)</code> where <code class="reqn">s</code> is the transition step.
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>see argument <code>a</code>.
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical: Should weights in the sequence object <code>seqdata</code> be used?
+
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The EMLT distance is the sum of the dissimilarity between the pairs of states observed at the successive positions, where the dissimilarity between states is defined at each position as the Chi-squared distance between the normalized vectors of transition probabilities (profiles of situations) from the current state to the next observed states in the sequence.
+Transition probabilities are down-weighted with the time distance to avoid exaggerated importance of transitions over long periods. The adjustment weight is <code class="reqn">1/a*s+b</code>, where <code class="reqn">s</code> is the period length over which the transition probability is measured.
+</p>
+<p>The EMLT distance between two sequences is obtained as the Euclidean distance between the returned numerical sequence coordinates. So, providing <code>coord</code> as the data input to any clustering algorithm that uses the Euclidean metric is equivalent to cluster with the EMLT metric.
+</p>
+<p>Each time-indexed state is called a situation, and the distance between two states at a position <code class="reqn">t</code> is derived from the transition probabilities to other observed situations.
+
+
+The distance between any situation and a situation that does not occur is coded as <code>NA</code>. Such non-occurring situations have no influence on the distance between sequences.
+
+</p>
+<p>The obtained numerical representations of sequences may be used as input to any Euclidean algorithm (clustering algorithms, ...).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>emlt</code> with the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>coord</code></td>
+<td>
+<p>Matrix with in each row the EMLT numerical coordinates of the corresponding sequence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>states </code></td>
+<td>
+<p>list of states</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>situations </code></td>
+<td>
+<p>list of situations (timestamped states)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sit.freq </code></td>
+<td>
+<p>Situation frequencies</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sit.transrate </code></td>
+<td>
+<p>matrix of transition probabilities from each situation to future situations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sit.profil </code></td>
+<td>
+<p>profiles of situations. Each profile is the normalized vector of transition probabilities to future situations adjusted to down weight transitions over longer periods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sit.cor </code></td>
+<td>
+<p>Matrix of correlations between situations. Two situations are highly correlated when their profiles are similar (i.e., when their transitions towards future are similar). </p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Patrick Rousset and Matthias Studer. Help page by Gilbert Ritschard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Rousset, Patrick and  Jean-François Giret (2007), Classifying Qualitative Time Series with SOM: The Typology of Career Paths in France, in F. Sandoval, A. Prieto and M. Grana (Eds) <em>Computational and Ambient Intelligence</em>, Lecture Notes in Computer science, vol 4507,  Berlin: Springer, pp 757-764.
+</p>
+<p>Rousset, Patrick and  Jean-François Giret (2008) A longitudinal Analysis of  Labour Market Data with SOM, in J. Rabuñal Dopico, J. Dorado, &amp; A. Pazos (Eds.) <em>Encyclopedia of Artificial Intelligence</em>, Hershey, PA: Information Science Reference, pp 1029-1035.
+</p>
+<p>Rousset, Patrick, Jean-François Giret and Yvette Grelet (2012) Typologies De Parcours et Dynamique Longitudinale, <em>Bulletin de méthodologie sociologique</em>, 114(1), 5-34.
+</p>
+<p>Studer, Matthias  and Gilbert Ritschard (2014) A comparative review of sequence dissimilarity measures. LIVES Working Paper, 33
+<a href="https://doi.org/10.12682/lives.2296-1658.2014.33">doi:10.12682/lives.2296-1658.2014.33</a>
+
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.emlt</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(mvad)
+mvad.seq &lt;- seqdef(mvad[1:100, 17:41])
+alphabet(mvad.seq)
+head(labels(mvad.seq))
+## Computing distance
+mvad.emlt &lt;- seqemlt(mvad.seq)
+
+## typology1 with kmeans in 3 clusters
+km &lt;- kmeans(mvad.emlt$coord, 3)
+
+##Plotting by clusters of typology1
+seqdplot(mvad.seq, group=km$cluster)
+
+## typology2: 3 clusters by applying hierarchical ward
+##   on the centers of the 25 group kmeans solution
+km&lt;-kmeans(mvad.emlt$coord, 25)
+hc&lt;-hclust(dist(km$centers, method="euclidean"), method="ward")
+zz&lt;-cutree(hc, k=3)
+
+##Plotting by clusters of typology2
+seqdplot(mvad.seq, group=zz[km$cluster])
+
+## Plotting the evolution of the correlation between states
+plot(mvad.emlt, from="employment", to="joblessness", type="cor")
+plot(mvad.emlt, from=c("employment","HE", "school", "FE"), to="joblessness", delay=0, leg=TRUE)
+plot(mvad.emlt, from="joblessness", to="employment", delay=6)
+plot(mvad.emlt, type="pca", cex=0.4, compx=1, compy=2)
+
+</code></pre>
+
+
+</div>

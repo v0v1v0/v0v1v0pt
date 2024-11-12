@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>layer_autoregressive_transform</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>An autoregressive normalizing flow layer, given a <code>layer_autoregressive</code>.</h2>
+
+<h3>Description</h3>
+
+<p>Following <a href="https://arxiv.org/abs/1705.07057">Papamakarios et al. (2017)</a>, given
+an autoregressive model <code class="reqn">p(x)</code> with conditional distributions in the location-scale
+family, we can construct a normalizing flow for <code class="reqn">p(x)</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">layer_autoregressive_transform(object, made, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>What to compose the new <code>Layer</code> instance with. Typically a
+Sequential model or a Tensor (e.g., as returned by <code>layer_input()</code>).
+The return value depends on <code>object</code>. If <code>object</code> is:
+</p>
+
+<ul>
+<li>
+<p> missing or <code>NULL</code>, the <code>Layer</code> instance is returned.
+</p>
+</li>
+<li>
+<p> a <code>Sequential</code> model, the model with an additional layer is returned.
+</p>
+</li>
+<li>
+<p> a Tensor, the output tensor from <code>layer_instance(object)</code> is returned.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>made</code></td>
+<td>
+<p>A <code>Made</code> layer, which must output two parameters for each input.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters passed to Keras Layer.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Specifically, suppose made is a <code style="white-space: pre;">⁠[layer_autoregressive()]⁠</code> – a layer implementing
+a Masked Autoencoder for Distribution Estimation (MADE) – that computes location
+and log-scale parameters <code class="reqn">made(x)[i]</code> for each input <code class="reqn">x[i]</code>. Then we can represent
+the autoregressive model <code class="reqn">p(x)</code> as <code class="reqn">x = f(u)</code> where <code class="reqn">u</code> is drawn
+from from some base distribution and where <code class="reqn">f</code> is an invertible and
+differentiable function (i.e., a Bijector) and <code class="reqn">f^{-1}(x)</code> is defined by:
+</p>
+<div class="sourceCode"><pre>library(tensorflow)
+library(zeallot)
+f_inverse &lt;- function(x) {
+  c(shift, log_scale) %&lt;-% tf$unstack(made(x), 2, axis = -1L)
+  (x - shift) * tf$math$exp(-log_scale)
+}
+</pre></div>
+<p>Given a <code>layer_autoregressive()</code> made, a <code>layer_autoregressive_transform()</code>
+transforms an input <code style="white-space: pre;">⁠tfd_*⁠</code> <code class="reqn">p(u)</code> to an output <code style="white-space: pre;">⁠tfd_*⁠</code> <code class="reqn">p(x)</code> where
+<code class="reqn">x = f(u)</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a Keras layer
+</p>
+
+
+<h3>References</h3>
+
+<p><a href="https://arxiv.org/abs/1705.07057">Papamakarios et al. (2017)</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tfb_masked_autoregressive_flow()</code> and <code>layer_autoregressive()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Step2Selection</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Select a Subset of the Measures Using Factor Analysis</h2>
+
+<h3>Description</h3>
+
+<p>This function applies the following dimension reduction algorithm
+to the measures computed by <code>Step1Measures</code>:
+</p>
+
+<ol>
+<li>
+<p> Drop the measures whose values are constant across the trajectories;
+</p>
+</li>
+<li>
+<p> Whenever two measures are highly correlated (absolute value of Pearson correlation &gt; 0.98), keep the highest-ranking measure on the list (see <code>Step1Measures</code>) and drop the other;
+</p>
+</li>
+<li>
+<p> Use principal component analysis (PCA) on the measures to form factors summarizing the variability in the measures;
+</p>
+</li>
+<li>
+<p> Drop the factors whose variance is smaller than any one of the standardized measures;
+</p>
+</li>
+<li>
+<p> Perform a varimax rotation on the remaining factors;
+</p>
+</li>
+<li>
+<p> For each rotated factor, select the measure that has the highest correlation (aka factor loading) with it and that hasn't yet been selected;
+</p>
+</li>
+<li>
+<p> Drop the remaining measures.
+</p>
+</li>
+</ol>
+<h3>Usage</h3>
+
+<pre><code class="language-R">Step2Selection(trajMeasures, num.select = NULL, discard = NULL, select = NULL)
+
+## S3 method for class 'trajSelection'
+print(x, ...)
+
+## S3 method for class 'trajSelection'
+summary(object, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>trajMeasures</code></td>
+<td>
+<p>object of class <code>trajMeasures</code> as returned by
+<code>Step1Measures</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num.select</code></td>
+<td>
+<p>an optional positive integer indicating the number of
+factors to keep in the second stage of the algorithm. Defaults to <code>NULL</code> so
+that all factors with variance greater than any one of the normalized
+measures are selected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discard</code></td>
+<td>
+<p>an optional vector of positive integers corresponding to the
+measures to be dropped from the analysis. See
+<code>Step1Measures</code> for the list of measures. Defaults to
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p>an optional vector of positive integers corresponding to the
+measures to forcefully select. Defaults to <code>NULL</code>. If a vector is supplied,
+the five-steps selection algorithm described above is bypassed and the
+corresponding measures are selected instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>object of class <code>trajSelection</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>object of class  <code>trajSelection</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Whenever two measures are highly correlated (Pearson correlation &gt;
+0.98), the highest-ranking measure on the list (see <code>Step1Measures</code>) is kept and the other is discarded and discards the others. PCA is applied on the remaining measures using the <code>principal</code> function from the <code>psych</code> package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>trajSelection</code>; a list containing the values
+of the selected measures, the output of the principal component analysis as
+well as a curated form of the arguments.
+</p>
+
+
+<h3>References</h3>
+
+<p>Leffondre K, Abrahamowicz M, Regeasse A, Hawker GA, Badley EM,
+McCusker J, Belzile E. Statistical measures were proposed for identifying
+longitudinal patterns of change in quantitative health indicators. J Clin
+Epidemiol. 2004 Oct;57(10):1049-62. doi: 10.1016/j.jclinepi.2004.02.012.
+PMID: 15528056.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>principal</code> <code>Step1Measures</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("trajdata")
+trajdata.noGrp &lt;- trajdata[, -which(colnames(trajdata) == "Group")] #remove the Group column
+
+m = Step1Measures(trajdata.noGrp, measure = c(1:18), ID = TRUE)
+s = Step2Selection(m)
+
+print(s)
+
+s2 = Step2Selection(m, select = c(13, 3, 12, 9))
+
+## End(Not run)
+
+
+</code></pre>
+
+
+</div>

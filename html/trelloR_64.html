@@ -1,0 +1,168 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_token</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get OAuth1.0 Token</h2>
+
+<h3>Description</h3>
+
+<p>Authorize access to Trello API, required for private boards and write access
+(see details).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_token(
+  app = NULL,
+  key = NULL,
+  secret = NULL,
+  scope = c("read", "write", "account"),
+  expiration = c("30days", "1day", "1hour", "never"),
+  cache = getOption("httr_oauth_cache"),
+  appname
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>app</code></td>
+<td>
+<p>A string, <code>NULL</code> or a Token.
+</p>
+
+<ul>
+<li>
+<p> If <code>key</code> and <code>secret</code> are set, a new token will be initialized and its
+name set to this value. A meaningful name can help you to spot your token
+on the settings page <code style="white-space: pre;">⁠https://trello.com/username/account⁠</code>. A token cannot
+be initialized without a name, so it will default to <code>"trello-app"</code> if it
+needs to.
+</p>
+</li>
+<li>
+<p> If <code>key</code> and <code>secret</code> are not set, the value of <code>app</code> will be used
+as a path from which an existing token is read. If <code>NULL</code>, the token will
+be read from the working directory. <code>NULL</code> is returned if nothing is found.
+</p>
+</li>
+<li>
+<p> If a Token, return as is.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key, secret</code></td>
+<td>
+<p>Developer credentials from <code style="white-space: pre;">⁠https://trello.com/app-key⁠</code>
+(see details). If <code>NULL</code> and a cache file exists, the newest token is read
+from it, otherwise an error is thrown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scope</code></td>
+<td>
+<p>Can be one or several of <code>"read"</code>, <code>"write"</code> or <code>"account"</code>.
+Defaults to <code>"read"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expiration</code></td>
+<td>
+<p>Can be <code>"1hour"</code>, <code>"1day"</code>, <code>"30days"</code> or <code>"never"</code>.
+Defaults to <code>"30days"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache</code></td>
+<td>
+<p>Passed to <code>httr::oauth1.0_token()</code>. Can specify whether
+the token should be cached locally (will ask the first time and then <code>TRUE</code>
+by default) or choose an alternative path for the cache file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>appname</code></td>
+<td>
+<p>Deprecated, use <code>app</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class <code>"Trello_API_token"</code> (a Token).
+</p>
+
+
+<h3>Getting developer access</h3>
+
+<p>To access private data, a secure token is required. In order to create it,
+you will need your developer <code>key</code> and <code>secret</code> which you can get by visiting
+<code style="white-space: pre;">⁠https://trello.com/app-key⁠</code> after logging in to Trello. You may also
+want to set at least one <em>allowed origin</em> there. If you are using trelloR
+locally (ie. from your laptop or PC), <code style="white-space: pre;">⁠http://localhost:1410⁠</code> is a good value
+to use.
+</p>
+
+
+<h3>Creating tokens</h3>
+
+<p>Once back in R, run this function the following way:
+</p>
+<p><code>my_token = get_token("my_app", key = key, secret = secret)</code>
+</p>
+<p>passing the values you have obtained on the developer page. First time you
+create a token, you will be prompted to confirm the authorization
+in a browser. If you chose to store the token locally as prompted, you won't
+have to do this anymore until your token expires (see <code>expiration</code>) or your
+local cache file is deleted.
+</p>
+<p>Tokens are stored inside a hidden <code>.httr-oauth</code> cache file and automatically
+read when any function in the package is called. Optionally, you can specify
+a different cache path using the <code>cache</code> argument, or avoid caching the token
+completely with <code>cache = FALSE</code>. See <code>httr::oauth1.0_token()</code> for details.
+</p>
+<p>If you opt out of storing the token, then it will only be held until your
+R session is over, and you will have to pass it to the <code>token</code> argument, eg.
+<code>get_my_boards(token = my_token)</code> each time you are fetching data.
+</p>
+<p>Remember to store your credentials in a <strong>secure, non-shared</strong> location. To
+minimize the risk of unwanted disclosure when using remote code
+repositories, <code>.httr-oauth</code> (or whatever cache path you have specified
+using the <code>cache</code> argument) is automatically added to <code>.gitignore</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>httr::oauth_app()</code>, <code>httr::oauth_endpoint()</code>,
+<code>httr::oauth1.0_token()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># This example assumes you are reading your key and secret from environment
+# variables. This is not obligatory, but wherever you read them from, make
+# sure it is a secure, non-shared location.
+
+## Not run: 
+
+key = Sys.getenv("MY_TRELLO_KEY")
+secret = Sys.getenv("MY_TRELLO_SECRET")
+
+token = get_token("my_app", key = key, secret = secret,
+                  scope = c("read", "write"))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

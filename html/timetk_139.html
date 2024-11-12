@@ -1,0 +1,136 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_stl_diagnostics</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group-wise STL Decomposition (Season, Trend, Remainder)</h2>
+
+<h3>Description</h3>
+
+<p><code>tk_stl_diagnostics()</code> is the preprocessor for <code>plot_stl_diagnostics()</code>.
+It helps by automating frequency and trend selection.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_stl_diagnostics(
+  .data,
+  .date_var,
+  .value,
+  .frequency = "auto",
+  .trend = "auto",
+  .message = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tibble</code> or <code>data.frame</code> with a time-based column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.date_var</code></td>
+<td>
+<p>A column containing either date or date-time values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.value</code></td>
+<td>
+<p>A column containing numeric values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.frequency</code></td>
+<td>
+<p>Controls the seasonal adjustment (removal of seasonality).
+Input can be either "auto", a time-based definition (e.g. "2 weeks"),
+or a numeric number of observations per frequency (e.g. 10).
+Refer to <code>tk_get_frequency()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.trend</code></td>
+<td>
+<p>Controls the trend component.
+For STL, trend controls the sensitivity of the lowess smoother, which is used to remove the remainder.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.message</code></td>
+<td>
+<p>A boolean. If <code>TRUE</code>, will output information related to automatic frequency
+and trend selection (if applicable).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>tk_stl_diagnostics()</code> function generates a Seasonal-Trend-Loess decomposition.
+The function is "tidy" in the sense that it works
+on data frames and is designed to work with <code>dplyr</code> groups.
+</p>
+<p><strong>STL method</strong>:
+</p>
+<p>The STL method implements time series decomposition using
+the underlying <code>stats::stl()</code>. The decomposition separates the
+"season" and "trend" components from
+the "observed" values leaving the "remainder".
+</p>
+<p><strong>Frequency &amp; Trend Selection</strong>
+</p>
+<p>The user can control two parameters: <code>.frequency</code> and <code>.trend</code>.
+</p>
+
+<ol>
+<li>
+<p> The <code>.frequency</code> parameter adjusts the "season" component that is removed
+from the "observed" values.
+</p>
+</li>
+<li>
+<p> The <code>.trend</code> parameter adjusts the
+trend window (<code>t.window</code> parameter from <code>stl()</code>) that is used.
+</p>
+</li>
+</ol>
+<p>The user may supply both <code>.frequency</code>
+and <code>.trend</code> as time-based durations (e.g. "6 weeks") or numeric values
+(e.g. 180) or "auto", which automatically selects the frequency and/or trend
+based on the scale of the time series.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tibble</code> or <code>data.frame</code> with Observed, Season, Trend, Remainder,
+and Seasonally-Adjusted features
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+
+# ---- GROUPS &amp; TRANSFORMATION ----
+m4_daily %&gt;%
+    group_by(id) %&gt;%
+    tk_stl_diagnostics(date, box_cox_vec(value))
+
+# ---- CUSTOM TREND ----
+m4_weekly %&gt;%
+    group_by(id) %&gt;%
+    tk_stl_diagnostics(date, box_cox_vec(value), .trend = "2 quarters")
+
+</code></pre>
+
+
+</div>

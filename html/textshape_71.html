@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidy_colo_tdm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert a 
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code> 
+into Collocating Words in Tidy Form</h2>
+
+<h3>Description</h3>
+
+<p>Converts non-zero elements of a
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code> 
+into a tidy data set made of collocating words.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tidy_colo_tdm(x, ...)
+
+tidy_colo_dtm(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A 
+<code>DocumentTermMatrix</code>/<code>TermDocumentMatrix</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Ignored.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a tidied data.frame.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>unique_pairs</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(simple_dtm)
+
+tidied &lt;- tidy_colo_dtm(simple_dtm)
+tidied
+unique_pairs(tidied)
+
+## Not run: 
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load_current_gh('trinker/gofastr', 'trinker/lexicon')
+pacman::p_load(tidyverse, magrittr, ggstance)
+
+my_dtm &lt;- with(
+    presidential_debates_2012, 
+    q_dtm(dialogue, paste(time, tot, sep = "_"))
+)
+
+tidy_colo_dtm(my_dtm) %&gt;%
+    tbl_df() %&gt;%
+    filter(!term_1 %in% c('i', lexicon::sw_onix) &amp; 
+        !term_2 %in% lexicon::sw_onix
+    ) %&gt;%
+    filter(term_1 != term_2) %&gt;%
+    unique_pairs() %&gt;%
+    filter(n &gt; 15) %&gt;%
+    complete(term_1, term_2, fill = list(n = 0)) %&gt;%
+    ggplot(aes(x = term_1, y = term_2, fill = n)) +
+        geom_tile() +
+        scale_fill_gradient(low= 'white', high = 'red') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,309 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_resamples</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit multiple models via resampling</h2>
+
+<h3>Description</h3>
+
+<p><code>fit_resamples()</code> computes a set of performance metrics across one or more
+resamples. It does not perform any tuning (see <code>tune_grid()</code> and
+<code>tune_bayes()</code> for that), and is instead used for fitting a single
+model+recipe or model+formula combination across many resamples.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_resamples(object, ...)
+
+## S3 method for class 'model_spec'
+fit_resamples(
+  object,
+  preprocessor,
+  resamples,
+  ...,
+  metrics = NULL,
+  eval_time = NULL,
+  control = control_resamples()
+)
+
+## S3 method for class 'workflow'
+fit_resamples(
+  object,
+  resamples,
+  ...,
+  metrics = NULL,
+  eval_time = NULL,
+  control = control_resamples()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>A <code>parsnip</code> model specification or an unfitted
+workflow(). No tuning parameters are allowed; if arguments
+have been marked with tune(), their values must be
+finalized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Currently unused.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preprocessor</code></td>
+<td>
+<p>A traditional model formula or a recipe created using
+<code>recipes::recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resamples</code></td>
+<td>
+<p>An <code>rset</code> resampling object created from an <code>rsample</code>
+function, such as <code>rsample::vfold_cv()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics</code></td>
+<td>
+<p>A <code>yardstick::metric_set()</code>, or <code>NULL</code> to compute a standard
+set of metrics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eval_time</code></td>
+<td>
+<p>A numeric vector of time points where dynamic event time
+metrics should be computed (e.g. the time-dependent ROC curve, etc). The
+values must be non-negative and should probably be no greater than the
+largest event time in the training set (See Details below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>A <code>control_resamples()</code> object used to fine tune the resampling
+process.</p>
+</td>
+</tr>
+</table>
+<h3>Case Weights</h3>
+
+<p>Some models can utilize case weights during training. tidymodels currently
+supports two types of case weights: importance weights (doubles) and
+frequency weights (integers). Frequency weights are used during model
+fitting and evaluation, whereas importance weights are only used during
+fitting.
+</p>
+<p>To know if your model is capable of using case weights, create a model spec
+and test it using <code>parsnip::case_weights_allowed()</code>.
+</p>
+<p>To use them, you will need a numeric column in your data set that has been
+passed through either <code>hardhat:: importance_weights()</code> or
+<code>hardhat::frequency_weights()</code>.
+</p>
+<p>For functions such as <code>fit_resamples()</code> and the <code style="white-space: pre;">⁠tune_*()⁠</code> functions, the
+model must be contained inside of a <code>workflows::workflow()</code>. To declare that
+case weights are used, invoke <code>workflows::add_case_weights()</code> with the
+corresponding (unquoted) column name.
+</p>
+<p>From there, the packages will appropriately handle the weights during model
+fitting and (if appropriate) performance estimation.
+</p>
+
+
+<h3>Censored Regression Models</h3>
+
+<p>Three types of metrics can be used to assess the quality of censored
+regression models:
+</p>
+
+<ul>
+<li>
+<p> static: the prediction is independent of time.
+</p>
+</li>
+<li>
+<p> dynamic: the prediction is a time-specific probability (e.g., survival
+probability) and is measured at one or more particular times.
+</p>
+</li>
+<li>
+<p> integrated: same as the dynamic metric but returns the integral of the
+different metrics from each time point.
+</p>
+</li>
+</ul>
+<p>Which metrics are chosen by the user affects how many evaluation times
+should be specified. For example:
+</p>
+<div class="sourceCode"><pre># Needs no `eval_time` value
+metric_set(concordance_survival)
+
+# Needs at least one `eval_time`
+metric_set(brier_survival)
+metric_set(brier_survival, concordance_survival)
+
+# Needs at least two eval_time` values
+metric_set(brier_survival_integrated, concordance_survival)
+metric_set(brier_survival_integrated, concordance_survival)
+metric_set(brier_survival_integrated, concordance_survival, brier_survival)
+</pre></div>
+<p>Values of <code>eval_time</code> should be less than the largest observed event
+time in the training data. For many non-parametric models, the results beyond
+the largest time corresponding to an event are constant (or <code>NA</code>).
+</p>
+
+
+<h3>Performance Metrics</h3>
+
+<p>To use your own performance metrics, the <code>yardstick::metric_set()</code> function
+can be used to pick what should be measured for each model. If multiple
+metrics are desired, they can be bundled. For example, to estimate the area
+under the ROC curve as well as the sensitivity and specificity (under the
+typical probability cutoff of 0.50), the <code>metrics</code> argument could be given:
+</p>
+<pre>
+  metrics = metric_set(roc_auc, sens, spec)
+</pre>
+<p>Each metric is calculated for each candidate model.
+</p>
+<p>If no metric set is provided, one is created:
+</p>
+
+<ul>
+<li>
+<p> For regression models, the root mean squared error and coefficient
+of determination are computed.
+</p>
+</li>
+<li>
+<p> For classification, the area under the ROC curve and overall accuracy
+are computed.
+</p>
+</li>
+</ul>
+<p>Note that the metrics also determine what type of predictions are estimated
+during tuning. For example, in a classification problem, if metrics are used
+that are all associated with hard class predictions, the classification
+probabilities are not created.
+</p>
+<p>The out-of-sample estimates of these metrics are contained in a list column
+called <code>.metrics</code>. This tibble contains a row for each metric and columns
+for the value, the estimator type, and so on.
+</p>
+<p><code>collect_metrics()</code> can be used for these objects to collapse the results
+over the resampled (to obtain the final resampling estimates per tuning
+parameter combination).
+</p>
+
+
+<h3>Obtaining Predictions</h3>
+
+<p>When <code>control_grid(save_pred = TRUE)</code>, the output tibble contains a list
+column called <code>.predictions</code> that has the out-of-sample predictions for each
+parameter combination in the grid and each fold (which can be very large).
+</p>
+<p>The elements of the tibble are tibbles with columns for the tuning
+parameters, the row number from the original data object (<code>.row</code>), the
+outcome data (with the same name(s) of the original data), and any columns
+created by the predictions. For example, for simple regression problems, this
+function generates a column called <code>.pred</code> and so on. As noted above, the
+prediction columns that are returned are determined by the type of metric(s)
+requested.
+</p>
+<p>This list column can be <code>unnested</code> using <code>tidyr::unnest()</code> or using the
+convenience function <code>collect_predictions()</code>.
+</p>
+
+
+<h3>Extracting Information</h3>
+
+<p>The <code>extract</code> control option will result in an additional function to be
+returned called <code>.extracts</code>. This is a list column that has tibbles
+containing the results of the user's function for each tuning parameter
+combination. This can enable returning each model and/or recipe object that
+is created during resampling. Note that this could result in a large return
+object, depending on what is returned.
+</p>
+<p>The control function contains an option (<code>extract</code>) that can be used to
+retain any model or recipe that was created within the resamples. This
+argument should be a function with a single argument. The value of the
+argument that is given to the function in each resample is a workflow
+object (see <code>workflows::workflow()</code> for more information). Several
+helper functions can be used to easily pull out the preprocessing
+and/or model information from the workflow, such as
+<code>extract_preprocessor()</code> and
+<code>extract_fit_parsnip()</code>.
+</p>
+<p>As an example, if there is interest in getting each parsnip model fit back,
+one could use:
+</p>
+<pre>
+  extract = function (x) extract_fit_parsnip(x)
+</pre>
+<p>Note that the function given to the <code>extract</code> argument is evaluated on
+every model that is <em>fit</em> (as opposed to every model that is <em>evaluated</em>).
+As noted above, in some cases, model predictions can be derived for
+sub-models so that, in these cases, not every row in the tuning parameter
+grid has a separate R object associated with it.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>control_resamples()</code>, <code>collect_predictions()</code>, <code>collect_metrics()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(recipes)
+library(rsample)
+library(parsnip)
+library(workflows)
+
+set.seed(6735)
+folds &lt;- vfold_cv(mtcars, v = 5)
+
+spline_rec &lt;- recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_ns(disp) %&gt;%
+  step_ns(wt)
+
+lin_mod &lt;- linear_reg() %&gt;%
+  set_engine("lm")
+
+control &lt;- control_resamples(save_pred = TRUE)
+
+spline_res &lt;- fit_resamples(lin_mod, spline_rec, folds, control = control)
+
+spline_res
+
+show_best(spline_res, metric = "rmse")
+
+# You can also wrap up a preprocessor and a model into a workflow, and
+# supply that to `fit_resamples()` instead. Here, a workflows "variables"
+# preprocessor is used, which lets you supply terms using dplyr selectors.
+# The variables are used as-is, no preprocessing is done to them.
+wf &lt;- workflow() %&gt;%
+  add_variables(outcomes = mpg, predictors = everything()) %&gt;%
+  add_model(lin_mod)
+
+wf_res &lt;- fit_resamples(wf, folds)
+
+</code></pre>
+
+
+</div>

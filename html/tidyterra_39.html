@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>drop_na.Spat</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Drop attributes of <code style="white-space: pre;">⁠Spat*⁠</code> objects containing missing values</h2>
+
+<h3>Description</h3>
+
+
+<ul>
+<li> <p><code>SpatVector</code>: <code>drop_na()</code> method drops geometries where any attribute
+specified by <code>...</code> contains a missing value.
+</p>
+</li>
+<li> <p><code>SpatRaster</code>: <code>drop_na()</code> method drops cells where any layer specified by
+<code>...</code> contains a missing value.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatVector'
+drop_na(data, ...)
+
+## S3 method for class 'SpatRaster'
+drop_na(data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>SpatVector</code> created with <code>terra::vect()</code> or a <code>SpatRaster</code>
+<code>terra::rast()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt;  Attributes to inspect
+for missing values. If empty, all attributes are used.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code style="white-space: pre;">⁠Spat*⁠</code> object of the same class than <code>data</code>. See <strong>Methods</strong>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>terra::trim()</code>
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>tidyr::drop_na()</code> function.
+</p>
+
+
+<h4><code>SpatVector</code></h4>
+
+<p>The implementation of this method is performed on a <code>by-attribute</code> basis,
+meaning that <code>NAs</code> are assessed on the attributes (columns) of each vector
+(rows). The result is a <code>SpatVector</code> with potentially less geometries than
+the input.
+</p>
+
+
+
+<h4><code>SpatRaster</code></h4>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#questioning"><img src="../help/figures/lifecycle-questioning.svg" alt="[Questioning]"></a>
+</p>
+<p>Actual implementation of <code style="white-space: pre;">⁠drop_na().SpatRaster⁠</code> can be understood as a
+masking method based on the values of the layers (see <code>terra::mask()</code>).
+</p>
+<p><code>SpatRaster</code> layers are considered as columns and <code>SpatRaster</code> cells as rows,
+so rows (cells) with any <code>NA</code> value on any layer would get a <code>NA</code> value. It
+is possible also to mask the cells (rows) based on the values of specific
+layers (columns).
+</p>
+<p><code>drop_na()</code> would effectively remove outer cells that are <code>NA</code> (see
+<code>terra::trim()</code>), so the extent of the resulting object may differ of the
+extent of the input (see <code>terra::resample()</code> for more info).
+</p>
+<p>Check the <strong>Examples</strong> to have a better understanding of this method.
+</p>
+
+
+<h5>Feedback needed!</h5>
+
+<p>Visit <a href="https://github.com/dieghernan/tidyterra/issues">https://github.com/dieghernan/tidyterra/issues</a>. The implementation
+of this method for <code>SpatRaster</code> may change in the future.
+</p>
+
+
+
+
+<h3>See Also</h3>
+
+<p><code>tidyr::drop_na()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=tidyr"><span class="pkg">tidyr</span></a> verbs for handling missing values:
+<code>fill.SpatVector()</code>,
+<code>replace_na.Spat</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=tidyr"><span class="pkg">tidyr</span></a> methods:
+<code>fill.SpatVector()</code>,
+<code>pivot_longer.SpatVector()</code>,
+<code>pivot_wider.SpatVector()</code>,
+<code>replace_na.Spat</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(terra)
+
+f &lt;- system.file("extdata/cyl.gpkg", package = "tidyterra")
+
+v &lt;- terra::vect(f)
+
+# Add NAs
+v &lt;- v %&gt;% mutate(iso2 = ifelse(cpro &lt;= "09", NA, cpro))
+
+# Init
+plot(v, col = "red")
+
+# Mask with lyr.1
+v %&gt;%
+  drop_na(iso2) %&gt;%
+  plot(col = "red")
+# SpatRaster method
+
+
+r &lt;- rast(
+  crs = "EPSG:3857",
+  extent = c(0, 10, 0, 10),
+  nlyr = 3,
+  resolution = c(2.5, 2.5)
+)
+terra::values(r) &lt;- seq_len(ncell(r) * nlyr(r))
+
+
+
+# Add NAs
+r[r &gt; 13 &amp; r &lt; 22 | r &gt; 31 &amp; r &lt; 45] &lt;- NA
+
+# Init
+plot(r, nc = 3)
+
+# Mask with lyr.1
+r %&gt;%
+  drop_na(lyr.1) %&gt;%
+  plot(nc = 3)
+
+# Mask with lyr.2
+r %&gt;%
+  drop_na(lyr.2) %&gt;%
+  plot(nc = 3)
+
+# Mask with lyr.3
+r %&gt;%
+  drop_na(lyr.3) %&gt;%
+  plot(nc = 3)
+
+# Auto-mask all layers
+r %&gt;%
+  drop_na() %&gt;%
+  plot(nc = 3)
+
+</code></pre>
+
+
+</div>

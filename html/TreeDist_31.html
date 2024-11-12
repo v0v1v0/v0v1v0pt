@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Islands</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find islands from distance matrix</h2>
+
+<h3>Description</h3>
+
+<p><code>Islands()</code> assigns a set of objects to islands, such that all elements
+within an island can form a connected graph in which each edge is no longer
+than <code>threshold</code> distance units Silva AS, Wilkinson M (2021).
+“On Defining and Finding Islands of Trees and Mitigating Large Island Bias.”
+<em>Systematic Biology</em>, <b>70</b>(6), 1282–1294.
+<a href="https://doi.org/10.1093/sysbio/syab015">doi:10.1093/sysbio/syab015</a>..
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Islands(D, threshold, dense = TRUE, smallest = 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+<p>Square matrix or <code>dist</code> object containing Euclidean distances
+between data points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>Elements greater than <code>threshold</code> distance units will not be
+assigned to the same island.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dense</code></td>
+<td>
+<p>Logical; if <code>FALSE</code>, each island will be named according to the
+index of its lowest-indexed member; if <code>TRUE</code>, each island will be numbered
+sequentially from <code>1</code>, ordered by the index of the lowest-indexed member.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smallest</code></td>
+<td>
+<p>Integer; Islands comprising no more than <code>smallest</code> elements
+will be assigned to island <code>NA</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>Islands()</code> returns a vector listing the island to which
+each element is assigned.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>There are no references for Rd macro <code style="white-space: pre;">⁠\insertAllCites⁠</code> on this help page.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree space functions: 
+<code>MSTSegments()</code>,
+<code>MapTrees()</code>,
+<code>MappingQuality()</code>,
+<code>SpectralEigens()</code>,
+<code>cluster-statistics</code>,
+<code>median.multiPhylo()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("TreeTools", quietly = TRUE)
+# Generate a set of trees
+trees &lt;- as.phylo(as.TreeNumber(BalancedTree(16)) + c(-(40:20), 70:105), 16)
+
+# Calculate distances between trees
+distances &lt;- ClusteringInfoDist(trees)
+summary(distances)
+
+# Assign trees to islands
+isle &lt;- Islands(distances, quantile(distances, 0.1))
+table(isle)
+
+# Indicate island membership on 2D mapping of tree distances
+mapping &lt;- cmdscale(distances, 2)
+plot(mapping, col = isle + 1,
+     asp = 1, # Preserve aspect ratio - do not distort distances
+     ann = FALSE, axes = FALSE, # Don't label axes: dimensions are meaningless)
+     pch = 16 # Plotting character: Filled circle
+)
+
+# Compare strict consensus with island consensus trees
+oPar &lt;- par(mfrow = c(2, 2), mai = rep(0.1, 4))
+plot(Consensus(trees), main = "Strict")
+plot(Consensus(trees[isle == 1]), edge.col = 2, main = "Island 1")
+plot(Consensus(trees[isle == 2]), edge.col = 3, main = "Island 2")
+plot(Consensus(trees[isle == 3]), edge.col = 4, main = "Island 3")
+
+# Restore graphical parameters
+par(oPar)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>util_zero_truncated_poisson_param_estimate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate Zero Truncated Poisson Parameters</h2>
+
+<h3>Description</h3>
+
+<p>This function will attempt to estimate the Zero Truncated Poisson
+lambda parameter given some vector of values <code>.x</code>. The function will return a
+tibble output, and if the parameter <code>.auto_gen_empirical</code> is set to <code>TRUE</code>
+then the empirical data given to the parameter <code>.x</code> will be run through the
+<code>tidy_empirical()</code> function and combined with the estimated Zero Truncated
+Poisson data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">util_zero_truncated_poisson_param_estimate(.x, .auto_gen_empirical = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>The vector of data to be passed to the function. Must be non-negative
+integers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.auto_gen_empirical</code></td>
+<td>
+<p>This is a boolean value of TRUE/FALSE with default
+set to TRUE. This will automatically create the <code>tidy_empirical()</code> output
+for the <code>.x</code> parameter and use the <code>tidy_combine_distributions()</code>. The user
+can then plot out the data using <code style="white-space: pre;">⁠$combined_data_tbl⁠</code> from the function output.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function estimates the parameter lambda of a Zero-Truncated Poisson distribution
+based on a vector of non-negative integer values <code>.x</code>. The Zero-Truncated Poisson
+distribution is a discrete probability distribution that models the number of events
+occurring in a fixed interval of time, given that at least one event has occurred.
+</p>
+<p>The estimation is performed by minimizing the negative log-likelihood of the observed
+data <code>.x</code> under the Zero-Truncated Poisson model. The negative log-likelihood function
+used for optimization is defined as:
+</p>
+<p style="text-align: center;"><code class="reqn">-\sum_{i=1}^{n} \log(P(X_i = x_i \mid X_i &gt; 0, \lambda))</code>
+</p>
+
+<p>where \( X_i \) are the observed values in <code>.x</code> and <code>lambda</code> is the parameter
+of the Zero-Truncated Poisson distribution.
+</p>
+<p>The optimization process uses the <code>optim</code> function to find the value of <code>lambda</code>
+that minimizes this negative log-likelihood. The chosen optimization method is Brent's
+method (<code>method = "Brent"</code>) within a specified interval <code style="white-space: pre;">⁠[0, max(.x)]⁠</code>.
+</p>
+<p>If <code>.auto_gen_empirical</code> is set to <code>TRUE</code>, the function will generate empirical data
+statistics using <code>tidy_empirical()</code> for the input data <code>.x</code> and then combine this
+empirical data with the estimated Zero-Truncated Poisson distribution using
+<code>tidy_combine_distributions()</code>. This combined data can be accessed via the
+<code style="white-space: pre;">⁠$combined_data_tbl⁠</code> element of the function output.
+</p>
+<p>The function returns a tibble containing the estimated parameter <code>lambda</code> along
+with other summary statistics of the input data (sample size, minimum, maximum).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tibble/list
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Steven P. Sanderson II, MPH
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Parameter Estimation: 
+<code>util_bernoulli_param_estimate()</code>,
+<code>util_beta_param_estimate()</code>,
+<code>util_binomial_param_estimate()</code>,
+<code>util_burr_param_estimate()</code>,
+<code>util_cauchy_param_estimate()</code>,
+<code>util_chisquare_param_estimate()</code>,
+<code>util_exponential_param_estimate()</code>,
+<code>util_f_param_estimate()</code>,
+<code>util_gamma_param_estimate()</code>,
+<code>util_generalized_beta_param_estimate()</code>,
+<code>util_generalized_pareto_param_estimate()</code>,
+<code>util_geometric_param_estimate()</code>,
+<code>util_hypergeometric_param_estimate()</code>,
+<code>util_inverse_burr_param_estimate()</code>,
+<code>util_inverse_pareto_param_estimate()</code>,
+<code>util_inverse_weibull_param_estimate()</code>,
+<code>util_logistic_param_estimate()</code>,
+<code>util_lognormal_param_estimate()</code>,
+<code>util_negative_binomial_param_estimate()</code>,
+<code>util_normal_param_estimate()</code>,
+<code>util_paralogistic_param_estimate()</code>,
+<code>util_pareto1_param_estimate()</code>,
+<code>util_pareto_param_estimate()</code>,
+<code>util_poisson_param_estimate()</code>,
+<code>util_t_param_estimate()</code>,
+<code>util_triangular_param_estimate()</code>,
+<code>util_uniform_param_estimate()</code>,
+<code>util_weibull_param_estimate()</code>,
+<code>util_zero_truncated_binomial_param_estimate()</code>,
+<code>util_zero_truncated_geometric_param_estimate()</code>,
+<code>util_zero_truncated_negative_binomial_param_estimate()</code>
+</p>
+<p>Other Poisson: 
+<code>tidy_poisson()</code>,
+<code>tidy_zero_truncated_poisson()</code>,
+<code>util_poisson_param_estimate()</code>,
+<code>util_poisson_stats_tbl()</code>,
+<code>util_zero_truncated_poisson_stats_tbl()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(ggplot2)
+
+tc &lt;- tidy_zero_truncated_poisson() |&gt; pull(y)
+output &lt;- util_zero_truncated_poisson_param_estimate(tc)
+
+output$parameter_tbl
+
+output$combined_data_tbl |&gt;
+  tidy_combined_autoplot()
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tJADE</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+tJADE for Tensor-Valued Observations 
+</h2>
+
+<h3>Description</h3>
+
+<p>Computes the tensorial JADE in an independent component model. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tJADE(x, maxiter = 100, eps = 1e-06)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric array of an order at least two. It is assumed that the last dimension corresponds to the sampling units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>Maximum number of iterations. Passed on to <code>rjd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Convergence tolerance. Passed on to <code>rjd</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is assumed that <code class="reqn">S</code> is a tensor (array) of size <code class="reqn">p_1 \times p_2 \times \ldots \times p_r</code> with mutually independent elements and measured on <code class="reqn">N</code> units. The tensor independent component model further assumes that the tensors S are mixed from each mode
+<code class="reqn">m</code> by the mixing matrix <code class="reqn">A_m</code>, <code class="reqn">m = 1, \ldots, r</code>, yielding the observed data <code class="reqn">X</code>. In R the sample of <code class="reqn">X</code> is saved as an <code>array</code> of dimensions
+<code class="reqn">p_1, p_2, \ldots, p_r, N</code>.
+</p>
+<p><code>tJADE</code> recovers then based on <code>x</code> the underlying independent components <code class="reqn">S</code> by estimating the <code class="reqn">r</code> unmixing matrices 
+<code class="reqn">W_1, \ldots, W_r</code> using fourth joint moments in a more efficient way than <code>tFOBI</code>. 
+</p>
+<p>If <code>x</code> is a matrix, that is, <code class="reqn">r = 1</code>, the method reduces to JADE and the function calls <code>JADE</code>.
+</p>
+<p>For a generalization for tensor-valued time series see <code>tgJADE</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with class 'tbss', inheriting from class 'bss', containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>Array of the same size as x containing the independent components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W </code></td>
+<td>
+<p>List containing all the unmixing matrices</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xmu </code></td>
+<td>
+<p>The data location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datatype</code></td>
+<td>
+<p>Character string with value "iid". Relevant for <code>plot.tbss</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Joni Virta
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Virta J., Li B., Nordhausen K., Oja H. (2018): JADE for tensor-valued observations, Journal of Computational and Graphical Statistics, Volume 27, p. 628 - 637, <a href="https://doi.org/10.1080/10618600.2017.1407324">doi:10.1080/10618600.2017.1407324</a></cite> 
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>JADE</code>, <code>tgJADE</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 1000
+S &lt;- t(cbind(rexp(n)-1,
+             rnorm(n),
+             runif(n, -sqrt(3), sqrt(3)),
+             rt(n,5)*sqrt(0.6),
+             (rchisq(n,1)-1)/sqrt(2),
+             (rchisq(n,2)-2)/sqrt(4)))
+             
+dim(S) &lt;- c(3, 2, n)
+
+A1 &lt;- matrix(rnorm(9), 3, 3)
+A2 &lt;- matrix(rnorm(4), 2, 2)
+
+X &lt;- tensorTransform(S, A1, 1)
+X &lt;- tensorTransform(X, A2, 2)
+
+tjade &lt;- tJADE(X)
+
+MD(tjade$W[[1]], A1)
+MD(tjade$W[[2]], A2) 
+tMD(tjade$W, list(A1, A2))
+
+## Not run: 
+# Digit data example
+# Running will take a few minutes
+
+data(zip.train)
+x &lt;- zip.train
+
+rows &lt;- which(x[, 1] == 0 | x[, 1] == 1)
+x0 &lt;- x[rows, 2:257]
+y0 &lt;- x[rows, 1] + 1
+
+x0 &lt;- t(x0)
+dim(x0) &lt;- c(16, 16, 2199)
+
+tjade &lt;- tJADE(x0)
+plot(tjade, col=y0)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

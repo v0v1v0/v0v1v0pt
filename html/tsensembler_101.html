@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update_weights</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Updating the weights of base models</h2>
+
+<h3>Description</h3>
+
+<p>Update the weights of base models of a <code>ADE-class</code>
+or <code>DETS-class</code> ensemble.
+This is accomplished by using computing the loss of the base models
+in new recent observations.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">update_weights(object, newdata)
+
+## S4 method for signature 'ADE'
+update_weights(object, newdata)
+
+## S4 method for signature 'DETS'
+update_weights(object, newdata)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>a <code>ADE-class</code> or <code>DETS-class</code> model object;</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>new data used to update the most
+recent observations of the time series. At prediction time
+these observations are used to compute the weights of the base models</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Updating the weights of an ensemble is only necessary between
+different calls of the functions <code>predict</code> or <code>forecast</code>.
+Otherwise, if consecutive know observations are predicted
+(e.g. a validation/test set) the updating is automatically done internally.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>update_weights</code> for the weight updating method
+for an <code>ADE</code> model, and <code>update_weights</code> for the same method
+for a <code>DETS</code> model
+</p>
+<p>Other updating models: 
+<code>update_ade_meta()</code>,
+<code>update_ade()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("water_consumption")
+dataset &lt;- embed_timeseries(water_consumption, 5)
+
+# toy size for checks
+train &lt;- dataset[1:300,]
+test &lt;- dataset[301:305, ]
+
+specs &lt;- model_specs(c("bm_ppr","bm_glm","bm_mars"), NULL)
+## same with model &lt;- DETS(target ~., train, specs)
+model &lt;- ADE(target ~., train, specs)
+
+# if consecutive know observations are predicted (e.g. a validation/test set)
+# the updating is automatically done internally.
+predictions1 &lt;- predict(model, test)@y_hat
+
+# otherwise, the models need to be updated
+predictions &lt;- numeric(nrow(test))
+# predict new data and update the weights of the model
+for (i in seq_along(predictions)) {
+  predictions[i] &lt;- predict(model, test[i, ])@y_hat
+
+  model &lt;- update_weights(model, test[i, ])
+}
+
+#all.equal(predictions1, predictions)
+
+
+</code></pre>
+
+
+</div>

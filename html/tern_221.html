@@ -1,0 +1,187 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_ggkm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to create a KM plot</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a>
+</p>
+<p>Draw the Kaplan-Meier plot using <code>ggplot2</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_ggkm(
+  data,
+  xticks = NULL,
+  yval = "Survival",
+  censor_show,
+  xlab,
+  ylab,
+  ylim = NULL,
+  title,
+  footnotes = NULL,
+  max_time = NULL,
+  lwd = 1,
+  lty = NULL,
+  pch = 3,
+  size = 2,
+  col = NULL,
+  ci_ribbon = FALSE,
+  ggtheme = nestcolor::theme_nest()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> survival data as pre-processed by <code>h_data_plot</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xticks</code></td>
+<td>
+<p>(<code>numeric</code> or <code>NULL</code>)<br> numeric vector of tick positions or a single number with spacing
+between ticks on the x-axis. If <code>NULL</code> (default), <code>labeling::extended()</code> is used to determine
+optimal tick positions on the x-axis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>yval</code></td>
+<td>
+<p>(<code>string</code>)<br> type of plot, to be plotted on the y-axis. Options are <code>Survival</code> (default) and <code>Failure</code>
+probability.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>censor_show</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether to show censored observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlab</code></td>
+<td>
+<p>(<code>string</code>)<br> x-axis label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylab</code></td>
+<td>
+<p>(<code>string</code>)<br> y-axis label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylim</code></td>
+<td>
+<p>(<code>numeric(2)</code>)<br> vector containing lower and upper limits for the y-axis, respectively.
+If <code>NULL</code> (default), the default scale range is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>string</code>)<br> plot title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>footnotes</code></td>
+<td>
+<p>(<code>string</code>)<br> plot footnotes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_time</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> maximum value to show on x-axis. Only data values less than or up to
+this threshold value will be plotted (defaults to <code>NULL</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lwd</code></td>
+<td>
+<p>(<code>numeric</code>)<br> line width. If a vector is given, its length should be equal to the number of strata from
+<code>survival::survfit()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lty</code></td>
+<td>
+<p>(<code>numeric</code>)<br> line type. If a vector is given, its length should be equal to the number of strata from
+<code>survival::survfit()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pch</code></td>
+<td>
+<p>(<code>string</code>)<br> name of symbol or character to use as point symbol to indicate censored cases.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>size</code></td>
+<td>
+<p>(<code>numeric(1)</code>)<br> size of censored point symbols.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>(<code>character</code>)<br> lines colors. Length of a vector should be equal
+to number of strata from <code>survival::survfit()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_ribbon</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether the confidence interval should be drawn around the Kaplan-Meier curve.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggtheme</code></td>
+<td>
+<p>(<code>theme</code>)<br> a graphical theme as provided by <code>ggplot2</code> to format the Kaplan-Meier plot.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>ggplot</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(survival)
+
+fit_km &lt;- tern_ex_adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  survfit(formula = Surv(AVAL, 1 - CNSR) ~ ARMCD, data = .)
+data_plot &lt;- h_data_plot(fit_km = fit_km)
+xticks &lt;- h_xticks(data = data_plot)
+gg &lt;- h_ggkm(
+  data = data_plot,
+  censor_show = TRUE,
+  xticks = xticks,
+  xlab = "Days",
+  yval = "Survival",
+  ylab = "Survival Probability",
+  title = "Survival"
+)
+gg
+
+
+</code></pre>
+
+
+</div>

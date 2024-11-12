@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>find_billable</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find Billable ICD Codes from CMS GEMs</h2>
+
+<h3>Description</h3>
+
+<p>This function tries to find all the billable ICD codes that can be
+translated by CMS GEMs for each of the input diagnosis codes representing
+a major category.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">find_billable(dx, version = 10, year = 2018,
+              match_all = TRUE, decimal = FALSE,
+              output = c("character", "list", "tidy-data"), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dx</code></td>
+<td>
+<p>A character vector representing diagnosis codes.  Each element
+of the vector can either represent individual diagnosis code or a set
+of diagnosis codes that are concartenated by commas in between.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>version</code></td>
+<td>
+<p>A numeric value specifying the version of the diagnosis
+codes that should be either <code>9</code> for ICD-9 codes or <code>10</code> for
+ICD-10 codes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>year</code></td>
+<td>
+<p>A numeric value specifying the year of the CMS GEMs.  The
+currently available options are <code>2017</code> and <code>2018</code>.  By
+default, 2018 CMS GEMs is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match_all</code></td>
+<td>
+<p>A logical value specifying the strategy for finding
+billable codes based on the input diagnosis category.  If <code>TRUE</code>
+(the default), the function will add the regular expression
+<code>"[[[[:alnum:]]{1,4}]]"</code> to the tail of diagnosis category so
+that all the billable diagnosis codes under the given category will be
+matched.  If <code>FALSE</code>, the function will add the regular
+experssion <code>"[[:alnum:]]"</code> repeatedly at most four times until
+any set of billable codes are matched.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decimal</code></td>
+<td>
+<p>A logical value.  If <code>TRUE</code>, the diagnosis codes would
+be returned with decimal points.  The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>A character value specifying the format of the output.  The
+avaiable options are <code>"character"</code>, <code>"list"</code>, and
+<code>"tidy-data"</code>.  By default, option <code>"character"</code> is used and
+results in a character vector that consists of element-wise
+concatenatation by commas of all the translated diagnosis codes from
+the original codes.  If <code>"list"</code> is specified, all the translated
+codes will not be concartenated and a list of character vectors will
+be returned by the function.  Similarly, if <code>"tidy-data"</code> is
+specified, a data frame in a tidy format will be returned.  The first
+column of the data frame consists of the original diagnosis codes; the
+second column consists of the translated diagnosis codes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments for future usage.  A warning will be thrown out
+if any argument goes into <code>...</code> accidentally.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is designed to be used with the function <code>icd_map</code> for
+translating the diagnosis codes that are not billable but representing
+major categories.  Notice that only the character vector output can be
+directly passed to the function <code>icd_map</code> for translation.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A character vector of the same length with the input vector will
+be returned by default or if <code>output = "charactor"</code>.  A list of
+character vectors will be returned if <code>output = "list"</code>; A data
+frame in tidy-format will be returned if <code>output = "tidy-data"</code>.
+See argument <code>output</code> for details.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Wenjie Wang &lt;wenjie.2.wang@uconn.edu&gt;
+</p>
+
+
+<h3>See Also</h3>
+
+<p>icd_map
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(touch)
+
+### for ICD-9 codes
+icd9_major &lt;- c("001", "316", "808", NA, "not_a_dx")
+
+## find all billable codes under the major category
+find_billable(icd9_major, version = 9)
+
+## find the billable codes right under the major category
+(icd9_billable &lt;- find_billable(icd9_major, version = 9,
+                                match_all = FALSE))
+
+## compare the translation results
+icd_map(icd9_major, nomatch = NA)
+icd_map(icd9_billable, nomatch = NA)
+
+### for ICD-10 codes
+icd10_major &lt;- c("T36.0X2", "T36.3X2", "T38.6X2")
+
+## find all billable codes and output in different formats
+find_billable(icd10_major, version = 10)
+find_billable(icd10_major, version = 10, output = "list")
+find_billable(icd10_major, version = 10, output = "tidy-data")
+
+## add decimal if wanted
+(icd10_billable &lt;- find_billable(icd10_major, version = 10, decimal = TRUE))
+
+## compare the translation results
+icd_map(icd10_major, from = 10, to = 9, nomatch = NA)
+icd_map(icd10_billable, from = 10, to = 9)
+</code></pre>
+
+
+</div>

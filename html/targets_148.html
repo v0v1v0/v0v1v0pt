@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_meta_sync</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Synchronize cloud metadata.</h2>
+
+<h3>Description</h3>
+
+<p>Synchronize metadata in a cloud bucket with metadata in the
+local data store.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_meta_sync(
+  meta = TRUE,
+  progress = TRUE,
+  process = TRUE,
+  crew = TRUE,
+  verbose = TRUE,
+  prefer_local = TRUE,
+  script = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>meta</code></td>
+<td>
+<p>Logical of length 1, whether to process the main metadata file
+at <code style="white-space: pre;">⁠_targets/meta/meta⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+<p>Logical of length 1, whether to process the progress file at
+<code style="white-space: pre;">⁠_targets/meta/progress⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>process</code></td>
+<td>
+<p>Logical of length 1, whether to process the process file at
+<code style="white-space: pre;">⁠_targets/meta/process⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crew</code></td>
+<td>
+<p>Logical of length 1, whether to process the <code>crew</code> file at
+<code style="white-space: pre;">⁠_targets/meta/crew⁠</code>. Only exists if running <code>targets</code> with <code>crew</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical of length 1, whether to print informative
+console messages.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefer_local</code></td>
+<td>
+<p>Logical of length 1 to control which copy of each
+metadata file takes precedence if the local hash and cloud hash
+are different but the time stamps are the same. Set to <code>TRUE</code>
+to upload the local data file in that scenario, <code>FALSE</code> to download
+the cloud file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. When you set
+this argument, the value of <code>tar_config_get("script")</code>
+is temporarily changed for the current function call.
+See <code>tar_script()</code>,
+<code>tar_config_get()</code>, and <code>tar_config_set()</code> for details
+about the target script file and how to set it
+persistently for a project.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_meta_sync()</code> synchronizes the local and cloud copies
+of all the metadata files of the pipeline so that both have the
+most recent copy. For each metadata file,
+if the local file does not exist or is older than the cloud file,
+then the cloud file is downloaded to the local file path.
+Conversely, if the cloud file is older or does not exist, then the local
+file is uploaded to the cloud. If the time stamps of these files are
+equal, use the <code>prefer_local</code> argument to determine
+which copy takes precedence.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other metadata: 
+<code>tar_meta()</code>,
+<code>tar_meta_delete()</code>,
+<code>tar_meta_download()</code>,
+<code>tar_meta_upload()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  tar_option_set(
+    resources = tar_resources(
+      aws = tar_resources_aws(
+        bucket = "YOUR_BUCKET_NAME",
+        prefix = "YOUR_PROJECT_NAME"
+      )
+    ),
+    repository = "aws"
+  )
+  list(
+    tar_target(x, data.frame(x = seq_len(2), y = seq_len(2)))
+  )
+}, ask = FALSE)
+tar_make()
+tar_meta_sync()
+})
+}
+</code></pre>
+
+
+</div>

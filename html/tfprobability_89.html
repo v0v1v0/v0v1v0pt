@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_smooth_seasonal</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Formal representation of a smooth seasonal effect model</h2>
+
+<h3>Description</h3>
+
+<p>The smooth seasonal model uses a set of trigonometric terms in order to
+capture a recurring pattern whereby adjacent (in time) effects are
+similar. The model uses <code>frequencies</code> calculated via:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_smooth_seasonal(
+  period,
+  frequency_multipliers,
+  allow_drift = TRUE,
+  drift_scale_prior = NULL,
+  initial_state_prior = NULL,
+  observed_time_series = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>positive scalar <code>float</code> <code>Tensor</code> giving the number of timesteps
+required for the longest cyclic effect to repeat.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frequency_multipliers</code></td>
+<td>
+<p>One-dimensional <code>float</code> <code>Tensor</code> listing the
+frequencies (cyclic components) included in the model, as multipliers of
+the base/fundamental frequency <code>2. * pi / period</code>. Each component is
+specified by the number of times it repeats per period, and adds two
+latent dimensions to the model. A smooth seasonal model that can
+represent any periodic function is given by
+<code style="white-space: pre;">⁠frequency_multipliers = [1,2, ..., floor(period / 2)]⁠</code>.
+However, it is often desirable to enforce a
+smoothness assumption (and reduce the computational burden) by dropping
+some of the higher frequencies.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_drift</code></td>
+<td>
+<p>optional <code>logical</code> specifying whether the seasonal
+effects can drift over time.  Setting this to <code>FALSE</code>
+removes the <code>drift_scale</code> parameter from the model. This is
+mathematically equivalent to
+<code>drift_scale_prior = tfd.Deterministic(0.)</code>, but removing drift
+directly is preferred because it avoids the use of a degenerate prior.
+Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drift_scale_prior</code></td>
+<td>
+<p>optional <code>tfd$Distribution</code> instance specifying a prior
+on the <code>drift_scale</code> parameter. If <code>NULL</code>, a heuristic default prior is
+constructed based on the provided <code>observed_time_series</code>.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>instance of <code>tfd$MultivariateNormal</code> representing
+the prior distribution on the latent states. Must have event shape
+<code style="white-space: pre;">⁠[2 * len(frequency_multipliers)]⁠</code>. If <code>NULL</code>, a heuristic default prior
+is constructed based on the provided <code>observed_time_series</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observed_time_series</code></td>
+<td>
+<p>optional <code>float</code> <code>Tensor</code> of shape
+<code style="white-space: pre;">⁠batch_shape + [T, 1]⁠</code> (omitting the trailing unit dimension is also
+supported when <code>T &gt; 1</code>), specifying an observed time series.
+Any priors not explicitly set will be given default values according to
+the scale of the observed time series (or batch of time series). May
+optionally be an instance of <code>tfp$sts$MaskedTimeSeries</code>, which includes
+a mask <code>Tensor</code> to specify timesteps with missing observations.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>the name of this model component. Default value: 'LocalLinearTrend'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<div class="sourceCode"><pre>frequencies[j] = 2. * pi * frequency_multipliers[j] / period
+</pre></div>
+<p>and then posits two latent states for each <code>frequency</code>. The two latent states
+associated with frequency <code>j</code> drift over time via:
+</p>
+<div class="sourceCode"><pre>effect[t] = (effect[t-1] * cos(frequencies[j]) +
+             auxiliary[t-] * sin(frequencies[j]) +
+             Normal(0., drift_scale))
+auxiliary[t] = (-effect[t-1] * sin(frequencies[j]) +
+                auxiliary[t-] * cos(frequencies[j]) +
+                Normal(0., drift_scale))
+</pre></div>
+<p>where <code>effect</code> is the smooth seasonal effect and <code>auxiliary</code> only appears as a
+matter of construction. The interpretation of <code>auxiliary</code> is thus not
+particularly important.
+</p>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>StructuralTimeSeries</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see <code>sts_fit_with_hmc()</code>, <code>sts_forecast()</code>, <code>sts_decompose_by_component()</code>.
+</p>
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

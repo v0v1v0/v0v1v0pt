@@ -1,0 +1,211 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TaxonInfluence</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Rank taxa by their influence on phylogenetic results</h2>
+
+<h3>Description</h3>
+
+<p><code>TaxonInfluence()</code> ranks taxa according to their influence on the most
+parsimonious topology.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TaxonInfluence(
+  dataset,
+  tree = NULL,
+  Distance = ClusteringInfoDistance,
+  calcWeighted = TRUE,
+  savePath = NULL,
+  useCache = FALSE,
+  verbosity = 3L,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A phylogenetic data matrix of <span class="pkg">phangorn</span> class
+<code>phyDat</code>, whose names correspond to the labels of any accompanying tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>Optimal tree or summary tree (of class "phylo") or list of trees
+(of class "list" or "multiPhylo") against which results should be evaluated.
+If <code>NULL</code>, an optimal tree will be sought using parsimony search with
+the parameters provided in <code>...</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Distance</code></td>
+<td>
+<p>Function to calculate tree distance; default:
+<code>ClusteringInfoDistance()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calcWeighted</code></td>
+<td>
+<p>Logical specifying whether to compute the
+distance-weighted mean value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>savePath</code></td>
+<td>
+<p>Character giving prefix of path to which reduced trees will be
+saved (with <code>write.nexus()</code>). File names will follow the pattern
+<code>paste0(savePath, droppedTaxonName, ".nex")</code>; <code>savePath</code> should thus contain
+a trailing <code>/</code> if writing to a directory, which will be created if it does
+not exist.  Special characters will be removed from leaf labels when
+creating the file path (using <code>path_sanitize()</code>).
+If <code>NULL</code>, computed trees will not be saved.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>useCache</code></td>
+<td>
+<p>Logical vector; if <code>TRUE</code>, previous tree search results will
+be loaded from the location given by <code>savePath</code>, instead of running a fresh
+search with the specified dataset and parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbosity, ...</code></td>
+<td>
+<p>Parameters for <code>MaximizeParsimony()</code>.
+Tree search will be conducted using <code>tree</code> as a starting tree.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>TaxonInfluence()</code> follows the approach of
+Mariadassou et al. (2012) in repeating tree search
+whilst leaving each taxon in turn out of the analysis, and measuring
+the distance of reconstructed trees from the optimal tree obtained when
+all taxa are included in phylogenetic inference.
+</p>
+<p>As Denton and Goolsby (2018) emphasize, the
+Robinson–Foulds distance is unsuitable for this purpose; this function
+allows the user to specify a preferred tree distance measure, defaulting
+to the clustering information distance (Smith 2020).
+Because optimal parsimony trees are not equiprobable, taxon influence is
+ranked based on the maximum and minimum tree-to-tree distances between
+optimal trees.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>TaxonInfluence()</code> returns a matrix listing the phylogenetic
+influence of each taxon, measured in the units of the chosen tree distance
+metric (default = bits).
+Columns denote taxa; rows denote the maximum, distance-weighted mean,
+and minimum distance between optimal tree sets.
+</p>
+
+
+<h3>Distance-weighted mean</h3>
+
+<p>Sets of equally parsimonious trees are not statistical samples of tree space,
+but are biased towards areas of uncertainty.
+It is possible that a set of trees contains all possible resolutions of a
+particular clade, and a single other topology in which that clade does not
+exist – essentially two distinct solutions, one (<em>a</em>) which could be
+summarised with a summary tree that contains a polytomy, and another (<em>b</em>)
+which could be summarized by a perfectly resolved tree.
+Neither of these scenarios is preferable under the principles of parsimony;
+but summary statistics (e.g. mean, median) will be strongly influenced by the
+many trees in group <em>a</em>, thus underplaying the existence of solution <em>b</em>.
+</p>
+<p><code>TaxonInfluence()</code> uses an <em>ad hoc</em> method to produce summary statistics
+after weighting for trees' distance from other trees.  Trees that have few
+close neighbours contribute more to the weighted mean, thus reducing the
+influence of many trees that differ only in small details.
+This distance-weighted mean is thus less prone to bias than a simple mean
+– it is no more statistically valid, but (potentially) provides a more
+representative summary of comparisons between sets of trees.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://smithlabdurham.github.io/">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Denton JS, Goolsby EW (2018).
+“Measuring Inferential Importance of Taxa Using Taxon Influence Indices.”
+<em>Ecology and Evolution</em>, <b>8</b>(9), 4484–4494.
+<a href="https://doi.org/10.1002/ece3.3941">doi:10.1002/ece3.3941</a>.<br><br> Mariadassou M, Bar-Hen A, Kishino H (2012).
+“Taxon Influence Index: Assessing Taxon-Induced Incongruities in Phylogenetic Inference.”
+<em>Systematic Biology</em>, <b>61</b>(2), 337–345.
+<a href="https://doi.org/10.1093/sysbio/syr129">doi:10.1093/sysbio/syr129</a>.<br><br> Smith MR (2020).
+“Information Theoretic Generalized Robinson-Foulds Metrics for Comparing Phylogenetic Trees.”
+<em>Bioinformatics</em>, <b>36</b>(20), 5007–5013.
+<a href="https://doi.org/10.1093/bioinformatics/btaa614">doi:10.1093/bioinformatics/btaa614</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree scoring: 
+<code>CharacterLength()</code>,
+<code>IWScore()</code>,
+<code>LengthAdded()</code>,
+<code>MinimumLength()</code>,
+<code>MorphyTreeLength()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#' # Load data for analysis in R
+library("TreeTools")
+data("congreveLamsdellMatrices", package = "TreeSearch")
+
+# Small dataset for demonstration purposes
+dataset &lt;- congreveLamsdellMatrices[[42]][1:8, ]
+bestTree &lt;- MaximizeParsimony(dataset, verbosity = 0)[[1]]
+
+# Calculate tip influence
+influence &lt;- TaxonInfluence(dataset, ratchIt = 0, startIt = 0, verbos = 0)
+
+# Colour tip labels according to their influence
+upperBound &lt;- 2 * TreeDist::ClusteringEntropy(
+  PectinateTree(NTip(dataset) - 1))
+nBin &lt;- 128
+bin &lt;- cut(
+  influence["max", ],
+  breaks = seq(0, upperBound, length.out = nBin),
+  include.lowest = TRUE
+)
+palette &lt;- hcl.colors(nBin, "inferno")
+
+plot(bestTree, tip.color = palette[bin])
+PlotTools::SpectrumLegend(
+  "bottomleft",
+  palette = palette,
+  title = "Tip influence / bits",
+  legend = signif(seq(upperBound, 0, length.out = 4), 3),
+  bty = "n"
+)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>http-try</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Client/Server Error Handling</h2>
+
+<h3>Description</h3>
+
+<p>Differentiate between client (4xx) and server (5xx) errors.
+Provides a mechanism to return custom status codes
+in combination with <code>http_error()</code> and <code>http_success()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">http_try(req, res, expr, silent = TRUE, ...)
+
+http_try_handler(req, res, x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>req</code></td>
+<td>
+<p>The request object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res</code></td>
+<td>
+<p>The response object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>An R expression to try.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Logical, should the report of error messages be suppressed by <code>try()</code>?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>try()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The return value from <code>try(expr)</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If we catch an error:
+</p>
+
+<ul>
+<li>
+<p> the error is a clear server error coming from <code>stop()</code>
+</p>
+
+<ul>
+<li>
+<p> log it as an ERROR + print the error message to STDERR
+</p>
+</li>
+<li>
+<p> return a generic status 500 message
+</p>
+</li>
+<li>
+<p> set the status code of the response object to 500
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p> the error is a structured HTTP error coming from <code>http_error()</code>
+</p>
+
+<ul>
+<li>
+<p> log it as an ERROR with the message from the condition attribute
+</p>
+</li>
+<li>
+<p> return the specific HTTP error code with the structured output
+</p>
+</li>
+<li>
+<p> set the status code of the response object
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>If we don't catch an error:
+</p>
+
+<ul>
+<li>
+<p> the object is of class <code>http_success()</code> (this comes in handy for async jobs and redirects)
+</p>
+
+<ul>
+<li>
+<p> log it as a SUCCESS with the message element
+</p>
+</li>
+<li>
+<p> return the specific HTTP status code with the structured output
+</p>
+</li>
+<li>
+<p> set the status code of the response object
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p> the object is NOT of class <code>http_success()</code>
+</p>
+
+<ul>
+<li>
+<p> log it as a SUCCESS with a generic 200 message
+</p>
+</li>
+<li>
+<p> return the object as is (default status code 200 assumed)
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A list or the results from <code>expr</code>.
+A side effect is setting of the response status code on the response
+object and a log message to STDOUT or STDERR.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>try()</code>, <code>msg()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">req &lt;- new.env()
+res &lt;- new.env()
+
+http_try(req, res)
+res$status
+
+http_try(req, res, { 2 + 2 })
+res$status
+
+http_try(req, res, http_error(401))
+res$status
+
+http_try(req, res, http_success(201))
+res$status
+
+http_try(req, res, { lm(NULL) })
+res$status
+
+http_try(req, res, { stop("Stop!!!") })
+res$status
+
+
+f &lt;- function() stop("Stop!!!")
+http_try(req, res, { f() })
+res$status
+
+http_try_handler(req, res, { try(f()) })
+res$status
+
+</code></pre>
+
+
+</div>

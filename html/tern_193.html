@@ -1,0 +1,115 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_adlb_worsen</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to prepare ADLB with worst labs</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Helper function to prepare a <code>df</code> for generate the patient count shift table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_adlb_worsen(
+  adlb,
+  worst_flag_low = NULL,
+  worst_flag_high = NULL,
+  direction_var
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>adlb</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> ADLB data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>worst_flag_low</code></td>
+<td>
+<p>(named <code>vector</code>)<br> worst low post-baseline lab grade flag variable. See how this is
+implemented in the following examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>worst_flag_high</code></td>
+<td>
+<p>(named <code>vector</code>)<br> worst high post-baseline lab grade flag variable. See how this is
+implemented in the following examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction_var</code></td>
+<td>
+<p>(<code>string</code>)<br> name of the direction variable specifying the direction of the shift table of
+interest. Only lab records flagged by <code>L</code>, <code>H</code> or <code>B</code> are included in the shift table.
+</p>
+
+<ul>
+<li> <p><code>L</code>: low direction only
+</p>
+</li>
+<li> <p><code>H</code>: high direction only
+</p>
+</li>
+<li> <p><code>B</code>: both low and high directions
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>h_adlb_worsen()</code> returns the <code>adlb</code> <code>data.frame</code> containing only the
+worst labs specified according to <code>worst_flag_low</code> or <code>worst_flag_high</code> for the
+direction specified according to <code>direction_var</code>. For instance, for a lab that is
+needed for the low direction only, only records flagged by <code>worst_flag_low</code> are
+selected. For a lab that is needed for both low and high directions, the worst
+low records are selected for the low direction, and the worst high record are selected
+for the high direction.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>abnormal_by_worst_grade_worsen
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# The direction variable, GRADDR, is based on metadata
+adlb &lt;- tern_ex_adlb %&gt;%
+  mutate(
+    GRADDR = case_when(
+      PARAMCD == "ALT" ~ "B",
+      PARAMCD == "CRP" ~ "L",
+      PARAMCD == "IGA" ~ "H"
+    )
+  ) %&gt;%
+  filter(SAFFL == "Y" &amp; ONTRTFL == "Y" &amp; GRADDR != "")
+
+df &lt;- h_adlb_worsen(
+  adlb,
+  worst_flag_low = c("WGRLOFL" = "Y"),
+  worst_flag_high = c("WGRHIFL" = "Y"),
+  direction_var = "GRADDR"
+)
+
+</code></pre>
+
+
+</div>

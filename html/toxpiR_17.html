@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TxpSlice-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ToxPi Slice</h2>
+
+<h3>Description</h3>
+
+<p>S4 class to store ToxPi slices
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TxpSlice(txpValueNames, txpTransFuncs = NULL)
+
+## S4 method for signature 'TxpSlice'
+txpValueNames(x)
+
+## S4 replacement method for signature 'TxpSlice'
+txpValueNames(x) &lt;- value
+
+## S4 method for signature 'TxpSlice'
+txpTransFuncs(x)
+
+## S4 replacement method for signature 'TxpSlice'
+txpTransFuncs(x) &lt;- value
+
+## S4 method for signature 'TxpSlice'
+length(x)
+
+## S4 method for signature 'TxpSlice,TxpSlice'
+merge(x, y)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>txpValueNames</code></td>
+<td>
+<p>Passed to <code>txpValueNames</code> slot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>txpTransFuncs</code></td>
+<td>
+<p>Passed to <code>txpTransFuncs</code> slot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x, y</code></td>
+<td>
+<p><code>TxpSlice</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>Replacement value</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If the user supplies <code>txpTransFuncs</code> a single function/TxpTransFunc object,
+the given function will be recycled for each input with a warning.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>txpValueNames(TxpSlice)</code>: Return <code>txpValueNames</code> slot
+</p>
+</li>
+<li> <p><code>txpTransFuncs(TxpSlice)</code>: Return <code>txpTransFuncs</code> slot
+</p>
+</li>
+<li> <p><code>length(TxpSlice)</code>: Return number of inputs in slice; shortcut for
+<code>length(txpValueNames(x))</code>
+</p>
+</li>
+<li> <p><code>merge(x = TxpSlice, y = TxpSlice)</code>: Merge two <code>TxpSlice</code> objects into a single
+slice
+</p>
+</li>
+</ul>
+<h3>Slots</h3>
+
+
+<dl>
+<dt><code>txpValueNames</code></dt>
+<dd>
+<p><code style="white-space: pre;">⁠vector(&lt;character&gt;)⁠</code> specifying the input columns to
+include in the slice</p>
+</dd>
+<dt><code>txpTransFuncs</code></dt>
+<dd>
+<p>TxpTransFuncList with one function per entry in
+<code>txpValueNames</code> or an object that can be coerced to <code>TxpTransFuncList</code>;
+when <code>NULL</code>, no transformation function applied</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Create TxpSlice object 
+# Without transform functions
+TxpSlice(txpValueNames = c("sqrData", "expData")) 
+# With transform functions
+TxpSlice(txpValueNames = c("sqrData", "expData"),
+         txpTransFuncs = c(sq = function(x) x^2, log = function(x) log(x)))
+
+# Transformation function recycled with warning when single function given
+TxpSlice(txpValueNames = c("sqrData", "expData"), 
+         txpTransFuncs = function(x) x^2) 
+         
+
+## Access TxpSlice slots
+sl &lt;- TxpSlice(txpValueNames = c("sqrData", "expData"),
+               txpTransFuncs = c(sq = function(x) x^2, 
+                                 log = function(x) log(x)))
+txpValueNames(sl)
+txpTransFuncs(sl)
+
+## Replacement
+txpValueNames(sl)[1] &lt;- "hello"
+sl
+
+txpTransFuncs(sl)[[2]](exp(1))
+txpTransFuncs(sl)[[2]] &lt;- function(x) sqrt(x)
+txpTransFuncs(sl)[[2]](exp(1))
+
+# Note that replacing a single list element does NOT update the name
+sl
+names(txpTransFuncs(sl))[2] &lt;- "sqrt" 
+sl
+
+# Replacing the whole list DOES update the names
+txpTransFuncs(sl) &lt;- list(sqrt = function(x) sqrt(x), 
+                          log = function(x) log(x))
+sl
+
+## length -- returns number of inputs
+length(TxpSlice(letters))
+
+## merge
+s1 &lt;- TxpSlice("hello")
+s2 &lt;- TxpSlice("data")
+merge(s1, s2)
+
+# Note, input names still must be unique
+## Not run: merge(s1, s1) ## produces error
+</code></pre>
+
+
+</div>

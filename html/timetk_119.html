@@ -1,0 +1,164 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_augment_slidify</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add many rolling window calculations to the data</h2>
+
+<h3>Description</h3>
+
+<p>Quickly use any function as a rolling function and apply to multiple <code>.periods</code>.
+Works with <code>dplyr</code> groups too.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_augment_slidify(
+  .data,
+  .value,
+  .period,
+  .f,
+  ...,
+  .align = c("center", "left", "right"),
+  .partial = FALSE,
+  .names = "auto"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A tibble.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.value</code></td>
+<td>
+<p>One or more column(s) to have a transformation applied. Usage
+of <code>tidyselect</code> functions (e.g. <code>contains()</code>) can be used to select multiple columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.period</code></td>
+<td>
+<p>One or more periods for the rolling window(s)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A summary <code style="white-space: pre;">⁠[function / formula]⁠</code>,</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Optional arguments for the summary function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.align</code></td>
+<td>
+<p>Rolling functions generate <code>.period - 1</code> fewer values than the incoming vector.
+Thus, the vector needs to be aligned. Select one of "center", "left", or "right".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.partial</code></td>
+<td>
+<p>.partial Should the moving window be allowed to return partial (incomplete) windows instead of <code>NA</code> values.
+Set to FALSE by default, but can be switched to TRUE to remove <code>NA</code>'s.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.names</code></td>
+<td>
+<p>A vector of names for the new columns. Must be of same length as <code>.period</code>. Default is "auto".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tk_augment_slidify()</code> scales the <code>slidify_vec()</code> function to multiple
+time series <code>.periods</code>. See <code>slidify_vec()</code> for examples and usage of the core function
+arguments.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a <code>tibble</code> object describing the timeseries.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Augment Operations:
+</p>
+
+<ul>
+<li> <p><code>tk_augment_timeseries_signature()</code> - Group-wise augmentation of timestamp features
+</p>
+</li>
+<li> <p><code>tk_augment_holiday_signature()</code> - Group-wise augmentation of holiday features
+</p>
+</li>
+<li> <p><code>tk_augment_slidify()</code> - Group-wise augmentation of rolling functions
+</p>
+</li>
+<li> <p><code>tk_augment_lags()</code> - Group-wise augmentation of lagged data
+</p>
+</li>
+<li> <p><code>tk_augment_differences()</code> - Group-wise augmentation of differenced data
+</p>
+</li>
+<li> <p><code>tk_augment_fourier()</code> - Group-wise augmentation of fourier series
+</p>
+</li>
+</ul>
+<p>Underlying Function:
+</p>
+
+<ul><li> <p><code>slidify_vec()</code> - The underlying function that powers <code>tk_augment_slidify()</code>
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# Single Column | Multiple Rolling Windows
+FANG %&gt;%
+    select(symbol, date, adjusted) %&gt;%
+    group_by(symbol) %&gt;%
+    tk_augment_slidify(
+        .value   = contains("adjust"),
+        # Multiple rolling windows
+        .period  = c(10, 30, 60, 90),
+        .f       = mean,
+        .partial = TRUE,
+        .names   = stringr::str_c("MA_", c(10, 30, 60, 90))
+    ) %&gt;%
+    ungroup()
+
+# Multiple Columns | Multiple Rolling Windows
+FANG %&gt;%
+    select(symbol, date, adjusted, volume) %&gt;%
+    group_by(symbol) %&gt;%
+    tk_augment_slidify(
+        .value  = c(adjusted, volume),
+        .period  = c(10, 30, 60, 90),
+        .f       = mean,
+        .partial = TRUE
+    ) %&gt;%
+    ungroup()
+
+</code></pre>
+
+
+</div>

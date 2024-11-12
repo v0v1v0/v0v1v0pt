@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ctlcurves</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Classification Trimmed Likelihood Curves</h2>
+
+<h3>Description</h3>
+
+<p>The function applies <code>tclust</code> several times on a given dataset while parameters 
+<code>alpha</code> and <code>k</code> are altered. The resulting object gives an idea of the optimal 
+trimming level and number of clusters considering a particular dataset.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ctlcurves(
+  x,
+  k = 1:4,
+  alpha = seq(0, 0.2, len = 6),
+  restr.fact = 50,
+  parallel = FALSE,
+  trace = 1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A matrix or data frame of dimension n x p, containing the observations (row-wise).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>A vector of cluster numbers to be checked. By default cluster numbers from 1 to 5 are examined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>A vector containing the alpha levels to be checked. By default <code>alpha</code> 
+levels from 0 to 0.2 (continuously increased by 0.01), are checked.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restr.fact</code></td>
+<td>
+<p>The restriction factor passed to <code>tclust</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>A logical value, to be passed further to <code>tclust()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>Defines the tracing level, which is set to <code>1</code> by default. 
+Tracing level <code>2</code> gives additional information on the current iteration.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments (as e.g. <code>restr</code>), passed to <code>tclust</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These curves show the values of the trimmed classification (log-)likelihoods 
+when altering the trimming proportion <code>alpha</code> and the number of clusters <code>k</code>. 
+The careful examination of these curves provides valuable information for choosing 
+these parameters in a clustering problem. For instance, an appropriate <code>k</code> 
+to be chosen is one that we do not observe a clear increase in the trimmed classification 
+likelihood curve for k with respect to the k+1 curve for almost all the range 
+of alpha values. Moreover, an appropriate choice of parameter alpha may be derived 
+by determining where an initial fast increase of the trimmed classification 
+likelihood curve stops for the final chosen k. A more detailed explanation can 
+be found in García-Escudero et al. (2011).
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function returns an S3 object of type <code>ctlcurves</code> containing the following components:
+</p>
+
+<ul>
+<li> <p><code>par</code> A list containing all the parameters passed to this function 
+</p>
+</li>
+<li> <p><code>obj</code>  An array containing the objective functions values of each computed cluster-solution 
+</p>
+</li>
+<li> <p><code>min.weights</code> An array containing the minimum cluster weight of each computed cluster-solution 
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>García-Escudero, L.A.; Gordaliza, A.; Matrán, C. and Mayo-Iscar, A. (2011), 
+"Exploring the number of groups in robust model-based clustering." <em>Statistics and Computing</em>, <b>21</b> 
+pp. 585-599, &lt;doi:10.1007/s11222-010-9194-z&gt;
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+
+ #--- EXAMPLE 1 ------------------------------------------
+
+ sig &lt;- diag (2)
+ cen &lt;- rep (1, 2)
+ x &lt;- rbind(MASS::mvrnorm(108, cen * 0,   sig),
+ 	       MASS::mvrnorm(162, cen * 5,   sig * 6 - 2),
+ 	       MASS::mvrnorm(30, cen * 2.5, sig * 50))
+
+ ctl &lt;- ctlcurves(x, k = 1:4)
+ ctl
+
+   ##  ctl-curves 
+ plot(ctl)  ##  --&gt; selecting k = 2, alpha = 0.08
+
+   ##  the selected model 
+ plot(tclust(x, k = 2, alpha = 0.08, restr.fact = 7))
+
+ #--- EXAMPLE 2 ------------------------------------------
+
+ data(geyser2)
+ ctl &lt;- ctlcurves(geyser2, k = 1:5)
+ ctl
+ 
+   ##  ctl-curves 
+ plot(ctl)  ##  --&gt; selecting k = 3, alpha = 0.08
+
+   ##  the selected model
+ plot(tclust(geyser2, k = 3, alpha = 0.08, restr.fact = 5))
+
+
+ #--- EXAMPLE 3 ------------------------------------------
+ 
+ data(swissbank)
+ ctl &lt;- ctlcurves(swissbank, k = 1:5, alpha = seq (0, 0.3, by = 0.025))
+ ctl
+ 
+   ##  ctl-curves 
+ plot(ctl)  ##  --&gt; selecting k = 2, alpha = 0.1
+ 
+   ##  the selected model
+ plot(tclust(swissbank, k = 2, alpha = 0.1, restr.fact = 50))
+ 
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

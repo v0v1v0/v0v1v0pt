@@ -1,0 +1,113 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ops_deform_conv2d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Performs Deformable Convolution v2,</h2>
+
+<h3>Description</h3>
+
+<p>Ddescribed in <a href="https://arxiv.org/abs/1811.11168">Deformable ConvNets v2: More Deformable, Better Results</a>
+if <code>mask</code> is not <code>NULL</code> and performs Deformable Convolution, described in
+<a href="https://arxiv.org/abs/1703.06211">Deformable Convolutional Networks</a>
+if <code>mask</code> is <code>NULL</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ops_deform_conv2d(
+  input,
+  offset,
+  weight,
+  bias = NULL,
+  stride = c(1, 1),
+  padding = c(0, 0),
+  dilation = c(1, 1),
+  mask = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input</code></td>
+<td>
+<p>(<code>Tensor[batch_size, in_channels, in_height, in_width]</code>): input tensor</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>(<code>Tensor[batch_size, 2 * offset_groups * kernel_height * kernel_width, out_height, out_width]</code>):
+offsets to be applied for each position in the convolution kernel.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠Tensor[out_channels, in_channels // groups, kernel_height, kernel_width]⁠</code>): convolution weights,
+split into groups of size (in_channels // groups)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+<p>(<code>Tensor[out_channels]</code>): optional bias of shape (out_channels,). Default: <code>NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stride</code></td>
+<td>
+<p>(int or <code>Tuple[int, int]</code>): distance between convolution centers. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding</code></td>
+<td>
+<p>(int or <code>Tuple[int, int]</code>): height/width of padding of zeroes around
+each image. Default: 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dilation</code></td>
+<td>
+<p>(int or <code>Tuple[int, int]</code>): the spacing between kernel elements. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask</code></td>
+<td>
+<p>(<code>Tensor[batch_size, offset_groups * kernel_height * kernel_width, out_height, out_width]</code>):
+masks to be applied for each position in the convolution kernel. Default: <code>NULL</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>Tensor[batch_sz, out_channels, out_h, out_w]</code>: result of convolution
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torchvisionlib_is_installed()) {
+  library(torch)
+  input &lt;- torch_rand(4, 3, 10, 10)
+  kh &lt;- kw &lt;- 3
+  weight &lt;- torch_rand(5, 3, kh, kw)
+  # offset and mask should have the same spatial size as the output
+  # of the convolution. In this case, for an input of 10, stride of 1
+  # and kernel size of 3, without padding, the output size is 8
+  offset &lt;- torch_rand(4, 2 * kh * kw, 8, 8)
+  mask &lt;- torch_rand(4, kh * kw, 8, 8)
+  out &lt;- ops_deform_conv2d(input, offset, weight, mask = mask)
+  print(out$shape)
+}
+</code></pre>
+
+
+</div>

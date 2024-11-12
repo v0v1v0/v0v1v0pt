@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_texthash</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Feature Hashing of Tokens</h2>
+
+<h3>Description</h3>
+
+<p><code>step_texthash()</code> creates a <em>specification</em> of a recipe step that will
+convert a <code>token</code> variable into multiple numeric variables
+using the hashing trick.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_texthash(
+  recipe,
+  ...,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  signed = TRUE,
+  num_terms = 1024L,
+  prefix = "texthash",
+  keep_original_cols = FALSE,
+  skip = FALSE,
+  id = rand_id("texthash")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>recipes::selections()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new columns created by the original variables will be
+used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument. This is <code>NULL</code>
+until the step is trained by <code>recipes::prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>signed</code></td>
+<td>
+<p>A logical, indicating whether to use a signed hash-function to
+reduce collisions when hashing. Defaults to TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_terms</code></td>
+<td>
+<p>An integer, the number of variables to output. Defaults to
+1024.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A character string that will be the prefix to the
+resulting new variables. See notes below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_original_cols</code></td>
+<td>
+<p>A logical to keep the original variables in the
+output. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>recipes::bake.recipe()</code>? While all operations are baked
+when <code>recipes::prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Feature hashing, or the hashing trick, is a transformation of a text variable
+into a new set of numerical variables. This is done by applying a hashing
+function over the tokens and using the hash values as feature indices. This
+allows for a low memory representation of the text. This implementation is
+done using the MurmurHash3 method.
+</p>
+<p>The argument <code>num_terms</code> controls the number of indices that the hashing
+function will map to. This is the tuning parameter for this transformation.
+Since the hashing function can map two different tokens to the same index,
+will a higher value of <code>num_terms</code> result in a lower chance of collision.
+</p>
+<p>The new components will have names that begin with <code>prefix</code>, then
+the name of the variable, followed by the tokens all separated by
+<code>-</code>. The variable names are padded with zeros. For example if
+<code>prefix = "hash"</code>, and if <code>num_terms &lt; 10</code>, their names will be
+<code>hash1</code> - <code>hash9</code>. If <code>num_terms = 101</code>, their names will be
+<code>hash001</code> - <code>hash101</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step added
+to the sequence of existing steps (if any).
+</p>
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) and <code>value</code> (number of terms).
+</p>
+
+
+<h3>Tuning Parameters</h3>
+
+<p>This step has 2 tuning parameters:
+</p>
+
+<ul>
+<li> <p><code>signed</code>: Signed Hash Value (type: logical, default: TRUE)
+</p>
+</li>
+<li> <p><code>num_terms</code>: # Hash Features (type: integer, default: 1024)
+</p>
+</li>
+</ul>
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>References</h3>
+
+<p>Kilian Weinberger; Anirban Dasgupta; John Langford; Alex Smola;
+Josh Attenberg (2009).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>step_tokenize()</code> to turn characters into <code>tokens</code>
+<code>step_text_normalization()</code> to perform text normalization.
+</p>
+<p>Other Steps for Numeric Variables From Tokens: 
+<code>step_lda()</code>,
+<code>step_tfidf()</code>,
+<code>step_tf()</code>,
+<code>step_word_embeddings()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+
+
+library(recipes)
+library(modeldata)
+data(tate_text)
+
+tate_rec &lt;- recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium) %&gt;%
+  step_tokenfilter(medium, max_tokens = 10) %&gt;%
+  step_texthash(medium)
+
+tate_obj &lt;- tate_rec %&gt;%
+  prep()
+
+bake(tate_obj, tate_text)
+
+tidy(tate_rec, number = 3)
+tidy(tate_obj, number = 3)
+
+</code></pre>
+
+
+</div>

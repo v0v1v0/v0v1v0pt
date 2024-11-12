@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TernaryDensityContour</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add contours of estimated point density to a ternary plot</h2>
+
+<h3>Description</h3>
+
+<p>Use two-dimensional kernel density estimation to plot contours of
+point density.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TernaryDensityContour(
+  coordinates,
+  bandwidth,
+  resolution = 25L,
+  tolerance = -0.2/resolution,
+  edgeCorrection = TRUE,
+  direction = getOption("ternDirection", 1L),
+  filled = FALSE,
+  nlevels = 10,
+  levels = pretty(zlim, nlevels),
+  zlim,
+  color.palette = function(n) hcl.colors(n, palette = "viridis", alpha = 0.6),
+  fill.col = color.palette(length(levels) - 1),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>coordinates</code></td>
+<td>
+<p>A list, matrix, data.frame or vector in which each
+element (or row) specifies
+the three coordinates of a point in ternary space.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bandwidth</code></td>
+<td>
+<p>Vector of bandwidths for x and y directions.
+Defaults to normal reference bandwidth (see <code>MASS::bandwidth.nrd</code>).
+A scalar value will be taken to apply to both directions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resolution</code></td>
+<td>
+<p>The number of triangles whose base should lie on the longest
+axis of the triangle.  Higher numbers will result in smaller subdivisions and smoother
+colour gradients, but at a computational cost.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolerance</code></td>
+<td>
+<p>Numeric specifying how close to the margins the contours
+should be plotted, as a fraction of the size of the triangle.
+Negative values will cause contour lines to extend beyond the margins of the
+plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>edgeCorrection</code></td>
+<td>
+<p>Logical specifying whether to correct for edge effects
+(see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+<p>(optional) Integer specifying the direction that the
+current ternary plot should point: 1, up; 2, right; 3, down; 4, left.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filled</code></td>
+<td>
+<p>Logical; if <code>TRUE</code>, contours will be filled
+(using <code>.filled.contour()</code>.).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nlevels, levels, zlim, ...</code></td>
+<td>
+<p>parameters to pass to
+<code>contour()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color.palette</code></td>
+<td>
+<p>parameters to pass to
+<code>.filled.contour()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill.col</code></td>
+<td>
+<p>Sent as <code>col</code> parameter to
+<code>.filled.contour()</code>.
+Computed from <code>color.palette</code> if not specified.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is modelled on <code>MASS::kde2d()</code>, which uses
+"an axis-aligned bivariate normal kernel, evaluated on a square grid".
+</p>
+<p>This is to say, values are calculated on a square grid, and contours fitted
+between these points.  This produces a couple of artefacts.
+Firstly, contours may not extend beyond the outermost point within the
+diagram, which may fall some distance from the margin of the plot if a
+low <code>resolution</code> is used.  Setting a negative <code>tolerance</code> parameter allows
+these contours to extend closer to (or beyond) the margin of the plot.
+</p>
+<p>Individual points cannot fall outside the margins of the ternary diagram,
+but their associated kernels can. In order to sample regions of the kernels
+that have "bled" outside the ternary diagram, each point's value is
+calculated by summing the point density at that point and at equivalent
+points outside the ternary diagram, "reflected" across the margin of
+the plot (see function <code>ReflectedEquivalents</code>).  This correction can be
+disabled by setting the <code>edgeCorrection</code> parameter to <code>FALSE</code>.
+</p>
+<p>A model based on a triangular grid may be more appropriate in certain
+situations, but is non-trivial to implement; if this distinction is
+important to you, please let the maintainers known by opening a
+<a href="https://github.com/ms609/Ternary/issues/new?title=Triangular+KDE">Github issue</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>TernaryDensityContour()</code> invisibly returns a list containing:
+</p>
+
+<ul>
+<li> <p><code>x</code>,<code>y</code>: the Cartesian coordinates of each grid coordinate;
+</p>
+</li>
+<li> <p><code>z</code>: The density at each grid coordinate.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Adapted from <code>MASS::kde2d()</code> by Martin R. Smith
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other contour plotting functions: 
+<code>ColourTernary()</code>,
+<code>TernaryContour()</code>,
+<code>TernaryPointValues()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate some example data
+nPoints &lt;- 400L
+coordinates &lt;- cbind(abs(rnorm(nPoints, 2, 3)),
+                     abs(rnorm(nPoints, 1, 1.5)),
+                     abs(rnorm(nPoints, 1, 0.5)))
+# Set up plot
+oPar &lt;- par(mar = rep(0, 4))
+TernaryPlot(axis.labels = seq(0, 10, by = 1))
+
+# Colour background by density
+ColourTernary(TernaryDensity(coordinates, resolution = 10L),
+              legend = TRUE, bty = "n", title = "Density")
+
+# Plot points
+TernaryPoints(coordinates, col = "red", pch = ".")
+
+# Contour by density
+TernaryDensityContour(coordinates, resolution = 30L)
+
+# Reset plotting parameters
+par(oPar)
+</code></pre>
+
+
+</div>

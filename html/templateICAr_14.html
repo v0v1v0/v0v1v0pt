@@ -1,0 +1,236 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dual_reg2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Dual Regression wrapper</h2>
+
+<h3>Description</h3>
+
+<p>Wrapper to <code>dual_reg</code> used by <code>estimate_template</code>. The format of <code>BOLD</code>
+(and <code>BOLD2</code>) must be provided, and <code>GICA</code> must be vectorized if applicable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dual_reg2(
+  BOLD,
+  BOLD2 = NULL,
+  format = c("CIFTI", "xifti", "GIFTI", "gifti", "NIFTI", "nifti", "RDS", "data"),
+  GICA,
+  GICA_parc_table = NULL,
+  mask = NULL,
+  keepA = FALSE,
+  scale = c("local", "global", "none"),
+  scale_sm_surfL = NULL,
+  scale_sm_surfR = NULL,
+  scale_sm_FWHM = 2,
+  TR = NULL,
+  hpf = 0.01,
+  GSR = FALSE,
+  Q2 = 0,
+  Q2_max = NULL,
+  NA_limit = 0.1,
+  brainstructures = "all",
+  resamp_res = NULL,
+  varTol = 1e-06,
+  maskTol = 0.1,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>BOLD, BOLD2</code></td>
+<td>
+<p>Subject-level fMRI data in one of the following formats:
+a CIFTI file path, a <code>"xifti"</code> object, a NIFTI file path, a <code>"nifti"</code> object, or
+<code class="reqn">V \times T</code> numeric matrices, where <code class="reqn">V</code> is the number of data locations and
+<code class="reqn">T</code> is the number of timepoints.
+</p>
+<p>If <code>BOLD2</code> is provided it must be in the same format as <code>BOLD</code>;
+<code>BOLD</code> will be the test data and <code>BOLD2</code> will be the retest data.
+</p>
+<p>If <code>BOLD2</code> is not provided, <code>BOLD</code> will be split in half;
+the first half will be the test data and the second half will be the retest data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Expected format of <code>BOLD</code> and <code>BOLD2</code>. Should be one
+of the following: a <code>"CIFTI"</code> file path, a <code>"xifti"</code> object, a
+<code>"NIFTI"</code> file path, a <code>"nifti"</code> object, or a <code>"data"</code> matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GICA</code></td>
+<td>
+<p>Group ICA maps as a (vectorized) numeric matrix
+(<code class="reqn">V \times Q</code>). Its columns will be centered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GICA_parc_table</code></td>
+<td>
+<p>Is the GICA actually a parcellation? If so, provide
+the parcellation table here. Default: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask</code></td>
+<td>
+<p>Required if and only if the entries of <code>BOLD</code> are NIFTI file paths or
+<code>"nifti"</code> objects. This is a brain map formatted as a binary array of the same
+size as the fMRI data, with <code>TRUE</code> corresponding to in-mask voxels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keepA</code></td>
+<td>
+<p>Keep the resulting <strong>A</strong> matrices, or only return the <strong>S</strong> matrices
+(default)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p><code>"local"</code> (default), <code>"global"</code>, or <code>"none"</code>.
+Local scaling will divide each data location's time series by its estimated
+standard deviation. Global scaling will divide the entire data matrix by the
+mean image standard deviation (<code>mean(sqrt(rowVars(BOLD)))</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_sm_surfL, scale_sm_surfR, scale_sm_FWHM</code></td>
+<td>
+<p>Only applies if
+<code>scale=="local"</code> and <code>BOLD</code> represents CIFTI-format data. To
+smooth the standard deviation estimates used for local scaling, provide the
+surface geometries along which to smooth as GIFTI geometry files or
+<code>"surf"</code> objects, as well as the smoothing FWHM (default: <code>2</code>).
+</p>
+<p>If <code>scale_sm_FWHM==0</code>, no smoothing of the local standard deviation
+estimates will be performed.
+</p>
+<p>If <code>scale_sm_FWHM&gt;0</code> but <code>scale_sm_surfL</code> and
+<code>scale_sm_surfR</code> are not provided, the default inflated surfaces from
+the HCP will be used.
+</p>
+<p>To create a <code>"surf"</code> object from data, see
+<code>make_surf</code>. The surfaces must be in the same
+resolution as the <code>BOLD</code> data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TR</code></td>
+<td>
+<p>The temporal resolution of the data, i.e. the time between volumes,
+in seconds. <code>TR</code> is required for detrending with <code>hpf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hpf</code></td>
+<td>
+<p>The frequency at which to apply a highpass filter to the data
+during pre-processing, in Hertz. Default: <code>0.01</code> Hertz. Set to <code>0</code>
+to disable the highpass filter.
+</p>
+<p>The highpass filter serves to detrend the data, since low-frequency
+variance is associated with noise. Highpass filtering is accomplished by
+nuisance regression of discrete cosine transform (DCT) bases.
+</p>
+<p>Note the <code>TR</code> argument is required for highpass filtering. If
+<code>TR</code> is not provided, <code>hpf</code> will be ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GSR</code></td>
+<td>
+<p>Center BOLD across columns (each image)? This
+is equivalent to performing global signal regression. Default:
+<code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q2, Q2_max</code></td>
+<td>
+<p>Obtain dual regression estimates after denoising? Denoising is
+based on modeling and removing nuisance ICs. It may result in a cleaner
+estimate for smaller datasets, but it may be unnecessary (and time-consuming)
+for larger datasets.
+</p>
+<p>Set <code>Q2</code> to control denoising: use a positive integer to specify the
+number of nuisance ICs, <code>NULL</code> to have the number of nuisance ICs
+estimated by PESEL, or zero (default) to skip denoising.
+</p>
+<p>If <code>is.null(Q2)</code>, use <code>Q2_max</code> to specify the maximum number of
+nuisance ICs that should be estimated by PESEL. <code>Q2_max</code> must be less
+than <code class="reqn">T * .75 - Q</code> where <code class="reqn">T</code> is the minimum number of timepoints in
+each fMRI scan and <code class="reqn">Q</code> is the number of group ICs. If <code>NULL</code>
+(default), <code>Q2_max</code> will be set to <code class="reqn">T * .50 - Q</code>, rounded.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>brainstructures</code></td>
+<td>
+<p>Only applies if the entries of <code>BOLD</code> are CIFTI file paths.
+Character vector indicating which brain structure(s)
+to obtain: <code>"left"</code> (left cortical surface), <code>"right"</code> (right
+cortical surface) and/or <code>"subcortical"</code> (subcortical and cerebellar
+gray matter). Can also be <code>"all"</code> (obtain all three brain structures).
+Default: <code>c("all")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resamp_res</code></td>
+<td>
+<p>Only applies if the entries of <code>BOLD</code> are CIFTI file paths.
+Resample the data upon reading it in? Default: <code>NULL</code> (no resampling).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varTol</code></td>
+<td>
+<p>Tolerance for variance of each data location. For each scan,
+locations which do not meet this threshold are masked out of the analysis.
+Default: <code>1e-6</code>. Variance is calculated on the original data, before
+any normalization. Set to <code>0</code> to avoid removing locations due to
+low variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maskTol</code></td>
+<td>
+<p>Tolerance for number of locations masked out due to low
+variance or missing values. If more than this many locations are masked out,
+this subject is skipped without calculating dual regression. <code>maskTol</code>
+can be specified either as a proportion of the number of locations (between
+zero and one), or as a number of locations (integers greater than one).
+Default: <code>.1</code>, i.e. up to 10\
+</p>
+<p>If <code>BOLD2</code> is provided, masks are calculated for each scan and then
+the intersection of the masks is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Display progress updates? Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The dual regression <strong>S</strong> matrices, or both the <strong>S</strong>
+and <strong>A</strong> matrices if <code>keepA</code>, or <code>NULL</code> if dual
+regression was skipped due to too many masked data locations.
+</p>
+
+
+</div>

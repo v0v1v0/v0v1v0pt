@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmc_metropolis_adjusted_langevin_algorithm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Runs one step of Metropolis-adjusted Langevin algorithm.</h2>
+
+<h3>Description</h3>
+
+<p>Metropolis-adjusted Langevin algorithm (MALA) is a Markov chain Monte Carlo
+(MCMC) algorithm that takes a step of a discretised Langevin diffusion as a
+proposal. This class implements one step of MALA using Euler-Maruyama method
+for a given <code>current_state</code> and diagonal preconditioning <code>volatility</code> matrix.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmc_metropolis_adjusted_langevin_algorithm(
+  target_log_prob_fn,
+  step_size,
+  volatility_fn = NULL,
+  seed = NULL,
+  parallel_iterations = 10,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>target_log_prob_fn</code></td>
+<td>
+<p>Function which takes an argument like
+<code>current_state</code> (if it's a list <code>current_state</code> will be unpacked) and returns its
+(possibly unnormalized) log-density under the target distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step_size</code></td>
+<td>
+<p><code>Tensor</code> or <code>list</code> of <code>Tensor</code>s representing the step
+size for the leapfrog integrator. Must broadcast with the shape of
+<code>current_state</code>. Larger step sizes lead to faster progress, but
+too-large step sizes make rejection exponentially more likely. When
+possible, it's often helpful to match per-variable step sizes to the
+standard deviations of the target distribution in each variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>volatility_fn</code></td>
+<td>
+<p>function which takes an argument like
+<code>current_state</code> (or <code style="white-space: pre;">⁠*current_state⁠</code> if it's a list) and returns
+volatility value at <code>current_state</code>. Should return a <code>Tensor</code> or
+<code>list</code> of <code>Tensor</code>s that must broadcast with the shape of
+<code>current_state</code>. Defaults to the identity function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>integer to seed the random number generator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel_iterations</code></td>
+<td>
+<p>the number of coordinates for which the gradients of
+the volatility matrix <code>volatility_fn</code> can be computed in parallel.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>String prefixed to Ops created by this function.
+Default value: <code>NULL</code> (i.e., 'mala_kernel').</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Mathematical details and derivations can be found in
+Roberts and Rosenthal (1998) and Xifara et al. (2013).
+</p>
+<p>The <code>one_step</code> function can update multiple chains in parallel. It assumes
+that all leftmost dimensions of <code>current_state</code> index independent chain states
+(and are therefore updated independently). The output of
+<code>target_log_prob_fn(current_state)</code> should reduce log-probabilities across
+all event dimensions. Slices along the rightmost dimensions may have different
+target distributions; for example, <code style="white-space: pre;">⁠current_state[0, :]⁠</code> could have a
+different target distribution from <code style="white-space: pre;">⁠current_state[1, :]⁠</code>. These semantics are
+governed by <code>target_log_prob_fn(current_state)</code>. (The number of independent
+chains is <code>tf.size(target_log_prob_fn(current_state))</code>.)
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="http://probability.ca/jeff/ftpdir/lang.pdf">Gareth Roberts and Jeffrey Rosenthal. Optimal Scaling of Discrete Approximations to Langevin Diffusions. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em>, 60: 255-268, 1998.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1309.2983">T. Xifara et al. Langevin diffusions and the Metropolis-adjusted Langevin algorithm. <em>arXiv preprint arXiv:1309.2983</em>, 2013.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other mcmc_kernels: 
+<code>mcmc_dual_averaging_step_size_adaptation()</code>,
+<code>mcmc_hamiltonian_monte_carlo()</code>,
+<code>mcmc_metropolis_hastings()</code>,
+<code>mcmc_no_u_turn_sampler()</code>,
+<code>mcmc_random_walk_metropolis()</code>,
+<code>mcmc_replica_exchange_mc()</code>,
+<code>mcmc_simple_step_size_adaptation()</code>,
+<code>mcmc_slice_sampler()</code>,
+<code>mcmc_transformed_transition_kernel()</code>,
+<code>mcmc_uncalibrated_hamiltonian_monte_carlo()</code>,
+<code>mcmc_uncalibrated_langevin()</code>,
+<code>mcmc_uncalibrated_random_walk()</code>
+</p>
+
+
+</div>

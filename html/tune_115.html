@@ -1,0 +1,113 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>merge.recipe</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merge parameter grid values into objects</h2>
+
+<h3>Description</h3>
+
+<p><code>merge()</code> can be used to easily update any of the arguments in a
+<span class="pkg">parsnip</span> model or recipe.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'recipe'
+merge(x, y, ...)
+
+## S3 method for class 'model_spec'
+merge(x, y, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A recipe or model specification object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A data frame or a parameter grid resulting from one of the
+<code style="white-space: pre;">⁠grid_*⁠</code> functions. The column names should correspond to the parameter
+names (or their annotations) in the object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not used but required for S3 completeness.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A tibble with a column <code>x</code> that has as many rows as were in <code>y</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tibble)
+library(recipes)
+library(parsnip)
+library(dials)
+
+pca_rec &lt;-
+  recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_impute_knn(all_predictors(), neighbors = tune()) %&gt;%
+  step_pca(all_predictors(), num_comp = tune())
+
+pca_grid &lt;-
+  tribble(
+    ~neighbors, ~num_comp,
+             1,         1,
+             5,         1,
+             1,         2,
+             5,         2
+  )
+
+merge(pca_rec, pca_grid)
+
+spline_rec &lt;-
+  recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_ns(disp, deg_free = tune("disp df")) %&gt;%
+  step_ns(wt, deg_free = tune("wt df"))
+
+spline_grid &lt;-
+  tribble(
+    ~"disp df", ~ "wt df",
+    3,         3,
+    5,         3,
+    3,         5,
+    5,         5
+  )
+
+merge(pca_rec, pca_grid)
+
+data(hpc_data, package = "modeldata")
+
+xgb_mod &lt;-
+  boost_tree(trees = tune(), min_n = tune()) %&gt;%
+  set_engine("xgboost")
+
+set.seed(254)
+xgb_grid &lt;-
+  extract_parameter_set_dials(xgb_mod) %&gt;%
+  finalize(hpc_data) %&gt;%
+  grid_max_entropy(size = 3)
+
+merge(xgb_mod, xgb_grid)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>E.2SI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of the Population Total under Two Stage Simple Random Sampling Without Replacement</h2>
+
+<h3>Description</h3>
+
+<p>Computes the Horvitz-Thompson estimator of the population total according to a 2SI sampling design</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">E.2SI(NI, nI, Ni, ni, y, PSU)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>NI</code></td>
+<td>
+<p>Population size of Primary Sampling Units</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nI</code></td>
+<td>
+<p>Sample size of Primary Sampling Units</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ni</code></td>
+<td>
+<p>Vector of population sizes of Secundary Sampling Units selected in the first draw</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ni</code></td>
+<td>
+<p>Vector of sample sizes of Secundary Sampling Units</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Vector, matrix or data frame containig the recollected information of the variables of interest for every
+unit in the selected sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PSU</code></td>
+<td>
+<p>Vector identifying the membership to the strata of each unit in the population</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Returns the estimation of the population total of every single variable of interest, its estimated standard error and its estimated coefficient of variation</p>
+
+
+<h3>Value</h3>
+
+<p>The function returns a data matrix whose columns correspond to the estimated parameters of the variables of interest</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hugo Andres Gutierrez Rojas <a href="mailto:hagutierrezro@gmail.com">hagutierrezro@gmail.com</a></p>
+
+
+<h3>References</h3>
+
+<p>Sarndal, C-E. and Swensson, B. and Wretman, J. (1992), <em>Model Assisted Survey Sampling</em>. Springer.<br>
+Gutierrez, H. A. (2009), <em>Estrategias de muestreo: Dise?o de encuestas y estimacion de parametros</em>.
+Editorial Universidad Santo Tomas.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>S.SI</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">############
+## Example 1
+############
+# Uses Lucy data to draw a twostage simple random sample 
+# accordind to a 2SI design. Zone is the clustering variable
+data(Lucy)
+attach(Lucy)
+summary(Zone)
+# The population of clusters or Primary Sampling Units
+UI&lt;-c("A","B","C","D","E")
+NI &lt;- length(UI)
+# The sample size is nI=3
+nI &lt;- 3
+# Selects the sample of PSUs
+samI&lt;-S.SI(NI,nI)
+dataI&lt;-UI[samI]
+dataI   
+# The sampling frame of Secondary Sampling Unit is saved in Lucy1 ... Lucy3
+Lucy1&lt;-Lucy[which(Zone==dataI[1]),]
+Lucy2&lt;-Lucy[which(Zone==dataI[2]),]
+Lucy3&lt;-Lucy[which(Zone==dataI[3]),]
+# The size of every single PSU
+N1&lt;-dim(Lucy1)[1]
+N2&lt;-dim(Lucy2)[1]
+N3&lt;-dim(Lucy3)[1]
+Ni&lt;-c(N1,N2,N3)
+# The sample size in every PSI is 135 Secondary Sampling Units
+n1&lt;-135
+n2&lt;-135
+n3&lt;-135
+ni&lt;-c(n1,n2,n3)
+# Selects a sample of Secondary Sampling Units inside the PSUs
+sam1&lt;-S.SI(N1,n1)
+sam2&lt;-S.SI(N2,n2)
+sam3&lt;-S.SI(N3,n3)
+# The information about each Secondary Sampling Unit in the PSUs
+# is saved in data1 ... data3
+data1&lt;-Lucy1[sam1,]
+data2&lt;-Lucy2[sam2,]
+data3&lt;-Lucy3[sam3,]
+# The information about each unit in the final selected sample is saved in data
+data&lt;-rbind(data1, data2, data3)
+attach(data)
+# The clustering variable is Zone
+Cluster &lt;- as.factor(as.integer(Zone))
+# The variables of interest are: Income, Employees and Taxes
+# This information is stored in a data frame called estima
+estima &lt;- data.frame(Income, Employees, Taxes)
+# Estimation of the Population total
+E.2SI(NI,nI,Ni,ni,estima,Cluster)
+
+########################################################
+## Example 2 Total Census to the entire population
+########################################################
+# Uses Lucy data to draw a cluster random sample
+# accordind to a SI design ...
+# Zone is the clustering variable
+data(Lucy)
+attach(Lucy)
+summary(Zone)
+# The population of clusters
+UI&lt;-c("A","B","C","D","E")
+NI &lt;- length(UI)
+# The sample size equals to the population size of PSU
+nI &lt;- NI
+# Selects every single PSU
+samI&lt;-S.SI(NI,nI)
+dataI&lt;-UI[samI]
+dataI   
+# The sampling frame of Secondary Sampling Unit is saved in Lucy1 ... Lucy5
+Lucy1&lt;-Lucy[which(Zone==dataI[1]),]
+Lucy2&lt;-Lucy[which(Zone==dataI[2]),]
+Lucy3&lt;-Lucy[which(Zone==dataI[3]),]
+Lucy4&lt;-Lucy[which(Zone==dataI[4]),]
+Lucy5&lt;-Lucy[which(Zone==dataI[5]),]
+# The size of every single PSU
+N1&lt;-dim(Lucy1)[1]
+N2&lt;-dim(Lucy2)[1]
+N3&lt;-dim(Lucy3)[1]
+N4&lt;-dim(Lucy4)[1]
+N5&lt;-dim(Lucy5)[1]
+Ni&lt;-c(N1,N2,N3,N4,N5)
+# The sample size of Secondary Sampling Units equals to the size of each PSU
+n1&lt;-N1
+n2&lt;-N2
+n3&lt;-N3
+n4&lt;-N4
+n5&lt;-N5
+ni&lt;-c(n1,n2,n3,n4,n5)
+# Selects every single Secondary Sampling Unit inside the PSU
+sam1&lt;-S.SI(N1,n1)
+sam2&lt;-S.SI(N2,n2)
+sam3&lt;-S.SI(N3,n3)
+sam4&lt;-S.SI(N4,n4)
+sam5&lt;-S.SI(N5,n5)
+# The information about each unit in the cluster is saved in Lucy1 ... Lucy5
+data1&lt;-Lucy1[sam1,]
+data2&lt;-Lucy2[sam2,]
+data3&lt;-Lucy3[sam3,]
+data4&lt;-Lucy4[sam4,]
+data5&lt;-Lucy5[sam5,]
+# The information about each Secondary Sampling Unit
+# in the sample (census) is saved in data
+data&lt;-rbind(data1, data2, data3, data4, data5)
+attach(data)
+# The clustering variable is Zone
+Cluster &lt;- as.factor(as.integer(Zone))
+# The variables of interest are: Income, Employees and Taxes
+# This information is stored in a data frame called estima
+estima &lt;- data.frame(Income, Employees, Taxes)
+# Estimation of the Population total
+E.2SI(NI,nI,Ni,ni,estima,Cluster)
+# Sampling error is null
+</code></pre>
+
+
+</div>

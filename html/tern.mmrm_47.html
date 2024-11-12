@@ -1,0 +1,120 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tabulate_mmrm_subgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tabulation of MMRM Subgroups Results</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>This function tabulates the results from <code>extract_mmrm_subgroups()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tabulate_mmrm_subgroups(
+  lyt,
+  df,
+  vars = c("n_tot", "n", "lsmean", "diff", "ci"),
+  .formats = list(n = "xx", n_tot = "xx", lsmean = "xx.x", diff = "xx.x", ci =
+    "(xx.x, xx.x)", pval = "x.xxxx | (&lt;0.0001)"),
+  .labels = list(n = "n", n_tot = "Total n", lsmean = "Mean", diff = "Mean Difference",
+    ci = paste0(round(100 * df$contrasts$conf_level[1]), "% CI"), pval = "p-value")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>layout</code>)<br> input layout where analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>list</code>)<br> of data frames containing all analysis variables, is the
+result from <code>extract_mmrm_subgroups()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> the name of statistics to be reported among
+<code>n_tot</code> (total number of patients per group),
+<code>n</code> (number of patients per treatment arm and group),
+<code>lsmean</code> (least square mean point estimate),
+<code>diff</code> (difference of least square mean estimates between treatment and reference arm),
+<code>ci</code> (confidence interval of difference) and
+<code>pval</code> (p value of the <code>diff</code>, not adjusted for multiple comparisons).
+Note, the statistics <code>n_tot</code>, <code>diff</code> and <code>ci</code> are required.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>list</code>)<br> containing the formats for the statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>list</code>)<br> containing the labels for the statistics.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The <code>rtables</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">mmrm_results &lt;- fit_mmrm(
+  vars = list(
+    response = "FEV1",
+    covariates = "RACE",
+    id = "USUBJID",
+    arm = "ARMCD",
+    visit = "AVISIT"
+  ),
+  data = mmrm_test_data,
+  cor_struct = "compound symmetry",
+  weights_emmeans = "equal",
+  averages_emmeans = list(
+    "VIS1+2" = c("VIS1", "VIS2")
+  )
+)
+
+df &lt;- extract_mmrm_subgroups(
+  fit = mmrm_results,
+  visit = "VIS3",
+  subgroups = c("RACE", "SEX")
+)
+
+## Table with default columns.
+basic_table() %&gt;%
+  tabulate_mmrm_subgroups(df)
+
+## Table with selected columns.
+tab &lt;- basic_table() %&gt;%
+  tabulate_mmrm_subgroups(
+    df = df,
+    vars = c("n_tot", "diff", "ci", "pval")
+  )
+tab
+
+## Forest plot can be produced based on this very easily.
+g_forest(tab, logx = FALSE, xlim = c(-10, 10), x_at = c(-10, -5, 0, 5, 10), vline = 0)
+</code></pre>
+
+
+</div>

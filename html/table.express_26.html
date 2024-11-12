@@ -1,0 +1,478 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ExprBuilder</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Frame expression builder</h2>
+
+<h3>Description</h3>
+
+<p>Build an expression that will be used inside a data.table::data.table's frame. This
+shouldn't be used directly.
+</p>
+
+
+<h3>Value</h3>
+
+<p>In general, a modified <code>self</code> with extended expression.
+</p>
+
+
+<h3>Active bindings</h3>
+
+<div class="r6-active-bindings">
+
+<dl>
+<dt><code>appends</code></dt>
+<dd>
+<p>Extra expressions that go at the end.</p>
+</dd>
+<dt><code>expr</code></dt>
+<dd>
+<p>The final expression that can be evaluated with <code>base::eval()</code> or
+<code>rlang::eval_bare()</code>.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-ExprBuilder-new"><code>ExprBuilder$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-set_i"><code>ExprBuilder$set_i()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-set_j"><code>ExprBuilder$set_j()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-set_by"><code>ExprBuilder$set_by()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-chain"><code>ExprBuilder$chain()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-chain_if_set"><code>ExprBuilder$chain_if_set()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-seek_and_nestroy"><code>ExprBuilder$seek_and_nestroy()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-eval"><code>ExprBuilder$eval()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-tidy_select"><code>ExprBuilder$tidy_select()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-print"><code>ExprBuilder$print()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-ExprBuilder-clone"><code>ExprBuilder$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-ExprBuilder-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Constructor.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$new(
+  DT,
+  dt_pronouns = list(),
+  nested = list(),
+  verbose = getOption("table.express.verbose", FALSE)
+)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>DT</code></dt>
+<dd>
+<p>A data.table::data.table.</p>
+</dd>
+<dt><code>dt_pronouns, nested</code></dt>
+<dd>
+<p>Internal parameters for joins.</p>
+</dd>
+<dt><code>verbose</code></dt>
+<dd>
+<p>Print more information during the process of building expressions.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-set_i"></a>
+
+
+
+<h4>Method <code>set_i()</code>
+</h4>
+
+<p>Set the <code>i</code> clause expression(s), starting a new frame if the current
+one already has said expression set.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$set_i(value, chain_if_needed)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>A captured expression.</p>
+</dd>
+<dt><code>chain_if_needed</code></dt>
+<dd>
+<p>Whether chaining is allowed during this step.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-set_j"></a>
+
+
+
+<h4>Method <code>set_j()</code>
+</h4>
+
+<p>Like <code>set_i</code> but for the <code>j</code> clause.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$set_j(value, chain_if_needed)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>A captured expression.</p>
+</dd>
+<dt><code>chain_if_needed</code></dt>
+<dd>
+<p>Whether chaining is allowed during this step.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-set_by"></a>
+
+
+
+<h4>Method <code>set_by()</code>
+</h4>
+
+<p>Set the <code>by</code> clause expression.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$set_by(value, chain_if_needed)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>value</code></dt>
+<dd>
+<p>A captured expression.</p>
+</dd>
+<dt><code>chain_if_needed</code></dt>
+<dd>
+<p>Whether chaining is allowed during this step.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-chain"></a>
+
+
+
+<h4>Method <code>chain()</code>
+</h4>
+
+<p>By default, start a new expression with the current one as its
+parent. If <code>type = "pronoun"</code>, <code>dt</code> is used to start a new expression
+that joins the current one.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$chain(type = "frame", next_dt, parent_env, to_eager = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>type</code></dt>
+<dd>
+<p>One of "frame", "pronoun".</p>
+</dd>
+<dt><code>next_dt</code></dt>
+<dd>
+<p>Next data table when chaining pronoun.</p>
+</dd>
+<dt><code>parent_env</code></dt>
+<dd>
+<p>Where to evaluate current expression when chaining
+pronoun.</p>
+</dd>
+<dt><code>to_eager</code></dt>
+<dd>
+<p>Whether or not to use an EagerExprBuilder in the
+new chain</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-chain_if_set"></a>
+
+
+
+<h4>Method <code>chain_if_set()</code>
+</h4>
+
+<p>Chain if any clause values are already set.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$chain_if_set(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>Clause values.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-seek_and_nestroy"></a>
+
+
+
+<h4>Method <code>seek_and_nestroy()</code>
+</h4>
+
+<p>Helper for <code>nest_expr</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$seek_and_nestroy(.exprs)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>.exprs</code></dt>
+<dd>
+<p>List of expressions.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-eval"></a>
+
+
+
+<h4>Method <code>eval()</code>
+</h4>
+
+<p>Evaluate the final expression with <code>parent_env</code> as the enclosing
+environment. If <code>by_ref = FALSE</code>, <code>data.table::copy()</code> is called
+before. The ellipsis' contents are assigned to the expression's
+evaluation environment.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$eval(parent_env, by_ref, ...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>parent_env</code></dt>
+<dd>
+<p>Enclosing environment.</p>
+</dd>
+<dt><code>by_ref</code></dt>
+<dd>
+<p>Flag to control deep copies.</p>
+</dd>
+<dt><code>...</code></dt>
+<dd>
+<p>Additional variables for the evaluation environment.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-tidy_select"></a>
+
+
+
+<h4>Method <code>tidy_select()</code>
+</h4>
+
+<p>Evaluate a <code>tidyselect</code> call using the currently captured table.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$tidy_select(select_expr)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>select_expr</code></dt>
+<dd>
+<p>The selection expression.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-print"></a>
+
+
+
+<h4>Method <code>print()</code>
+</h4>
+
+<p>Prints the built <code>expr</code>.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$print(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>Ignored.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-ExprBuilder-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>ExprBuilder$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+</div>

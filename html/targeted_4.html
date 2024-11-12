@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>AIPW (doubly-robust) estimator for Average Treatement Effect</h2>
+
+<h3>Description</h3>
+
+<p>Augmented Inverse Probability Weighting estimator for the Average (Causal)
+Treatment Effect. All nuisance models are here parametric (glm). For a more
+general approach see the <code>cate</code> implementation. In this implementation
+the standard errors are correct even when the nuisance models are
+misspecified (the influence curve is calculated including the term coming
+from the parametric nuisance models). The estimate is consistent if either
+the propensity model or the outcome model / Q-model is correctly specified.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ate(
+  formula,
+  data = parent.frame(),
+  weights,
+  offset,
+  family = stats::gaussian(identity),
+  nuisance = NULL,
+  propensity = nuisance,
+  all,
+  labels = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>Formula (see details below)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>optional frequency weights</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>optional offset (character or vector). can also be specified in the formula.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>Exponential family argument for outcome model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nuisance</code></td>
+<td>
+<p>outcome regression formula (Q-model)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>propensity</code></td>
+<td>
+<p>propensity model formula</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>all</code></td>
+<td>
+<p>If TRUE all standard errors are calculated (default TRUE when exposure
+only has two levels)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>Optional treatment labels</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments to lower level functions</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The formula may either be specified as:
+response ~ treatment | nuisance-formula | propensity-formula
+</p>
+<p>For example: <code>ate(y~a | x+z+a | x*z, data=...)</code>
+</p>
+<p>Alternatively, as a list: <code>ate(list(y~a, ~x+z, ~x*z), data=...)</code>
+</p>
+<p>Or using the nuisance (and propensity argument): <code>ate(y~a, nuisance=~x+z, ...)</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class '<code>ate.targeted</code>' is returned. See <code>targeted-class</code>
+for more details about this class and its generic functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Klaus K. Holst
+</p>
+
+
+<h3>See Also</h3>
+
+<p>cate
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">m &lt;- lvm(y ~ a+x, a~x)
+distribution(m, ~y) &lt;- binomial.lvm()
+m &lt;- ordinal(m, K=4, ~a)
+transform(m, ~a) &lt;- factor
+d &lt;- sim(m, 1e3, seed=1)
+(a &lt;- ate(y~a|a*x|x, data=d))
+## ate(y~a, nuisance=~a*x, propensity=~x, ...)
+
+# Comparison with randomized experiment
+m0 &lt;- cancel(m, a~x)
+lm(y~a-1, sim(m0,2e4))
+
+# Choosing a different contrast for the association measures
+summary(a, contrast=c(2,4))
+</code></pre>
+
+
+</div>

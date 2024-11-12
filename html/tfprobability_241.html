@@ -1,0 +1,131 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd_plackett_luce</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plackett-Luce distribution over permutations.</h2>
+
+<h3>Description</h3>
+
+<p>The Plackett-Luce distribution is defined over permutations of
+fixed length. It is parameterized by a positive score vector of same length.
+This class provides methods to create indexed batches of PlackettLuce
+distributions. If the provided <code>scores</code> is rank 2 or higher, for
+every fixed set of leading dimensions, the last dimension represents one
+single PlackettLuce distribution. When calling distribution
+functions (e.g. <code>dist.log_prob(x)</code>), <code>scores</code> and <code>x</code> are broadcast to the
+same shape (if possible). In all cases, the last dimension of <code style="white-space: pre;">⁠scores, x⁠</code>
+represents single PlackettLuce distributions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd_plackett_luce(
+  scores,
+  dtype = tf$int32,
+  validate_args = FALSE,
+  allow_nan_stats = FALSE,
+  name = "PlackettLuce"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>scores</code></td>
+<td>
+<p>An N-D <code>Tensor</code>, <code>N &gt;= 1</code>, representing the scores of a set of
+elements to be permuted. The first <code>N - 1</code> dimensions index into a
+batch of independent distributions and the last dimension represents a
+vector of scores for the elements.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtype</code></td>
+<td>
+<p>The type of the event samples (default: int32).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. When TRUE distribution parameters are checked
+for validity despite possibly degrading runtime performance. When FALSE invalid inputs may
+silently render incorrect outputs. Default value: FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p>Logical, default TRUE. When TRUE, statistics (e.g., mean, mode, variance)
+use the value NaN to indicate the result is undefined. When FALSE, an exception is raised if
+one or more of the statistic's batch members are undefined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Mathematical Details
+</p>
+<p>The Plackett-Luce is a distribution over permutation vectors <code>p</code> of length <code>k</code>
+where the permutation <code>p</code> is an arbitrary ordering of <code>k</code> indices
+<code style="white-space: pre;">⁠{0, 1, ..., k-1}⁠</code>.
+</p>
+<p>The probability mass function (pmf) is,
+</p>
+<div class="sourceCode"><pre>pmf(p; s) = prod_i s_{p_i} / (Z - Z_i)
+Z = sum_{j=0}^{k-1} s_j
+Z_i = sum_{j=0}^{i-1} s_{p_j} for i&gt;0 and 0 for i=0
+</pre></div>
+<p>where <code style="white-space: pre;">⁠scores = s = [s_0, ..., s_{k-1}]⁠</code>, <code>s_i &gt;= 0</code>.
+</p>
+<p>Samples from Plackett-Luce distribution are generated sequentially as follows.
+</p>
+<div class="sourceCode"><pre>Initialize normalization `N_0 = Z`
+For `i` in `{0, 1, ..., k-1}`
+  1. Sample i-th element of permutation
+     `p_i ~ Categorical(probs=[s_0/N_i, ..., s_{k-1}/N_i])`
+  2. Update normalization
+     `N_{i+1} = N_i-s_{p_i}`
+  3. Mask out sampled index for subsequent rounds
+     `s_{p_i} = 0`
+Return p
+</pre></div>
+<p>Alternately, an equivalent way to sample from this distribution is to sort
+Gumbel perturbed log-scores (Aditya et al. 2019)
+</p>
+<div class="sourceCode"><pre>p = argsort(log s + g) ~ PlackettLuce(s)
+g = [g_0, ..., g_{k-1}], g_i~ Gumbel(0, 1)
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p>a distribution instance.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> Aditya Grover, Eric Wang, Aaron Zweig, Stefano Ermon. Stochastic Optimization of Sorting Networks via Continuous Relaxations. ICLR 2019.
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>For usage examples see e.g. <code>tfd_sample()</code>, <code>tfd_log_prob()</code>, <code>tfd_mean()</code>.
+</p>
+
+
+</div>

@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_stats_data</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get statistics data</h2>
+
+<h3>Description</h3>
+
+<p>Like the layer numeric data, Tplyr also stores the numeric data produced from
+statistics like risk difference. This helper function gives you access to
+obtain that data from the environment
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_stats_data(x, layer = NULL, statistic = NULL, where = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A tplyr_table or tplyr_layer object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>layer</code></td>
+<td>
+<p>Layer name or index to select out specifically</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statistic</code></td>
+<td>
+<p>Statistic name or index to select</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>where</code></td>
+<td>
+<p>Subset criteria passed to dplyr::filter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to dispatch</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When used on a <code>tplyr_table</code> object, this method will aggregate the
+numeric data from all Tplyr layers and calculate all statistics. The data
+will be returned to the user in a list of data frames. If the data has
+already been processed (i.e. <code>build</code> has been run), the numeric data is
+already available and the statistic data will simply be returned. Otherwise,
+the numeric portion of the layer will be processed.
+</p>
+<p>Using the layer, where, and statistic parameters, data for a specific layer
+statistic can be extracted and subset, allowing you to directly access data
+of interest. This is most clear when layers are given text names instead of
+using a layer index, but a numeric index works as well. If just a statistic
+is specified, that statistic will be collected and returned in a list of data
+frames, allowing you to grab, for example, just the risk difference
+statistics across all layers.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The statistics data of the supplied layer
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(magrittr)
+
+t &lt;- tplyr_table(mtcars, gear) %&gt;%
+  add_layer(name='drat',
+            group_desc(drat)
+  ) %&gt;%
+  add_layer(name="cyl",
+            group_count(cyl)
+  ) %&gt;%
+  add_layer(name="am",
+            group_count(am) %&gt;%
+              add_risk_diff(c('4', '3'))
+  ) %&gt;%
+  add_layer(name="carb",
+            group_count(carb) %&gt;%
+              add_risk_diff(c('4', '3'))
+  )
+
+ # Returns a list of lists, containing stats data from each layer
+ get_stats_data(t)
+
+ # Returns just the riskdiff statistics from each layer - NULL
+ # for layers without riskdiff
+ get_stats_data(t, statistic="riskdiff")
+
+ # Return the statistic data for just the "am" layer - a list
+ get_stats_data(t, layer="am")
+ get_stats_data(t, layer=3)
+
+ # Return the statistic data for just the "am" and "cyl", layer - a
+ # list of lists
+ get_stats_data(t, layer=c("am", "cyl"))
+ get_stats_data(t, layer=c(3, 2))
+
+ # Return just the statistic data for "am" and "cyl" - a list
+ get_stats_data(t, layer=c("am", "cyl"), statistic="riskdiff")
+ get_stats_data(t, layer=c(3, 2), statistic="riskdiff")
+
+
+ # Return the riskdiff for the "am" layer - a data frame
+ get_stats_data(t, layer="am", statistic="riskdiff")
+
+ # Return and filter the riskdiff for the am layer - a data frame
+ get_stats_data(t, layer="am", statistic="riskdiff", where = summary_var==1)
+
+</code></pre>
+
+
+</div>

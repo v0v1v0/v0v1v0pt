@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>prune.rulelist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>prune</code> rules of a rulelist</h2>
+
+<h3>Description</h3>
+
+<p>Prune the rulelist by suggesting to keep first 'k' rules based
+on metrics computed by calculate
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'rulelist'
+prune(
+  tree,
+  metrics_to_exclude = NULL,
+  stop_expr_string = "relative__cumulative_coverage &gt;= 0.9",
+  min_n_rules = 1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A rulelist</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics_to_exclude</code></td>
+<td>
+<p>(character vector or NULL) Names of metrics not to
+be calculated. See calculate for the list of default
+metrics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_expr_string</code></td>
+<td>
+<p>(string default: "relative__cumulative_coverage &gt;=
+0.9") Parsable condition</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_n_rules</code></td>
+<td>
+<p>(positive integer) Minimum number of rules to keep</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Named list of custom metrics passed to
+calculate</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ol><li>
+<p> Metrics are computed using calculate. 2.
+Relative metrics (prepended by 'relative__') are calculated by dividing
+each metric by its max value. 3. The first rule in rulelist order which
+meets the 'stop_expr_string' criteria is stored (say 'pos'). Print method
+suggests to keep rules until pos.
+</p>
+</li></ol>
+<h3>Value</h3>
+
+<p>Object of class 'prune_ruleslist' with these components: 1. pruned:
+ruleset keeping only first 'pos' rows. 2. n_pruned_rules: pos. If stop
+criteria is never met, then pos = nrow(ruleset) 3. n_total_rules:
+nrow(ruleset), 4. metrics_df: Dataframe with metrics and relative metrics
+5. stop_expr_string
+</p>
+
+
+<h3>See Also</h3>
+
+<p>rulelist, tidy, augment,
+predict, calculate,
+prune, reorder
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("magrittr")
+model_c5  = C50::C5.0(Attrition ~., data = modeldata::attrition, rules = TRUE)
+tidy_c5   = tidy(model_c5) %&gt;%
+            set_validation_data(modeldata::attrition, "Attrition") %&gt;%
+            set_keys(NULL)
+
+#' prune with defaults
+prune_obj = prune(tidy_c5)
+#' note that all other metrics are visible in the print output
+prune_obj
+plot(prune_obj)
+prune_obj$pruned
+
+#' prune with a different stop_expr_string threshold
+prune_obj = prune(tidy_c5,
+                  stop_expr_string = "relative__cumulative_coverage &gt;= 0.2"
+                  )
+prune_obj #' as expected, has smaller then 10 rules as compared to default args
+plot(prune_obj)
+prune_obj$pruned
+
+#' prune with a different stop_expr_string metric
+st = "relative__cumulative_overlap &lt;= 0.7 &amp; relative__cumulative_overlap &gt; 0"
+prune_obj = prune(tidy_c5, stop_expr_string = st)
+prune_obj #' as expected, has smaller then 10 rules as compared to default args
+plot(prune_obj)
+prune_obj$pruned
+
+</code></pre>
+
+
+</div>

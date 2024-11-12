@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cv.msda</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Cross-validation for DSDA/MSDA through function <code>msda</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Performs K-fold cross validation for <code>msda</code> and returns the best tuning parameter <code class="reqn">\lambda</code> in the user-specified or automatically generated choices.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cv.msda(x, y, model = NULL, nfolds = 5, lambda = NULL,
+ lambda.opt = "min", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Input matrix of predictors. <code>x</code> is of dimension <code class="reqn">N \times p</code>; each row is an observation vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Class label. For <code>K</code> class problems, <code>y</code> takes values in <code class="reqn">\{1,\cdots,\code{K}\}</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Method type. The <code>model</code> argument can be one of <code>'binary'</code>, <code>'multi.original'</code>, <code>'multi.modified'</code> and the default is NULL. The function supports fitting DSDA and MSDA models by specifying method type. Without specification, the function will automatically choose one of the methods. If the response variable is binary, the function will fit a DSDA model. If the response variable is multi-class, the function will fit an original MSDA model for dimension <code class="reqn">p&lt;=2000</code> and a modified MSDA model for dimension <code class="reqn">p&gt;2000</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfolds</code></td>
+<td>
+
+<p>Number of folds. Default value is 5. Although <code>nfolds</code>
+can be as large as the sample size (leave-one-out CV), it is not
+recommended for large datasets. Smallest value allowable is <code>nfolds=3</code> for <code>multi.original</code> and <code>multi.modified</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>User-specified <code>lambda</code> sequence for cross validation. If not specified, the algorithm will generate a sequence of <code>lambda</code>s based on all data and cross validate on the sequence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.opt</code></td>
+<td>
+<p>The optimal criteria when multiple elements in <code>lambda</code> return the same minimum classification error. "<code>min</code>" will return the smallest <code>lambda</code> with minimum cross validation error. "<code>max</code>" will return the largest <code>lambda</code> with the minimum cross validation error.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>other arguments that can be passed to <code>msda</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>cv.msda</code> runs function <code>msda</code> <code>nfolds+1</code> times. The first one fits model on all data. If <code>lambda</code> is specified, it will check if all <code>lambda</code> satisfies the constraints of <code>dfmax</code> and <code>pmax</code> in <code>msda</code>. If not, a <code>lambda</code> sequence will be generated according to <code>lambda.factor</code> in <code>msda</code>. Then the rest <code>nfolds</code> many replicates will fit model on <code>nfolds-1</code> many folds data and predict on the omitted fold, repectively. Return the <code>lambda</code> with minimum average cross validation error and the largest <code>lambda</code> within one standard error of the minimum.
+</p>
+<p>Similar as <code>msda</code>, user can specify which method to use by inputing argument <code>model</code>. Without specification, the function can automatically decide the method by number of classes and variables.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>cv.dsda</code> or <code>cv.msda.original</code> or <code>cv.msda.modified</code> is returned, which is a
+list with the ingredients of the cross-validation fit.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>The actual <code>lambda</code> sequence used. The user specified sequence or automatically generated sequence could be truncated by constraints on <code>dfmax</code> and <code>pmax</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvm</code></td>
+<td>
+<p>The mean of cross validation errors for each <code>lambda</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvsd</code></td>
+<td>
+<p>The standard error of cross validaiton errors for each <code>lambda</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.min</code></td>
+<td>
+<p>The <code>lambda</code> with minimum cross validation error. If <code>lambda.opt</code> is <code>min</code>, then returns the smallest <code>lambda</code> with minimum cross validation error. If <code>lambda.opt</code> is <code>max</code>, then returns the largest <code>lambda</code> with minimum cross validation error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.1se</code></td>
+<td>
+<p>The largest value of <code>lambda</code> such that error is
+within one standard error of the minimum. This arguement is only available for object <code>cv.msda.original</code> and <code>cv.msda.modified</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model.fit</code></td>
+<td>
+<p>A fitted <code>cv.dsda</code> or <code>cv.msda.original</code> or <code>cv.msda.modified</code> object for the full data.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Yuqing Pan, Qing Mai, Xin Zhang</p>
+
+
+<h3>References</h3>
+
+<p>Mai, Q., Zou, H. and Yuan, M. (2012), "A direct approach to sparse discriminant analysis in ultra-high dimensions." Biometrica, 99, 29-42.
+</p>
+<p>Mai, Q., Yang, Y., and Zou, H. (2017), "Multiclass sparse discriminant analysis." Statistica Sinica, in press.
+</p>
+<p>URL: <a href="https://github.com/emeryyi/msda">https://github.com/emeryyi/msda</a><br></p>
+
+
+<h3>See Also</h3>
+
+<p><code>msda</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(GDS1615)
+x &lt;- GDS1615$x
+y &lt;- GDS1615$y
+obj.cv &lt;- cv.msda(x=x, y=y, nfolds=5, lambda.opt="max")
+lambda.min &lt;- obj.cv$lambda.min
+obj &lt;- msda(x=x, y=y, lambda=lambda.min)
+pred &lt;- predict(obj,x)
+</code></pre>
+
+
+</div>

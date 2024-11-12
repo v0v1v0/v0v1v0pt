@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gather_pairs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Gather pairwise combinations of values from key/value columns in a long-format data frame</h2>
+
+<h3>Description</h3>
+
+<p>Fast method for producing combinations of values in a value column for different levels of a key column,
+assuming long-format (tidy) data with an equal number of values per key. Among other things, this is
+useful for producing scatter-plot matrices.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gather_pairs(
+  data,
+  key,
+  value,
+  row = ".row",
+  col = ".col",
+  x = ".x",
+  y = ".y",
+  triangle = c("lower only", "upper only", "lower", "upper", "both only", "both")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Tidy data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>Bare name of column in <code>data</code> containing the key .</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>Bare name of column in <code>data</code> containing the value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>row</code></td>
+<td>
+<p>Character vector giving the name of the output column identifying rows in the matrix
+of pairs (takes values of <code>key</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>Character vector giving the name of the output column identifying columns in the matrix
+of pairs (takes values of <code>key</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Character vector giving the name of the output column with x values in the matrix
+of pairs (takes values of <code>value</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Character vector giving the name of the output column with y values in the matrix
+of pairs (takes values of <code>value</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>triangle</code></td>
+<td>
+<p>Should the upper or lower triangle of the matrix of all possible combinations be returned?
+The default, <code>"lower only"</code>, returns the lower triangle without the diagonal; <code>"lower"</code> returns
+the lower triangle with the diagonal (<code>"upper"</code> and <code>"upper only"</code> operate analogously),
+<code>"both"</code> returns the full set of possible combinations, and <code>"both only"</code> returns all
+combinations except the diagonal.
+</p>
+<p>This method is particularly useful for constructing scatterplot matrices. See examples below.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A tidy data frame of combinations of values in <code>key</code> and <code>value</code>, with columns <code>row</code>
+and <code>col</code> (default names <code>".row"</code> and <code>".col"</code>) containing values from <code>key</code>,
+and columns <code>y</code> and <code>x</code> (default names <code>".y"</code> and <code>".x"</code>) containing values
+from <code>value</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>emmeans::emmeans()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(ggplot2)
+library(dplyr)
+
+t_a = rnorm(100)
+t_b = rnorm(100, t_a * 2)
+t_c = rnorm(100)
+
+df = rbind(
+  data.frame(g = "a", t = t_a),
+  data.frame(g = "b", t = t_b),
+  data.frame(g = "c", t = t_c)
+)
+
+df %&gt;%
+  gather_pairs(g, t, row = "g_row", col = "g_col", x = "t_x", y = "t_y") %&gt;%
+  ggplot(aes(t_x, t_y)) +
+  geom_point() +
+  facet_grid(vars(g_row), vars(g_col))
+
+df %&gt;%
+  gather_pairs(g, t, triangle = "upper") %&gt;%
+  ggplot(aes(.x, .y)) +
+  geom_point() +
+  facet_grid(vars(.row), vars(.col))
+
+df %&gt;%
+  gather_pairs(g, t, triangle = "both") %&gt;%
+  ggplot(aes(.x, .y)) +
+  geom_point() +
+  facet_grid(vars(.row), vars(.col))
+
+data(line, package = "coda")
+
+line %&gt;%
+  tidy_draws() %&gt;%
+  gather_variables() %&gt;%
+  gather_pairs(.variable, .value) %&gt;%
+  ggplot(aes(.x, .y)) +
+  geom_point(alpha = .25) +
+  facet_grid(vars(.row), vars(.col))
+
+line %&gt;%
+  tidy_draws() %&gt;%
+  gather_variables() %&gt;%
+  gather_pairs(.variable, .value) %&gt;%
+  ggplot(aes(.x, .y, color = factor(.chain))) +
+  geom_density_2d(alpha = .5) +
+  facet_grid(vars(.row), vars(.col))
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,196 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>thematic_on</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Enable (or disable) simplified theming of R graphics.</h2>
+
+<h3>Description</h3>
+
+<p>A unified interface for theming <strong>ggplot2</strong>, <strong>base</strong>, and <strong>lattice</strong> graphics
+based on a handful of styling options. In some cases (most notably in a <strong>shiny</strong> runtime),
+these options can automatically resolve to relevant CSS styles (see the "Auto theming"
+section below).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">thematic_on(
+  bg = "auto",
+  fg = "auto",
+  accent = "auto",
+  font = NA,
+  sequential = sequential_gradient(),
+  qualitative = okabe_ito(),
+  inherit = FALSE
+)
+
+thematic_off()
+
+thematic_theme(
+  bg = "auto",
+  fg = "auto",
+  accent = "auto",
+  font = NA,
+  sequential = sequential_gradient(),
+  qualitative = okabe_ito(),
+  inherit = FALSE
+)
+
+thematic_shiny(
+  bg = "auto",
+  fg = "auto",
+  accent = "auto",
+  font = NA,
+  sequential = sequential_gradient(),
+  qualitative = okabe_ito(),
+  inherit = FALSE,
+  session = shiny::getDefaultReactiveDomain()
+)
+
+thematic_rmd(
+  bg = "auto",
+  fg = "auto",
+  accent = "auto",
+  font = NA,
+  sequential = sequential_gradient(),
+  qualitative = okabe_ito(),
+  inherit = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>bg</code></td>
+<td>
+<p>a background color.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fg</code></td>
+<td>
+<p>a foreground color.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>accent</code></td>
+<td>
+<p>a color for making certain graphical markers 'stand out'
+(e.g., the fitted line color for <code>ggplot2::geom_smooth()</code>).
+Can be 2 colors for lattice (stroke vs fill accent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>font</code></td>
+<td>
+<p>a <code>font_spec()</code> object. If missing, font defaults are not altered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sequential</code></td>
+<td>
+<p>a color palette for graphical markers that encode
+numeric values. Can be a vector of color codes or a
+<code>sequential_gradient()</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>qualitative</code></td>
+<td>
+<p>a color palette for graphical markers that encode
+qualitative values (won't be used in ggplot2 when the number of data
+levels exceeds the max allowed colors). Defaults to <code>okabe_ito()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inherit</code></td>
+<td>
+<p>should non-specified values inherit from the previous theme?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>session</code></td>
+<td>
+<p>see <code>shiny::onStop()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>thematic_theme()</code> returns a theme object as a list (which can be
+activated with <code>thematic_with_theme()</code> or <code>thematic_set_theme()</code>).
+</p>
+<p><code>thematic_on()</code>, <code>thematic_off()</code>, and <code>thematic_shiny()</code> all return
+the previous global theme.
+</p>
+
+
+<h3>Auto theming</h3>
+
+<p>The <code>bg</code>, <code>fg</code>, <code>accent</code>, and <code>font</code> arguments all support a value of <code>'auto'</code>,
+which are all resolved, at plot time, based on the execution environment. In a
+<strong>shiny</strong> runtime, resolution of auto values should always work as expect; but
+in other contexts, auto values may lead to wrong or surprising results. In that
+case, auto resolution logic can be customized (see <code>auto_config_set()</code> for more details).
+</p>
+
+
+<h3>Global vs. local theming</h3>
+
+<p><code>thematic_on()</code> enables thematic in a global fashion (that is, it impacts all
+future plots, up until <code>thematic_off()</code> is called). To use thematic in local fashion,
+first create a theme with <code>thematic_theme()</code>, then provide it to <code>thematic_with_theme()</code>
+(or similar). To use thematic in a global fashion up until a <strong>shiny</strong>
+app exits, use <code>thematic_shiny()</code> (which cleans up after itself once the next shiny
+app that exits using <code>shiny::onStop()</code>). To use thematic in a global fashion up until
+a <strong>rmarkdown</strong> document finishes rendering, use <code>thematic_rmd()</code>.
+</p>
+
+
+<h3>Color values</h3>
+
+<p>Colors (e.g., <code>bg</code>, <code>fg</code>, <code>accent</code>) may be any value understood by <code>col2rgb()</code>
+or <code>htmltools::parseCssColors()</code> (i.e., may be any valid R or CSS color string).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>sequential_gradient()</code>, <code>thematic_with_theme()</code>, <code>thematic_save_plot()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># simple dark mode
+thematic_on("black", "white")
+plot(1:10)
+plot(1:10, col = 1:10)
+lattice::show.settings()
+
+# use any hex color string
+thematic_on("#444444", "#e4e4e4")
+plot(1:10)
+plot(1:10, col = 1:10)
+lattice::show.settings()
+
+# disables thematic (also restores global state)
+thematic_off()
+plot(1:10)
+lattice::show.settings()
+
+thematic_on("darkblue", "skyblue", "orange")
+image(volcano)
+image(volcano, col = thematic_get_option("sequential"))
+lattice::show.settings()
+thematic_off()
+
+</code></pre>
+
+
+</div>

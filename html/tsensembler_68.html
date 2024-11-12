@@ -1,0 +1,104 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Predicting new observations using an ensemble</h2>
+
+<h3>Description</h3>
+
+<p>Initially, the predictions of the base models are collected.
+Then, the predictions of the loss to be incurred by the base models <strong>E_hat</strong>
+(estimated by their associate meta models) are computed. The weights of
+the base models are then estimated according to <strong>E_hat</strong> and the committee of
+top models. The committee is built according to the <em>lambda</em> and
+<em>omega</em> parameters. Finally, the predictions are combined
+according to the weights and the committee setup.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'ADE'
+predict(object, newdata)
+
+## S4 method for signature 'DETS'
+predict(object, newdata)
+
+## S4 method for signature 'base_ensemble'
+predict(object, newdata)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an object of class <code>ADE-class</code>;</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>new data to predict</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+###### Predicting with an ADE ensemble
+
+specs &lt;- model_specs(
+ learner = c("bm_glm", "bm_mars"),
+ learner_pars = NULL
+)
+
+data("water_consumption")
+dataset &lt;- embed_timeseries(water_consumption, 5)
+train &lt;- dataset[1:1000, ]
+test &lt;- dataset[1001:1500, ]
+
+model &lt;- ADE(target ~., train, specs)
+
+preds &lt;- predict(model, test)
+
+
+## Not run: 
+
+###### Predicting with a DETS ensemble
+
+specs &lt;- model_specs(
+ learner = c("bm_svr", "bm_glm", "bm_mars"),
+ learner_pars = NULL
+)
+
+data("water_consumption")
+dataset &lt;- embed_timeseries(water_consumption, 5)
+train &lt;- dataset[1:700, ]
+test &lt;- dataset[701:1000, ]
+
+model &lt;- DETS(target ~., train, specs, lambda = 50, omega = .2)
+
+preds &lt;- predict(model, test)
+
+## End(Not run)
+
+
+## Not run: 
+###### Predicting with a base ensemble
+
+model &lt;- ADE(target ~., train, specs)
+
+basepreds &lt;- predict(model@base_ensemble, test)
+
+## End(Not run)
+
+
+</code></pre>
+
+
+</div>

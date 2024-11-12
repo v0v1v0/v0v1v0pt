@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compute_metrics</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate and format metrics from tuning functions</h2>
+
+<h3>Description</h3>
+
+<p>This function computes metrics from tuning results. The arguments and
+output formats are closely related to those from <code>collect_metrics()</code>, but
+this function additionally takes a <code>metrics</code> argument with a
+metric set for new metrics to compute. This
+allows for computing new performance metrics without requiring users to
+re-evaluate models against resamples.
+</p>
+<p>Note that the control option <code>save_pred = TRUE</code> must
+have been supplied when generating <code>x</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compute_metrics(x, metrics, summarize, event_level, ...)
+
+## Default S3 method:
+compute_metrics(x, metrics, summarize = TRUE, event_level = "first", ...)
+
+## S3 method for class 'tune_results'
+compute_metrics(x, metrics, ..., summarize = TRUE, event_level = "first")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The results of a tuning function like <code>tune_grid()</code> or
+<code>fit_resamples()</code>, generated with the control option <code>save_pred = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics</code></td>
+<td>
+<p>A metric set of new metrics
+to compute. See the "Details" section below for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summarize</code></td>
+<td>
+<p>A single logical value indicating whether metrics should
+be summarized over resamples (<code>TRUE</code>) or return the values for each
+individual resample. See <code>collect_metrics()</code> for more details on how
+metrics are summarized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>event_level</code></td>
+<td>
+<p>A single string containing either <code>"first"</code> or <code>"second"</code>.
+This argument is passed on to yardstick metric functions when any type
+of class prediction is made, and specifies which level of the outcome
+is considered the "event".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Each metric in the set supplied to the <code>metrics</code> argument must have a metric
+type (usually <code>"numeric"</code>, <code>"class"</code>, or <code>"prob"</code>) that matches some metric
+evaluated when generating <code>x</code>. e.g. For example, if <code>x</code> was generated with
+only hard <code>"class"</code> metrics, this function can't compute metrics that take in
+class probabilities (<code>"prob"</code>.) By default, the tuning functions used to
+generate <code>x</code> compute metrics of all needed types.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tibble. See <code>collect_metrics()</code> for more details on the return value.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# load needed packages:
+library(parsnip)
+library(rsample)
+library(yardstick)
+
+# evaluate a linear regression against resamples.
+# note that we pass `save_pred = TRUE`:
+res &lt;-
+  fit_resamples(
+    linear_reg(),
+    mpg ~ cyl + hp,
+    bootstraps(mtcars, 5),
+    control = control_grid(save_pred = TRUE)
+  )
+
+# to return the metrics supplied to `fit_resamples()`:
+collect_metrics(res)
+
+# to compute new metrics:
+compute_metrics(res, metric_set(mae))
+
+# if `metrics` is the same as that passed to `fit_resamples()`,
+# then `collect_metrics()` and `compute_metrics()` give the same
+# output, though `compute_metrics()` is quite a bit slower:
+all.equal(
+  collect_metrics(res),
+  compute_metrics(res, metric_set(rmse, rsq))
+)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>iucn_summary</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get a summary from the IUCN Red List</h2>
+
+<h3>Description</h3>
+
+<p>Get a summary from the IUCN Red List (https://www.iucnredlist.org/).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">iucn_summary(x, distr_detail = FALSE, key = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>character; Scientific name. Should be cleaned and in the
+format <code style="white-space: pre;">⁠*&lt;Genus&gt; &lt;Species&gt;*⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr_detail</code></td>
+<td>
+<p>logical; If <code>TRUE</code>, the geographic distribution is
+returned as a list of vectors corresponding to the different range types:
+native, introduced, etc.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>a Redlist API key, get one from
+https://apiv3.iucnredlist.org/api/v3/token Required for
+<code>iucn_summary</code>. Defaults to <code>NULL</code> in case you have your key
+stored (see <code style="white-space: pre;">⁠Redlist Authentication⁠</code> below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>curl options passed on to crul::verb-GET</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Beware: IUCN functions can give back incorrect data. This isn't our fault.
+We do our best to get you the correct data quickly, but sometimes IUCN gives
+back the wrong data, and sometimes Global Names gives back the wrong data.
+We will fix these as soon as possible. In the meantime, just make sure that
+the data you get back is correct.
+</p>
+<p><code>iucn_summary</code> has a default method that errors when anything's
+passed in that's not <code>character</code> or <code>iucn</code> class - a
+<code>iucn_summary.character</code> method for when you pass in taxon names -
+and a <code>iucn_summary.iucn</code> method so you can pass in iucn class objects
+as output from <code>get_iucn()</code> or <code>as.iucn()</code>. If you
+already have IUCN IDs, coerce them to <code>iucn</code> class via
+<code>as.iucn(..., check = FALSE)</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list (for every species one entry) of lists with the following
+items:
+</p>
+
+<ul>
+<li> <p><code>status</code> Red List Category.
+</p>
+</li>
+<li> <p><code>history</code> History of status, if available.
+</p>
+</li>
+<li> <p><code>distr</code> Geographic distribution, if available.
+</p>
+</li>
+<li> <p><code>trend</code> Trend of population size, if available.
+</p>
+</li>
+</ul>
+<h3>Redlist Authentication</h3>
+
+<p><code>iucn_summary</code> uses the new Redlist API for searching for a IUCN ID, so we
+use the <code>rl_search()</code> function internally. This function
+requires an API key. Get the key at https://apiv3.iucnredlist.org/api/v3/token,
+and pass it to the <code>key</code> parameter, or store in your <code>.Renviron</code> file like
+<code>IUCN_REDLIST_KEY=yourkey</code> or in your <code>.Rprofile</code> file like
+<code>options(iucn_redlist_key="yourkey")</code>. We strongly encourage you to not pass
+the key in the function call but rather store it in one of those two files.
+This key will also set you up to use the <span class="pkg">rredlist</span> package.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Not all entries (history, distr, trend) are available for every species
+and NA is returned.
+<code>iucn_status()</code> is an extractor function to easily extract
+status into a vector.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Eduard Szoecs, <a href="mailto:eduardszoecs@gmail.com">eduardszoecs@gmail.com</a>
+</p>
+<p>Philippe Marchand, <a href="mailto:marchand.philippe@gmail.com">marchand.philippe@gmail.com</a>
+</p>
+<p>Scott Chamberlain,
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>iucn_status()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# if you send a taxon name, an IUCN API key is required
+## here, the key is being detected from a .Rprofile file
+## or .Renviron file, See "Redlist Authentication" above
+iucn_summary("Lutra lutra")
+
+ia &lt;- iucn_summary(c("Panthera uncia", "Lynx lynx"))
+ia &lt;- iucn_summary(c("Panthera uncia", "Lynx lynx", "aaa"))
+iucn_summary("Muntiacus rooseveltorum/truongsonensis")
+iucn_summary(c("Muntiacus rooseveltorum/truongsonensis", "Lynx lynx"))
+
+## get detailed distribution
+iac &lt;- iucn_summary(x="Ara chloropterus", distr_detail = TRUE)
+iac[[1]]$distr
+
+
+# If you pass in an IUCN ID, you don't need to pass in a Redlist API Key
+# extract status
+iucn_status(iac)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

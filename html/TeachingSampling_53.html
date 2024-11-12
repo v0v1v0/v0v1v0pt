@@ -1,0 +1,244 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Wk</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The Calibration Weights</h2>
+
+<h3>Description</h3>
+
+<p>Computes the calibration weights (Chi-squared distance) for the estimation of the population total of several variables of interest.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Wk(x,tx,Pik,ck,b0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Vector, matrix or data frame containing the recollected auxiliary information for every unit in the selected sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tx</code></td>
+<td>
+<p>Vector containing the populations totals of the auxiliary information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Pik</code></td>
+<td>
+<p>A vector containing inclusion probabilities for each unit in the sample</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ck</code></td>
+<td>
+<p>A vector of weights induced by the structure of variance of the supposed model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b0</code></td>
+<td>
+<p>By default FALSE. The intercept of the regression model</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The calibration weights satisfy the following expression
+</p>
+<p style="text-align: center;"><code class="reqn">\sum_{k\in S}w_kx_k=\sum_{k\in U}x_k</code>
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>The function returns a vector of calibrated weights.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hugo Andres Gutierrez Rojas <a href="mailto:hagutierrezro@gmail.com">hagutierrezro@gmail.com</a></p>
+
+
+<h3>References</h3>
+
+<p>Sarndal, C-E. and Swensson, B. and Wretman, J. (1992), <em>Model Assisted Survey Sampling</em>. Springer.<br>
+Gutierrez, H. A. (2009), <em>Estrategias de muestreo: Diseno de encuestas y estimacion de parametros</em>.
+Editorial Universidad Santo Tomas.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">############
+## Example 1
+############
+# Without replacement sampling
+# Vector U contains the label of a population of size N=5
+U &lt;- c("Yves", "Ken", "Erik", "Sharon", "Leslie")
+# Vector x is the auxiliary information and y is the variables of interest
+x&lt;-c(32, 34, 46, 89, 35)
+y&lt;-c(52, 60, 75, 100, 50)
+# pik is some vector of inclusion probabilities in the sample
+# In this case the sample size is equal to the population size
+pik&lt;-rep(1,5)
+w1&lt;-Wk(x,tx=236,pik,ck=1,b0=FALSE)
+sum(x*w1)
+# Draws a sample size without replacement
+sam &lt;- sample(5,2)
+pik &lt;- c (0.8,0.2,0.2,0.5,0.3)
+# The auxiliary information an variable of interest in the selected smaple
+x.s&lt;-x[sam]
+y.s&lt;-y[sam]
+# The vector of inclusion probabilities in the selected smaple
+pik.s&lt;-pik[sam]
+# Calibration weights under some specifics model
+w2&lt;-Wk(x.s,tx=236,pik.s,ck=1,b0=FALSE)
+sum(x.s*w2)
+
+w3&lt;-Wk(x.s,tx=c(5,236),pik.s,ck=1,b0=TRUE)
+sum(w3)
+sum(x.s*w3)
+
+w4&lt;-Wk(x.s,tx=c(5,236),pik.s,ck=x.s,b0=TRUE)
+sum(w4)
+sum(x.s*w4)
+
+w5&lt;-Wk(x.s,tx=236,pik.s,ck=x.s,b0=FALSE)
+sum(x.s*w5)
+
+######################################################################
+## Example 2: Linear models involving continuous auxiliary information
+######################################################################
+
+# Draws a simple random sample without replacement
+data(Lucy)
+attach(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- 400
+Pik &lt;- rep(n/N, n)
+sam &lt;- S.SI(N,n)
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+
+########### common ratio model ###################
+
+estima&lt;-data.frame(Income)
+x &lt;- Employees
+tx &lt;- sum(Lucy$Employees)
+w &lt;- Wk(x, tx, Pik, ck=1, b0=FALSE)
+sum(x*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+########### Simple regression model without intercept ###################
+
+estima&lt;-data.frame(Income, Employees)
+x &lt;- Taxes
+tx &lt;- sum(Lucy$Taxes)
+w&lt;-Wk(x,tx,Pik,ck=x,b0=FALSE)
+sum(x*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+########### Multiple regression model without intercept ###################
+
+estima&lt;-data.frame(Income)
+x &lt;- cbind(Employees, Taxes)
+tx &lt;- c(sum(Lucy$Employees), sum(Lucy$Taxes))
+w &lt;- Wk(x,tx,Pik,ck=1,b0=FALSE)
+sum(x[,1]*w)
+sum(x[,2]*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+########### Simple regression model with intercept ###################
+
+estima&lt;-data.frame(Income, Employees)
+x &lt;- Taxes
+tx &lt;- c(N,sum(Lucy$Taxes))
+w &lt;- Wk(x,tx,Pik,ck=1,b0=TRUE)
+sum(1*w)
+sum(x*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+########### Multiple regression model with intercept ###################
+
+estima&lt;-data.frame(Income)
+x &lt;- cbind(Employees, Taxes)
+tx &lt;- c(N, sum(Lucy$Employees), sum(Lucy$Taxes))
+w &lt;- Wk(x,tx,Pik,ck=1,b0=TRUE)
+sum(1*w)
+sum(x[,1]*w)
+sum(x[,2]*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+####################################################################
+## Example 3: Linear models involving discrete auxiliary information
+####################################################################
+
+# Draws a simple random sample without replacement
+data(Lucy)
+attach(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- 400
+sam &lt;- S.SI(N,n)
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+# Vector of inclusion probabilities for units in the selected sample
+Pik&lt;-rep(n/N,n)
+# The auxiliary information is discrete type
+Doma&lt;-Domains(Level)
+
+########### Poststratified common mean model ###################
+
+estima&lt;-data.frame(Income, Employees, Taxes)
+tx &lt;- colSums(Domains(Lucy$Level))
+w &lt;- Wk(Doma,tx,Pik,ck=1,b0=FALSE)
+sum(Doma[,1]*w)
+sum(Doma[,2]*w)
+sum(Doma[,3]*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+########### Poststratified common ratio model ###################
+
+estima&lt;-data.frame(Income, Employees)
+x&lt;-Doma*Taxes
+tx &lt;- colSums(Domains(Lucy$Level))
+w &lt;- Wk(x,tx,Pik,ck=1,b0=FALSE)
+sum(x[,1]*w)
+sum(x[,2]*w)
+sum(x[,3]*w)
+tx
+# The calibration estimation
+colSums(estima*w)
+
+</code></pre>
+
+
+</div>

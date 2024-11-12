@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_backoff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Superseded: exponential backoff</h2>
+
+<h3>Description</h3>
+
+<p>Superseded: configure exponential backoff
+while polling for tasks during the pipeline.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_backoff(min = 0.001, max = 0.1, rate = 1.5)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>min</code></td>
+<td>
+<p>Positive numeric of length 1,
+minimum polling interval in seconds.
+Must be at least <code>sqrt(.Machine$double.eps)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max</code></td>
+<td>
+<p>Positive numeric of length 1,
+maximum polling interval in seconds.
+Must be at least <code>sqrt(.Machine$double.eps)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rate</code></td>
+<td>
+<p>Positive numeric of length 1, greater than or equal to 1.
+Multiplicative rate parameter that allows the exponential backoff
+minimum polling interval to increase from <code>min</code> to <code>max</code>.
+Actual polling intervals are sampled uniformly from the current
+minimum to <code>max</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function is superseded and is now only relevant to other
+superseded functions <code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+<code>tar_make()</code> uses <code>crew</code> in an efficient non-polling way, making
+exponential backoff unnecessary.
+</p>
+
+
+<h3>Backoff</h3>
+
+<p>In high-performance computing it can be expensive to repeatedly poll the
+priority queue if no targets are ready to process. The number of seconds
+between polls is <code>runif(1, min, max(max, min * rate ^ index))</code>,
+where <code>index</code> is the number of consecutive polls so far that found
+no targets ready to skip or run, and <code>min</code>, <code>max</code>, and <code>rate</code>
+are arguments to <code>tar_backoff()</code>.
+(If no target is ready, <code>index</code> goes up by 1. If a target is ready,
+<code>index</code> resets to 0. For more information on exponential,
+backoff, visit <a href="https://en.wikipedia.org/wiki/Exponential_backoff">https://en.wikipedia.org/wiki/Exponential_backoff</a>).
+Raising <code>min</code> or <code>max</code> is kinder to the CPU etc. but may incur delays
+in some instances.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other utilities: 
+<code>tar_active()</code>,
+<code>tar_call()</code>,
+<code>tar_cancel()</code>,
+<code>tar_definition()</code>,
+<code>tar_described_as()</code>,
+<code>tar_envir()</code>,
+<code>tar_format_get()</code>,
+<code>tar_group()</code>,
+<code>tar_name()</code>,
+<code>tar_path()</code>,
+<code>tar_path_script()</code>,
+<code>tar_path_script_support()</code>,
+<code>tar_path_store()</code>,
+<code>tar_path_target()</code>,
+<code>tar_source()</code>,
+<code>tar_store()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_option_set(backoff = tar_backoff(min = 0.001, max = 0.1, rate = 1.5))
+})
+}
+</code></pre>
+
+
+</div>

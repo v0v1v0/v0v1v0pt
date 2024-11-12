@@ -1,0 +1,139 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estSpaceUse</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate the space use of tracked animals using kernel utilization
+distribution</h2>
+
+<h3>Description</h3>
+
+<p><code>estSpaceUse</code> is a wrapper for <code>kernelUD</code> 
+which estimates the utilization distribution (UD) of multiple individuals or 
+tracks in a tracking dataset.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estSpaceUse(tracks, scale, levelUD, res = NULL, polyOut = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tracks</code></td>
+<td>
+<p>SpatialPointsDataFrame. Must be projected into an equal-area
+coordinate system. If not, first run <code>projectTracks</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>numeric (in kilometers). The smoothing parameter ('H') used in
+the kernel density estimation, which defines the width of the normal
+distribution around each location. The <code>findScale</code> function can
+assist in finding sensible scales.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>levelUD</code></td>
+<td>
+<p>numeric (percent). Specify which utilization distribution
+contour at which to subset the polygon output. NOTE: This will only affect
+the output if <code>polyOut=TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res</code></td>
+<td>
+<p>numeric (in square kilometers). Grid cell resolution
+for kernel density estimation. Default is a grid of
+500 cells, with spatial extent determined by the latitudinal and longitudinal
+extent of the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>polyOut</code></td>
+<td>
+<p>logical scalar (TRUE/FALSE). If TRUE then output will include
+a plot of individual UD polygons and a simple feature with kernel UD polygons
+for the level of <code>levelUD</code>. NOTE: creating polygons of UD is both
+computationally slow and prone to errors if the usage included in
+<code>levelUD</code> extends beyond the specified grid. In this case
+<code>estSpaceUse</code> will return only the <code>estUDm</code>object and issue a
+warning.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A utilization distribution will be calculated for each unique 'ID'. The data
+should be regularly sampled or interpolated (see adehabitatLT package for
+functions to this end).
+</p>
+<p>If desired <code>res</code> results in memory-heavy grid (e.g. &gt;10,000 cells)
+use <code>polyOut = FALSE</code> to speed things up.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of class <code>estUDm</code> which is essentially a list,
+with each item representing the utilization distribution of a level of 'ID'.
+Values in the output signify the usage probability per unit area for that
+individual in each grid cell. This can be converted into a
+SpatialPixelsDataFrame via the <code>adehabitatHR::estUDm2spixdf</code> function.
+</p>
+<p>If <code>polyOut=TRUE</code> the output will be a list with two components:
+<em>'KDE.Surface'</em> is the <code>estUDm</code> object and <code>UDPolygons</code> is
+polygon object of class <code>sf</code> (Simple Features) with the UD contour for
+each individual at the specified <code>levelUD</code>.
+</p>
+<p>If <code>polyOut=TRUE</code> but the polygon delineation in
+<code>adehabitatHR::getverticeshr</code> fails, output is an object of class
+<code>estUDm</code> and a warning will be issued.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>formatFields</code>, <code>tripSplit</code>,
+<code>findScale</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(sf)
+library(sp)
+library(magrittr)
+
+## make some play data
+dataGroup &lt;- data.frame(
+  Longitude = c(1, 1.01, 1.02, 1.04, 1.05, 1.03, 1), 
+    Latitude =  c(1, 1.01, 1.02, 1.03, 1.021, 1.01, 1),
+      ID = rep("A", 7),
+        DateTime = format(
+            lubridate::ymd_hms("2021-01-01 00:00:00") + 
+              lubridate::hours(0:6)
+                )
+                )
+                
+tracks &lt;- sf::st_as_sf(
+   dataGroup, coords = c("Longitude", "Latitude"), 
+   crs = 4326, agr = "constant") %&gt;% 
+   sf::st_transform(crs = 32631) %&gt;% 
+   sf::as_Spatial()
+
+## estimate utilization distributions for each track
+KDE &lt;- estSpaceUse(tracks, scale=10, levelUD = 50)
+
+</code></pre>
+
+
+</div>

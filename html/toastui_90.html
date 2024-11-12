@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>validateOpts</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Validation options</h2>
+
+<h3>Description</h3>
+
+<p>Validate columns' content with rules, useful when content is editable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">validateOpts(
+  required = NULL,
+  type = NULL,
+  min = NULL,
+  max = NULL,
+  regExp = NULL,
+  unique = NULL,
+  jsfun = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>required</code></td>
+<td>
+<p>If set to <code>TRUE</code>, the data of the column will be checked to be not empty.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Type of data, can be <code>"string"</code> or <code>"number"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min</code></td>
+<td>
+<p>For numeric values, the minimum acceptable value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max</code></td>
+<td>
+<p>For numeric values, the maximum acceptable value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regExp</code></td>
+<td>
+<p>A regular expression to validate content.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unique</code></td>
+<td>
+<p>If set to <code>TRUE</code>, check the uniqueness on the data of the column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>jsfun</code></td>
+<td>
+<p>A <code>JS</code> function to validate content.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>datagrid</code> htmlwidget.
+</p>
+<p>a <code>list</code> of options to use in <code>grid_editor()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(shiny)
+
+ui &lt;- fluidPage(
+  tags$h2("Validation rules"),
+  datagridOutput("grid"),
+  verbatimTextOutput("validation")
+)
+
+server &lt;- function(input, output, session) {
+
+  output$grid &lt;- renderDatagrid({
+    validate &lt;- data.frame(
+      col_text = c("a", "b", "a", NA, "c"),
+      col_number = sample(1:10, 5),
+      col_mail = c("victor@mail.com", "victor", NA, "victor@mail", "victor.fr")
+    )
+
+    datagrid(validate) %&gt;%
+      grid_editor(
+        "col_text", type = "text",
+        validation = validateOpts(required = TRUE, unique = TRUE)
+      ) %&gt;%
+      grid_editor(
+        "col_number", type = "number",
+        validation = validateOpts(min = 0, max = 5)
+      ) %&gt;%
+      grid_editor(
+        "col_mail", type = "text",
+        validation = validateOpts(
+          regExp = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+        )
+      )
+  })
+
+  output$validation &lt;- renderPrint({
+    input$grid_validation
+  })
+
+}
+
+if (interactive())
+  shinyApp(ui, server)
+</code></pre>
+
+
+</div>

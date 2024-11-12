@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>findParams</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function for estimation of probability density function parameters through quadratic optimization</h2>
+
+<h3>Description</h3>
+
+<p>Function for estimation of probability density function parameters through quadratic optimization
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">findParams(q, p, output = "complete", pdfunction, params, initVals = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>q</code></td>
+<td>
+<p>A numeric vector of observed quantiles, might come from a HPD from a previous study (along with a median), or from other sources of prior information. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>A numeric vector of percentiles.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>One of two possible values: <code>"complete"</code> and <code>"parameters"</code>. For the latter the complete output of the <code>optim</code> function is returned with information on convergence and squared errors (that might be useless for simple cases) or just the parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pdfunction</code></td>
+<td>
+<p>A character vector (of length one) with the name of the PDF function of interest. Technically this argument supports any PDF function of the form pDIST (e.g., <code>pnorm</code>, <code>ppois</code>, <code>pexp</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>A character vector with the name of the parameter(s) to optimize in the probability density function. These should match the parameter names of the respective PDF function, e.g., <code>"lambda"</code> in the function <code>ppois</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initVals</code></td>
+<td>
+<p>A numeric vector with default value <code>NULL</code>. It allows the user to provide initial values, althought this is discouraged in most cases.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function comes handy whenever we have some values of uncertainty, (e.g., confidence intervals, HPDs, biostratigraphic age constrains) and want to express it in the form of a probability density function of the form <code class="reqn">P(x;\theta)</code>. As we have some values (the quantiles) already and their corresponding percentiles, all we need is a way to approximate the parameters <code class="reqn">\theta</code> that produce the same combination of quantiles for the given percentiles under a given PDF. This is carried out through optimization of a quadratic error function. This is accomplished through the function <code>optim</code>. For instance, if the estimated age of a fossil is Lutetian, in the Eocene (41.2 to 47.8 Ma), and we want to model such uncertainty through a normal distribution, we could assume that these age boundaries are the quantiles for percentiles 0.025 and 0.975 respectively, and add a thir pair with the midpoint corresponding to the percentile 0.5. This is all the information needed in order to estimate the parameters <code>mean</code> and <code>sd</code> in the functiono <code>pnorm</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Either a list with the complete output of convergence, squared errors and parameter values, or just a vector of parameter values. Depends on the value of <code>output</code>.
+Warnings may be triggered by the function <code>optim</code> since the optimization is a heuristic process, whenever a given iteration results in an invalid value for a given combination of parameters, the <code>optim</code> function tries another combination of values but inform the user about the problem through a warning. In general these can be safely disregarded.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Main code by Gustavo A. Ballen with important contributions in expression call structure and vectorized design by Klaus Schliep (<a href="mailto:Klaus.Schliep@umb.edu">Klaus.Schliep@umb.edu</a>).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Find the best parameters for a standard normal density that fit the observed quantiles
+# -1.644854, 0, and 1.644854, providing full output for the calculations in the form of
+# a list
+findParams(q = c(-1.959964, 0.000000, 1.959964),
+           p = c(0.025, 0.50, 0.975),
+           output = "complete",
+           pdfunction = "pnorm",
+           params = c("mean", "sd"))
+
+# Given that we have prior on the age of a fossil to be 1 - 10 Ma and that we want to
+# model it with a lognormal distribution, fin the parameters of the PDF that best reflect
+# the uncertainty in question (i.e., the parameters  for which the observed quantiles are
+# 1, 5.5, and 10, assuming that we want the midpoint to reflect the mean of the PDF.
+findParams(q = c(1, 5.5, 10),
+           p = c(0.025,  0.50, 0.975),
+           output = "complete",
+           pdfunction = "plnorm",
+           params = c("meanlog", "sdlog"))
+</code></pre>
+
+
+</div>

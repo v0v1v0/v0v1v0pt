@@ -1,0 +1,192 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>regress</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Linear regression on tidy data</h2>
+
+<h3>Description</h3>
+
+<p>This function is a wrapper to fit many different types of linear
+regression models on a (grouped) <code>tibble</code>.
+</p>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>an object of class "formula": a symbolic description of the model to be fitted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>name-function pairs of models to be estimated. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.cv</code></td>
+<td>
+<p>type of 'rsample' cross validation procedure to use to determine optimal hyperparameter values. Default is <code>.cv = "none"</code>. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.cv_args</code></td>
+<td>
+<p>additional settings to pass to the 'rsample' cross validation function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.weights</code></td>
+<td>
+<p>optional name of column containing sample weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.mask</code></td>
+<td>
+<p>optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula syntax.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.return_slices</code></td>
+<td>
+<p>logical. Should the output of individual cross validation slices be returned or only the final fit. Default is <code>.return_slices=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.return_grid</code></td>
+<td>
+<p>logical. Should the output of the individual hyperparameter grids be returned or only the best fitting set of hyperparameters. Default is <code>.return_grid=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.tune_each_group</code></td>
+<td>
+<p>logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is <code>.tune_each_group=TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.force_cv</code></td>
+<td>
+<p>logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is <code>.force_cv=FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>regress</code> fits all models passed in <code>...</code> using the <code>m</code> function. The models can be passed as name-function pairs (e.g. <code>ols = m("lm")</code>) or without including a name.
+</p>
+<p>Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to <code>m()</code> (e.g. <code>lasso = m("lasso", lambda = 0.5)</code>). See the individual model functions (<code>?m()</code>) for an overview of hyperparameters.
+</p>
+<p>Cross validation is performed using the 'rsample' package with possible methods including
+</p>
+
+<ul>
+<li>
+<p> 'initial_split' (simple train-test split)
+</p>
+</li>
+<li>
+<p> 'initial_time_split' (train-test split with retained order)
+</p>
+</li>
+<li>
+<p> 'vfold_cv' (aka kfold cross validation)
+</p>
+</li>
+<li>
+<p> 'loo_cv' (leave-one-out)
+</p>
+</li>
+<li>
+<p> 'rolling_origin' (generalized time series cross validation, e.g. rolling or expanding windows)
+</p>
+</li>
+<li>
+<p> 'sliding_window', 'sliding_index', 'sliding_period' (specialized time series splits)
+</p>
+</li>
+<li>
+<p> 'bootstraps'
+</p>
+</li>
+<li>
+<p> 'group_vfold_cv', 'group_bootstraps'
+</p>
+</li>
+</ul>
+<p>See package documentation for 'rsample' for all available methods.
+</p>
+<p>The mean squared error loss is used to validate performance in the cross validation.
+</p>
+<p>Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument. Weights are also considered during cross validation by calculating weighted versions of the cross validation loss function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tidyfit.models</code> frame containing model details for each group.
+</p>
+<p>The <strong>'tidyfit.models' frame</strong> consists of 4 different components:
+</p>
+
+<ol>
+<li>
+<p> A group of identifying columns (e.g. model name, data groups, grid IDs)
+</p>
+</li>
+<li>
+<p> A 'model_object' column, which contains the fitted model.
+</p>
+</li>
+<li>
+<p> A nested 'settings' column containing model arguments and hyperparameters
+</p>
+</li>
+<li>
+<p> Columns showing errors, warnings and messages (if applicable)
+</p>
+</li>
+</ol>
+<p>Coefficients, predictions, fitted values or residuals can be accessed using the built-in <code>coef</code>, <code>predict</code>, <code>fitted</code> and <code>resid</code> methods. Note that all coefficients are transformed to ensure comparability across methods.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Johann Pfitzinger
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>classify</code>, <code>coef.tidyfit.models</code> and <code>predict.tidyfit.models</code> method
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data &lt;- tidyfit::Factor_Industry_Returns
+fit &lt;- regress(data, Return ~ ., m("lasso", lambda = c(0.001, 0.1)), .mask = c("Date", "Industry"))
+
+# Print the models frame
+tidyr::unnest(fit, settings)
+
+# View coefficients
+coef(fit)
+
+</code></pre>
+
+
+</div>

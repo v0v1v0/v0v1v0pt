@@ -1,0 +1,234 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>read_container</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read a GPS container file.</h2>
+
+<h3>Description</h3>
+
+<p>Read a GPS container file.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">read_container(
+  file,
+  type = c("tcx", "gpx", "db3", "json"),
+  table = "gps_data",
+  timezone = "",
+  session_threshold = 2,
+  correct_distances = FALSE,
+  smooth_elevation_gain = TRUE,
+  country = NULL,
+  mask = TRUE,
+  from_distances = NULL,
+  speedunit = NULL,
+  distanceunit = NULL,
+  sport = NULL,
+  lgap = 30,
+  lskip = 5,
+  m = 11,
+  silent = FALSE
+)
+
+readContainer(
+  file,
+  type = c("tcx", "gpx", "db3", "json"),
+  table = "gps_data",
+  timezone = "",
+  session_threshold = 2,
+  correct_distances = FALSE,
+  smooth_elevation_gain = TRUE,
+  country = NULL,
+  mask = TRUE,
+  from_distances = NULL,
+  speedunit = NULL,
+  distanceunit = NULL,
+  sport = NULL,
+  lgap = 30,
+  lskip = 5,
+  m = 11,
+  silent = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>The path to a tcx, gpx, json or db3 file. Compressed
+versions (gz, bz2, xz, zip) of tcx, gpx, and json files are
+directly supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The type of the GPS container file. Supported so far
+are <code>tcx</code>, <code>db3</code>, and <code>json</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table</code></td>
+<td>
+<p>The name of the table in the database if <code>type</code>
+is set to <code>db3</code>, ignored otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timezone</code></td>
+<td>
+<p>The timezone of the observations as passed on to
+<code>as.POSIXct</code>.  Ignored for JSON files.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>session_threshold</code></td>
+<td>
+<p>The threshold in hours for the time
+difference between consecutive timestamps above which they are
+considered to belong to different training sessions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correct_distances</code></td>
+<td>
+<p>Logical. Should the distances be corrected
+for elevation? Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smooth_elevation_gain</code></td>
+<td>
+<p>Logical. Should the elevation gain be
+smoothed before computing elevation gain? Default
+is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>country</code></td>
+<td>
+<p>ISO3 country code for downloading altitude data. If
+<code>NULL</code>, country is derived from longitude and latitude</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask</code></td>
+<td>
+<p>Logical. Passed on to
+<code>getData</code>. Should only the altitudes for
+the specified <code>country</code> be extracted (<code>TRUE</code>) or also
+those for the neighbouring countries (<code>FALSE</code>)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from_distances</code></td>
+<td>
+<p>Logical. Should the speeds be calculated from
+the distance recordings instead of taken from the speed
+recordings directly. Defaults to <code>TRUE</code> for <code>tcx</code> and
+Golden Cheetah's json files and to <code>FALSE</code> for <code>db3</code>
+files.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>speedunit</code></td>
+<td>
+<p>Character string indicating the measurement unit
+of the speeds in the container file to be converted into meters
+per second. Default is <code>m_per_s</code> when <code>type</code> is
+<code>tcx</code> and <code>km_per_h</code> when <code>type</code> is <code>db3</code>
+or <code>json</code>. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distanceunit</code></td>
+<td>
+<p>Character string indicating the measurement
+unit of the distance in the container file to be converted into
+meters. Default is <code>m</code> when <code>type</code> is <code>tcx</code> and
+<code>km</code> when <code>type</code> is <code>db3</code> or <code>json</code>. See
+Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sport</code></td>
+<td>
+<p>What sport does <code>file</code> contain data from? Either
+<code>'cycling'</code>, <code>'running'</code>, <code>'swimming'</code> or
+<code>NULL</code> (default), in which case the sport is directly
+obtained from the <code>readX</code> extractors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lgap</code></td>
+<td>
+<p>Time in seconds corresponding to the minimal sampling rate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lskip</code></td>
+<td>
+<p>Time in seconds between the last observation before a small break
+and the first imputed speed or the last imputed speed and the first
+observation after a small break.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>Number of imputed observations in each small break.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Logical. Should warnings be generated if any of the
+sanity checks on the data are triggered?</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Available options for <code>speedunit</code> currently are
+<code>km_per_h</code>, <code>m_per_s</code>, <code>mi_per_h</code>,
+<code>ft_per_min</code> and <code>ft_per_s</code>.  Available options for
+<code>distanceunit</code> currently are <code>km</code>, <code>m</code>,
+<code>mi</code> and <code>ft</code>.
+</p>
+<p><code>read_container</code> try to identify the sport from the data in
+the container file. If that fails, then an attempt is made to guess
+the sport from keywords in the filename. If identification is not
+possible then an error is returned from
+<code>trackeRdata</code>. To avoid that error, and if the sport is
+known, append an appropriate keyword to the filename (e.g. 'ride',
+'swim', 'run'). This should fix the error.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>trackeRdata</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>trackeRdata</code>, <code>readTCX</code>, <code>readDB3</code>, <code>readJSON</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">filepath &lt;- system.file("extdata/tcx", "2013-06-08-090442.TCX.gz", package = "trackeR")
+run &lt;- read_container(filepath, type = "tcx", timezone = "GMT")
+</code></pre>
+
+
+</div>

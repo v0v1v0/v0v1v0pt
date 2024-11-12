@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>binless</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Perform binless Visual Predictive Check (VPC)</h2>
+
+<h3>Description</h3>
+
+<p>Use this function in place of traditional binning methods to derive VPC. For continuous
+VPC, this is obtained using additive quantile regression (<code>quantreg::rqss()</code>) and LOESS for pcVPC. While for categorical
+VPC, this is obtained using a generalized additive model (<code>gam(family = "binomial")</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">binless(o, ...)
+
+## S3 method for class 'tidyvpcobj'
+binless(
+  o,
+  optimize = TRUE,
+  optimization.interval = c(0, 7),
+  loess.ypc = NULL,
+  lambda = NULL,
+  span = NULL,
+  sp = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>o</code></td>
+<td>
+<p>A <code>tidyvpcobj</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments to include will be ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize</code></td>
+<td>
+<p>Logical indicating whether smoothing parameters should be optimized using AIC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimization.interval</code></td>
+<td>
+<p>Numeric vector of length 2 specifying the min/max range of smoothing parameter for optimization. Only applicable if <code>optimize = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loess.ypc</code></td>
+<td>
+<p>(Deprecated) Argument is ignored. For a LOESS pcVPC using the 'binless' method, usage of <code>predcorrect</code> will automatically perform LOESS prediction correction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>Numeric vector of length 3 specifying lambda values for each quantile. If stratified, specify a <code>data.frame</code> with given strata represented the column name, and value specified as a numeric vector of length 3.
+See below examples. Only applicable to continuous VPC with <code>optimize = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>span</code></td>
+<td>
+<p>Numeric between 0,1 specifying smoothing parameter for LOESS prediction correction. Only applicable for continuous VPC with <code>optimize = FALSE</code> and usage of <code>predcorrect</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sp</code></td>
+<td>
+<p>List of smoothing parameters applied to <code>mgcv::gam()</code>. Elements of list must be in the same order as unique values of DV. If one or more stratification variables present, the order of sp
+should be specified as unique combination of strata + DV, in ascending order. See below examples. Only applicable for categorical VPC, if <code>optimize = FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>For continuous VPC, updates <code>tidyvpcobj</code> with additive quantile regression fits for observed and simulated data for quantiles specified in the <code>qpred</code> argument of <code>vpcstats()</code>.
+If the <code>optimize = TRUE</code> argument is specified, the resulting <code>tidyvpcobj</code> will contain optimized lambda values according to AIC.  For prediction
+corrected VPC (pcVPC), specifying <code>loess.ypc = TRUE</code> will return optimized span value for LOESS smoothing. For categorical VPC,
+updates <code>tidyvpcobj</code> with fits obtained by <code>gam(family="binomial")</code> for observed and simulated data for each category of DV (in each stratum if <code>stratify</code> defined).
+If <code>optimize = TRUE</code> argument is specified, the resulting <code>tidyvpcobj</code> wil contain optimized <code>sp</code> values according to AIC.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>observed</code> <code>simulated</code> <code>censoring</code> <code>predcorrect</code> <code>stratify</code> <code>binning</code> <code>vpcstats</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+require(magrittr)
+require(data.table)
+
+obs_data &lt;- obs_data[MDV == 0]
+sim_data &lt;- sim_data[MDV == 0]
+
+
+ vpc &lt;- observed(obs_data, y = DV, x = TIME) %&gt;%
+      simulated(sim_data, y = DV) %&gt;%
+      binless() %&gt;%
+      vpcstats()
+
+ # Binless example with LOESS prediction correction
+
+ obs_data$PRED &lt;- sim_data[REP == 1, PRED]
+
+ vpc &lt;- observed(obs_data, y = DV, x = TIME) %&gt;%
+      simulated(sim_data, y = DV) %&gt;%
+      binless(optimize = TRUE) %&gt;%
+      predcorrect(pred = PRED) %&gt;% 
+      vpcstats()
+
+# Binless example with user specified lambda values stratified on
+# "GENDER" with 2 levels ("M", "F"), 10%, 50%, 90% quantiles.
+
+ lambda_strat &lt;- data.table(
+ GENDER_M = c(3,5,2),
+ GENDER_F = c(1,3,4)
+ )
+
+ vpc &lt;- observed(obs_data, y = DV, x = TIME) %&gt;%
+      simulated(sim_data, y = DV) %&gt;%
+      stratify(~ GENDER) %&gt;%
+      binless(optimize = FALSE, lambda = lambda_strat) %&gt;%
+      vpcstats(qpred = c(0.1, 0.5, 0.9))
+
+ # Binless example for categorical DV with optimized smoothing
+ vpc &lt;- observed(obs_cat_data, x = agemonths, yobs = zlencat) %&gt;%
+       simulated(sim_cat_data, ysim = DV) %&gt;%
+       stratify(~ Country_ID_code) %&gt;%
+       binless() %&gt;%
+       vpcstats(vpc.type = "cat", quantile.type = 6)
+
+ # Binless example for categorical DV with user specified sp values
+ user_sp &lt;- list(
+ Country1_prob0 = 100,
+ Country1_prob1 = 3,
+ Country1_prob2 = 4,
+ Country2_prob0 = 90,
+ Country2_prob1 = 3,
+ Country2_prob2 = 4,
+ Country3_prob0 = 55,
+ Country3_prob1 = 3,
+ Country3_prob2 = 200)
+
+ vpc &lt;- observed(obs_cat_data, x = agemonths, yobs = zlencat) %&gt;%
+        simulated(sim_cat_data, ysim = DV) %&gt;%
+        stratify(~ Country_ID_code) %&gt;%
+        binless(optimize = FALSE, sp = user_sp) %&gt;%
+        vpcstats(vpc.type = "categorical", conf.level = 0.9, quantile.type = 6)
+
+
+</code></pre>
+
+
+</div>

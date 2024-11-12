@@ -1,0 +1,265 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_destroy</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Destroy the data store.</h2>
+
+<h3>Description</h3>
+
+<p>Destroy the data store written by the pipeline.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_destroy(
+  destroy = c("all", "cloud", "local", "meta", "process", "progress", "objects",
+    "scratch", "workspaces", "user"),
+  batch_size = 1000L,
+  verbose = TRUE,
+  ask = NULL,
+  script = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>destroy</code></td>
+<td>
+<p>Character of length 1, what to destroy. Choices:
+</p>
+
+<ul>
+<li> <p><code>"all"</code>: entire data store (default: <code style="white-space: pre;">⁠_targets/⁠</code>)
+including cloud data, as well as download/upload scratch files.
+</p>
+</li>
+<li> <p><code>"cloud"</code>: cloud data, including metadata as well as target object data
+from targets with <code>tar_target(..., repository = "aws")</code>.
+Also deletes temporary staging files in
+<code>file.path(tempdir(), "targets")</code>
+that may have been accidentally left over from incomplete
+uploads or downloads.
+</p>
+</li>
+<li> <p><code>"local"</code>: all the local files in the data store but nothing
+on the cloud.
+</p>
+</li>
+<li> <p><code>"meta"</code>: metadata file at <code>meta/meta</code> in the
+data store, which invalidates all the targets but keeps the data.
+</p>
+</li>
+<li> <p><code>"process"</code>: progress data file at
+<code>meta/process</code> in the data store, which resets the metadata
+of the main process.
+</p>
+</li>
+<li> <p><code>"progress"</code>: progress data file at
+<code>meta/progress</code> in the data store,
+which resets the progress tracking info.
+</p>
+</li>
+<li> <p><code>"objects"</code>: all the target
+return values in <code style="white-space: pre;">⁠objects/⁠</code> in the data
+store but keep progress and metadata.
+Dynamic files are not deleted this way.
+</p>
+</li>
+<li> <p><code>"scratch"</code>: temporary files in saved during <code>tar_make()</code> that should
+automatically get deleted except if R crashed.
+</p>
+</li>
+<li> <p><code>"workspaces"</code>: compressed lightweight files in <code style="white-space: pre;">⁠workspaces/⁠</code>
+in the data store with the saved workspaces of targets.
+See <code>tar_workspace()</code> for details.
+</p>
+</li>
+<li> <p><code>"user"</code>: custom user-supplied files in the <code style="white-space: pre;">⁠user/⁠</code> folder in the
+data store.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_size</code></td>
+<td>
+<p>Positive integer between 1 and 1000,
+number of target objects to delete
+from the cloud with each HTTP API request.
+Currently only supported for AWS.
+Cannot be more than 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical of length 1, whether to print console messages
+to show progress when deleting each batch of targets from each
+cloud bucket. Batched deletion with verbosity is currently only supported
+for AWS.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ask</code></td>
+<td>
+<p>Logical of length 1, whether to pause with a menu prompt
+before deleting files. To disable this menu, set the <code>TAR_ASK</code>
+environment variable to <code>"false"</code>. <code>usethis::edit_r_environ()</code>
+can help set environment variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. If the script does not exist,
+then cloud metadata will not be deleted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The data store is a folder created by <code>tar_make()</code>
+(or <code>tar_make_future()</code> or <code>tar_make_clustermq()</code>).
+The details of the data store are explained at
+<a href="https://books.ropensci.org/targets/data.html#local-data-store">https://books.ropensci.org/targets/data.html#local-data-store</a>.
+The data store folder contains the output data
+and metadata of the targets in the pipeline. Usually,
+the data store is a folder called <code style="white-space: pre;">⁠_targets/⁠</code>
+(see <code>tar_config_set()</code> to customize), and it may
+link to data on the cloud if you used AWS or GCP
+buckets. By default, <code>tar_destroy()</code> deletes the entire
+<code style="white-space: pre;">⁠_targets/⁠</code> folder (or wherever the data store is located),
+including custom user-supplied files in <code style="white-space: pre;">⁠_targets/user/⁠</code>,
+as well as any cloud data that the pipeline uploaded.
+See the <code>destroy</code> argument to customize this behavior
+and only delete part of the data store, and see functions like
+<code>tar_invalidate()</code>, <code>tar_delete()</code>, and <code>tar_prune()</code> to remove
+information pertaining to some but not all targets in the pipeline.
+After calling <code>tar_destroy()</code> with default arguments,
+the entire data store is gone, which means all the output data from
+previous runs of the pipeline is gone (except for
+input/output files tracked with <code>tar_target(..., format = "file")</code>).
+The next run of the pipeline will start from scratch,
+and it will not skip any targets.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code> (invisibly).
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>Cloud target data versioning</h3>
+
+<p>Some buckets in Amazon S3 or Google Cloud Storage are "versioned",
+which means they track historical versions of each data object.
+If you use <code>targets</code> with cloud storage
+(<a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>)
+and versioning is turned on, then <code>targets</code> will record each
+version of each target in its metadata.
+</p>
+<p>Functions like <code>tar_read()</code>
+and <code>tar_load()</code> load the version recorded in the local metadata,
+which may not be the same as the "current" version of the
+object in the bucket. Likewise, functions <code>tar_delete()</code>
+and <code>tar_destroy()</code> only remove
+the version ID of each target as recorded in the local
+metadata.
+</p>
+<p>If you want to interact with the <em>latest</em> version of an object
+instead of the version ID recorded in the local metadata,
+then you will need to delete the object from the metadata.
+</p>
+
+<ol>
+<li>
+<p> Make sure your local copy of the metadata is current and
+up to date. You may need to run <code>tar_meta_download()</code> or
+<code>tar_meta_sync()</code> first.
+</p>
+</li>
+<li>
+<p> Run <code>tar_unversion()</code> to remove the recorded version IDs of
+your targets in the local metadata.
+</p>
+</li>
+<li>
+<p> With the version IDs gone from the local metadata,
+functions like <code>tar_read()</code> and <code>tar_destroy()</code> will use the
+<em>latest</em> version of each target data object.
+</p>
+</li>
+<li>
+<p> Optional: to back up the local metadata file with the version IDs
+deleted, use <code>tar_meta_upload()</code>.
+</p>
+</li>
+</ol>
+<h3>See Also</h3>
+
+<p>Other clean: 
+<code>tar_delete()</code>,
+<code>tar_invalidate()</code>,
+<code>tar_prune()</code>,
+<code>tar_prune_list()</code>,
+<code>tar_unversion()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(tar_target(x, 1 + 1))
+})
+tar_make() # Creates the _targets/ data store.
+tar_destroy()
+print(file.exists("_targets")) # Should be FALSE.
+})
+}
+</code></pre>
+
+
+</div>

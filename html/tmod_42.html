@@ -1,0 +1,278 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmodUtest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Perform a statistical test of module expression</h2>
+
+<h3>Description</h3>
+
+<p>Perform a statistical test of module expression
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tmodUtest(
+  l,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  filter = FALSE,
+  mset = "all",
+  cols = "Title",
+  useR = FALSE,
+  nodups = TRUE
+)
+
+tmodGeneSetTest(
+  l,
+  x,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  filter = FALSE,
+  mset = "all",
+  cols = "Title",
+  Nsim = 1000,
+  nodups = TRUE
+)
+
+tmodCERNOtest(
+  l,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  filter = FALSE,
+  mset = "all",
+  cols = "Title",
+  nodups = TRUE
+)
+
+tmodPLAGEtest(
+  l,
+  x,
+  group,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  mset = "all",
+  cols = "Title",
+  filter = FALSE,
+  nodups = TRUE
+)
+
+tmodZtest(
+  l,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  filter = FALSE,
+  mset = "all",
+  cols = "Title",
+  nodups = TRUE
+)
+
+tmodHGtest(
+  fg,
+  bg,
+  modules = NULL,
+  qval = 0.05,
+  order.by = "pval",
+  filter = FALSE,
+  mset = "all",
+  cols = "Title",
+  nodups = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>l</code></td>
+<td>
+<p>sorted list of HGNC gene identifiers</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modules</code></td>
+<td>
+<p>optional list of modules for which to make the test</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>qval</code></td>
+<td>
+<p>Threshold FDR value to report</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order.by</code></td>
+<td>
+<p>Order by P value ("pval") or none ("none")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter</code></td>
+<td>
+<p>Remove gene names which have no module assignments</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mset</code></td>
+<td>
+<p>Which module set to use. Either a character vector ("LI", "DC" or "all", default: all) or an object of class tmod (see "Custom module definitions" below)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cols</code></td>
+<td>
+<p>Which columns from the MODULES data frame should be included in resulsts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>useR</code></td>
+<td>
+<p>use the R <code>wilcox.test</code> function; slow, but with exact p-values for small samples</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodups</code></td>
+<td>
+<p>Remove duplicate gene names in l and corresponding
+rows from ranks</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Expression matrix for the tmodPLAGEtest; a vector for tmodGeneSetTest</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nsim</code></td>
+<td>
+<p>for tmodGeneSetTest, number of replicates for the randomization test</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>group assignments for the tmodPLAGEtest</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fg</code></td>
+<td>
+<p>foreground gene set for the HG test</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bg</code></td>
+<td>
+<p>background gene set for the HG test</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Performs a test on either on an ordered list of genes (tmodUtest,
+tmodCERNOtest, tmodZtest) or on two groups of genes (tmodHGtest).
+tmodUtest is a U test on ranks of genes that are contained in a module.
+</p>
+<p>tmodCERNOtest is also a nonparametric test working on gene ranks, but it
+originates from Fisher's combined probability test. This test weights
+genes with lower ranks more, the resulting p-values better correspond to
+the observed effect size. In effect, modules with small effect but many
+genes get higher p-values than in case of the U-test.
+</p>
+<p>tmodPLAGEtest is based on the PLAGE, "Pathway level analysis of gene
+expression" published by Tomfohr, Lu and Kepler (2005), doi 10.1186/1471-2105-6-225.
+In essence it is just a t-test run on module eigengenes, but it
+performs really well. This approach can be used with any complex linear
+model; for this, use the function eigengene(). See users guide for details.
+</p>
+<p>tmodZtest works very much like tmodCERNOtest, but instead of combining
+the rank-derived p-values using Fisher's method, it uses the Stouffer
+method (known also as the Z-transform test). 
+</p>
+<p>tmodGeneSetTest is an implementation of the function geneSetTest from
+the limma package (note that tmodUtest is equivalent to the limma's
+wilcoxGST function).
+</p>
+<p>For a discussion of the above three methods, read M. C. Whitlock,
+"Combining probability from independent tests: the weighted Z-method is
+superior to Fisher's approach", J. Evol. Biol. 2005 (doi:
+10.1111/j.1420-9101.2005.00917.x) for further details.
+</p>
+<p>tmodHGtest is simply a hypergeometric test.
+</p>
+<p>In tmod, two module sets can be used, "LI" (from Li et al. 2013), or
+"DC" (from Chaussabel et al. 2008). Using the parameter "mset", the
+module set can be selected, or, if mset is "all", both of sets are used.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The statistical tests return a data frame with module names, additional statistic (e.g.
+enrichment or AUC, depending on the test), P value and FDR q-value (P value corrected for multiple
+testing using the p.adjust function and Benjamini-Hochberg correction.
+The data frame has class 'colorDF' (see package colorDF for details),
+but except for printing using colors on the terminal behaves just like an
+ordinary data.frame. To strip the coloring, use [colorDF::uncolor()].
+</p>
+
+
+<h3>Custom module definitions</h3>
+
+<p>Custom and arbitrary module, gene set or pathway definitions can be also provided through the mset
+option, if the parameter is a list rather than a character vector. The
+list parameter to mset must contain the following members: "MODULES",
+"MODULES2GENES" and "GENES". 
+</p>
+<p>"MODULES" and "GENES" are data frames. It is required that MODULES
+contains the following columns: "ID", specifying a unique identifier of a
+module, and "Title", containing the description of the module. The
+data frame "GENES" must contain the column "ID".
+</p>
+<p>The list MODULES2GENES is a mapping between modules and genes. The names
+of the list must correspond to the ID column of the MODULES data frame. The members of the
+list are character vectors, and the values of these vectors must correspond
+to the ID column of the GENES data frame.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>tmod-package
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(tmod)
+fg &lt;- tmod$MODULES2GENES[["LI.M127"]]
+bg &lt;- tmod$GENES$ID
+result &lt;- tmodHGtest( fg, bg )
+
+## A more sophisticated example
+## Gene set enrichment in TB patients compared to 
+## healthy controls (Egambia data set)
+## Not run: 
+data(Egambia)
+library(limma)
+design &lt;- cbind(Intercept=rep(1, 30), TB=rep(c(0,1), each= 15))
+fit &lt;- eBayes( lmFit(Egambia[,-c(1:3)], design))
+tt &lt;- topTable(fit, coef=2, number=Inf, genelist=Egambia[,1:3] )
+tmodUtest(tt$GENE_SYMBOL)
+tmodCERNOtest(tt$GENE_SYMBOL)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

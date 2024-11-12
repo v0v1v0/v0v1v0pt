@@ -1,0 +1,120 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>is_whole_number</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Are all numbers whole numbers?</h2>
+
+<h3>Description</h3>
+
+<p>Are all numbers whole numbers?
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">is_whole_number(x, tol = .Machine$double.eps, na.rm = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>tolerance value. <br>
+The default is <code>.Machine$double.eps</code>, essentially the lowest possible tolerance.
+A more typical tolerance for double floating point comparisons in other comparisons
+is <code>sqrt(.Machine$double.eps)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>Should <code>NA</code> values be removed before calculation?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This is a very efficient function that returns <code>FALSE</code> if any number
+is not a whole-number and <code>TRUE</code> if all of them are.
+</p>
+
+
+<h4>Method</h4>
+
+<p><code>x</code> is defined as a whole number vector
+if all numbers satisfy <code>abs(x - round(x)) &lt; tol</code>.
+</p>
+
+
+
+<h4>
+<code>NA</code> handling</h4>
+
+<p><code>NA</code> values are handled in a custom way. <br>
+If <code>x</code> is an integer, <code>TRUE</code> is always returned even if <code>x</code> has missing values. <br>
+If <code>x</code> has both missing values and decimal numbers, <code>FALSE</code> is always returned. <br>
+If <code>x</code> has missing values, and only whole numbers and <code>na.rm = FALSE</code>, then
+<code>NA</code> is returned. <br>
+Basically <code>NA</code> is only returned if <code>na.rm = FALSE</code> and
+<code>x</code> is a double vector of only whole numbers and <code>NA</code> values.
+</p>
+<p>Inspired by the discussion in this thread:
+<a href="https://stackoverflow.com/questions/3476782/check-if-the-number-is-integer/76655734">check-if-the-number-is-integer</a>
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>A logical vector of length 1.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+
+# Has built-in tolerance
+sqrt(2)^2 %% 1 == 0
+is_whole_number(sqrt(2)^2)
+
+is_whole_number(1)
+is_whole_number(1.2)
+
+x1 &lt;- c(0.02, 0:10^5)
+x2 &lt;- c(0:10^5, 0.02)
+
+is_whole_number(x1)
+is_whole_number(x2)
+
+# Somewhat more strict than all.equal
+
+all.equal(10^9 + 0.0001, round(10^9 + 0.0001))
+is_whole_number(10^9 + 0.0001)
+
+# Can safely be used to select whole number variables
+starwars %&gt;%
+  select(where(is_whole_number))
+
+# To reduce the size of any data frame one can use the below code
+
+df &lt;- starwars %&gt;%
+  mutate(across(where(is_whole_number), as.integer))
+
+</code></pre>
+
+
+</div>

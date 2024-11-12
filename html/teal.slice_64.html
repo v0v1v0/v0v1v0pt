@@ -1,0 +1,237 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>teal_slice</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Specify single filter</h2>
+
+<h3>Description</h3>
+
+<p>Create a <code>teal_slice</code> object that holds complete information on filtering one variable.
+Check out <code>teal_slice-utilities</code> functions for working with <code>teal_slice</code> object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">teal_slice(
+  dataname,
+  varname,
+  id,
+  expr,
+  choices = NULL,
+  selected = NULL,
+  keep_na = NULL,
+  keep_inf = NULL,
+  fixed = FALSE,
+  anchored = FALSE,
+  multiple = TRUE,
+  title = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataname</code></td>
+<td>
+<p>(<code>character(1)</code>) name of data set</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varname</code></td>
+<td>
+<p>(<code>character(1)</code>) name of variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>(<code>character(1)</code>) identifier of the filter. Must be specified when <code>expr</code> is set.
+When <code>varname</code> is specified then <code>id</code> is set to <code>"{dataname} {varname}"</code> by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>(<code>character(1)</code>) string providing a logical expression.
+Must be a valid <code>R</code> expression which can be evaluated in the context of the data set.
+For a <code>data.frame</code> <code>var == "x"</code> is sufficient, but <code>MultiAssayExperiment::subsetByColData</code>
+requires <code>dataname</code> prefix, <em>e.g.</em> <code>data$var == "x"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choices</code></td>
+<td>
+<p>(<code>vector</code>) optional, specifies allowed choices;
+When specified it should be a subset of values in variable denoted by <code>varname</code>;
+Type and size depends on variable type. Factors are coerced to character.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selected</code></td>
+<td>
+<p>(<code>vector</code>) optional, specifies selected values from <code>choices</code>;
+Type and size depends on variable type. Factors are coerced to character.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_na</code></td>
+<td>
+<p>(<code>logical(1)</code>) optional flag specifying whether to keep missing values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_inf</code></td>
+<td>
+<p>(<code>logical(1)</code>) optional flag specifying whether to keep infinite values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed</code></td>
+<td>
+<p>(<code>logical(1)</code>) flag specifying whether to fix this filter state (forbid setting state)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>anchored</code></td>
+<td>
+<p>(<code>logical(1)</code>) flag specifying whether to lock this filter state (forbid removing and inactivating)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multiple</code></td>
+<td>
+<p>(<code>logical(1)</code>) optional flag specifying whether more than one value can be selected;
+only applicable to <code>ChoicesFilterState</code> and <code>LogicalFilterState</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>character(1)</code>) optional title of the filter. Ignored when <code>varname</code> is set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments which can be handled by extensions of <code>teal.slice</code> classes.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>teal_slice</code> object fully describes filter state and can be used to create,
+modify, and delete a filter state. A <code>teal_slice</code> contains a number of common fields
+(all named arguments of <code>teal_slice</code>), some of which are mandatory, but only
+<code>dataname</code> and  either <code>varname</code> or <code>expr</code> must be specified, while the others have default
+values.
+</p>
+<p>Setting any of the other values to <code>NULL</code> means that those properties will not be modified
+(when setting an existing state) or that they will be determined by data (when creating new a new one).
+Entire object is <code>FilterState</code> class member and can be accessed with <code>FilterState$get_state()</code>.
+</p>
+<p>A <code>teal_slice</code> can come in two flavors:
+</p>
+
+<ol>
+<li> <p><code>teal_slice_var</code> -
+this describes a typical interactive filter that refers to a single variable, managed by the <code>FilterState</code> class.
+This class is created when <code>varname</code> is specified.
+The object retains all fields specified in the call. <code>id</code> can be created by default and need not be specified.
+</p>
+</li>
+<li> <p><code>teal_slice_expr</code> -
+this describes a filter state that refers to an expression, which can potentially include multiple variables,
+managed by the <code>FilterStateExpr</code> class.
+This class is created when <code>expr</code> is specified.
+<code>dataname</code> and <code>anchored</code> are retained, <code>fixed</code> is set to <code>TRUE</code>, <code>id</code> becomes mandatory, <code>title</code>
+remains optional, while other arguments are disregarded.
+</p>
+</li>
+</ol>
+<p>A teal_slice can be passed <code>FilterState</code>/<code>FilterStateExpr</code> constructors to instantiate an object.
+It can also be passed to <code>FilterState$set_state</code> to modify the state.
+However, once a <code>FilterState</code> is created, only the mutable features can be set with a teal_slice:
+<code>selected</code>, <code>keep_na</code> and <code>keep_inf</code>.
+</p>
+<p>Special consideration is given to two fields: <code>fixed</code> and <code>anchored</code>.
+These are always immutable logical flags that default to <code>FALSE</code>.
+In a <code>FilterState</code> instantiated with <code>fixed = TRUE</code> the features
+<code>selected</code>, <code>keep_na</code>, <code>keep_inf</code> cannot be changed.
+Note that a <code>FilterStateExpr</code> is always considered to have <code>fixed = TRUE</code>.
+A <code>FilterState</code> instantiated with <code>anchored = TRUE</code> cannot be removed.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>teal.slice</code> object. Depending on whether <code>varname</code> or <code>expr</code> was specified, the resulting
+<code>teal_slice</code> also receives class <code>teal_slice_var</code> or <code>teal_slice_expr</code>, respectively.
+</p>
+
+
+<h3>Filters in <code>SumarizedExperiment</code> and <code>MultiAssayExperiment</code> objects</h3>
+
+<p>To establish a filter on a column in a <code>data.frame</code>, <code>dataname</code> and <code>varname</code> are sufficient.
+<code>MultiAssayExperiment</code> objects can be filtered either on their <code>colData</code> slot (which contains subject information)
+or on their experiments, which are stored in the <code>experimentList</code> slot.
+For filters referring to <code>colData</code> no extra arguments are needed.
+If a filter state is created for an experiment, that experiment name must be specified in the <code>experiment</code> argument.
+Furthermore, to specify filter for an <code>SummarizedExperiment</code> one must also set <code>arg</code>
+(<code>"subset"</code>  or <code>"select"</code>, arguments in the <code>subset()</code> function for <code>SummarizedExperiment</code>)
+in order to determine whether the filter refers to the <code>SE</code>'s <code>rowData</code> or <code>colData</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Date time objects of <code>POSIX*t</code> classes are printed as strings after converting to UTC timezone.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>teal_slices</code>,
+<code>is.teal_slice</code>, <code>as.teal_slice</code>, <code>as.list.teal_slice</code>, <code>print.teal_slice</code>, <code>format.teal_slice</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x1 &lt;- teal_slice(
+  dataname = "data",
+  id = "Female adults",
+  expr = "SEX == 'F' &amp; AGE &gt;= 18",
+  title = "Female adults"
+)
+x2 &lt;- teal_slice(
+  dataname = "data",
+  varname = "var",
+  choices = c("F", "M", "U"),
+  selected = "F",
+  keep_na = TRUE,
+  keep_inf = TRUE,
+  fixed = FALSE,
+  anchored = FALSE,
+  multiple = TRUE,
+  id = "Gender",
+  extra_arg = "extra"
+)
+
+is.teal_slice(x1)
+as.list(x1)
+as.teal_slice(list(dataname = "a", varname = "var"))
+format(x1)
+format(x1, show_all = TRUE, trim_lines = FALSE)
+print(x1)
+print(x1, show_all = TRUE, trim_lines = FALSE)
+
+</code></pre>
+
+
+</div>

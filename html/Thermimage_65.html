@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Teq</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Estimates equivalent temperature.
+</h2>
+
+<h3>Description</h3>
+
+<p>Estimates equivalent black-body temperature of an object.  Analagous to other measures of operative temperature
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Teq(Ts = 30, Ta = 25, Tg = NULL, RH = 0.5, E = 0.96, rho = 0.1, cloud = 0, SE = 0, V = 1, 
+L = 0.1, type = "forced")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Ts</code></td>
+<td>
+
+<p>Surface temperature (degrees Celsius). Default value is 30.  Not used in this calculation but kept for similar structure to other functions in package.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ta</code></td>
+<td>
+
+<p>Air temperature (degrees Celsius).  Default value is 20.  Used to estimate ground temperature if Tg is unavailable.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Tg</code></td>
+<td>
+
+<p>Ground temperature (degrees Celsius).  Default value is NULL, but a measured Tg can be substituted or estimated with other functions.  Used in estimating long wave radiation from the ground.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RH</code></td>
+<td>
+
+<p>Relative humidity (fraction 0 to 1).  Default value is 0.5.  Used in call to Ld() to determine incoming radiation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>E</code></td>
+<td>
+
+<p>Emissivity (fraction 0 to 1) of the object absorbing longwave radiation.  According to Kirschoff's law, emissivity = absorptivity.  Absorptivity is multiplied by the average of the incoming longwave radiation to estimate absorbed radiation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+
+<p>Reflectivity (fraction 0 to 1) of the object absorbing solar radiation.  Used to modify absorbed solar energy.  Default is 0.1.  
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cloud</code></td>
+<td>
+
+<p>Fractional cloud cover (fraction from 0 to 1).  Used in call to Ld() to determine incoming radiation.  Default is 0.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SE</code></td>
+<td>
+
+<p>Solar energy (W/m2), usually measured.  Default is 100.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+
+<p>Air velocity (m/s).  Default value is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>L</code></td>
+<td>
+
+<p>Characteristic dimension (m) of object.  Usually the vertical dimension (i.e. height). Default value is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+
+<p>"forced" or "free" - to calculate convection coefficient for either forced or free convection.  Default value is "forced"
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Glenn J Tattersall
+</p>
+
+
+<h3>References</h3>
+
+<p>Mahoney, S.A. and King, J. R. (1977). The use of the equivalent black-body temperautre in the thermal energetics of small birds.  J Thermal Biol. 2: 115-120
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## The function is currently defined as
+function (Ts = 30, Ta = 25, Tg = NULL, RH = 0.5, E = 0.96, rho = 0.1, 
+    cloud = 0, SE = 0, V = 1, L = 0.1, type = "forced") 
+{
+    if (type == "forced") 
+        k &lt;- 0.7 * 310
+    if (type == "free") 
+        k &lt;- 310
+    rr &lt;- airdensity(Ta) * airspecificheat(Ta)/(4 * E * StephBoltz() * 
+        (Ta + 273.15)^3)
+    ra &lt;- k * (L/V)^0.5
+    re &lt;- 1/(1/ra + 1/rr)
+    Rni &lt;- qabs(Ta = Ta, Tg = Tg, RH = RH, E = E, rho = rho, 
+        cloud = cloud, SE = SE) - StephBoltz() * E * (Ta + 273.15)^4
+    Teq &lt;- Ta + Rni * re/(airdensity(Ta) * airspecificheat(Ta))
+    Teq
+  }
+  
+# For detailed examples and explanations, see:
+# https://github.com/gtatters/Thermimage/blob/master/HeatTransferCalculations.md
+
+</code></pre>
+
+
+</div>

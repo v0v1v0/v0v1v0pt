@@ -1,0 +1,156 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>geocode_combine</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Combine multiple geocoding queries</h2>
+
+<h3>Description</h3>
+
+<p>Executes multiple geocoding queries on a dataframe input and combines
+the results. To use a character vector input instead, see the geo_combine function.
+Queries are executed by the geocode function. See example usage
+in <code>vignette("tidygeocoder")</code>.
+</p>
+<p>Query results are by default labelled to show which query produced each result. Labels are either
+placed in a <code>query</code> column (if <code>return_list = FALSE</code>) or used as the names of the returned list
+(if <code>return_list = TRUE</code>). By default the <code>method</code> parameter value of each query is used as a query label.
+If the same <code>method</code> is used in multiple queries then a number is added according
+to the order of the queries (ie. <code>osm1</code>, <code>osm2</code>, ...). To provide your own custom query labels
+use the <code>query_names</code> parameter.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">geocode_combine(
+  .tbl,
+  queries,
+  global_params = list(),
+  return_list = FALSE,
+  cascade = TRUE,
+  query_names = NULL,
+  lat = "lat",
+  long = "long"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.tbl</code></td>
+<td>
+<p>dataframe containing addresses</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>queries</code></td>
+<td>
+<p>a list of queries, each provided as a list of parameters. The queries are
+executed by the geocode function in the order provided.
+(ex. <code>list(list(method = 'osm'), list(method = 'census'), ...)</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global_params</code></td>
+<td>
+<p>a list of parameters to be used for all queries
+(ex. <code>list(address = 'address', full_results = TRUE)</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_list</code></td>
+<td>
+<p>if TRUE then results from each service will be returned as separate
+dataframes. If FALSE (default) then all results will be combined into a single dataframe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cascade</code></td>
+<td>
+<p>if TRUE (default) then only addresses that are not found by a geocoding
+service will be attempted by subsequent queries. If FALSE then all queries will
+attempt to geocode all addresses.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>query_names</code></td>
+<td>
+<p>optional vector with one label for each query provided
+(ex. <code>c('geocodio batch', 'geocodio single')</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lat</code></td>
+<td>
+<p>latitude column name. Can be quoted or unquoted (ie. lat or 'lat').</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>long</code></td>
+<td>
+<p>longitude column name. Can be quoted or unquoted (ie. long or 'long').</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>tibble (dataframe)
+</p>
+
+
+<h3>See Also</h3>
+
+<p>geo_combine geo geocode
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+library(dplyr, warn.conflicts = FALSE)
+
+sample_addresses %&gt;%
+  geocode_combine(
+    queries = list(list(method = 'census'), list(method = 'osm')),
+    global_params = list(address = 'addr'), cascade = TRUE)
+
+more_addresses &lt;- tibble::tribble(
+     ~street_address, ~city, ~state,        ~zip_cd,
+     "624 W DAVIS ST #1D",   "BURLINGTON", "NC", 27215,
+     "201 E CENTER ST #268", "MEBANE",     "NC", 27302,
+     "100 Wall Street",      "New York",   "NY", 10005,
+     "Bucharest",            NA,           NA,   NA
+     )
+ 
+ more_addresses %&gt;%        
+   geocode_combine( 
+     queries = list(
+         list(method = 'census', mode = 'batch'),
+         list(method = 'census', mode = 'single'),
+         list(method = 'osm')
+      ),
+     global_params = list(street = 'street_address', 
+       city = 'city', state = 'state', postalcode = 'zip_cd'),
+     query_names = c('census batch', 'census single', 'osm')
+   )
+   
+ more_addresses %&gt;%
+   geocode_combine( 
+     queries = list(
+         list(method = 'census', mode = 'batch', street = 'street_address', 
+       city = 'city', state = 'state', postalcode = 'zip_cd'),
+         list(method = 'arcgis', address = 'street_address')
+      ),
+     cascade = FALSE,
+     return_list = TRUE
+   )
+
+</code></pre>
+
+
+</div>

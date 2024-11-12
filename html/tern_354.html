@@ -1,0 +1,137 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summarize_logistic</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Multivariate logistic regression table</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Layout-creating function which summarizes a logistic variable regression for binary outcome with
+categorical/continuous covariates in model statement. For each covariate category (if categorical)
+or specified values (if continuous), present degrees of freedom, regression parameter estimate and
+standard error (SE) relative to reference group or category. Report odds ratios for each covariate
+category or specified values and corresponding Wald confidence intervals as default but allow user
+to specify other confidence levels. Report p-value for Wald chi-square test of the null hypothesis
+that covariate has no effect on response in model containing all specified covariates.
+Allow option to include one two-way interaction and present similar output for
+each interaction degree of freedom.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">summarize_logistic(
+  lyt,
+  conf_level,
+  drop_and_remove_str = "",
+  .indent_mods = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>proportion</code>)<br> confidence level of the interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_and_remove_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string to be dropped and removed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A layout object suitable for passing to further layouting functions, or to <code>rtables::build_table()</code>.
+Adding this function to an <code>rtable</code> layout will add a logistic regression variable summary to the table layout.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For the formula, the variable names need to be standard <code>data.frame</code> column names without
+special characters.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(broom)
+
+adrs_f &lt;- tern_ex_adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  filter(RACE %in% c("ASIAN", "WHITE", "BLACK OR AFRICAN AMERICAN")) %&gt;%
+  mutate(
+    Response = case_when(AVALC %in% c("PR", "CR") ~ 1, TRUE ~ 0),
+    RACE = factor(RACE),
+    SEX = factor(SEX)
+  )
+formatters::var_labels(adrs_f) &lt;- c(formatters::var_labels(tern_ex_adrs), Response = "Response")
+mod1 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE")
+  )
+)
+mod2 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE"),
+    interaction = "AGE"
+  )
+)
+
+df &lt;- tidy(mod1, conf_level = 0.99)
+df2 &lt;- tidy(mod2, conf_level = 0.99)
+
+# flagging empty strings with "_"
+df &lt;- df_explicit_na(df, na_level = "_")
+df2 &lt;- df_explicit_na(df2, na_level = "_")
+
+result1 &lt;- basic_table() %&gt;%
+  summarize_logistic(
+    conf_level = 0.95,
+    drop_and_remove_str = "_"
+  ) %&gt;%
+  build_table(df = df)
+result1
+
+result2 &lt;- basic_table() %&gt;%
+  summarize_logistic(
+    conf_level = 0.95,
+    drop_and_remove_str = "_"
+  ) %&gt;%
+  build_table(df = df2)
+result2
+
+</code></pre>
+
+
+</div>

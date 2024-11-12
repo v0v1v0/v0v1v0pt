@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>calibration</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calibration (training)</h2>
+
+<h3>Description</h3>
+
+<p>Calibration for multiclassication methods
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">calibration(
+  pr,
+  cl,
+  weights = NULL,
+  threshold = 10,
+  method = "bin",
+  breaks = nclass.Sturges,
+  df = 3,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pr</code></td>
+<td>
+<p>matrix with probabilities for each class</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cl</code></td>
+<td>
+<p>class variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>counts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>do not calibrate if less then 'threshold' events</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>either 'isotonic' (pava), 'logistic', 'mspline' (monotone spline), 'bin' (local constant)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breaks</code></td>
+<td>
+<p>optional number of bins (only for method 'bin')</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>degrees of freedom (only for spline methods)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to lower level functions</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>...
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class '<code>calibration</code>' is returned. See <code>calibration-class</code>
+for more details about this class and its generic functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Klaus K. Holst
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">sim1 &lt;- function(n, beta=c(-3, rep(.5,10)), rho=.5) {
+ p &lt;- length(beta)-1
+ xx &lt;- lava::rmvn0(n,sigma=diag(nrow=p)*(1-rho)+rho)
+ y &lt;- rbinom(n, 1, lava::expit(cbind(1,xx)%*%beta))
+ d &lt;- data.frame(y=y, xx)
+ names(d) &lt;- c("y",paste0("x",1:p))
+ return(d)
+}
+
+set.seed(1)
+beta &lt;- c(-2,rep(1,10))
+d &lt;- sim1(1e4, beta=beta)
+a1 &lt;- NB(y ~ ., data=d)
+a2 &lt;- glm(y ~ ., data=d, family=binomial)
+## a3 &lt;- randomForest(factor(y) ~ ., data=d, family=binomial)
+
+d0 &lt;- sim1(1e4, beta=beta)
+p1 &lt;- predict(a1, newdata=d0)
+p2 &lt;- predict(a2, newdata=d0, type="response")
+## p3 &lt;- predict(a3, newdata=d0, type="prob")
+
+c2 &lt;- calibration(p2, d0$y, method="isotonic")
+c1 &lt;- calibration(p1, d0$y, breaks=100)
+if (interactive()) {
+  plot(c1)
+  plot(c2,col="red",add=TRUE)
+  abline(a=0,b=1)##'
+  with(c1$xy[[1]], points(pred,freq,type="b", col="red"))
+}
+
+set.seed(1)
+beta &lt;- c(-2,rep(1,10))
+dd &lt;- lava::csplit(sim1(1e4, beta=beta), k=3)
+mod &lt;- NB(y ~ ., data=dd[[1]])
+p1 &lt;- predict(mod, newdata=dd[[2]])
+cal &lt;- calibration(p1, dd[[2]]$y)
+p2 &lt;- predict(mod, newdata=dd[[3]])
+pp &lt;- predict(c1, p2)
+cc &lt;- calibration(pp, dd[[3]]$y)
+if (interactive()) {##'
+  plot(cal)
+  plot(cc, add=TRUE, col="blue")
+}
+</code></pre>
+
+
+</div>

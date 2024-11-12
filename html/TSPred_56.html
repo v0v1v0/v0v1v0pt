@@ -1,0 +1,353 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fittestPolyRKF</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Automatic fitting and prediction of polynomial regression with Kalman filter</h2>
+
+<h3>Description</h3>
+
+<p>The function predicts and returns the next n consecutive values of a
+univariate time series using the best evaluated polynomial regression model
+automatically fitted with Kalman filter. It also evaluates the fitness of
+the produced model, using AICc, AIC, BIC and logLik criteria, and its
+prediction accuracy, using the MSE, NMSE, MAPE, sMAPE and maximal error
+accuracy measures.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fittestPolyRKF(
+  timeseries,
+  timeseries.test = NULL,
+  h = NULL,
+  na.action = stats::na.omit,
+  level = 0.9,
+  order = NULL,
+  minorder = 0,
+  maxorder = 5,
+  initQ = NULL,
+  filtered = TRUE,
+  rank.by = c("MSE", "NMSE", "MAPE", "sMAPE", "MaxError", "AIC", "AICc", "BIC",
+    "logLik", "errors", "fitness")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>timeseries</code></td>
+<td>
+<p>A vector or univariate time series which contains the
+values used for fitting a polynomial regression model with Kalman filter. 
+~~Describe <code>timeseries</code> here~~</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeseries.test</code></td>
+<td>
+<p>A vector or univariate time series containing a
+continuation for <code>timeseries</code> with actual values. It is used as a
+testing set and base for calculation of prediction error measures. Ignored
+if <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>Number of consecutive values of the time series to be predicted. If
+<code>h</code> is <code>NULL</code>, the number of consecutive values to be predicted is
+assumed to be equal to the length of <code>timeseries.test</code>. Required when
+<code>timeseries.test</code> is <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>A function for treating missing values in <code>timeseries</code>
+and <code>timeseries.test</code>. The default function is <code>na.omit</code>,
+which omits any missing values found in <code>timeseries</code> or
+<code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>Confidence level for prediction intervals. See the
+<code>predict.SSModel</code> function in the <code>KFAS</code> package. 
+~~Describe <code>na.action</code> here~~</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>A numeric integer value corresponding to the order of
+polynomial regression to be fitted. If <code>NULL</code>, the order of the
+polynomial regression returned by the function is automatically selected
+within the interval <code>minorder:maxorder</code>. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minorder</code></td>
+<td>
+<p>A numeric integer value corresponding to the minimum order
+of candidate polynomial regression to be fitted and evaluated. Ignored if
+<code>order</code> is provided. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxorder</code></td>
+<td>
+<p>A numeric integer value corresponding to the maximal order
+of candidate polynomial regression to be fitted and evaluated. Ignored if
+<code>order</code> is provided. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initQ</code></td>
+<td>
+<p>Numeric argument regarding the initial values for the
+covariance of disturbances parameter to be optimized over. The initial
+values to be optimized are set to <code>rep(initQ,(order+1))</code>. See the
+<code>Q</code> argument of the <code>SSModel</code> function in the <code>KFAS</code>
+package and the examples in <code>KFAS</code>. If <code>NULL</code>, <code>initQ</code>
+is automatically set. See 'Details'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filtered</code></td>
+<td>
+<p>If <code>filtered</code> is <code>TRUE</code>, Kalman filtered time
+series observations are used for prediction, otherwise, Kalman smoothed
+observations are used for prediction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank.by</code></td>
+<td>
+<p>Character string. Criteria used for ranking candidate models
+generated using different options of values for <code>order</code> and/or
+<code>initQ</code>. Ignored if both <code>order</code> and <code>initQ</code> are provided.
+See 'Details'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The polynomial regression model produced and returned by the function is
+generated and represented as state space model (<code>SSModel</code>) based
+on code from the <code>dlmodeler</code> package. See <code>dlmodeler.polynomial</code>.
+The model is optimized using the Kalman filter and functions of the
+<code>KFAS</code> package (see <code>fitSSM</code>).
+</p>
+<p>If <code>order</code> is <code>NULL</code>, it is automatically selected. For that, a
+set of candidate polynomial regression state space models of orders from
+<code>minorder</code> to <code>maxorder</code> is generated and evaluated. Also, if
+<code>initQ</code> is <code>NULL</code>, it is automatically set as either
+<code>log(stats::var(timeseries))</code> or <code>0</code>. For that, candidate models receive
+different initial parameterization of <code>initQ</code> during the model
+optimization process. The value options of <code>order</code> and/or <code>initQ</code>
+which generate the best ranked candidate polynomial regression model
+acoording to the criteria in <code>rank.by</code> are selected.
+</p>
+<p>The ranking criteria in <code>rank.by</code> may be set as a prediction error
+measure (such as <code>MSE</code>, <code>NMSE</code>, <code>MAPE</code>,
+<code>sMAPE</code> or <code>MAXError</code>), or as a fitness criteria
+(such as <code>AIC</code>, <code>AICc</code>, <code>BIC</code> or
+<code>logLik</code>). In the former case, the candidate models are used for
+time series prediction and the error measures are calculated by means of a
+cross-validation process. In the latter case, the candidate models are
+fitted and fitness criteria are calculated based on all observations in
+<code>timeseries</code>.
+</p>
+<p>If <code>rank.by</code> is set as <code>"errors"</code> or <code>"fitness"</code>, the
+candidate models are ranked by all the mentioned prediction error measures
+or fitness criteria, respectively. The wheight of the ranking criteria is
+equally distributed. In this case, a <code>rank.position.sum</code> criterion is
+produced for ranking the candidate models. The <code>rank.position.sum</code>
+criterion is calculated as the sum of the rank positions of a model (1 = 1st
+position = better ranked model, 2 = 2nd position, etc.) on each calculated
+ranking criteria.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with components: </p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>An object of class "SSModel"
+containing the best evaluated polynomial regression model fitted with Kalman
+Filter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>The order argument provided (or automatically
+selected) for the best evaluated polynomial regression model fitted with
+Kalman Filter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initQ</code></td>
+<td>
+<p>The initQ argument provided (or automatically
+selected) for optimization of the best evaluated polynomial regression model
+fitted with Kalman Filter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AICc</code></td>
+<td>
+<p>Numeric value of the computed AICc
+criterion of the best evaluated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AIC</code></td>
+<td>
+<p>Numeric value of the
+computed AIC criterion of the best evaluated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BIC</code></td>
+<td>
+<p>Numeric
+value of the computed BIC criterion of the best evaluated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logLik</code></td>
+<td>
+<p>Numeric value of the computed log-likelihood of the best
+evaluated model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pred</code></td>
+<td>
+<p>A list with the components <code>mean</code>,
+<code>lower</code> and <code>upper</code>, containing the predictions of the best
+evaluated model and the lower and upper limits for prediction intervals,
+respectively. All components are time series. See
+<code>predict.SSModel</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MSE</code></td>
+<td>
+<p>Numeric value of the resulting
+MSE error of prediction. Require <code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NMSE</code></td>
+<td>
+<p>Numeric value of the resulting NMSE error of prediction. Require
+<code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MAPE</code></td>
+<td>
+<p>Numeric value of the resulting MAPE
+error of prediction. Require <code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sMAPE</code></td>
+<td>
+<p>Numeric
+value of the resulting sMAPE error of prediction. Require
+<code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MaxError</code></td>
+<td>
+<p>Numeric value of the maximal error
+of prediction. Require <code>timeseries.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank.val</code></td>
+<td>
+<p>Data.frame
+with the fitness or prediction accuracy criteria computed for all candidate
+polynomial regression with Kalman filter models ranked by <code>rank.by</code>. It
+has the attribute <code>"ranked.models"</code>, which is a list of objects of
+class "SSModel" containing all the candidate polynomial regression models
+fitted with Kalman Filter, also ranked by <code>rank.by</code>. Only provided if
+<code>order</code> or <code>initQ</code> were automatically selected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank.by</code></td>
+<td>
+<p>Ranking criteria used for ranking candidate models and
+producing <code>rank.val</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Rebecca Pontes Salles
+</p>
+
+
+<h3>References</h3>
+
+<p>R.J. Hyndman and G. Athanasopoulos, 2013, Forecasting:
+principles and practice. OTexts.
+</p>
+<p>R.H. Shumway and D.S. Stoffer, 2010, Time Series Analysis and Its
+Applications: With R Examples. 3rd ed. 2011 edition ed. New York, Springer.
+
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>fittestPolyR</code>, <code>fittestLM</code> ~
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+data(CATS,CATS.cont)
+fPolyRKF &lt;- fittestPolyRKF(CATS[,1],CATS.cont[,1])
+#predicted values
+pred &lt;- fPolyRKF$pred
+
+#extracting Kalman filtered and smoothed time series from the best fitted model
+fs &lt;- KFAS::KFS(fPolyRKF$model,filtering=c("state","mean"),smoothing=c("state","mean"))
+f &lt;- fitted(fs, filtered = TRUE) #Kalman filtered time  series
+s &lt;- fitted(fs) #Kalman smoothed time  series
+#plotting the time series data
+plot(c(CATS[,1],CATS.cont[,1]),type='o',lwd=2,xlim=c(960,1000),ylim=c(0,200),
+ xlab="Time",ylab="PRKF")
+#plotting the Kalman filtered time series
+lines(f,col='red',lty=2,lwd=2)
+#plotting the Kalman smoothed time series
+lines(s,col='green',lty=2,lwd=2)
+#plotting predicted values
+lines(ts(pred$mean,start=981),lwd=2,col='blue')
+#plotting prediction intervals
+lines(ts(pred$lower,start=981),lwd=2,col='light blue')
+lines(ts(pred$upper,start=981),lwd=2,col='light blue')
+
+
+</code></pre>
+
+
+</div>

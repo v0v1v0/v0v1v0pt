@@ -1,0 +1,236 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_expand</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A time based extension to <code>tidyr::complete()</code>.</h2>
+
+<h3>Description</h3>
+
+<p>A time based extension to <code>tidyr::complete()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_expand(
+  data,
+  time = NULL,
+  ...,
+  .by = NULL,
+  time_by = NULL,
+  from = NULL,
+  to = NULL,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  time_floor = FALSE,
+  week_start = getOption("lubridate.week.start", 1),
+  expand_type = c("nesting", "crossing"),
+  sort = TRUE,
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+
+time_complete(
+  data,
+  time = NULL,
+  ...,
+  .by = NULL,
+  time_by = NULL,
+  from = NULL,
+  to = NULL,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  time_floor = FALSE,
+  week_start = getOption("lubridate.week.start", 1),
+  expand_type = c("nesting", "crossing"),
+  sort = TRUE,
+  fill = NA,
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Groups to expand.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using tidy-select.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time unit. <br>
+Must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>Time series start date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>Time series end date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_floor</code></td>
+<td>
+<p>Should <code>from</code> be floored to the
+nearest unit specified through the <code>time_by</code>
+argument? This is particularly useful for
+starting sequences at the beginning of a week or month for example.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>week_start</code></td>
+<td>
+<p>day on which week starts following ISO conventions - 1
+means Monday (default), 7 means Sunday.
+This is only used when <code>floor_date = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expand_type</code></td>
+<td>
+<p>Type of time expansion to use where "nesting"
+finds combinations already present in the data,
+"crossing" finds all combinations of values in the group variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> expanded/completed variables are sorted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_month</code></td>
+<td>
+<p>Control how impossible dates are handled when
+month or year arithmetic is involved.
+Options are "preday", "boundary", "postday", "full" and "NA".
+See <code>?timechange::time_add</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_dst</code></td>
+<td>
+<p>See <code>?timechange::time_add</code> for the full list of details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>A named list containing value-name pairs to fill the named implicit missing values.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This works much the same as <code>tidyr::complete()</code>, except that
+you can supply an additional <code>time</code> argument to allow for filling in time gaps,
+expansion of time, as well as aggregating time to a higher unit.
+<code>lubridate</code> is used for handling time, while <code>data.table</code> and <code>collapse</code> are used for
+the data frame expansion.
+</p>
+<p>At the moment, within group combinations are ignored. This means when <code>expand_type = nesting</code>,
+existing combinations of supplied groups across the entire dataset are used, and
+when <code>expand_type = crossing</code>, all possible combinations of supplied groups across the <b>entire</b>
+dataset are used as well.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> of expanded time by or across groups.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(lubridate)
+library(nycflights13)
+
+x &lt;- flights$time_hour
+
+time_num_gaps(x) # Missing hours
+
+flights_count &lt;- flights %&gt;%
+  fcount(time_hour)
+
+# Fill in missing hours
+flights_count %&gt;%
+  time_complete(time = time_hour)
+
+# You can specify units too
+flights_count %&gt;%
+  time_complete(time = time_hour, time_by = "hours")
+flights_count %&gt;%
+  time_complete(time = as_date(time_hour), time_by = "days") #  Nothing to complete here
+
+# Where time_expand() and time_complete() really shine is how fast they are with groups
+flights %&gt;%
+  group_by(origin, dest) %&gt;%
+  time_expand(time = time_hour, time_by = dweeks(1))
+
+</code></pre>
+
+
+</div>

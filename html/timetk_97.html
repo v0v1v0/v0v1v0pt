@@ -1,0 +1,256 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_holiday_signature</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Holiday Feature (Signature) Generator</h2>
+
+<h3>Description</h3>
+
+<p><code>step_holiday_signature</code> creates a a <em>specification</em> of a recipe
+step that will convert date or date-time data into many
+holiday features that can aid in machine learning with time-series data.
+By default, many features are returned for different <em>holidays, locales, and stock exchanges</em>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_holiday_signature(
+  recipe,
+  ...,
+  holiday_pattern = ".",
+  locale_set = "all",
+  exchange_set = "all",
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  features = NULL,
+  skip = FALSE,
+  id = rand_id("holiday_signature")
+)
+
+## S3 method for class 'step_holiday_signature'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables that will be used to create the new variables. The
+selected variables should have class <code>Date</code> or
+<code>POSIXct</code>. See <code>recipes::selections()</code> for more details.
+For the <code>tidy</code> method, these are not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>holiday_pattern</code></td>
+<td>
+<p>A regular expression pattern to search the "Holiday Set".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>locale_set</code></td>
+<td>
+<p>Return binary holidays based on locale.
+One of: "all", "none", "World", "US", "CA", "GB", "FR", "IT", "JP", "CH", "DE".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exchange_set</code></td>
+<td>
+<p>Return binary holidays based on Stock Exchange Calendars.
+One of: "all", "none", "NYSE", "LONDON", "NERC", "TSX", "ZURICH".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new variable columns created by the original variables
+will be used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variables that will be
+used as inputs. This field is a placeholder and will be
+populated once <code>recipes::prep()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>features</code></td>
+<td>
+<p>A character string of features that will be
+generated. This field is a placeholder and will be
+populated once <code>recipes::prep()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the recipe is
+baked by bake.recipe()? While all operations are baked when prep.recipe()
+is run, some operations may not be able to be conducted on new data
+(e.g. processing the outcome variable(s)). Care should be taken when
+using skip = TRUE as it may affect the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_holiday_signature</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Use Holiday Pattern and Feature Sets to Pare Down Features</strong>
+By default, you're going to get A LOT of Features. This is a good thing because many
+machine learning algorithms have regularization built in. But, in many cases you
+will still want to reduce the number of <em>unnecessary features</em>. Here's how:
+</p>
+
+<ul>
+<li> <p><strong>Holiday Pattern:</strong> This is a Regular Expression pattern that can be used to filter.
+Try <code>holiday_pattern = "(US_Christ)|(US_Thanks)"</code> to return just Christmas and Thanksgiving
+features.
+</p>
+</li>
+<li> <p><strong>Locale Sets:</strong> This is a logical as to whether or not the locale has a holiday.
+For locales outside of US you may want to combine multiple locales.
+For example, <code>locale_set = c("World", "GB")</code> returns both World Holidays and Great Britain.
+</p>
+</li>
+<li> <p><strong>Exchange Sets:</strong> This is a logical as to whether or not the <em>Business is off</em> due
+to a holiday. Different Stock Exchanges are used as a proxy for business holiday calendars.
+For example, <code>exchange_set = "NYSE"</code> returns business holidays for New York Stock Exchange.
+</p>
+</li>
+</ul>
+<p><strong>Removing Unnecessary Features</strong>
+By default, many features are created automatically. Unnecessary features can
+be removed using <code>recipes::step_rm()</code> and <code>recipes::selections()</code> for more details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>step_holiday_signature</code>, an updated version of recipe with
+the new step added to the sequence of existing steps (if any).
+For the <code>tidy</code> method, a tibble with columns <code>terms</code>
+(the selectors or variables selected), <code>value</code> (the feature
+names).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Main Recipe Functions:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(dplyr)
+
+# Sample Data
+dates_in_2017_tbl &lt;- tibble::tibble(
+    index = tk_make_timeseries("2017-01-01", "2017-12-31", by = "day")
+)
+
+# Add US holidays and Non-Working Days due to Holidays
+# - Physical Holidays are added with holiday pattern (individual) and locale_set
+rec_holiday &lt;- recipe(~ ., dates_in_2017_tbl) %&gt;%
+    step_holiday_signature(index,
+                           holiday_pattern = "^US_",
+                           locale_set      = "US",
+                           exchange_set    = "NYSE")
+
+# Not yet prep'ed - just returns parameters selected
+rec_holiday %&gt;% tidy(1)
+
+# Prep the recipe
+rec_holiday_prep &lt;- prep(rec_holiday)
+
+# Now prep'ed - returns new features that will be created
+rec_holiday_prep %&gt;% tidy(1)
+
+# Apply the recipe to add new holiday features!
+bake(rec_holiday_prep, dates_in_2017_tbl)
+
+
+
+
+</code></pre>
+
+
+</div>

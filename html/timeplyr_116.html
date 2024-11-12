@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_seq_id</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate a unique identifier for a regular time sequence with gaps</h2>
+
+<h3>Description</h3>
+
+<p>A unique identifier is created every time a specified amount of
+time has passed, or in the case of regular sequences, when there is a gap
+in time.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_seq_id(
+  x,
+  time_by = NULL,
+  threshold = 1,
+  g = NULL,
+  na_skip = TRUE,
+  rolling = TRUE,
+  switch_on_boundary = FALSE,
+  time_type = getOption("timeplyr.time_type", "auto")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Date, datetime or numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time unit. <br>
+This signifies the granularity of the time data with which to measure gaps
+in the sequence.
+If your data is daily for example, supply <code>time_by = "days"</code>.
+If weekly, supply <code>time_by = "week"</code>.
+Must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>Threshold such that when the time elapsed
+exceeds this, the sequence ID is incremented by 1.
+For example, if <code>time_by = "days"</code> and <code>threshold = 2</code>,
+then when 2 days have passed, a new ID is created.
+Furthermore, <code>threshold</code> generally need not be supplied as <br><code>time_by = "3 days"</code> &amp; <code>threshold = 1</code> <br>
+is identical to <br><code>time_by = "days"</code> &amp; <code>threshold = 3</code>. <br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Object used for grouping x.
+This can for example be a vector or data frame.
+<code>g</code> is passed directly to <code>collapse::GRP()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_skip</code></td>
+<td>
+<p>Should <code>NA</code> values be skipped? Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rolling</code></td>
+<td>
+<p>When this is <code>FALSE</code>, a new ID is created every time
+a cumulative amount of time has passed. Once that amount of time has passed,
+a new ID is created, the clock "resets" and we start counting from that point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>switch_on_boundary</code></td>
+<td>
+<p>When an exact amount of time
+(specified in <code>time_by</code>) has passed, should there an increment in ID?
+The default is <code>FALSE</code>. For example, if <code>time_by = "days"</code> and
+<code>switch_on_boundary = FALSE</code>, <code>&gt;</code> 1 day must have passed, otherwise
+<code>&gt;=</code> 1 day must have passed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>time_seq_id()</code> Assumes <code>x</code> is regular and in
+ascending or descending order.
+To check this condition formally, use <code>time_is_regular()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An integer vector of <code>length(x)</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(timeplyr)
+library(lubridate)
+
+# Weekly sequence, with 2 gaps in between
+x &lt;- time_seq(today(), length.out = 10, time_by = "week")
+x &lt;- x[-c(3, 7)]
+# A new ID when more than a week has passed since the last time point
+time_seq_id(x, time_by = "week")
+# A new ID when &gt;= 2 weeks has passed since the last time point
+time_seq_id(x, time_by = "weeks", threshold = 2, switch_on_boundary = TRUE)
+# A new ID when at least 4 cumulative weeks have passed
+time_seq_id(x, time_by = "4 weeks",
+            switch_on_boundary = TRUE, rolling = FALSE)
+# A new ID when more than 4 cumulative weeks have passed
+time_seq_id(x, time_by = "4 weeks",
+            switch_on_boundary = FALSE, rolling = FALSE)
+
+</code></pre>
+
+
+</div>

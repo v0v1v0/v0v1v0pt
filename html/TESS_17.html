@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tess.PosteriorPrediction</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tess.PosteriorPrediction: Approximation of the posterior predictive distribution.</h2>
+
+<h3>Description</h3>
+
+<p>tess.PosteriorPrediction calls the simulation function exactly once for each sampled parameter combination. In that way, posterior predictive simulations can be obtained which then in turn can be used to compute summary statistics based on these posterior predictive simulations. Fore more information see the vignette.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tess.PosteriorPrediction(simulationFunction,parameters,burnin)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>simulationFunction</code></td>
+<td>
+<p>The simulation function which will be called internally by simulationFunction(parameters).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>A matrix of parameters where the rows represent samples of parameters and the column the different parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>The fraction of samples to be discarded as burnin. This is 0.25 by default</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns samples simulated from the posterior predictive distribution.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sebastian Hoehna</p>
+
+
+<h3>References</h3>
+
+<p>S. Hoehna: Fast simulation of reconstructed phylogenies under global, time-dependent birth-death processes. 2013, Bioinformatics, 29:1367-1374 </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># We first run an MCMC to obtain samples from the posterior distribution 
+# and then simulate the posterior predictive distribution.
+
+# The bird phylogeny as the test data set
+data(cettiidae)
+times &lt;- as.numeric( branching.times(cettiidae) )
+
+# The log-likelihood function
+likelihood &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  lnl &lt;- tess.likelihood(times,b,d,samplingProbability=1.0,log=TRUE)
+  return (lnl)
+}
+
+prior_diversification &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+prior_turnover &lt;- function(x) { dexp(x,rate=0.1,log=TRUE) }
+priors &lt;- c(prior_diversification,prior_turnover)
+
+# Note, the number of iterations and the burnin is too small here 
+# and should be adapted for real analyses
+samples &lt;- tess.mcmc(likelihood,priors,c(1,0.1),c(TRUE,TRUE),c(0.1,0.1),10,10)
+
+tmrca &lt;- max(branching.times(cettiidae))
+# The simulation function
+sim &lt;- function(params) {
+  # We use the parameters as diversification rate and turnover rate.
+  # Thus we need to transform first
+  b &lt;- params[1] + params[2]
+  d &lt;- params[2]
+  
+  tree &lt;- tess.sim.age(n=1,age=tmrca,b,d,samplingProbability=1.0)[[1]]
+  return (tree)
+}
+
+trees &lt;- tess.PosteriorPrediction(sim,samples)
+
+# compute the posterior predictive test statistic
+ppt &lt;- tess.PosteriorPredictiveTest(trees,cettiidae,gammaStat)
+# get the p-value of the observed test-statistic
+ppt[[2]]
+
+</code></pre>
+
+
+</div>

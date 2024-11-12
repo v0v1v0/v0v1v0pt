@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>set.gui.path</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Declare GUI's Active Document</h2>
+
+<h3>Description</h3>
+
+<p><code>set.gui.path()</code> can be used to implement <code>this.path()</code> for
+arbitrary GUIs. This is similar to <code>set.sys.path()</code> which can be
+used to implement <code>sys.path()</code> for arbitrary <code>source()</code>-like
+functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">set.gui.path(...)
+
+thisPathNotExistsError(..., call. = TRUE, domain = NULL,
+                       call = .getCurrentCall())
+
+thisPathNotFoundError(..., call. = TRUE, domain = NULL,
+                      call = .getCurrentCall())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>..., call., domain, call</code></td>
+<td>
+<p>See details.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p><code>thisPathNotExistsError()</code> and <code>thisPathNotFoundError()</code> are
+provided for use inside <code>set.gui.path()</code>, and should not be used
+elsewhere.
+</p>
+<p>If no arguments are passed to <code>set.gui.path()</code>, the default behaviour
+will be restored.
+</p>
+<p>If one argument is passed to <code>set.gui.path()</code>, it must be a function
+that returns the path of the active document in your GUI. It must accept the
+following arguments: <code>(verbose, original, for.msg, contents)</code> (default
+values are unnecessary). This makes sense for a GUI which can edit and run <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span>
+code from several different documents such as RGui, <a href="https://posit.co/products/open-source/rstudio/">RStudio</a>, <a href="https://code.visualstudio.com/">VSCode</a>, and
+<a href="https://ess.r-project.org/">Emacs</a>.
+</p>
+<p>If two or three arguments are passed to <code>set.gui.path()</code>, they must be
+the name of the GUI, the path of the active document, and optionally a
+function to get the contents of the document. If provided, the function must
+accept at least one argument which will be the normalized path of the
+document. This makes sense for a GUI which can edit and run <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> code from only
+one document such as <a href="https://jupyter.org/">Jupyter</a> and shell.
+</p>
+<p>It is best to call this function as a user hook.
+</p>
+<pre>setHook(packageEvent("this.path"),
+function(pkgname, pkgpath)
+{
+    this.path::set.gui.path(&lt;...&gt;)
+}, action = "prepend")</pre>
+<p>An example for a GUI which can run code from multiple documents:
+</p>
+<pre>evalq(envir = new.env(parent = .BaseNamespaceEnv), {
+    .guiname &lt;- "myGui"
+    .custom_gui_path &lt;- function(verbose, original, for.msg, contents) {
+        if (verbose)
+            cat("Source: document in", .guiname, "\n")
+
+        ## your GUI needs to know which document is active
+        ## and some way to retrieve that document from R
+        doc &lt;- &lt;.myGui_activeDocument()&gt;
+
+        ## if no documents are open, 'doc' should be NULL
+        ## or some other object to represent no documents open
+        if (is.null(doc)) {
+            if (for.msg)
+                NA_character_
+            else stop(this.path::thisPathNotExistsError(
+                "R is running from ", .guiname, " with no documents open\n",
+                " (or document has no path)"))
+        }
+        else if (contents) {
+            ## somehow, get and return the contents of the document
+            &lt;doc$contents&gt;
+        }
+        else {
+            ## somehow, get the path of the document
+            path &lt;- &lt;doc$path&gt;
+            if (nzchar(path)) {
+                ## if the path is not normalized, this will normalize it
+                if (isTRUE(original))
+                    path
+                else normalizePath(path, "/", TRUE)
+                # ## otherwise, you could just do:
+                # path
+            }
+            else if (for.msg)
+                ## return "Untitled" possibly translated
+                gettext("Untitled", domain = "RGui", trim = FALSE)
+            else
+                stop(this.path::thisPathNotFoundError(
+                    "document in ", .guiname, " does not exist"))
+        }
+    }
+    ## recommended to prevent tampering
+    lockEnvironment(environment(), bindings = TRUE)
+    setHook(packageEvent("this.path"),
+    function(pkgname, pkgpath) {
+        this.path::set.gui.path(.custom_gui_path)
+    }, action = "prepend")
+})</pre>
+<p>An example for a GUI which can run code from only one document:
+</p>
+<pre>evalq(envir = new.env(parent = .BaseNamespaceEnv), {
+    .guiname &lt;- "myGui"
+    .path &lt;- "~/example.R"
+    .custom_get_contents &lt;- function(path) {
+        ## get the contents of the document
+        readLines(path, warn = FALSE)
+    }
+    ## recommended to prevent tampering
+    lockEnvironment(environment(), bindings = TRUE)
+    setHook(packageEvent("this.path"), function(pkgname, pkgpath) {
+        this.path::set.gui.path(.guiname, .path, .custom_get_contents)
+    }, action = "prepend")
+    # ## if your GUI does not have/need a .custom_get_contents
+    # ## function, then this works just as well:
+    # setHook(packageEvent("this.path"), function(pkgname, pkgpath) {
+    #     this.path::set.gui.path(.guiname, .path)
+    # }, action = "prepend")
+})</pre>
+
+
+<h3>Value</h3>
+
+<p>a list of the previous settings for <code>set.gui.path()</code>, similar to
+<code>options()</code>.
+</p>
+
+
+</div>

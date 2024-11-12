@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>extract_rsp_biomarkers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Prepare response data estimates for multiple biomarkers in a single data frame</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Prepares estimates for number of responses, patients and overall response rate,
+as well as odds ratio estimates, confidence intervals and p-values,
+for multiple biomarkers across population subgroups in a single data frame.
+<code>variables</code> corresponds to the names of variables found in <code>data</code>, passed as a
+named list and requires elements <code>rsp</code> and <code>biomarkers</code> (vector of continuous
+biomarker variables) and optionally <code>covariates</code>, <code>subgroups</code> and <code>strata</code>.
+<code>groups_lists</code> optionally specifies groupings for <code>subgroups</code> variables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">extract_rsp_biomarkers(
+  variables,
+  data,
+  groups_lists = list(),
+  control = control_logistic(),
+  label_all = "All Patients"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>string</code>)<br> list of additional analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the dataset containing the variables to summarize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups_lists</code></td>
+<td>
+<p>(named <code>list</code> of <code>list</code>)<br> optionally contains for each <code>subgroups</code> variable a
+list, which specifies the new group levels via the names and the
+levels that belong to it in the character vectors that are elements of the list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(named <code>list</code>)<br> controls for the response definition and the
+confidence level produced by <code>control_logistic()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_all</code></td>
+<td>
+<p>(<code>string</code>)<br> label for the total population analysis.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> with columns <code>biomarker</code>, <code>biomarker_label</code>, <code>n_tot</code>, <code>n_rsp</code>,
+<code>prop</code>, <code>or</code>, <code>lcl</code>, <code>ucl</code>, <code>conf_level</code>, <code>pval</code>, <code>pval_label</code>, <code>subgroup</code>, <code>var</code>,
+<code>var_label</code>, and <code>row_type</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>You can also specify a continuous variable in <code>rsp</code> and then use the
+<code>response_definition</code> control to convert that internally to a logical
+variable reflecting binary response.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>h_logistic_mult_cont_df()</code> which is used internally.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(forcats)
+
+adrs &lt;- tern_ex_adrs
+adrs_labels &lt;- formatters::var_labels(adrs)
+
+adrs_f &lt;- adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  mutate(rsp = AVALC == "CR")
+
+# Typical analysis of two continuous biomarkers `BMRKR1` and `AGE`,
+# in logistic regression models with one covariate `RACE`. The subgroups
+# are defined by the levels of `BMRKR2`.
+df &lt;- extract_rsp_biomarkers(
+  variables = list(
+    rsp = "rsp",
+    biomarkers = c("BMRKR1", "AGE"),
+    covariates = "SEX",
+    subgroups = "BMRKR2"
+  ),
+  data = adrs_f
+)
+df
+
+# Here we group the levels of `BMRKR2` manually, and we add a stratification
+# variable `STRATA1`. We also here use a continuous variable `EOSDY`
+# which is then binarized internally (response is defined as this variable
+# being larger than 750).
+df_grouped &lt;- extract_rsp_biomarkers(
+  variables = list(
+    rsp = "EOSDY",
+    biomarkers = c("BMRKR1", "AGE"),
+    covariates = "SEX",
+    subgroups = "BMRKR2",
+    strata = "STRATA1"
+  ),
+  data = adrs_f,
+  groups_lists = list(
+    BMRKR2 = list(
+      "low" = "LOW",
+      "low/medium" = c("LOW", "MEDIUM"),
+      "low/medium/high" = c("LOW", "MEDIUM", "HIGH")
+    )
+  ),
+  control = control_logistic(
+    response_definition = "I(response &gt; 750)"
+  )
+)
+df_grouped
+
+</code></pre>
+
+
+</div>

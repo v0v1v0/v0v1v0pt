@@ -1,0 +1,83 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tboot_bmr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function tboot_bmr</h2>
+
+<h3>Description</h3>
+
+<p>Bootstrap <code>nrow</code> rows of <code>dataset</code> using
+the given row-level weights.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tboot_bmr(nrow, weights_bmr, tol_rel_sd = 0.01)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nrow</code></td>
+<td>
+<p>Number of rows in the new bootstrapped dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights_bmr</code></td>
+<td>
+<p>An object of class 'tweights_bmr' output from the 'tweights_bmr' function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol_rel_sd</code></td>
+<td>
+<p>An error will be called if for some simulation if the target is not achievable with the data. However, the error will only be called if max absolute difference releative to the marginal standard is greater than specified.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Simulates a dataset by first simulating from the posterior distribution of the column means and then simulating a dataset with that underlying mean. Details a further documented in the vignette.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A simulated dataset with 'nrow' rows. The underlying 'true' posterior parameter value is an attribute which can be extracted useing <code>attr(ret, "post_bmr")</code> where 'ret' is the matrix.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tweights</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Use winsorized marginal to keep marginal simulation within feasible bootstrap region
+winsor=function(marginalSims,y)  {
+  l=min(y)
+  u=max(y)
+  ifelse(marginalSims&lt;l,l,ifelse(marginalSims&gt;u,u, marginalSims))
+}
+#Create an example marginal posterior
+marginal = list(Sepal.Length=winsor(rnorm(10000,mean=5.8, sd=.2),iris$Sepal.Length),
+               Sepal.Width=winsor(rnorm(10000,mean=3,sd=.2), iris$Sepal.Width),
+               Petal.Length=winsor(rnorm(10000,mean=3.7,sd=.2), iris$Petal.Length)
+)
+
+#simulate
+w = tweights_bmr(dataset = iris, marginal = marginal, silent = TRUE)
+sample_data = tboot_bmr(1000, weights = w)
+
+</code></pre>
+
+
+</div>

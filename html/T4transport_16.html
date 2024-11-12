@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>histmed22Y</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wasserstein Median of Histograms by You et al. (2022)</h2>
+
+<h3>Description</h3>
+
+<p>Given multiple histograms represented as <code>"histogram"</code> S3 objects, compute the
+Wasserstein median of order 2. We need one requirement that all histograms in an
+input list <code>hists</code> must have <b>same breaks</b>. See the example on how to
+construct a histogram on predefined breaks/bins.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">histmed22Y(hists, weights = NULL, lambda = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>hists</code></td>
+<td>
+<p>a length-<code class="reqn">N</code> list of histograms (<code>"histogram"</code> object) of same breaks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>a weight of each image; if <code>NULL</code> (default), uniform weight is set. Otherwise,
+it should be a length-<code class="reqn">N</code> vector of nonnegative weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>a regularization parameter; if <code>NULL</code> (default), a paper's suggestion
+would be taken, or it should be a nonnegative real number.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra parameters including </p>
+
+<dl>
+<dt>abstol</dt>
+<dd>
+<p>stopping criterion for iterations (default: 1e-8).</p>
+</dd>
+<dt>init.vec</dt>
+<dd>
+<p>an initial weight vector (default: uniform weight).</p>
+</dd>
+<dt>maxiter</dt>
+<dd>
+<p>maximum number of iterations (default: 496).</p>
+</dd>
+<dt>nthread</dt>
+<dd>
+<p>number of threads for OpenMP run (default: 1).</p>
+</dd>
+<dt>print.progress</dt>
+<dd>
+<p>a logical to show current iteration (default: <code>FALSE</code>).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>"histogram"</code> object of the Wasserstein median histogram.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#----------------------------------------------------------------------
+#                      Binned from Two Gaussians
+#
+# EXAMPLE : small example for CRAN for visualization purpose.
+#----------------------------------------------------------------------
+# GENERATE FROM TWO GAUSSIANS WITH DIFFERENT MEANS
+set.seed(100)
+x  = stats::rnorm(1000, mean=-4, sd=0.5)
+y  = stats::rnorm(1000, mean=+4, sd=0.5)
+bk = seq(from=-10, to=10, length.out=20)
+
+# HISTOGRAMS WITH COMMON BREAKS
+histxy = list()
+histxy[[1]] = hist(x, breaks=bk, plot=FALSE)
+histxy[[2]] = hist(y, breaks=bk, plot=FALSE)
+
+# COMPUTE
+hmean = histbary15B(histxy)
+hmeds = histmed22Y(histxy)
+
+# VISUALIZE
+opar &lt;- par(no.readonly=TRUE)
+par(mfrow=c(1,3))
+barplot(histxy[[1]]$density, col=rgb(0,0,1,1/4), 
+        ylim=c(0, 1.05), main="Two Histograms")
+barplot(histxy[[2]]$density, col=rgb(1,0,0,1/4), 
+        ylim=c(0, 1.05), add=TRUE)
+barplot(hmean$density, main="Barycenter",
+        ylim=c(0, 1.05))
+barplot(hmeds$density, main="Wasserstein Median",
+        ylim=c(0, 1.05))
+par(opar)
+
+
+</code></pre>
+
+
+</div>

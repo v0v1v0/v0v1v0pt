@@ -1,0 +1,178 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>initModel</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Defines the model to be used in analysis.</h2>
+
+<h3>Description</h3>
+
+<p>Allows definition of a model of class "dat" to be used
+in analysis.  The arguments specify the model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">initModel(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>specify the model class via the character string
+e.g., <code>kin-class</code> or <code>spec</code> and
+any of the slots associated with that model type (which is
+a subclass of class <code>dat</code>, so that all slots in <code>dat</code>
+may also be specified),
+e.g., <code>mod_type = "kin"</code> will initialize a model with
+class <code>kin</code>, for a kinetic model.  </p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>For examples, see the help files for <code>dat-class</code> and
+<code>fitModel</code></p>
+
+
+<h3>Value</h3>
+
+<p>an object of class <code>dat</code> with the sub-class given by the value of
+the <code>mod_type</code> input.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Katharine M. Mullen, Ivo H. M. van Stokkum</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>dat-class</code>, <code>kin-class</code>,
+<code>spec-class</code>,
+<code>fitModel</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+##############################
+## READ IN PSI 1
+##############################
+
+data(denS4)
+
+##############################
+## PREPROCESS PSI 1
+##############################
+
+denS4&lt;-preProcess(data = denS4, scalx2 = c(3.78, 643.5))
+
+##############################
+## READ IN PSI 2
+##############################
+
+data(denS5)
+
+##############################
+## PREPROCESS PSI 2
+##############################
+
+denS5&lt;-preProcess(data = denS5, scalx2 = c(3.78, 643.5))
+
+##############################
+## DEFINE INITIAL MODEL
+##############################
+
+model1&lt;- initModel(mod_type = "kin",
+kinpar= c(7.9, 1.08, 0.129, .0225, .00156) ,
+irfpar=c( -.1018, 0.0434),
+disptau=FALSE, dispmu=TRUE, parmu = list(c(.230)),
+lambdac = 650,
+seqmod=TRUE,
+positivepar=c("kinpar"),
+title="S4",
+cohspec = list( type = "irf"))
+
+
+
+##############################
+## FIT INITIAL MODEL
+##############################
+
+denRes1 &lt;- fitModel(data=list(denS4, denS5), list(model1),
+opt=kinopt(iter=5, divdrel = TRUE, linrange = .2,
+makeps = "den1", selectedtraces = c(1,5,10), plotkinspec =TRUE,
+output="pdf", xlab = "time (ps)", ylab = "wavelength"))
+
+##############################
+## REFINE INITIAL MODEL, RE-FIT
+## adding some per-dataset parameters
+##############################
+
+denRes2 &lt;- fitModel(data = list(denS4, denS5), modspec = list(model1),
+modeldiffs = list(dscal = list(list(to=2,from=1,value=.457)),
+free = list(
+list(what = "irfpar", ind = 1, dataset = 2, start=-.1932),
+list(what = "kinpar", ind = 5, dataset = 2, start=.0004),
+list(what = "kinpar", ind = 4, dataset = 2, start= .0159)
+)),
+opt=kinopt(iter=5, divdrel = TRUE, linrange = .2,
+xlab = "time (ps)", ylab = "wavelength", output="pdf",
+makeps = "den2", selectedtraces = c(1,5,10)))
+
+##############################
+## REFINE MODEL FURTHER AS NEW MODEL OBJECT
+##############################
+
+model2 &lt;- initModel(mod_type = "kin",
+kinpar= c(7.9, 1.08, 0.129, .0225, .00156),
+irfpar=c( -.1018, 0.0434),
+parmu = list(c(.230)),
+lambdac = 650,
+positivepar=c("kinpar", "coh"),
+cohspec = list( type = "seq", start = c(8000, 1800)))
+
+##############################
+## FIT NEW MODEL OBJECT
+##############################
+
+denRes3 &lt;- fitModel(data = list(denS4, denS5), list(model2),
+modeldiffs = list(dscal = list(list(to=2,from=1,value=.457)),
+free = list(
+list(what = "irfpar", ind = 1, dataset = 2, start=-.1932),
+list(what = "kinpar", ind = 5, dataset = 2, start=.0004),
+list(what = "kinpar", ind = 4, dataset = 2, start= .0159)
+)),
+opt=kinopt(iter=5, divdrel = TRUE, linrange = .2,
+makeps = "den3", selectedtraces = c(1,5,10), plotkinspec =TRUE,
+stderrclp = TRUE, kinspecerr=TRUE, output="pdf",
+xlab = "time (ps)", ylab = "wavelength",
+breakdown = list(plot=c(643.50, 658.62, 677.5))))
+
+ # end donttest
+
+##############################
+## CLEANUP GENERATED FILES
+##############################
+# This removes the files that were generated in this example
+# (do not run this code if you wish to inspect the output)
+file_list_cleanup = c('den1_paramEst.txt', 'den2_paramEst.txt', 'den3_paramEst.txt',
+  Sys.glob("*paramEst.txt"), Sys.glob("*.ps"), Sys.glob("Rplots*.pdf"))
+
+# Iterate over the files and delete them if they exist
+for (f in file_list_cleanup) {
+  if (file.exists(f)) {
+    unlink(f)
+  }
+}
+
+</code></pre>
+
+
+</div>

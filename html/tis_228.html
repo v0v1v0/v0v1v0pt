@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tisFromCsv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read time series from Comma Separated Values (.csv) file</h2>
+
+<h3>Description</h3>
+
+<p>Reads <code>tis</code> (Time Indexed Series) from a csv file,
+returning the series in a list, and optionally storing them in an environment.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tisFromCsv(csvFile, dateCol = "date", dateFormat = "%Y%m%d", tz = "",
+           tif = NULL, defaultTif = "business",
+           save = F, envir = parent.frame(),
+           naNumber = NULL, chopNAs = TRUE,
+           tolerance = sqrt(.Machine$double.eps), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>csvFile</code></td>
+<td>
+<p>A file name, connection, or URL acceptable to
+<code>read.csv</code>. Also see the the rest of this help entry for 
+required attributes of this file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dateCol</code></td>
+<td>
+<p>name of the column holding dates.  This column must be
+present in the file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dateFormat</code></td>
+<td>
+<p>format of the dates in <code>dateCol</code>. If
+the <code>dateCol</code> cells contain Excel dates, use <code>dateFormat ==
+  "excel"</code>.  If they are strings, see <code>strptime</code> for date formats.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tz</code></td>
+<td>
+<p>the time zone to be used by <code>strptime</code> when
+converting date strings into <code>POSIXlt</code> timestamps. The default
+is to use the current time zone, which means it can change from,
+say, EST to EDT in the spring, and back to EST in the fall. If you
+have an "impossible" time in your csv file, like 2 am on March 13,
+2011, this will result in an unexpected <code>NA</code> in the created
+<code>ti</code> dates, which will result in those rows in your csv being
+effectively ignored.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tif</code></td>
+<td>
+<p>time index frequency of the data.  If this is <code>NULL</code>
+(the default), the function tries to infer the frequency from the
+dates in the <code>ymdCol</code> column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>defaultTif</code></td>
+<td>
+<p>If the frequency can't be inferred from the dates in
+the <code>ymdCol</code> column, this <code>tif</code> frequency will be used.
+This should be a rare occurrence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>save</code></td>
+<td>
+<p>If true, save the individual series in the enviroment
+given by the <code>envir</code> argument. Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>if <code>save == TRUE</code>, the individual series (one per
+column) are saved in this enviroment.  Default is the frame of the caller.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>naNumber</code></td>
+<td>
+<p>if non-<code>NULL</code>, numbers within <code>tolerance</code> of
+this number are considered to be <code>NA</code> values.  NA strings can
+be specified by including an <code>na.strings</code> argument as one of
+the ... arguments that are passed along to <code>read.csv</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chopNAs</code></td>
+<td>
+<p>if <code>TRUE</code> (the default), leading and trailing
+<code>NA</code> values are cut off of each column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolerance</code></td>
+<td>
+<p>Used to determine whether or not numbers in the file
+are close enough to <code>naNumber</code> to be regarded as equal to it.
+The default is about 1.48e-08.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed along to the underlying
+<code>read.csv</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><b>File Requirements:</b> The csv file must have column names
+across the top, and everything but the first row should be numeric.
+There must be as many column names (enclosed in quotes) as there are
+columns, and the column named by <code>dateCol</code> must have dates in the
+format indicated by <code>dateFormat</code>. <strong>The <code>dateCol</code>
+column must be present.</strong> 
+</p>
+<p><b>Missing (NA) values:</b>  Missing and NA values are the same thing.
+The underlying <code>read.csv</code> has "," as its default separator and
+"NA" as its default na.string, so the rows 
+</p>
+<pre>
+    
+  20051231,,13,,42,NA,
+  20060131,NA,14,,43,,NA
+
+</pre>  
+<p>indicate <code>NA</code> values for both the Dec 2005 and Jan 2006
+observations of the first, third, fifth and sixth series. 
+</p>
+<p>The values in the file are read into a single large <code>tis</code> series,
+with a <code>tif</code> (Time Index Frequency) inferred from the first six
+dates in the ymd column.  The first date is converted to a <code>ti</code>
+(Time Index) of that frequency and becomes the <code>start</code> of the
+series.  If <code>chopNAs</code> is <code>TRUE</code>, each individual column is
+then windowed via <code>naWindow</code> to strip off leading and trailing
+<code>NA</code> values, and the resulting series are put into a list with
+names given by lower-casing the column names from the csv file.  If
+<code>save</code> is <code>TRUE</code>, the series are also stored in <code>envir</code>
+using those same names. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of <code>tis</code> time series, one per column of the csv file.
+The list is returned invisibly if <code>save</code> is <code>TRUE</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>ti</code>, <code>tis</code>, <code>read.csv</code>,
+<code>read.table</code></p>
+
+
+</div>

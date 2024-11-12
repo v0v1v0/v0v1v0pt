@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>interpolate_pw</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use population-weighted areal interpolation to transfer information from one set of shapes to another</h2>
+
+<h3>Description</h3>
+
+<p>A common use-case when working with time-series small-area Census data is to transfer data from one set of shapes (e.g. 2010 Census tracts) to another set of shapes (e.g. 2020 Census tracts). Population-weighted interpolation is one such solution to this problem that takes into account the distribution of the population within a Census unit to intelligently transfer data between incongruent units.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">interpolate_pw(
+  from,
+  to,
+  to_id = NULL,
+  extensive,
+  weights,
+  weight_column = NULL,
+  weight_placement = c("surface", "centroid"),
+  crs = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>The spatial dataset from which numeric attributes will be interpolated to target zones. By default, all numeric columns in this dataset will be interpolated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>The target geometries (zones) to which numeric attributes will be interpolated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to_id</code></td>
+<td>
+<p>(optional) An ID column in the target dataset to be retained in the output. For data obtained with tidycensus, this will be <code>"GEOID"</code> by convention.  If <code>NULL</code>, the output dataset will include a column <code>id</code> that uniquely identifies each row.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extensive</code></td>
+<td>
+<p>if <code>TRUE</code>, return weighted sums; if <code>FALSE</code>, return weighted means.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>An input spatial dataset to be used as weights. If the dataset is not of geometry type <code>POINT</code>, it will be converted to points by the function with <code>sf::st_point_on_surface()</code>.  For US-based applications, this will commonly be a Census block dataset obtained with the tigris or tidycensus packages.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_column</code></td>
+<td>
+<p>(optional) a column in <code>weights</code> used for weighting in the interpolation process.  Typically this will be a column representing the population (or other weighting metric, like housing units) of the input weights dataset.  If <code>NULL</code> (the default), each feature in <code>weights</code> is given an equal weight of 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_placement</code></td>
+<td>
+<p>(optional) One of <code>"surface"</code>, where weight polygons are converted to points on polygon surfaces with <code>sf::st_point_on_surface()</code>, or <code>"centroid"</code>, where polygon centroids are used instead with <code>sf::st_centroid()</code>.  Defaults to <code>"surface"</code>.  This argument is not necessary if weights are already of geometry type <code>POINT</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crs</code></td>
+<td>
+<p>(optional) The EPSG code of the output projected coordinate reference system (CRS). Useful as all input layers (<code>from</code>, <code>to</code>, and <code>weights</code>) must share the same CRS for the function to run correctly.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The approach implemented here is based on Esri's data apportionment algorithm, in which an "apportionment layer" of points (referred to here as the <code>weights</code>) is used to determine how to weight areas of overlap between origin and target zones.  Users must supply a "from" dataset as an sf object (the dataset from which numeric columns will be interpolated) and a "to" dataset, also of class sf, that contains the target zones. A third sf object, the "weights", may be an object of geometry type <code>POINT</code> or polygons from which points will be derived using <code>sf::st_point_on_surface()</code>.
+</p>
+<p>An intersection is computed between <code>from</code> and <code>to</code>, and a spatial join is computed between the intersection layer and the weights layer, represented as points.  A specified <code>weight_column</code> in <code>weights</code> will be used to determine the relative influence of each point on the allocation of values between <code>from</code> and <code>to</code>; if no weight column is specified, all points will be weighted equally.
+</p>
+<p>The <code>extensive</code> parameter (logical) should reflect the values being interpolated correctly.  If <code>TRUE</code>, the function returns a weighted sum for each zone.  If <code>FALSE</code>, a weighted mean will be returned.  For Census data, <code>extensive = TRUE</code> should be used for transferring counts / estimated counts between zones.  Derived metrics (e.g. population density, percentages, etc.) should use <code>extensive = FALSE</code>.  Margins of error in the ACS will not be transferred correctly with this function, so please use with caution.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A dataset of class sf with the geometries and an ID column from <code>to</code> (the target shapes) but with numeric attributes of <code>from</code> interpolated to those shapes.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Example: interpolating work-from-home from 2011-2015 ACS
+# to 2020 shapes
+library(tidycensus)
+library(tidyverse)
+library(tigris)
+options(tigris_use_cache = TRUE)
+
+wfh_15 &lt;- get_acs(
+  geography = "tract",
+  variables = "B08006_017",
+  year = 2015,
+  state = "AZ",
+  county = "Maricopa",
+  geometry = TRUE
+) %&gt;%
+select(estimate)
+
+wfh_20 &lt;- get_acs(
+  geography = "tract",
+  variables = "B08006_017",
+  year = 2020,
+  state = "AZ",
+  county = "Maricopa",
+  geometry = TRUE
+ )
+
+maricopa_blocks &lt;- blocks(
+  "AZ",
+  "Maricopa",
+  year = 2020
+)
+
+wfh_15_to_20 &lt;- interpolate_pw(
+  from = wfh_15,
+  to = wfh_20,
+  to_id = "GEOID",
+  weights = maricopa_blocks,
+  weight_column = "POP20",
+  crs = 26949,
+  extensive = TRUE
+)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

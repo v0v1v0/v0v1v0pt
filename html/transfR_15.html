@@ -1,0 +1,251 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>inversion</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate net rainfall by inversion</h2>
+
+<h3>Description</h3>
+
+<p>Estimate net rainfall by inverse modelling, where the model is a convolution between net rainfall
+and a unit hydrograph in order to simulate discharge.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">inversion(Qobs, ...)
+
+## Default S3 method:
+inversion(Qobs, uh, RnAp, deltat, ...)
+
+## S3 method for class 'units'
+inversion(
+  Qobs,
+  uh,
+  RnAp,
+  deltat,
+  Bd = 0.01,
+  Dd = 1,
+  Bp = 0.001,
+  Tp = 20,
+  Ad = 0.01,
+  Ap = 0.9,
+  warmup = 10,
+  cooldown = 8,
+  dosplit = TRUE,
+  split = 30,
+  fixedpar = TRUE,
+  parallel = FALSE,
+  cores = NULL,
+  ...
+)
+
+## S3 method for class 'transfR'
+inversion(Qobs, verbose = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Qobs</code></td>
+<td>
+<p>discharge vector or object of class <code>transfR</code>. If no unit is provided,
+<code>Qobs</code> is assumed to be in [mm/h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>uh</code></td>
+<td>
+<p>unit hydrograph vector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RnAp</code></td>
+<td>
+<p>net rainfall a priori. If no unit is provided, <code>RnAp</code> is assumed to be in [mm/h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deltat</code></td>
+<td>
+<p>time step of the time series. If no unit is provided, <code>deltat</code> is assumed to be in [min]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Bd</code></td>
+<td>
+<p>parameter used to maintain a minimum value of standart deviation for low discharge values.
+If no unit is provided, <code>Bd</code> is assumed to be in [mm/h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Dd</code></td>
+<td>
+<p>decorrelation time of discharge errors. If no unit is provided, <code>Dd</code> is assumed to be
+in [h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Bp</code></td>
+<td>
+<p>parameter used to maintain a minimum value of standart deviation for low net rainfall values.
+If no unit is provided, <code>Bp</code> is assumed to be in [mm/h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Tp</code></td>
+<td>
+<p>decorrelation time of net rainfall errors. If no unit is provided, <code>Tp</code> is assumed to
+be in [h]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ad</code></td>
+<td>
+<p>parameter equivalent to the coefficient of variation of the discharge measurement error. If
+no unit is provided, <code>Ad</code> is assumed to be dimensionless</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ap</code></td>
+<td>
+<p>parameter equivalent to the coefficient of variation of the net rainfall error. If no unit
+is provided, <code>Ap</code> is assumed to be dimensionless</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warmup</code></td>
+<td>
+<p>length of the warmup period. If no unit is provided, <code>warmup</code> is assumed to be in [days]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cooldown</code></td>
+<td>
+<p>length of the period removed at the end of the simulation. If no unit is provided,
+<code>cooldown</code> is assumed to be in [days]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dosplit</code></td>
+<td>
+<p>boolean, if true the inversion is performed by
+subperiods of length defined by <code>split</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split</code></td>
+<td>
+<p>length the subperiods if dosplit is true. If no unit is provided, <code>split</code> is assumed to be
+in [days]</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixedpar</code></td>
+<td>
+<p>boolean, if false Ap and Ad are calibrated dynamically according to the coefficient of variation of
+RnAp and Qobs respectively (see details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>boolean, if true the splitting of the inversion
+by subperiods is parallelised</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>the number of cores to use for parallel execution if <code>parallel</code> is TRUE. If not specified, the number of cores is set to the value of <code>parallel::detectCores()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>boolean indicating if information messages should be written to the console</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In a convolution between the unit hydrograph (<code>uh</code>) and net rainfall that is simulating
+streamflow at the outltet (<code>Qobs</code>), and where net rainfall is the only unknown variable, this function estimates
+net rainfall by inversion (Tarantola and Valette 1982; Menke 1989; Boudhraâ et al. 2018). It requires an
+a priori on this net rainfall (that could be estimated by the function rapriori), a description
+of the errors on the discharge (<code>Ad</code>, <code>Bd</code>, <code>Dd</code>) and on the net rainfall (<code>Ap</code>,
+<code>Bp</code>, <code>Tp</code>) that are assumed to be Gaussian and unbiased. Default values of these parameters
+are taken from de Lavenne et al. (2016). If <code>fixedpar</code> is deactivated, <code>Ap</code>
+is estimated at 20
+of variation of Qobs.
+</p>
+<p>It is recommanded to use <code>warmup</code> and <code>cooldown</code> periods in order to reduce the problem of oscillations
+created by inversion.
+</p>
+<p>If <code>object</code> is provided, results are stored as a new space-time attribute in the <code>object</code>
+called "RnAp".
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of the same class of <code>Qobs</code>. If <code>Qobs</code> is a transfR object,
+the same transfR object incremented by the new computed attributes.
+</p>
+
+
+<h3>References</h3>
+
+<p>Boudhraâ H, Cudennec C, Andrieu H, Slimani M (2018).
+“Net rainfall estimation by the inversion of a geomorphology-based transfer function and discharge deconvolution.”
+<em>Hydrological Sciences Journal</em>, <b>63</b>(2), 285–301.
+<a href="https://doi.org/10.1080/02626667.2018.1425801">doi:10.1080/02626667.2018.1425801</a>.
+</p>
+<p>de Lavenne A, Skøien JO, Cudennec C, Curie F, Moatar F (2016).
+“Transferring measured discharge time series: Large-scale comparison of Top-kriging to geomorphology-based inverse modeling.”
+<em>Water Resources Research</em>, <b>52</b>(7), 5555–5576.
+<a href="https://doi.org/10.1002/2016WR018716">doi:10.1002/2016WR018716</a>.
+</p>
+<p>Menke W (1989).
+<em>Geophysical data analysis: discrete inverse theory</em>, volume 45.
+Academic Press.
+</p>
+<p>Tarantola A, Valette B (1982).
+“Inverse problems= quest for information.”
+<em>Journal of Geophysics</em>, <b>50</b>(3), 150–170.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>rapriori
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(Oudon)
+icatch &lt;- 1 # Catchment index
+itime &lt;- 1:1000 # Using the first values for a quicker example
+Qobs &lt;- Oudon$obs[["Qobs"]][itime,icatch]
+Qspec &lt;- units::set_units(Qobs/st_area(st_geometry(Oudon$obs)[icatch]), "mm/h")
+deltat &lt;- units::set_units(1, "h")
+uc &lt;- velocity(hl = Oudon$hl[[icatch]])
+uh &lt;- uh(hl = Oudon$hl[[icatch]], uc = uc, deltat = units::set_units(1,"h"))$prob
+RnAp &lt;- rapriori(Qobs = Qspec, lagtime = lagtime(hl = Oudon$hl[[icatch]], uc = uc),
+deltat = deltat)
+RnInv &lt;- inversion(Qobs = Qspec, RnAp = RnAp, uh = uh, deltat = deltat)
+</code></pre>
+
+
+</div>

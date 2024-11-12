@@ -1,0 +1,248 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Multivariate variance matrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Multivariate variance matrix penalization</h2>
+
+<h3>Description</h3>
+
+<p>Ridge penalization of a multi-variate (co)variance matrix taking the form of either a Kronecker or Hadamard product
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Kronecker_cov(Sigma = 1, K, Theta, swap = FALSE,
+              rows = NULL, cols = NULL, 
+              drop = TRUE, inplace = FALSE)
+              
+Hadamard_cov(Sigma = 1, K, Theta, IDS, IDK, 
+             drop = TRUE, inplace = FALSE) 
+              
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Sigma</code></td>
+<td>
+<p>(numeric) A variance matrix among features. If is scalar, a scaled identity matrix with the same dimension as <code>Theta</code> is used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>(numeric) Variance matrix among subjects</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Theta</code></td>
+<td>
+<p>(numeric) A diagonal-shifting parameter, value to be added to the diagonals of the resulting (co)variance matrix. It should be a (symmetric) matrix with the same dimension as <code>Sigma</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rows</code></td>
+<td>
+<p>(integer) Index which rows of the (Kronecker product) (co)variance matrix are to be returned. Default <code>rows=NULL</code> will return all the rows</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cols</code></td>
+<td>
+<p>(integer) Index which columns of the (Kronecker product) (co)variance are to be returned. Default <code>cols=NULL</code> return all the columns</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IDS</code></td>
+<td>
+<p>(integer/character) Vector with either indices or row names mapping from rows/columns of <code>Sigma</code> and <code>Theta</code> into the resulting (Hadamard product) (co)variance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IDK</code></td>
+<td>
+<p>(integer/character) Vector with either indices or row names mapping from rows/columns of <code>K</code> into the resulting (Hadamard product) (co)variance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>swap</code></td>
+<td>
+<p>(logical) Either <code>TRUE</code> or <code>FALSE</code> (default) to whether swap the order of the matrices in the resulting (Kronecker product) (co)variance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>(logical) Either <code>TRUE</code> or <code>FALSE</code> to whether return a uni-dimensional vector when output is a matrix with either 1 row or 1 column as per the <code>rows</code> and <code>cols</code> arguments</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inplace</code></td>
+<td>
+<p>(logical) Either <code>TRUE</code> or <code>FALSE</code> to whether operate directly on matrix <code>K</code> when <code>Sigma</code> and <code>Theta</code> are scalars. This is possible only when <code>rows=NULL</code> and <code>cols=NULL</code>. When <code>TRUE</code> the output will be overwritten on the same address occupied by <code>K</code>. Default <code>inplace=FALSE</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume that a multi-variate random matrix <b>X</b> with 
+<i>n</i> subjects in rows and <i>p</i> features in columns follows a matrix Gaussian distribution with certain matrix of means 
+<b>M</b> and variance matrix
+<b>K</b> of dimension 
+<i>n</i> × <i>n</i> between subjects, and 
+<b>Σ</b> of dimension 
+<i>p</i> × <i>p</i> between features.
+</p>
+<b>Kronecker product form.</b>
+<p>The random variable 
+<b>x</b> = vec(<b>X</b>), formed by stacking columns of
+<b>X</b>, is a vector of length 
+<i>n</i><i>p</i>
+that also follow a Gaussian distribution with mean 
+vec(<b>M</b>) and (co)variance covariance matrix taking the Kronecker form
+</p>
+<p style="text-align:center"><b>Σ</b>⊗<b>K</b></p>
+<p>In the uni-variate case, the problem of near-singularity can be alleviated by penalizing the variance matrix
+<b>K</b> by adding positive elements 
+θ to its diagonal, i.e., 
+<b>K</b> + θ<b>I</b>, where 
+<b>I</b> is an identity matrix. The same can be applied to the multi-variate case where the Kronecker product (co)variance matrix is penalized with 
+<b>Θ</b>={θ<sub>ij</sub>} of dimensions <i>p</i> × <i>p</i>, where diagonal entries will penalize within feature
+<i>i</i> and off-diagonals will penalize between features <i>i</i>
+and <i>j</i>. This is,
+</p>
+<p style="text-align:center"><b>Σ</b>⊗<b>K</b> + <b>Θ</b>⊗<b>I</b></p>
+<p>The second Kronecker summand 
+<b>Θ</b>⊗<b>I</b>
+is a sparse matrix consisting of non-zero diagonal and sub-diagonals. The <code>Kronecker_cov</code> function derives the penalized Kronecker (co)variance matrix by computing densely only the first Kronecker summand
+<b>Σ</b>⊗<b>K</b>,
+and then calculating and adding accordingly only the non-zero entries of 
+<b>Θ</b>⊗<b>I</b>.
+</p>
+<p><em>Note</em>: Swapping the order of the matrices in the above Kronecker operations will yield a different result. In this case the penalized matrix 
+</p>
+<p style="text-align:center"><b>K</b>⊗<b>Σ</b> + <b>I</b>⊗<b>Θ</b></p>
+<p>corresponds to the penalized multi-variate (co)variance matrix of the transposed of the above multi-variate random matrix 
+<b>X</b>, now with features in rows and subjects in columns. This can be achieved by setting <code>swap=TRUE</code> in the <code>Kronecker_cov</code> function.
+</p>
+<b>Hadamard product form.</b>
+<p>Assume the random variable <b>x</b><sub>0</sub> is a subset of <b>x</b> containing entries corresponding to specific combinations of subjects and features, then the (co)variance matrix of the vector <b>x</b><sub>0</sub> will be a Hadamard product formed by the entry-wise product of only the elements of 
+<b>Σ</b> and
+<b>K</b> involved in the combinations contained in
+<b>x</b><sub>0</sub>; this is
+</p>
+<p style="text-align:center">(<b>Z</b><sub>1</sub><b>Σ</b> <b>Z'</b><sub>1</sub>) &amp;odot; (<b>Z</b><sub>2</sub><b>K</b> <b>Z'</b><sub>2</sub>)</p>
+<p>where
+<b>Z</b><sub>1</sub> and
+<b>Z</b><sub>2</sub> are incidence matrices mapping from entries of the random variable <b>x</b><sub>0</sub> to rows (and columns) of <b>Σ</b> and <b>K</b>, respectively. This (co)variance matrix can be obtained using matrix indexing (see <code>help(Hadamard)</code>), as 
+</p>
+<p style="text-align:center;font-family:courier">Sigma[IDS,IDS]*K[IDK,IDK]</p>
+<p>where <code>IDS</code> and <code>IDK</code> are integer vectors whose entries are the row (and column) number of 
+<b>Σ</b> and <b>K</b>, respectively, that are mapped at each row of
+<b>Z</b><sub>1</sub> and
+<b>Z</b><sub>2</sub>, respectively.
+</p>
+<p>The penalized version of this Hadamard product (co)variance matrix will be
+</p>
+<p style="text-align:center">(<b>Z</b><sub>1</sub><b>Σ</b> <b>Z'</b><sub>1</sub>) &amp;odot; (<b>Z</b><sub>2</sub><b>K</b> <b>Z'</b><sub>2</sub>) + (<b>Z</b><sub>1</sub><b>Θ</b> <b>Z'</b><sub>1</sub>) &amp;odot; (<b>Z</b><sub>2</sub><b>I</b> <b>Z'</b><sub>2</sub>)</p>
+<p>The <code>Hadamard_cov</code> function derives this penalized (co)variance matrix using matrix indexing, as 
+</p>
+<p style="text-align:center;font-family:courier">Sigma[IDS,IDS]*K[IDK,IDK] + Theta[IDS,IDS]*I[IDK,IDK]</p>
+<p>Likewise, this function computes densely only the first Hadamard summand
+and then calculates and adds accordingly only the non-zero entries of the second summand.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns the penalized (co)variance matrix formed either as a Kronecker or Hadamard product. For the Kronecker product case, it can be a sub-matrix of the Kronecker product as per the <code>rows</code> and <code>cols</code> arguments.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  require(tensorEVD)
+  
+  # Generate rectangular some covariance matrices 
+  n = 30;  p = 10
+  
+  K = crossprod(matrix(rnorm(n*p), ncol=n))      # n x n matrix 
+  Sigma = crossprod(matrix(rnorm(n*p), ncol=p))  # p x p matrix  
+  Theta = crossprod(matrix(rnorm(n*p), ncol=p))  # p x p matrix
+  
+  # ==============================================
+  # Kronecker covariance
+  # ==============================================
+  G1 = Kronecker_cov(Sigma, K, Theta = Theta)
+
+  # it must equal to:
+  D = diag(n)    # diagonal matrix of dimension n
+  G2 = Kronecker(Sigma, K) + Kronecker(Theta, D)
+  all.equal(G1,G2)
+  
+  # (b) Swapping the order of the matrices
+  G1 = Kronecker_cov(Sigma, K, Theta, swap = TRUE)
+
+  # in this case the kronecker is swapped:
+  G2 = Kronecker(K, Sigma) + Kronecker(D, Theta)
+  all.equal(G1,G2)
+  
+  # (c) Selecting specific entries of the output
+  # We want only some rows and columns
+  rows = c(1,3,5)
+  cols = c(10,30,50)
+  G1 = Kronecker_cov(Sigma, K, Theta, rows=rows, cols=cols)
+
+  # this can be preferable instead of:
+  G2 = (Kronecker(Sigma, K) + Kronecker(Theta, D))[rows,cols]
+  all.equal(G1,G2)
+  
+  # (d) Inplace calculation
+  # overwrite the output at the same address as the input:
+  G1 = K[]                     # copy of K to be used as input
+  add  = pryr::address(G1)     # address of G on entry
+  G1 = Kronecker_cov(Sigma=0.5, G1, Theta=1.5)
+  pryr::address(G1) == add     # on exit, G was moved to a different address
+  
+  G2 = K[]   
+  add  = pryr::address(G2) 
+  G2 = Kronecker_cov(Sigma=0.5, G2, Theta=1.5, inplace=TRUE)
+  pryr::address(G2) == add     # on exit, G remains at the same address
+  all.equal(G1,G2)
+  
+  # ==============================================
+  # Hadamard covariance
+  # ==============================================
+  # Define IDs for a Hadamard of size m x m
+  m = 1000
+  IDS = sample(1:p, m, replace=TRUE)
+  IDK = sample(1:n, m, replace=TRUE)
+  
+  G1 = Hadamard_cov(Sigma, K, Theta, IDS=IDS, IDK=IDK)
+  
+  # it must equal to:
+  G2 = Sigma[IDS,IDS]*K[IDK,IDK] + Theta[IDS,IDS]*D[IDK,IDK]
+  all.equal(G1,G2)
+  
+  # (b) Inplace calculation
+  # overwrite the output at the same address as the input:
+  G1 = K[]                     # copy of K to be used as input
+  add  = pryr::address(G1)     # address of G on entry
+  G1 = Hadamard_cov(Sigma=0.5, G1, Theta=1.5, IDS=rep(1,n))
+  pryr::address(G1) == add     # on exit, G was moved to a different address
+  
+  G2 = K[]   
+  add  = pryr::address(G2)
+  G2 = Hadamard_cov(Sigma=0.5, G2, Theta=1.5, IDS=rep(1,n), inplace=TRUE)
+  pryr::address(G2) == add     # on exit, G remains at the same address
+  all.equal(G1,G2)
+  
+</code></pre>
+
+
+</div>

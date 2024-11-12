@@ -1,0 +1,272 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>AutogradContext</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Class representing the context.</h2>
+
+<h3>Description</h3>
+
+<p>Class representing the context.
+</p>
+<p>Class representing the context.
+</p>
+
+
+<h3>Public fields</h3>
+
+<div class="r6-fields">
+
+<dl>
+<dt><code>ptr</code></dt>
+<dd>
+<p>(Dev related) pointer to the context c++ object.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Active bindings</h3>
+
+<div class="r6-active-bindings">
+
+<dl>
+<dt><code>needs_input_grad</code></dt>
+<dd>
+<p>boolean listing arguments of <code>forward</code> and whether they require_grad.</p>
+</dd>
+<dt><code>saved_variables</code></dt>
+<dd>
+<p>list of objects that were saved for backward via <code>save_for_backward</code>.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-torch_autograd_context-new"><code>AutogradContext$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_autograd_context-save_for_backward"><code>AutogradContext$save_for_backward()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_autograd_context-mark_non_differentiable"><code>AutogradContext$mark_non_differentiable()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_autograd_context-mark_dirty"><code>AutogradContext$mark_dirty()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-torch_autograd_context-clone"><code>AutogradContext$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-torch_autograd_context-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>(Dev related) Initializes the context. Not user related.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>AutogradContext$new(
+  ptr,
+  env,
+  argument_names = NULL,
+  argument_needs_grad = NULL
+)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>ptr</code></dt>
+<dd>
+<p>pointer to the c++ object</p>
+</dd>
+<dt><code>env</code></dt>
+<dd>
+<p>environment that encloses both forward and backward</p>
+</dd>
+<dt><code>argument_names</code></dt>
+<dd>
+<p>names of forward arguments</p>
+</dd>
+<dt><code>argument_needs_grad</code></dt>
+<dd>
+<p>whether each argument in forward needs grad.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_autograd_context-save_for_backward"></a>
+
+
+
+<h4>Method <code>save_for_backward()</code>
+</h4>
+
+<p>Saves given objects for a future call to backward().
+</p>
+<p>This should be called at most once, and only from inside the <code>forward()</code>
+method.
+</p>
+<p>Later, saved objects can be accessed through the <code>saved_variables</code> attribute.
+Before returning them to the user, a check is made to ensure they weren’t used
+in any in-place operation that modified their content.
+</p>
+<p>Arguments can also be any kind of R object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>AutogradContext$save_for_backward(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>any kind of R object that will be saved for the backward pass.
+It's common to pass named arguments.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_autograd_context-mark_non_differentiable"></a>
+
+
+
+<h4>Method <code>mark_non_differentiable()</code>
+</h4>
+
+<p>Marks outputs as non-differentiable.
+</p>
+<p>This should be called at most once, only from inside the <code>forward()</code> method,
+and all arguments should be outputs.
+</p>
+<p>This will mark outputs as not requiring gradients, increasing the efficiency
+of backward computation. You still need to accept a gradient for each output
+in <code>backward()</code>, but it’s always going to be a zero tensor with the same
+shape as the shape of a corresponding output.
+</p>
+<p>This is used e.g. for indices returned from a max Function.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>AutogradContext$mark_non_differentiable(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>non-differentiable outputs.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_autograd_context-mark_dirty"></a>
+
+
+
+<h4>Method <code>mark_dirty()</code>
+</h4>
+
+<p>Marks given tensors as modified in an in-place operation.
+</p>
+<p>This should be called at most once, only from inside the <code>forward()</code> method,
+and all arguments should be inputs.
+</p>
+<p>Every tensor that’s been modified in-place in a call to <code>forward()</code> should
+be given to this function, to ensure correctness of our checks. It doesn’t
+matter whether the function is called before or after modification.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>AutogradContext$mark_dirty(...)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>...</code></dt>
+<dd>
+<p>tensors that are modified in-place.</p>
+</dd>
+</dl>
+</div>
+
+
+<hr>
+<a id="method-torch_autograd_context-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>AutogradContext$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+</div>

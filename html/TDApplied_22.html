@@ -1,0 +1,115 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict_diagram_kpca</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Project persistence diagrams into a low-dimensional space via a pre-computed kernel PCA embedding.</h2>
+
+<h3>Description</h3>
+
+<p>Compute the location in low-dimensional space of each element of a list of new persistence diagrams using a
+previously-computed kernel PCA embedding (from the <code>diagram_kpca</code> function).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">predict_diagram_kpca(
+  new_diagrams,
+  K = NULL,
+  embedding,
+  num_workers = parallelly::availableCores(omit = 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>new_diagrams</code></td>
+<td>
+<p>a list of persistence diagrams which are either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>. Only one of 'new_diagrams' and 'K' need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>an optional precomputed cross-Gram matrix of the new diagrams and the ones used in 'embedding', default NULL. If not NULL then 'new_diagrams' does not need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>embedding</code></td>
+<td>
+<p>the output of a <code>diagram_kpca</code> function call, of class 'diagram_kpca'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>the data projection (rotation), stored as a numeric matrix. Each row corresponds to the same-index diagram in 'new_diagrams'.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>diagram_kpca</code> for embedding persistence diagrams into a low-dimensional space.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create six diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D3 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D4 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D5 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D6 &lt;- TDAstats::calculate_homology(TDAstats::sphere3d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D2,D3,D4,D5,D6)
+
+  # calculate their 2D PCA embedding with sigma = t = 2 in dimension 0
+  pca &lt;- diagram_kpca(diagrams = g,dim = 1,t = 2,sigma = 2,
+                      features = 2,num_workers = 2,th = 1e-6)
+
+  # project two new diagrams onto old model
+  D7 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,50),],
+                                     dim = 0,threshold = 2)
+  D8 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,50),],
+                                     dim = 0,threshold = 2)
+  g_new &lt;- list(D7,D8)
+
+  # calculate new embedding coordinates
+  new_pca &lt;- predict_diagram_kpca(new_diagrams = g_new,embedding = pca,num_workers = 2)
+  
+  # repeat with precomputed Gram matrix, gives same result but much faster
+  K &lt;- gram_matrix(diagrams = g_new,other_diagrams = pca$diagrams,dim = pca$dim,
+                   t = pca$t,sigma = pca$sigma,num_workers = 2)
+  new_pca &lt;- predict_diagram_kpca(K = K,embedding = pca,num_workers = 2)
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_module</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Base class for all neural network modules.</h2>
+
+<h3>Description</h3>
+
+<p>Your models should also subclass this class.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_module(
+  classname = NULL,
+  inherit = nn_Module,
+  ...,
+  private = NULL,
+  active = NULL,
+  parent_env = parent.frame()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>classname</code></td>
+<td>
+<p>an optional name for the module</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inherit</code></td>
+<td>
+<p>an optional module to inherit from</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>methods implementation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>private</code></td>
+<td>
+<p>passed to <code>R6::R6Class()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>active</code></td>
+<td>
+<p>passed to <code>R6::R6Class()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parent_env</code></td>
+<td>
+<p>passed to <code>R6::R6Class()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Modules can also contain other Modules, allowing to nest them in a tree
+structure. You can assign the submodules as regular attributes.
+</p>
+<p>You are expected to implement the <code>initialize</code> and the <code>forward</code> to create a
+new <code>nn_module</code>.
+</p>
+
+
+<h3>Initialize</h3>
+
+<p>The initialize function will be called whenever a new instance of the <code>nn_module</code>
+is created. We use the initialize functions to define submodules and parameters
+of the module. For example:
+</p>
+<div class="sourceCode"><pre>initialize = function(input_size, output_size) {
+   self$conv1 &lt;- nn_conv2d(input_size, output_size, 5)
+   self$conv2 &lt;- nn_conv2d(output_size, output_size, 5)
+}
+</pre></div>
+<p>The initialize function can have any number of parameters. All objects
+assigned to <code style="white-space: pre;">⁠self$⁠</code> will be available for other methods that you implement.
+Tensors wrapped with <code>nn_parameter()</code> or <code>nn_buffer()</code> and submodules are
+automatically tracked when assigned to <code style="white-space: pre;">⁠self$⁠</code>.
+</p>
+<p>The initialize function is optional if the module you are defining doesn't
+have weights, submodules or buffers.
+</p>
+
+
+<h3>Forward</h3>
+
+<p>The forward method is called whenever an instance of <code>nn_module</code> is called.
+This is usually used to implement the computation that the module does with
+the weights ad submodules defined in the <code>initialize</code> function.
+</p>
+<p>For example:
+</p>
+<div class="sourceCode"><pre>forward = function(input) {
+   input &lt;- self$conv1(input)
+   input &lt;- nnf_relu(input)
+   input &lt;- self$conv2(input)
+   input &lt;- nnf_relu(input)
+   input
+ }
+</pre></div>
+<p>The <code>forward</code> function can use the <code>self$training</code> attribute to make different
+computations depending wether the model is training or not, for example if you
+were implementing the dropout module.
+</p>
+
+
+<h3>Cloning</h3>
+
+<p>To finalize the cloning of a module, you can define a private <code>finalize_deep_clone()</code> method.
+This method is called on the cloned object when deep-cloning a module, after all the modules, parameters and
+buffers were already cloned.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+model &lt;- nn_module(
+  initialize = function() {
+    self$conv1 &lt;- nn_conv2d(1, 20, 5)
+    self$conv2 &lt;- nn_conv2d(20, 20, 5)
+  },
+  forward = function(input) {
+    input &lt;- self$conv1(input)
+    input &lt;- nnf_relu(input)
+    input &lt;- self$conv2(input)
+    input &lt;- nnf_relu(input)
+    input
+  }
+)
+}
+</code></pre>
+
+
+</div>

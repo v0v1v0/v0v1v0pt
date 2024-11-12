@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>msm_vimshift</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Working marginal structural model for causal effects of an intervention grid</h2>
+
+<h3>Description</h3>
+
+<p>Working marginal structural model for causal effects of an intervention grid
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">msm_vimshift(
+  W,
+  A,
+  C_cens = rep(1, length(Y)),
+  Y,
+  C_samp = rep(1, length(Y)),
+  V = NULL,
+  delta_grid = seq(-0.5, 0.5, 0.5),
+  msm_form = list(type = "linear", knot = NA),
+  estimator = c("tmle", "onestep"),
+  weighting = c("identity", "variance"),
+  ci_level = 0.95,
+  ci_type = c("marginal", "simultaneous"),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>A <code>matrix</code>, <code>data.frame</code>, or similar containing a set of
+baseline covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>A <code>numeric</code> vector corresponding to a treatment variable. The
+parameter of interest is defined as a location shift of this quantity.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>C_cens</code></td>
+<td>
+<p>A <code>numeric</code> indicator for whether a given observation was
+subject to censoring by way of loss to follow-up. The default assumes no
+censoring due to loss to follow-up.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>A <code>numeric</code> vector of the observed outcomes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>C_samp</code></td>
+<td>
+<p>A <code>numeric</code> indicator for whether a given observation was
+subject to censoring by being omitted from the second-stage sample, used to
+compute an inverse probability of censoring weighted estimator in such
+cases. The default assumes no censoring due to two-phase sampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+<p>The covariates that are used in determining the sampling procedure
+that gives rise to censoring. The default is <code>NULL</code> and corresponds to
+scenarios in which there is no censoring (in which case all values in the
+preceding argument <code>C</code> must be uniquely 1. To specify this, pass in a
+NAMED <code>list</code> identifying variables amongst W, A, Y that are thought to
+have played a role in defining the sampling/censoring mechanism (C).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta_grid</code></td>
+<td>
+<p>A <code>numeric</code> vector giving the individual values of
+the shift parameter used in computing each of the estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>msm_form</code></td>
+<td>
+<p>A <code>list</code> specifying the type of working MSM to fit to
+summarize the counterfactual means. The <code>list</code> has two components:
+(1) <code>"type"</code>, which may be either "linear" or "piecewise", and (2)
+<code>"knot"</code>, which, if specified, must be a value in <code>delta_grid</code>.
+See examples for its use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimator</code></td>
+<td>
+<p>The type of estimator to be fit, either <code>"tmle"</code> for
+targeted maximum likelihood estimation or <code>"onestep"</code> for a one-step
+augmented inverse probability weighted (AIPW) estimator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighting</code></td>
+<td>
+<p>Whether to weight each parameter estimate by the inverse of
+its variance (in order to improve stability of the resultant MSM fit) or to
+simply weight all parameter estimates equally. The default is the option
+<code>"identity"</code>, weighting all estimates identically.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_level</code></td>
+<td>
+<p>A <code>numeric</code> indicating the desired coverage level of
+the confidence interval to be computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_type</code></td>
+<td>
+<p>Whether to construct a simultaneous confidence band covering
+all parameter estimates at once or marginal confidence intervals covering
+each parameter estimate separately. The default is to construct marginal
+confidence intervals for each parameter estimate rather than a simultaneous
+confidence band.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments to be passed to <code>txshift</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Computes estimates of the counterfactual mean over a grid of shift
+stochastic interventions and fits a working marginal structural model to
+summarize the trend through the counterfactual means as a function of the
+specified shift intervention. The working marginal structural model may be
+linear in the shift parameter or piecewise linear with a single knot point.
+Provides support for two weighting schemes, may be used with either of the
+one-step or TML estimators, and also allows the construction of marginal or
+simultaneous confidence intervals.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>list</code> containing estimates of the individual counterfactual
+means over a grid in the shift parameters (<code>delta_grid</code>), alongside
+the estimate of a marginal structural model that summarizes a trend through
+these counterfactual means.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (require("sl3")) {
+  n_obs &lt;- 100
+  W &lt;- as.numeric(replicate(1, rbinom(n_obs, 1, 0.5)))
+  A &lt;- as.numeric(rnorm(n_obs, mean = 2 * W, sd = 1))
+  Y &lt;- rbinom(n_obs, 1, plogis(2 * A - W))
+  msm &lt;- msm_vimshift(
+    W = W, A = A, Y = Y, estimator = "tmle",
+    g_exp_fit_args = list(
+      fit_type = "sl",
+      sl_learners_density = Lrnr_density_hse$new(Lrnr_glm$new())
+    ),
+    Q_fit_args = list(
+      fit_type = "glm",
+      glm_formula = "Y ~ ."
+    ),
+    delta_grid = seq(-1, 1, 0.25)
+  )
+
+  # fit a linear spline with knot at 0
+  n_obs &lt;- 100
+  W &lt;- as.numeric(replicate(1, rbinom(n_obs, 1, 0.5)))
+  A &lt;- as.numeric(rnorm(n_obs, mean = 2 * W, sd = 1))
+  Y &lt;- rbinom(n_obs, 1, plogis(0.1 * A * (A &gt;= 0) - 3 * A * (A &lt; 0) - W))
+  msm &lt;- msm_vimshift(
+    W = W, A = A, Y = Y, estimator = "tmle",
+    g_exp_fit_args = list(
+      fit_type = "sl",
+      sl_learners_density = Lrnr_density_hse$new(Lrnr_glm$new())
+    ),
+    Q_fit_args = list(
+      fit_type = "glm",
+      glm_formula = "Y ~ ."
+    ),
+    delta_grid = seq(-1, 1, 0.25),
+    msm_form = list(type = "piecewise", knot = 0)
+  )
+}
+</code></pre>
+
+
+</div>

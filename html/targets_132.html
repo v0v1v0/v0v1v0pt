@@ -1,0 +1,216 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_load</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Load the values of targets.</h2>
+
+<h3>Description</h3>
+
+<p>Load the return values of targets into the current environment
+(or the environment of your choosing). For a typical target, the return
+value lives in a file in <code style="white-space: pre;">⁠_targets/objects/⁠</code>. For dynamic files (i.e.
+<code>format = "file"</code>) the paths loaded in place of the values.
+<code>tar_load_everything()</code> is shorthand for <code>tar_load(everything())</code>
+to load all targets.
+</p>
+<p><code>tar_load()</code> uses non-standard evaluation in the <code>names</code> argument
+(example: <code>tar_load(names = everything())</code>), whereas <code>tar_load_raw()</code>
+uses standard evaluation for <code>names</code>
+(example: <code>tar_load_raw(names = quote(everything()))</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_load(
+  names,
+  branches = NULL,
+  meta = targets::tar_meta(targets_only = TRUE, store = store),
+  strict = TRUE,
+  silent = FALSE,
+  envir = parent.frame(),
+  store = targets::tar_config_get("store")
+)
+
+tar_load_raw(
+  names,
+  branches = NULL,
+  meta = tar_meta(store = store),
+  strict = TRUE,
+  silent = FALSE,
+  envir = parent.frame(),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>Names of the targets to load.
+<code>tar_load()</code> uses non-standard evaluation in the <code>names</code> argument
+(example: <code>tar_load(names = everything())</code>), whereas <code>tar_load_raw()</code>
+uses standard evaluation for <code>names</code>
+(example: <code>tar_load_raw(names = quote(everything()))</code>).
+</p>
+<p>The object supplied to <code>names</code> should be a
+<code>tidyselect</code> expression like <code>any_of()</code> or <code>starts_with()</code>
+from <code>tidyselect</code> itself, or <code>tar_described_as()</code> to select target names
+based on their descriptions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>branches</code></td>
+<td>
+<p>Integer of indices of the branches to load
+for any targets that are patterns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meta</code></td>
+<td>
+<p>Data frame of target metadata from <code>tar_meta()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strict</code></td>
+<td>
+<p>Logical of length 1, whether to error out
+if one of the selected targets is in the metadata
+but cannot be loaded.
+Set to <code>FALSE</code> to just load the targets in the metadata
+that can be loaded and skip the others.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Logical of length 1. Only relevant when
+<code>strict</code> is <code>FALSE</code>. If <code>silent</code> is <code>FALSE</code>
+and <code>strict</code> is <code>FALSE</code>, then a message will be printed
+if a target is in the metadata but cannot be loaded.
+However, load failures
+will not stop other targets from being loaded.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>R environment in which to load target return values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, directory path to the data store
+of the pipeline.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Nothing.
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>Cloud target data versioning</h3>
+
+<p>Some buckets in Amazon S3 or Google Cloud Storage are "versioned",
+which means they track historical versions of each data object.
+If you use <code>targets</code> with cloud storage
+(<a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>)
+and versioning is turned on, then <code>targets</code> will record each
+version of each target in its metadata.
+</p>
+<p>Functions like <code>tar_read()</code>
+and <code>tar_load()</code> load the version recorded in the local metadata,
+which may not be the same as the "current" version of the
+object in the bucket. Likewise, functions <code>tar_delete()</code>
+and <code>tar_destroy()</code> only remove
+the version ID of each target as recorded in the local
+metadata.
+</p>
+<p>If you want to interact with the <em>latest</em> version of an object
+instead of the version ID recorded in the local metadata,
+then you will need to delete the object from the metadata.
+</p>
+
+<ol>
+<li>
+<p> Make sure your local copy of the metadata is current and
+up to date. You may need to run <code>tar_meta_download()</code> or
+<code>tar_meta_sync()</code> first.
+</p>
+</li>
+<li>
+<p> Run <code>tar_unversion()</code> to remove the recorded version IDs of
+your targets in the local metadata.
+</p>
+</li>
+<li>
+<p> With the version IDs gone from the local metadata,
+functions like <code>tar_read()</code> and <code>tar_destroy()</code> will use the
+<em>latest</em> version of each target data object.
+</p>
+</li>
+<li>
+<p> Optional: to back up the local metadata file with the version IDs
+deleted, use <code>tar_meta_upload()</code>.
+</p>
+</li>
+</ol>
+<h3>See Also</h3>
+
+<p>Other storage: 
+<code>tar_format()</code>,
+<code>tar_load_everything()</code>,
+<code>tar_objects()</code>,
+<code>tar_read()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(y1, 1 + 1),
+    tar_target(y2, 1 + 1),
+    tar_target(z, y1 + y2)
+  )
+}, ask = FALSE)
+tar_make()
+ls() # Does not have "y1", "y2", or "z".
+tar_load(starts_with("y"))
+ls() # Has "y1" and "y2" but not "z".
+tar_load_raw(quote(any_of("z")))
+ls() # Has "y1", "y2", and "z".
+})
+}
+</code></pre>
+
+
+</div>

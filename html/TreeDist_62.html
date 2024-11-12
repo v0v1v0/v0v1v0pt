@@ -1,0 +1,240 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>NNIDist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Approximate Nearest Neighbour Interchange distance</h2>
+
+<h3>Description</h3>
+
+<p>Use the approach of Li et al. (1996) to approximate the
+Nearest Neighbour Interchange distance (Robinson 1971)
+between phylogenetic trees.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">NNIDist(tree1, tree2 = tree1)
+
+NNIDiameter(tree)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Single trees of class <code>phylo</code> to undergo comparison.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>Object of supported class representing a tree or list of trees,
+or an integer specifying the number of leaves in a tree/trees.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In brief, this approximation algorithm works by identifying edges in one
+tree that do not match edges in the second.  Each of these edges must
+undergo at least one NNI operation in order to reconcile the trees.
+Edges that match in both trees need never undergo an NNI operation, and
+divide each tree into smaller regions.  By "cutting" matched edges into two,
+a tree can be divided into a number of regions that solely comprise unmatched
+edges.
+</p>
+<p>These regions can be viewed as separate trees that need to be reconciled.
+One way to reconcile these trees is to conduct a series of NNI operations
+that reduce a tree to a pectinate (caterpillar) tree, then to conduct an
+analogue of the mergesort algorithm.  This takes at most <em>n</em> log <em>n</em> + O(<em>n</em>)
+NNI operations, and provides a loose upper bound on the NNI score.
+The maximum number of moves for an <em>n</em>-leaf tree
+(<a href="https://oeis.org/A182136">OEIS A182136</a>) can be calculated exactly for
+small trees (Fack et al. 2002); this provides a tighter upper
+bound, but is unavailable for <em>n</em> &gt; 12.
+<code>NNIDiameter()</code> reports the limits on this bound.
+</p>
+
+<table>
+<tr>
+<td style="text-align: right;">
+Leaves:   </td>
+<td style="text-align: center;"> 1 </td>
+<td style="text-align: center;"> 2 </td>
+<td style="text-align: center;"> 3 </td>
+<td style="text-align: center;"> 4 </td>
+<td style="text-align: center;"> 5 </td>
+<td style="text-align: center;"> 6 </td>
+<td style="text-align: center;"> 7 </td>
+<td style="text-align: center;"> 8 </td>
+<td style="text-align: center;"> 9
+</td>
+<td style="text-align: center;"> 10 </td>
+<td style="text-align: center;"> 11 </td>
+<td style="text-align: center;"> 12 </td>
+<td style="text-align: center;"> 13 </td>
+</tr>
+<tr>
+<td style="text-align: right;">
+Diameter: </td>
+<td style="text-align: center;"> 0 </td>
+<td style="text-align: center;"> 0 </td>
+<td style="text-align: center;"> 0 </td>
+<td style="text-align: center;"> 1 </td>
+<td style="text-align: center;"> 3 </td>
+<td style="text-align: center;"> 5 </td>
+<td style="text-align: center;"> 7 </td>
+<td style="text-align: center;"> 10 </td>
+<td style="text-align: center;"> 12
+</td>
+<td style="text-align: center;"> 15 </td>
+<td style="text-align: center;"> 18 </td>
+<td style="text-align: center;"> 21 </td>
+<td style="text-align: center;"> ? </td>
+</tr>
+<tr>
+<td style="text-align: right;">
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>NNIDist()</code> returns, for each pair of trees, a named vector
+containing three integers:
+</p>
+
+<ul>
+<li> <p><code>lower</code> is a lower bound on the NNI distance, and corresponds
+to the RF distance between the trees.
+</p>
+</li>
+<li> <p><code>tight_upper</code> is an upper bound on the distance, based on calculated
+maximum diameters for trees with &lt; 13 leaves.  <em>NA</em> is returned if trees are
+too different to employ this approach.
+</p>
+</li>
+<li> <p><code>loose_upper</code> is a looser upper bound on the distance, using <em>n</em> log <em>n</em> +
+O(<em>n</em>).
+</p>
+</li>
+</ul>
+<p><code>NNIDiameter()</code> returns a matrix specifying (bounds on) the diameter
+of the NNI distance metric on the specified tree(s).
+Columns correspond to:
+</p>
+
+<ul>
+<li> <p><code>liMin</code>:  </p>
+<p style="text-align: center;"><code class="reqn">n - 3</code>
+</p>
+<p>, a lower bound on the diameter
+(Li <em>et al.</em> 1996);
+</p>
+</li>
+<li> <p><code>fackMin</code>: Lower bound on diameter following Fack <em>et al</em>. (2002), i.e.
+</p>
+<p style="text-align: center;"><code class="reqn">\log2{N!} / 4</code>
+</p>
+<p>;
+</p>
+</li>
+<li> <p><code>min</code>: The larger of <code>liMin</code> and <code>fackMin</code>;
+</p>
+</li>
+<li> <p><code>exact</code>: The exact value of the diameter, where <em>n</em> &lt; 13;
+</p>
+</li>
+<li> <p><code>liMax</code>: Upper bound on diameter following Li <em>et al.</em> (1996), i.e.
+</p>
+<p style="text-align: center;"><code class="reqn">n \log2{n} + \textrm{O}(n)</code>
+</p>
+<p>;
+</p>
+</li>
+<li> <p><code>fackMax</code>: Upper bound on diameter following Fack <em>et al</em>. (2002), i.e.
+(</p>
+<p style="text-align: center;"><code class="reqn">N - 2</code>
+</p>
+<p>) ceiling(</p>
+<p style="text-align: center;"><code class="reqn">\log2{n}</code>
+</p>
+<p>)
+</p>
+
+<ul><li> <p><em>N</em>;
+</p>
+</li></ul>
+</li>
+<li> <p><code>max</code>: The smaller of <code>liMax</code> and <code>fackMax</code>;
+</p>
+</li>
+</ul>
+<p>where <em>n</em> is the number of leaves, and <em>N</em> the number of internal nodes,
+i.e. </p>
+<p style="text-align: center;"><code class="reqn">n - 2</code>
+</p>
+<p>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Fack V, Lievens S, Van der Jeugt J (2002).
+“On the diameter of the rotation graph of binary coupling trees.”
+<em>Discrete Mathematics</em>, <b>245</b>(1-3), 1–18.
+<a href="https://doi.org/10.1016/S0012-365X%2801%2900418-6">doi:10.1016/S0012-365X(01)00418-6</a>.<br><br> Li M, Tromp J, Zhang L (1996).
+“Some notes on the nearest neighbour interchange distance.”
+In Goos G, Hartmanis J, Leeuwen J, Cai J, Wong CK (eds.), <em>Computing and Combinatorics</em>, volume 1090, 343–351.
+Springer, Berlin, Heidelberg.
+ISBN 978-3-540-61332-9 978-3-540-68461-9, <a href="https://doi.org/10.1007/3-540-61332-3_168">doi:10.1007/3-540-61332-3_168</a>.<br><br> Robinson DF (1971).
+“Comparison of labeled trees with valency three.”
+<em>Journal of Combinatorial Theory, Series B</em>, <b>11</b>(2), 105–119.
+<a href="https://doi.org/10.1016/0095-8956%2871%2990020-7">doi:10.1016/0095-8956(71)90020-7</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree distances: 
+<code>JaccardRobinsonFoulds()</code>,
+<code>KendallColijn()</code>,
+<code>MASTSize()</code>,
+<code>MatchingSplitDistance()</code>,
+<code>NyeSimilarity()</code>,
+<code>PathDist()</code>,
+<code>Robinson-Foulds</code>,
+<code>SPRDist()</code>,
+<code>TreeDistance()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("TreeTools", quietly = TRUE)
+
+NNIDist(BalancedTree(7), PectinateTree(7))
+
+NNIDist(BalancedTree(7), as.phylo(0:2, 7))
+NNIDist(as.phylo(0:2, 7), PectinateTree(7))
+
+NNIDist(list(bal = BalancedTree(7), pec = PectinateTree(7)),
+        as.phylo(0:2, 7))
+
+CompareAll(as.phylo(30:33, 8), NNIDist)
+</code></pre>
+
+
+</div>

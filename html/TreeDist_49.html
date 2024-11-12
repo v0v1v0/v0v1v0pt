@@ -1,0 +1,388 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TreeDistance</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Information-based generalized Robinson–Foulds distances</h2>
+
+<h3>Description</h3>
+
+<p>Calculate tree similarity and distance measures based on the amount of
+phylogenetic or clustering information that two trees hold in common, as
+proposed in Smith (2020).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TreeDistance(tree1, tree2 = NULL)
+
+SharedPhylogeneticInfo(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE,
+  diag = TRUE
+)
+
+DifferentPhylogeneticInfo(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE
+)
+
+PhylogeneticInfoDistance(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE
+)
+
+ClusteringInfoDistance(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE
+)
+
+ExpectedVariation(tree1, tree2, samples = 10000)
+
+MutualClusteringInfo(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE,
+  diag = TRUE
+)
+
+SharedPhylogeneticInfoSplits(
+  splits1,
+  splits2,
+  nTip = attr(splits1, "nTip"),
+  reportMatching = FALSE
+)
+
+MutualClusteringInfoSplits(
+  splits1,
+  splits2,
+  nTip = attr(splits1, "nTip"),
+  reportMatching = FALSE
+)
+
+MatchingSplitInfo(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE,
+  diag = TRUE
+)
+
+MatchingSplitInfoDistance(
+  tree1,
+  tree2 = NULL,
+  normalize = FALSE,
+  reportMatching = FALSE
+)
+
+MatchingSplitInfoSplits(
+  splits1,
+  splits2,
+  nTip = attr(splits1, "nTip"),
+  reportMatching = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Trees of class <code>phylo</code>, with leaves labelled identically,
+or lists of such trees to undergo pairwise comparison.  Where implemented,
+<code>tree2 = NULL</code> will compute distances between each pair of trees in the list
+<code>tree1</code> using a fast algorithm based on
+Day (1985).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>If a numeric value is provided, this will be used as a
+maximum value against which to rescale results.
+If <code>TRUE</code>, results will be rescaled against a maximum value calculated from
+the specified tree sizes and topology, as specified in the "Normalization"
+section below.
+If <code>FALSE</code>, results will not be rescaled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reportMatching</code></td>
+<td>
+<p>Logical specifying whether to return the clade
+matchings as an attribute of the score.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diag</code></td>
+<td>
+<p>Logical specifying whether to return similarities along the
+diagonal, i.e. of each tree with itself.  Applies only if <code>tree2</code> is
+a list identical to <code>tree1</code>, or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>samples</code></td>
+<td>
+<p>Integer specifying how many samplings to obtain;
+accuracy of estimate increases with <code>sqrt(samples)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splits1, splits2</code></td>
+<td>
+<p>Logical matrices where each row corresponds to a leaf,
+either listed in the same order or bearing identical names (in any sequence),
+and each column corresponds to a split, such that each leaf is identified as
+a member of the ingroup (<code>TRUE</code>) or outgroup (<code>FALSE</code>) of the respective
+split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTip</code></td>
+<td>
+<p>(Optional) Integer specifying the number of leaves in each split.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><a href="https://ms609.github.io/TreeDist/articles/Robinson-Foulds.html#generalized-robinson-foulds-distances">Generalized Robinson–Foulds distances</a>
+calculate tree similarity by finding an
+optimal matching that the similarity between a split on one tree
+and its pair on a second, considering all possible ways to pair splits
+between trees (including leaving a split unpaired).
+</p>
+<p>The methods implemented here use the concepts of
+<a href="https://ms609.github.io/TreeDist/articles/information.html">entropy and information</a>
+(MacKay 2003) to assign a similarity score between each
+pair of splits.
+</p>
+<p>The returned tree similarity measures state the amount of information,
+in bits, that the splits in two trees hold in common
+when they are optimally matched, following
+Smith (2020).
+The complementary tree distance measures state how much information is
+different in the splits of two trees, under an optimal matching.
+Where trees contain different tips, tips present in one tree but not the
+other are removed before each comparison (as by definition, the trees neither
+hold information in common nor differ regarding these tips).
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>reportMatching = FALSE</code>, the functions return a numeric
+vector specifying the requested similarities or differences.
+</p>
+<p>If <code>reportMatching = TRUE</code>, the functions additionally return an integer
+vector listing the index of the split in <code>tree2</code> that is matched with
+each split in <code>tree1</code> in the optimal matching.
+Unmatched splits are denoted <code>NA</code>.
+Use <code>VisualizeMatching()</code> to plot the optimal matching.
+</p>
+<p><code>TreeDistance()</code> simply returns the clustering information distance (it is
+an alias of <code>ClusteringInfoDistance()</code>).
+</p>
+
+
+<h3>Concepts of information</h3>
+
+<p>The phylogenetic (Shannon) information content and entropy of a split are
+defined in
+<a href="https://ms609.github.io/TreeDist/articles/information.html">a separate vignette</a>.
+</p>
+<p>Using the mutual (clustering) information
+(Meila 2007; Vinh et al. 2010) of two splits to quantify their
+similarity gives rise to the Mutual Clustering Information measure
+(<code>MutualClusteringInfo()</code>, <code>MutualClusteringInfoSplits()</code>);
+the entropy distance gives the Clustering Information Distance
+(<code>ClusteringInfoDistance()</code>).
+This approach is optimal in many regards, and is implemented with
+normalization in the convenience function <code>TreeDistance()</code>.
+</p>
+<p>Using the amount of phylogenetic information common to two splits to measure
+their similarity gives rise to the Shared Phylogenetic Information similarity
+measure (<code>SharedPhylogeneticInfo()</code>, <code>SharedPhylogeneticInfoSplits()</code>).
+The amount of information distinct to
+each of a pair of splits provides the complementary Different Phylogenetic
+Information distance metric (<code>DifferentPhylogeneticInfo()</code>).
+</p>
+<p>The Matching Split Information measure (<code>MatchingSplitInfo()</code>,
+<code>MatchingSplitInfoSplits()</code>) defines the similarity between a pair of
+splits as the phylogenetic information content of the most informative
+split that is consistent with both input splits; <code>MatchingSplitInfoDistance()</code>
+is the corresponding measure of tree difference.
+(<a href="https://ms609.github.io/TreeDist/articles/Generalized-RF.html">More information here</a>.)
+</p>
+
+
+<h3>Conversion to distances</h3>
+
+<p>To convert similarity measures to distances, it is necessary to
+subtract the similarity score from a maximum value.  In order to generate
+distance <em>metrics</em>, these functions subtract the similarity twice from the
+total information content (SPI, MSI) or entropy (MCI) of all the splits in
+both trees (Smith 2020).
+</p>
+
+
+<h3>Normalization</h3>
+
+<p>If <code>normalize = TRUE</code>, then results will be rescaled such that distance
+ranges from zero to (in principle) one.
+The maximum <strong>distance</strong> is the sum of the information content or entropy of
+each split in each tree; the maximum <strong>similarity</strong> is half this value.
+(See Vinh <em>et al.</em> (2010, table 3) and
+Smith (2020) for
+alternative normalization possibilities.)
+</p>
+<p>Note that a distance value of one (= similarity of zero) will seldom be
+achieved, as even the most different trees exhibit some similarity.
+It may thus be helpful to rescale the normalized value such that the
+<em>expected</em> distance between a random pair of trees equals one.  This can
+be calculated with <code>ExpectedVariation()</code>; or see package
+'<a href="https://ms609.github.io/TreeDistData/reference/randomTreeDistances.html">TreeDistData</a>'
+for a compilation of expected values under different metrics for trees with
+up to 200 leaves.
+</p>
+<p>Alternatively, use <code style="white-space: pre;">⁠normalize = ⁠</code><code>pmax</code> or <code>pmin</code> to scale against the
+information content or entropy of all splits in the most (<code>pmax</code>) or
+least (<code>pmin</code>) informative tree in each pair.
+To calculate the relative similarity against a reference tree that is known
+to be "correct", use <code>normalize = SplitwiseInfo(trueTree)</code> (SPI, MSI) or
+<code>ClusteringEntropy(trueTree)</code> (MCI).
+For worked examples, see the internal function <code>NormalizeInfo()</code>, which is
+called from distance functions with the parameter <code>how = normalize</code>.
+.
+</p>
+
+
+<h3>Distances between large trees</h3>
+
+<p>To balance memory demands and runtime with flexibility, these functions are
+implemented for trees with up to 2048 leaves.
+To analyse trees with up to 8192 leaves, you will need to a modified version
+of the package:
+<code>install.packages("BigTreeDist", repos = "https://ms609.github.io/packages/")</code>
+Use <code>library("BigTreeDist")</code> <em>instead</em> of <code>library("TreeDist")</code> to load
+the modified package – or prefix functions with the package name, e.g.
+<code>BigTreeDist::TreeDistance()</code>.
+</p>
+<p>As an alternative download method,
+uninstall <span class="pkg">TreeDist</span> and <span class="pkg">TreeTools</span> using
+<code>remove.packages()</code>, then use
+<code>devtools::install_github("ms609/TreeTools", ref = "more-leaves")</code>
+to install the modified <span class="pkg">TreeTools</span> package; then,
+install <span class="pkg">TreeDist</span> using
+<code>devtools::install_github("ms609/TreeDist", ref = "more-leaves")</code>.
+(<span class="pkg">TreeDist</span> will need building from source <em>after</em> the modified
+<span class="pkg">TreeTools</span> package has been installed, as its code links to values
+set in the TreeTools source code.)
+</p>
+<p>Trees with over 8192 leaves require further modification of the source code,
+which the maintainer plans to attempt in the future; please <a href="https://github.com/ms609/TreeTools/issues/141">comment on GitHub</a> if you would find this useful.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Day WHE (1985).
+“Optimal algorithms for comparing trees with labeled leaves.”
+<em>Journal of Classification</em>, <b>2</b>(1), 7–28.
+<a href="https://doi.org/10.1007/BF01908061">doi:10.1007/BF01908061</a>.<br><br> MacKay DJC (2003).
+<em>Information Theory, Inference, and Learning Algorithms</em>.
+Cambridge University Press, Cambridge.
+<a href="https://www.inference.org.uk/itprnn/book.pdf">https://www.inference.org.uk/itprnn/book.pdf</a>.<br><br> Meila M (2007).
+“Comparing clusterings—an information based distance.”
+<em>Journal of Multivariate Analysis</em>, <b>98</b>(5), 873–895.
+<a href="https://doi.org/10.1016/j.jmva.2006.11.013">doi:10.1016/j.jmva.2006.11.013</a>.<br><br> Smith MR (2020).
+“Information theoretic Generalized Robinson-Foulds metrics for comparing phylogenetic trees.”
+<em>Bioinformatics</em>, <b>36</b>(20), 5007–5013.
+<a href="https://doi.org/10.1093/bioinformatics/btaa614">doi:10.1093/bioinformatics/btaa614</a>.<br><br> Vinh NX, Epps J, Bailey J (2010).
+“Information theoretic measures for clusterings comparison: variants, properties, normalization and correction for chance.”
+<em>Journal of Machine Learning Research</em>, <b>11</b>, 2837–2854.
+<a href="https://doi.org/10.1145/1553374.1553511">doi:10.1145/1553374.1553511</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree distances: 
+<code>JaccardRobinsonFoulds()</code>,
+<code>KendallColijn()</code>,
+<code>MASTSize()</code>,
+<code>MatchingSplitDistance()</code>,
+<code>NNIDist()</code>,
+<code>NyeSimilarity()</code>,
+<code>PathDist()</code>,
+<code>Robinson-Foulds</code>,
+<code>SPRDist()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tree1 &lt;- ape::read.tree(text="((((a, b), c), d), (e, (f, (g, h))));")
+tree2 &lt;- ape::read.tree(text="(((a, b), (c, d)), ((e, f), (g, h)));")
+tree3 &lt;- ape::read.tree(text="((((h, b), c), d), (e, (f, (g, a))));")
+
+# Best possible score is obtained by matching a tree with itself
+DifferentPhylogeneticInfo(tree1, tree1) # 0, by definition
+SharedPhylogeneticInfo(tree1, tree1)
+SplitwiseInfo(tree1) # Maximum shared phylogenetic information
+
+# Best possible score is a function of tree shape; the splits within
+# balanced trees are more independent and thus contain less information
+SplitwiseInfo(tree2)
+
+# How similar are two trees?
+SharedPhylogeneticInfo(tree1, tree2) # Amount of phylogenetic information in common
+attr(SharedPhylogeneticInfo(tree1, tree2, reportMatching = TRUE), "matching")
+VisualizeMatching(SharedPhylogeneticInfo, tree1, tree2) # Which clades are matched?
+
+DifferentPhylogeneticInfo(tree1, tree2) # Distance measure
+DifferentPhylogeneticInfo(tree2, tree1) # The metric is symmetric
+
+# Are they more similar than two trees of this shape would be by chance?
+ExpectedVariation(tree1, tree2, sample=12)["DifferentPhylogeneticInfo", "Estimate"]
+
+# Every split in tree1 conflicts with every split in tree3
+# Pairs of conflicting splits contain clustering, but not phylogenetic, 
+# information
+SharedPhylogeneticInfo(tree1, tree3) # = 0
+MutualClusteringInfo(tree1, tree3) # &gt; 0
+
+# Distance functions internally convert trees to Splits objects.
+# Pre-conversion can reduce run time if the same trees will feature in
+# multiple comparisons
+splits1 &lt;- TreeTools::as.Splits(tree1)
+splits2 &lt;- TreeTools::as.Splits(tree2)
+
+SharedPhylogeneticInfoSplits(splits1, splits2)
+MatchingSplitInfoSplits(splits1, splits2)
+MutualClusteringInfoSplits(splits1, splits2)
+</code></pre>
+
+
+</div>

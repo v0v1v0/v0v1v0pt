@@ -1,0 +1,94 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>set_custom_summaries</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set custom summaries to be performed within a descriptive statistics layer</h2>
+
+<h3>Description</h3>
+
+<p>This function allows a user to define custom summaries to be performed in a
+call to <code>dplyr::summarize()</code>. A custom summary by the same name as a
+default summary will override the default. This allows the user to override
+the default behavior of summaries built into 'Tplyr', while also adding new
+desired summary functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">set_custom_summaries(e, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>e</code></td>
+<td>
+<p><code>desc</code> layer on which the summaries should be bound</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Named parameters containing syntax to be used in a call to
+<code>dplyr::summarize()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When programming the logic of the summary function, use the variable name
+<code>.var</code> to within your summary functions. This allows you apply the
+summary function to each variable when multiple target variables are
+declared.
+</p>
+<p>An important, yet not immediately obvious, part of using
+<code>set_custom_summaries</code> is to understand the link between the named
+parameters you set in <code>set_custom_summaries</code> and the names called in
+<code>f_str</code> objects within <code>set_format_strings</code>. In
+<code>f_str</code>, after you supply the string format you'd like your
+numbers to take, you specify the summaries that fill those strings.
+</p>
+<p>When you go to set your format strings, the name you use to declare a summary
+in <code>set_custom_summaries</code> is the same name that you use in your
+<code>f_str</code> call. This is necessary because
+<code>set_format_strings</code> needs some means of putting two summaries in
+the same value, and setting a row label for the summary being performed.
+</p>
+<p>Review the examples to see this put into practice. Note the relationship
+between the name created in <code>set_custom_summaries</code> and the name used in
+<code>set_format_strings</code> within the <code>f_str</code> call
+</p>
+
+
+<h3>Value</h3>
+
+<p>Binds a variable <code>custom_summaries</code> to the specified layer
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Load in pipe
+library(magrittr)
+
+tplyr_table(iris, Species) %&gt;%
+  add_layer(
+    group_desc(Sepal.Length, by = "Sepal Length") %&gt;%
+      set_custom_summaries(
+        geometric_mean = exp(sum(log(.var[.var &gt; 0]),
+                                     na.rm=TRUE) / length(.var))
+      ) %&gt;%
+      set_format_strings(
+        'Geometric Mean' = f_str('xx.xx', geometric_mean)
+      )
+  ) %&gt;%
+  build()
+</code></pre>
+
+
+</div>

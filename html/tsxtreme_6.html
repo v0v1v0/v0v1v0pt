@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>depfit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Dependence model fit
+</h2>
+
+<h3>Description</h3>
+
+<p>Bayesian semiparametrics are used to fit the Heffernan–Tawn model to time series. Options are available to impose a structure in time on the model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">depfit(ts, u.mar = 0, u.dep=u.mar,
+    lapl = FALSE, method.mar=c("mle","mom","pwm"),  nlag = 1,
+    par = bayesparams(),
+    submodel = c("fom", "none", "ugm"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts</code></td>
+<td>
+
+<p>numeric vector; time series to be fitted.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u.mar</code></td>
+<td>
+
+<p>marginal threshold; used when transforming the time series to Laplace scale.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u.dep</code></td>
+<td>
+
+<p>dependence threshold; level above which the dependence is modelled. <code>u.dep</code> can be lower than <code>u.mar</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lapl</code></td>
+<td>
+
+<p>logical; is <code>ts</code> on the Laplace scale already? The default (FALSE) assumes unknown marginal distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method.mar</code></td>
+<td>
+
+<p>a character string defining the method used to estimate the marginal GPD; either <code>"mle"</code> for maximum likelihood or <code>"mom"</code> for method of moments or <code>"pwm"</code> for probability weighted moments. Defaults to <code>"mle"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nlag</code></td>
+<td>
+
+<p>integer; number of lags to be considered when modelling the dependence in time.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par</code></td>
+<td>
+
+<p>an object of class 'bayesparams'.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>submodel</code></td>
+<td>
+
+<p>a character string; "fom" for <em>first order Markov</em>, "none" for <em>no particular time structure</em>, or "ugm" for <em>univariate Gaussian mixture</em> (see details).
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>submodel</code> can be <code>"fom"</code> to impose a first order Markov structure on the model parameters <code class="reqn">\alpha_j</code> and <code class="reqn">\beta_j</code> (see <code>thetafit</code> for more details); it can take the value <code>"none"</code> to impose no particular structure in time; it can also be <code>"ugm"</code> which can be applied to density estimation, as it corresponds to setting <code class="reqn">\alpha=\beta=0</code> (see examples).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class 'bayesfit' with elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>a </code></td>
+<td>
+<p>posterior trace of <code class="reqn">\alpha</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b </code></td>
+<td>
+<p>posterior trace of <code class="reqn">\beta</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sd </code></td>
+<td>
+<p>posterior trace of the components' standard deviations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean </code></td>
+<td>
+<p>posterior trace of the components' means.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w </code></td>
+<td>
+<p>posterior trace of the components' assigned weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prec </code></td>
+<td>
+<p>posterior trace of the precision parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noo </code></td>
+<td>
+<p>posterior trace of the number of observations per component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noc </code></td>
+<td>
+<p>posterior trace of the number of components containing at least one observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prop.sd </code></td>
+<td>
+<p>trace of proposal standard deviations in the 5+3 regions of the adaption scheme for <code class="reqn">\alpha</code> and <code class="reqn">\beta</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len </code></td>
+<td>
+<p>length of the returned traces.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>thetafit</code>, <code>chifit</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## generate data from an AR(1)
+## with Gaussian marginal distribution
+n   &lt;- 10000
+dep &lt;- 0.5
+ar    &lt;- numeric(n)
+ar[1] &lt;- rnorm(1)
+for(i in 2:n)
+  ar[i] &lt;- rnorm(1, mean=dep*ar[i-1], sd=1-dep^2)
+  
+## rescale the margin
+ar &lt;- qlapl(pnorm(ar))
+
+## fit the data
+params &lt;- bayesparams()
+params$maxit &lt;- 100# bigger numbers would be
+params$burn  &lt;- 10 # more sensible...
+params$thin  &lt;- 4
+fit &lt;- depfit(ts=ar, u.mar=0.95, u.dep=0.98, par=params)
+
+########
+## density estimation with submodel=="ugm"
+data &lt;- MASS::galaxies/1e3
+dens &lt;- depfit(ts=data, par=params, submodel="ugm")
+</code></pre>
+
+
+</div>

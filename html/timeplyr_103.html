@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_ggplot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Quick time-series ggplot</h2>
+
+<h3>Description</h3>
+
+<p><code>time_ggplot()</code> is a neat way to quickly
+plot aggregate time-series data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_ggplot(
+  data,
+  time,
+  value,
+  group = NULL,
+  facet = FALSE,
+  geom = ggplot2::geom_line,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Time variable using <code>tidyselect</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>Value variable using <code>tidyselect</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>(Optional) Group variable using <code>tidyselect</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>facet</code></td>
+<td>
+<p>When groups are supplied, should multi-series be
+plotted separately or on the same plot?
+Default is <code>FALSE</code>, or together.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geom</code></td>
+<td>
+<p><code>ggplot2</code> 'geom' type. Default is <code>geom_line()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed to the chosen 'geom'.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>ggplot</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>ts_as_tibble
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(timeplyr)
+library(ggplot2)
+library(lubridate)
+
+# It's as easy as this
+AirPassengers %&gt;%
+  ts_as_tibble() %&gt;%
+  time_ggplot(time, value)
+
+# And this
+EuStockMarkets %&gt;%
+  ts_as_tibble() %&gt;%
+  time_ggplot(time, value, group)
+
+# zoo example
+x.Date &lt;- as.Date("2003-02-01") + c(1, 3, 7, 9, 14) - 1
+x &lt;- zoo::zoo(rnorm(5), x.Date)
+x %&gt;%
+  ts_as_tibble() %&gt;%
+  time_ggplot(time, value)
+
+# An example using raw data
+
+ebola &lt;- outbreaks::ebola_sim$linelist
+
+# We can build a helper to count and complete
+# Using the same time grid
+
+count_and_complete &lt;- function(.data, time, .name,
+                               from = NULL, ...,
+                               time_by = NULL){
+  .data %&gt;%
+    time_by(!!dplyr::enquo(time), time_by = time_by,
+               .name = .name, from = !!dplyr::enquo(from),
+            as_interval = FALSE) %&gt;%
+    dplyr::count(...) %&gt;%
+    dplyr::ungroup() %&gt;%
+    time_complete(.data[[.name]], ..., time_by = time_by,
+                  fill = list(n = 0))
+}
+ebola %&gt;%
+  count_and_complete(date_of_onset, outcome, time_by = "week", .name = "date_of_onset",
+                     from = floor_date(min(date_of_onset), "week")) %&gt;%
+  time_ggplot(date_of_onset, n, geom = geom_blank) +
+  geom_col(aes(fill = outcome))
+
+</code></pre>
+
+
+</div>

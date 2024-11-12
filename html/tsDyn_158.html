@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TVECM.HStest </td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Test of linear cointegration vs threshold cointegration</h2>
+
+<h3>Description</h3>
+
+<p>Tests the null of linear cointegration against threshold cointegration following Hansen and Seo (2002). Fixed regressor and residual bootstrap are available. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TVECM.HStest(data, lag=1, ngridTh=300, trim=0.05, 
+ nboot=100, fixed.beta=NULL,  intercept=TRUE, 
+ boot.type=c("FixedReg", "ResBoot"), 
+ hpc=c("none", "foreach"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Time series </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>Number of lags to include in each regime</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngridTh</code></td>
+<td>
+<p>Number of threshold grid points to evaluate the optimal threshold.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trim</code></td>
+<td>
+<p>Trimming parameter indicating the minimal percentage of observations in each regime</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nboot</code></td>
+<td>
+<p>Number of bootstrap replications</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed.beta</code></td>
+<td>
+<p>Numeric. User pre-specified cointegrating value, as in <code>VECM</code> 
+(i.e. cointegrating  vector will be c(1, <code>-beta.fixed</code>)). When NULL (default), the value is estimated from the linear VECM.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>intercept</code></td>
+<td>
+<p>Logical. Whether an intercept has to be included in the VECM</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boot.type</code></td>
+<td>
+<p>Character. Type of bootstrap simulation (only if <code>nboot</code>&gt;0)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hpc</code></td>
+<td>
+<p>Possibility to run the bootstrap on parallel core. See details</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This test follows the implementation done by Hansen and Seo (2002). The cointegrating value is estimated from the linear VECM. Then, conditional on this value, the LM test is run for a range of different threshold values. The maximum of those LM test values is reported. 
+</p>
+<p>Two bootstrap are available: a fixed regressor, as well as a usual residual bootstrap (using the function <code>TVECM.sim</code>). 
+</p>
+<p>Available methods are <code>print()</code>, <code>summary()</code> and <code>plot()</code>. 
+</p>
+<p>With the argument <code>hpc</code>, the burdensome bootstrap replication can be run on parallel cores, thus alleviating the time of computation. The user needs simply to choose a package (among doMC, doMPI, doSNOW or doRedis) and register the backend. See the vignette for more details. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing diverse values:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>stat</code></td>
+<td>
+<p>The sup-LM statistic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>values</code></td>
+<td>
+<p>The whole LM values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PvalBoot</code></td>
+<td>
+<p>The bootstrap p-value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CriticalValBoot</code></td>
+<td>
+<p>The bootstrap critical values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allBoots</code></td>
+<td>
+<p>The boot sup-LM values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>args</code></td>
+<td>
+<p>Some user given args (nboot, boot.type)</p>
+</td>
+</tr>
+</table>
+<h3>Reproducibility</h3>
+
+<p>Comparison with original paper is made difficult as values of the test are not shown in the paper, only their critical values, which depend on random bootstrap. 
+</p>
+<p>Comparison is done with the GAUSS code available on the page of Bruce Hansen. Running tar_ci, we have the same sup-LM value when lags=1 and lags=2, a higher value with lag=3. When the test is run with pre-specified beta values, we have different results, sometimes higher but also smaller sup-LM value. 
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthieu Stigler</p>
+
+
+<h3>References</h3>
+
+<p>Hansen, B. and Seo, B. (2002), Testing for two-regime threshold cointegration in vector error-correction models, Journal of Econometrics, 110, pages 293 - 318
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>zeroyld</code>: data used in the original paper of Hansen and Seo. 
+</p>
+<p><code>TVECM.SeoTest</code>: a similar test, but with null hypothesis of no-cointegration. 
+</p>
+<p><code>TVECM</code> for estimating a TVECM, <code>TVECM.sim</code> for simulating/bootstrap a TVECM, 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Use original data from paper:
+data(zeroyld)
+dataPaper&lt;-zeroyld
+# Test: nboot, number of bootstrap replications, should be high 
+## Not run: 
+test1&lt;-TVECM.HStest(dataPaper, lag=1, intercept=TRUE, nboot=1000)
+
+## End(Not run)
+
+#we use here for the example a much smaller number of bootstrap:
+test1&lt;-TVECM.HStest(dataPaper, lag=1, intercept=TRUE, nboot=10)
+
+test1
+summary(test1)
+plot(test1)
+
+#can have only specific plots:
+plot(test1, which="LM values")
+plot(test1, which="Density")
+
+## Run the function in parallel:
+## Not run: 
+#we show here the use with package doMC
+library(doMC)
+registerDoMC(2) #Number of cores
+test1&lt;-TVECM.HStest(dataPaper, lag=1, intercept=TRUE, nboot=1000, hpc="foreach")
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

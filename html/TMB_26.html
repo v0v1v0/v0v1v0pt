@@ -1,0 +1,232 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sdreport</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>General sdreport function.</h2>
+
+<h3>Description</h3>
+
+<p>After optimization of an AD model, <code>sdreport</code> is used to
+calculate standard deviations of all model parameters, including
+non linear functions of random effects and parameters specified
+through the ADREPORT() macro from the user template.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sdreport(
+  obj,
+  par.fixed = NULL,
+  hessian.fixed = NULL,
+  getJointPrecision = FALSE,
+  bias.correct = FALSE,
+  bias.correct.control = list(sd = FALSE, split = NULL, nsplit = NULL),
+  ignore.parm.uncertainty = FALSE,
+  getReportCovariance = TRUE,
+  skip.delta.method = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>Object returned by <code>MakeADFun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par.fixed</code></td>
+<td>
+<p>Optional. Parameter estimate (will be known to <code>obj</code> when an optimization has been carried out).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hessian.fixed</code></td>
+<td>
+<p>Optional. Hessian wrt. parameters (will be calculated from <code>obj</code> if missing).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>getJointPrecision</code></td>
+<td>
+<p>Optional. Return full joint precision matrix of random effects and parameters?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias.correct</code></td>
+<td>
+<p>logical indicating if bias correction should be applied</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias.correct.control</code></td>
+<td>
+<p>a <code>list</code> of bias correction options; currently <code>sd</code>, <code>split</code> and <code>nsplit</code> are used - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore.parm.uncertainty</code></td>
+<td>
+<p>Optional. Ignore estimation variance of parameters?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>getReportCovariance</code></td>
+<td>
+<p>Get full covariance matrix of ADREPORTed variables?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip.delta.method</code></td>
+<td>
+<p>Skip the delta method? (<code>FALSE</code> by default)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>First, the Hessian wrt. the parameter vector (<code class="reqn">\theta</code>) is
+calculated.  The parameter covariance matrix is approximated by
+</p>
+<p style="text-align: center;"><code class="reqn">V(\hat\theta)=-\nabla^2 l(\hat\theta)^{-1}</code>
+</p>
+<p> where <code class="reqn">l</code>
+denotes the log likelihood function (i.e. <code>-obj$fn</code>).  If
+<code>ignore.parm.uncertainty=TRUE</code> then the Hessian calculation
+is omitted and a zero-matrix is used in place of
+<code class="reqn">V(\hat\theta)</code>.
+</p>
+<p>For non-random effect models the standard delta-method is used to
+calculate the covariance matrix of transformed parameters. Let
+<code class="reqn">\phi(\theta)</code> denote some non-linear function of
+<code class="reqn">\theta</code>. Then </p>
+<p style="text-align: center;"><code class="reqn">V(\phi(\hat\theta))\approx \nabla\phi
+V(\hat\theta) \nabla\phi'</code>
+</p>
+
+<p>The covariance matrix of reported variables
+<code class="reqn">V(\phi(\hat\theta))</code> is returned by default. This can cause
+high memory usage if many variables are ADREPORTed. Use
+<code>getReportCovariance=FALSE</code> to only return standard errors.
+In case standard deviations are not required one can completely skip
+the delta method using <code>skip.delta.method=TRUE</code>.
+</p>
+<p>For random effect models a generalized delta-method is used. First
+the joint covariance of random effect and parameter estimation error is approximated
+by
+</p>
+<p style="text-align: center;"><code class="reqn">V \left( \begin{array}{cc} \hat u - u \cr \hat\theta - \theta \end{array} \right) \approx
+\left( \begin{array}{cc} H_{uu}^{-1} &amp; 0 \cr 0 &amp; 0 \end{array} \right) +
+J V(\hat\theta) J'
+</code>
+</p>
+
+<p>where <code class="reqn">H_{uu}</code> denotes random effect block of the full joint
+Hessian of <code>obj$env$f</code> and <code class="reqn">J</code> denotes the Jacobian of
+<code class="reqn">\left( \begin{array}{cc}\hat u(\theta) \cr \theta \end{array} \right)</code> wrt. <code class="reqn">\theta</code>.
+Here, the first term represents the expected conditional variance
+of the estimation error given the data and the second term represents the variance
+of the conditional mean of the estimation error given the data.
+</p>
+<p>Now the delta method can be applied on a general non-linear
+function <code class="reqn">\phi(u,\theta)</code> of random effects <code class="reqn">u</code> and
+parameters <code class="reqn">\theta</code>:
+</p>
+<p style="text-align: center;"><code class="reqn">V\left(\phi(\hat u,\hat\theta) - \phi(u,\theta) \right)\approx \nabla\phi V \left( \begin{array}{cc}
+\hat u - u \cr \hat\theta - \theta \end{array} \right) \nabla\phi'</code>
+</p>
+
+<p>The full joint covariance is not returned by default, because it
+may require large amounts of memory.  It may be obtained by
+specifying <code>getJointPrecision=TRUE</code>, in which case <code class="reqn">V
+\left( \begin{array}{cc} \hat u - u \cr \hat\theta - \theta \end{array} \right) ^{-1} </code> will be part of the
+output. This matrix must be manually inverted using
+<code>solve(jointPrecision)</code> in order to get the joint covariance
+matrix. Note, that the parameter order will follow the original
+order (i.e. <code>obj$env$par</code>).
+</p>
+<p>Using <code class="reqn">\phi(\hat u,\theta)</code> as estimator of
+<code class="reqn">\phi(u,\theta)</code> may result in substantial bias. This may be
+the case if either <code class="reqn">\phi</code> is non-linear or if the distribution
+of <code class="reqn">u</code> given <code class="reqn">x</code> (data) is sufficiently non-symmetric.  A
+generic correction is enabled with <code>bias.correct=TRUE</code>. It is
+based on the identity
+</p>
+<p style="text-align: center;"><code class="reqn">E_{\theta}[\phi(u,\theta)|x] =
+\partial_\varepsilon\left(\log \int \exp(-f(u,\theta) +
+\varepsilon \phi(u,\theta))\:du\right)_{|\varepsilon=0}</code>
+</p>
+
+<p>stating that the conditional expectation can be written as a
+marginal likelihood gradient wrt. a nuisance parameter
+<code class="reqn">\varepsilon</code>.
+The marginal likelihood is replaced by its Laplace approximation.
+</p>
+<p>If <code>bias.correct.control$sd=TRUE</code> the variance of the
+estimator is calculated using
+</p>
+<p style="text-align: center;"><code class="reqn">V_{\theta}[\phi(u,\theta)|x] =
+\partial_\varepsilon^2\left(\log \int \exp(-f(u,\theta) +
+\varepsilon \phi(u,\theta))\:du\right)_{|\varepsilon=0}</code>
+</p>
+
+<p>A further correction is added to this variance to account for the
+effect of replacing <code class="reqn">\theta</code> by the MLE <code class="reqn">\hat\theta</code>
+(unless <code>ignore.parm.uncertainty=TRUE</code>).
+</p>
+<p>Bias correction can be be performed in chunks in order to reduce
+memory usage or in order to only bias correct a subset of
+variables. First option is to pass a list of indices as
+<code>bias.correct.control$split</code>. E.g. a list
+<code>list(1:2,3:4)</code> calculates the first four ADREPORTed
+variables in two chunks.
+The internal function <code>obj$env$ADreportIndex()</code>
+gives an overview of the possible indices of ADREPORTed variables.
+</p>
+<p>Second option is to pass the number of
+chunks as <code>bias.correct.control$nsplit</code> in which case all
+ADREPORTed variables are bias corrected in the specified number of
+chunks.
+Also note that <code>skip.delta.method</code> may be necessary when bias
+correcting a large number of variables.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of class <code>sdreport</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.sdreport</code>, <code>print.sdreport</code>, <code>as.list.sdreport</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+runExample("linreg_parallel", thisR = TRUE) ## Non-random effect example
+sdreport(obj) 
+## End(Not run)
+
+runExample("simple", thisR = TRUE)          ## Random effect example
+rep &lt;- sdreport(obj)
+summary(rep, "random")                      ## Only random effects
+summary(rep, "fixed", p.value = TRUE)       ## Only non-random effects
+summary(rep, "report")                      ## Only report
+
+## Bias correction
+rep &lt;- sdreport(obj, bias.correct = TRUE)
+summary(rep, "report")                      ## Include bias correction
+</code></pre>
+
+
+</div>

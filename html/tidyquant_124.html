@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>excel_stat_mutation_functions</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Excel Statistical Mutation Functions</h2>
+
+<h3>Description</h3>
+
+<p>15+ common statistical functions familiar to users of Excel (e.g. <code>ABS()</code>, <code>SQRT()</code>)
+that <strong>modify / transform</strong> a series of values
+(i.e. a vector of the same length of the input is returned).
+</p>
+<p>These functions are designed to help users coming from an <strong>Excel background</strong>.
+Most functions replicate the behavior of Excel:
+</p>
+
+<ul>
+<li>
+<p> Names in most cases match Excel function names
+</p>
+</li>
+<li>
+<p> Functionality replicates Excel
+</p>
+</li>
+<li>
+<p> By default, missing values are ignored (same as in Excel)
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">ABS(x)
+
+SQRT(x)
+
+LOG(x)
+
+EXP(x)
+
+RETURN(x, n = 1, fill_na = NA)
+
+PCT_CHANGE(x, n = 1, fill_na = NA)
+
+CHANGE(x, n = 1, fill_na = NA)
+
+LAG(x, n = 1, fill_na = NA)
+
+LEAD(x, n = 1, fill_na = NA)
+
+CUMULATIVE_SUM(x)
+
+CUMULATIVE_PRODUCT(x)
+
+CUMULATIVE_MAX(x)
+
+CUMULATIVE_MIN(x)
+
+CUMULATIVE_MEAN(x)
+
+CUMULATIVE_MEDIAN(x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A vector. Most functions are designed for numeric data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Values to offset. Used in functions like <code>LAG()</code>, <code>LEAD()</code>, and <code>PCT_CHANGE()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill_na</code></td>
+<td>
+<p>Fill missing (<code>NA</code>) values with a different value. Used in offsetting functions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><strong>Mutation functions</strong> return a mutated / transformed version of the vector
+</p>
+</li></ul>
+<h3>Useful functions</h3>
+
+<p><strong>Mutation Functions</strong> - Transforms a vector
+</p>
+
+<ul>
+<li>
+<p> Transformation: <code>ABS()</code>, <code>SQRT()</code>, <code>LOG()</code>, <code>EXP()</code>
+</p>
+</li>
+<li>
+<p> Lags &amp; Change (Offsetting Functions): <code>CHANGE()</code>, <code>PCT_CHANGE()</code>, <code>LAG()</code>, <code>LEAD()</code>
+</p>
+</li>
+<li>
+<p> Cumulative Totals: <code>CUMULATIVE_SUM()</code>, <code>CUMULATIVE_PRODUCT()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Libraries
+library(timetk, exclude = "FANG")
+library(dplyr)
+
+# --- Basic Usage ----
+
+CUMULATIVE_SUM(1:10)
+
+PCT_CHANGE(c(21, 24, 22, 25), fill_na = 0)
+
+# --- Usage with tidyverse ---
+
+# Go from daily to monthly periodicity,
+# then calculate returns and growth of $1 USD
+FANG %&gt;%
+    mutate(symbol = forcats::as_factor(symbol)) %&gt;%
+    group_by(symbol) %&gt;%
+
+    # Summarization - Collapse from daily to FIRST value by month
+    summarise_by_time(
+        .date_var  = date,
+        .by        = "month",
+        adjusted   = FIRST(adjusted)
+    ) %&gt;%
+
+    # Mutation - Calculate monthly returns and cumulative growth of $1 USD
+    group_by(symbol) %&gt;%
+    mutate(
+        returns = PCT_CHANGE(adjusted, fill_na = 0),
+        growth  = CUMULATIVE_SUM(returns) + 1
+    )
+
+</code></pre>
+
+
+</div>

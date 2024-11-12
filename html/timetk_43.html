@@ -1,0 +1,236 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pad_by_time</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Insert time series rows with regularly spaced timestamps</h2>
+
+<h3>Description</h3>
+
+<p>The easiest way to fill in missing timestamps or convert to a more
+granular period (e.g. quarter to month). Wraps the <code>padr::pad()</code> function
+for padding tibbles.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pad_by_time(
+  .data,
+  .date_var,
+  .by = "auto",
+  .pad_value = NA,
+  .fill_na_direction = c("none", "down", "up", "downup", "updown"),
+  .start_date = NULL,
+  .end_date = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A tibble with a time-based column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.date_var</code></td>
+<td>
+<p>A column containing date or date-time values to pad</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>Either "auto", a time-based frequency like "year", "month", "day", "hour", etc,
+or a time expression like "5 min", or "7 days". See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.pad_value</code></td>
+<td>
+<p>Fills in padded values. Default is <code>NA</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.fill_na_direction</code></td>
+<td>
+<p>Users can provide an <code>NA</code> fill strategy using <code>tidyr::fill()</code>.
+Possible values: <code>'none'</code>, <code>'down'</code>, <code>'up'</code>, <code>'downup'</code>, <code>'updown'</code>. Default: <code>'none'</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.start_date</code></td>
+<td>
+<p>Specifies the start of the padded series.
+If NULL it will use the lowest value of the input variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.end_date</code></td>
+<td>
+<p>Specifies the end of the padded series.
+If NULL it will use the highest value of the input variable.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Padding Missing Observations</strong>
+</p>
+<p>The most common use case for <code>pad_by_time()</code> is to add rows where timestamps
+are missing. This could be from sales data that have missing values on weekends and holidays.
+Or it could be high frequency data where observations are irregularly spaced and should be
+reset to a regular frequency.
+</p>
+<p><strong>Going from Low to High Frequency</strong>
+</p>
+<p>The second use case is going from a low frequency (e.g. day) to high frequency (e.g. hour).
+This is possible by supplying a higher frequency to <code>pad_by_time()</code>.
+</p>
+<p><strong>Interval, .by</strong>
+</p>
+<p>Padding can be applied in the following ways:
+</p>
+
+<ul>
+<li> <p><code>.by = "auto"</code> - <code>pad_by_time()</code> will detect the time-stamp frequency and apply padding.
+</p>
+</li>
+<li>
+<p> The eight intervals in are: year, quarter, month, week, day, hour, min, and sec.
+</p>
+</li>
+<li>
+<p> Intervals like 5 minutes, 6 hours, 10 days are possible.
+</p>
+</li>
+</ul>
+<p><strong>Pad Value, .pad_value</strong>
+</p>
+<p>A pad value can be supplied that fills in missing numeric data. Note that this is only applied to numeric columns.
+</p>
+<p><strong>Fill NA Direction, .fill_na_directions</strong>
+</p>
+<p>Uses <code>tidyr::fill()</code> to fill missing observations using a fill strategy.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tibble</code> or <code>data.frame</code> with rows containing missing timestamps added.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> This function wraps the <code>padr::pad()</code> function developed by Edwin Thoen.
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Imputation:
+</p>
+
+<ul><li> <p><code>ts_impute_vec()</code> - Impute missing values for time series.
+</p>
+</li></ul>
+<p>Time-Based dplyr functions:
+</p>
+
+<ul>
+<li> <p><code>summarise_by_time()</code> - Easily summarise using a date column.
+</p>
+</li>
+<li> <p><code>mutate_by_time()</code> - Simplifies applying mutations by time windows.
+</p>
+</li>
+<li> <p><code>pad_by_time()</code> - Insert time series rows with regularly spaced timestamps
+</p>
+</li>
+<li> <p><code>filter_by_time()</code> - Quickly filter using date ranges.
+</p>
+</li>
+<li> <p><code>filter_period()</code> - Apply filtering expressions inside periods (windows)
+</p>
+</li>
+<li> <p><code>slice_period()</code> - Apply slice inside periods (windows)
+</p>
+</li>
+<li> <p><code>condense_period()</code> - Convert to a different periodicity
+</p>
+</li>
+<li> <p><code>between_time()</code> - Range detection for date or date-time sequences.
+</p>
+</li>
+<li> <p><code>slidify()</code> - Turn any function into a sliding (rolling) function
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# Create a quarterly series with 1 missing value
+missing_data_tbl &lt;- tibble::tibble(
+    date = tk_make_timeseries("2014-01-01", "2015-01-01", by = "quarter"),
+    value = 1:5
+) %&gt;%
+    slice(-4) # Lose the 4th quarter on purpose
+missing_data_tbl
+
+
+# Detects missing quarter, and pads the missing regularly spaced quarter with NA
+missing_data_tbl %&gt;% pad_by_time(date, .by = "quarter")
+
+# Can specify a shorter period. This fills monthly.
+missing_data_tbl %&gt;% pad_by_time(date, .by = "month")
+
+# Can let pad_by_time() auto-detect date and period
+missing_data_tbl %&gt;% pad_by_time()
+
+# Can specify a .pad_value
+missing_data_tbl %&gt;% pad_by_time(date, .by = "quarter", .pad_value = 0)
+
+# Can then impute missing values
+missing_data_tbl %&gt;%
+    pad_by_time(date, .by = "quarter") %&gt;%
+    mutate(value = ts_impute_vec(value, period = 1))
+
+# Can specify a custom .start_date and .end_date
+missing_data_tbl %&gt;%
+   pad_by_time(date, .by = "quarter", .start_date = "2013", .end_date = "2015-07-01")
+
+# Can specify a tidyr::fill() direction
+missing_data_tbl %&gt;%
+   pad_by_time(date, .by = "quarter",
+               .fill_na_direction = "downup",
+               .start_date = "2013", .end_date = "2015-07-01")
+
+# --- GROUPS ----
+
+# Apply standard NA padding to groups
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    pad_by_time(.by = "day")
+
+# Apply constant pad value
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    pad_by_time(.by = "day", .pad_value = 0)
+
+# Apply filled padding to groups
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    pad_by_time(.by = "day", .fill_na_direction = "down")
+
+</code></pre>
+
+
+</div>

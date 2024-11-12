@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>parse_logs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Parse Log Files</h2>
+
+<h3>Description</h3>
+
+<p>Parse a log file with a provided template and a set of classes
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">parse_logs(text, template, classes = list(), ...)
+
+parse_logs_file(text_file, config_file, formatters = list(), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>text</code></td>
+<td>
+<p>Character vector; each element a log record</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>template</code></td>
+<td>
+<p>Template string</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classes</code></td>
+<td>
+<p>A named list of parsers or regex strings for use within the
+template string</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments passed onto <code>regexpr</code> for matching regular expressions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>text_file</code></td>
+<td>
+<p>Filename (or readable connection) containing log text</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>config_file</code></td>
+<td>
+<p>Filename (or readable connection) containing template file</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formatters</code></td>
+<td>
+<p>Named list of formatter functions for use of formatting <code>classes</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>'<code>template</code> should only be a template string, such as
+'ip ip_address [date access_date]...'.
+</p>
+<p><code>config_file</code> should be a yaml file or connection with the following fields
+</p>
+
+<ul>
+<li>
+<p> template: Template String
+</p>
+</li>
+<li>
+<p> classes: Named list of regex strings for building classes
+</p>
+</li>
+</ul>
+<p><code>text</code> should be a character vector, with each element representing a
+a log record
+</p>
+<p><code>text_file</code> should be a file or connection that can be split (with readLines)
+into a character vector of records
+</p>
+<p><code>classes</code> should be a named list of parser objects, where names
+match names of classes in template string, or a similarly
+named list of regex strings for coercing into parsers
+</p>
+<p><code>formatters</code> should be a named list of functions, where names
+match names of classes in template string, for properly
+formatting fields once they have been captured
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data.frame with each field identified in the template string as a column.
+For each record in the passed text, the fields were extracted and formatted
+using the parser objects in <code>default_classes()</code> and <code>classes</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Template string with two fields
+template &lt;- '{{ip ipAddress}} - [{{date accessDate}}] {{int status }}'
+
+# Two simple log records
+logs &lt;- c(
+  '192.168.1.10 - [26/Jul/2019:11:41:10 -0500] 200',
+  '192.168.1.11 - [26/Jul/2019:11:41:21 -0500] 404'
+)
+
+# A formatter for the date field
+myFormatters &lt;- list(date = function(x) lubridate::as_datetime(x, format = '%d/%b/%Y:%H:%M:%S %z'))
+# A parser class for the date field
+date_parser &lt;- parser(
+  '[0-3][0-9]\\/[A-Z][a-z]{2}\\/[0-9]{4}:[0-9]{2}:[0-9]{2}:[0-9]{2}[ ][\\+|\\-][0-9]{4}',
+  myFormatters$date,
+  'date'
+)
+
+# Parse the logs from raw data
+parse_logs(logs, template, list(date=date_parser))
+
+# Write the logs and to file and parse
+logfile &lt;- tempfile()
+templatefile &lt;- tempfile()
+writeLines(logs, logfile)
+yaml::write_yaml(list(template=template, classes=list(date=date_parser)), templatefile)
+parse_logs_file(logfile, templatefile, myFormatters)
+file.remove(logfile)
+file.remove(templatefile)
+
+</code></pre>
+
+
+</div>

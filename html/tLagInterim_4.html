@@ -1,0 +1,93 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>print</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Print results from a tLagInterim object</h2>
+
+<h3>Description</h3>
+
+<p>Print results from a tLagInterim object
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tLagInterimObj'
+print(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A tLagInterimObj object, returned by tLagInterim().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Ignored.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>No return value, called to display key results.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(tLagIntCat)
+# f basis functions#'
+f &lt;- function(x.data) {
+       return( as.matrix(x = cbind(1.0, x.data)) )
+     }
+
+# h basis functions#'
+h &lt;- function(b.data, x.data, t.data, times) {
+
+  # Number of basis functions L 
+  # (note that the number of basis functions does not and cannot depend
+  #  on the treatment group; `h` is called internally multiple times -- each
+  #  call is for a single treatment group.)
+  L &lt;- 2
+  
+  # Number of subjects in data
+  n_subjects &lt;- nrow(x = b.data)
+  
+  # Number of time points
+  n_times &lt;- length(x = times)
+   
+  # Initialize array of basis functions for this trt
+  h.basis &lt;- array(data = 0.0, dim = c(n_subjects, n_times, L))
+       
+  # Indicator of still being in hospital at any censoring time
+  lindicator &lt;- outer(X = t.data$lu, Y = times, "&lt;=") * {t.data$ldelta == 2L}
+  h.basis[, , 1L] &lt;- lindicator
+     
+  # Time from leaving hospital to obstime for those known to
+  # leave hospital at each censoring time
+  h.basis[, , 2L] &lt;- {times - t.data$lu} * lindicator
+          
+  return( h.basis )
+}
+
+# fit with only baseline covariates provided, categorical outcome, user-specified f, h
+res &lt;- tLagInterim(b.data = b.data.cat,
+                   x.data = x.data.cat,
+                   t.data = NULL,
+                   outcome = "categorical",
+                   f = f, 
+                   h = h)
+print(res)
+
+</code></pre>
+
+
+</div>

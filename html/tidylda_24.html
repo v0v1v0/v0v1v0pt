@@ -1,0 +1,88 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>recover_counts_from_probs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get Count Matrices from Beta or Theta (and Priors)</h2>
+
+<h3>Description</h3>
+
+<p>This function is a core component of <code>initialize_topic_counts</code>.
+See details, below.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">recover_counts_from_probs(prob_matrix, prior_matrix, total_vector)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>prob_matrix</code></td>
+<td>
+<p>a numeric <code>beta</code> or <code>theta</code> matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prior_matrix</code></td>
+<td>
+<p>a matrix of same dimension as <code>prob_matrix</code> whose 
+entries represent the relevant prior (<code>alpha</code> or <code>eta</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_vector</code></td>
+<td>
+<p>a vector of token counts of length <code>ncol(prob_matrix)</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function uses a probability matrix (theta or beta), its prior (alpha or
+eta, respectively), and a vector of counts to simulate what the the Cd or
+Cv matrix would be at the end of a Gibbs run that resulted in that probability
+matrix.
+</p>
+<p>For example, theta is calculated from a matrix of counts, Cd, and a prior,
+alpha. Specifically, the i,j entry of theta is given by
+</p>
+<p><code>(Cd[i, j] + alpha[i, j]) / sum(Cd[, j] + alpha[, j])</code>
+</p>
+<p>Similarly, beta comes from
+</p>
+<p><code>(Cv[i, j] + eta[i, j]) / sum(Cv[, j] + eta[, j])</code>
+</p>
+<p>(The above are written to be general with respect to alpha and eta being
+matrices. They could also be vectors or scalars.)
+</p>
+<p>So, this function uses the above formulas to try and reconstruct Cd or Cv
+from theta and alpha or beta and eta, respectively. As of this writing,
+this method is experimental. In the future, there will be a paper with
+more technical details cited here.
+</p>
+<p>The priors must be matrices for the purposes of the function. This is to
+support topic seeding and model updates. The former requires eta to be a 
+matrix. The latter may require eta to be a matrix. Here, alpha is also
+required to be a matrix for compatibility.
+</p>
+<p>All that said, for now <code>initialize_topic_counts</code> only
+uses this function to calculate Cd.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a matrix corresponding to the number of times each topic sampled
+for each document (<code>Cd</code>) or for each token (<code>Cv</code>) depending on
+whether or not <code>prob_matrix</code>/<code>prior_matrix</code> corresponds to
+<code>theta</code>/<code>alpha</code> or <code>beta</code>/<code>eta</code> respectively.
+</p>
+
+
+</div>

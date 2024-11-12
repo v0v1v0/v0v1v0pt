@@ -1,0 +1,226 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_conv_transpose1d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ConvTranspose1D</h2>
+
+<h3>Description</h3>
+
+<p>Applies a 1D transposed convolution operator over an input image
+composed of several input planes.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_conv_transpose1d(
+  in_channels,
+  out_channels,
+  kernel_size,
+  stride = 1,
+  padding = 0,
+  output_padding = 0,
+  groups = 1,
+  bias = TRUE,
+  dilation = 1,
+  padding_mode = "zeros"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>in_channels</code></td>
+<td>
+<p>(int): Number of channels in the input image</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out_channels</code></td>
+<td>
+<p>(int): Number of channels produced by the convolution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_size</code></td>
+<td>
+<p>(int or tuple): Size of the convolving kernel</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stride</code></td>
+<td>
+<p>(int or tuple, optional): Stride of the convolution. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding</code></td>
+<td>
+<p>(int or tuple, optional): <code>dilation * (kernel_size - 1) - padding</code> zero-padding
+will be added to both sides of the input. Default: 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output_padding</code></td>
+<td>
+<p>(int or tuple, optional): Additional size added to one side
+of the output shape. Default: 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups</code></td>
+<td>
+<p>(int, optional): Number of blocked connections from input channels to output channels. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+<p>(bool, optional): If <code>True</code>, adds a learnable bias to the output. Default: <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dilation</code></td>
+<td>
+<p>(int or tuple, optional): Spacing between kernel elements. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding_mode</code></td>
+<td>
+<p>(string, optional): <code>'zeros'</code>, <code>'reflect'</code>,
+<code>'replicate'</code> or <code>'circular'</code>. Default: <code>'zeros'</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This module can be seen as the gradient of Conv1d with respect to its input.
+It is also known as a fractionally-strided convolution or
+a deconvolution (although it is not an actual deconvolution operation).
+</p>
+
+<ul>
+<li> <p><code>stride</code> controls the stride for the cross-correlation.
+</p>
+</li>
+<li> <p><code>padding</code> controls the amount of implicit zero-paddings on both
+sides for <code>dilation * (kernel_size - 1) - padding</code> number of points. See note
+below for details.
+</p>
+</li>
+<li> <p><code>output_padding</code> controls the additional size added to one side
+of the output shape. See note below for details.
+</p>
+</li>
+<li> <p><code>dilation</code> controls the spacing between the kernel points; also known as the
+à trous algorithm. It is harder to describe, but this <a href="https://github.com/vdumoulin/conv_arithmetic">link</a>
+has a nice visualization of what <code>dilation</code> does.
+</p>
+</li>
+<li> <p><code>groups</code> controls the connections between inputs and outputs.
+<code>in_channels</code> and <code>out_channels</code> must both be divisible by
+<code>groups</code>. For example,
+</p>
+
+<ul>
+<li>
+<p> At groups=1, all inputs are convolved to all outputs.
+</p>
+</li>
+<li>
+<p> At groups=2, the operation becomes equivalent to having two conv
+layers side by side, each seeing half the input channels,
+and producing half the output channels, and both subsequently
+concatenated.
+</p>
+</li>
+<li>
+<p> At groups= <code>in_channels</code>, each input channel is convolved with
+its own set of filters (of size
+<code class="reqn">\left\lfloor\frac{out\_channels}{in\_channels}\right\rfloor</code>).
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, C_{in}, L_{in})</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, C_{out}, L_{out})</code> where
+</p>
+<p style="text-align: center;"><code class="reqn">
+  L_{out} = (L_{in} - 1) \times \mbox{stride} - 2 \times \mbox{padding} + \mbox{dilation}
+\times (\mbox{kernel\_size} - 1) + \mbox{output\_padding} + 1
+</code>
+</p>
+
+</li>
+</ul>
+<h3>Attributes</h3>
+
+
+<ul>
+<li>
+<p> weight (Tensor): the learnable weights of the module of shape
+<code class="reqn">(\mbox{in\_channels}, \frac{\mbox{out\_channels}}{\mbox{groups}},</code>
+<code class="reqn">\mbox{kernel\_size})</code>.
+The values of these weights are sampled from
+<code class="reqn">\mathcal{U}(-\sqrt{k}, \sqrt{k})</code> where
+<code class="reqn">k = \frac{groups}{C_{\mbox{out}} * \mbox{kernel\_size}}</code>
+</p>
+</li>
+<li>
+<p> bias (Tensor):   the learnable bias of the module of shape (out_channels).
+If <code>bias</code> is <code>TRUE</code>, then the values of these weights are
+sampled from <code class="reqn">\mathcal{U}(-\sqrt{k}, \sqrt{k})</code> where
+<code class="reqn">k = \frac{groups}{C_{\mbox{out}} * \mbox{kernel\_size}}</code>
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>Depending of the size of your kernel, several (of the last)
+columns of the input might be lost, because it is a valid <code>cross-correlation</code><em>,
+and not a full <code>cross-correlation</code></em>.
+It is up to the user to add proper padding.
+</p>
+<p>The <code>padding</code> argument effectively adds <code>dilation * (kernel_size - 1) - padding</code>
+amount of zero padding to both sizes of the input. This is set so that
+when a <code>~torch.nn.Conv1d</code> and a <code>~torch.nn.ConvTranspose1d</code>
+are initialized with same parameters, they are inverses of each other in
+regard to the input and output shapes. However, when <code>stride &gt; 1</code>,
+<code>~torch.nn.Conv1d</code> maps multiple input shapes to the same output
+shape. <code>output_padding</code> is provided to resolve this ambiguity by
+effectively increasing the calculated output shape on one side. Note
+that <code>output_padding</code> is only used to find output shape, but does
+not actually add zero-padding to output.
+</p>
+<p>In some circumstances when using the CUDA backend with CuDNN, this operator
+may select a nondeterministic algorithm to increase performance. If this is
+undesirable, you can try to make the operation deterministic (potentially at
+a performance cost) by setting <code>torch.backends.cudnn.deterministic = TRUE</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+m &lt;- nn_conv_transpose1d(32, 16, 2)
+input &lt;- torch_randn(10, 32, 2)
+output &lt;- m(input)
+}
+</code></pre>
+
+
+</div>

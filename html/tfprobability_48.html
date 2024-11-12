@@ -1,0 +1,249 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmc_simple_step_size_adaptation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adapts the inner kernel's <code>step_size</code> based on <code>log_accept_prob</code>.</h2>
+
+<h3>Description</h3>
+
+<p>The simple policy multiplicatively increases or decreases the <code>step_size</code> of
+the inner kernel based on the value of <code>log_accept_prob</code>. It is based on
+equation 19 of Andrieu and Thoms (2008). Given enough steps and small
+enough <code>adaptation_rate</code> the median of the distribution of the acceptance
+probability will converge to the <code>target_accept_prob</code>. A good target
+acceptance probability depends on the inner kernel. If this kernel is
+<code>HamiltonianMonteCarlo</code>, then 0.6-0.9 is a good range to aim for. For
+<code>RandomWalkMetropolis</code> this should be closer to 0.25. See the individual
+kernels' docstrings for guidance.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmc_simple_step_size_adaptation(
+  inner_kernel,
+  num_adaptation_steps,
+  target_accept_prob = 0.75,
+  adaptation_rate = 0.01,
+  step_size_setter_fn = NULL,
+  step_size_getter_fn = NULL,
+  log_accept_prob_getter_fn = NULL,
+  validate_args = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>inner_kernel</code></td>
+<td>
+<p><code>TransitionKernel</code>-like object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_adaptation_steps</code></td>
+<td>
+<p>Scalar <code>integer</code> <code>Tensor</code> number of initial steps to
+during which to adjust the step size. This may be greater, less than, or
+equal to the number of burnin steps.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target_accept_prob</code></td>
+<td>
+<p>A floating point <code>Tensor</code> representing desired
+acceptance probability. Must be a positive number less than 1. This can
+either be a scalar, or have shape <code>list(num_chains)</code>. Default value: <code>0.75</code>
+(the center of asymptotically optimal rate for HMC).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptation_rate</code></td>
+<td>
+<p><code>Tensor</code> representing amount to scale the current
+<code>step_size</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step_size_setter_fn</code></td>
+<td>
+<p>A function with the signature
+<code style="white-space: pre;">⁠(kernel_results, new_step_size) -&gt; new_kernel_results⁠</code> where
+<code>kernel_results</code> are the results of the <code>inner_kernel</code>, <code>new_step_size</code>
+is a <code>Tensor</code> or a nested collection of <code>Tensor</code>s with the same
+structure as returned by the <code>step_size_getter_fn</code>, and
+<code>new_kernel_results</code> are a copy of <code>kernel_results</code> with the step
+size(s) set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step_size_getter_fn</code></td>
+<td>
+<p>A function with the signature
+<code>(kernel_results) -&gt; step_size</code> where <code>kernel_results</code> are the results
+of the <code>inner_kernel</code>, and <code>step_size</code> is a floating point <code>Tensor</code> or a
+nested collection of such <code>Tensor</code>s.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log_accept_prob_getter_fn</code></td>
+<td>
+<p>A function with the signature
+<code>(kernel_results) -&gt; log_accept_prob</code> where <code>kernel_results</code> are the
+results of the <code>inner_kernel</code>, and <code>log_accept_prob</code> is a floating point
+<code>Tensor</code>. <code>log_accept_prob</code> can either be a scalar, or have shape
+<code>list(num_chains)</code>. If it's the latter, <code>step_size</code> should also have the same
+leading dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p><code>Logical</code>. When <code>True</code> kernel parameters are checked
+for validity. When <code>False</code> invalid inputs may silently render incorrect
+outputs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to Ops created by this class. Default: "simple_step_size_adaptation".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In general, adaptation prevents the chain from reaching a stationary
+distribution, so obtaining consistent samples requires <code>num_adaptation_steps</code>
+be set to a value somewhat smaller than the number of burnin steps.
+However, it may sometimes be helpful to set <code>num_adaptation_steps</code> to a larger
+value during development in order to inspect the behavior of the chain during
+adaptation.
+</p>
+<p>The step size is assumed to broadcast with the chain state, potentially having
+leading dimensions corresponding to multiple chains. When there are fewer of
+those leading dimensions than there are chain dimensions, the corresponding
+dimensions in the <code>log_accept_prob</code> are averaged (in the direct space, rather
+than the log space) before being used to adjust the step size. This means that
+this kernel can do both cross-chain adaptation, or per-chain step size
+adaptation, depending on the shape of the step size.
+</p>
+<p>For example, if your problem has a state with shape <code style="white-space: pre;">⁠[S]⁠</code>, your chain state
+has shape <code style="white-space: pre;">⁠[C0, C1, Y]⁠</code> (meaning that there are <code>C0 * C1</code> total chains) and
+<code>log_accept_prob</code> has shape <code style="white-space: pre;">⁠[C0, C1]⁠</code> (one acceptance probability per chain),
+then depending on the shape of the step size, the following will happen:
+</p>
+
+<ul>
+<li>
+<p> Step size has shape <code style="white-space: pre;">⁠[]⁠</code>, <code style="white-space: pre;">⁠[S]⁠</code> or <code style="white-space: pre;">⁠[1]⁠</code>, the <code>log_accept_prob</code> will be averaged
+across its <code>C0</code> and <code>C1</code> dimensions. This means that you will learn a shared
+step size based on the mean acceptance probability across all chains. This
+can be useful if you don't have a lot of steps to adapt and want to average
+away the noise.
+</p>
+</li>
+<li>
+<p> Step size has shape <code style="white-space: pre;">⁠[C1, 1]⁠</code> or <code style="white-space: pre;">⁠[C1, S]⁠</code>, the <code>log_accept_prob</code> will be
+averaged across its <code>C0</code> dimension. This means that you will learn a shared
+step size based on the mean acceptance probability across chains that share
+the coordinate across the <code>C1</code> dimension. This can be useful when the <code>C1</code>
+dimension indexes different distributions, while <code>C0</code> indexes replicas of a
+single distribution, all sampled in parallel.
+</p>
+</li>
+<li>
+<p> Step size has shape <code style="white-space: pre;">⁠[C0, C1, 1]⁠</code> or <code style="white-space: pre;">⁠[C0, C1, S]⁠</code>, then no averaging will
+happen. This means that each chain will learn its own step size. This can be
+useful when all chains are sampling from different distributions. Even when
+all chains are for the same distribution, this can help during the initial
+warmup period.
+</p>
+</li>
+<li>
+<p> Step size has shape <code style="white-space: pre;">⁠[C0, 1, 1]⁠</code> or <code style="white-space: pre;">⁠[C0, 1, S]⁠</code>, the <code>log_accept_prob</code> will be
+averaged across its <code>C1</code> dimension. This means that you will learn a shared
+step size based on the mean acceptance probability across chains that share
+the coordinate across the <code>C0</code> dimension. This can be useful when the <code>C0</code>
+dimension indexes different distributions, while <code>C1</code> indexes replicas of a
+single distribution, all sampled in parallel.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a Monte Carlo sampling kernel
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="https://people.eecs.berkeley.edu/~jordan/sail/readings/andrieu-thoms.pdf">Andrieu, Christophe, Thoms, Johannes. A tutorial on adaptive MCMC. <em>Statistics and Computing</em>, 2008.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1411.6669">Betancourt, M. J., Byrne, S., &amp; Girolami, M. (2014). <em>Optimizing The Integrator Step Size for Hamiltonian Monte Carlo</em>.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other mcmc_kernels: 
+<code>mcmc_dual_averaging_step_size_adaptation()</code>,
+<code>mcmc_hamiltonian_monte_carlo()</code>,
+<code>mcmc_metropolis_adjusted_langevin_algorithm()</code>,
+<code>mcmc_metropolis_hastings()</code>,
+<code>mcmc_no_u_turn_sampler()</code>,
+<code>mcmc_random_walk_metropolis()</code>,
+<code>mcmc_replica_exchange_mc()</code>,
+<code>mcmc_slice_sampler()</code>,
+<code>mcmc_transformed_transition_kernel()</code>,
+<code>mcmc_uncalibrated_hamiltonian_monte_carlo()</code>,
+<code>mcmc_uncalibrated_langevin()</code>,
+<code>mcmc_uncalibrated_random_walk()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  target_log_prob_fn &lt;- tfd_normal(loc = 0, scale = 1)$log_prob
+  num_burnin_steps &lt;- 500
+  num_results &lt;- 500
+  num_chains &lt;- 64L
+  step_size &lt;- tf$fill(list(num_chains), 0.1)
+
+  kernel &lt;- mcmc_hamiltonian_monte_carlo(
+    target_log_prob_fn = target_log_prob_fn,
+    num_leapfrog_steps = 2,
+    step_size = step_size
+  ) %&gt;%
+    mcmc_simple_step_size_adaptation(num_adaptation_steps = round(num_burnin_steps * 0.8))
+
+  res &lt;- kernel %&gt;% mcmc_sample_chain(
+    num_results = num_results,
+    num_burnin_steps = num_burnin_steps,
+    current_state = rep(0, num_chains),
+    trace_fn = function(x, pkr) {
+      list (
+        pkr$inner_results$accepted_results$step_size,
+        pkr$inner_results$log_accept_ratio
+      )
+    }
+  )
+
+  samples &lt;- res$all_states
+  step_size &lt;- res$trace[[1]]
+  log_accept_ratio &lt;- res$trace[[2]]
+
+
+</code></pre>
+
+
+</div>

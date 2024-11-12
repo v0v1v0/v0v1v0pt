@@ -1,0 +1,179 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_ctc_loss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The Connectionist Temporal Classification loss.</h2>
+
+<h3>Description</h3>
+
+<p>Calculates loss between a continuous (unsegmented) time series and a target sequence. CTCLoss sums over the
+probability of possible alignments of input to target, producing a loss value which is differentiable
+with respect to each input node. The alignment of input to target is assumed to be "many-to-one", which
+limits the length of the target sequence such that it must be <code class="reqn">\leq</code> the input length.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_ctc_loss(blank = 0, reduction = "mean", zero_infinity = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>blank</code></td>
+<td>
+<p>(int, optional): blank label. Default <code class="reqn">0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reduction</code></td>
+<td>
+<p>(string, optional): Specifies the reduction to apply to the output:
+<code>'none'</code> | <code>'mean'</code> | <code>'sum'</code>. <code>'none'</code>: no reduction will be applied,
+<code>'mean'</code>: the output losses will be divided by the target lengths and
+then the mean over the batch is taken. Default: <code>'mean'</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zero_infinity</code></td>
+<td>
+<p>(bool, optional):
+Whether to zero infinite losses and the associated gradients.
+Default: <code>FALSE</code>
+Infinite losses mainly occur when the inputs are too short
+to be aligned to the targets.</p>
+</td>
+</tr>
+</table>
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Log_probs: Tensor of size <code class="reqn">(T, N, C)</code>,
+where <code class="reqn">T = \mbox{input length}</code>,
+<code class="reqn">N = \mbox{batch size}</code>, and
+<code class="reqn">C = \mbox{number of classes (including blank)}</code>.
+The logarithmized probabilities of the outputs (e.g. obtained with
+[nnf)log_softmax()]).
+</p>
+</li>
+<li>
+<p> Targets: Tensor of size <code class="reqn">(N, S)</code> or
+<code class="reqn">(\mbox{sum}(\mbox{target\_lengths}))</code>,
+where <code class="reqn">N = \mbox{batch size}</code> and
+<code class="reqn">S = \mbox{max target length, if shape is } (N, S)</code>.
+It represent the target sequences. Each element in the target
+sequence is a class index. And the target index cannot be blank (default=0).
+In the <code class="reqn">(N, S)</code> form, targets are padded to the
+length of the longest sequence, and stacked.
+In the <code class="reqn">(\mbox{sum}(\mbox{target\_lengths}))</code> form,
+the targets are assumed to be un-padded and
+concatenated within 1 dimension.
+</p>
+</li>
+<li>
+<p> Input_lengths: Tuple or tensor of size <code class="reqn">(N)</code>,
+where <code class="reqn">N = \mbox{batch size}</code>. It represent the lengths of the
+inputs (must each be <code class="reqn">\leq T</code>). And the lengths are specified
+for each sequence to achieve masking under the assumption that sequences
+are padded to equal lengths.
+</p>
+</li>
+<li>
+<p> Target_lengths: Tuple or tensor of size <code class="reqn">(N)</code>,
+where <code class="reqn">N = \mbox{batch size}</code>. It represent lengths of the targets.
+Lengths are specified for each sequence to achieve masking under the
+assumption that sequences are padded to equal lengths. If target shape is
+<code class="reqn">(N,S)</code>, target_lengths are effectively the stop index
+<code class="reqn">s_n</code> for each target sequence, such that <code>target_n = targets[n,0:s_n]</code> for
+each target in a batch. Lengths must each be <code class="reqn">\leq S</code>
+If the targets are given as a 1d tensor that is the concatenation of individual
+targets, the target_lengths must add up to the total length of the tensor.
+</p>
+</li>
+<li>
+<p> Output: scalar. If <code>reduction</code> is <code>'none'</code>, then
+<code class="reqn">(N)</code>, where <code class="reqn">N = \mbox{batch size}</code>.
+</p>
+</li>
+</ul>
+<p>[nnf)log_softmax()]: R:nnf)log_softmax()
+[n,0:s_n]: R:n,0:s_n
+</p>
+
+
+<h3>Note</h3>
+
+<p>In order to use CuDNN, the following must be satisfied: <code>targets</code> must be
+in concatenated format, all <code>input_lengths</code> must be <code>T</code>.  <code class="reqn">blank=0</code>,
+<code>target_lengths</code> <code class="reqn">\leq 256</code>, the integer arguments must be of
+The regular implementation uses the (more common in PyTorch) <code>torch_long</code> dtype.
+dtype <code>torch_int32</code>.
+</p>
+<p>In some circumstances when using the CUDA backend with CuDNN, this operator
+may select a nondeterministic algorithm to increase performance. If this is
+undesirable, you can try to make the operation deterministic (potentially at
+a performance cost) by setting <code>torch.backends.cudnn.deterministic = TRUE</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>A. Graves et al.: Connectionist Temporal Classification:
+Labelling Unsegmented Sequence Data with Recurrent Neural Networks:
+https://www.cs.toronto.edu/~graves/icml_2006.pdf
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+# Target are to be padded
+T &lt;- 50 # Input sequence length
+C &lt;- 20 # Number of classes (including blank)
+N &lt;- 16 # Batch size
+S &lt;- 30 # Target sequence length of longest target in batch (padding length)
+S_min &lt;- 10 # Minimum target length, for demonstration purposes
+
+# Initialize random batch of input vectors, for *size = (T,N,C)
+input &lt;- torch_randn(T, N, C)$log_softmax(2)$detach()$requires_grad_()
+
+# Initialize random batch of targets (0 = blank, 1:C = classes)
+target &lt;- torch_randint(low = 1, high = C, size = c(N, S), dtype = torch_long())
+
+input_lengths &lt;- torch_full(size = c(N), fill_value = TRUE, dtype = torch_long())
+target_lengths &lt;- torch_randint(low = S_min, high = S, size = c(N), dtype = torch_long())
+ctc_loss &lt;- nn_ctc_loss()
+loss &lt;- ctc_loss(input, target, input_lengths, target_lengths)
+loss$backward()
+
+
+# Target are to be un-padded
+T &lt;- 50 # Input sequence length
+C &lt;- 20 # Number of classes (including blank)
+N &lt;- 16 # Batch size
+
+# Initialize random batch of input vectors, for *size = (T,N,C)
+input &lt;- torch_randn(T, N, C)$log_softmax(2)$detach()$requires_grad_()
+input_lengths &lt;- torch_full(size = c(N), fill_value = TRUE, dtype = torch_long())
+
+# Initialize random batch of targets (0 = blank, 1:C = classes)
+target_lengths &lt;- torch_randint(low = 1, high = T, size = c(N), dtype = torch_long())
+target &lt;- torch_randint(
+  low = 1, high = C, size = as.integer(sum(target_lengths)),
+  dtype = torch_long()
+)
+ctc_loss &lt;- nn_ctc_loss()
+loss &lt;- ctc_loss(input, target, input_lengths, target_lengths)
+loss$backward()
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SupportColour</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Colour for node support value</h2>
+
+<h3>Description</h3>
+
+<p>Colour value with which to display node support.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">SupportColour(
+  support,
+  show1 = TRUE,
+  scale = rev(diverge_hcl(101, h = c(260, 0), c = 100, l = c(50, 90), power = 1)),
+  outOfRange = "red"
+)
+
+SupportColor(
+  support,
+  show1 = TRUE,
+  scale = rev(diverge_hcl(101, h = c(260, 0), c = 100, l = c(50, 90), power = 1)),
+  outOfRange = "red"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>support</code></td>
+<td>
+<p>A numeric vector of values in the range 0–1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show1</code></td>
+<td>
+<p>Logical specifying whether to display values of 1.
+A transparent white will be returned if <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>101-element vector listing colours in sequence. Defaults to
+a diverging <abbr><span class="acronym">HCL</span></abbr> scale.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outOfRange</code></td>
+<td>
+<p>Colour to use if results are outside the range 0–1.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>SupportColour()</code> returns the appropriate value from <code>scale</code>,
+or <code>outOfRange</code> if a value is outwith the valid range.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Use in conjunction with <code>LabelSplits()</code> to colour split labels,
+possibly calculated using <code>SplitFrequency()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">SupportColour((-1):4 / 4, show1 = FALSE)
+
+# An example forest of 100 trees, some identical
+forest &lt;- as.phylo(c(1, rep(10, 79), rep(100, 15), rep(1000, 5)), nTip = 9)
+
+# Generate an 80% consensus tree
+cons &lt;- ape::consensus(forest, p = 0.8)
+plot(cons)
+
+# Calculate split frequencies
+splitFreqs &lt;- SplitFrequency(cons, forest)
+
+# Optionally, colour edges by corresponding frequency.
+# Note that not all edges are associated with a unique split
+# (and two root edges may be associated with one split - not handled here)
+edgeSupport &lt;- rep(1, nrow(cons$edge)) # Initialize trivial splits to 1
+childNode &lt;- cons$edge[, 2]
+edgeSupport[match(names(splitFreqs), childNode)] &lt;- splitFreqs / 100
+
+plot(cons, edge.col = SupportColour(edgeSupport), edge.width = 3)
+
+# Annotate nodes by frequency 
+LabelSplits(cons, splitFreqs, unit = "%",
+            col = SupportColor(splitFreqs / 100),
+            frame = "none", pos = 3L)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tskeleton</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate the Skeleton of a DAG while Accounting for a Partial Ordering</h2>
+
+<h3>Description</h3>
+
+<p>Like <code>pcalg::skeleton</code>, but takes a user-specified partial node
+ordering into account. The conditional independence
+between <code>x</code> and <code>y</code> given <code>S</code> is not tested if any variable in
+<code>S</code> lies in the future of both <code>x</code> and <code>y</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tskeleton(
+  suffStat,
+  indepTest,
+  alpha,
+  labels,
+  p,
+  method = c("stable", "original"),
+  m.max = Inf,
+  fixedGaps = NULL,
+  fixedEdges = NULL,
+  NAdelete = TRUE,
+  tiers = NULL,
+  verbose = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>suffStat</code></td>
+<td>
+<p>A list of sufficient statistics, containing all necessary elements for
+the conditional independence decisions in the function <code>indepTest</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indepTest</code></td>
+<td>
+<p>Predefined <code>function</code> for testing conditional
+independence. It is internally called as <code>indepTest(x,y,S,suffStat)</code>, and tests
+conditional independence of <code>x</code> and <code>y</code> given <code>S</code>. Here, <code>x</code> and
+<code>y</code> are variables, and <code>S</code> is a (possibly empty) vector of variables (all
+variables are denoted by their (integer) column positions in the adjacency matrix).
+<code>suffStat</code> is a list, see the argument above. The return value of <code>indepTest</code>
+is the p-value of the test for conditional independence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Significance level (number in <em>(0,1)</em> for the individual conditional
+independence tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>(optional) character vector of variable (or "node") names.
+Typically preferred to specifying <code>p</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>(optional) number of variables (or nodes). May be specified if <code>labels</code>
+are not, in which case <code>labels</code> is set to <code>1:p</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Character string specifying method; the default, "stable" provides an
+<em>order-independent</em> skeleton, see 'Details' below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m.max</code></td>
+<td>
+<p>Maximal size of the conditioning sets that are considered in the
+conditional independence tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixedGaps</code></td>
+<td>
+<p>logical <em>symmetric</em> matrix of dimension <code>p*p</code>. If entry
+<code>[i,j]</code> is true, the edge <em>i-j</em> is removed before starting the
+algorithm. Therefore, this edge is guaranteed to be <em>absent</em> in the
+resulting graph.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixedEdges</code></td>
+<td>
+<p>a logical <em>symmetric</em> matrix of dimension <code>p*p</code>. If entry
+<code>[i,j]</code> is true, the edge <em>i-j</em> is never considered for removal.
+Therefore, this edge is guaranteed to be <em>present</em> in the resulting graph.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NAdelete</code></td>
+<td>
+<p>logical needed for the case <code>indepTest(*)</code> returns <code>NA</code>.
+If it is true, the corresponding edge is deleted, otherwise not.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tiers</code></td>
+<td>
+<p>Numeric vector specifying the tier / time point for each variable.
+Must be of length 'p', if specified, or have the same length as 'labels', if specified.
+A smaller number corresponds to an earlier tier / time point. Conditional independence
+testing is restricted such that if <code>x</code> is in tier <code>t(x)</code> and <code>y</code> is
+in <code>t(y)</code>, only those variables are allowed in the conditioning set whose tier is
+not larger than <code>t(x)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>if <code>TRUE</code>, detailed output is provided.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <code>pcalg::skeleton</code> for further information on the
+skeleton algorithm.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class "pcAlgo" (see <code>pcalg::pcAlgo</code>)
+containing an estimate of the skeleton of the underlying DAG, the conditioning
+sets (sepset) that led to edge removals and several other parameters.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Original code by Markus Kalisch, Martin Maechler, Alain Hauser and Diego Colombo.
+Modifications by Janine Witte.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load simulated cohort data
+data("dat_sim")
+n &lt;- nrow(dat_sim)
+lab &lt;- colnames(dat_sim)
+# estimate skeleton without taking background information into account
+tskel.fit &lt;- tskeleton(suffStat = list(C = cor(dat_sim), n = n),
+                       indepTest = gaussCItest, alpha = 0.01, labels = lab)
+skel.fit &lt;- pcalg::skeleton(suffStat = list(C = cor(dat_sim), n = n),
+                            indepTest = gaussCItest, alpha = 0.01, labels = lab)
+                            identical(skel.fit@graph, tskel.fit@graph) # TRUE
+
+# estimate skeleton with temporal ordering as background information
+tiers &lt;- rep(c(1,2,3), times=c(3,3,3))
+tskel.fit2 &lt;- tskeleton(suffStat = list(C = cor(dat_sim), n = n),
+                       indepTest = gaussCItest, alpha = 0.01, labels = lab, tiers = tiers)
+
+# in this case, the skeletons estimated with and without
+# background knowledge are identical, but fewer conditional
+# independence tests were performed when background
+# knowledge was taken into account
+identical(tskel.fit@graph, tskel.fit2@graph) # TRUE
+tskel.fit@n.edgetests
+tskel.fit2@n.edgetests
+
+
+</code></pre>
+
+
+</div>

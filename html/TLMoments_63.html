@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>quantiles</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculating quantiles from distribution parameters</h2>
+
+<h3>Description</h3>
+
+<p>Calculates quantiles from distribution parameters received by parameters or
+from a named vector.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">quantiles(x, p, distr = attr(x, "distribution"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>object returned by parameters or a named vector. In the latter
+you have to specify the <code>distr</code>-argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>numeric vector giving the quantiles to calculate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+<p>character object defining the distribution. Supported types are
+"gev", "gum" and "gpd". You do not need to set this, if <code>x</code> is from parameters.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>numeric vector, matrix, list, or data.frame of the quantiles and with class
+<code>quantiles</code>. The object contains the following attributes: </p>
+
+<ul>
+<li> <p><code>distribution</code>: a character indicating the used distribution
+</p>
+</li>
+<li> <p><code>p</code>: a vector with the calculated quantiles
+</p>
+</li>
+<li> <p><code>source</code>: a list with background information (used function, data, n,
+formula, trimmings; mainly for internal purposes)
+</p>
+</li>
+</ul>
+<p>The attributes are hidden in the print-function for a clearer presentation.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>PWMs</code>, <code>TLMoments</code>, <code>parameters</code>, <code>summary.quantiles</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generating data sets:
+xmat &lt;- matrix(rnorm(100), nc = 4)
+xvec &lt;- xmat[, 3]
+xlist &lt;- lapply(1L:ncol(xmat), function(i) xmat[, i])
+xdat &lt;- data.frame(
+ station = rep(letters[1:2], each = 50),
+ season = rep(c("S", "W"), 50),
+ hq = as.vector(xmat)
+)
+
+# Calculating quantiles from parameters-object
+tlm &lt;- TLMoments(xvec, leftrim = 0, rightrim = 1)
+quantiles(parameters(tlm, "gev"), c(.9, .99))
+tlm &lt;- TLMoments(xmat, leftrim = 1, rightrim = 1)
+quantiles(parameters(tlm, "gum"), c(.9, .95, .999))
+tlm &lt;- TLMoments(xlist)
+quantiles(parameters(tlm, "gpd"), .999)
+tlm &lt;- TLMoments(xdat, hq ~ station, leftrim = 2, rightrim = 3)
+quantiles(parameters(tlm, "gev"), seq(.1, .9, .1))
+tlm &lt;- TLMoments(xdat, hq ~ station + season, leftrim = 0, rightrim = 2)
+quantiles(parameters(tlm, "gum"), seq(.1, .9, .1))
+
+# Distribution can be overwritten (but parameters have to fit)
+tlm &lt;- TLMoments(xvec, leftrim = 0, rightrim = 1)
+params &lt;- parameters(tlm, "gev")
+quantiles(params, c(.9, .99))
+quantiles(params[1:2], c(.9, .99), distr = "gum")
+evd::qgumbel(c(.9, .99), loc = params[1], scale = params[2])
+
+
+# Using magrittr
+library(magrittr)
+rgev(50, shape = .3) %&gt;%
+  TLMoments(leftrim = 0, rightrim = 1) %&gt;%
+  parameters("gev") %&gt;%
+  quantiles(c(.99, .999))
+
+# Calculating quantiles to given parameters for arbitrary functions
+quantiles(c(mean = 10, sd = 3), c(.95, .99), "norm")
+qnorm(c(.95, .99), mean = 10, sd = 3)
+
+# These give errors:
+#quantiles(c(loc = 10, scale = 5, shape = .3), c(.95, .99), "notexistingdistribution")
+#quantiles(c(loc = 10, scale = 5, shpe = .3), c(.95, .99), "gev") # wrong arguments
+</code></pre>
+
+
+</div>

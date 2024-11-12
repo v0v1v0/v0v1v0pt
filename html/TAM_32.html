@@ -1,0 +1,210 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data.geiser</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Dataset from Geiser et al. (2006)
+</h2>
+
+<h3>Description</h3>
+
+<p>This is a subsample of the dataset used in Geiser et al. (2006) and
+Geiser and Eid (2010).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data(data.geiser)
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>A data frame with 519 observations on the following 24 variables
+</p>
+<p><code>'data.frame':   519 obs. of  24 variables:</code> <br><code> $ mrt1 : num  0 0 0 0 0 0 0 0 0 0 ...</code> <br><code> $ mrt2 : num  0 0 0 0 0 0 0 0 0 0 ...</code> <br><code> $ mrt3 : num  0 0 0 0 0 0 0 0 1 0 ...</code> <br><code> $ mrt4 : num  0 0 0 0 0 1 0 0 0 0 ...</code> <br><code>[...]</code> <br><code> $ mrt23: num  0 0 0 0 0 0 0 1 0 0 ...</code> <br><code> $ mrt24: num  0 0 0 0 0 0 0 0 0 0 ...</code> <br></p>
+
+
+<h3>References</h3>
+
+<p>Geiser, C., &amp; Eid, M. (2010). Item-Response-Theorie.
+In C. Wolf &amp; H. Best (Hrsg.). <em>Handbuch der sozialwissenschaftlichen
+Datenanalyse</em> (S. 311-332). VS Verlag fuer Sozialwissenschaften.
+</p>
+<p>Geiser, C., Lehmann, W., &amp; Eid, M. (2006). Separating rotators from
+nonrotators in the mental rotations test: A multigroup latent class analysis.
+<em>Multivariate Behavioral Research, 41</em>(3), 261-293.
+<a href="https://doi.org/10.1207/s15327906mbr4103_2">doi:10.1207/s15327906mbr4103_2</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+#############################################################################
+# EXAMPLE 1: Latent trait and latent class models (Geiser et al., 2006, MBR)
+#############################################################################
+
+data(data.geiser)
+dat &lt;- data.geiser
+
+#**********************************************
+# Model 1: Rasch model
+tammodel &lt;- "
+  LAVAAN MODEL:
+    F=~ 1*mrt1__mrt12
+    F ~~ F
+  ITEM TYPE:
+    ALL(Rasch)
+    "
+mod1 &lt;- TAM::tamaan( tammodel, dat)
+summary(mod1)
+
+#**********************************************
+# Model 2: 2PL model
+tammodel &lt;- "
+  LAVAAN MODEL:
+    F=~ mrt1__mrt12
+    F ~~ 1*F
+    "
+mod2 &lt;- TAM::tamaan( tammodel, dat)
+summary(mod2)
+
+# model comparison Rasch vs. 2PL
+anova(mod1,mod2)
+
+#*********************************************************************
+#*** Model 3: Latent class analysis with four classes
+
+tammodel &lt;- "
+ANALYSIS:
+  TYPE=LCA;
+  NCLASSES(4);   # 4 classes
+  NSTARTS(10,20); # 10 random starts with 20 iterations
+LAVAAN MODEL:
+  F=~ mrt1__mrt12
+    "
+mod3 &lt;- TAM::tamaan( tammodel, resp=dat  )
+summary(mod3)
+
+# extract item response functions
+imod2 &lt;- IRT.irfprob(mod3)[,2,]
+# plot class specific probabilities
+matplot( imod2, type="o", pch=1:4, xlab="Item", ylab="Probability" )
+legend( 10,1, paste0("Class",1:4), lty=1:4, col=1:4, pch=1:4 )
+
+#*********************************************************************
+#*** Model 4: Latent class analysis with five classes
+
+tammodel &lt;- "
+ANALYSIS:
+  TYPE=LCA;
+  NCLASSES(5);
+  NSTARTS(10,20);
+LAVAAN MODEL:
+  F=~ mrt1__mrt12
+    "
+mod4 &lt;- TAM::tamaan( tammodel, resp=dat )
+summary(mod4)
+
+# compare different models
+AIC(mod1); AIC(mod2); AIC(mod3); AIC(mod4)
+BIC(mod1); BIC(mod2); BIC(mod3); BIC(mod4)
+# more condensed form
+IRT.compareModels(mod1, mod2, mod3, mod4)
+
+#############################################################################
+# EXAMPLE 2: Rasch model and mixture Rasch model (Geiser &amp; Eid, 2010)
+#############################################################################
+
+data(data.geiser)
+dat &lt;- data.geiser
+
+#*********************************************************************
+#*** Model 1: Rasch model
+tammodel &lt;- "
+LAVAAN MODEL:
+  F=~ mrt1__mrt6
+  F ~~ F
+ITEM TYPE:
+  ALL(Rasch);
+    "
+mod1 &lt;- TAM::tamaan( tammodel, resp=dat  )
+summary(mod1)
+
+#*********************************************************************
+#*** Model 2: Mixed Rasch model with two classes
+tammodel &lt;- "
+ANALYSIS:
+  TYPE=MIXTURE ;
+  NCLASSES(2);
+  NSTARTS(20,25);
+LAVAAN MODEL:
+  F=~ mrt1__mrt6
+  F ~~ F
+ITEM TYPE:
+  ALL(Rasch);
+    "
+mod2 &lt;- TAM::tamaan( tammodel, resp=dat  )
+summary(mod2)
+
+# plot item parameters
+ipars &lt;- mod2$itempartable_MIXTURE[ 1:6, ]
+plot( 1:6, ipars[,3], type="o", ylim=c(-3,2), pch=16,
+        xlab="Item", ylab="Item difficulty")
+lines( 1:6, ipars[,4], type="l", col=2, lty=2)
+points( 1:6, ipars[,4],  col=2, pch=2)
+
+# extract individual posterior distribution
+post2 &lt;- IRT.posterior(mod2)
+str(post2)
+# num [1:519, 1:30] 0.000105 0.000105 0.000105 0.000105 0.000105 ...
+# - attr(*, "theta")=num [1:30, 1:30] 1 0 0 0 0 0 0 0 0 0 ...
+# - attr(*, "prob.theta")=num [1:30, 1] 1.21e-05 2.20e-04 2.29e-03 1.37e-02 4.68e-02 ...
+# - attr(*, "G")=num 1
+
+# There are 2 classes and 15 theta grid points for each class
+# The loadings of the theta grid on items are as follows
+mod2$E[1,2,,"mrt1_F_load_Cl1"]
+mod2$E[1,2,,"mrt1_F_load_Cl2"]
+
+# compute individual posterior probability for class 1 (first 15 columns)
+round( rowSums( post2[, 1:15] ), 3 )
+# columns 16 to 30 refer to class 2
+
+#*********************************************************************
+#*** Model 3: Mixed Rasch model with three classes
+tammodel &lt;- "
+ANALYSIS:
+  TYPE=MIXTURE ;
+  NCLASSES(3);
+  NSTARTS(20,25);
+LAVAAN MODEL:
+  F=~ mrt1__mrt6
+  F ~~ F
+ITEM TYPE:
+  ALL(Rasch);
+    "
+mod3 &lt;- TAM::tamaan( tammodel, resp=dat  )
+summary(mod3)
+
+# plot item parameters
+ipars &lt;- mod3$itempartable_MIXTURE[ 1:6, ]
+plot( 1:6, ipars[,3], type="o", ylim=c(-3.7,2), pch=16,
+        xlab="Item", ylab="Item difficulty")
+lines( 1:6, ipars[,4], type="l", col=2, lty=2)
+points( 1:6, ipars[,4],  col=2, pch=2)
+lines( 1:6, ipars[,5], type="l", col=3, lty=3)
+points( 1:6, ipars[,5],  col=3, pch=17)
+
+# model comparison
+IRT.compareModels( mod1, mod2, mod3 )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

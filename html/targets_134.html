@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_load_globals</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Load globals for debugging, testing, and prototyping</h2>
+
+<h3>Description</h3>
+
+<p>Load user-defined packages, functions, global objects, and
+settings defined in the target script file (default: <code style="white-space: pre;">⁠_targets.R⁠</code>).
+This function is for debugging, testing, and prototyping only.
+It is not recommended for use inside a serious pipeline
+or to report the results of a serious pipeline.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_load_globals(
+  envir = parent.frame(),
+  script = targets::tar_config_get("script")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>Environment to source the target script (default: <code style="white-space: pre;">⁠_targets.R⁠</code>).
+Defaults to the calling environment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the target script file
+that defines the pipeline (<code style="white-space: pre;">⁠_targets.R⁠</code> by default).
+This path should be either
+an absolute path or a path relative to the project root where you will
+call <code>tar_make()</code> and other functions. When <code>tar_make()</code> and friends
+run the script from the current working directory.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function first sources the target script file
+(default: <code style="white-space: pre;">⁠_targets.R⁠</code>)
+to loads all user-defined functions, global objects, and settings
+into the current R process. Then, it loads all the packages defined
+in <code>tar_option_get("packages")</code> (default: <code>(.packages())</code>)
+using <code>library()</code> with <code>lib.loc</code> defined in <code>tar_option_get("library")</code>
+(default: <code>NULL</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code> (invisibly).
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other debug: 
+<code>tar_traceback()</code>,
+<code>tar_workspace()</code>,
+<code>tar_workspaces()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  tar_option_set(packages = "callr")
+  analyze_data &lt;- function(data) {
+    summary(data)
+  }
+  list(
+    tar_target(x, 1 + 1),
+    tar_target(y, 1 + 1)
+  )
+}, ask = FALSE)
+tar_load_globals()
+print(analyze_data)
+print("callr" %in% (.packages()))
+})
+}
+</code></pre>
+
+
+</div>

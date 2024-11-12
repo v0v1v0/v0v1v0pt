@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gram_matrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute the gram matrix for a group of persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the Gram matrix <code class="reqn">K</code> for either a single list of persistence diagrams <code class="reqn">(D_1,D_2,\dots,D_n)</code>, i.e. <code class="reqn">K[i,j] = k_{PF}(D_i,D_j)</code>, 
+or between two lists of persistence diagrams, <code class="reqn">(D_1,D_2,\dots,D_n)</code> and <code class="reqn">(D'_1,D'_2,\dots,D'_n)</code>, <code class="reqn">K[i,j] = k_{PF}(D_i,D'_j)</code>, in parallel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gram_matrix(
+  diagrams,
+  other_diagrams = NULL,
+  dim = 0,
+  sigma = 1,
+  t = 1,
+  rho = NULL,
+  num_workers = parallelly::availableCores(omit = 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diagrams</code></td>
+<td>
+<p>a list of persistence diagrams, where each diagram is either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>other_diagrams</code></td>
+<td>
+<p>either NULL (default) or another list of persistence diagrams to compute a cross-Gram matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>the non-negative integer homological dimension in which the distance is to be computed, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a positive number representing the bandwidth for the Fisher information metric, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>a positive number representing the scale for the kernel, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If supplied, code execution is sequential, but functions in the "exec" directory
+of the package can be loaded to calculate distance matrices in parallel with approximation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Gram matrices are used in downstream analyses, like in the 'diagram_kkmeans', 'diagram_nearest_cluster','diagram_kpca', 
+'predict_diagram_kpca', 'predict_diagram_ksvm' and 'independence_test' functions.
+</p>
+
+
+<h3>Value</h3>
+
+<p>the numeric (cross) Gram matrix of class 'kernelMatrix'.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>diagram_kernel</code> for individual persistence Fisher kernel calculations.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D2)
+
+  # calculate the Gram matrix in dimension 0 with sigma = 2, t = 2
+  G &lt;- gram_matrix(diagrams = g,dim = 0,sigma = 2,t = 2,num_workers = 2)
+
+  # calculate cross-Gram matrix, which is the same as G
+  G_cross &lt;- gram_matrix(diagrams = g,other_diagrams = g,dim = 0,sigma = 2,
+                         t = 2,num_workers = 2)
+}
+</code></pre>
+
+
+</div>

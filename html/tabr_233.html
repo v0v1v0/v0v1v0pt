@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>phrase-checks</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Phrase validation and coercion</h2>
+
+<h3>Description</h3>
+
+<p>These helper functions add some validation checks for phrase and candidate
+phrase objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">as_phrase(phrase)
+
+phrasey(phrase)
+
+notify(phrase)
+
+phrase_notes(phrase, collapse = TRUE)
+
+phrase_info(phrase, collapse = TRUE, annotations = TRUE)
+
+phrase_strings(phrase, collapse = FALSE)
+
+notable(phrase)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>phrase</code></td>
+<td>
+<p>phrase object or character string (candidate phrase).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>collapse</code></td>
+<td>
+<p>logical, collapse result into a single string ready for
+phrase construction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>annotations</code></td>
+<td>
+<p>logical, strip any text annotations from the note info
+converted from <code>phrase()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Use these functions with some caution. They are not intended for strictness
+and perfection. <code>phrasey()</code> checks whether an object is weakly phrase-like
+and returns <code>TRUE</code> or <code>FALSE</code>. It can be used to safeguard against the most
+obvious cases of <code>phrase()</code> not containing valid phrase syntax when
+programming. However, it may also be limiting. Use wear sensible.
+</p>
+<p><code>as_phrase()</code> coerces an object to a phrase object if possible. This function
+performs an internal <code>phrasey()</code> check.
+</p>
+<p><code>notify()</code> attempts to decompose a phrase object back to its original input
+vectors consisting of notes, note info, and optionally, instrument string
+numbering. If successful, it returns a tibble data frame with columns:
+<code>notes</code>, <code>info</code>, <code>string</code>.
+</p>
+<p>Unless decomposing very simple phrases, this function is likely to reveal
+limitations. Complex phrase objects constructed originally with <code>phrase()</code>
+can be challenging to deconstruct in a one to one manner. Information may be
+lost, garbled, or the function may fail. For example, this function is not
+advanced enough to unravel repeat notation or tuplets.
+</p>
+<p><code>notable()</code> returns <code>TRUE</code> or <code>FALSE</code> regarding whether a phrase can be
+converted back to character string inputs, not necessarily with complete
+correctness, but without simple failure.It checks for phrasiness. Then it
+tries to call <code>notify()</code> and returns <code>FALSE</code> gracefully if that call throws
+an exception.
+</p>
+
+
+<h3>Value</h3>
+
+<p>see details for each function's purpose and return value.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Create a list of phrase objects
+p1 &lt;- phrase("c ec'g' ec'g'", "4 4 2") # no string numbers (not recommended)
+p2 &lt;- phrase("c ec4g4 ec4g4", "4 4 2") # same as above
+p3 &lt;- phrase("c b, c", "4. 8( 8)", "5 5 5") # direction implies hammer on
+p4 &lt;- phrase("b2 c d", "4( 4)- 2", "5 5 5") # hammer and slide
+p5 &lt;- phrase("c ec'g'~ ec'g'", 1, "5 432 432") # tied chord
+x &lt;- list(p1, p2, p3, p4, p5)
+
+# Check if phrases and strings are phrasey
+sapply(x, phrasey)
+sapply(as.character(x), phrasey, USE.NAMES = FALSE)
+
+# Coerce character string representation to phrase and compare with original
+y &lt;- lapply(as.character(x), as_phrase)
+identical(x, y)
+
+# Check if notable
+sapply(x, notable)
+notable(p("a b c", 1))
+notable("a b x") # note: not constructible as a phrase in the first place
+
+# Notify phrases
+d &lt;- do.call(rbind, lapply(x, notify))
+d
+
+# Wrappers around notify extract components, default to collapsed strings
+phrase_notes(p5)
+phrase_info(p5)
+phrase_strings(p5)
+
+# If phrase decomposition works well, coercion is one to one
+x2 &lt;- lapply(x,
+  function(x) p(phrase_notes(x), phrase_info(x), phrase_strings(x))
+)
+identical(x, x2)
+</code></pre>
+
+
+</div>

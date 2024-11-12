@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as_dot_density</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert polygon geometry to dots for dot-density mapping</h2>
+
+<h3>Description</h3>
+
+<p>Dot-density maps are a compelling alternative to choropleth maps for cartographic visualization of demographic data as they allow for representation of the internal heterogeneity of geographic units.  This function helps users generate dots from an input polygon dataset intended for dot-density mapping.  Dots are placed randomly within polygons according to a given data:dots ratio; for example, a ratio of 100:1 for an input population value column will place approximately 1 dot in the polygon for every 100 people in the geographic unit.  Users can then map the dots using tools like <code>ggplot2::geom_sf()</code> or <code>tmap::tm_dots()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">as_dot_density(
+  input_data,
+  value,
+  values_per_dot,
+  group = NULL,
+  erase_water = FALSE,
+  area_threshold = NULL,
+  water_year = 2020
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_data</code></td>
+<td>
+<p>An input sf object of geometry type <code>POLYGON</code> or <code>MULTIPOLYGON</code> that includes some information that can be converted to dots.  While the function is designed for use with data acquired with the tidycensus package, it will work for arbitrary polygon datasets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The value column to be used to determine the number of dots to generate. For tidycensus users, this will typically be the <code>"value"</code> column for decennial Census data or the <code>"estimate"</code> column for American Community Survey estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>values_per_dot</code></td>
+<td>
+<p>The number of values per dot; used to determine the output data:dots ratio. A value of 100 means that each dot will represent approximately 100 values in the value column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>A column in the dataset that identifies salient groups within which dots should be generated.  For a long-form tidycensus dataset, this will typically be the <code>"variable"</code> column or some derivative of it. The output dataset will be randomly shuffled to prevent "stacking" of groups in downstream dot-density maps.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>erase_water</code></td>
+<td>
+<p>If <code>TRUE</code>, calls <code>tigris::erase_water()</code> to remove water areas from the polygons prior to generating dots, allowing for dasymetric dot placement. This option is recommended if your location includes significant water area. If using this option, it is recommended that you first transform your data to a projected coordinate reference system using <code>sf::st_transform()</code> to improve performance. This argument only works for data in the United States.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>area_threshold</code></td>
+<td>
+<p>The area percentile threshold to be used when erasing water; ranges from 0 (all water area included) to 1 (no water area included)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>water_year</code></td>
+<td>
+<p>The year of the TIGER/Line water area shapefiles to use if erasing water. Defaults to 2020; ignore if not using the <code>erase_water</code> feature.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>as_dot_density()</code> uses <code>terra::dots()</code> internally for fast creation of dots. As terra is not a hard dependency of the tidycensus package, users must first install terra before using this function.
+</p>
+<p>The <code>erase_water</code> parameter will internally call <code>tigris::erase_water()</code> to fetch water area for a given location in the United States and remove that water area from the polygons before placing dots in polygons. This will slow down performance of the function, but can improve cartographic accuracy in locations with significant water area. It is recommended that users transform their data into a projected coordinate reference system with <code>sf::st_transform()</code> prior to using this option in order to improve performance.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The original dataset but of geometry type <code>POINT</code>, with the number of point features corresponding to the given value:dot ratio for a given group.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+library(tidycensus)
+library(ggplot2)
+
+# Identify variables for mapping
+race_vars &lt;- c(
+  Hispanic = "P2_002N",
+  White = "P2_005N",
+  Black = "P2_006N",
+  Asian = "P2_008N"
+)
+
+# Get data from tidycensus
+baltimore_race &lt;- get_decennial(
+  geography = "tract",
+  variables = race_vars,
+  state = "MD",
+  county = "Baltimore city",
+  geometry = TRUE,
+  year = 2020
+)
+
+# Convert data to dots
+baltimore_dots &lt;- as_dot_density(
+  baltimore_race,
+  value = "value",
+  values_per_dot = 100,
+  group = "variable"
+)
+
+# Use one set of polygon geometries as a base layer
+baltimore_base &lt;- baltimore_race[baltimore_race$variable == "Hispanic", ]
+
+# Map with ggplot2
+ggplot() +
+  geom_sf(data = baltimore_base,
+          fill = "white",
+          color = "grey") +
+  geom_sf(data = baltimore_dots,
+          aes(color = variable),
+          size = 0.01) +
+  theme_void()
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

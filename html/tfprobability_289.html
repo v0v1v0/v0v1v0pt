@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>vi_fit_surrogate_posterior</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit a surrogate posterior to a target (unnormalized) log density</h2>
+
+<h3>Description</h3>
+
+<p>The default behavior constructs and minimizes the negative variational
+evidence lower bound (ELBO), given by <code style="white-space: pre;">⁠q_samples &lt;- surrogate_posterior$sample(num_draws) elbo_loss &lt;- -tf$reduce_mean(target_log_prob_fn(q_samples) - surrogate_posterior$log_prob(q_samples))⁠</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">vi_fit_surrogate_posterior(
+  target_log_prob_fn,
+  surrogate_posterior,
+  optimizer,
+  num_steps,
+  convergence_criterion = NULL,
+  trace_fn = tfp$vi$optimization$`_trace_loss`,
+  variational_loss_fn = NULL,
+  discrepancy_fn = tfp$vi$kl_reverse,
+  sample_size = 1,
+  importance_sample_size = 1,
+  trainable_variables = NULL,
+  jit_compile = NULL,
+  seed = NULL,
+  name = "fit_surrogate_posterior"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>target_log_prob_fn</code></td>
+<td>
+<p>function that takes a set of <code>Tensor</code> arguments
+and returns a <code>Tensor</code> log-density. Given <code>q_sample &lt;- surrogate_posterior$sample(sample_size)</code>, this will be (in Python)
+called as <code>target_log_prob_fn(q_sample)</code> if <code>q_sample</code> is a list or a
+tuple, <code style="white-space: pre;">⁠target_log_prob_fn(**q_sample)⁠</code> if <code>q_sample</code> is a dictionary,
+or <code>target_log_prob_fn(q_sample)</code> if <code>q_sample</code> is a <code>Tensor</code>. It
+should support batched evaluation, i.e., should return a result of
+shape <code style="white-space: pre;">⁠[sample_size]⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>surrogate_posterior</code></td>
+<td>
+<p>A <code>tfp$distributions$Distribution</code> instance
+defining a variational posterior (could be a
+<code>tfp$distributions$JointDistribution</code>). Crucially, the distribution's
+<code>log_prob</code> and (if reparameterized) <code>sample</code> methods must directly
+invoke all ops that generate gradients to the underlying variables. One
+way to ensure this is to use <code>tfp$util$DeferredTensor</code> to represent any
+parameters defined as transformations of unconstrained variables, so
+that the transformations execute at runtime instead of at distribution
+creation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimizer</code></td>
+<td>
+<p>Optimizer instance to use. This may be a TF1-style
+<code>tf$train$Optimizer</code>, TF2-style <code>tf$optimizers$Optimizer</code>, or any
+Python-compatible object that implements
+<code>optimizer$apply_gradients(grads_and_vars)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_steps</code></td>
+<td>
+<p><code>integer</code> number of steps to run the optimizer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>convergence_criterion</code></td>
+<td>
+<p>Optional instance of
+<code>tfp$optimizer$convergence_criteria$ConvergenceCriterion</code> representing
+a criterion for detecting convergence. If <code>NULL</code>, the optimization will
+run for <code>num_steps</code> steps, otherwise, it will run for at <em>most</em>
+<code>num_steps</code> steps, as determined by the provided criterion. Default
+value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace_fn</code></td>
+<td>
+<p>function with signature <code>state = trace_fn(loss, grads, variables)</code>, where <code>state</code> may be a <code>Tensor</code> or nested structure of
+<code>Tensor</code>s. The state values are accumulated (by <code>tf$scan</code>) and
+returned. The default <code>trace_fn</code> simply returns the loss, but in
+general can depend on the gradients and variables (if
+<code>trainable_variables</code> is not <code>NULL</code> then
+<code>variables==trainable_variables</code>; otherwise it is the list of all
+variables accessed during execution of <code>loss_fn()</code>), as well as any
+other quantities captured in the closure of <code>trace_fn</code>, for example,
+statistics of a variational distribution. Default value:
+<code>function(loss, grads, variables) loss</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variational_loss_fn</code></td>
+<td>
+<p>function with signature <code>loss &lt;- variational_loss_fn(target_log_prob_fn, surrogate_posterior, sample_size, seed)</code> defining a variational loss function. The default
+is a Monte Carlo approximation to the standard evidence lower bound
+(ELBO), equivalent to minimizing the 'reverse' <code>KL[q||p]</code> divergence
+between the surrogate <code>q</code> and true posterior <code>p</code>. Default value:
+<code>functools.partial(tfp.vi.monte_carlo_variational_loss, discrepancy_fn=tfp.vi.kl_reverse, use_reparameterization=True)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discrepancy_fn</code></td>
+<td>
+<p>A function of Python <code>callable</code> representing a
+Csiszar <code>f</code> function in log-space. See the docs for
+<code>tfp.vi.monte_carlo_variational_loss</code> for examples. This argument is
+ignored if a <code>variational_loss_fn</code> is explicitly specified. Default
+value: <code>tfp$vi$kl_reverse</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample_size</code></td>
+<td>
+<p><code>integer</code> number of Monte Carlo samples to use in
+estimating the variational divergence. Larger values may stabilize the
+optimization, but at higher cost per step in time and memory. Default
+value: <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>importance_sample_size</code></td>
+<td>
+<p>An integer number of terms used to define
+an importance-weighted divergence. If <code>importance_sample_size &gt; 1</code>,
+then the <code>surrogate_posterior</code> is optimized to function as an
+importance-sampling proposal distribution. In this case, posterior
+expectations should be approximated by importance sampling, as
+demonstrated in the example below. This argument is ignored if a
+<code>variational_loss_fn</code> is explicitly specified. Default value: <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trainable_variables</code></td>
+<td>
+<p>Optional list of <code>tf$Variable</code> instances to
+optimize with respect to. If <code>NULL</code>, defaults to the set of all
+variables accessed during the computation of the variational bound,
+i.e., those defining <code>surrogate_posterior</code> and the model
+<code>target_log_prob_fn</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>jit_compile</code></td>
+<td>
+<p>If <code>TRUE</code>, compiles the loss function and gradient
+update using XLA. XLA performs compiler optimizations, such as fusion,
+and attempts to emit more efficient code. This may drastically improve
+the performance. See the docs for <code>tf.function</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>integer to seed the random number generator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to ops created by this function. Default value:
+'fit_surrogate_posterior'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This corresponds to minimizing the 'reverse' Kullback-Liebler divergence
+(<code>KL[q||p]</code>) between the variational distribution and the unnormalized
+<code>target_log_prob_fn</code>, and  defines a lower bound on the marginal log
+likelihood, <code style="white-space: pre;">⁠log p(x) &gt;= -elbo_loss⁠</code>.
+</p>
+<p>More generally, this function supports fitting variational distributions
+that minimize any <a href="https://en.wikipedia.org/wiki/F-divergence">Csiszar f-divergence</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>results <code>Tensor</code> or nested structure of <code>Tensor</code>s, according to
+the return type of <code>result_fn</code>. Each <code>Tensor</code> has an added leading
+dimension of size <code>num_steps</code>, packing the trajectory of the result
+over the course of the optimization.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other vi-functions: 
+<code>vi_amari_alpha()</code>,
+<code>vi_arithmetic_geometric()</code>,
+<code>vi_chi_square()</code>,
+<code>vi_csiszar_vimco()</code>,
+<code>vi_dual_csiszar_function()</code>,
+<code>vi_jeffreys()</code>,
+<code>vi_jensen_shannon()</code>,
+<code>vi_kl_forward()</code>,
+<code>vi_kl_reverse()</code>,
+<code>vi_log1p_abs()</code>,
+<code>vi_modified_gan()</code>,
+<code>vi_monte_carlo_variational_loss()</code>,
+<code>vi_pearson()</code>,
+<code>vi_squared_hellinger()</code>,
+<code>vi_symmetrized_csiszar_function()</code>
+</p>
+
+
+</div>

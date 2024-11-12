@@ -1,0 +1,98 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_suggested_subgroup</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>get_suggested_subgroup</h2>
+
+<h3>Description</h3>
+
+<p>Get a string definition of the suggested subgroup definition.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_suggested_subgroup(anonymized_subgroup, suggested_cutoff, anon = "xxxxx")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>anonymized_subgroup</code></td>
+<td>
+<p>A string containing the the anonymized subgroup.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>suggested_cutoff</code></td>
+<td>
+<p>A string containing the suggested cutoff.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>anon</code></td>
+<td>
+<p>The anonymization string. By default this is 'xxxxx'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Subgroups are reported in an anonymized fashion – e.g. a subgroup
+defined on a variable X1 could be reported as X1&lt;xxxxx, 'xxxxx' is a string
+used to represent an exact numeric cutoff. For each anonymized subgroup,
+the distribution of exact numeric cutpoints is retained across all
+bootrstrapped samples. TSDT then provides a suggested cutoff got each
+anonymized subgroup. By default, this suggested cutoff is the median of the
+observed cutpoints. Note that this anonymization applies only to numeric
+splitting variables. Categorical splitting variables are not anonymized.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(0)
+N &lt;- 200
+continuous_response = runif( min = 0, max = 20, n = N )
+trt &lt;- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
+X1 &lt;- runif( N, min = 0, max = 1 )
+X2 &lt;- runif( N, min = 0, max = 1 )
+X3 &lt;- sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE )
+X4 &lt;- sample( c('A','B','C'), size = N, prob = c(0.6,0.3,0.1), replace = TRUE )
+covariates &lt;- data.frame( X1 )
+covariates$X2 &lt;- X2
+covariates$X3 &lt;- factor( X3 )
+covariates$X4 &lt;- factor( X4 )
+
+## Create a TSDT object
+ex1 &lt;- TSDT( response = continuous_response,
+             trt = trt, trt_control = 'Control',
+             covariates = covariates[,1:4],
+             inbag_score_margin = 0,
+             desirable_response = "increasing",
+             oob_score_margin = 0,
+             min_subgroup_n_control = 10,
+             min_subgroup_n_trt = 20,
+             maxdepth = 2,
+             rootcompete = 2 )
+
+## Show summary statistics
+summary( ex1 )
+
+## Get the anonymized subgroup defined on X1
+anonymized_subgroup &lt;- as.character( ex1@superior_subgroups$Subgroup[2] )
+
+## Get the suggested cutoff for this subgroup
+suggested_cutoff &lt;- as.character( ex1@superior_subgroups$Suggested_Cutoff[2] )
+
+## Get the suggested subgroup
+get_suggested_subgroup( anonymized_subgroup = anonymized_subgroup,
+                        suggested_cutoff = suggested_cutoff )
+</code></pre>
+
+
+</div>

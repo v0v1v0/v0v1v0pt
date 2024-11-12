@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TRMF_regression</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add external regressors to TRMF object</h2>
+
+<h3>Description</h3>
+
+<p>A function to add external regressors to a TRMF object.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TRMF_regression(obj, Xreg, type = c("global", "columnwise"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>TRMF object created by <code>create_TRMF()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xreg</code></td>
+<td>
+<p>Vector or matrix of external regressors. If <code>type = "columnwise"</code>, <code>Xreg</code> can be a matrix or array, but the first two dimensions must match those of the data matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>how are the regressors added to the model. If <code>type = "global"</code> the matrix factorization includes all the regressors. If <code>type = "columnwise"</code> each column in the data matrix is regressed of the corresponding column of <code>Xreg</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The coefficients model for the regressors are subject to the same regularization as the rest of the matrix factorization. Only one columnwise and one global model should be used in the same model. Both types can be include in the same model though.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an updated object of class TRMF.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Chad Hammerquist
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>create_TRMF</code>, <code>TRMF_columns</code>, <code>TRMF_trend</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># ~ Global regression example ~
+# create test data 
+bb = (-10:10)/10
+xReg = 10*cos(bb*10)
+xm = poly(x = bb,degree=3)
+fm = matrix(rnorm(40),4,10)
+Am = cbind(xReg,xm)%*%fm+rnorm(210,0,.2)
+
+# creat model and fit
+obj = create_TRMF(Am)
+obj = TRMF_trend(obj,numTS=3,order=2)
+obj = TRMF_regression(obj,Xreg=xReg,type="global")
+out = train(obj)
+plot(out)
+
+# ~ columnwise regression example ~
+# create test data 
+bb = (-10:10)/10
+xm = poly(x = bb,degree=4)
+fm = matrix(rnorm(84),4,21)
+Am = xm%*%fm+rnorm(441,0,.2)
+
+layers = array(0,dim=c(21,21,2))
+layers[,,1] = 2*cos(2*bb)%o%sin(4*bb)
+layers[,,2] = 2*sqrt(abs(bb%o%bb))
+nAm = Am+layers[,,1]+layers[,,2]
+
+# creat model and fit
+obj = create_TRMF(nAm)
+obj = TRMF_trend(obj,numTS=4,order=2)
+obj = TRMF_regression(obj,Xreg=layers,type="columnwise")
+out = train(obj)
+plot(out)
+
+
+</code></pre>
+
+
+</div>

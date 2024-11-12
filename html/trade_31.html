@@ -1,0 +1,270 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Sim-Functions</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tariff Simulation With User-Supplied Demand Parameters</h2>
+
+<h3>Description</h3>
+
+<p>Simulates the price effects of an ad valorem tariff
+with user-supplied demand parameters under the
+assumption that all firms in the market are playing either a
+differentiated products Bertrand pricing game, 2nd price auction, or bargaining game.
+</p>
+<p>Let k denote the number of products produced by all firms below.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sim(
+  prices,
+  supply = c("moncom", "bertrand", "auction", "bargaining"),
+  demand = c("logit", "ces"),
+  demand.param,
+  owner,
+  tariffPre = rep(0, length(prices)),
+  tariffPost,
+  subset = rep(TRUE, length(prices)),
+  insideSize = 1,
+  priceOutside,
+  priceStart,
+  bargpowerPre = rep(0.5, length(prices)),
+  bargpowerPost = bargpowerPre,
+  labels = paste("Prod", 1:length(prices), sep = ""),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>prices</code></td>
+<td>
+<p>A length k vector of product prices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>supply</code></td>
+<td>
+<p>A character string indicating how firms compete with one another. Valid
+values are "moncom" (monopolistic competition), "bertrand" (Nash Bertrand),  "auction2nd"
+(2nd score auction), or "bargaining".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>demand</code></td>
+<td>
+<p>A character string indicating the type of demand system
+to be used in the merger simulation. Supported demand systems are
+logit (‘Logit’) or ces (‘CES’).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>demand.param</code></td>
+<td>
+<p>See Below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>owner</code></td>
+<td>
+<p>EITHER a vector of length k whose values indicate which firm produced a product before the tariff
+OR a k x k matrix of pre-merger ownership shares.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tariffPre</code></td>
+<td>
+<p>A vector of length k where each element equals the <strong>current</strong> <em>ad valorem</em> tariff
+(expressed as a proportion of the consumer price) imposed on each product. Default is 0, which assumes no tariff.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tariffPost</code></td>
+<td>
+<p>A vector of length k where each element equals the <strong>new</strong>  <em>ad valorem</em> tariff
+(expressed as a proportion of the consumer price) imposed on each product. Default is 0, which assumes no tariff.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>A vector of length k where each element equals TRUE if
+the product indexed by that element should be included in the
+post-merger simulation and FALSE if it should be excluded.Default is a
+length k vector of TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insideSize</code></td>
+<td>
+<p>A length 1 vector equal to total units sold if ‘demand’ equals "logit", or total revenues if
+‘demand’ equals "ces".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priceOutside</code></td>
+<td>
+<p>A length 1 vector indicating the price of the
+outside good. This option only applies to the ‘Logit’ class and its child classes
+Default for ‘Logit’,‘LogitNests’, and ‘LogitCap’ is 0,
+and for ‘CES’ and ‘CesNests’ is 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priceStart</code></td>
+<td>
+<p>A length k vector of starting values used to solve for
+equilibrium price. Default is the ‘prices’ vector for all values of
+demand except for ‘AIDS’, which is set equal to a vector of 0s.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bargpowerPre</code></td>
+<td>
+<p>A length k vector of pre-merger bargaining power parameters. Values
+must be between 0 (sellers have the power) and 1 (buyers the power). Ignored if ‘supply’ not equal
+to "bargaining".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bargpowerPost</code></td>
+<td>
+<p>A length k vector of post-merger bargaining power parameters. Values
+must be between 0 (sellers have the power) and 1 (buyers the power). Default is ‘bargpowerPre’.
+Ignored if ‘supply’ not equal to "bargaining".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>A k-length vector of labels. Default is “Prod#”, where
+‘#’ is a number between 1 and the length of ‘prices’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional options to feed to the
+optimizer used to solve for equilibrium prices.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Using user-supplied demand parameters,
+<code>sim</code> simulates the effects of a merger in a market where
+firms are playing a differentiated products pricing game.
+</p>
+<p>If ‘demand’ equals ‘Logit’  then
+‘demand.param’ must equal a list containing
+</p>
+
+<ul>
+<li>
+<p>alphaThe price coefficient.
+</p>
+</li>
+<li>
+<p>meanvalA length-k vector of mean valuations ‘meanval’. If
+none of the values of ‘meanval’ are zero, an outside good is assumed
+to exist.
+</p>
+</li>
+</ul>
+<p>If demand equals ‘CES’  then
+‘demand.param’ must equal a list containing
+</p>
+
+<ul>
+<li>
+<p>gamma The price coefficient,
+</p>
+</li>
+<li>
+<p>alphaThe coefficient on the numeraire good. May instead be
+calibrated using ‘shareInside’,
+</p>
+</li>
+<li>
+<p>meanvalA length-k vector of mean valuations ‘meanval’. If
+none of the values of ‘meanval’ are zero, an outside good is assumed
+to exist,
+</p>
+</li>
+<li>
+<p>shareInside The budget share of all products in the
+market. Default is 1, meaning that all consumer wealth is spent on
+products in the market. May instead be specified using ‘alpha’.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p><code>sim</code> returns an instance of the class specified by the
+‘demand’ argument.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Charles Taragin <a href="mailto:ctaragin+trader@gmail.com">ctaragin+trader@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>The S4 class documentation for:  <code>Logit</code> and
+<code>CES</code>,
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Calibration and simulation results from a merger between Budweiser and
+## Old Style. Note that the in the following model there is no outside
+## good; BUD's mean value has been normalized to zero.
+
+## Source: Epstein/Rubenfeld 2004, pg 80
+
+
+prodNames &lt;- c("BUD","OLD STYLE","MILLER","MILLER-LITE","OTHER-LITE","OTHER-REG")
+owner &lt;-c("BUD","OLD STYLE","MILLER","MILLER","OTHER-LITE","OTHER-REG")
+tariff &lt;- c(0,0,0,0,.1,.1)
+
+price    &lt;- c(.0441,.0328,.0409,.0396,.0387,.0497)
+
+# a list containing price coefficient and mean valuations
+demand.param=list(alpha=-48.0457,
+                  meanval=c(0,0.4149233,1.1899885,0.8252482,0.1460183,1.4865730)
+)
+
+sim.logit &lt;- sim(price,demand="logit",supply="bertrand", demand.param,
+                 owner=owner,tariffPost=tariff,labels=prodNames)
+
+
+
+print(sim.logit)           # return predicted price change
+summary(sim.logit)         # summarize merger simulation
+
+elast(sim.logit,TRUE)      # returns premerger elasticities
+elast(sim.logit,FALSE)     # returns postmerger elasticities
+
+diversion(sim.logit,TRUE)  # return premerger diversion ratios
+diversion(sim.logit,FALSE) # return postmerger diversion ratios
+
+
+cmcr(sim.logit)            #calculate compensating marginal cost reduction
+upp(sim.logit)             #calculate Upwards Pricing Pressure Index
+
+CV(sim.logit)              #calculate representative agent compensating variation
+
+</code></pre>
+
+
+</div>

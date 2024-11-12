@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cluster_matrix</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Reorder a Matrix Based on Hierarchical Clustering</h2>
+
+<h3>Description</h3>
+
+<p>Reorder matrix rows, columns, or both via hierarchical clustering.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cluster_matrix(x, dim = "both", method = "ward.D2", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>The dimension to reorder (cluster); must be set to "row", "col", 
+or "both".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The agglomeration method to be used (see 
+<code>hclust</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>ignored.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a reordered matrix.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>hclust</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">cluster_matrix(mtcars)
+cluster_matrix(mtcars, dim = 'row')
+cluster_matrix(mtcars, dim = 'col')
+
+## Not run: 
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, viridis, gridExtra)
+
+## plot heatmap w/o clustering
+wo &lt;- mtcars %&gt;%
+    cor() %&gt;%
+    tidy_matrix('car', 'var') %&gt;%
+    ggplot(aes(var, car, fill = value)) +
+         geom_tile() +
+         scale_fill_viridis(name = expression(r[xy])) +
+         theme(
+             axis.text.y = element_text(size = 8)   ,
+             axis.text.x = element_text(
+                 size = 8, 
+                 hjust = 1, 
+                 vjust = 1, 
+                 angle = 45
+             ),   
+             legend.position = 'bottom',
+             legend.key.height = grid::unit(.1, 'cm'),
+             legend.key.width = grid::unit(.5, 'cm')
+         ) +
+         labs(subtitle = "With Out Clustering")
+
+## plot heatmap w clustering
+w &lt;- mtcars %&gt;%
+    cor() %&gt;%
+    cluster_matrix() %&gt;%
+    tidy_matrix('car', 'var') %&gt;%
+    mutate(
+        var = factor(var, levels = unique(var)),
+        car = factor(car, levels = unique(car))        
+    ) %&gt;%
+    group_by(var) %&gt;%
+    ggplot(aes(var, car, fill = value)) +
+         geom_tile() +
+         scale_fill_viridis(name = expression(r[xy])) +
+         theme(
+             axis.text.y = element_text(size = 8)   ,
+             axis.text.x = element_text(
+                 size = 8, 
+                 hjust = 1, 
+                 vjust = 1, 
+                 angle = 45
+             ),   
+             legend.position = 'bottom',
+             legend.key.height = grid::unit(.1, 'cm'),
+             legend.key.width = grid::unit(.5, 'cm')               
+         ) +
+         labs(subtitle = "With Clustering")
+
+gridExtra::grid.arrange(wo, w, ncol = 2)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

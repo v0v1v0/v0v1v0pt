@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>replace_tokens</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Replace Tokens</h2>
+
+<h3>Description</h3>
+
+<p>Replace tokens with a single substring.  This is much faster than 
+<code>mgsub</code> if one wants to replace fixed tokens
+with a single value or remove them all together.  This can be useful
+for quickly replacing tokens like names in string with a single
+value in order to reduce noise.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">replace_tokens(x, tokens, replacement = NULL, ignore.case = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A character vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tokens</code></td>
+<td>
+<p>A vector of token to be replaced.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>replacement</code></td>
+<td>
+<p>A single character string to replace the tokens with.
+The default, <code>NULL</code>, replaces the tokens with nothing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore.case</code></td>
+<td>
+<p>logical.  If <code>TRUE</code> the case of the tokens will 
+be ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>ignored.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a vector of strings with tokens replaced.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The function splits the string apart into tokens for speed
+optimization.  After the replacement occurs the strings are pasted back
+together.  The strings are not guaranteed to retain exact spacing of the
+original.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>mgsub</code>, <code>match_tokens</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">replace_tokens(DATA$state, c('No', 'what', "it's"))
+replace_tokens(DATA$state, c('No', 'what', "it's"), "&lt;&lt;TOKEN&gt;&gt;")
+replace_tokens(
+    DATA$state, 
+    c('No', 'what', "it's"), 
+    "&lt;&lt;TOKEN&gt;&gt;", 
+    ignore.case = TRUE
+)
+
+## Not run: 
+## Now let's see the speed
+## Set up data
+library(textshape)
+data(hamlet)
+set.seed(11)
+tokens &lt;- sample(unique(unlist(split_token(hamlet$dialogue))), 2000)
+
+tic &lt;- Sys.time()
+head(replace_tokens(hamlet$dialogue, tokens))
+(toc &lt;- Sys.time() - tic)
+
+
+tic &lt;- Sys.time()
+head(mgsub(hamlet$dialogue, tokens, ""))
+(toc &lt;- Sys.time() - tic)
+
+
+## Amp it up 20x more data
+tic &lt;- Sys.time()
+head(replace_tokens(rep(hamlet$dialogue, 20), tokens))
+(toc &lt;- Sys.time() - tic)
+
+## Replace names example
+
+library(lexicon)
+library(textshape)
+nms &lt;- gsub("(^.)(.*)", "\\U\\1\\L\\2", common_names, perl = TRUE)
+x &lt;- split_portion(
+    sample(c(sample(grady_augmented, 5000), sample(nms, 10000, TRUE))), 
+    n.words = 12
+)
+x$text.var &lt;- paste0(
+    x$text.var, 
+    sample(c('.', '!', '?'), length(x$text.var), TRUE)
+ )
+replace_tokens(x$text.var, nms, 'NAME')
+
+## End(Not run)
+</code></pre>
+
+
+</div>

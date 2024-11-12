@@ -1,0 +1,94 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.tidygam</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot methods for tidygam objects</h2>
+
+<h3>Description</h3>
+
+<p>Plotting methods for <code>tidygam</code> objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tidygam'
+plot(x, series = NULL, comparison = NULL, raster_interp = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>tidygam</code> object (see <code>predict_gam()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>series</code></td>
+<td>
+<p>A string specifying the variable that corresponds to the series
+to be plotted on the $x$-axis. If a string is given, the other numeric
+variables in the model are set to their mean value, unless specific values
+are given in <code>values</code>. If a character vector of two strings is given, the
+two variables will be taken as the elements of a tensor product smooth.
+This allows the user to plot 2D raster plots.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>comparison</code></td>
+<td>
+<p>Name of a categorical predictor to compare as a string.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>raster_interp</code></td>
+<td>
+<p>Whether to linearly interpolate when plotting a tensor
+product smooth/interaction. It makes sense only when <code>series</code> has two
+variables. The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>plot()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>ggplot</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(mgcv)
+set.seed(10)
+sim_data &lt;- gamSim(4)
+
+model_1 &lt;- gam(y ~ s(x2, by = fac) + s(x0), data = sim_data)
+
+preds_1 &lt;- predict_gam(model_1, length_out = 50, exclude_terms = "s(x0)")
+plot(preds_1, "x2")
+
+preds_2 &lt;- predict_gam(model_1, length_out = 100, values = list(x0 = 0))
+plot(preds_2, "x2", "fac")
+library(ggplot2)
+plot(preds_2, "x2", "fac") +
+  scale_fill_brewer(type = "qual") +
+  scale_color_brewer(type = "qual")
+
+# Plotting tensor product smooths/interactions
+model_2 &lt;- gam(y ~ te(x0, x2, by = fac), data = sim_data)
+preds_3 &lt;- predict_gam(model_2)
+preds_3 %&gt;% plot(series = c("x0", "x2"), comparison = "fac")
+</code></pre>
+
+
+</div>

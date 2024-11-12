@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>collect_predictions</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Obtain and format results produced by tuning functions</h2>
+
+<h3>Description</h3>
+
+<p>Obtain and format results produced by tuning functions
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">collect_predictions(x, ...)
+
+## Default S3 method:
+collect_predictions(x, ...)
+
+## S3 method for class 'tune_results'
+collect_predictions(x, ..., summarize = FALSE, parameters = NULL)
+
+collect_metrics(x, ...)
+
+## S3 method for class 'tune_results'
+collect_metrics(x, ..., summarize = TRUE, type = c("long", "wide"))
+
+collect_notes(x, ...)
+
+## S3 method for class 'tune_results'
+collect_notes(x, ...)
+
+collect_extracts(x, ...)
+
+## S3 method for class 'tune_results'
+collect_extracts(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The results of <code>tune_grid()</code>, <code>tune_bayes()</code>, <code>fit_resamples()</code>,
+or <code>last_fit()</code>. For <code>collect_predictions()</code>, the control option <code>save_pred = TRUE</code> should have been used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summarize</code></td>
+<td>
+<p>A logical; should metrics be summarized over resamples
+(<code>TRUE</code>) or return the values for each individual resample. Note that, if <code>x</code>
+is created by <code>last_fit()</code>, <code>summarize</code> has no effect. For the other object
+types, the method of summarizing predictions is detailed below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>An optional tibble of tuning parameter values that can be
+used to filter the predicted values before processing. This tibble should
+only have columns for each tuning parameter identifier (e.g. <code>"my_param"</code>
+if <code>tune("my_param")</code> was used).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>One of <code>"long"</code> (the default) or <code>"wide"</code>. When <code>type = "long"</code>,
+output has columns <code>.metric</code> and one of <code>.estimate</code> or <code>mean</code>.
+<code>.estimate</code>/<code>mean</code> gives the values for the <code>.metric</code>. When <code>type = "wide"</code>,
+each metric has its own column and the <code>n</code> and <code>std_err</code> columns are removed,
+if they exist.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A tibble. The column names depend on the results and the mode of the
+model.
+</p>
+<p>For <code>collect_metrics()</code> and <code>collect_predictions()</code>, when unsummarized,
+there are columns for each tuning parameter (using the <code>id</code> from <code>tune()</code>,
+if any).
+</p>
+<p><code>collect_metrics()</code> also has columns <code>.metric</code>, and <code>.estimator</code> by default.
+For <code>collect_metrics()</code> methods that have a <code>type</code> argument, supplying
+<code>type = "wide"</code> will pivot the output such that each metric has its own
+column. When the results are summarized, there are columns for <code>mean</code>, <code>n</code>,
+and <code>std_err</code>. When not summarized, the additional columns for the resampling
+identifier(s) and <code>.estimate</code>.
+</p>
+<p>For <code>collect_predictions()</code>, there are additional columns for the resampling
+identifier(s), columns for the predicted values (e.g., <code>.pred</code>,
+<code>.pred_class</code>, etc.), and a column for the outcome(s) using the original
+column name(s) in the data.
+</p>
+<p><code>collect_predictions()</code> can summarize the various results over
+replicate out-of-sample predictions. For example, when using the bootstrap,
+each row in the original training set has multiple holdout predictions
+(across assessment sets). To convert these results to a format where every
+training set same has a single predicted value, the results are averaged
+over replicate predictions.
+</p>
+<p>For regression cases, the numeric predictions are simply averaged.
+</p>
+<p>For classification models, the problem is more complex. When class probabilities
+are used, these are averaged and then re-normalized to make sure that they
+add to one. If hard class predictions also exist in the data, then these are
+determined from the summarized probability estimates (so that they match).
+If only hard class predictions are in the results, then the mode is used to
+summarize.
+</p>
+<p>With censored outcome models, the predicted survival probabilities (if any)
+are averaged while the static predicted event times are summarized using the
+median.
+</p>
+<p><code>collect_notes()</code> returns a tibble with columns for the resampling
+indicators, the location (preprocessor, model, etc.), type (error or warning),
+and the notes.
+</p>
+<p><code>collect_extracts()</code> collects objects extracted from fitted workflows
+via the <code>extract</code> argument to control functions. The
+function returns a tibble with columns for the resampling
+indicators, the location (preprocessor, model, etc.), and extracted objects.
+</p>
+
+
+<h3>Hyperparameters and extracted objects</h3>
+
+<p>When making use of submodels, tune can generate predictions and calculate
+metrics for multiple model <code>.config</code>urations using only one model fit.
+However, this means that if a function was supplied to a
+control function's <code>extract</code> argument, tune can only
+execute that extraction on the one model that was fitted. As a result,
+in the <code>collect_extracts()</code> output, tune opts to associate the
+extracted objects with the hyperparameter combination used to
+fit that one model workflow, rather than the hyperparameter
+combination of a submodel. In the output, this appears like
+a hyperparameter entry is recycled across many <code>.config</code>
+entries—this is intentional.
+</p>
+<p>See <a href="https://parsnip.tidymodels.org/articles/Submodels.html">https://parsnip.tidymodels.org/articles/Submodels.html</a> to learn
+more about submodels.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data("example_ames_knn")
+# The parameters for the model:
+extract_parameter_set_dials(ames_wflow)
+
+# Summarized over resamples
+collect_metrics(ames_grid_search)
+
+# Per-resample values
+collect_metrics(ames_grid_search, summarize = FALSE)
+
+
+# ---------------------------------------------------------------------------
+
+library(parsnip)
+library(rsample)
+library(dplyr)
+library(recipes)
+library(tibble)
+
+lm_mod &lt;- linear_reg() %&gt;% set_engine("lm")
+set.seed(93599150)
+car_folds &lt;- vfold_cv(mtcars, v = 2, repeats = 3)
+ctrl &lt;- control_resamples(save_pred = TRUE, extract = extract_fit_engine)
+
+spline_rec &lt;-
+  recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_ns(disp, deg_free = tune("df"))
+
+grid &lt;- tibble(df = 3:6)
+
+resampled &lt;-
+  lm_mod %&gt;%
+  tune_grid(spline_rec, resamples = car_folds, control = ctrl, grid = grid)
+
+collect_predictions(resampled) %&gt;% arrange(.row)
+collect_predictions(resampled, summarize = TRUE) %&gt;% arrange(.row)
+collect_predictions(
+  resampled,
+  summarize = TRUE,
+  parameters = grid[1, ]
+) %&gt;% arrange(.row)
+
+collect_extracts(resampled)
+
+</code></pre>
+
+
+</div>

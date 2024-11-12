@@ -1,0 +1,388 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>prop.odds</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit Semiparametric Proportional 0dds Model</h2>
+
+<h3>Description</h3>
+
+<p>Fits a semiparametric proportional odds model: </p>
+<p style="text-align: center;"><code class="reqn"> logit(1-S_Z(t)) =
+log(G(t)) + \beta^T Z </code>
+</p>
+<p> where G(t) is increasing but otherwise unspecified.
+Model is fitted by maximising the modified partial likelihood.  A
+goodness-of-fit test by considering the score functions is also computed by
+resampling methods.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">prop.odds(
+  formula,
+  data = parent.frame(),
+  beta = NULL,
+  Nit = 20,
+  detail = 0,
+  start.time = 0,
+  max.time = NULL,
+  id = NULL,
+  n.sim = 500,
+  weighted.test = 0,
+  profile = 1,
+  sym = 0,
+  baselinevar = 1,
+  clusters = NULL,
+  max.clust = 1000,
+  weights = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula object, with the response on the left of a '~'
+operator, and the terms on the right.  The response must be a Event object
+as returned by the ‘Event’ function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with the variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>starting value for relative risk estimates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nit</code></td>
+<td>
+<p>number of iterations for Newton-Raphson algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>detail</code></td>
+<td>
+<p>if 0 no details is printed during iterations, if 1 details are
+given.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.time</code></td>
+<td>
+<p>start of observation period where estimates are computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.time</code></td>
+<td>
+<p>end of observation period where estimates are computed.
+Estimates thus computed from [start.time, max.time].  This is very useful to
+obtain stable estimates, especially for the baseline. Default is max of
+data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>For timevarying covariates the variable must associate each record
+with the id of a subject.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.sim</code></td>
+<td>
+<p>number of simulations in resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted.test</code></td>
+<td>
+<p>to compute a variance weighted version of the
+test-processes used for testing time-varying effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>profile</code></td>
+<td>
+<p>if profile is 1 then modified partial likelihood is used,
+profile=0 fits by simple estimating equation. The modified partial
+likelihood is recommended.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sym</code></td>
+<td>
+<p>to use symmetrized second derivative in the case of the
+estimating equation approach (profile=0).  This may improve the numerical
+performance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baselinevar</code></td>
+<td>
+<p>set to 0 to omit calculations of baseline variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clusters</code></td>
+<td>
+<p>to compute cluster based standard errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.clust</code></td>
+<td>
+<p>number of maximum clusters to be used, to save time in iid
+decomposition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights for score equations.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The modelling formula uses the standard survival modelling given in the
+<b>survival</b> package.
+</p>
+<p>For large data sets use the divide.conquer.timereg of the mets package to
+run the model on splits of the data, or the alternative estimator by the
+cox.aalen function.
+</p>
+<p>The data for a subject is presented as multiple rows or "observations", each
+of which applies to an interval of observation (start, stop]. The program
+essentially assumes no ties, and if such are present a little random noise
+is added to break the ties.
+</p>
+
+
+<h3>Value</h3>
+
+<p>returns an object of type 'cox.aalen'. With the following arguments:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>cum</code></td>
+<td>
+<p>cumulative timevarying regression coefficient estimates are
+computed within the estimation interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.cum</code></td>
+<td>
+<p>the martingale
+based pointwise variance estimates.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robvar.cum</code></td>
+<td>
+<p>robust pointwise
+variances estimates.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>estimate of proportional odds
+parameters of model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.gamma</code></td>
+<td>
+<p>variance for gamma.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robvar.gamma</code></td>
+<td>
+<p>robust variance for gamma.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>list with
+residuals. Estimated martingale increments (dM) and corresponding time
+vector (time).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeq0</code></td>
+<td>
+<p>observed absolute value of supremum of
+cumulative components scaled with the variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeq0</code></td>
+<td>
+<p>p-value for covariate effects based on supremum test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeq0</code></td>
+<td>
+<p>resampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC</code></td>
+<td>
+<p>observed
+absolute value of supremum of difference between observed cumulative process
+and estimate under null of constant effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC</code></td>
+<td>
+<p>p-value
+based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeqC</code></td>
+<td>
+<p>resampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC.is</code></td>
+<td>
+<p>observed integrated squared differences between
+observed cumulative and estimate under null of constant effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC.is</code></td>
+<td>
+<p>p-value based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeqC.is</code></td>
+<td>
+<p>resampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.band</code></td>
+<td>
+<p>resampling based constant to construct robust 95% uniform
+confidence bands. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test.procBeqC</code></td>
+<td>
+<p>observed test-process of difference
+between observed cumulative process and estimate under null of constant
+effect over time.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loglike</code></td>
+<td>
+<p>modified partial likelihood, pseudo
+profile likelihood for regression parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D2linv</code></td>
+<td>
+<p>inverse of the
+derivative of the score function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>score</code></td>
+<td>
+<p>value of score for final
+estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test.procProp</code></td>
+<td>
+<p>observed score process for proportional
+odds regression effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.Prop</code></td>
+<td>
+<p>p-value based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.supProp</code></td>
+<td>
+<p>re-sampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.test.procProp</code></td>
+<td>
+<p>list of 50 random realizations of test-processes
+for constant proportional odds under the model based on resampling.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>Martinussen and Scheike, Dynamic Regression Models for Survival
+Data, Springer (2006).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(sTRACE)
+# Fits Proportional odds model 
+out&lt;-prop.odds(Event(time,status==9)~age+diabetes+chf+vf+sex,
+sTRACE,max.time=7,n.sim=100)
+summary(out)
+
+par(mfrow=c(2,3))
+plot(out,sim.ci=2)
+plot(out,score=1) 
+
+pout &lt;- predict(out,Z=c(70,0,0,0,0))
+plot(pout)
+
+### alternative estimator for large data sets 
+form &lt;- Surv(time,status==9)~age+diabetes+chf+vf+sex
+pform &lt;- timereg.formula(form)
+out2&lt;-cox.aalen(pform,data=sTRACE,max.time=7,
+	propodds=1,n.sim=0,robust=0,detail=0,Nit=40)
+summary(out2)
+
+</code></pre>
+
+
+</div>

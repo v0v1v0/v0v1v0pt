@@ -1,0 +1,133 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gLRT</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Compute the generalized Likelihood Ratio Test</h2>
+
+<h3>Description</h3>
+
+<p>Compute the generalized Likelihood Ratio Test (LRT) for a specified value of the nuisance parameter.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gLRT(theta, mll, x, init, lowlim, uplim, null0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+
+<p>A vector or scalar of the value of the nuisance parameter with respect to which the LRT is computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mll</code></td>
+<td>
+
+<p>A function specifying the negative (profile) log-likelihood. See details. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>A vector or matrix collecting the data.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+
+<p>A   vector or scalar  of initial values for the MLE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lowlim</code></td>
+<td>
+
+<p>A   vector or scalar of lower bounds for the MLE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>uplim</code></td>
+<td>
+
+<p>A   vector or scalar of upper bounds for the MLE.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>null0</code></td>
+<td>
+
+<p>A   vector or scalar of the free parameters under the null hypothesis. See details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>mll</code>  takes as first argument the vector of the parameters for which   the  MLE is generated. Other arguments of <code>mll</code>  are the data vector or matrix (<code>x</code>) and a scalar or vector corresponding to the fixed value for the nuisance parameter with respect to which the profilying is computed (<code>theta</code>, see <code>gLRT</code>). If the latter is a vector it must be of same length of the rows in <code>THETA</code>.
+If the null model has nuisance parameters, <code>null0</code> takes as arguments the values of the parameters being tested under the null hypothesis, followed by the estimates of the nuisance parameters obtained assuming that the null hypothesis is true.</p>
+
+
+<h3>Value</h3>
+
+<p>The value of the generalized LRT for a specified value of <code>theta</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sara Algeri
+</p>
+
+
+<h3>References</h3>
+
+<p>S. Algeri and D.A. van Dyk. Testing one hypothesis multiple times: The multidimensional
+case.   arXiv:1803.03858, submitted to the Journal of Computational and Graphical Statistics, 2018.
+</p>
+<p>A.C. Davison. Statistical models, volume 11. Cambridge University Press, 2003.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>find_max</code>, <code>TOHM_LRT</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#generating data of interest
+N&lt;-100
+x&lt;-as.matrix(cbind(runif(N*2,172.5,217.5),runif(N*2,-2,58)))
+x2&lt;-x[(x[,1]&lt;=217.5)&amp;(x[,1]&gt;=172.5),]
+x_sel&lt;-x2[(x2[,2]&lt;=(28+sqrt(30^2-(x2[,1]-195)^2)))&amp;(x2[,2]&gt;=(28-
+sqrt(30^2-(x2[,1]-195)^2))),]
+data&lt;-x_sel[sample(seq(1:(dim(x_sel)[1])),N),]
+
+#Specifying minus-log-likelihood
+kg&lt;-function(theta){integrate(Vectorize(function(x) {
+exp(-0.5*((x-theta[1])/0.5)^2)*integrate(function(y) {
+exp(-0.5*((y-theta[2])/0.5)^2) }, 28-sqrt(30^2-(x-195)^2),
+28+sqrt(30^2-(x-195)^2))$value}) , 172.5, 217.5)$value}
+mll&lt;-function(eta,x,theta){
+  -sum(log((1-eta)/(pi*(30)^2)+eta*exp(-0.5*((x[,1]-
+  theta[1])/0.5)^2-
+  0.5*((x[,2]-theta[2])/0.5)^2)/kg(theta)))}
+
+gLRT(theta=c(200,30),mll=mll,init=0.1,lowlim=0,uplim=1,null0=0,x=data)
+</code></pre>
+
+
+</div>

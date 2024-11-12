@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>note-equivalence</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Note, pitch and chord equivalence</h2>
+
+<h3>Description</h3>
+
+<p>Helper functions to check the equivalence of two noteworthy strings, and
+other related functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">note_is_equal(notes1, notes2, ignore_octave = TRUE)
+
+note_is_identical(notes1, notes2, ignore_octave = TRUE)
+
+pitch_is_equal(notes1, notes2)
+
+pitch_is_identical(notes1, notes2)
+
+octave_is_equal(notes1, notes2)
+
+octave_is_identical(notes1, notes2, single_octave = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>notes1</code></td>
+<td>
+<p>character, noteworthy string, space-delimited or vector of
+individual entries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>notes2</code></td>
+<td>
+<p>character, noteworthy string, space-delimited or vector of
+individual entries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_octave</code></td>
+<td>
+<p>logical, ignore octave position when considering
+equivalence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>single_octave</code></td>
+<td>
+<p>logical, for octave equality, require all notes share
+the same octave. See details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Noteworthy strings may contain notes, pitches and chords. Noteworthy strings
+are equal if they sound the same.
+This means that if one string contains Eb (<code>e_</code>) and the other contains
+D# (<code>d#</code>) then the two strings may be equal, but they are not identical.
+</p>
+<p><code>pitch_is_equal()</code> and <code>pitch_is_identical()</code> perform these respective
+tests of equivalence on both notes and chords.
+These are the strictest functions in terms of equivalent sound because pitch
+includes the octave number.
+</p>
+<p><code>note_is_equal()</code> and <code>note_is_identical()</code> are similar but include a default
+argument <code>ignore_octave = TRUE</code>, focusing only on the notes and chords.
+This allows an even more relaxed definition of equivalence. Setting this
+argument to <code>FALSE</code> is the same as calling the <code style="white-space: pre;">⁠pitch_is_*⁠</code> variant.
+</p>
+<p>Chords can be checked the same as notes. Every timestep in the sequence is
+checked pairwise between <code>note1</code> and <code>note2</code>.
+</p>
+<p>These functions will return <code>TRUE</code> or <code>FALSE</code> for every timestep
+in a sequence.
+If the two noteworthy strings do not contain the same number of notes at a
+specific step, such as a single note compared to a chord, this yields a
+<code>FALSE</code> value,
+even in a case of an octave dyad with octave number ignored.
+If the two sequences have unequal length <code>NA</code> is returned.
+These are bare minimum requirements for equivalence. See examples.
+</p>
+<p><code>octave_is_equal()</code> and <code>octave_is_identical()</code> allow much weaker forms of
+equivalence in that they ignore notes completely. These functions are only
+concerned with comparing the octave numbers spanned by any pitches present at
+each timestep. When checking for equality, <code>octave_is_equal()</code> only looks at
+the octave number associated with the first note at each step, e.g., only the
+root note of a chord. <code>octave_is_identical()</code> compares all octaves spanned at
+a given timestep.
+</p>
+<p>It does not matter when comparing two chords that they may be comprised of a
+different numbers of notes.
+If the set of unique octaves spanned by one chord is identical to the set
+spanned by the other, they are considered to have identical octave coverage.
+For example, <code>a1b2c3</code> is identical to <code>d1e1f2g3</code>. To be equal, it
+only matters that the two chords begin with <code>x1</code>, where <code>x</code> is any
+note.
+Alternatively, for <code>octave_is_identical()</code> only, setting
+<code>single_octave = TRUE</code> additionally requires that all notes from both
+chords being compared at a given timestep share a single octave.
+</p>
+
+
+<h3>Value</h3>
+
+<p>logical
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- "b_2 ce_g"
+y &lt;- "b_ cd#g"
+note_is_equal(x, y)
+note_is_identical(x, y)
+
+x &lt;- "b_2 ce_g"
+y &lt;- "b_2 cd#g"
+pitch_is_equal(x, y)
+pitch_is_identical(x, y)
+
+# same number of same notes, same order: unequal sequence length
+x &lt;- "b_2 ce_g b_"
+y &lt;- "b_2 ce_gb_"
+note_is_equal(x, y)
+
+# same number of same notes, order, equal length: unequal number per timestep
+x &lt;- "b_2 ce_g b_"
+y &lt;- "b_2 ce_ gb_"
+note_is_equal(x, y)
+
+x &lt;- "a1 b_2 a1b2c3 a1b4 g1a1b1"
+y &lt;- "a_2 g#2 d1e1f2g3 a1b2b4 d1e1"
+octave_is_equal(x, y)
+octave_is_identical(x, y)
+octave_is_identical(x, y, single_octave = TRUE)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tNSS.JD</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+NSS-JD Method for Tensor-Valued Time Series
+</h2>
+
+<h3>Description</h3>
+
+<p>Estimates the non-stationary sources of a tensor-valued time series using separation information contained in several time intervals.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tNSS.JD(x, K = 12, n.cuts = NULL, eps = 1e-06, maxiter = 100, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric array of an order at least two. It is assumed that the last dimension corresponds to the sampling units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The number of equisized intervals into which the time range is divided. If the parameter <code>n.cuts</code> is non-<code>NULL</code> it takes preference over this argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.cuts</code></td>
+<td>
+<p>Either a interval cutoffs (the cutoffs are used to define the two intervals that are open below and closed above, e.g. <code class="reqn">(a, b]</code>) or <code>NULL</code> (the parameter <code>K</code> is used to define the the amount of intervals).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Convergence tolerance for <code>rjd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>Maximum number of iterations for <code>rjd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to or from methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assume that the observed tensor-valued time series comes from a tensorial BSS model where the sources have constant means over time but the component variances change in time. Then TNSS-JD first standardizes the series from all modes and then estimates the non-stationary sources by dividing the time scale into <code>K</code> intervals and jointly diagonalizing the covariance matrices of the <code>K</code> intervals within each mode.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with class 'tbss', inheriting from class 'bss', containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>Array of the same size as x containing the independent components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>List containing all the unmixing matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The number of intervals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.cuts</code></td>
+<td>
+<p>The interval cutoffs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xmu</code></td>
+<td>
+<p>The data location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datatype</code></td>
+<td>
+<p>Character string with value "ts". Relevant for <code>plot.tbss</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Joni Virta
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Virta J., Nordhausen K. (2017): Blind source separation for nonstationary tensor-valued time series, 2017 IEEE 27th International Workshop on Machine Learning for Signal Processing (MLSP), <a href="https://doi.org/10.1109/MLSP.2017.8168122">doi:10.1109/MLSP.2017.8168122</a></cite>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>NSS.SD</code>, <code>NSS.JD</code>, <code>NSS.TD.JD</code>, <code>tNSS.SD</code>, <code>tNSS.TD.JD</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Create innovation series with block-wise changing variances
+n1 &lt;- 200
+n2 &lt;- 500
+n3 &lt;- 300
+n &lt;- n1 + n2 + n3
+innov1 &lt;- c(rnorm(n1, 0, 1), rnorm(n2, 0, 3), rnorm(n3, 0, 5))
+innov2 &lt;- c(rnorm(n1, 0, 1), rnorm(n2, 0, 5), rnorm(n3, 0, 3))
+innov3 &lt;- c(rnorm(n1, 0, 5), rnorm(n2, 0, 3), rnorm(n3, 0, 1))
+innov4 &lt;- c(rnorm(n1, 0, 5), rnorm(n2, 0, 1), rnorm(n3, 0, 3))
+
+# Generate the observations
+vecx &lt;- cbind(as.vector(arima.sim(n = n, list(ar = 0.8), innov = innov1)),
+              as.vector(arima.sim(n = n, list(ar = c(0.5, 0.1)), innov = innov2)),
+              as.vector(arima.sim(n = n, list(ma = -0.7), innov = innov3)),
+              as.vector(arima.sim(n = n, list(ar = 0.5, ma = -0.5), innov = innov4)))
+             
+# Vector to tensor
+tenx &lt;- t(vecx)
+dim(tenx) &lt;- c(2, 2, n)
+
+# Run TNSS-JD
+res &lt;- tNSS.JD(tenx, K = 6)
+res$W
+
+res &lt;- tNSS.JD(tenx, K = 12)
+res$W
+</code></pre>
+
+
+</div>

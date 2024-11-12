@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>checkConsistency</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Check consistency and Laplace accuracy</h2>
+
+<h3>Description</h3>
+
+<p>Check consistency of various parts of a TMB implementation.
+Requires that user has implemented simulation code for the data and
+optionally random effects. (<em>Beta version; may change without
+notice</em>)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">checkConsistency(
+  obj,
+  par = NULL,
+  hessian = FALSE,
+  estimate = FALSE,
+  n = 100,
+  observation.name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>Object from <code>MakeADFun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par</code></td>
+<td>
+<p>Parameter vector (<code class="reqn">\theta</code>) for simulation. If
+unspecified use the best encountered parameter of the object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hessian</code></td>
+<td>
+<p>Calculate the hessian matrix for each replicate ?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimate</code></td>
+<td>
+<p>Estimate parameters for each replicate ?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of simulations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation.name</code></td>
+<td>
+<p>Optional; Name of simulated observation</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function checks that the simulation code of random effects and
+data is consistent with the implemented negative log-likelihood
+function. It also checks whether the approximate <em>marginal</em>
+score function is central indicating whether the Laplace
+approximation is suitable for parameter estimation.
+</p>
+<p>Denote by <code class="reqn">u</code> the random effects, <code class="reqn">\theta</code> the parameters
+and by <code class="reqn">x</code> the data.  The main assumption is that the user has
+implemented the joint negative log likelihood <code class="reqn">f_{\theta}(u,x)</code>
+satisfying
+</p>
+<p style="text-align: center;"><code class="reqn">\int \int \exp( -f_{\theta}(u,x) ) \:du\:dx = 1</code>
+</p>
+
+<p>It follows that the joint and marginal score functions are central:
+</p>
+
+<ol>
+<li> <p><code class="reqn">E_{u,x}\left[\nabla_{\theta}f_{\theta}(u,x)\right]=0</code>
+</p>
+</li>
+<li> <p><code class="reqn">E_{x}\left[\nabla_{\theta}-\log\left( \int \exp(-f_{\theta}(u,x))\:du \right) \right]=0</code>
+</p>
+</li>
+</ol>
+<p>For each replicate of <code class="reqn">u</code> and <code class="reqn">x</code> joint and marginal
+gradients are calculated. Appropriate centrality tests are carried
+out by <code>summary.checkConsistency</code>.  An asymptotic
+<code class="reqn">\chi^2</code> test is used to verify the first identity. Power of
+this test increases with the number of simulations <code>n</code>.  The
+second identity holds <em>approximately</em> when replacing the
+marginal likelihood with its Laplace approximation. A formal test
+would thus fail eventually for large <code>n</code>. Rather, the gradient
+bias is transformed to parameter scale (using the estimated
+information matrix) to provide an estimate of parameter bias caused
+by the Laplace approximation.
+</p>
+
+
+<h3>Value</h3>
+
+<p>List with gradient simulations (joint and marginal)
+</p>
+
+
+<h3>Simulation/re-estimation</h3>
+
+<p>A full simulation/re-estimation study is performed when <code>estimate=TRUE</code>.
+By default nlminb will be used to perform the minimization, and output is stored in a separate list component 'estimate' for each replicate.
+Should a custom optimizer be needed, it can be passed as a user function via the same argument (<code>estimate</code>).
+The function (<code>estimate</code>) will be called for each simulation as <code>estimate(obj)</code> where <code>obj</code> is the simulated model object.
+Current default corresponds to <code>estimate = function(obj) nlminb(obj$par,obj$fn,obj$gr)</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.checkConsistency</code>, <code>print.checkConsistency</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+runExample("simple")
+chk &lt;- checkConsistency(obj)
+chk
+## Get more details
+s &lt;- summary(chk)
+s$marginal$p.value  ## Laplace exact for Gaussian models 
+## End(Not run)
+</code></pre>
+
+
+</div>

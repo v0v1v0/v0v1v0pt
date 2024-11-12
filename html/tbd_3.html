@@ -1,0 +1,267 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sace</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of causal effects with outcomes truncated by death</h2>
+
+<h3>Description</h3>
+
+<p><code>sace</code> estimates survivor average causal effects (SACE) with outcomes truncated by death.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sace(Z, S, Y, X, A, subset, optim.method = "BFGS", max.step = 1000,
+  singular.ok = TRUE, need.variance = TRUE, hessian = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>a logical vector. Exposure indicator. Convetionally, <code>1</code> means treatment and <code>0</code> means control. Must not have missing values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>a logical vector. Survival indicator. <code>1</code> means survival and <code>0</code> means death. Must not have missing values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>a numeric vector. (Univariate) outcomes. May have <code>NA</code> where <code class="reqn">S=0</code> (since <code class="reqn">Y</code> is not well-defined where <code class="reqn">S=0</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>an optional numeric matrix or vector. Baseline covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>an optional numeric matrix or vector. Substitution variable(s) which satisfies the assumptions of "exclusion restriction" and "substitution relevance". See references. If <code>A == NULL</code>, then the naive method, namely OLS, will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>an optional vector specifying a subset of obervations to be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optim.method</code></td>
+<td>
+<p>The method to be used for maximum likelihood optimization. See optim.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.step</code></td>
+<td>
+<p>integer. Maximum iterating steps of maximum likelihood optimization.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>singular.ok</code></td>
+<td>
+<p>logical. Refers to the OLS estimation of the coefficients <code>alpha_1</code> and <code>alpha_2</code> using lm. If <code>FALSE</code> (default), a singular fit raises an error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>need.variance</code></td>
+<td>
+<p>logical. Is variance of parameters and estimators needed? See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hessian</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the hessian returned by optim will be used to compute the information matrix. If <code>FALSE</code>, the matrix will be calculated by an explicit formula.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function <code>sace</code>, gives estimation of average causal effects (ACE) with outcomes truncated by death. The identification of SACE relies on the existence of a substitution variable and requires the assumptions of monotonicity, ignorability, exclusion restriction, and relevance. While the naive estimates given by the coefficient of <code>Z</code> from <code>lm(Y ~ Z + X + A, subset = S == 1)</code> are restricted among survivors and therefore may be subject to selection bias, this method gives consistent estimates of the SACE (survivor average causal effect), defined as the average causal effect among the subgroup consisting of subjects who would survive under either exposure, i.e. among the always-survivor group (<code class="reqn">G=LL</code>). See references for details of the assumptions and the model parameterizations.
+</p>
+<p>Parameters <code>beta</code> and <code>gamma</code> are estimated by MLE, using optim.
+</p>
+<p>If <code>need.variance == TRUE</code>, the asymptotic variance estimators of both parameters and estimators will be given. This requires the <span class="pkg">numDeriv</span> package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list with following elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>CALL</code></td>
+<td>
+<p>function call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data used (within the specified subset).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optim.method</code></td>
+<td>
+<p>method used for optimization.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>need.variance</code></td>
+<td>
+<p>is variance of parameters and estimators needed?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>sample size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu_0_LL</code></td>
+<td>
+<p>average potential outcomes among control group, <code class="reqn">E[ Y(0) | G=LL ]</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu_1_LL</code></td>
+<td>
+<p>average potential outcomes among treatment group, <code class="reqn">E[ Y(1) | G=LL ]</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sace</code></td>
+<td>
+<p>survivor average causal effect, equals <code>mu_1_LL</code>-<code>mu_0_LL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p><code class="reqn">Pr{S(1)=1| X,A}=expit(\beta_0+X' \beta_1+ A \beta_2)</code>, estimated by MLE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p><code class="reqn">Pr{S(0)=1| X,A}/Pr{S(1)=1| X,A}=expit(\gamma_0+X' \gamma_1+ A \gamma_2)</code>, estimated by MLE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta_gamma.convergence</code></td>
+<td>
+<p>indicator of convergence of MLE optimization of beta and gamma. 0 means convergence. See optim.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha_1</code></td>
+<td>
+<p><code class="reqn">E[Y(0)| Z=0, G=LL, X, A ]=\alpha_{10}+X' \alpha_{11}+ A \alpha_{12}</code>, coefficients of <code>lm(Y ~ 1 + X + A, subset = Z == 0)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha_2</code></td>
+<td>
+<p><code class="reqn">E[Y(1)| Z=1, G=LL, X, A ]=\alpha_{20}+X' \alpha_{21}+ G \alpha_{22}</code>, coefficients of <code>lm(Y ~ 1 + X + W.expit, subset = (Z == 1 &amp; S == 1))</code>.</p>
+</td>
+</tr>
+</table>
+<p>The following items will be given only if <code>need.variance == TRUE</code>:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>beta.var</code></td>
+<td>
+<p>estimated asymptotic covariance matrix of beta.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma.var</code></td>
+<td>
+<p>estimated asymptotic covariance matrix of gamma.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>relevance.Pvalue</code></td>
+<td>
+<p>P value of the asymptotic chi-squared test on the relevance assumption for the substitution variable. A large P value suggests that the relevance assumption may not hold, namely, the substitution variable(s) may have little impact on the latent survival type.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha_1.var</code></td>
+<td>
+<p>estimated asymptotic covariance matrix of alpha_1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha_2.var</code></td>
+<td>
+<p>estimated asymptotic covariance matrix of alpha_2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu_0_LL.var</code></td>
+<td>
+<p>estimated asymptotic variance of mu_0_LL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu_1_LL.var</code></td>
+<td>
+<p>estimated asymptotic variance of mu_1_LL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sace.var</code></td>
+<td>
+<p>estimated asymptotic variance of the SACE.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>The length of vectors <code>Z</code>, <code>Y</code>, <code>S</code>, as well as the row number of matrix <code>X</code> and <code>A</code> must equal the sample size <code>n</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Linbo Wang &lt;linbo.wang@utoronto.ca&gt;
+</p>
+<p>Zhixuan Shao &lt;shaozhixuansh@pku.edu.cn&gt;
+</p>
+
+
+<h3>References</h3>
+
+<p>Linbo Wang, Xiao-Hua Zhou, Thomas S. Richardson; Identification and estimation of causal effects with outcomes truncated by death, Biometrika, Volume 104, Issue 3, 1 September 2017, Pages 597-612, <a href="https://doi.org/10.1093/biomet/asx034">https://doi.org/10.1093/biomet/asx034</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">attach(simulated_data)
+X &lt;- cbind(X.X1, X.V2, X.V3)
+sace.result &lt;- sace(Z, S, Y, X, A)
+sace
+</code></pre>
+
+
+</div>

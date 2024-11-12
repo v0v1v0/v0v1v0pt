@@ -1,0 +1,231 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>perm_tester</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Monte Carlo Permutation Tests for Model P-Values</h2>
+
+<h3>Description</h3>
+
+<p><code>perm_tester()</code> carries out Monte Carlo permutation tests for model
+p-values from two-tailed, left-tailed, and/or right-tailed hypothesis
+testing.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">perm_tester(
+  data,
+  model,
+  perm_var = NULL,
+  strat_var = NULL,
+  statistic,
+  perm_n = 1000,
+  alternative = "all",
+  alpha = 0.05,
+  seed = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The dataframe from which the model is estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>The model which will be estimated and re-estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perm_var</code></td>
+<td>
+<p>The variable in the model that will be permuted.
+Default is <code>NULL</code> which takes the first <code>Y</code>n term
+in the formula of the model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strat_var</code></td>
+<td>
+<p>Categorical variable for within-stratum permutations.
+Defaults to <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statistic</code></td>
+<td>
+<p>The name of the model statistic you want to "grab" after
+re-running the model with each permutation to compare to
+the original model statistic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perm_n</code></td>
+<td>
+<p>The total number of permutations. Defaults to 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alternative</code></td>
+<td>
+<p>The alternative hypothesis. One of <code>"two.sided"</code>
+(default),
+<code>"left"</code>, <code>"right"</code>, and <code>"all"</code>. Defaults to <code>"all"</code>,
+which reports the p-value statistics for all three
+alternative hypotheses.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Alpha level for the hypothesis test. Defaults to 0.05.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Optional seed for reproducibility of the p-value statistics.
+Defaults to null.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>perm_tester()</code> can be used to derive p-values under the randomization
+model of inference. There are various reasons one might want to do this—
+with text data, and observational data more generally, this might be
+because the corpus/sample is not a random sample from a target population.
+In such cases, population model p-values might not make much sense since
+the asymptotically-derived standard errors from which they are constructed
+themselves do not make sense. We might therefore want to make inferences
+on the basis of whether or not randomness, as a data-generating mechanism,
+might reasonably account for a statistic at least as extreme as the one
+we observed. <code>perm_tester()</code> works from this idea.
+</p>
+<p><code>perm_tester()</code> works like this. First, the model (supplied the <code>model</code>
+parameter) is run on the observed data. Second, we take some statistic of
+interest, which we indicate with the <code>statistic</code> parameter, and set it to
+the side. Third, a variable, <code>perm_var</code>, is permuted—meaning the observed
+values for the rows of <code>data</code> on <code>perm_var</code> are randomly reshuffled. Fourth,
+we estimate the model again, this time with the permuted <code>perm_var</code>. Fifth,
+we get grab that same <code>statistic</code>. We repeat steps two through
+five a total of <code>perm_n</code> times, each time tallying the number of times the
+<code>statistic</code> from the permutation-derived model is greater than or equal to
+(for a right-tailed test), less-than or equal to (for a left-tailed test),
+and/or has an absolute value greater than or equal to (for a two-tailed test)
+the <code>statistic</code> from the "real" model.
+</p>
+<p>If we divide those tallies by the total number of permutations, then we
+get randomization-based p-values. This is what <code>perm_tester()</code> does. The
+null hypothesis is that randomness could likely generate the statistic
+that we observe. The alternative hypothesis is that randomness alone likely
+can't account for the observed statistic.
+</p>
+<p>We then reject the null hypothesis if the p-value is below a threshold indicated
+with <code>alpha</code>, which, as in population-based inference, is the probability
+below which we are willing to reject the null hypothesis when it is actually
+true. So if the p-value is below, say, <code>alpha</code> = 0.05 and we're performing,
+a right-tailed test, then fewer than 5% of the statistics derived from the
+permutation-based models are greater than or equal to our observed
+statistic. We would then reject the null, as it is unlikely (based on our <code>alpha</code>
+threshold), that randomness as a data-generating mechanism can account
+for a test statistic at least as large the one we observed.
+</p>
+<p>In most cases, analysts probably cannot expect to perform "exact" permutation
+tests where every possible permutation is accounted for—i.e., where
+<code>perm_n</code> equals the total number of possible permutations. Instead, we
+can take random samples of the "population" of permutations. <code>perm_tester()</code>
+does this, and reports the standard errors and (1 - <code>alpha</code>) confidence
+intervals for the p-values.
+</p>
+<p><code>perm_tester()</code> can also perform stratified permutation tests, where the observed
+<code>perm_var</code> variables within groups. This can be done by setting the <code>strat_var</code>
+variable to be he grouping variable.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a data frame with the observed statistic (<code>stat</code>), the
+p-values (<code>P_left</code>, for left-tailed, <code>P_right</code> for right-tailed,
+and/or
+<code>P_two</code> for two-tailed), and the standard errors and confidence
+intervals for those p-values, respectively.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Marshall Taylor and Dustin Stoltz
+</p>
+
+
+<h3>References</h3>
+
+<p>Taylor, Marshall A. (2020)
+'Visualization Strategies for Regression Estimates with Randomization
+Inference' <em>Stata Journal</em> 20(2):309-335.
+<a href="https://doi.org/10.1177/1536867X20930999">doi:10.1177/1536867X20930999</a>.<br></p>
+<p>#' Darlington, Richard B. and Andrew F. Hayes (2016)
+<em>Regression analysis and linear models: Concepts, applications, and implementation</em>.
+Guilford Publications.<br></p>
+<p>Ernst, Michael D. (2004)
+'permutation methods: a basis for exact inference' <em>Statistical Scicence</em>
+19(4):676-685.
+<a href="https://doi.org/10.1214/088342304000000396">doi:10.1214/088342304000000396</a>.<br></p>
+<p>Manly, Bryan F. J. (2007)
+<em>Randomization, Bootstrap and Monte Carlo Methods in Biology</em>.
+Chapman and Hall/CRC.
+<a href="https://doi.org/10.1201/9781315273075">doi:10.1201/9781315273075</a>.<br></p>
+
+
+<h3>See Also</h3>
+
+<p>CMDist, CoCA, get_direction
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data &lt;- text2map::meta_shakespeare
+
+model &lt;- lm(body_count ~ boas_problem_plays + year + genre, data = data)
+
+# without stratified permutations, two-sided test
+out1 &lt;- perm_tester(
+  data = data,
+  model = model,
+  statistic = "coefficients",
+  perm_n = 40,
+  alternative = "two.sided",
+  alpha = .01,
+  seed = 8675309
+)
+
+# with stratified permutations, two-sided test
+out2 &lt;- perm_tester(
+  data = data,
+  model = model,
+  strat_var = "boas_problem_plays",
+  statistic = "coefficients",
+  perm_n = 40,
+  alternative = "two.sided",
+  alpha = .01,
+  seed = 8675309
+)
+
+
+</code></pre>
+
+
+</div>

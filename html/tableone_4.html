@@ -1,0 +1,257 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CreateTableOne</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create an object summarizing both continuous and categorical variables</h2>
+
+<h3>Description</h3>
+
+<p>Create an object summarizing all baseline variables (both continuous and categorical) optionally stratifying by one or more startifying variables and performing statistical tests. The object gives a table that is easy to use in medical research papers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CreateTableOne(
+  vars,
+  strata,
+  data,
+  factorVars,
+  includeNA = FALSE,
+  test = TRUE,
+  testApprox = chisq.test,
+  argsApprox = list(correct = TRUE),
+  testExact = fisher.test,
+  argsExact = list(workspace = 2 * 10^5),
+  testNormal = oneway.test,
+  argsNormal = list(var.equal = TRUE),
+  testNonNormal = kruskal.test,
+  argsNonNormal = list(NULL),
+  smd = TRUE,
+  addOverall = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>Variables to be summarized given as a character vector. Factors are handled as categorical variables, whereas numeric variables are handled as continuous variables. If empty, all variables in the data frame specified in the data argument are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>Stratifying (grouping) variable name(s) given as a character vector. If omitted, the overall results are returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame in which these variables exist. All variables (both vars and strata) must be in this data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factorVars</code></td>
+<td>
+<p>Numerically coded variables that should be handled as categorical variables given as a character vector. Do not include factors, unless you need to relevel them by removing empty levels. If omitted, only factors are considered categorical variables. The variables specified here must also be specified in the <code>vars</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>includeNA</code></td>
+<td>
+<p>If TRUE, NA is handled as a regular factor level rather than missing. NA is shown as the last factor level in the table. Only effective for categorical variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test</code></td>
+<td>
+<p>If TRUE, as in the default and there are more than two groups, groupwise comparisons are performed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testApprox</code></td>
+<td>
+<p>A function used to perform the large sample approximation based tests. The default is <code>chisq.test</code>. This is not recommended when some of the cell have small counts like fewer than 5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsApprox</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in testApprox. The default is <code>list(correct = TRUE)</code>, which turns on the continuity correction for <code>chisq.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testExact</code></td>
+<td>
+<p>A function used to perform the exact tests. The default is <code>fisher.test</code>. If the cells have large numbers, it will fail because of memory limitation. In this situation, the large sample approximation based should suffice.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsExact</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in testExact. The default is <code>list(workspace = 2*10^5)</code>, which specifies the memory space allocated for <code>fisher.test</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testNormal</code></td>
+<td>
+<p>A function used to perform the normal assumption based tests. The default is <code>oneway.test</code>. This is equivalent of the t-test when there are only two groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsNormal</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in <code>testNormal</code>. The default is <code>list(var.equal = TRUE)</code>, which makes it the ordinary ANOVA that assumes equal variance across groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testNonNormal</code></td>
+<td>
+<p>A function used to perform the nonparametric tests. The default is <code>kruskal.test</code> (Kruskal-Wallis Rank Sum Test). This is equivalent of the wilcox.test (Mann-Whitney U test) when there are only two groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>argsNonNormal</code></td>
+<td>
+<p>A named list of arguments passed to the function specified in <code>testNonNormal</code>. The default is <code>list(NULL)</code>, which is just a placeholder.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smd</code></td>
+<td>
+<p>If TRUE, as in the default and there are more than two groups, standardized mean differences for all pairwise comparisons are calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>addOverall</code></td>
+<td>
+<p>(optional, only used if strata are supplied) Adds an overall column to the table. Smd and p-value calculations are performed using only the stratifed clolumns.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The definitions of the standardized mean difference (SMD) are available in <a href="https://www.tandfonline.com/doi/abs/10.1080/00031305.1986.10475403">Flury <em>et al</em> 1986</a> for the univariate case and the multivariate case (essentially the square root of the Mahalanobis distance). Extension to binary variables is discussed in <a href="https://www.tandfonline.com/doi/abs/10.1080/03610910902859574">Austin 2009</a> and extension to multinomival variables is suggested in <a href="https://support.sas.com/resources/papers/proceedings12/335-2012.pdf">Yang <em>et al</em> 2012</a>. This multinomial extesion treats a single multinomial variable as multiple non-redundant dichotomous variables and use the Mahalanobis distance. The off diagonal elements of the covariance matrix on page 3 have an error, and need negation. In weighted data, the same definitions can be used except that the mean and standard deviation estimates are weighted estimates (<a href="https://pubmed.ncbi.nlm.nih.gov/23902694/">Li <em>et al</em> 2013</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/26238958/">Austin <em>et al</em> 2015</a>). In tableone, all weighted estimates are calculated by weighted estimation functions in the <code>survey</code> package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>TableOne</code>, which is a list of three objects.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>ContTable</code></td>
+<td>
+<p>object of class <code>ContTable</code>, containing continuous variables only</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CatTable</code></td>
+<td>
+<p>object of class <code>CatTable</code>, containing categorical variables only</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MetaData</code></td>
+<td>
+<p>list of metadata regarding variables</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Kazuki Yoshida, Justin Bohn, Alexander Bartel
+</p>
+
+
+<h3>References</h3>
+
+<p>Flury, BK. and Riedwyl, H. (1986). Standard distance in univariate and multivariate analysis. <em>The American Statistician</em>, <b>40</b>, 249-251.
+</p>
+<p>Austin, PC. (2009). Using the Standardized Difference to Compare the Prevalence of a Binary Variable Between Two Groups in Observational Research. <em>Communications in Statistics - Simulation and Computation</em>, <b>38</b>, 1228-1234.
+</p>
+<p>Yang, D. and Dalton, JE. (2012). A unified approach to measuring the effect size between two groups using SAS. SAS Global Forum 2012, Paper 335-2012.
+</p>
+<p>Li, L. and Greene, T. (2013). A weighting analogue to pair matching in propensity score analysis. <em>International Journal of Biostatistics</em>, <b>9</b>, 215-234.
+</p>
+<p>Austin, PC. and Stuart, EA. (2015). Moving towards best practice when using inverse probability of treatment weighting (IPTW) using the propensity score to estimate causal treatment effects in observational studies. <em>Statistics in Medicine</em>, Online on August 3, 2015.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>print.TableOne</code>, <code>summary.TableOne</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Load
+library(tableone)
+
+## Load Mayo Clinic Primary Biliary Cirrhosis Data
+library(survival)
+data(pbc)
+## Check variables
+head(pbc)
+
+## Make categorical variables factors
+varsToFactor &lt;- c("status","trt","ascites","hepato","spiders","edema","stage")
+pbc[varsToFactor] &lt;- lapply(pbc[varsToFactor], factor)
+
+## Create a variable list
+dput(names(pbc))
+vars &lt;- c("time","status","age","sex","ascites","hepato",
+          "spiders","edema","bili","chol","albumin",
+          "copper","alk.phos","ast","trig","platelet",
+          "protime","stage")
+
+## Create Table 1 stratified by trt
+tableOne &lt;- CreateTableOne(vars = vars, strata = c("trt"), data = pbc)
+
+## Just typing the object name will invoke the print.TableOne method
+tableOne
+
+## Specifying nonnormal variables will show the variables appropriately,
+## and show nonparametric test p-values. Specify variables in the exact
+## argument to obtain the exact test p-values. cramVars can be used to
+## show both levels for a 2-level categorical variables.
+print(tableOne, nonnormal = c("bili","chol","copper","alk.phos","trig"),
+      exact = c("status","stage"), cramVars = "hepato", smd = TRUE)
+
+## Use the summary.TableOne method for detailed summary
+summary(tableOne)
+
+## See the categorical part only using $ operator
+tableOne$CatTable
+summary(tableOne$CatTable)
+
+## See the continuous part only using $ operator
+tableOne$ContTable
+summary(tableOne$ContTable)
+
+## If your work flow includes copying to Excel and Word when writing manuscripts,
+## you may benefit from the quote argument. This will quote everything so that
+## Excel does not mess up the cells.
+print(tableOne, nonnormal = c("bili","chol","copper","alk.phos","trig"),
+      exact = c("status","stage"), quote = TRUE)
+
+## If you want to center-align values in Word, use noSpaces option.
+print(tableOne, nonnormal = c("bili","chol","copper","alk.phos","trig"),
+      exact = c("status","stage"), quote = TRUE, noSpaces = TRUE)
+
+## If SMDs are needed as numericals, use ExtractSmd()
+ExtractSmd(tableOne)
+
+</code></pre>
+
+
+</div>

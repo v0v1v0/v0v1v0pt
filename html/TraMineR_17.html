@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dissmergegroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merging groups by minimizing loss of partition quality.</h2>
+
+<h3>Description</h3>
+
+<p>Merging groups by minimizing loss of partition quality.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dissmergegroups(
+  diss,
+  group,
+  weights = NULL,
+  measure = "ASW",
+  crit = 0.2,
+  ref = "max",
+  min.group = 4,
+  small = 0.05,
+  silent = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>diss</code></td>
+<td>
+<p>A dissimilarity matrix or a distance object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>Group membership. Typically, the outcome of a clustering function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>Vector of non-negative case weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>measure</code></td>
+<td>
+<p>Character. Name of quality index. One of those returned by <code>wcClusterQuality</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crit</code></td>
+<td>
+<p>Real in the range [0,1]. Maximal allowed proportion of quality loss.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>Character. Reference for proportion <code>crit</code>. One of <code>"initial"</code>, <code>"max"</code> (default), and <code>"previous"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.group</code></td>
+<td>
+<p>Integer. Minimal number of end groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>small</code></td>
+<td>
+<p>Real. Percentage of sample size under which groups are considered as small.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Logical. Should merge steps be displayed during computation?</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The procedure is greedy. The function iteratively searches for the pair of groups whose merge minimizes quality loss. As long as the smallest group is smaller than <code>small</code>, it searches among the pairs formed by that group with one of the other groups. Once all groups have sizes larger than <code>small</code>, the search is done among all possible pairs of groups. There are two stopping criteria: the minimum number of groups (<code>min.group</code>) and maximum allowed quality deterioration (<code>crit</code>). The percentage specified with <code>crit</code> applies either to the quality of the initial partition (<code>ref="initial"</code>), the quality after the previous iteration (<code>ref="previous"</code>), or the maximal quality achieved so far (<code>ref="max"</code>), the latter being the default. The process stops when any of the criteria is reached.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Vector of merged group memberships.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard
+</p>
+
+
+<h3>References</h3>
+
+<p>Ritschard, G., T.F. Liao, and E. Struffolino (2023). Strategies for
+multidomain sequence analysis in social research.
+<em>Sociological Methodology</em>, 53(2), 288-322. <a href="https://doi.org/10.1177/00811750231163833">doi:10.1177/00811750231163833</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>wcClusterQuality</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(biofam)
+
+## Building one channel per type of event (children, married, left home)
+cases &lt;- 1:40
+bf &lt;- as.matrix(biofam[cases, 10:25])
+children &lt;-  bf==4 | bf==5 | bf==6
+married &lt;- bf == 2 | bf== 3 | bf==6
+left &lt;- bf==1 | bf==3 | bf==5 | bf==6
+
+## Creating sequence objects
+child.seq &lt;- seqdef(children, weights = biofam[cases,'wp00tbgs'])
+marr.seq &lt;- seqdef(married, weights = biofam[cases,'wp00tbgs'])
+left.seq &lt;- seqdef(left, weights = biofam[cases,'wp00tbgs'])
+
+## distances by domain
+dchild &lt;- seqdist(child.seq, method="OM", sm="INDELSLOG")
+dmarr &lt;- seqdist(marr.seq, method="OM", sm="INDELSLOG")
+dleft &lt;- seqdist(left.seq, method="OM", sm="INDELSLOG")
+dnames &lt;- c("child","marr","left")
+
+## clustering each domain into 2 groups
+child.cl2 &lt;- cutree(hclust(as.dist(dchild)),k=2)
+marr.cl2 &lt;- cutree(hclust(as.dist(dmarr)),k=2)
+left.cl2 &lt;- cutree(hclust(as.dist(dleft)),k=2)
+
+## Multidomain sequences
+MD.seq &lt;- seqMD(list(child.seq,marr.seq,left.seq))
+d.expand &lt;- seqdist(MD.seq, method="LCS")
+clust.comb &lt;- interaction(child.cl2,marr.cl2,left.cl2)
+merged.grp &lt;- dissmergegroups(d.expand, clust.comb,
+                              weights=biofam[cases,'wp00tbgs'])
+
+## weighted size of merged groups
+xtabs(biofam[cases,'wp00tbgs'] ~ merged.grp)
+</code></pre>
+
+
+</div>

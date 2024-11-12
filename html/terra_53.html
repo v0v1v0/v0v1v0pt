@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>approximate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate values for cell values that are <code>NA</code> by interpolating between layers</h2>
+
+<h3>Description</h3>
+
+<p>approximate uses the <code>stats</code> function <code>approx</code> to estimate values for cells that are <code>NA</code> by interpolation across layers. Layers are considered equidistant, unless argument <code>z</code> is used, or <code>time(x)</code> returns values that are not <code>NA</code>, in which case these values are used to determine distance between layers.
+</p>
+<p>For estimation based on neighboring cells see <code>focal</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+approximate(x, method="linear", yleft, yright,
+            rule=1, f=0, ties=mean, z=NULL, NArule=1,filename="",  ...) 
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>specifies the interpolation method to be used. Choices are "linear" or "constant" (step function; see the example in <code>approx</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>yleft</code></td>
+<td>
+<p>the value to be returned before a non-<code>NA</code> value is encountered. The default is defined by the value of rule given below</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>yright</code></td>
+<td>
+<p>the value to be returned after the last non-<code>NA</code> value is encountered. The default is defined by the value of rule given below</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rule</code></td>
+<td>
+<p>an integer (of length 1 or 2) describing how interpolation is to take place at for the first and last cells (before or after any non-<code>NA</code> values are encountered). If rule is 1 then NAs are returned for such points and if it is 2, the value at the closest data extreme is used. Use, e.g., <code>rule = 2:1</code>, if the left and right side extrapolation should differ</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p>for method = "constant" a number between 0 and 1 inclusive, indicating a compromise between left- and right-continuous step functions. If y0 and y1 are the values to the left and right of the point then the value is <code>y0*(1-f)+y1*f</code> so that <code>f = 0)</code> is right-continuous and <code>f = 1</code> is left-continuous</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ties</code></td>
+<td>
+<p>Handling of tied 'z' values. Either a function with a single vector argument returning a single number result or the string "ordered"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>numeric vector to indicate the distance between layers (e.g., depth). The default is <code>time(x)</code> if these are not <code>NA</code> or else <code>1:nlys(x)</code>  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NArule</code></td>
+<td>
+<p>single integer used to determine what to do when only a single layer with a non-<code>NA</code> value is encountered (and linear interpolation is not possible). The default value of 1 indicates that all layers will get this value for that cell; all other values do not change the cell values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code> focal</code>, <code>fillTime</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(ncols=5, nrows=5)
+r1 &lt;- setValues(r, runif(ncell(r)))
+r2 &lt;- setValues(r, runif(ncell(r)))
+r3 &lt;- setValues(r, runif(ncell(r)))
+r4 &lt;- setValues(r, runif(ncell(r)))
+r5 &lt;- setValues(r, NA)
+r6 &lt;- setValues(r, runif(ncell(r)))
+r1[6:10] &lt;- NA
+r2[5:15] &lt;- NA
+r3[8:25] &lt;- NA
+s &lt;- c(r1,r2,r3,r4,r5,r6)
+s[1:5] &lt;- NA
+x1 &lt;- approximate(s)
+x2 &lt;- approximate(s, rule=2)
+x3 &lt;- approximate(s, rule=2, z=c(1,2,3,5,14,15))
+
+</code></pre>
+
+
+</div>

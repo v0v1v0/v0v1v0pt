@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>empirical_bayes</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate proportions of liars in multiple samples using empirical Bayes</h2>
+
+<h3>Description</h3>
+
+<p>This function creates a prior by fitting a Beta distribution to the <code>heads/N</code> vector,
+using <code>MASS::fitdistr()</code>. The prior is then updated using data from each
+individual sample to give the posterior distributions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">empirical_bayes(heads, ...)
+
+## Default S3 method:
+empirical_bayes(heads, N, P, ...)
+
+## S3 method for class 'formula'
+empirical_bayes(formula, data, P, subset, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>heads</code></td>
+<td>
+<p>A vector of numbers of the good outcome reported</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Ignored</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N</code></td>
+<td>
+<p>A vector of sample sizes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>Probability of <em>bad</em> outcome</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>A two-sided formula of the form <code>heads ~ group</code>. <code>heads</code> is
+a logical vector  specifying whether the "good" outcome was reported. <code>group</code>
+specifies the sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame or matrix. Each row represents one individual.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>A logical or numeric vector specifying the subset of data to use</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The formula interface allows calling the function directly on experimental data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with two components:
+</p>
+
+<ul>
+<li> <p><code>prior</code>, the calculated empirical prior (of class <code>densityFunction</code>).
+</p>
+</li>
+<li> <p><code>posterior</code>, a list of posterior distributions (objects of class <code>densityFunction</code>).
+If <code>heads</code> was named, the list will have the same names.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+heads &lt;- c(Baseline = 30, Treatment1 = 38, Treatment2 = 45)
+N &lt;- c(50, 52, 57)
+res &lt;- empirical_bayes(heads, N, P = 0.5)
+
+compare_dists(res$posteriors$Baseline, res$posteriors$Treatment1)
+plot(res$prior, ylim = c(0, 4), col = "grey", lty = 2)
+plot(res$posteriors$Baseline, add = TRUE, col = "blue")
+plot(res$posteriors$Treatment1, add = TRUE, col = "orange")
+plot(res$posteriors$Treatment2, add = TRUE, col = "red")
+
+
+# starting from raw data:
+raw_data &lt;- data.frame(
+        report = sample(c("heads", "tails"),
+          size = 300,
+          replace = TRUE,
+          prob = c(.8, .2)
+        ),
+        group = rep(LETTERS[1:10], each = 30)
+    )
+empirical_bayes(I(report == "heads") ~ group, data = raw_data, P = 0.5)
+</code></pre>
+
+
+</div>

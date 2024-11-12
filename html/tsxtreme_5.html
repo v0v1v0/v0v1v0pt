@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dep2fit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Dependence model fit (stepwise)
+</h2>
+
+<h3>Description</h3>
+
+<p>The conditional Heffernan–Tawn model is used to fit the dependence in time of a stationary series. A standard 2-stage procedure is used.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dep2fit(ts, u.mar = 0, u.dep,
+        lapl = FALSE, method.mar = c("mle","mom","pwm"),
+        nlag = 1, conditions = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts</code></td>
+<td>
+
+<p>numeric vector; time series to be fitted.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u.mar</code></td>
+<td>
+
+<p>marginal threshold; used when transforming the time series to Laplace scale.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u.dep</code></td>
+<td>
+
+<p>dependence threshold; level above which the dependence is modelled. <code>u.dep</code> can be lower than <code>u.mar</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lapl</code></td>
+<td>
+
+<p>logical; is <code>ts</code> on the Laplace scale already? The default (FALSE) assumes unknown marginal distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method.mar</code></td>
+<td>
+
+<p>a character string defining the method used to estimate the marginal GPD; either <code>"mle"</code> for maximum likelihood of <code>"mom"</code> for method of moments. Defaults to <code>"mle"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nlag</code></td>
+<td>
+
+<p>integer; number of lags to be considered when modelling the dependence in time.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conditions</code></td>
+<td>
+
+<p>logical; should conditions on <code class="reqn">\alpha</code> and <code class="reqn">\beta</code> be set? (see Details) Defaults to <code>TRUE</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Consider a stationary time series <code class="reqn">(X_t)</code> with Laplace marginal distribution; the fitting procedure consists of fitting
+</p>
+<p style="text-align: center;"><code class="reqn">X_t = \alpha_t\times x_0 + x_0^{\beta_t}\times Z_t,\quad t=1,\ldots,m,</code>
+</p>
+
+<p>with <code class="reqn">m</code> the number of lags considered. A likelihood is maximised assuming <code class="reqn">Z_t\sim N(\mu_t, \sigma^2_t)</code>, then an empirical distribution for the <code class="reqn">Z_t</code> is derived using the estimates of <code class="reqn">\alpha_t</code> and <code class="reqn">\beta_t</code> and the relation
+</p>
+<p style="text-align: center;"><code class="reqn">\hat Z_t = \frac{X_t - \hat\alpha_t\times x_0}{x_0^{\hat\beta_t}}.</code>
+</p>
+
+<p><code>conditions</code> implements additional conditions suggested by Keef, Papastathopoulos and Tawn (2013) on the ordering of conditional quantiles. These conditions help with getting a consistent fit by shrinking the domain in which <code class="reqn">(\alpha,\beta)</code> live.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>alpha </code></td>
+<td>
+<p>parameter controlling the conditional extremal expectation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta </code></td>
+<td>
+<p>parameter controlling the conditional extremal expectation and variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res </code></td>
+<td>
+<p>empirical residual of the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars.se </code></td>
+<td>
+<p>vector of length 2 giving the estimated standard errors for <code>alpha</code> and <code>beta</code> given by the hessian matrix of the likelihood function used in the first step of the inference procedure.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>depfit</code>, <code>theta2fit</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## generate data from an AR(1)
+## with Gaussian marginal distribution
+n   &lt;- 10000
+dep &lt;- 0.5
+ar    &lt;- numeric(n)
+ar[1] &lt;- rnorm(1)
+for(i in 2:n)
+  ar[i] &lt;- rnorm(1, mean=dep*ar[i-1], sd=1-dep^2)
+plot(ar, type="l")
+plot(density(ar))
+grid &lt;- seq(-3,3,0.01)
+lines(grid, dnorm(grid), col="blue")
+
+## rescale margin
+ar &lt;- qlapl(pnorm(ar))
+
+## fit model without constraints...
+fit1 &lt;- dep2fit(ts=ar, u.mar = 0.95, u.dep=0.98, conditions=FALSE)
+fit1$a; fit1$b
+
+## ...and compare with a fit with constraints
+fit2 &lt;- dep2fit(ts=ar, u.mar = 0.95, u.dep=0.98, conditions=TRUE)
+fit2$a; fit2$b# should be similar, as true parameters lie well within the constraints
+</code></pre>
+
+
+</div>

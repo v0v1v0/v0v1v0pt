@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>oneplcdm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>One-parameter log-linear cognitive diagnosis model.</h2>
+
+<h3>Description</h3>
+
+<p>Function to estimate the 1-PLCDM (Madison et al., 2023; Maas et al., 2023).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">oneplcdm(data, q.matrix, progress = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a required <code class="reqn">N \times I</code> matrix. Binary item responses are in the columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>q.matrix</code></td>
+<td>
+<p>a required <code class="reqn">I \times A</code> matrix indicating which items measure which attributes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+<p>An optional logical indicating whether the function should print the progress of estimation.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Estimates the single-attribute and multi-attribute 1-PLCDM described in Madison et al. (2023). Example shows that attribute subscores are sufficient statistics for classifications.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>gdina</code> with entries as indicated in the CDM package.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Currently, this model cannot be embedded within the TDCM via the <code>rule</code> argument.
+</p>
+
+
+<h3>References</h3>
+
+<p>George, A. C., Robitzsch, A., Kiefer, T., Gross, J., &amp; Ünlü , A. (2016). The R package CDM for cognitive diagnosis models. <em>Journal of Statistical Software, 74</em>(2), 1-24.
+</p>
+<p>Henson, R., Templin, J., &amp; Willse, J. (2009). Defining a family of cognitive diagnosis models using log linear models with latent variables. <em>Psychometrika, 74</em>, 191-21.
+</p>
+<p>Madison, M.J., Chung, S., Kim, J., &amp; Bradshaw, L. (2023). Approaches to estimating longitudinal diagnostic classification models. <em>Behaviormetrika</em>.
+</p>
+<p>Madison, M.J., Wind, S., Maas, L., Yamaguchi, K. &amp; Haab, S. (2023). A one-parameter diagnostic classification model with familiar measurement properties. <em>Arxiv</em>.
+</p>
+<p>Maas, L., Madison, M. J., &amp; Brinkhuis, M. J. (2024). Properties and performance of the one-parameter log-linear cognitive diagnosis model. <em>Frontiers</em>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Example 1: A = 4
+data(data.tdcm05)
+dat5 &lt;- data.tdcm05$data
+qmat5 &lt;- data.tdcm05$q.matrix
+
+# calibrate LCDM
+m1 &lt;- CDM::gdina(dat5, qmat5, linkfct = "logit", method = "ML")
+
+# calibrate 1-PLCDM
+m2 &lt;- TDCM::oneplcdm(dat5, qmat5)
+summary(m2)
+#demonstrate 1-PLCDM sum score sufficiency for each attribute
+subscores &lt;- cbind(rowSums(dat5[, 1:5]), rowSums(dat5[, 6:10]),
+rowSums(dat5[, 11:15]), rowSums(dat5[, 16:20]))
+colnames(subscores) &lt;- c("Att1", "Att2", "Att3", "Att4")
+proficiency &lt;- cbind(m2$pattern[, 6] &gt; .50, m2$pattern[, 7] &gt; .50,
+m2$pattern[, 8] &gt; .50, m2$pattern[, 9] &gt; .5) * 1
+table(subscores[, 1], proficiency[, 1])
+table(subscores[, 2], proficiency[, 2])
+table(subscores[, 3], proficiency[, 3])
+table(subscores[, 4], proficiency[, 4])
+
+#plot sum score sufficiency for each attribute
+posterior1pl &lt;- m2$pattern[, 6:9]
+posteriorlcdm &lt;- m1$pattern[, 6:9]
+oldpar &lt;- par(mfrow = c(2, 2))
+for (i in 1:4) {
+ plot(subscores[, i], posteriorlcdm[, i], pch = 19,las = 1, cex.lab = 1.5,
+ xlab = "Sum Scores", ylab = "P(proficiency)",
+ cex.main = 1.5, col = "grey", xaxt = "n", yaxt = "n", cex = 1.2,
+ main = paste("Attribute ", i, sep = ""))
+ graphics::axis(side = 1, at = c(0, 1, 2, 3, 4, 5), )
+ graphics::axis(side = 2, at = c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0), las = 1)
+ graphics::points(subscores[, i], posterior1pl[, i], col = "black", pch = 18, cex = 1.5)
+ graphics::abline(a = .50, b = 0, col = "red")
+ graphics::legend("bottomright", c("1-PLCDM", "LCDM"), col = c("black", "grey"),
+ pch = c(18 ,19), box.lwd = 0, box.col = "white", bty = 'n')
+}
+par(oldpar)
+
+
+</code></pre>
+
+
+</div>

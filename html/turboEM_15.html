@@ -1,0 +1,201 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>turbo</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Methods for objects of class "turbo"</h2>
+
+<h3>Description</h3>
+
+<p>The <code>turbo</code> class represents results from parameter estimation in fixed-point mapping problems. The <code>turboem</code> function outputs objects of class <code>turbo</code>.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'turbo'
+print(x, ...)
+## S3 method for class 'turbo'
+pars(x, ...)
+## S3 method for class 'turbo'
+error(x, ...)
+## S3 method for class 'turbo'
+plot(x, which.methods = seq_along(x$method), 
+method.names = x$method[which.methods], xlim, ylim, ...)
+## S3 method for class 'turbo'
+grad(x, objfn=x$objfn, which.methods = seq_along(x$method), 
+  method.names = x$method[which.methods], ...)
+## S3 method for class 'turbo'
+hessian(x, objfn=x$objfn, which.methods = seq_along(x$method), 
+  method.names = x$method[which.methods], ...)
+## S3 method for class 'turbo'
+stderror(x, objfn=x$objfn, which.methods = seq_along(x$method), 
+  method.names = x$method[which.methods], ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An object of class <code>turbo</code>, typically the output of a call to <code>turboem</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which.methods</code></td>
+<td>
+<p>A vector identifying for which subset of algorithms results are desired.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method.names</code></td>
+<td>
+<p>A vector of unique identifiers for the algorithms for which results are being provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xlim</code></td>
+<td>
+<p>Optional range for the x-axis of the trace plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ylim</code></td>
+<td>
+<p>Optional range for the y-axis of the trace plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objfn</code></td>
+<td>
+<p>Objective function. Usually this is taken to be the appropriate component of a <code>turbo</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>print</code></td>
+<td>
+<p>Shows a brief summary of the results from fitting the acceleration schemes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>Prints the fixed-point values across acceleration schemes at termination of the algorithms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error</code></td>
+<td>
+<p>Prints any error messages from running the acceleration schemes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>Shows a trace plot of the objective function value over iterations. This method is only available if the call to <code>turboem</code> had the argument<code>control.run[["keep.objfval"]]=TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grad</code></td>
+<td>
+<p>Calculates the gradient of the objective function evaluated at the fixed-point across acceleration schemes. Uses numerical methods from the package <code>numDeriv</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hessian</code></td>
+<td>
+<p>Calculates the Hessian of the objective function evaluated at the fixed-point across acceleration schemes. Uses numerical methods from the package <code>numDeriv</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stderror</code></td>
+<td>
+<p>Provides estimates of the standard error of the fixed-point across acceleration schemes.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>turboem</code> 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###########################################################################
+# Also see the vignette by typing:
+#  vignette("turboEM")
+#
+# EM algorithm for Poisson mixture estimation 
+
+fixptfn &lt;- function(p,y) {
+# The fixed point mapping giving a single E and M step of the EM algorithm
+# 
+pnew &lt;- rep(NA,3)
+i &lt;- 0:(length(y)-1)
+zi &lt;- p[1]*exp(-p[2])*p[2]^i / (p[1]*exp(-p[2])*p[2]^i + (1 - p[1])*exp(-p[3])*p[3]^i)
+pnew[1] &lt;- sum(y*zi)/sum(y)
+pnew[2] &lt;- sum(y*i*zi)/sum(y*zi)
+pnew[3] &lt;- sum(y*i*(1-zi))/sum(y*(1-zi))
+p &lt;- pnew
+return(pnew)
+}
+
+objfn &lt;- function(p,y) {
+# Objective function whose local minimum is a fixed point 
+# negative log-likelihood of binary poisson mixture
+i &lt;- 0:(length(y)-1)
+loglik &lt;- y*log(p[1]*exp(-p[2])*p[2]^i/exp(lgamma(i+1)) + 
+		(1 - p[1])*exp(-p[3])*p[3]^i/exp(lgamma(i+1)))
+return ( -sum(loglik) )
+}
+
+# Real data from Hasselblad (JASA 1969)
+poissmix.dat &lt;- data.frame(death=0:9, freq=c(162,267,271,185,111,61,27,8,3,1))
+y &lt;- poissmix.dat$freq
+
+# Use a preset seed so the example is reproducable. 
+require("setRNG")
+old.seed &lt;- setRNG(list(kind="Mersenne-Twister", normal.kind="Inversion",
+    seed=1))
+
+p0 &lt;- c(runif(1),runif(2,0,4))  # random starting value
+
+# Basic EM algorithm, SQUAREM, and parabolic EM, with default settings
+res1 &lt;- turboem(par=p0, y=y, fixptfn=fixptfn, objfn=objfn, method=c("EM", "squarem", "pem"))
+
+# Apply methods for class "turbo"
+res1
+pars(res1)
+grad(res1)
+hessian(res1)
+stderror(res1)
+error(res1)
+
+# We get an error for Dynamic ECME (decme) if we do not specify the boundary function
+res2 &lt;- turboem(par=p0, y=y, fixptfn=fixptfn, objfn=objfn, 
+  method=c("EM", "squarem", "pem", "decme"))
+res2
+error(res2)
+
+# we can't plot the results, because we did not store the objective function value at each iteration
+# Changing the options to store the objective function values, we can:
+res1keep &lt;- turboem(par=p0, y=y, fixptfn=fixptfn, objfn=objfn, method=c("EM", "squarem", "pem"), 
+  control.run=list(keep.objfval=TRUE))
+plot(res1keep, xlim=c(0.001, 0.02))
+</code></pre>
+
+
+</div>

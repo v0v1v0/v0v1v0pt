@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predefinedClassifiers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+TunePareto wrappers for certain classifiers
+</h2>
+
+<h3>Description</h3>
+
+<p>Creates TunePareto classifier objects for the k-Nearest Neighbour classifier, support vector machines, and trees.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tunePareto.knn()
+               
+tunePareto.svm()
+               
+tunePareto.tree()
+                
+tunePareto.randomForest()
+
+tunePareto.NaiveBayes()
+</code></pre>
+
+
+<h3>Details</h3>
+
+<p><code>tunePareto.knn</code> encapsulates a k-Nearest Neighbour classifier as defined in <code>link[class]{knn}</code> in package <span class="pkg">class</span>. The classifier allows for supplying and tuning the following parameters of <code>link[class]{knn}</code>: 
+</p>
+<p><code>k, l, use.all</code>
+</p>
+<p><code>tunePareto.svm</code> encapsulates the support vector machine <code>svm</code> classifier in package <span class="pkg">e1071</span>. The classifier allows for supplying and tuning the following parameters: 
+</p>
+<p><code>kernel, degree, gamma, 
+      coef0, cost, nu, 
+      class.weights, cachesize, 
+      tolerance, epsilon, 
+      scale, shrinking, fitted,
+      subset, na.action</code>
+</p>
+<p><code>tunePareto.tree</code> encapsulates the CART classifier <code>tree</code> in package <span class="pkg">tree</span>. The classifier allows for supplying and tuning the following parameters: 
+</p>
+<p><code>weights, subset, 
+      na.action, method,
+      split, mincut, minsize, mindev</code>
+</p>
+<p>as well as the <code>type</code> parameter of <code>predict.tree</code>.
+</p>
+<p><code>tunePareto.randomForest</code> encapsulates the <code>randomForest</code> classifier in package <span class="pkg">randomForest</span>. The classifier allows for supplying and tuning the following parameters:
+</p>
+<p><code>subset, na.action,
+      ntree,  mtry,
+      replace, classwt, 
+      cutoff, strata,
+      sampsize, nodesize,
+      maxnodes</code>
+</p>
+<p><code>tunePareto.NaiveBayes</code> encapsulates the <code>NaiveBayes</code> classifier in package <span class="pkg">klaR</span>. The classifier allows for supplying and tuning the following parameters:
+</p>
+<p><code>prior, usekernel, fL, subset,
+      na.action, bw, adjust, kernel, weights,
+      window, width, give.Rkern, n,
+      from, to, cut, na.rm</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns objects of class <code>TuneParetoClassifier</code> as described in <code>tuneParetoClassifier</code>. These can be passed to functions like <code>tunePareto</code> or <code>trainTuneParetoClassifier</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tuneParetoClassifier</code>, <code>tunePareto</code>, <code>trainTuneParetoClassifier</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# tune a k-NN classifier with different 'k' and 'l' 
+# on the 'iris' data set
+print(tunePareto(classifier = tunePareto.knn(),
+                 data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 k = c(5,7,9),
+                 l = c(1,2,3),
+                 objectiveFunctions=list(cvError(10, 10),
+                                         cvSpecificity(10, 10, caseClass="setosa"))))
+                 
+# tune an SVM with different costs on 
+# the 'iris' data set
+# using Halton sequences for sampling
+print(tunePareto(classifier = tunePareto.svm(),
+                 data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 cost = as.interval(0.001,10),
+                 sampleType = "halton",
+                 numCombinations=20,                 
+                 objectiveFunctions=list(cvWeightedError(10, 10),
+                                         cvSensitivity(10, 10, caseClass="setosa"))))
+
+# tune a CART classifier with different 
+# splitting criteria on the 'iris' data set
+print(tunePareto(classifier = tunePareto.tree(),
+                 data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 split = c("deviance","gini"),
+                 objectiveFunctions=list(cvError(10, 10),
+                                         cvErrorVariance(10, 10))))
+
+# tune a Random Forest with different numbers of trees 
+# on the 'iris' data set
+print(tunePareto(classifier = tunePareto.randomForest(),
+                 data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 ntree = seq(50,300,50),
+                 objectiveFunctions=list(cvError(10, 10),
+                                         cvSpecificity(10, 10, caseClass="setosa"))))
+
+# tune a Naive Bayes classifier with different kernels
+# on the 'iris' data set
+print(tunePareto(classifier = tunePareto.NaiveBayes(),
+                 data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 kernel = c("gaussian", "epanechnikov", "rectangular",
+                            "triangular", "biweight",
+                            "cosine", "optcosine"),
+                 objectiveFunctions=list(cvError(10, 10),
+                                         cvSpecificity(10, 10, caseClass="setosa"))))
+                             
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>npmvtol.region</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nonparametric Multivariate Hyperrectangular Tolerance Regions</h2>
+
+<h3>Description</h3>
+
+<p>Provides depth-based multivariate central or semi-space nonparametric tolerance regions.  These can be calculated for any continuous multivariate data set.  Either (P, 1-alpha) tolerance regions or beta-expectation tolerance regions can be specified.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">npmvtol.region(x, alpha = NULL, P = NULL, Beta = NULL, depth.fn, 
+               adjust = c("no", "floor", "ceiling"), 
+               type = c("central", "semispace"), 
+               semi.order = list(lower = NULL, center = NULL, upper = NULL), 
+               L = -Inf, U = Inf, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An <code>n</code>x<code>p</code> matrix of data assumed to be drawn from a <code>p</code>-dimensional multivariate distribution.  <code>n</code> pertains to the sample size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The level chosen such that <code>1-alpha</code> is the confidence level. Note that if a (P, 1-alpha) tolerance region is required, then both <code>alpha</code> and <code>P</code> must be specified, but <code>Beta</code> must be set to <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>The proportion of the population to be covered by this tolerance interval.  Note that if a (P, 1-alpha) tolerance region is required, then both <code>alpha</code> and <code>P</code> must be specified, but <code>Beta</code> must be set to <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Beta</code></td>
+<td>
+<p>The confidence level for a beta-expectation tolerance region. Note that if a beta-expectation tolerance region is required, then <code>Beta</code> must be specified, but both <code>alpha</code> and <code>P</code> must be set to <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>depth.fn</code></td>
+<td>
+<p>The data depth function used to perform the ordering of the multivariate data.  Thus function must be coded in such a way that the first argument is multivariate data for which to calculate the depth values and the second argument is the original multivariate sample, <code>x</code>.  For the purpose of this tolerance region calculation, these two arguments should both be the original multivariate sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adjust</code></td>
+<td>
+<p>Whether an adjustment should be made during an intermediate calculation for determining the number of points that need to be included in the multivariate region.  If <code>adjust = "no"</code>, the default, then no adjustment is made during the intermediate calculation.  If <code>adjust = "floor"</code>, then the intermediate calculation is rounded down to the next nearest integer.  If <code>adjust = "ceiling"</code>, then the intermediate calculation is rounded up to the next nearest integer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>The type of multivariate hyperrectangular region to calculate.  If <code>type = "central"</code>, then two-sided intervals are reported for each dimension of the data <code>x</code>.  If <code>type = "semispace"</code>, then a combination of one-sided intervals and two-sided intervals are reported for the dimensions of <code>x</code>.  Which interval is calculated for each dimension in this latter setting is dictated by the <code>semi.order</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>semi.order</code></td>
+<td>
+<p>If <code>type = "semispace"</code>, then this argument must be specified.  This argument is a list of length 3, such that each element gives the indices of the dimensions of <code>x</code> for which the type of interval should be calculated.  Indices specified for the element of <code>lower</code> will return one-sided lower limits for those dimensions, indices specified for the element of <code>center</code> will return two-sided intervals for those dimensions, and indices specified for the element of <code>upper</code> will return one-sided upper limits for those dimensions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>L</code></td>
+<td>
+<p>If <code>type = "semispace"</code>, these are the lower limits for any dimensions for which one requests one-sided upper limits.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>U</code></td>
+<td>
+<p>If <code>type = "semispace"</code>, these are the upper limits for any dimensions for which one requests one-sided lower limits.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to the <code>depth.fn</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>npmvtol.region</code> returns a <code>p</code>x<code>2</code> matrix where the columns give the lower and upper limits, respectively, of the multivariate hyperrectangular tolerance region.
+</p>
+
+
+<h3>References</h3>
+
+<p>Young, D. S. and Mathew, T. (2020), Nonparametric Hyperrectangular Tolerance
+and Prediction Regions for Setting Multivariate Reference Regions in Laboratory
+Medicine, <em>Statistical Methods in Medical Research</em>, <b>29</b>, 3569–3585.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>distfree.est</code>, <code>mvtol.region</code>, <code>npregtol.int</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> 
+## 90%/95% semi-space tolerance region for a sample
+## of size 20 generated from a multivariate normal
+## distribution. The mdepth function below is not 
+## a true depth function, but used only for
+## illustrative purposes.
+
+mdepth &lt;- function(pts, x){
+          mahalanobis(pts, center = rep(0, 3),
+                      cov = diag(1, 3))
+          }
+
+set.seed(100)
+x &lt;- cbind(rnorm(100), rnorm(100), rnorm(100))
+out &lt;- npmvtol.region(x = x, alpha = 0.10, P = 0.95, depth.fn = mdepth,
+                      type = "semispace", semi.order = list(lower = 2, 
+                      center = 3, upper = 1))
+out
+</code></pre>
+
+
+</div>

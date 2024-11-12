@@ -1,0 +1,187 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fourier_vec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fourier Series</h2>
+
+<h3>Description</h3>
+
+<p><code>fourier_vec()</code> calculates a Fourier Series from a date or date-time index.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fourier_vec(x, period, K = 1, type = c("sin", "cos"), scale_factor = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A date, POSIXct, yearmon, yearqtr, or numeric sequence (scaled to difference 1 for <code>period</code> alignment)
+to be converted to a fourier series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>The number of observations that complete one cycle.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The fourier term order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Either "sin" or "cos" for the appropriate type of fourier term.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_factor</code></td>
+<td>
+<p>Scale factor is a calculated value that scales date sequences to numeric sequences.
+A user can provide a different value of scale factor to override the date scaling.
+Default: NULL (auto-scale).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Benefits:</strong>
+</p>
+<p>This function is <code>NA</code> padded by default so it works well with <code>dplyr::mutate()</code> operations.
+</p>
+<p><strong>Fourier Series Calculation</strong>
+</p>
+<p>The internal calculation is relatively straightforward:
+<code style="white-space: pre;">⁠fourier(x) = sin(2 * pi * term * x) or cos(2 * pi * term * x)⁠</code>,
+where <code>term = K / period</code>.
+</p>
+<p><strong>Period Alignment, period</strong>
+</p>
+<p>The <code>period</code> alignment with the sequence is an essential part of fourier series calculation.
+</p>
+
+<ul>
+<li> <p><strong>Date, Date-Time, and Zoo (yearqtr and yearmon) Sequences</strong> - Are scaled to unit difference of 1. This happens internally,
+so there's nothing you need to do or to worry about. Future time series will be scaled appropriately.
+</p>
+</li>
+<li> <p><strong>Numeric Sequences</strong> - Are not scaled, which means you should transform them to a unit difference of 1 so that
+your x is a sequence that increases by 1. Otherwise your period and fourier order will be incorrectly calculated.
+The solution is to just take your sequence and divide by the median difference between values.
+</p>
+</li>
+</ul>
+<p><strong>Fourier Order, K</strong>
+</p>
+<p>The fourier order is a parameter that increases the frequency. <code>K = 2</code> doubles the frequency.
+It's common in time series analysis to add multiple fourier orders (e.g. 1 through 5) to account for
+seasonalities that occur faster than the primary seasonality.
+</p>
+<p><strong>Type (Sin/Cos)</strong>
+</p>
+<p>The type of the fourier series can be either <code>sin</code> or <code>cos</code>. It's common in time series analysis
+to add both sin and cos series.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric vector
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Fourier Modeling Functions:
+</p>
+
+<ul>
+<li> <p><code>step_fourier()</code> - Recipe for <code>tidymodels</code> workflow
+</p>
+</li>
+<li> <p><code>tk_augment_fourier()</code> - Adds many fourier series to a <code>data.frame</code> (<code>tibble</code>)
+</p>
+</li>
+</ul>
+<p>Additional Vector Functions:
+</p>
+
+<ul>
+<li>
+<p> Fourier Series: <code>fourier_vec()</code>
+</p>
+</li>
+<li>
+<p> Box Cox Transformation: <code>box_cox_vec()</code>
+</p>
+</li>
+<li>
+<p> Lag Transformation: <code>lag_vec()</code>
+</p>
+</li>
+<li>
+<p> Differencing Transformation: <code>diff_vec()</code>
+</p>
+</li>
+<li>
+<p> Rolling Window Transformation: <code>slidify_vec()</code>
+</p>
+</li>
+<li>
+<p> Loess Smoothing Transformation: <code>smooth_vec()</code>
+</p>
+</li>
+<li>
+<p> Missing Value Imputation for Time Series: <code>ts_impute_vec()</code>, <code>ts_clean_vec()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# Set max.print to 50
+options_old &lt;- options()$max.print
+options(max.print = 50)
+
+date_sequence &lt;- tk_make_timeseries("2016-01-01", "2016-01-31", by = "hour")
+
+# --- VECTOR ---
+
+fourier_vec(date_sequence, period = 7 * 24, K = 1, type = "sin")
+
+# --- MUTATE ---
+
+tibble(date = date_sequence) %&gt;%
+    # Add cosine series that oscilates at a 7-day period
+    mutate(
+        C1_7 = fourier_vec(date, period = 7*24, K = 1, type = "cos"),
+        C2_7 = fourier_vec(date, period = 7*24, K = 2, type = "cos")
+    ) %&gt;%
+    # Visualize
+    tidyr::pivot_longer(cols = contains("_"), names_to = "name", values_to = "value") %&gt;%
+    plot_time_series(
+        date, value, .color_var = name,
+        .smooth = FALSE,
+        .interactive = FALSE,
+        .title = "7-Day Fourier Terms"
+    )
+
+options(max.print = options_old)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,346 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>MakeADFun</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Construct objective functions with derivatives based on a compiled C++ template.</h2>
+
+<h3>Description</h3>
+
+<p>Construct objective functions with derivatives based on the users C++ template.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">MakeADFun(
+  data,
+  parameters,
+  map = list(),
+  type = c("ADFun", "Fun", "ADGrad"[!intern &amp;&amp; (!is.null(random) || !is.null(profile))]),
+  random = NULL,
+  profile = NULL,
+  random.start = expression(last.par.best[random]),
+  hessian = FALSE,
+  method = "BFGS",
+  inner.method = "newton",
+  inner.control = list(maxit = 1000),
+  MCcontrol = list(doMC = FALSE, seed = 123, n = 100),
+  ADreport = FALSE,
+  atomic = TRUE,
+  LaplaceNonZeroGradient = FALSE,
+  DLL = getUserDLL(),
+  checkParameterOrder = TRUE,
+  regexp = FALSE,
+  silent = FALSE,
+  intern = FALSE,
+  integrate = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>List of data objects (vectors, matrices, arrays, factors, sparse matrices) required by the user template (order does not matter and un-used components are allowed).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>List of all parameter objects required by the user template (both random and fixed effects).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>map</code></td>
+<td>
+<p>List defining how to optionally collect and fix parameters - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character vector defining which operation stacks are generated from the users template - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>random</code></td>
+<td>
+<p>Character vector defining the random effect parameters. See also <code>regexp</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>profile</code></td>
+<td>
+<p>Parameters to profile out of the likelihood (this subset will be appended to <code>random</code> with Laplace approximation disabled).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>random.start</code></td>
+<td>
+<p>Expression defining the strategy for choosing random effect initial values as function of previous function evaluations - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hessian</code></td>
+<td>
+<p>Calculate Hessian at optimum?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Outer optimization method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inner.method</code></td>
+<td>
+<p>Inner optimization method (see function "newton").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inner.control</code></td>
+<td>
+<p>List controlling inner optimization.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MCcontrol</code></td>
+<td>
+<p>List controlling importance sampler (turned off by default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ADreport</code></td>
+<td>
+<p>Calculate derivatives of macro ADREPORT(vector) instead of objective_function return value?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>atomic</code></td>
+<td>
+<p>Allow tape to contain atomic functions?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>LaplaceNonZeroGradient</code></td>
+<td>
+<p>Allow Taylor expansion around non-stationary point?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>DLL</code></td>
+<td>
+<p>Name of shared object file compiled by user (without the conventional extension, ‘<span class="file">.so</span>’, ‘<span class="file">.dll</span>’, ...).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>checkParameterOrder</code></td>
+<td>
+<p>Optional check for correct parameter order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regexp</code></td>
+<td>
+<p>Match random effects by regular expressions?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Disable all tracing information?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>intern</code></td>
+<td>
+<p>Do Laplace approximation on C++ side ? See details (Experimental - may change without notice)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>integrate</code></td>
+<td>
+<p>Specify alternative integration method(s) for random effects (see details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Currently unused.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A call to <code>MakeADFun</code> will return an object that, based on the users DLL code (specified through <code>DLL</code>), contains functions to calculate the objective function
+and its gradient. The object contains the following components:
+</p>
+
+<ul>
+<li> <p><code>par</code> A default parameter.
+</p>
+</li>
+<li> <p><code>fn</code> The likelihood function.
+</p>
+</li>
+<li> <p><code>gr</code> The gradient function.
+</p>
+</li>
+<li> <p><code>report</code> A function to report all variables reported with the REPORT() macro in the user template.
+</p>
+</li>
+<li> <p><code>env</code> Environment with access to all parts of the structure.
+</p>
+</li>
+</ul>
+<p>and is thus ready for a call to an R optimizer, such as <code>nlminb</code> or <code>optim</code>.
+Data (<code>data</code>) and parameters (<code>parameters</code>) are directly read by the user template via the macros beginning with DATA_
+and PARAMETER_. The order of the PARAMETER_ macros defines the order of parameters in the final objective function.
+There are no restrictions on the order of random parameters, fixed parameters or data in the template.
+</p>
+
+
+<h3>Value</h3>
+
+<p>List with components (fn, gr, etc) suitable for calling an R optimizer, such as <code>nlminb</code> or <code>optim</code>.
+</p>
+
+
+<h3>Parameter mapping</h3>
+
+<p>Optionally, a simple mechanism for collecting and fixing parameters from R is available through the <code>map</code> argument. A map is a named list
+of factors with the following properties:
+</p>
+
+<ul>
+<li>
+<p> names(map) is a subset of names(parameters).
+</p>
+</li>
+<li>
+<p> For a parameter "p" length(map$p) equals length(parameters$p).
+</p>
+</li>
+<li>
+<p> Parameter entries with NAs in the factor are fixed.
+</p>
+</li>
+<li>
+<p> Parameter entries with equal factor level are collected to a common value.
+</p>
+</li>
+</ul>
+<p>More advanced parameter mapping, such as collecting parameters between different vectors etc., must be implemented from the template.
+</p>
+
+
+<h3>Specifying random effects</h3>
+
+<p>Random effects are specified via the argument <code>random</code>: A component of the parameter list is marked as random if its name is matched
+by any of the characters of the vector <code>random</code> (Regular expression match is performed if <code>regexp=TRUE</code>).
+If some parameters are specified as random effects, these will
+be integrated out of the objective function via the Laplace approximation. In this situation the functions <code>fn</code> and <code>gr</code>
+automatically perform an optimization of random effects for each function evaluation. This is referred to as
+the 'inner optimization'. Strategies for choosing initial values of the inner optimization can be controlled
+via the argument <code>random.start</code>. The default is <code>expression(last.par.best[random])</code>
+where <code>last.par.best</code> is an internal full parameter vector corresponding to the currently best
+likelihood. An alternative choice could be <code>expression(last.par[random])</code> i.e. the random effect optimum of
+the most recent - not necessarily best - likelihood evaluation. Further control of the inner optimization can
+be obtained by the argument <code>inner.control</code> which is a list of control parameters for the inner optimizer
+<code>newton</code>. Depending of the inner optimization problem type the following settings are recommended:
+</p>
+
+<ol>
+<li>
+<p> Quasi-convex: <code>smartsearch=TRUE</code> (the default).
+</p>
+</li>
+<li>
+<p> Strictly-convex: <code>smartsearch=FALSE</code> and <code>maxit=20</code>.
+</p>
+</li>
+<li>
+<p> Quadratic: <code>smartsearch=FALSE</code> and <code>maxit=1</code>.
+</p>
+</li>
+</ol>
+<h3>The model environment <code>env</code>
+</h3>
+
+<p>Technically, the user template is processed several times by inserting
+different types as template parameter, selected by argument <code>type</code>:
+</p>
+
+<ul>
+<li> <p><code>"ADFun"</code> Run through the template with AD-types and produce a stack of operations representing the objective function.
+</p>
+</li>
+<li> <p><code>"Fun"</code> Run through the template with ordinary double-types.
+</p>
+</li>
+<li> <p><code>"ADGrad"</code> Run through the template with nested AD-types and produce a stack of operations representing the objective function gradient.
+</p>
+</li>
+</ul>
+<p>Each of these are represented by external pointers to C++ structures available in the environment <code>env</code>.
+</p>
+<p>Further objects in the environment <code>env</code>:
+</p>
+
+<ul>
+<li> <p><code>validpar</code> Function defining the valid parameter region (by default no restrictions). If an invalid
+parameter is inserted <code>fn</code> immediately return NaN.
+</p>
+</li>
+<li> <p><code>parList</code> Function to get the full parameter vector of random and fixed effects in a convenient
+list format.
+</p>
+</li>
+<li> <p><code>random</code> An index vector of random effect positions in the full parameter vector.
+</p>
+</li>
+<li> <p><code>last.par</code> Full parameter of the latest likelihood evaluation.
+</p>
+</li>
+<li> <p><code>last.par.best</code> Full parameter of the best likelihood evaluation.
+</p>
+</li>
+<li> <p><code>tracepar</code> Trace every likelihood evaluation ?
+</p>
+</li>
+<li> <p><code>tracemgc</code> Trace maximum gradient component of every gradient evaluation ?
+</p>
+</li>
+<li> <p><code>silent</code> Pass 'silent=TRUE' to all try-calls ?
+</p>
+</li>
+</ul>
+<h3>The argument <code>intern</code>
+</h3>
+
+<p>By passing <code>intern=TRUE</code> the entire Laplace approximation (including sparse matrix calculations) is done within the AD machinery on the C++ side. This requires the model to be compiled using the 'TMBad framework' - see <code>compile</code>. For any serious use of this option one should consider compiling with <code>supernodal=TRUE</code> - again see <code>compile</code> - in order to get performance comparable to R's matrix calculations. The benefit of the 'intern' LA is that it may be faster in some cases and that it provides an autodiff hessian (<code>obj$he</code>) wrt. the fixed effects which would otherwise not work for random effect models. Another benefit is that it gives access to fast computations with certain hessian structures that do not meet the usual sparsity requirement. A detailed list of options are found in the online doxygen documentation in the 'newton' namespace under the 'newton_config' struct. All these options can be passed from R via the 'inner.control' argument. However, there are some drawbacks of running the LA on the C++ side. Notably, random effects are no longer visible in the model environment which may break assumptions on the layout of internal vectors ('par', 'last.par', etc). In addition, model debugging becomes harder when calculations are moved to C++.
+</p>
+
+
+<h3>Controlling tracing</h3>
+
+<p>A high level of tracing information will be output by default when evaluating the objective function and gradient.
+This is useful while developing a model, but may eventually become annoying. Disable all tracing by passing
+<code>silent=TRUE</code> to the <code>MakeADFun</code> call.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Do not rely upon the default arguments of any of the functions in the model object <code>obj$fn</code>, <code>obj$gr</code>, <code>obj$he</code>, <code>obj$report</code>. I.e. always use the explicit form <code>obj$fn(obj$par)</code> rather than <code>obj$fn()</code>.
+</p>
+
+
+</div>

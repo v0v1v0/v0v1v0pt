@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tax_agg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Aggregate species data to given taxonomic rank</h2>
+
+<h3>Description</h3>
+
+<p>Aggregate species data to given taxonomic rank
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tax_agg(x, rank, db = "ncbi", messages = FALSE, ...)
+
+## S3 method for class 'tax_agg'
+print(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Community data matrix. Taxa in columns, samples in rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rank</code></td>
+<td>
+<p>character; Taxonomic rank to aggregate by.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>db</code></td>
+<td>
+<p>character; taxonomic API to use, 'ncbi, 'itis' or both, see
+<code>tax_name()</code>. Note that each taxonomic data source has
+their own identifiers, so that if you provide the wrong <code>db</code> value
+for the identifier you could get a result, but it will likely be wrong (not
+what you were expecting). If using ncbi we recommend getting an API key;
+see taxize-authentication</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>messages</code></td>
+<td>
+<p>(logical) If FALSE (Default) suppress messages</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments passed to <code>get_tsn()</code> or <code>get_uid()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tax_agg</code> aggregates (sum) taxa to a specific taxonomic level.
+If a taxon is not found in the database (ITIS or NCBI) or the supplied taxon
+is on higher taxonomic level this taxon is not aggregated.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class <code>tax_agg</code> with the following items:
+</p>
+
+<ul>
+<li> <p><code>x</code> Community data matrix with aggregated data.
+</p>
+</li>
+<li> <p><code>by</code> A lookup-table showing which taxa were aggregated.
+</p>
+</li>
+<li> <p><code>n_pre</code> Number of taxa before aggregation.
+</p>
+</li>
+<li> <p><code>rank</code> Rank at which taxa have been aggregated.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>tax_name
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+if (requireNamespace("vegan", quietly = TRUE)) {
+  # use dune dataset
+  data(dune, package='vegan')
+  species &lt;- c("Achillea millefolium", "Agrostis stolonifera",
+    "Aira praecox", "Alopecurus geniculatus", "Anthoxanthum odoratum",
+    "Bellis perennis", "Bromus hordeaceus", "Chenopodium album",
+    "Cirsium arvense", "Comarum palustre", "Eleocharis palustris",
+    "Elymus repens", "Empetrum nigrum", "Hypochaeris radicata",
+    "Juncus articulatus", "Juncus bufonius", "Lolium perenne",
+    "Plantago lanceolata", "Poa pratensis", "Poa trivialis",
+    "Ranunculus flammula", "Rumex acetosa", "Sagina procumbens",
+    "Salix repens", "Scorzoneroides autumnalis", "Trifolium pratense",
+    "Trifolium repens", "Vicia lathyroides", "Brachythecium rutabulum",
+    "Calliergonella cuspidata")
+  colnames(dune) &lt;- species
+
+  # aggregate sample to families
+  (agg &lt;- tax_agg(dune, rank = 'family', db = 'ncbi'))
+
+  # extract aggregated community data matrix for further usage
+  agg$x
+  # check which taxa have been aggregated
+  agg$by
+}
+
+# A use case where there are different taxonomic levels in the same dataset
+spnames &lt;- c('Puma','Ursus americanus','Ursidae')
+df &lt;- data.frame(c(1,2,3), c(11,12,13), c(1,4,50))
+names(df) &lt;- spnames
+out &lt;- tax_agg(x=df, rank = 'family', db='itis')
+out$x
+
+# You can input a matrix too
+mat &lt;- matrix(c(1,2,3, 11,12,13), nrow = 2, ncol = 3,
+ dimnames=list(NULL, c('Puma concolor','Ursus americanus','Ailuropoda melanoleuca')))
+tax_agg(mat, rank = 'family', db='itis')
+
+## End(Not run)
+</code></pre>
+
+
+</div>

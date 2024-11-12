@@ -1,0 +1,248 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd_joint_distribution_named_auto_batched</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Joint distribution parameterized by named distribution-making functions.</h2>
+
+<h3>Description</h3>
+
+<p>This class provides automatic vectorization and alternative semantics for
+<code>tfd_joint_distribution_named()</code>, which in many cases allows for
+simplifications in the model specification.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd_joint_distribution_named_auto_batched(
+  model,
+  batch_ndims = 0,
+  use_vectorized_map = TRUE,
+  validate_args = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A generator that yields a sequence of <code>tfd$Distribution</code>-like
+instances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_ndims</code></td>
+<td>
+<p><code>integer</code> <code>Tensor</code> number of batch dimensions. The <code>batch_shape</code>s
+of all component distributions must be such that the prefixes of
+length <code>batch_ndims</code> broadcast to a consistent joint batch shape.
+Default value: <code>0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_vectorized_map</code></td>
+<td>
+<p><code>logical</code>. Whether to use <code>tf$vectorized_map</code>
+to automatically vectorize evaluation of the model. This allows the
+model specification to focus on drawing a single sample, which is often
+simpler, but some ops may not be supported. Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. When TRUE distribution parameters are checked
+for validity despite possibly degrading runtime performance. When FALSE invalid inputs may
+silently render incorrect outputs. Default value: FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Automatic vectorization
+</p>
+<p>Auto-vectorized variants of JointDistribution allow the user to avoid
+explicitly annotating a model's vectorization semantics.
+When using manually-vectorized joint distributions, each operation in the
+model must account for the possibility of batch dimensions in Distributions
+and their samples. By contrast, auto-vectorized models need only describe
+a <em>single</em> sample from the joint distribution; any batch evaluation is
+automated using <code>tf$vectorized_map</code> as required. In many cases this
+allows for significant simplications. For example, the following
+manually-vectorized <code>tfd_joint_distribution_named()</code> model:
+</p>
+<div class="sourceCode"><pre>model &lt;- tfd_joint_distribution_sequential(
+    list(
+      x = tfd_normal(loc = 0, scale = tf$ones(3L)),
+      y = tfd_normal(loc = 0, scale = 1),
+      z = function(y, x) {
+        tfd_normal(loc = x[reticulate::py_ellipsis(), 1:2] + y[reticulate::py_ellipsis(), tf$newaxis], scale = 1)
+      }
+    )
+)
+</pre></div>
+<p>can be written in auto-vectorized form as
+</p>
+<div class="sourceCode"><pre>model &lt;- tfd_joint_distribution_sequential_auto_batched(
+  list(
+    x = tfd_normal(loc = 0, scale = tf$ones(3L)),
+    y = tfd_normal(loc = 0, scale = 1),
+    z = function(y, x) {tfd_normal(loc = x[1:2] + y, scale = 1)}
+  )
+)
+</pre></div>
+<p>in which we were able to avoid explicitly accounting for batch dimensions
+when indexing and slicing computed quantities in the third line.
+Note: auto-vectorization is still experimental and some TensorFlow ops may
+be unsupported. It can be disabled by setting <code>use_vectorized_map=FALSE</code>.
+</p>
+<p>Alternative batch semantics
+This class also provides alternative semantics for specifying a batch of
+independent (non-identical) joint distributions.
+Instead of simply summing the <code>log_prob</code>s of component distributions
+(which may have different shapes), it first reduces the component <code>log_prob</code>s
+to ensure that <code>jd$log_prob(jd$sample())</code> always returns a scalar, unless
+<code>batch_ndims</code> is explicitly set to a nonzero value (in which case the result
+will have the corresponding tensor rank).
+</p>
+<p>The essential changes are:
+</p>
+
+<ul>
+<li>
+<p> An <code>event</code> of <code>JointDistributionNamedAutoBatched</code> is the list of
+tensors produced by <code style="white-space: pre;">⁠$sample()⁠</code>; thus, the <code>event_shape</code> is the
+list containing the shapes of sampled tensors. These combine both
+the event and batch dimensions of the component distributions. By contrast,
+the event shape of a base <code>JointDistribution</code>s does not include batch
+dimensions of component distributions.
+</p>
+</li>
+<li>
+<p> The <code>batch_shape</code> is a global property of the entire model, rather
+than a per-component property as in base <code>JointDistribution</code>s.
+The global batch shape must be a prefix of the batch shapes of
+each component; the length of this prefix is specified by an optional
+argument <code>batch_ndims</code>. If <code>batch_ndims</code> is not specified, the model has
+batch shape <code style="white-space: pre;">⁠()⁠</code>.#'
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a distribution instance.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see e.g. <code>tfd_sample()</code>, <code>tfd_log_prob()</code>, <code>tfd_mean()</code>.
+</p>
+<p>Other distributions: 
+<code>tfd_autoregressive()</code>,
+<code>tfd_batch_reshape()</code>,
+<code>tfd_bates()</code>,
+<code>tfd_bernoulli()</code>,
+<code>tfd_beta_binomial()</code>,
+<code>tfd_beta()</code>,
+<code>tfd_binomial()</code>,
+<code>tfd_categorical()</code>,
+<code>tfd_cauchy()</code>,
+<code>tfd_chi2()</code>,
+<code>tfd_chi()</code>,
+<code>tfd_cholesky_lkj()</code>,
+<code>tfd_continuous_bernoulli()</code>,
+<code>tfd_deterministic()</code>,
+<code>tfd_dirichlet_multinomial()</code>,
+<code>tfd_dirichlet()</code>,
+<code>tfd_empirical()</code>,
+<code>tfd_exp_gamma()</code>,
+<code>tfd_exp_inverse_gamma()</code>,
+<code>tfd_exponential()</code>,
+<code>tfd_gamma_gamma()</code>,
+<code>tfd_gamma()</code>,
+<code>tfd_gaussian_process_regression_model()</code>,
+<code>tfd_gaussian_process()</code>,
+<code>tfd_generalized_normal()</code>,
+<code>tfd_geometric()</code>,
+<code>tfd_gumbel()</code>,
+<code>tfd_half_cauchy()</code>,
+<code>tfd_half_normal()</code>,
+<code>tfd_hidden_markov_model()</code>,
+<code>tfd_horseshoe()</code>,
+<code>tfd_independent()</code>,
+<code>tfd_inverse_gamma()</code>,
+<code>tfd_inverse_gaussian()</code>,
+<code>tfd_johnson_s_u()</code>,
+<code>tfd_joint_distribution_named()</code>,
+<code>tfd_joint_distribution_sequential_auto_batched()</code>,
+<code>tfd_joint_distribution_sequential()</code>,
+<code>tfd_kumaraswamy()</code>,
+<code>tfd_laplace()</code>,
+<code>tfd_linear_gaussian_state_space_model()</code>,
+<code>tfd_lkj()</code>,
+<code>tfd_log_logistic()</code>,
+<code>tfd_log_normal()</code>,
+<code>tfd_logistic()</code>,
+<code>tfd_mixture_same_family()</code>,
+<code>tfd_mixture()</code>,
+<code>tfd_multinomial()</code>,
+<code>tfd_multivariate_normal_diag_plus_low_rank()</code>,
+<code>tfd_multivariate_normal_diag()</code>,
+<code>tfd_multivariate_normal_full_covariance()</code>,
+<code>tfd_multivariate_normal_linear_operator()</code>,
+<code>tfd_multivariate_normal_tri_l()</code>,
+<code>tfd_multivariate_student_t_linear_operator()</code>,
+<code>tfd_negative_binomial()</code>,
+<code>tfd_normal()</code>,
+<code>tfd_one_hot_categorical()</code>,
+<code>tfd_pareto()</code>,
+<code>tfd_pixel_cnn()</code>,
+<code>tfd_poisson_log_normal_quadrature_compound()</code>,
+<code>tfd_poisson()</code>,
+<code>tfd_power_spherical()</code>,
+<code>tfd_probit_bernoulli()</code>,
+<code>tfd_quantized()</code>,
+<code>tfd_relaxed_bernoulli()</code>,
+<code>tfd_relaxed_one_hot_categorical()</code>,
+<code>tfd_sample_distribution()</code>,
+<code>tfd_sinh_arcsinh()</code>,
+<code>tfd_skellam()</code>,
+<code>tfd_spherical_uniform()</code>,
+<code>tfd_student_t_process()</code>,
+<code>tfd_student_t()</code>,
+<code>tfd_transformed_distribution()</code>,
+<code>tfd_triangular()</code>,
+<code>tfd_truncated_cauchy()</code>,
+<code>tfd_truncated_normal()</code>,
+<code>tfd_uniform()</code>,
+<code>tfd_variational_gaussian_process()</code>,
+<code>tfd_vector_diffeomixture()</code>,
+<code>tfd_vector_exponential_diag()</code>,
+<code>tfd_vector_exponential_linear_operator()</code>,
+<code>tfd_vector_laplace_diag()</code>,
+<code>tfd_vector_laplace_linear_operator()</code>,
+<code>tfd_vector_sinh_arcsinh_diag()</code>,
+<code>tfd_von_mises_fisher()</code>,
+<code>tfd_von_mises()</code>,
+<code>tfd_weibull()</code>,
+<code>tfd_wishart_linear_operator()</code>,
+<code>tfd_wishart_tri_l()</code>,
+<code>tfd_wishart()</code>,
+<code>tfd_zipf()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tween_sf</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transition between data.frames containing sfc columns</h2>
+
+<h3>Description</h3>
+
+<p>This function is equivalent to <code>tweenr::tween_state()</code> except that it
+understands <code>sf::sfc</code> columns, as defined by the <code>sf</code> package. An <code>sfc</code>
+column is a column containing simple features and can this hold both points,
+lines polygons and more. <code>tween_sf</code> currently has support for (multi)point,
+(multi)linestring, and (multi)polygon types and requires that the transition
+is between compatible types (points-to-points, linestring-to-linestring,
+polygon-to-polygon). For (multi)linestring and (multi)polygon, the behavior
+is similar to <code>tween_path()</code> and <code>tween_polygon()</code> respectively, with each
+feature beeing run through the respective function with <code>match = FALSE</code>. For
+(multi)points it behaves more or less like <code>tweenr::tween_state()</code> except
+additional points are added as needed to make the to stages contain the same
+number of points. Points are added on top of existing points so it appears as
+if the points are divided into more.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tween_sf(.data, to, ease, nframes, id = NULL, enter = NULL, exit = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A data.frame to start from. If <code>.data</code> is the result of a prior
+tween, only the last frame will be used for the tween. The new tween will
+then be added to the prior tween</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>A data.frame to end at. It must contain the same columns as .data
+(exluding <code>.frame</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ease</code></td>
+<td>
+<p>The easing function to use. Either a single string or one for
+each column in the data set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nframes</code></td>
+<td>
+<p>The number of frames to calculate for the tween</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>The column to match observations on. If <code>NULL</code> observations will be
+matched by position. See the <em>Match, Enter, and Exit</em> section for more
+information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>enter, exit</code></td>
+<td>
+<p>functions that calculate a start state for new observations
+that appear in <code>to</code> or an end state for observations that are not present in
+<code>to</code>. If <code>NULL</code> the new/old observations will not be part of the tween. The
+function gets a data.frame with either the start state of the exiting
+observations, or the end state of the entering observations and must return
+a modified version of that data.frame. See the <em>Match, Enter, and Exit</em>
+section for more information.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data.frame containing intermediary states
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(magrittr)
+star_hole &lt;- poly_star_hole(st = TRUE)
+circles &lt;- poly_circles(st = TRUE)
+spiral &lt;- path_spiral(st = TRUE)
+waves &lt;- path_waves(st = TRUE)
+random &lt;- point_random(st = TRUE)
+grid &lt;- point_grid(st = TRUE)
+df1 &lt;- data.frame(geo = sf::st_sfc(star_hole, spiral, random))
+df2 &lt;- data.frame(geo = sf::st_sfc(circles, waves, grid))
+
+tween_sf(df1, df2, 'linear', 30)
+
+</code></pre>
+
+
+</div>

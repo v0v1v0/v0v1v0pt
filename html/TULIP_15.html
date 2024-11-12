@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.catch</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Predict categorical responses for matrix/tensor data.
+</h2>
+
+<h3>Description</h3>
+
+<p>Predict categorical responses on new matrix/tensor data given the fitted CATCH model input.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'catch'
+predict(object, newx, z = NULL, ztest = NULL, gamma = NULL,...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Input <code>catchobj</code> class object as fitted model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newx</code></td>
+<td>
+<p>Input adjusted testing tensor or matrix list. Each element of the list is a tensor. The tensor should of the same dimension as training data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>Input training covariates matrix. <code>z</code> can be omitted if there is no covariate. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ztest</code></td>
+<td>
+<p>Input testing covariates matrix. <code>ztest</code> can be omitted if there is no covariate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>Coefficients of covariates obtained from <code>adjten</code>. <code>gamma</code> is <code>NULL</code> if there is no covariate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments that can be passed to <code>predict</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function fits LDA model on selected discriminant vectors. Call <code>predict</code> or <code>predict.catch</code> to perform predictions.
+</p>
+<p>There are two ways to make predictions. One way is to directly predict at the same time as fitting model by <code>catch</code> since <code>predict.catch</code> has already been embedded in <code>catch</code> and it will predicts response when testing data is provided. The other way is to first use <code>adjten</code> to adjuste tensor and <code>catch</code> to fit model. <code>predict.catch</code> will take the input adjusted tensor list <code>newx</code>, covariate coefficient <code>gamma</code> from <code>adjten</code> and the fitted model from <code>catch</code> to perform prediction. The prediction is identical to providing <code>catch</code> testing data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Predicted response of <code>newx</code> for each <code>lambda</code> in model <code>object</code>.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Yuqing Pan, Qing Mai, Xin Zhang
+</p>
+
+
+<h3>References</h3>
+
+<p>Pan, Y., Mai, Q., and Zhang, X. (2018) <em>Covariate-Adjusted Tensor Classification in High-Dimensions</em>, arXiv:1805.04421.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>catch</code>, <code>adjten</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#generate training data
+n &lt;- 20
+p &lt;- 4
+k &lt;- 2
+nvars &lt;- p*p*p
+x &lt;- array(list(),n)
+vec_x &lt;- matrix(rnorm(n*nvars),nrow=n,ncol=nvars)
+vec_x[1:10,] &lt;- vec_x[1:10,]+2
+z &lt;- matrix(rnorm(n*2),nrow=n,ncol=2)
+z[1:10,] &lt;- z[1:10,]+0.5
+y &lt;- c(rep(1,10),rep(2,10))
+for (i in 1:n){
+  x[[i]] &lt;- array(vec_x[i,],dim=c(p,p,p))
+}
+
+#generate testing data
+newx &lt;- array(list(),n)
+vec_newx &lt;- matrix(rnorm(n*nvars),nrow=n,ncol=nvars)
+vec_newx[1:10,] &lt;- vec_newx[1:10,]+2
+newz &lt;- matrix(rnorm(n*2),nrow=n,ncol=2)
+newz[1:10,] &lt;- newz[1:10,]+0.5
+for (i in 1:n){
+  newx[[i]] &lt;- array(vec_newx[i,],dim=c(p,p,p))
+}
+
+#Make adjustment and fit model
+obj &lt;- adjten(x, z, y, newx, newz)
+fit &lt;- catch(x, z, y)
+#Predict
+pred &lt;- predict(fit, obj$testxres, z, newz, obj$gamma)
+
+#The adjusting, fitting model and predicting step can also be completed
+#by one command.
+pred &lt;- catch(x, z, y, newx, newz)$pred
+</code></pre>
+
+
+</div>

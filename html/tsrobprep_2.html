@@ -1,0 +1,358 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>detect_outliers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Detects unreliable outliers in univariate time series data based on
+model-based clustering</h2>
+
+<h3>Description</h3>
+
+<p>This function applies finite mixture modelling to compute
+the probability of each observation being outliying data
+in an univariate time series.
+By utilizing the Mclust package the data is
+assigned in G clusters whereof one is modelled as an outlier cluster.
+The clustering process is based on features, which are modelled to
+differentiate normal from outlying observation.Beside computing
+the probability of each observation being outlying data also
+the specific cause in terms of the responsible feature/ feature combination
+can be provided.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">detect_outliers(
+  data,
+  S,
+  proba = 0.5,
+  share = NULL,
+  repetitions = 10,
+  decomp = T,
+  PComp = F,
+  detection.parameter = 1,
+  out.par = 2,
+  max.cluster = 9,
+  G = NULL,
+  modelName = "VVV",
+  feat.inf = F,
+  ext.val = 1,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an one dimensional matrix or data frame without missing data;
+each row is an observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>vector with numeric values for each seasonality present in data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proba</code></td>
+<td>
+<p>denotes the threshold from which on an observation is considered
+as being outlying data. By default is set to 0.5 (ranging from 0 to 1). Number of
+outliers increases with decrease of proba threshold.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>share</code></td>
+<td>
+<p>controlls the size of the subsample used for estimation.
+By default set to pmin(2*round(length(data)^(sqrt(2)/2)),
+length(data))/length(data) (ranging from 0 to 1).
+In combination with the repetitions parameter the
+robustness and computational time of the method can be controlled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>repetitions</code></td>
+<td>
+<p>denotes the number of
+repetitions to repeat the clustering.
+By default set to 10. Allows to control the robustness and computational time
+of the method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decomp</code></td>
+<td>
+<p>allows to perform seasonal decomposition on the original time series as pre-
+processing step before feature modelling. By default set to TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PComp</code></td>
+<td>
+<p>allows to use the principal components of the modelled feature matrix.
+By default set to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>detection.parameter</code></td>
+<td>
+<p>denotes a parameter to regulate the
+detection sensitivity. By default set to 1. It is assumed that the outlier cluster
+follows a (multivariate) Gaussian distribution parameterized by sample mean and a blown up
+sample covariance matrix of the feature space. The covariance matrix is blown up
+by detection.parameter * (2 * log(length(data)))^2.
+By increase the more extrem outliers are detected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out.par</code></td>
+<td>
+<p>controls the number of artifially produced outliers to allow cluster
+formation of oultier cluster. By default out.par ist set to 2. By increase it is assumed that
+share of outliers in data increases. A priori it is assumed that
+out.par * ceiling(sqrt(nrow(data.original))) number of observations are outlying observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.cluster</code></td>
+<td>
+<p>a single numeric value controlling the maximum
+number of allowed clusters. By default set to 9.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>G</code></td>
+<td>
+<p>denotes the optimal number of clusters limited by the
+max.cluster paramter. By default G is set to NULL and is automatically
+calculated based on the BIC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modelName</code></td>
+<td>
+<p>denotes the geometric features of the covariance matrix.
+i.e. "EII", "VII", "EEI", "EVI", "VEI", "VVI", etc.. By default modelName
+is set to "VVV". The help file for mclustModelNames describes
+the available models. Choice of modelName influences the fit to the data as well as
+the computational time.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>feat.inf</code></td>
+<td>
+<p>logical value indicating whether influential features/ feature combinations
+should be computed. By default set to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ext.val</code></td>
+<td>
+<p>denotes the number of observations for each side of an identified outlier,
+which should also be treated as outliyng data. By default set to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the Mclust function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The detection of outliers is addressed by
+model based clustering based on parameterized finite Gaussian mixture models.
+For cluster estimation the Mclust function is applied.
+Models are estimated by the EM algorithm initialized by hierarchical
+model-based agglomerative clustering. The optimal model is selected
+according to BIC. <code style="white-space: pre;">⁠
+
+⁠</code>
+The following features based on the introduced data are used in the clustering process:
+</p>
+
+<dl>
+<dt>org.series</dt>
+<dd>
+<p>denotes the scaled and potantially decomposed original time series.</p>
+</dd>
+<dt>seasonality</dt>
+<dd>
+<p>denotes determenistic seasonalities based on S.</p>
+</dd>
+<dt>gradient</dt>
+<dd>
+<p>denotes the summation of the two sided gradient of the org.series.</p>
+</dd>
+<dt>abs.gradient</dt>
+<dd>
+<p>denotes the summation of the absolute two sided gradient of
+org.series.</p>
+</dd>
+<dt>rel.gradient</dt>
+<dd>
+<p>denotes the summation of the two sided absolute gradient of the
+org.series with sign based on left sided gradient in relation to the
+rolling mean absolut deviation based on most relevant seasonality S.</p>
+</dd>
+<dt>abs.seas.grad</dt>
+<dd>
+<p>denotes the summation of the absolute two sided seasonal gradient of
+org.series based on seasonalties S.</p>
+</dd>
+</dl>
+<p>In case PComp = TRUE, the features correspond to the principal components of the
+introduced feature space.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list containing the following elements:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>numeric vector containing the original data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outlier.pos</code></td>
+<td>
+<p>a vector indicating the position of each outlier and the
+corresponding neighboorhood controled by ext.val.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outlier.pos.raw</code></td>
+<td>
+<p>a vector indicating the position of each outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outlier.probs</code></td>
+<td>
+<p>a vector containing all probabilities for each observation
+being outlying data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Repetitions</code></td>
+<td>
+<p>provides a list for each repetition containing the estimated model,
+the outlier cluster, the probabilities for each observation belonging to the estimated
+clusters, the outlier position, the influence of each feature/ feature combination
+on the identified outyling data, and the corresponding probabilities
+after shift to the feature mean of each considered outlier, as well as the applied
+subset of the extended feature matrix for estimation (including artificially introduced
+outliers).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>features</code></td>
+<td>
+<p>a matrix containg the feature matrix. Each column is a feature.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inf.feature.combinations</code></td>
+<td>
+<p>a list containg the features/ feature comibinations,
+which caused assignment to outlier cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>feature.inf.tab</code></td>
+<td>
+<p>a matrix containing all possible feature combinations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>PC</code></td>
+<td>
+<p>an object of class "princomp" containing the principal component analysis
+of the feature matrix.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Narajewski M, Kley-Holsteg J, Ziel F (2021).
+“tsrobprep — an R package for robust preprocessing of time series data.”
+<em>SoftwareX</em>, <b>16</b>, 100809.
+doi: <a href="https://doi.org/10.1016/j.softx.2021.100809">10.1016/j.softx.2021.100809</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>model_missing_data</code>,
+impute_modelled_data,
+auto_data_cleaning
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+set.seed(1)
+id &lt;- 14000:17000
+# Replace missing values
+modelmd &lt;- model_missing_data(data = GBload[id, -1], tau = 0.5,
+                              S = c(48, 336), indices.to.fix = seq_len(nrow(GBload[id, ])),
+                              consider.as.missing = 0, min.val = 0)
+# Impute missing values
+data.imputed &lt;- impute_modelled_data(modelmd)
+
+#Detect outliers
+system.time(
+  o.ident &lt;- detect_outliers(data = data.imputed, S = c(48, 336))
+)
+
+# Plot of identified outliers in time series
+outlier.vector &lt;- rep(F,length(data.imputed))
+outlier.vector[o.ident$outlier.pos] &lt;- T
+plot(data.imputed, type = "o", col=1 + 1 * outlier.vector,
+     pch = 1 + 18 * outlier.vector)
+
+# table of identified raw outliers and corresponding probs being outlying data
+df &lt;- data.frame(o.ident$outlier.pos.raw,unlist(o.ident$outlier.probs)[o.ident$outlier.pos.raw])
+colnames(df) &lt;- c("Outlier position", "Probability of being outlying data")
+df
+
+# Plot of feature matrix
+plot.ts(o.ident$features, type = "o",
+        col = 1 + outlier.vector,
+        pch = 1 + 1 * outlier.vector)
+
+# table of outliers and corresponding features/ feature combinations,
+# which caused assignment to outlier cluster
+# Detect outliers with feat.int = T
+set.seed(1)
+system.time(
+  o.ident &lt;- detect_outliers(data = data.imputed, S = c(48, 336), feat.inf = T)
+)
+feature.imp &lt;- unlist(lapply(o.ident$inf.feature.combinations,
+                             function(x) paste(o.ident$feature.inf.tab[x], collapse = " | ")))
+
+df &lt;- data.frame(o.ident$outlier.pos.raw,o.ident$outlier.probs[o.ident$outlier.pos.raw],
+                 feature.imp[as.numeric(names(feature.imp)) %in% o.ident$outlier.pos.raw])
+colnames(df) &lt;- c("Outlier position", "Probability being outlying data", "Responsible features")
+View(df)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,214 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>JaccardRobinsonFoulds</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Jaccard–Robinson–Foulds metric</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the
+<a href="https://ms609.github.io/TreeDist/articles/Generalized-RF.html#jaccard-robinson-foulds-metric">Jaccard–Robinson–Foulds metric</a>
+(Böcker et al. 2013), a
+<a href="https://ms609.github.io/TreeDist/articles/Robinson-Foulds.html#generalized-robinson-foulds-distances">Generalized Robinson–Foulds metric</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">JaccardRobinsonFoulds(
+  tree1,
+  tree2 = NULL,
+  k = 1L,
+  allowConflict = TRUE,
+  similarity = FALSE,
+  normalize = FALSE,
+  reportMatching = FALSE
+)
+
+JaccardSplitSimilarity(
+  splits1,
+  splits2,
+  nTip = attr(splits1, "nTip"),
+  k = 1L,
+  allowConflict = TRUE,
+  reportMatching = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Trees of class <code>phylo</code>, with leaves labelled identically,
+or lists of such trees to undergo pairwise comparison.  Where implemented,
+<code>tree2 = NULL</code> will compute distances between each pair of trees in the list
+<code>tree1</code> using a fast algorithm based on
+Day (1985).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>An arbitrary exponent to which to raise the Jaccard index.
+Integer values greater than one are anticipated by Böcker <em>et al</em>.
+The Nye <em>et al</em>. metric uses <code>k = 1</code>.
+As k increases towards infinity, the metric converges to the Robinson–Foulds
+metric.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allowConflict</code></td>
+<td>
+<p>Logical specifying whether to allow conflicting splits
+to be paired. If <code>FALSE</code>, such pairings will be allocated a similarity
+score of zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>similarity</code></td>
+<td>
+<p>Logical specifying whether to report the result as a tree
+similarity, rather than a difference.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normalize</code></td>
+<td>
+<p>If a numeric value is provided, this will be used as a
+maximum value against which to rescale results.
+If <code>TRUE</code>, results will be rescaled against a maximum value calculated from
+the specified tree sizes and topology, as specified in the "Normalization"
+section below.
+If <code>FALSE</code>, results will not be rescaled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reportMatching</code></td>
+<td>
+<p>Logical specifying whether to return the clade
+matchings as an attribute of the score.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splits1, splits2</code></td>
+<td>
+<p>Logical matrices where each row corresponds to a leaf,
+either listed in the same order or bearing identical names (in any sequence),
+and each column corresponds to a split, such that each leaf is identified as
+a member of the ingroup (<code>TRUE</code>) or outgroup (<code>FALSE</code>) of the respective
+split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTip</code></td>
+<td>
+<p>(Optional) Integer specifying the number of leaves in each split.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In short, the Jaccard–Robinson–Foulds
+metric is a generalized Robinson-Foulds
+metric: it finds the optimal matching that pairs each split in one tree with
+a similar split in the second.
+Matchings are scored according to the size of the largest split that is
+consistent with both of them, normalized against the Jaccard index, and
+raised to an arbitrary exponent.
+A more detailed explanation is provided in the
+<a href="https://ms609.github.io/TreeDist/articles/Generalized-RF.html#jaccard-robinson-foulds-metric">vignettes</a>.
+</p>
+<p>By default, conflicting splits may be paired.
+</p>
+<p>Note that the settings <code style="white-space: pre;">⁠k = 1, allowConflict = TRUE, similarity = TRUE⁠</code>
+give the similarity metric of Nye et al. (2006);
+a slightly faster implementation of this metric is available as
+<code>NyeSimilarity()</code>.
+</p>
+<p>The examples section below details how to visualize matchings with
+non-default parameter values.
+</p>
+<p>Trees need not contain identical leaves; scores are based on the leaves that
+trees hold in common.  Check for unexpected differences in tip labelling
+with <code>setdiff(TipLabels(tree1), TipLabels(tree2))</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>JaccardRobinsonFoulds()</code> returns an array of numerics providing the
+distances between each  pair of trees in <code>tree1</code> and <code>tree2</code>,
+or <code>splits1</code> and <code>splits2</code>.
+</p>
+
+
+<h3>Normalization</h3>
+
+<p>If <code>normalize = TRUE</code>, then results will be rescaled from zero to one by
+dividing by the maximum possible value for trees of the given topologies,
+which is equal to the sum of the number of splits in each tree.
+You may wish to normalize instead against the maximum number of splits
+present in a pair of trees with <em>n</em> leaves, by specifying
+<code>normalize = n - 3</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Böcker S, Canzar S, Klau GW (2013).
+“The generalized Robinson-Foulds metric.”
+In Darling A, Stoye J (eds.), <em>Algorithms in Bioinformatics. WABI 2013. Lecture Notes in Computer Science, vol 8126</em>, 156–169.
+Springer, Berlin, Heidelberg.
+<a href="https://doi.org/10.1007/978-3-642-40453-5_13">doi:10.1007/978-3-642-40453-5_13</a>.<br><br> Day WHE (1985).
+“Optimal algorithms for comparing trees with labeled leaves.”
+<em>Journal of Classification</em>, <b>2</b>(1), 7–28.
+<a href="https://doi.org/10.1007/BF01908061">doi:10.1007/BF01908061</a>.<br><br> Nye TMW, Liò P, Gilks WR (2006).
+“A novel algorithm and web-based tool for comparing two alternative phylogenetic trees.”
+<em>Bioinformatics</em>, <b>22</b>(1), 117–119.
+<a href="https://doi.org/10.1093/bioinformatics/bti720">doi:10.1093/bioinformatics/bti720</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other tree distances: 
+<code>KendallColijn()</code>,
+<code>MASTSize()</code>,
+<code>MatchingSplitDistance()</code>,
+<code>NNIDist()</code>,
+<code>NyeSimilarity()</code>,
+<code>PathDist()</code>,
+<code>Robinson-Foulds</code>,
+<code>SPRDist()</code>,
+<code>TreeDistance()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(2)
+tree1 &lt;- ape::rtree(10)
+tree2 &lt;- ape::rtree(10)
+JaccardRobinsonFoulds(tree1, tree2, k = 2, allowConflict = FALSE)
+JaccardRobinsonFoulds(tree1, tree2, k = 2, allowConflict = TRUE)
+
+JRF2 &lt;- function(tree1, tree2, ...) 
+  JaccardRobinsonFoulds(tree1, tree2, k = 2, allowConflict = FALSE, ...)
+  
+VisualizeMatching(JRF2, tree1, tree2, matchZeros = FALSE)
+</code></pre>
+
+
+</div>

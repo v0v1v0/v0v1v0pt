@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>E_HDx_HmDm_HT.f</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate height of given diameter</h2>
+
+<h3>Description</h3>
+
+<p>Calibrates a taper curve based on at least one diameter 
+measurement and returns the height of a given diameter
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">E_HDx_HmDm_HT.f(
+  Dx,
+  Hm,
+  Dm,
+  mHt,
+  sHt = 0,
+  par.lme,
+  Rfn = list(fn = "sig2"),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Dx</code></td>
+<td>
+<p>Scalar. Diameter for which to return height.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Hm</code></td>
+<td>
+<p>Numeric vector of stem heights (m) along which diameter 
+measurements were taken for calibration. Can be of length 1. Must be of same 
+length as <code>Dm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Dm</code></td>
+<td>
+<p>Numeric vector of diameter measurements (cm) taken for calibration.
+Can be of length 1. Must be of same length as <code>Hm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mHt</code></td>
+<td>
+<p>Scalar. Tree height (m).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sHt</code></td>
+<td>
+<p>Scalar. Standard deviation of stem height. Can be 0 if height was 
+measured without error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par.lme</code></td>
+<td>
+<p>List of taper model parameters obtained by 
+<code>TapeR_FIT_LME.f</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Rfn</code></td>
+<td>
+<p>list with function name to provide estimated or assumed residual 
+variances for the given measurements, optionally parameters for such functions</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not currently used</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>returns the height given a certain diameter.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A scalar. Estimated height (m) given a diameter.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Edgar Kublin
+</p>
+
+
+<h3>References</h3>
+
+<p>Kublin, E., Breidenbach, J., Kaendler, G. (2013) A flexible stem 
+taper and volume prediction method based on mixed-effects B-spline 
+regression, Eur J For Res, 132:983-997.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TapeR_FIT_LME.f</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># example data
+data(DxHx.df)
+# taper curve parameters based on all measured trees
+data(SK.par.lme)
+
+#select data of first tree
+Idi &lt;- (DxHx.df[,"Id"] == unique(DxHx.df$Id)[1])
+(tree1 &lt;- DxHx.df[Idi,])
+
+## Predict the taper curve based on the diameter measurement in 2 m
+## height and known height 
+tc.tree1 &lt;- E_DHx_HmDm_HT.f(Hx=1:tree1$Ht[1], 
+                            Hm=tree1$Hx[3],
+                            Dm=tree1$Dx[3], 
+                            mHt = tree1$Ht[1], 
+                            sHt = 0, 
+                            par.lme = SK.par.lme)
+#plot the predicted taper curve
+plot(tc.tree1$Hx, tc.tree1$DHx, type="l", las=1)
+
+## Calculate the height given a certain diameter threshold, say 8.5 cm
+ht.tree1.d8.5 &lt;- E_HDx_HmDm_HT.f (Dx=8.5, 
+                                  Hm=tree1$Hx[3],
+                                  Dm=tree1$Dx[3], 
+                                  mHt = tree1$Ht[1], 
+                                  sHt = 1, 
+                                  par.lme = SK.par.lme,
+                                  Rfn=list(fn="sig2")) 
+# add to plot
+points(x=ht.tree1.d8.5, y=8.5, pch=8, col=2, cex=2)
+
+</code></pre>
+
+
+</div>

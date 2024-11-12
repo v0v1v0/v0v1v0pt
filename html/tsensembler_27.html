@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>DETS-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Dynamic Ensemble for Time Series</h2>
+
+<h3>Description</h3>
+
+<p>A Dynamic Ensemble for Time Series (DETS). The DETS ensemble
+method we present settles on individually pre-trained models
+which are dynamically combined at run-time to make a prediction.
+The combination rule is reactive to changes in the environment,
+rendering an online combined model. The main properties of the ensemble
+are:
+</p>
+
+<dl>
+<dt>heterogeneity</dt>
+<dd>
+<p>Heterogeneous ensembles are those
+comprised of different types of base learners. By employing
+models that follow different learning strategies, use different
+features and/or data observations we expect that individual
+learners will disagree with each other, introducing a natural
+diversity into the ensemble that helps in handling different
+dynamic regimes in a time series forecasting setting;</p>
+</dd>
+<dt>responsiveness</dt>
+<dd>
+<p>We promote greater responsiveness of
+heterogeneous ensembles in time series tasks by making the
+aggregation of their members' predictions time-dependent.
+By tracking the loss of each learner over time, we weigh
+the predictions of individual learners according to their
+recent performance using a non-linear function. This strategy
+may be advantageous for better detecting regime changes and
+also to quickly adapt the ensemble to new regimes.</p>
+</dd>
+</dl>
+<h3>Slots</h3>
+
+
+<dl>
+<dt><code>base_ensemble</code></dt>
+<dd>
+<p>object of class <code>base_ensemble-class</code>.
+It contains the base models used that can be used for predicting
+new data or forecasting future values;</p>
+</dd>
+<dt><code>form</code></dt>
+<dd>
+<p>formula;</p>
+</dd>
+<dt><code>specs</code></dt>
+<dd>
+<p>object of class <code>model_specs-class</code>. Contains
+the parameter setting information for training the
+base models;</p>
+</dd>
+<dt><code>lambda</code></dt>
+<dd>
+<p>window size. Number of observations to compute
+the recent performance of the base models, according to the
+committee ratio <strong>omega</strong>. Essentially, the top <em>omega</em>
+models are selected and weighted at each prediction instance, according
+to their performance in the last <em>lambda</em> observations.
+Defaults to 50 according to empirical experiments;</p>
+</dd>
+<dt><code>omega</code></dt>
+<dd>
+<p>committee ratio size. Essentially, the top <em>omega</em>
+models are selected and weighted at each prediction instance, according
+to their performance in the last <em>lambda</em> observations.
+Defaults to .5 according to empirical experiments;</p>
+</dd>
+<dt><code>select_best</code></dt>
+<dd>
+<p>Logical. If true, at each prediction time,
+a single base model is picked to make a prediction. The picked
+model is the one that has the lowest loss prediction from
+the meta models. Defaults to FALSE;</p>
+</dd>
+<dt><code>recent_series</code></dt>
+<dd>
+<p>the most recent <code>lambda</code> observations.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Cerqueira, Vitor; Torgo, Luis; Oliveira, Mariana,
+and Bernhard Pfahringer. "Dynamic and Heterogeneous Ensembles
+for Time Series Forecasting." Data Science and Advanced
+Analytics (DSAA), 2017 IEEE International Conference on. IEEE, 2017.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>model_specs-class</code> for setting up the ensemble parameters
+for an <strong>DETS</strong> model;
+<code>predict</code> for the method that predicts new held out observations;
+<code>update_weights</code> for the method used to update the
+weights of an <strong>DETS</strong> model between successive predict or forecast calls;
+<code>update_base_models</code> for the updating (retraining)
+the base models of an <strong>DETS</strong> ensemble (and respective
+weights); and <code>dets_hat-class</code> for the object that results from
+predicting with an <strong>DETS</strong> model.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">specs &lt;- model_specs(
+ c("bm_ppr", "bm_svr"),
+ list(bm_ppr = list(nterms = c(2, 4)),
+      bm_svr = list(kernel = c("vanilladot"), C = c(1,5)))
+)
+
+data("water_consumption")
+train &lt;- embed_timeseries(water_consumption, 5)[1:500,]
+
+model &lt;- DETS(target ~., train, specs, lambda = 30, omega = .2)
+
+</code></pre>
+
+
+</div>

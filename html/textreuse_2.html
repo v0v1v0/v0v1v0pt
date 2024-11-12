@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>align_local</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Local alignment of natural language texts</h2>
+
+<h3>Description</h3>
+
+<p>This function takes two texts, either as strings or as
+<code>TextReuseTextDocument</code> objects, and finds the optimal local alignment
+of those texts. A local alignment finds the best matching subset of the two
+documents. This function adapts the
+<a href="https://en.wikipedia.org/wiki/Smith-Waterman_algorithm">Smith-Waterman
+algorithm</a>, used for genetic sequencing, for use with natural language. It
+compare the texts word by word (the comparison is case-insensitive) and
+scores them according to a set of parameters. These parameters define the
+score for a <code>match</code>, and the penalties for a <code>mismatch</code> and for
+opening a <code>gap</code> (i.e., the first mismatch in a potential sequence). The
+function then reports the optimal local alignment. Only the subset of the
+documents that is a match is included. Insertions or deletions in the text
+are reported with the <code>edit_mark</code> character.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">align_local(
+  a,
+  b,
+  match = 2L,
+  mismatch = -1L,
+  gap = -1L,
+  edit_mark = "#",
+  progress = interactive()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>A character vector of length one, or a
+<code>TextReuseTextDocument</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>A character vector of length one, or a
+<code>TextReuseTextDocument</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match</code></td>
+<td>
+<p>The score to assign a matching word. Should be a positive
+integer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mismatch</code></td>
+<td>
+<p>The score to assign a mismatching word. Should be a negative
+integer or zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gap</code></td>
+<td>
+<p>The penalty for opening a gap in the sequence. Should be a
+negative integer or zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>edit_mark</code></td>
+<td>
+<p>A single character used for displaying for displaying
+insertions/deletions in the documents.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+<p>Display a progress bar and messages while computing the
+alignment.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The compute time of this function is proportional to the product of the
+lengths of the two documents. Thus, longer documents will take considerably
+more time to compute. This function has been tested with pairs of documents
+containing about 25 thousand words each.
+</p>
+<p>If the function reports that there were multiple optimal alignments, then it
+is likely that there is no strong match in the document.
+</p>
+<p>The score reported for the local alignment is dependent on both the size of
+the documents and on the strength of the match, as well as on the parameters
+for match, mismatch, and gap penalties, so the scores are not directly
+comparable.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the class <code>textreuse_alignment</code>. This list contains
+several elements: </p>
+ <ul>
+<li> <p><code>a_edit</code> and <code>b_edit</code>:
+Character vectors of the sequences with edits marked. </p>
+</li>
+<li> <p><code>score</code>:
+The score of the optimal alignment. </p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>For a useful description of the algorithm, see
+<a href="http://etherealbits.com/2013/04/string-alignment-dynamic-programming-dna/">this
+post</a>. For the application of the Smith-Waterman algorithm to natural
+language, see David A. Smith, Ryan Cordell, and Elizabeth Maddock Dillon,
+"Infectious Texts: Modeling Text Reuse in Nineteenth-Century Newspapers."
+IEEE International Conference on Big Data, 2013,
+<a href="http://hdl.handle.net/2047/d20004858">http://hdl.handle.net/2047/d20004858</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">align_local("The answer is blowin' in the wind.",
+            "As the Bob Dylan song says, the answer is blowing in the wind.")
+
+# Example of matching documents from a corpus
+dir &lt;- system.file("extdata/legal", package = "textreuse")
+corpus &lt;- TextReuseCorpus(dir = dir, progress = FALSE)
+alignment &lt;- align_local(corpus[["ca1851-match"]], corpus[["ny1850-match"]])
+str(alignment)
+
+</code></pre>
+
+
+</div>

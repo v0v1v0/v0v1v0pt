@@ -1,0 +1,255 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>default.itemps</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Default Sigmoidal, Harmonic and Geometric Temperature Ladders </h2>
+
+<h3>Description</h3>
+
+<p>Parameterized by the minimum desired <em>inverse</em> temperature, this
+function generates a ladder of inverse temperatures <code>k[1:m]</code>
+starting at <code>k[1] = 1</code>, with <code>m</code> steps down to the final
+temperature <code>k[m] = k.min</code> progressing sigmoidally,
+harmonically or geometrically.
+The output is in a format convenient for the <code>b*</code> functions
+in the <span class="pkg">tgp</span> package (e.g. <code>btgp</code>), including
+stochastic approximation parameters <code class="reqn">c_0</code> and <code class="reqn">n_0</code>
+for tuning the uniform pseudo-prior output by this function
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">default.itemps(m = 40, type = c("geometric", "harmonic","sigmoidal"),
+               k.min = 0.1, c0n0 = c(100, 1000), lambda = c("opt",
+               "naive", "st"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p> Number of temperatures in the ladder; <code>m=1</code> corresponds
+to <em>importance sampling</em> at the temperature specified by
+<code>k.min</code> (in this case all other arguments are ignored) </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p> Choose from amongst two common defaults for simulated
+tempering and Metropolis-coupled MCMC, i.e., geometric (default)
+or harmonic, or a sigmoidal ladder (default) that concentrates
+more inverse temperatures near 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k.min</code></td>
+<td>
+<p> Minimum inverse temperature desired </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>c0n0</code></td>
+<td>
+<p> Stochastic approximation parameters used to tune
+the simulated tempering pseudo-prior (<code>$pk</code>) to get
+a uniform posterior over the inverse temperatures; must be
+a 2-vector of positive integers <code>c(c0, n0)</code>; see the Geyer &amp;
+Thompson reference below </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p> Method for combining the importance samplers at each
+temperature.  Optimal combination (<code>"opt"</code>) is the default,
+weighting the IS at each temperature <code class="reqn">k</code> by
+</p>
+<p style="text-align: center;"><code class="reqn">\lambda_k \propto (\sum_i w_{ki})^2/\sum_i w_{ki}^2.</code>
+</p>
+
+<p>Setting <code>lambda = "naive"</code> allows each temperature to
+contribute equally (<code class="reqn">\lambda_k \propto 1</code>, or
+equivalently ignores delineations due to temperature when using
+importance weights.  Setting <code>lambda = "st"</code> allows only the
+first (cold) temperature to contribute to the estimator, thereby
+implementing <em>simulated tempering</em></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The geometric and harmonic inverse temperature ladders are usually defined
+by an index <code class="reqn">i=1,\dots,m</code> and a parameter
+<code class="reqn">\Delta_k &gt; 0</code>.  The geometric ladder is defined by
+</p>
+<p style="text-align: center;"><code class="reqn">k_i = (1+\Delta_k)^{1-i},</code>
+</p>
+
+<p>and the harmonic ladder by
+</p>
+<p style="text-align: center;"><code class="reqn">k_i = (1+\Delta_k(i-1))^{-1}.</code>
+</p>
+
+<p>Alternatively, specifying the minimum temperature
+<code class="reqn">k_{\mbox{\tiny min}}</code> in the ladder can be used to
+uniquely determine <code class="reqn">\Delta_k</code>.  E.g., for the geometric
+ladder
+</p>
+<p style="text-align: center;"><code class="reqn">\Delta_k = k_{\mbox{\tiny min}}^{1/(1-m)}-1,</code>
+</p>
+
+<p>and for the harmonic
+</p>
+<p style="text-align: center;"><code class="reqn">\Delta_k = \frac{k_{\mbox{\tiny min}}^{-1}-1}{m-1}.</code>
+</p>
+
+<p>In a similar spirit, the sigmoidal ladder is specified by first
+situating <code class="reqn">m</code> indices <code class="reqn">j_i\in \Re</code> so that
+<code class="reqn">k_1 = k(j_1) = 1</code>
+and
+<code class="reqn">k_m = k(j_m) = k_{\mbox{\tiny min}}</code>
+under
+</p>
+<p style="text-align: center;"><code class="reqn">k(j_i) = 1.01 - \frac{1}{1+e^{j_i}}.</code>
+</p>
+
+<p>The remaining <code class="reqn">j_i, i=2,\dots,(m-1)</code> are spaced evenly
+between <code class="reqn">j_1</code> and <code class="reqn">j_m</code> to fill out the ladder
+<code class="reqn">k_i = k(j_i), i=1,\dots,(m-1)</code>.
+</p>
+<p>For more details, see the <em>Importance tempering</em> paper cited
+below and a full demonstration in <code>vignette("tgp2")</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p>The return value is a <code>list</code> which is compatible with the input argument
+<code>itemps</code> to the <code>b*</code> functions (e.g. <code>btgp</code>),
+containing the following entries:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>c0n0 </code></td>
+<td>
+<p> A copy of the <code>c0n0</code> input argument </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k </code></td>
+<td>
+<p> The generated inverse temperature ladder; a vector
+with <code>length(k) = m</code> containing a decreasing sequence from
+<code>1</code> down to <code>k.min</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pk </code></td>
+<td>
+<p> A vector with <code>length(pk) = m</code> containing  an
+initial pseudo-prior for the temperature ladder of <code>1/m</code> for
+each inverse temperature</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p> IT method, as specified by the input argument</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gramacy, R.B., Samworth, R.J., and King, R. (2010)
+<em>Importance Tempering.</em> ArXiV article 0707.4242
+Statistics and Computing, 20(1), pp. 1-7;
+<a href="https://arxiv.org/abs/0707.4242">https://arxiv.org/abs/0707.4242</a>. 
+</p>
+<p>For stochastic approximation and simulated tempering (ST):
+</p>
+<p>Geyer, C.~and Thompson, E.~(1995).
+<em>Annealing Markov chain Monte Carlo with applications to
+ancestral inference.</em>
+Journal of the American Statistical Association, <b>90</b>,
+909–920.
+</p>
+<p>For the geometric temperature ladder:
+</p>
+<p>Neal, R.M.~(2001)
+<em>Annealed importance sampling.</em>
+Statistics and Computing, <b>11</b>, 125–129
+</p>
+<p>Justifying geometric and harmonic defaults:
+</p>
+<p>Liu, J.S.~(1002)
+<em>Monte Carlo Strategies in Scientific Computing.</em>
+New York: Springer.  Chapter 10 (pages 213 &amp; 233)
+</p>
+<p><a href="https://bobby.gramacy.com/r_packages/tgp/">https://bobby.gramacy.com/r_packages/tgp/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>btgp</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## comparing the different ladders
+geo &lt;- default.itemps(type="geometric")
+har &lt;- default.itemps(type="harmonic")
+sig &lt;- default.itemps(type="sigmoidal")
+par(mfrow=c(2,1))
+matplot(cbind(geo$k, har$k, sig$k), pch=21:23,
+        main="inv-temp ladders", xlab="indx",
+        ylab="itemp")
+legend("topright", pch=21:23, 
+       c("geometric","harmonic","sigmoidal"), col=1:3)
+matplot(log(cbind(sig$k, geo$k, har$k)), pch=21:23,
+        main="log(inv-temp) ladders", xlab="indx",
+        ylab="itemp")
+
+## Not run: 
+## using Importance Tempering (IT) to improve mixing
+## on the motorcycle accident dataset
+library(MASS)
+out.it &lt;- btgpllm(X=mcycle[,1], Z=mcycle[,2], BTE=c(2000,22000,2),
+        R=3, itemps=default.itemps(), bprior="b0", trace=TRUE, 
+        pred.n=FALSE)
+
+## compare to regular tgp w/o IT
+out.reg &lt;- btgpllm(X=mcycle[,1], Z=mcycle[,2], BTE=c(2000,22000,2),
+        R=3, bprior="b0", trace=TRUE, pred.n=FALSE)
+
+## compare the heights explored by the three chains:
+## REG, combining all temperatures, and IT
+p &lt;- out.it$trace$post
+L &lt;- length(p$height)
+hw &lt;- suppressWarnings(sample(p$height, L, prob=p$wlambda, replace=TRUE))
+b &lt;- hist2bar(cbind(out.reg$trace$post$height, p$height, hw))
+par(mfrow=c(1,1))
+barplot(b, beside=TRUE, xlab="tree height", ylab="counts", col=1:3,
+        main="tree heights encountered")
+legend("topright", c("reg MCMC", "All Temps", "IT"), fill=1:3)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

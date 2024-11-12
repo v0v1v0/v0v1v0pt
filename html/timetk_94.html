@@ -1,0 +1,238 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_box_cox</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Box-Cox Transformation using Forecast Methods</h2>
+
+<h3>Description</h3>
+
+<p><code>step_box_cox</code> creates a <em>specification</em> of a recipe
+step that will transform data using a Box-Cox
+transformation. This function differs from
+<code>recipes::step_BoxCox</code> by adding multiple methods
+including Guerrero lambda optimization and handling for
+negative data used in the Forecast R Package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_box_cox(
+  recipe,
+  ...,
+  method = c("guerrero", "loglik"),
+  limits = c(-1, 2),
+  role = NA,
+  trained = FALSE,
+  lambdas_trained = NULL,
+  skip = FALSE,
+  id = rand_id("box_cox")
+)
+
+## S3 method for class 'step_box_cox'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A <code>recipe</code> object. The step will be added to the sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>selections()</code>
+for more details. For the <code>tidy</code> method, these are not
+currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>One of "guerrero" or "loglik"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>limits</code></td>
+<td>
+<p>A length 2 numeric vector defining the range to
+compute the transformation parameter lambda.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>Not used by this step since no new variables are
+created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambdas_trained</code></td>
+<td>
+<p>A numeric vector of transformation values. This
+is <code>NULL</code> until computed by <code>prep()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the recipe
+is baked by <code>bake.recipe()</code>? While all operations are baked when <code>prep.recipe()</code> is run,
+some operations may not be able to be conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = TRUE</code> as it may affect the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_box_cox</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>step_box_cox()</code> function is designed specifically to handle time series
+using methods implemented in the Forecast R Package.
+</p>
+<p><strong>Negative Data</strong>
+</p>
+<p>This function can be applied to Negative Data.
+</p>
+<p><strong>Lambda Optimization Methods</strong>
+</p>
+<p>This function uses 2 methods for optimizing the lambda selection
+from the Forecast R Package:
+</p>
+
+<ol>
+<li> <p><code>method = "guerrero"</code>: Guerrero's (1993) method is used, where lambda minimizes
+the coefficient of variation for subseries of x.
+</p>
+</li>
+<li> <p><code>method = loglik</code>: the value of lambda is chosen to maximize the profile
+log likelihood of a linear model fitted to x. For non-seasonal data, a
+linear time trend is fitted while for seasonal data, a linear time trend
+with seasonal dummy variables is used.
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step
+added to the sequence of existing steps (if any). For the
+<code>tidy</code> method, a tibble with columns <code>terms</code> (the
+selectors or variables selected) and <code>value</code> (the
+lambda estimate).
+</p>
+
+
+<h3>References</h3>
+
+
+<ol>
+<li>
+<p> Guerrero, V.M. (1993) Time-series analysis supported by power transformations. <em>Journal of Forecasting</em>, <strong>12</strong>, 37–48.
+</p>
+</li>
+<li>
+<p> Box, G. E. P. and Cox, D. R. (1964) An analysis of transformations. <em>JRSS</em> B <strong>26</strong> 211–246.
+</p>
+</li>
+</ol>
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Transformations to reduce variance:
+</p>
+
+<ul>
+<li> <p><code>recipes::step_log()</code> - Log transformation
+</p>
+</li>
+<li> <p><code>recipes::step_sqrt()</code> - Square-Root Power Transformation
+</p>
+</li>
+</ul>
+<p>Recipe Setup and Application:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(recipes)
+
+FANG_wide &lt;- FANG %&gt;%
+    select(symbol, date, adjusted) %&gt;%
+    tidyr::pivot_wider(names_from = symbol, values_from = adjusted)
+
+recipe_box_cox &lt;- recipe(~ ., data = FANG_wide) %&gt;%
+    step_box_cox(FB, AMZN, NFLX, GOOG) %&gt;%
+    prep()
+
+recipe_box_cox %&gt;% bake(FANG_wide)
+
+recipe_box_cox %&gt;% tidy(1)
+
+</code></pre>
+
+
+</div>

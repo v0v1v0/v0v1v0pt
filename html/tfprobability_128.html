@@ -1,0 +1,245 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_masked_autoregressive_flow</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Affine MaskedAutoregressiveFlow bijector</h2>
+
+<h3>Description</h3>
+
+<p>The affine autoregressive flow (Papamakarios et al., 2016) provides a
+relatively simple framework for user-specified (deep) architectures to learn a
+distribution over continuous events. Regarding terminology,
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_masked_autoregressive_flow(
+  shift_and_log_scale_fn,
+  is_constant_jacobian = FALSE,
+  unroll_loop = FALSE,
+  event_ndims = 1L,
+  validate_args = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>shift_and_log_scale_fn</code></td>
+<td>
+<p>Function which computes shift and log_scale from both the
+forward domain (x) and the inverse domain (y).
+Calculation must respect the "autoregressive property". Suggested default:
+tfb_masked_autoregressive_default_template(hidden_layers=...).
+Typically the function contains <code>tf$Variables</code> and is wrapped using <code>tf$make_template</code>.
+Returning NULL for either (both) shift, log_scale is equivalent to (but more efficient than) returning zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_constant_jacobian</code></td>
+<td>
+<p>Logical, default: FALSE. When TRUE the implementation assumes log_scale
+does not depend on the forward domain (x) or inverse domain (y) values.
+(No validation is made; is_constant_jacobian=FALSE is always safe but possibly computationally inefficient.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unroll_loop</code></td>
+<td>
+<p>Logical indicating whether the <code>tf$while_loop</code> in _forward should be replaced with a
+static for loop. Requires that the final dimension of x be known at graph construction time. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>event_ndims</code></td>
+<td>
+<p>integer, the intrinsic dimensionality of this bijector.
+1 corresponds to a simple vector autoregressive bijector as implemented by the
+<code>tfb_masked_autoregressive_default_template</code>, 2 might be useful for a 2D convolutional shift_and_log_scale_fn and so on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. Whether to validate input with asserts. If validate_args is
+FALSE, and the inputs are invalid, correct behavior is not guaranteed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>"Autoregressive models decompose the joint density as a product of
+conditionals, and model each conditional in turn. Normalizing flows
+transform a base density (e.g. a standard Gaussian) into the target density
+by an invertible transformation with tractable Jacobian." (Papamakarios et al., 2016)
+</p>
+<p>In other words, the "autoregressive property" is equivalent to the
+decomposition, <code style="white-space: pre;">⁠p(x) = prod{ p(x[perm[i]] | x[perm[0:i]]) : i=0, ..., d }⁠</code>
+where perm is some permutation of <code style="white-space: pre;">⁠{0, ..., d}⁠</code>. In the simple case where
+the permutation is identity this reduces to:
+</p>
+<p><code style="white-space: pre;">⁠p(x) = prod{ p(x[i] | x[0:i]) : i=0, ..., d }⁠</code>. The provided
+shift_and_log_scale_fn, tfb_masked_autoregressive_default_template, achieves
+this property by zeroing out weights in its masked_dense layers.
+In TensorFlow Probability, "normalizing flows" are implemented as
+tfp.bijectors.Bijectors. The forward "autoregression" is implemented
+using a tf.while_loop and a deep neural network (DNN) with masked weights
+such that the autoregressive property is automatically met in the inverse.
+A TransformedDistribution using MaskedAutoregressiveFlow(...) uses the
+(expensive) forward-mode calculation to draw samples and the (cheap)
+reverse-mode calculation to compute log-probabilities. Conversely, a
+TransformedDistribution using Invert(MaskedAutoregressiveFlow(...)) uses
+the (expensive) forward-mode calculation to compute log-probabilities and the
+(cheap) reverse-mode calculation to compute samples.
+</p>
+<p>Given a shift_and_log_scale_fn, the forward and inverse transformations are
+(a sequence of) affine transformations. A "valid" shift_and_log_scale_fn
+must compute each shift (aka loc or "mu" in Germain et al. (2015)])
+and log(scale) (aka "alpha" in Germain et al. (2015)) such that ech
+are broadcastable with the arguments to forward and inverse, i.e., such
+that the calculations in forward, inverse below are possible.
+</p>
+<p>For convenience, tfb_masked_autoregressive_default_template is offered as a
+possible shift_and_log_scale_fn function. It implements the MADE
+architecture (Germain et al., 2015). MADE is a feed-forward network that
+computes a shift and log(scale) using masked_dense layers in a deep
+neural network. Weights are masked to ensure the autoregressive property. It
+is possible that this architecture is suboptimal for your task. To build
+alternative networks, either change the arguments to
+tfb_masked_autoregressive_default_template, use the masked_dense function to
+roll-out your own, or use some other architecture, e.g., using tf.layers.
+Warning: no attempt is made to validate that the shift_and_log_scale_fn
+enforces the "autoregressive property".
+</p>
+<p>Assuming shift_and_log_scale_fn has valid shape and autoregressive semantics,
+the forward transformation is
+</p>
+<div class="sourceCode"><pre>def forward(x):
+   y = zeros_like(x)
+   event_size = x.shape[-event_dims:].num_elements()
+   for _ in range(event_size):
+     shift, log_scale = shift_and_log_scale_fn(y)
+     y = x * tf.exp(log_scale) + shift
+   return y
+</pre></div>
+<p>and the inverse transformation is
+</p>
+<div class="sourceCode"><pre>def inverse(y):
+  shift, log_scale = shift_and_log_scale_fn(y)
+  return (y - shift) / tf.exp(log_scale)
+</pre></div>
+<p>Notice that the inverse does not need a for-loop. This is because in the
+forward pass each calculation of shift and log_scale is based on the y
+calculated so far (not x). In the inverse, the y is fully known, thus is
+equivalent to the scaling used in forward after event_size passes, i.e.,
+the "last" y used to compute shift, log_scale.
+(Roughly speaking, this also proves the transform is bijective.)
+</p>
+
+
+<h3>Value</h3>
+
+<p>a bijector instance.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="https://arxiv.org/abs/1502.03509">Mathieu Germain, Karol Gregor, Iain Murray, and Hugo Larochelle. MADE: Masked Autoencoder for Distribution Estimation. In <em>International Conference on Machine Learning</em>, 2015.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1606.04934">Diederik P. Kingma, Tim Salimans, Rafal Jozefowicz, Xi Chen, Ilya Sutskever, and Max Welling. Improving Variational Inference with Inverse Autoregressive Flow. In <em>Neural Information Processing Systems</em>, 2016.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1705.07057">George Papamakarios, Theo Pavlakou, and Iain Murray. Masked Autoregressive Flow for Density Estimation. In <em>Neural Information Processing Systems</em>, 2017.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>For usage examples see <code>tfb_forward()</code>, <code>tfb_inverse()</code>, <code>tfb_inverse_log_det_jacobian()</code>.
+</p>
+<p>Other bijectors: 
+<code>tfb_absolute_value()</code>,
+<code>tfb_affine_linear_operator()</code>,
+<code>tfb_affine_scalar()</code>,
+<code>tfb_affine()</code>,
+<code>tfb_ascending()</code>,
+<code>tfb_batch_normalization()</code>,
+<code>tfb_blockwise()</code>,
+<code>tfb_chain()</code>,
+<code>tfb_cholesky_outer_product()</code>,
+<code>tfb_cholesky_to_inv_cholesky()</code>,
+<code>tfb_correlation_cholesky()</code>,
+<code>tfb_cumsum()</code>,
+<code>tfb_discrete_cosine_transform()</code>,
+<code>tfb_expm1()</code>,
+<code>tfb_exp()</code>,
+<code>tfb_ffjord()</code>,
+<code>tfb_fill_scale_tri_l()</code>,
+<code>tfb_fill_triangular()</code>,
+<code>tfb_glow()</code>,
+<code>tfb_gompertz_cdf()</code>,
+<code>tfb_gumbel_cdf()</code>,
+<code>tfb_gumbel()</code>,
+<code>tfb_identity()</code>,
+<code>tfb_inline()</code>,
+<code>tfb_invert()</code>,
+<code>tfb_iterated_sigmoid_centered()</code>,
+<code>tfb_kumaraswamy_cdf()</code>,
+<code>tfb_kumaraswamy()</code>,
+<code>tfb_lambert_w_tail()</code>,
+<code>tfb_masked_autoregressive_default_template()</code>,
+<code>tfb_masked_dense()</code>,
+<code>tfb_matrix_inverse_tri_l()</code>,
+<code>tfb_matvec_lu()</code>,
+<code>tfb_normal_cdf()</code>,
+<code>tfb_ordered()</code>,
+<code>tfb_pad()</code>,
+<code>tfb_permute()</code>,
+<code>tfb_power_transform()</code>,
+<code>tfb_rational_quadratic_spline()</code>,
+<code>tfb_rayleigh_cdf()</code>,
+<code>tfb_real_nvp_default_template()</code>,
+<code>tfb_real_nvp()</code>,
+<code>tfb_reciprocal()</code>,
+<code>tfb_reshape()</code>,
+<code>tfb_scale_matvec_diag()</code>,
+<code>tfb_scale_matvec_linear_operator()</code>,
+<code>tfb_scale_matvec_lu()</code>,
+<code>tfb_scale_matvec_tri_l()</code>,
+<code>tfb_scale_tri_l()</code>,
+<code>tfb_scale()</code>,
+<code>tfb_shifted_gompertz_cdf()</code>,
+<code>tfb_shift()</code>,
+<code>tfb_sigmoid()</code>,
+<code>tfb_sinh_arcsinh()</code>,
+<code>tfb_sinh()</code>,
+<code>tfb_softmax_centered()</code>,
+<code>tfb_softplus()</code>,
+<code>tfb_softsign()</code>,
+<code>tfb_split()</code>,
+<code>tfb_square()</code>,
+<code>tfb_tanh()</code>,
+<code>tfb_transform_diagonal()</code>,
+<code>tfb_transpose()</code>,
+<code>tfb_weibull_cdf()</code>,
+<code>tfb_weibull()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fortify.tis</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fortify a tis object</h2>
+
+<h3>Description</h3>
+
+<p>A fortify method for tis objects </p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">    ## S3 method for class 'tis'
+fortify(x, offset = 0.5, dfNames = NULL, timeName = "date")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>tis</code> object of time series</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p> A number between 0 and 1 specifying where in the period of time
+represented by the 'ti(x)' the points should eventually be plotted in <code>ggplot2</code>.
+'offset = 0' gives the beginning of the period and 'offset
+= 1' the end of the period, 'offset = 0.5' the middle of the period, and
+so on.  For example if <code>x</code> is a tis object of quarterly time series and <code>offset = 0.5</code>
+then the resulting plotted points would fall in the middle of each quarter.  
+<code>offset</code> is passed on to <code>POSIXct(ti(x), offset=offset)</code> 
+and used to create the field <code>date</code> in the resulting data frame.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfNames</code></td>
+<td>
+<p> A character vector of the names for the <code>tis</code> objects contained in <code>x</code>. Defaults to the name of the <code>tis</code> object in the univariate case and the column names of the <code>tis</code> object in the multivariate case.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeName</code></td>
+<td>
+<p> A character vector of length one with the desired name for
+the column of dates that will be created from the <code>tis</code> object time index.
+Default name is <code>"date"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function turns a <code>tis</code> object into a data frame containing the 
+original time series plus a field of dates
+adjusted by an ‘offset’,
+so that the time series can be more easily plotted with <code>ggplot2</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Trevor Davis</p>
+
+
+<h3>See Also</h3>
+
+<p>fortify</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">    if(require("ggplot2") &amp;&amp; require("reshape")) {
+             # Examples of plotting tis series with ggplot2
+             require("datasets")
+             require("scales")
+
+             # univariate example
+             num_discoveries &lt;- as.tis(discoveries)
+             ggplot(data = fortify(num_discoveries, offset=0)) + 
+                    geom_line(aes(x=date, y=num_discoveries)) + 
+                    scale_x_date(breaks = date_breaks("10 years"), labels = date_format("%Y"))
+             
+             # multivariate example using the "melt trick"
+             Seatbelts.tis &lt;- as.tis(Seatbelts[ , c("drivers", "front", "rear")])
+             Seatbelt.names &lt;- c("Driver", "Front Seat Passenger", "Back Seat Passenger")
+             Seatbelts.df &lt;- fortify(Seatbelts.tis, dfNames = Seatbelt.names,
+                                     timeName = "Time")
+             Seatbelts.dfm &lt;- melt(Seatbelts.df, id.var = "Time", variable_name="type")
+             qplot( Time, value, data = Seatbelts.dfm, geom="line", 
+                    group=type, colour=type, linetype=type ) + 
+                 geom_vline(xintercept=as.numeric(as.Date("1983-01-31")), 
+                    colour="black", linetype="dashed") +
+                 ylab("Monthly Road Casulties in the UK")
+    }
+</code></pre>
+
+
+</div>

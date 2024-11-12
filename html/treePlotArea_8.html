@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_correction_factors</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Correction Factors for Tree Plot Areas Intersected by Stand Boundaries</h2>
+
+<h3>Description</h3>
+
+<p>Get correction factors for an angle count table (i.e. a
+<code>data.frame</code>) and a corresponding boundary
+table (i.e. a <code>data.frame</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_correction_factors(
+  angle_counts,
+  boundaries,
+  verbose = TRUE,
+  stop_on_error = FALSE,
+  skip_check = FALSE,
+  counting_factor = 4,
+  is_ti_round = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>angle_counts</code></td>
+<td>
+<p>A <code>data.frame</code> containing angle counts.
+It has to have columns named by the contents of
+either<br><code>get_defaults()[["angle_counts"]]</code> or <br><code>getOption("treePlotArea")[["angle_counts"]]</code>.<br>
+Could be
+<code>bw2bwi2022de(get(data("trees", package = "treePlotArea")))</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boundaries</code></td>
+<td>
+<p>A <code>data.frame</code> containing boundaries.
+It has to have columns named by the contents of
+either<br><code>get_defaults()[["boundaries"]]</code> or <br><code>getOption("treePlotArea")[["boundaries"]]</code>.<br>
+Could be
+<code>get(data("boundaries", package = "treePlotArea"))</code> or the
+output of
+<code>get_boundary_polygons</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Be verbose?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop_on_error</code></td>
+<td>
+<p>Passed to <code>get_boundary_polygons</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_check</code></td>
+<td>
+<p>We usually check if the angle counts are
+suitable
+(for example whether a diameter at breast height, a horizontal distance and
+an azimuth
+measurement are given). Skip this check? This might be of interest if you
+want to check whether another plot with no dbh recorded (for example a
+corner) is intersected by a boundary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>counting_factor</code></td>
+<td>
+<p>The basal area factor used in counting the trees. For
+tally trees in the German national forest inventory its value is 4 [m^2].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_ti_round</code></td>
+<td>
+<p>When checking for the boundary circle of a tree to include
+the center of the plot: round that circle's radius to the unit (i.e. [cm])
+as done by Thuenen Institute?</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The columns in the names have to be named according to the values of
+<code>getOption("treePlotArea")</code>.
+If they do not: you can either rename the columns
+or set the option accordingly, probably using <code>set_options</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A  <code>data.frame</code> containing the correction factors and a
+status giving information on possibly errors.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>set_options
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("trees", "boundaries", package = "treePlotArea")
+
+# For CRAN's sake: draw a subset
+tracts &lt;- c(sample(boundaries[["tnr"]], 20), 10056)
+
+# Calculate correction factors
+trees &lt;- subset(trees, tnr %in% tracts)
+boundaries &lt;- subset(boundaries, tnr %in% tracts)
+angle_counts &lt;- bw2bwi2022de(trees)
+validate_data(x = boundaries)
+validate_data(x = angle_counts)
+boundary_polygons &lt;- get_boundary_polygons(boundaries)
+correction_factors &lt;- get_correction_factors(angle_counts, boundary_polygons)
+summary(correction_factors$status)
+
+#  Select valid angle count trees only
+valid_angle_counts &lt;- select_valid_angle_count_trees(angle_counts)
+correction_factors &lt;- get_correction_factors(valid_angle_counts,
+                                             boundary_polygons)
+summary(correction_factors$status)
+
+# Select a single tree
+tnr &lt;- 10056
+enr &lt;- 4
+bnr &lt;- 3
+tree &lt;- valid_angle_counts[valid_angle_counts[["tnr"]] == tnr &amp;
+                     valid_angle_counts[["enr"]] == enr &amp;
+                     valid_angle_counts[["bnr"]] == bnr, TRUE]
+bounds &lt;- boundaries[boundaries[["tnr"]] == tnr &amp; boundaries[["enr"]] == enr,
+                     TRUE]
+get_correction_factors(tree, bounds)
+
+# Deadwood plots:
+dead_wood_plots &lt;- unique(trees[TRUE, c("tnr", "enr")])
+dead_wood_plots[["bnr"]] &lt;- 0
+dead_wood_plots[["hori"]] &lt;- 0
+dead_wood_plots[["azi"]] &lt;- 0
+dead_wood_plots[["bhd"]] &lt;- 200
+get_correction_factors(dead_wood_plots, boundary_polygons,
+                       skip_check = TRUE)
+# Set the deadwood plot's radius to 500 mm
+dead_wood_plots[["bhd"]] &lt;- 5000
+# The counting factor has unit square meters per area.
+# Area is hardcoded to 10000 [square meters], so to get a plot radius that's
+# equal to the dbh, we need 2 * sqrt(counting_factor) / sqrt(10000) to be
+# equal to 1.
+get_correction_factors(dead_wood_plots, boundary_polygons,
+                       skip_check = TRUE,
+                       counting_factor = 2500)
+</code></pre>
+
+
+</div>

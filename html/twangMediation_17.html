@@ -1,0 +1,359 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>wgtmed</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Weighted mediation analysis.</h2>
+
+<h3>Description</h3>
+
+<p>Estimate causal mediation mechanism of a treatment
+using propensity score weighting.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">wgtmed(
+  formula.med,
+  data,
+  a_treatment,
+  y_outcome = NULL,
+  med_interact = NULL,
+  total_effect_wts = NULL,
+  total_effect_ps = NULL,
+  total_effect_stop_rule = NULL,
+  method = "ps",
+  sampw = NULL,
+  ps_n.trees = 10000,
+  ps_interaction.depth = 3,
+  ps_shrinkage = 0.01,
+  ps_bag.fraction = 1,
+  ps_n.minobsinnode = 10,
+  ps_perm.test.iters = 0,
+  ps_verbose = FALSE,
+  ps_stop.method = c("ks.mean", "ks.max"),
+  ps_version = "gbm",
+  ps_ks.exact = NULL,
+  ps_n.keep = 1,
+  ps_n.grid = 25,
+  ps_cv.folds = 10,
+  ps_keep.data = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula.med</code></td>
+<td>
+<p>A object of class formula relating the mediatior(s)
+to the covariates (potential confounding variables).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A dataset of class data.frame that includes the treatment indicator, mediator(s), and covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a_treatment</code></td>
+<td>
+<p>The (character) name of the treatment variable, which must be
+dichotomous (0, 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_outcome</code></td>
+<td>
+<p>The (character) name of the outcome variable, y. If this is not provided, then
+no effects will be calculated and a warning will be raised. Default : <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>med_interact</code></td>
+<td>
+<p>The (character) vector of names of variables specified on the right-hand side
+of formula.med that consist of crossproducts or interactions between a covariate
+and the mediator. See the tutorial for details on these variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_effect_wts</code></td>
+<td>
+<p>A vector of total effect weights, which if left <code>NULL</code>
+then total_effect_ps must be supplied. Default : <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_effect_ps</code></td>
+<td>
+<p>A ps object that contains the total effect weights,</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_effect_stop_rule</code></td>
+<td>
+<p>The stopping rule (<code>ks.mean</code>, <code>ks.max</code>, <code>es.mean</code>, <code>es.max</code>) for the total effect weights, which
+only needs to be specified if total_effect_ps is provided. Default : <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The method for getting weights ("ps", "logistic", or "crossval"). Default : <code>"ps"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sampw</code></td>
+<td>
+<p>Optional sampling weights Default : <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_n.trees</code></td>
+<td>
+<p>Number of gbm iterations passed on to gbm. Default: 10000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_interaction.depth</code></td>
+<td>
+<p>A positive integer denoting the tree depth used in
+gradient boosting. Default: 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_shrinkage</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the learning rate.
+See gbm for more details. Default: 0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_bag.fraction</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the fraction of
+the observations randomly selected in each iteration of the gradient
+boosting algorithm to propose the next tree. See gbm for
+more details. Default: 1.0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_n.minobsinnode</code></td>
+<td>
+<p>An integer specifying the minimum number of observations
+in the terminal nodes of the trees used in the gradient boosting.  See gbm for
+more details. Default: 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_perm.test.iters</code></td>
+<td>
+<p>A non-negative integer giving the number of iterations
+of the permutation test for the KS statistic. If <code>perm.test.iters=0</code>
+then the function returns an analytic approximation to the p-value. Setting
+<code>perm.test.iters=200</code> will yield precision to within 3% if the true
+p-value is 0.05. Use <code>perm.test.iters=500</code> to be within 2%. Default: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_verbose</code></td>
+<td>
+<p>If <code>TRUE</code>, lots of information will be printed to monitor the
+the progress of the fitting. Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_stop.method</code></td>
+<td>
+<p>A method or methods of measuring and summarizing balance across pretreatment
+variables. Current options are <code>ks.mean</code>, <code>ks.max</code>, <code>es.mean</code>, and <code>es.max</code>. <code>ks</code> refers to the
+Kolmogorov-Smirnov statistic and es refers to standardized effect size. These are summarized
+across the pretreatment variables by either the maximum (<code>.max</code>) or the mean (<code>.mean</code>).
+Default: <code>c("ks.mean", "ks.max")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_version</code></td>
+<td>
+<p>"gbm", "xgboost", or "legacy", indicating which version of the twang package to use.
+</p>
+
+<ul>
+<li> <p><code>"gbm"</code> uses gradient boosting from the <code>gbm</code> package.
+</p>
+</li>
+<li> <p><code>"xgboost"</code> uses gradient boosting from the <code>xgboost</code> package.
+</p>
+</li>
+<li> <p><code>"legacy"</code> uses the prior implementation of the <code>ps</code> function.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_ks.exact</code></td>
+<td>
+<p><code>NULL</code> or a logical indicating whether the
+Kolmogorov-Smirnov p-value should be based on an approximation of exact
+distribution from an unweighted two-sample Kolmogorov-Smirnov test. If
+<code>NULL</code>, the approximation based on the exact distribution is computed
+if the product of the effective sample sizes is less than 10,000.
+Otherwise, an approximation based on the asymptotic distribution is used.
+<strong>Warning:</strong> setting <code>ks.exact = TRUE</code> will add substantial
+computation time for larger sample sizes. Default: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_n.keep</code></td>
+<td>
+<p>A numeric variable indicating the algorithm should only
+consider every <code>n.keep</code>-th iteration of the propensity score model and
+optimize balance over this set instead of all iterations. Default : 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_n.grid</code></td>
+<td>
+<p>A numeric variable that sets the grid size for an initial
+search of the region most likely to minimize the <code>stop.method</code>. A
+value of <code>n.grid=50</code> uses a 50 point grid from <code>1:n.trees</code>. It
+finds the minimum, say at grid point 35. It then looks for the actual
+minimum between grid points 34 and 36.If specified with <code>n.keep&gt;1</code>, <code>n.grid</code>
+corresponds to a grid of points on the kept iterations as defined by <code>n.keep</code>. Default: 25.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_cv.folds</code></td>
+<td>
+<p>A numeric variable that sets the number of cross-validation folds if
+using method='crossval'. Default: 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ps_keep.data</code></td>
+<td>
+<p>A logical variable that determines if the dataset should be saved
+in the resulting <code>ps</code> model objects. Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For users comfortable with ps, any options prefaced with
+<code>ps_</code> are passed directly to the <code>ps()</code> function.
+Model A is used to estimate Pr(A=1 | X) where X is the vector of background covariates specified in <code>formula.med</code>. If <code>method</code> equals <code>"ps"</code> model A is fit using the twang <code>ps</code> function with estimand= <code>"ATE"</code>. If <code>method</code> equals <code>"logistic"</code> then model A is fit using logistic regression. If <code>method</code> equals <code>"crossval"</code> then gbm using cross-validation is used to estimate model A. Because X might include variables not used to estimate the user-provided total effect weights, model A is fit rather than using the user-provided total effect weights to derive Pr(A | X). If the user uses the same set of variables to estimate their provided total effect weights as they enter in the wgtmed function to estimate the cross-world weights and the user uses the same estimation method and arguments as specified in the wgtmed function, then the estimated model A will match the model the user used to obtain the provided total effect weights.
+</p>
+
+
+<h3>Value</h3>
+
+<p>mediation object
+The <code>mediation</code> object includes the following:
+</p>
+
+<ul>
+<li> <p><code>model_a</code> The model A <code>ps()</code> results.
+</p>
+</li>
+<li> <p><code>model_m1</code> The model M1 <code>ps()</code> results.
+</p>
+</li>
+<li> <p><code>model_m0</code> The model M0 <code>ps()</code> results.
+</p>
+</li>
+<li> <p><code>data</code> The data set used to compute models
+</p>
+</li>
+<li> <p><code>stopping_methods</code> The stopping methods passed to <code>stop.method</code>.
+</p>
+</li>
+<li> <p><code>datestamp</code> The date when the analysis was run.
+</p>
+</li>
+<li>
+<p> For each <code>stop.method</code>, a list with the following:
+</p>
+
+<ul>
+<li> <p><code>TE</code> The total effect.
+</p>
+</li>
+<li> <p><code>NDE_0</code> The natural direct effect, holding the mediator constant at 0.
+</p>
+</li>
+<li> <p><code>NIE_1</code> The natural indirect effect, holding the exposure constant at 1.
+</p>
+</li>
+<li> <p><code>NDE_1</code> The natural direct effect, holding the mediator constant at 1.
+</p>
+</li>
+<li> <p><code>NIE_0</code> The natural indirect effect, holding the exposure constant at 0.
+</p>
+</li>
+<li> <p><code>expected_treatment0_mediator0</code> E(Y(0, M(0)))
+</p>
+</li>
+<li> <p><code>expected_treatment1_mediator1</code> E(Y(1, M(1)))
+</p>
+</li>
+<li> <p><code>expected_treatment1_mediator0</code> E(Y(1, M(0)))
+</p>
+</li>
+<li> <p><code>expected_treatment0_mediator1</code> E(Y(0, M(1)))
+</p>
+</li>
+</ul>
+</li>
+<li> <p><code>dx.wts</code> A list with information for checking covariate balance of for each
+estimated effect. Elements are TE, NIE1, NDE0, NIE0, NDE1, with results of
+<code>twang</code> <code>dx.wts</code> for the covariates when weighted  by weights used in the
+estimating the effect.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>ps</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("tMdat")
+
+## tMdat is small simulated data set included in twangMediation for 
+## demonstrating the functions. See ?tMdat for details
+
+head(tMdat)
+
+## The tMdat data contains the following variables:
+##   w1, w2, w3 -- Simulatad covariates
+##   A   -- Simulated dichotomous exposure indicator
+##   M   -- Simulated discrete mediator (11 values)
+##   Y   -- Simulated continuous outcome
+##   te.wgt -- Estimated inverse probability weight, estimated using 
+##             GBM via the twang ps function
+
+fit.es.max &lt;- wgtmed(M ~ w1 + w2 + w3,
+                      data = tMdat,
+                      a_treatment = "A",
+                      y_outcome = "Y",
+                      total_effect_wts = tMdat$te.wgt,
+                      method = "ps",
+                      ps_n.trees=1500,
+                      ps_shrinkage=0.01,
+                      ps_stop.method=c("es.max")
+                      )
+
+fit.es.max
+</code></pre>
+
+
+</div>

@@ -1,0 +1,218 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_diff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a differenced predictor</h2>
+
+<h3>Description</h3>
+
+<p><code>step_diff</code> creates a <em>specification</em> of a recipe step that
+will add new columns of differenced data. Differenced data will
+include NA values where a difference was induced.
+These can be removed with <code>step_naomit()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_diff(
+  recipe,
+  ...,
+  role = "predictor",
+  trained = FALSE,
+  lag = 1,
+  difference = 1,
+  log = FALSE,
+  prefix = "diff_",
+  columns = NULL,
+  skip = FALSE,
+  id = rand_id("diff")
+)
+
+## S3 method for class 'step_diff'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the sequence of
+operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which variables are
+affected by the step. See <code>selections()</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>Defaults to "predictor"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for preprocessing
+have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>A vector of positive integers identifying which lags (how far back)
+to be included in the differencing calculation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>difference</code></td>
+<td>
+<p>The number of differences to perform.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>Calculates log differences instead of differences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prefix</code></td>
+<td>
+<p>A prefix for generated column names, default to "diff_".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>bake.recipe()</code>? While all operations are baked
+when <code>prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = TRUE</code> as it may affect
+the computations for subsequent operations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_diff</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The step assumes that the data are already <em>in the proper sequential
+order</em> for lagging.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the
+new step added to the sequence of existing steps (if any).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Remove NA Values:
+</p>
+
+<ul><li> <p><code>recipes::step_naomit()</code>
+</p>
+</li></ul>
+<p>Main Recipe Functions:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+
+
+FANG_wide &lt;- FANG %&gt;%
+    dplyr::select(symbol, date, adjusted) %&gt;%
+    tidyr::pivot_wider(names_from = symbol, values_from = adjusted)
+
+
+# Make and apply recipe ----
+
+recipe_diff &lt;- recipe(~ ., data = FANG_wide) %&gt;%
+  step_diff(FB, AMZN, NFLX, GOOG, lag = 1:3, difference = 1) %&gt;%
+  prep()
+
+recipe_diff %&gt;% bake(FANG_wide)
+
+
+# Get information with tidy ----
+
+recipe_diff %&gt;% tidy()
+
+recipe_diff %&gt;% tidy(1)
+
+</code></pre>
+
+
+</div>

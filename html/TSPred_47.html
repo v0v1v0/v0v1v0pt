@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>evaluate.tspred</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Evaluate method for <code>tspred</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>Evaluates the modeling fitness and quality of time series prediction of the trained models and
+predicted time series data contained in a <code>tspred</code> class object, respectively,
+based on a particular metric. Each metric is defined
+by an <code>evaluating</code> object in the list contained in the <code>tspred</code> class object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tspred'
+evaluate(obj, fitness = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>An object of class <code>tspred</code> defining a particular time series prediction process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fitness</code></td>
+<td>
+<p>Should the function compute fitness quality metrics?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed to the method <code>evaluate</code> of
+the <code>evaluating</code> objects from <code>obj</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>evaluate.tspred</code> calls the method <code>evaluate</code>
+on each <code>evaluating</code> object contained in <code>obj</code>. It uses each trained model,
+the testing set and the time series predictions contained in <code>obj</code> to compute the metrics.
+Finally, the produced quality metrics are introduced in the structure of the <code>tspred</code>
+class object in <code>obj</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>tspred</code> with updated structure containing
+computed quality metric values.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Rebecca Pontes Salles
+</p>
+
+
+<h3>See Also</h3>
+
+<p>[tspred()] for defining a particular time series prediction process,
+and [MSE_eval()] for defining a time series prediction/modeling quality metric.
+</p>
+<p>Other evaluate: 
+<code>evaluate()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(CATS)
+
+#Obtaining objects of the processing class
+proc1 &lt;- subsetting(test_len=20)
+proc2 &lt;- BoxCoxT(lambda=NULL)
+proc3 &lt;- WT(level=1, filter="bl14")
+
+#Obtaining objects of the modeling class
+modl1 &lt;- ARIMA()
+
+#Obtaining objects of the evaluating class
+eval1 &lt;- MSE_eval()
+
+#Defining a time series prediction process
+tspred_1 &lt;- tspred(subsetting=proc1,
+                   processing=list(BCT=proc2,
+                                   WT=proc3),
+                   modeling=modl1,
+                   evaluating=list(MSE=eval1)
+)
+summary(tspred_1)
+
+tspred_1 &lt;- subset(tspred_1, data=CATS[3])
+tspred_1 &lt;- preprocess(tspred_1,prep_test=FALSE)
+tspred_1 &lt;- train(tspred_1)
+tspred_1 &lt;- predict(tspred_1, onestep=TRUE)
+tspred_1 &lt;- postprocess(tspred_1)
+tspred_1 &lt;- evaluate(tspred_1)
+
+
+</code></pre>
+
+
+</div>

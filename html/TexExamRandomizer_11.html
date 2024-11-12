@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CreateRandomExams</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>CreateRandomExams</h2>
+
+<h3>Description</h3>
+
+<p>This function creates a series of randomized exams from a tex document and personalizes the information from a table (if a table is given) and a series of command names where thae information shoudl be replaced.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CreateRandomExams(
+  x,
+  layersNames = c("questions", "choices"),
+  layersCmd = c("question", "(choice|CorrectChoice)"),
+  outputBaseName,
+  outputDirectory,
+  cmdReorder = rep_len(TRUE, length(layersNames)),
+  sectionReorder = FALSE,
+  infoTable = NULL,
+  colNames = NULL,
+  cmdNames = NULL,
+  nOutputVersions = nrow(infoTable),
+  nOutputQuestions = "max",
+  answerSheetCorrectTag = NULL,
+  answerSheetWrongTag = NULL,
+  optionList = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A character vector, each element represents one line of the latex document</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>layersNames</code></td>
+<td>
+<p>A character vector, with each element representating the environment name to be searched as <code>cmdName</code> as describe in <code>FindBegin</code> and <code>FindEnd</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>layersCmd</code></td>
+<td>
+<p>A character vector, with the same length as <code>layersNames</code>. with each element representing the environment command to be serached as <code>cmdName</code> as described in <code>FindCommand</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outputBaseName</code></td>
+<td>
+<p>String, The basename for the output files.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outputDirectory</code></td>
+<td>
+<p>String, The output directory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cmdReorder, sectionReorder</code></td>
+<td>
+<p>Logical vector, the length of <code>cmdReorder</code> determines how many layers deep are we going to dig and randomize. For that reason, if <code>sectionReorder</code> is just a scalar, it will assume that it repeats for every <code>cmdReorder</code> that is given. See <code>RandomizeDocument</code> for extra details on these parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>infoTable</code></td>
+<td>
+<p>Table with information, if NULL, no information is added to the exams</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colNames</code></td>
+<td>
+<p>Character vector, Column names from the <code>infoTable</code> from which we will extract the information.
+</p>
+<p>It first tries to find the column names literally, if ti couldn't find them like that, it will try to use them as a regular expression to find a column that matches the column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cmdNames</code></td>
+<td>
+<p>Character vector, Names of the commands on the tex file, <code>\&lt;cmdNames[i]&gt;</code>, that are to be matched with the columns to replace the information from the table in those commands. For extra info see also <code>ReplaceFromTable</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nOutputVersions</code></td>
+<td>
+<p>Number of different random versions of the exam to be outputted</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nOutputQuestions</code></td>
+<td>
+<p>Number of "questions" on the output exams. If the input is a scalar, the program will decide how to more evenly split the questions between all the sections, otherwise one can directly provide an integer vector specifying how many questions from each section are needed. (this only searches the "items" of the outermost layer)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>answerSheetCorrectTag, answerSheetWrongTag</code></td>
+<td>
+<p>If the tags are not given, the output answersheet will be <code>NULL</code>. In other cases, these tags can be regular expressions</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optionList</code></td>
+<td>
+<p>Instead of writing the options on the function. Options could be given to optionList, and it will add those options. As long as the names are correct</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>All the output exams are named with <code>outputBaseName</code> followed by 00i identifying the number of the exam (The number of zeros is the minimum that allows for all the exams to have a different number) and <code>"_Version_"</code> followed by the version number of the exam and "<code>.tex</code>". That is:
+</p>
+<p><code>&lt;outputDirectory&gt;/&lt;outputBaseName&gt;00i_Version_j.tex</code>
+</p>
+<p>The number of exams outputted will always be the same as the number of versions if no table is given. However, if a table is added as input. It will create one exam for each row of the table, and it will try to divide as evenly as possible how to give the versions between the different rows. (Having one exam for each row, which will probably represent a student)
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list that contains
+</p>
+
+<dl>
+<dt><code>outputDirectory</code></dt>
+<dd>
+<p>The output directory</p>
+</dd>
+<dt><code>outputFiles</code></dt>
+<dd>
+<p>A character vector that contains all the output names</p>
+</dd>
+<dt><code>FullAnswerSheet</code></dt>
+<dd>
+<p>The full answer sheet of all the exams.
+</p>
+<p>Each answer sheet is created as described by <code>ConstructAnswerSheet</code>, and all the answer sheets are joined together with a version number in front as an added column to bind them all together. The original version has the number 0, all the output versions have sequential numbers as Version
+</p>
+<p>This wrapper function assumes equal depth on all branches of the tree structure, so that the number of columns is always identical in the answer sheet
+</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>ConstructAnswerSheet</code>, <code>ReplaceFromTable</code>, <code>RandomizeDocument</code> for extra details. . To see examples of how to use it, look at the code in <code>jsonhwparser</code>
+</p>
+
+
+</div>

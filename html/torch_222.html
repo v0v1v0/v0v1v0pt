@@ -1,0 +1,168 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_adaptive_log_softmax_with_loss</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>AdaptiveLogSoftmaxWithLoss module</h2>
+
+<h3>Description</h3>
+
+<p>Efficient softmax approximation as described in
+<a href="https://arxiv.org/abs/1609.04309">Efficient softmax approximation for GPUs by Edouard Grave, Armand Joulin, Moustapha Cissé, David Grangier, and Hervé Jégou</a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_adaptive_log_softmax_with_loss(
+  in_features,
+  n_classes,
+  cutoffs,
+  div_value = 4,
+  head_bias = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>in_features</code></td>
+<td>
+<p>(int): Number of features in the input tensor</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_classes</code></td>
+<td>
+<p>(int): Number of classes in the dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoffs</code></td>
+<td>
+<p>(Sequence): Cutoffs used to assign targets to their buckets</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>div_value</code></td>
+<td>
+<p>(float, optional): value used as an exponent to compute sizes
+of the clusters. Default: 4.0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>head_bias</code></td>
+<td>
+<p>(bool, optional): If <code>True</code>, adds a bias term to the 'head' of the
+adaptive softmax. Default: <code>False</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Adaptive softmax is an approximate strategy for training models with large
+output spaces. It is most effective when the label distribution is highly
+imbalanced, for example in natural language modelling, where the word
+frequency distribution approximately follows the Zipf's law.
+</p>
+<p>Adaptive softmax partitions the labels into several clusters, according to
+their frequency. These clusters may contain different number of targets
+each.
+</p>
+<p>Additionally, clusters containing less frequent labels assign lower
+dimensional embeddings to those labels, which speeds up the computation.
+For each minibatch, only clusters for which at least one target is
+present are evaluated.
+</p>
+<p>The idea is that the clusters which are accessed frequently
+(like the first one, containing most frequent labels), should also be cheap
+to compute – that is, contain a small number of assigned labels.
+We highly recommend taking a look at the original paper for more details.
+</p>
+
+<ul>
+<li> <p><code>cutoffs</code> should be an ordered Sequence of integers sorted
+in the increasing order.
+It controls number of clusters and the partitioning of targets into
+clusters. For example setting <code>cutoffs = c(10, 100, 1000)</code>
+means that first <code>10</code> targets will be assigned
+to the 'head' of the adaptive softmax, targets <code style="white-space: pre;">⁠11, 12, ..., 100⁠</code> will be
+assigned to the first cluster, and targets <code style="white-space: pre;">⁠101, 102, ..., 1000⁠</code> will be
+assigned to the second cluster, while targets
+<code style="white-space: pre;">⁠1001, 1002, ..., n_classes - 1⁠</code> will be assigned
+to the last, third cluster.
+</p>
+</li>
+<li> <p><code>div_value</code> is used to compute the size of each additional cluster,
+which is given as
+<code class="reqn">\left\lfloor\frac{\mbox{in\_features}}{\mbox{div\_value}^{idx}}\right\rfloor</code>,
+where <code class="reqn">idx</code> is the cluster index (with clusters
+for less frequent words having larger indices,
+and indices starting from <code class="reqn">1</code>).
+</p>
+</li>
+<li> <p><code>head_bias</code> if set to True, adds a bias term to the 'head' of the
+adaptive softmax. See paper for details. Set to False in the official
+implementation.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p><code>NamedTuple</code> with <code>output</code> and <code>loss</code> fields:
+</p>
+
+<ul>
+<li> <p><strong>output</strong> is a Tensor of size <code>N</code> containing computed target
+log probabilities for each example
+</p>
+</li>
+<li> <p><strong>loss</strong> is a Scalar representing the computed negative
+log likelihood loss
+</p>
+</li>
+</ul>
+<h3>Warning</h3>
+
+<p>Labels passed as inputs to this module should be sorted according to
+their frequency. This means that the most frequent label should be
+represented by the index <code>0</code>, and the least frequent
+label should be represented by the index <code>n_classes - 1</code>.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> input: <code class="reqn">(N, \mbox{in\_features})</code>
+</p>
+</li>
+<li>
+<p> target: <code class="reqn">(N)</code> where each value satisfies <code class="reqn">0 &lt;= \mbox{target[i]} &lt;= \mbox{n\_classes}</code>
+</p>
+</li>
+<li>
+<p> output1: <code class="reqn">(N)</code>
+</p>
+</li>
+<li>
+<p> output2: <code>Scalar</code>
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>This module returns a <code>NamedTuple</code> with <code>output</code>
+and <code>loss</code> fields. See further documentation for details.
+</p>
+<p>To compute log-probabilities for all classes, the <code>log_prob</code>
+method can be used.
+</p>
+
+
+</div>

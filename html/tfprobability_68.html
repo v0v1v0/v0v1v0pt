@@ -1,0 +1,180 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_autoregressive_state_space_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>State space model for an autoregressive process.</h2>
+
+<h3>Description</h3>
+
+<p>A state space model (SSM) posits a set of latent (unobserved) variables that
+evolve over time with dynamics specified by a probabilistic transition model
+<code>p(z[t+1] | z[t])</code>. At each timestep, we observe a value sampled from an
+observation model conditioned on the current state, <code>p(x[t] | z[t])</code>. The
+special case where both the transition and observation models are Gaussians
+with mean specified as a linear function of the inputs, is known as a linear
+Gaussian state space model and supports tractable exact probabilistic
+calculations; see <code>tfd_linear_gaussian_state_space_model</code> for
+details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_autoregressive_state_space_model(
+  num_timesteps,
+  coefficients,
+  level_scale,
+  initial_state_prior,
+  observation_noise_scale = 0,
+  initial_step = 0,
+  validate_args = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_timesteps</code></td>
+<td>
+<p>Scalar <code>integer</code> <code>tensor</code> number of timesteps to model
+with this distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefficients</code></td>
+<td>
+<p><code>float</code> <code>tensor</code> of shape <code>tf$concat(batch_shape, list(order))</code>
+defining  the autoregressive coefficients. The coefficients are defined
+backwards in time:
+<code>coefficients[0] * level[t] + coefficients[1] * level[t-1] + ... + coefficients[order-1] * level[t-order+1]</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are treated as batch
+dimensions) <code>float</code> <code>tensor</code> indicating the standard deviation of the
+transition noise at each step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>instance of <code>tfd_multivariate_normal</code> representing
+the prior distribution on latent states.  Must have event shape <code>list(order)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation_noise_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are
+treated as batch dimensions) <code>float</code> <code>tensor</code> indicating the standard
+deviation of the observation noise. Default value: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_step</code></td>
+<td>
+<p>Optional scalar <code>int</code> <code>tensor</code> specifying the starting
+timestep. Default value: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p><code>logical</code>. Whether to validate input
+with asserts. If <code>validate_args</code> is <code>FALSE</code>, and the inputs are
+invalid, correct behavior is not guaranteed. Default value: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to ops created by this class. Default value: "AutoregressiveStateSpaceModel".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In an autoregressive process, the expected level at each timestep is a linear
+function of previous levels, with added Gaussian noise:
+</p>
+<div class="sourceCode"><pre>level[t+1] = (sum(coefficients * levels[t:t-order:-1]) + Normal(0., level_scale))
+</pre></div>
+<p>The process is characterized by a vector <code>coefficients</code> whose size determines
+the order of the process (how many previous values it looks at), and by
+<code>level_scale</code>, the standard deviation of the noise added at each step.
+This is formulated as a state space model by letting the latent state encode
+the most recent values; see 'Mathematical Details' below.
+</p>
+<p>The parameters <code>level_scale</code> and <code>observation_noise_scale</code> are each (a batch
+of) scalars, and <code>coefficients</code> is a (batch) vector of size <code>list(order)</code>. The
+batch shape of this <code>Distribution</code> is the broadcast batch
+shape of these parameters and of the <code>initial_state_prior</code>.
+</p>
+<p>Mathematical Details
+</p>
+<p>The autoregressive model implements a
+<code>tfd_linear_gaussian_state_space_model</code> with <code>latent_size = order</code>
+and <code>observation_size = 1</code>. The latent state vector encodes the recent history
+of the process, with the current value in the topmost dimension. At each
+timestep, the transition sums the previous values to produce the new expected
+value, shifts all other values down by a dimension, and adds noise to the
+current value. This is formally encoded by the transition model:
+</p>
+<div class="sourceCode"><pre>transition_matrix = [ coefs[0], coefs[1], ..., coefs[order]
+                      1.,       0 ,       ..., 0.
+                      0.,       1.,       ..., 0.
+                      ...
+                      0.,       0.,  ...,  1., 0.         ]
+</pre></div>
+<div class="sourceCode"><pre>transition_noise ~ N(loc=0., scale=diag([level_scale, 0., 0., ..., 0.]))
+</pre></div>
+<p>The observation model simply extracts the current (topmost) value, and
+optionally adds independent noise at each step:
+</p>
+<div class="sourceCode"><pre>observation_matrix = [[1., 0., ..., 0.]]
+observation_noise ~ N(loc=0, scale=observation_noise_scale)
+</pre></div>
+<p>Models with <code>observation_noise_scale = 0</code> are AR processes in the formal
+sense. Setting <code>observation_noise_scale</code> to a nonzero value corresponds to a
+latent AR process observed under an iid noise model.
+</p>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>LinearGaussianStateSpaceModel</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

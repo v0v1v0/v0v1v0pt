@@ -1,0 +1,90 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tpac</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tissue-adjusted pathway analysis of cancer (TPAC) algorithm</h2>
+
+<h3>Description</h3>
+
+<p>Implementation of the tissue-adjusted pathway analysis of cancer (TPAC) method, which performs single sample gene set scoring of
+cancer transcriptomic data. The TPAC method computes a tissue-adjusted squared Mahalanobis distance and one-sided CDF values for
+all samples in the specified cancer gene expression matrix. Importantly, these distances are measured from the
+normal tissue mean and normal tissue specificity (i.e., fold-change in mean expression in the corresponding normal tissue relative to
+the mean expression in other tissue types) is used to weight genes when computing the distance metric. The distances are decomposed into
+a positive component, negative component and overall component, i.e., the positive component only captures expression values above the mean.
+A gamma distribution is fit on the squared tissue-adjusted Mahalanobis distances computed on data that is permuted to match to the null 
+that the cancer expression data is uncorrelated with mean values matching those found in the associated normal tissue. This null
+gamma distribution is used to calculate the CDF values for the unpermuted distances.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">    tpac(gene.expr, mean.expr, tissue.specificity)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>gene.expr</code></td>
+<td>
+<p>An n x p matrix of gene expression values for n samples and p genes. This matrix should reflect the subset of the 
+full expression profile that corresponds to a single gene set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean.expr</code></td>
+<td>
+<p>Vector of mean expression values for the p genes from which distances will be measured, i.e., mean expression in 
+corresponding normal tissue.These mean expression values must be computed using the same normalization method used for 
+tumor expression data in <code>gene.expr</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tissue.specificity</code></td>
+<td>
+<p>Optional vector of tissue-specificity values for the p genes, 
+i.e, fold change between mean expression in the associated normal tissue and the average of 
+mean expression values in other cancer-associated normal tissues. If specified, these specificity values are used to modify the 
+diagonal elements of the covariance matrix used in the Mahalanobis statistic.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> with the following elements (row names will match row names from <code>gene.expr</code>):
+</p>
+
+<ul>
+<li> <p><code>s.pos</code>: vector of TPAC scores (i.e., CDF values) computed from the positive squared adjusted Mahalanobis distances.
+</p>
+</li>
+<li> <p><code>s.neg</code>: vector of TPAC scores computed from the negative squared adjusted Mahalanobis distances.
+</p>
+</li>
+<li> <p><code>s</code>: vector of TPAC scores computed from the sum of the positive and negative squared adjusted Mahalanobis distances.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>tpacForCollection</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">    # Simulate Gaussian expression data for 10 genes and 10 samples
+    gene.expr=matrix(rnorm(100), nrow=10)
+    # Use 0 as mean.expr 
+    mean.expr=rep(0,10)
+    # Simulate tissue-specific weights
+    tissue.specificity = runif(10, min=0.5, max=1.5)
+    # Execute TPAC to compute positive, negative and overall scores 
+    tpac(gene.expr=gene.expr, mean.expr=mean.expr, tissue.specificity=tissue.specificity)
+</code></pre>
+
+
+</div>

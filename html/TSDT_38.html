@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>subgroup</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>subgroup</h2>
+
+<h3>Description</h3>
+
+<p>Subset a user-provided data.frame according to the subgroup
+specified by a node in a tree.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">subgroup(splits, node, xdata, ydata = xdata)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>splits</code></td>
+<td>
+<p>A data.frame of splits returned from a call to parse_rpart().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>node</code></td>
+<td>
+<p>The NodeID of the node defining the desired split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xdata</code></td>
+<td>
+<p>The data.frame of covariates to subset according to the subgroup
+definition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ydata</code></td>
+<td>
+<p>The associated vector of response values to subset according to
+the subgroup definition. (optional)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>After the splits from an rpart.object are extracted by a call to
+parse_rpart(), the extracted splits define a subgroup for each node. This
+subgroup can be used to subset a user-provided data.frame. This function takes
+as its input a data.frame of splits obtained from a call to parse_rpart(), a
+NodeID indicating which node specifies the desired subgroup, a data.frame of
+covariates to subset, and (optionally) the associated response data to subset.
+If only xdata is specified by the user, the subset of xdata implied by the
+subgroup will be returned. If xdata and ydata are provided by the user, the
+subset of ydata will be returned (xdata is still required from the user
+because the subsetting is computed on the covariate values even when the data
+returned to the user are from ydata).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data.frame containing the data consistent with the specified
+subgroup.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>parse_rpart, rpart, rpart.object
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">requireNamespace( "rpart", quietly = TRUE )
+
+## Generate example data containing response, treatment, and covariates
+N &lt;- 20
+continuous_response = runif( min = 0, max = 20, n = N )
+trt &lt;- sample( c('Control','Experimental'), size = N, prob = c(0.4,0.6), replace = TRUE )
+X1 &lt;- runif( N, min = 0, max = 1 )
+X2 &lt;- runif( N, min = 0, max = 1 )
+X3 &lt;- sample( c(0,1), size = N, prob = c(0.2,0.8), replace = TRUE )
+X4 &lt;- sample( c('A','B','C'), size = N, prob = c(0.6,0.3,0.1), replace = TRUE )
+
+covariates &lt;- data.frame( trt )
+names( covariates ) &lt;- "trt"
+covariates$X1 &lt;- X1
+covariates$X2 &lt;- X2
+covariates$X3 &lt;- X3
+covariates$X4 &lt;- X4
+
+## Fit an rpart model
+fit &lt;- rpart::rpart( continuous_response ~ trt + X1 + X2 + X3 + X4 )
+
+## Return parsed splits with subgroups
+splits1 &lt;- parse_rpart( fit, include_subgroups = TRUE )
+splits1
+
+## Subset covariate data according to split for NodeID 3
+ex1 &lt;- subgroup( splits = splits1, node = 3, xdata = covariates )
+ex1
+
+## Subset response data according to split for NodeID 3
+ex2 &lt;- subgroup( splits = splits1, node = 3, xdata = covariates, ydata = continuous_response )
+ex2
+</code></pre>
+
+
+</div>

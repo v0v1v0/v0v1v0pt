@@ -1,0 +1,126 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_branches</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Reconstruct the branch names and the names of their dependencies.</h2>
+
+<h3>Description</h3>
+
+<p>Given a branching pattern, use available metadata
+to reconstruct branch names and the names of each
+branch's dependencies. The metadata of each target
+must already exist and be consistent with the metadata
+of the other targets involved.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_branches(
+  name,
+  pattern = NULL,
+  script = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Symbol, name of the target.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pattern</code></td>
+<td>
+<p>Language to define branching for a target
+(just like in <code>tar_target()</code>) or <code>NULL</code> to get the pattern
+from the <code>targets</code> pipeline script specified in the <code>script</code> argument
+(default: <code style="white-space: pre;">⁠_targets.R⁠</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. When you set
+this argument, the value of <code>tar_config_get("script")</code>
+is temporarily changed for the current function call.
+See <code>tar_script()</code>,
+<code>tar_config_get()</code>, and <code>tar_config_set()</code> for details
+about the target script file and how to set it
+persistently for a project.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The results from this function can help you retroactively
+figure out correspondences between upstream branches and downstream
+branches. However, it does not always correctly predict what the
+names of the branches will be after the next run of the pipeline.
+Dynamic branching happens while the pipeline is running,
+so we cannot always know what the names of the branches will be
+in advance (or even how many there will be).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tibble</code> with one row per branch and one column for each target
+(including the branched-over targets and the target with the pattern.)
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other branching: 
+<code>tar_branch_index()</code>,
+<code>tar_branch_names()</code>,
+<code>tar_pattern()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(x, seq_len(2)),
+    tar_target(y, head(letters, 2)),
+    tar_target(z, head(LETTERS, 2)),
+    tar_target(dynamic, c(x, y, z), pattern = cross(z, map(x, y)))
+  )
+}, ask = FALSE)
+tar_make()
+tar_branches(dynamic)
+tar_branches(dynamic, pattern = cross(z, map(x, y)))
+})
+}
+</code></pre>
+
+
+</div>

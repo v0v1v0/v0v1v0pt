@@ -1,0 +1,143 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.ithreshpred</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot diagnostics an ithreshpred object</h2>
+
+<h3>Description</h3>
+
+<p><code>plot</code> method for class <code>"ithreshpred"</code>.  Produces plots to
+summarise the predictive inferences made by <code>predict.ithresh</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'ithreshpred'
+plot(x, ..., ave_only = FALSE, add_best = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class <code>"ithreshpred"</code>, a result of a call to
+<code>ithresh</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed on to
+<code>plot.evpred</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ave_only</code></td>
+<td>
+<p>A logical scalar.  Only relevant if
+<code>predict.ithresh</code> was called with <code>which_u = "all"</code>.
+If <code>TRUE</code> then plot only
+a curve for the weighted average over multiple training thresholds.
+If <code>FALSE</code> then also plot a curve for each training threshold.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add_best</code></td>
+<td>
+<p>A logical scalar.  If <code>TRUE</code> then the best
+threshold, as judged using the validation threshold selected using the
+argument <code>which_v</code> supplied to <code>predict.ithresh</code>, is
+highlighted by plotting it with a different line style.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><em>Single threshold case</em>, where
+<code>predict.ithresh</code> was called with numeric scalar
+<code>which_u</code> or <code>which_u = "best"</code>.
+<code>plot.evpred</code> is called to produce the plot.
+</p>
+<p><em>Multiple threshold</em> case, where
+<code>predict.ithresh</code> was called with <code>which_u = "all"</code>.
+Again, <code>plot.evpred</code> is called but now the
+estimated predictive distribution function (<code>type = "p"</code> used
+in the call to <code>predict.ithresh</code>) or density function
+(<code>type = "d"</code>) is plotted for each of the training thresholds
+(grey lines) as is the result of the weighted average over the
+different training thresholds (black line).
+If graphical parameters, such as <code>lty</code>, <code>lwd</code> or <code>col</code>
+are passed via <code>...</code> then the first element relates to the
+weighted average and the remaining <code>length(x$u_vec)</code> elements to
+the respective training thresholds in <code>u_vec</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing the graphical parameters using in producing the
+plot including any arguments supplied via ... is returned (invisibly).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ithresh</code> for threshold selection in the i.i.d. case
+based on leave-one-out cross-validation.
+</p>
+<p><code>predict.ithresh</code> for predictive inference for the
+largest value observed in N years.
+</p>
+<p><code>plot.ithresh</code> for the S3 plot method for objects of
+class <code>ithresh</code>.
+</p>
+<p><code>summary.ithresh</code> Summarizing measures of threshold
+predictive performance.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">u_vec_gom &lt;- quantile(gom, probs = seq(0, 0.9, by = 0.05))
+gom_cv &lt;- ithresh(data = gom, u_vec = u_vec_gom, n_v = 3)
+
+# Note: gom_cv$npy contains the correct value of npy (it was set in the
+#       call to ithresh, via attr(gom, "npy").
+#       If object$npy doesn't exist then the argument npy must be supplied
+#       in the call to predict().
+
+### Best training threshold based on the lowest validation threshold
+
+# Predictive distribution function
+npy_gom &lt;- length(gom)/105
+best_p &lt;- predict(gom_cv, n_years = c(100, 1000))
+plot(best_p)
+
+# Predictive density function
+best_d &lt;- predict(gom_cv, type = "d", n_years = c(100, 1000))
+plot(best_d)
+
+### All thresholds plus weighted average of inferences over all thresholds
+
+# Predictive distribution function
+all_p &lt;- predict(gom_cv, which_u = "all")
+plot(all_p)
+
+# Predictive density function
+all_d &lt;- predict(gom_cv, which_u = "all", type = "d")
+plot(all_d)
+
+### ... and highlight the best threshold
+
+plot(all_p, add_best = TRUE)
+plot(all_d, add_best = TRUE)
+</code></pre>
+
+
+</div>

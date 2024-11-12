@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_stack_by_baskets</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to create a new SMQ variable in ADAE by stacking SMQ and/or CQ records.</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Helper function to create a new SMQ variable in ADAE that consists of all adverse events belonging to
+selected Standardized/Customized queries. The new dataset will only contain records of the adverse events
+belonging to any of the selected baskets. Remember that <code>na_str</code> must match the needed pre-processing
+done with <code>df_explicit_na()</code> to have the desired output.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_stack_by_baskets(
+  df,
+  baskets = grep("^(SMQ|CQ).+NAM$", names(df), value = TRUE),
+  smq_varlabel = "Standardized MedDRA Query",
+  keys = c("STUDYID", "USUBJID", "ASTDTM", "AEDECOD", "AESEQ"),
+  aag_summary = NULL,
+  na_str = "&lt;Missing&gt;"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baskets</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names of the selected Standardized/Customized queries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smq_varlabel</code></td>
+<td>
+<p>(<code>string</code>)<br> a label for the new variable created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keys</code></td>
+<td>
+<p>(<code>character</code>)<br> names of the key variables to be returned along with the new variable created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aag_summary</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> containing the SMQ baskets and the levels of interest for the final SMQ
+variable. This is useful when there are some levels of interest that are not observed in the <code>df</code> dataset.
+The two columns of this dataset should be named <code>basket</code> and <code>basket_name</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> with variables in <code>keys</code> taken from <code>df</code> and new variable SMQ containing
+records belonging to the baskets selected via the <code>baskets</code> argument.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">adae &lt;- tern_ex_adae[1:20, ] %&gt;% df_explicit_na()
+h_stack_by_baskets(df = adae)
+
+aag &lt;- data.frame(
+  NAMVAR = c("CQ01NAM", "CQ02NAM", "SMQ01NAM", "SMQ02NAM"),
+  REFNAME = c(
+    "D.2.1.5.3/A.1.1.1.1 aesi", "X.9.9.9.9/Y.8.8.8.8 aesi",
+    "C.1.1.1.3/B.2.2.3.1 aesi", "C.1.1.1.3/B.3.3.3.3 aesi"
+  ),
+  SCOPE = c("", "", "BROAD", "BROAD"),
+  stringsAsFactors = FALSE
+)
+
+basket_name &lt;- character(nrow(aag))
+cq_pos &lt;- grep("^(CQ).+NAM$", aag$NAMVAR)
+smq_pos &lt;- grep("^(SMQ).+NAM$", aag$NAMVAR)
+basket_name[cq_pos] &lt;- aag$REFNAME[cq_pos]
+basket_name[smq_pos] &lt;- paste0(
+  aag$REFNAME[smq_pos], "(", aag$SCOPE[smq_pos], ")"
+)
+
+aag_summary &lt;- data.frame(
+  basket = aag$NAMVAR,
+  basket_name = basket_name,
+  stringsAsFactors = TRUE
+)
+
+result &lt;- h_stack_by_baskets(df = adae, aag_summary = aag_summary)
+all(levels(aag_summary$basket_name) %in% levels(result$SMQ))
+
+h_stack_by_baskets(
+  df = adae,
+  aag_summary = NULL,
+  keys = c("STUDYID", "USUBJID", "AEDECOD", "ARM"),
+  baskets = "SMQ01NAM"
+)
+
+</code></pre>
+
+
+</div>

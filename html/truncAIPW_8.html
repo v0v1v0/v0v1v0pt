@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>truncAIPW_cen2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Doubly Robust Estimation under Covariate-induced Dependent Left Truncation and Noninformative Right Censoring where Censoring is always after Left Truncation</h2>
+
+<h3>Description</h3>
+
+<p>Doubly robust estimation of the mean of an arbitrarily transformed survival time under covariate-induced dependent left truncation and noninformative right censoring where censoring is always after left truncation. Inverse probability of censoring weighting is used to handle the right censoring.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">truncAIPW_cen2(
+  dat,
+  nu,
+  Fuz.mx,
+  Gvz.mx,
+  wd,
+  X.name,
+  Q.name,
+  status.name,
+  trim = 1e-07
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dat</code></td>
+<td>
+<p>data frame that contains the data for constructing the estimating equation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+<p>transformation that defines the parameter of interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Fuz.mx</code></td>
+<td>
+<p>matrix for the estimated conditional CDF of the event time given covariates. Each row corresponds to a subject, and each column corresponds to a time point. The column names of the matrix are the time points. See <code>F_est</code> for an example of computing this input matrix for the conditional CDF.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Gvz.mx</code></td>
+<td>
+<p>matrix for the estimated conditional CDF of the truncation time given covariates. Each row corresponds to a subject, and each column corresponds to a time point. The column names of the matrix are the time points. See <code>G_est</code> for an example of computing this input matrix for the conditional CDF.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wd</code></td>
+<td>
+<p>vector for the inverse probability of residual censoring weights <code class="reqn">\Delta/\hat S_D(X-Q)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X.name</code></td>
+<td>
+<p>name of the censored event time variable X = min(T, C).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.name</code></td>
+<td>
+<p>name of the left truncation time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>status.name</code></td>
+<td>
+<p>name of the event time indicator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trim</code></td>
+<td>
+<p>constant that is used to bound from below for the denominators involved in the computation.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>truncAIPW_cen2()</code> returns a list of estimators (‘dr’, ‘IPW.Q’, ‘Reg.T1’, ‘Reg.T2’).
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>dr</code></td>
+<td>
+<p>doubly robust estimator 'dr'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IPW.Q</code></td>
+<td>
+<p>inverse probability of truncation weighted estimator 'IPW.Q'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Reg.T1</code></td>
+<td>
+<p>regression based estimator 'Reg.T1'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Reg.T2</code></td>
+<td>
+<p>regression based estimator 'Reg.T2'.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Wang, Y., Ying, A., Xu, R. (2022) "Doubly robust estimation under covariate-induced dependent left truncation" &lt;arXiv:2208.06836&gt;.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See also <code>truncAIPW</code> for estimation under no censoring, and <code>truncAIPW_cen1</code> for estimation under another type of noninformative right censoring. See also <code>F_est</code>, <code>G_est</code> as examples for computing the input matrices of the conditional CDF's.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(survival)
+data("simu_c2")
+nu &lt;- function(t){ return(as.numeric(t&gt;3)) }
+
+u = c(min(simu_c2$X)-1e-10, sort(simu_c2$X), max(simu_c2$X)+1e-10)
+v = c(min(simu_c2$Q)-1e-10, sort(simu_c2$Q), max(simu_c2$Q)+1e-10)
+
+kmfit.D = survfit(Surv(X-Q, 1-delta)~1, data = simu_c2, type = "kaplan-meier")
+Sd = stepfun(kmfit.D$time,  c(1, kmfit.D$surv))
+wd = rep(0, nrow(simu_c2))
+wd[which(simu_c2$delta == 1)] = 1/Sd(simu_c2$X - simu_c2$Q)[which(simu_c2$delta == 1)]
+
+simu_c2$wd = wd
+simu_c2.1 = simu_c2[simu_c2$delta==1,]
+wd_1 = simu_c2.1$wd
+
+Fuz.mx = F_est(simu_c2, simu_c2, u, "Cox", "X", "Q", "delta", c("Z1","Z2"))
+Gvz.mx = G_est(simu_c2.1, simu_c2, v, "Cox", "X", "Q", "delta", c("Z1","Z2"), weights = wd_1)
+
+est = truncAIPW_cen2(simu_c2, nu, Fuz.mx, Gvz.mx, wd, "X", "Q", "delta", trim = 1e-7)
+est
+</code></pre>
+
+
+</div>

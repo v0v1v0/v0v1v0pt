@@ -1,0 +1,143 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trem_delete</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Perform a DELETE request to Tremendous API</h2>
+
+<h3>Description</h3>
+
+<p>Tremendous only supports DELETE requests for one endpoint – deleting an
+invoice. Per <a href="https://developers.tremendous.com/reference/core-invoices-delete">their documentation</a>,
+this request "removes an invoice. This has no further consequences but is a
+rather cosmetic operation." See the examples for a walk-through.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trem_delete(
+  client,
+  path,
+  query = list(),
+  body = NULL,
+  disk = NULL,
+  stream = NULL,
+  encode = "json",
+  parse = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>client</code></td>
+<td>
+<p>A Tremendous API Client object, created with
+<code>trem_client_new</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>The URL path, appended to the base URL, for GET requests such as
+listing available payment types, funding sources, account members, and
+more. See the <a href="https://developers.tremendous.com/">Tremendous API Documentation</a> for examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>query</code></td>
+<td>
+<p>Query terms as a named list. See crul::HttpClient for more
+details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>body</code></td>
+<td>
+<p>Request body for Tremendous API, as an R List.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>disk</code></td>
+<td>
+<p>A path to write to. <code>NULL</code> by default, so info is written to
+memory. See crul::HttpClient for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stream</code></td>
+<td>
+<p>An R function to determine how to stream data. <code>NULL</code> by
+default, so info is streaned with memory. See crul::HttpClient for more
+details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>encode</code></td>
+<td>
+<p>"json" by default based on Tremendous API Request format. See
+crul::HttpClient for more options.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parse</code></td>
+<td>
+<p>Logical: Should the API Response results be parsed into a data
+frame?</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>If <code>parse = TRUE</code> (default), a list containing the response from the
+API request. Otherwise, the R6 HttpResponse object containing API request
+data.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+
+  # Create a new Tremendous API Client
+  test_client &lt;- trem_client_new(api_key = "TEST_YOUR-API-KEY-HERE",
+                                 sandbox = TRUE)
+
+  # Perform a POST request for an invoice.
+  # `po_number` is Reference to the purchase order number within your organization
+  # `amount` is in USD
+  trem_post(test_client,
+            path = "invoices",
+            body = list(po_number = "unique-invoice-id",
+                        amount = 50)
+  )
+
+  # Perform a GET request for listing all current (non-deleted) invoices.
+  current_invoices &lt;- trem_get(test_client, "invoices")
+
+  # Get index for the correct ID
+  unique_id_index &lt;- which(current_invoices$invoices$po_number == "unique-invoice-id")
+
+  # Get the invoice ID for 'unique-invoice-id' to delete
+  my_invoice_id &lt;- current_invoices$invoices[unique_id_index, "id"]
+
+  # Perform a DELETE request for the specific invoice.
+  trem_delete(test_client, paste0("invoices/", my_invoice_id))
+
+  # Perform a GET request for listing all current (non-deleted) invoices.
+  # The one with id po_number 'unique-invoice-id' should no longer be here.
+  trem_get(test_client, "invoices")
+
+
+## End(Not run)
+
+
+</code></pre>
+
+
+</div>

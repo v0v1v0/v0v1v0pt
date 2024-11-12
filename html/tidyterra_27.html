@@ -1,0 +1,155 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bind_rows.SpatVector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Bind multiple <code>SpatVector</code>, <code>sf/sfc</code> and data frames objects by row</h2>
+
+<h3>Description</h3>
+
+<p>Bind any number of <code>SpatVector</code>, data frames and <code>sf/sfc</code> objects by row,
+making a longer result. This is similar to <code>do.call(rbind, dfs)</code>, but the
+output will contain all columns that appear in any of the inputs.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bind_spat_rows(..., .id = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Objects to combine. The first argument should be a <code>SpatVector</code>
+and each of the subsequent arguments can either be a <code>SpatVector</code>, a
+<code>sf/sfc</code> object or a data frame. Columns are matched by name, and any
+missing columns will be filled with <code>NA</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.id</code></td>
+<td>
+<p>The name of an optional identifier column. Provide a string to
+create an output column that identifies each input. The column will use
+names if available, otherwise it will use positions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>SpatVector</code> of the same type as the first element of <code>...</code>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>rbind()</code> method
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <code>dplyr::bind_rows()</code> function for
+<code>SpatVector</code> objects.
+</p>
+<p>The first element of <code>...</code> should be a <code>SpatVector</code>. Subsequent elements may
+be <code>SpatVector</code>, <code>sf/sfc</code> objects or data frames:
+</p>
+
+<ul>
+<li>
+<p> If subsequent <code>SpatVector/sf/sfc</code> objects present a different CRS than the
+first element, those elements would be reprojected to the CRS of the first
+element with a message.
+</p>
+</li>
+<li>
+<p> If any element of <code>...</code> is a tibble/data frame the rows would be
+<code>cbind</code>ed with empty geometries with a message.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>dplyr::bind_rows()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on pairs <code>Spat*</code>/data.frame:
+<code>bind_cols.SpatVector</code>,
+<code>filter-joins.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_cols.SpatVector</code>,
+<code>count.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>filter.Spat</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>rowwise.SpatVector()</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(terra)
+v &lt;- vect(system.file("extdata/cyl.gpkg", package = "tidyterra"))
+
+v1 &lt;- v[1, "cpro"]
+v2 &lt;- v[3:5, c("name", "iso2")]
+
+# You can supply individual SpatVector as arguments:
+bind_spat_rows(v1, v2)
+
+# When you supply a column name with the `.id` argument, a new
+# column is created to link each row to its original data frame
+bind_spat_rows(v1, v2, .id = "id")
+
+
+# Use with sf
+sfobj &lt;- sf::st_as_sf(v2[1, ])
+
+sfobj
+
+bind_spat_rows(v1, sfobj)
+
+# Would reproject with a message on different CRS
+sfobj_3857 &lt;- as_spatvector(sfobj) %&gt;% project("EPSG:3857")
+
+bind_spat_rows(v1, sfobj_3857)
+
+# And with data frames with a message
+data("mtcars")
+bind_spat_rows(v1, sfobj, mtcars, .id = "id2")
+
+
+# Use lists
+bind_spat_rows(list(v1[1, ], sfobj[1:2, ]))
+
+# Or named list combined with .id
+bind_spat_rows(list(
+  SpatVector = v1[1, ], sf = sfobj[1, ],
+  mtcars = mtcars[1, ]
+), .id = "source")
+
+</code></pre>
+
+
+</div>

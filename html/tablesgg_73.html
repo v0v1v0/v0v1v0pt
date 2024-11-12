@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>styleObj</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a Style Object </h2>
+
+<h3>Description</h3>
+
+<p>Create a style object that can be used to assign graphical properties to
+table elements (entries, hvrules, or blocks).  The properties are used
+when displaying the elements.  Styles allow assignment of graphical
+properties to be based on element descriptors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">styleObj(x, type, match_columns=character(0))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Data frame with (a) column(s) that specify patterns to be used to identify
+and select a subset of table elements; and (b) columns specifying the
+graphical properties to be used for elements in the selected subset.  See
+DETAILS.  May also be a string with the path to a <code>.csv</code> file that
+will be read to create such a data frame.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character string, one of "entry", "hvrule", or "block".  This specifies
+the type of element to which the style will apply.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match_columns</code></td>
+<td>
+<p>Optional character vector (possibly empty) with the names of element
+descriptors that are required in order to evaluate the subset selector
+expressions in <code>x</code>.  See DETAILS.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A style specifies graphical properties to be used in displaying one of the
+element types in a table (i.e., entries, hvrules, or blocks).  A style is
+similar to a theme in <code>ggplot2</code> in that it can be applied to any
+table, not just a particular table.
+</p>
+<p>A <code>styleObj</code> object is a data frame.  Each row can be thought of as a
+pattern plus a set of graphical properties.  Table elements that are to be
+styled are compared to the patterns.  If the pattern in a style row
+matches a table element, the graphical properties in that row are assigned
+to the element.  If more than one style row matches an element, the
+properties from the last matching row override the earlier ones.
+</p>
+<p>The graphical property columns that must be present in a <code>styleObj</code>
+data frame are described in <code>?elements</code>.
+</p>
+<p>Specification of style patterns and how they are matched to elements is
+similar for table entries and blocks, and is described first.  The process
+for hvrules is more complicated and is described second.  It will be
+easier to follow the descriptions if one also looks at an example, such as
+<code style="white-space: pre;">⁠View(styles_pkg$entryStyle_pkg_1)⁠</code> and
+<code style="white-space: pre;">⁠View(styles_pkg$hvruleStyle_pkg_1)⁠</code>.
+</p>
+<p><em>Style specification and matching: Entry and block styles</em>
+</p>
+<p>First note that table entries and blocks internally are stored in objects
+that are themselves data frames, with one row per element.  (These data
+frames can be accessed using the <code>elements</code> function.)  Columns
+include element descriptors such as the table part associated with the
+element, its position in the table, whether the element spans multiple
+rows or columns, and other information.  See <code>?elements</code> for lists of
+the standard descriptors.
+</p>
+<p>In styles for table entries and blocks, the pattern part of the
+<code>styleObj</code> object consists of a single column named <code>condition</code>.
+<code>condition</code> should contain character strings that can be interpreted
+as expressions involving the element descriptors mentioned in the previous
+paragraph.  Each <code>condition</code> expression, when evaluated within an
+<code>entries</code> or <code>blocks</code> data frame, should produce a logical
+vector with one value per element.  (Vectors of length 1 are recycled to
+the necessary length.)  Examples of such strings are <code style="white-space: pre;">⁠part ==
+"rowhead" &amp; multirow⁠</code> for entries and <code style="white-space: pre;">⁠type == "colblock" &amp; subtype
+== "A" &amp; headlayer &gt; 1⁠</code> for blocks.
+</p>
+<p>Elements for which the <code>condition</code> expression in a style row
+evaluates to TRUE are considered to match that row of the style, and are
+assigned the graphical properties in that row.
+</p>
+<p>An NA value (or equivalently an empty string) as a style row's
+<code>condition</code> is treated specially: it matches _any_ element.  The
+row's graphical properties will be applied to all elements, unless
+overridden by a later style row.
+</p>
+<p><em>Style specification and matching: hvrule styles</em>
+</p>
+<p>The creation and styling of hvrules is closely tied to table blocks: by
+default, four hvrules are created for each block, one running along each
+side.  (They are initially disabled.)  Style specification for hvrules is
+more complicated than for table blocks because hvrules effectively
+*separate* blocks.  Therefore one may want their appearance to depend on
+characteristics of the blocks on *both* sides of the hvrule.
+</p>
+<p>Similar to entries and blocks, hvrules are represented internally as a
+data frame with one row per hvrule.  Columns include: <code>block</code>, the ID
+of the block that generated the hvrule; <code>side</code>, the side of
+<code>block</code> along which the hvrule runs ("top", "bottom", "left", or
+"right"); and <code>adjacent_blocks</code>, a string listing the ID's of all the
+blocks adjacent to <code>block</code> on the same side as the hvrule.  That is,
+the hvrule separates <code>block</code> and the blocks in
+<code>adjacent_blocks</code>.  Note that <code>adjacent_blocks</code> may be empty.
+</p>
+<p>In styles for hvrules, the pattern part of the <code>styleObj</code> object
+consists of three columns: <code>block_condition</code>, <code>side</code>, and
+<code>adjacent_condition</code>. <code>side</code> is one of "top", "bottom", "left"
+or "right".  <code>block_condition</code> and <code>adjacent_condition</code> are like
+the <code>condition</code> column for block styles: they should contain
+character strings that can be interpreted as expressions involving block
+descriptors.  Each expression will be evaluated within the data frame of
+blocks that generated the hvrules.  (Not the data frame containing the
+hvrules themselves.)  It should produce a logical vector with one element
+per block; if the value is TRUE for a block, the block satisfies that
+expression.
+</p>
+<p>An hvrule matches a given style row if (a) its generating block satisfies
+the style row's <code>block_condition</code>; (b) they have the same value of
+<code>side</code>; and (c) one or more of the hvrule's <code>adjacent_blocks</code>
+satisfies the style row's <code>adjacent_condition</code>.
+</p>
+<p>Any of <code>block_condition</code>, <code>side</code>, and <code>adjacent_condition</code>
+in a style row may also be set to NA (or equivalently, to an empty
+string).  In that case the corresponding criterion (a), (b), or (c) is
+considered to be satisfied for all hvrules, and so does not limit matches.
+Note that setting <code>adjacent_condition</code> to NA is the only way to
+satisfy criterion (c) if an hvrule's <code>adjacent_blocks</code> is empty.  In
+all other cases, an empty <code>adjacent_blocks</code> will never satisfy
+criterion (c).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of S3 classes <code>styleObj</code> and <code>data.frame</code>.  It will
+have the same number of rows and all the columns in <code>x</code>.
+</p>
+<p>The object will have attributes <code>element_type</code> and
+<code>match_columns</code>, equal to the corresponding arguments.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>styles_pkg</code> contains predefined styles provided by the
+package.  They can be examined as illustrations of how styles are
+specified, or edited to create new styles.  <code>elements</code> lists
+the descriptors and graphical properties available for each element type.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Built-in default styles:
+if (interactive()) {
+  View(styles_pkg$entryStyle_pkg_1)
+  View(styles_pkg$blockStyle_pkg_1)
+  View(styles_pkg$hvruleStyle_pkg_1)
+}
+  </code></pre>
+
+
+</div>

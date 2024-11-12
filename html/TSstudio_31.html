@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ts_ma</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Moving Average Method for Time Series Data</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the moving average (and double moving average) for time series data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ts_ma(ts.obj, n = c(3, 6, 9), n_left = NULL, n_right = NULL,
+  double = NULL, plot = TRUE, show_legend = TRUE, multiple = FALSE,
+  separate = TRUE, margin = 0.03, title = NULL, Xtitle = NULL,
+  Ytitle = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts.obj</code></td>
+<td>
+<p>a univariate time series object of a class "ts", "zoo" or "xts" (support only series with either monthly or quarterly frequency)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>A single or multiple integers (by default using 3, 6, and 9 as inputs), 
+define a two-sides moving averages by setting the number of past and future to use 
+in each moving average window along with current observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_left</code></td>
+<td>
+<p>A single integer (optional argument, default set to NULL), can be used, 
+along with the n_right argument, an unbalanced moving average. 
+The n_left defines the number of lags to includes in the moving average.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_right</code></td>
+<td>
+<p>A single integer (optional argument, default set to NULL), can be used, 
+along with the n_left argument, to set an unbalanced moving average. 
+The n_right defines the number of negative lags to includes in the moving average.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>double</code></td>
+<td>
+<p>A single integer, an optional argument. If not NULL (by default), will apply a second moving average process on the initial moving average output</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>A boolean, if TRUE will plot the results</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_legend</code></td>
+<td>
+<p>A boolean, if TRUE will show the plot legend</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multiple</code></td>
+<td>
+<p>A boolean, if TRUE (and n &gt; 1) will create multiple plots, one for each moving average degree. By default is set to FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>separate</code></td>
+<td>
+<p>A boolean, if TRUE will separate the orignal series from the moving average output</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>margin</code></td>
+<td>
+<p>A numeric, set the plot margin when using the multiple or/and separate option, default value is 0.03</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>A character, if not NULL (by default), will use the input as the plot title</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xtitle</code></td>
+<td>
+<p>A character, if not NULL (by default), will use the input as the plot x - axis title</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ytitle</code></td>
+<td>
+<p>A character, if not NULL (by default), will use the input as the plot y - axis title</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A one-side moving averages (also known as simple moving averages) calculation for Y[t] (observation Y of the series at time t):
+</p>
+<p>MA[t|n] = (Y[t-n] + Y[t-(n-1)] +...+ Y[t]) / (n + 1), 
+</p>
+<p>where n defines the number of consecutive observations to be used on each rolling window along with the current observation 
+</p>
+<p>Similarly, a two-sided moving averages with an order of (2*n + 1) for Y[t]:
+</p>
+<p>MA[t|n] = (Y[t-n] + Y[t-(n-1)] +...+ Y[t] +...+ Y[t+(n-1)] + Y[t+n]) / (2*n + 1)
+</p>
+<p>Unbalanced moving averages with an order of (k1 + k2 + 1) for observation Y[t]:
+</p>
+<p>MA[t|k1 &amp; k2] = (Y[t-k1] + Y[t-(k1-1)] +...+ Y[t] +...+ Y[t+(k2-1)] + Y[t+k2]) / (k1 + k2 + 1)
+</p>
+<p>The unbalanced moving averages is a special case of two-sides moving averages, 
+where k1 and k2 represent the number of past and future periods, 
+respectively to be used in each rolling window, and k1 != k2 
+(otherwise it is a normal two-sided moving averages function)
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the original series, the moving averages outputs and the plot
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# A one-side moving average order of 7
+USgas_MA7 &lt;- ts_ma(USgas, n_left = 6, n = NULL)
+
+# A two-sided moving average order of 13
+USgas_two_side_MA &lt;- ts_ma(USgas, n = 6)
+
+# Unbalanced moving average of order 12
+ USVSales_MA12 &lt;- ts_ma(USVSales, n_left = 6, n_right = 5, n = NULL, 
+ title = "US Monthly Total Vehicle Sales - MA", 
+ Ytitle = "Thousand of Units")
+
+# Adding double MA of order 2 to balanced the series:
+USVSales_MA12 &lt;- ts_ma(USVSales, n_left = 6, n_right = 5, n = NULL, 
+ double = 2,
+ title = "US Monthly Total Vehicle Sales - MA", 
+ Ytitle = "Thousand of Units")
+
+# Adding several types of two-sided moving averages along with the unblanced
+# Plot each on a separate plot
+USVSales_MA12 &lt;- ts_ma(USVSales, n_left = 6, n_right = 5, n = c(3, 6, 9), 
+double = 2, multiple = TRUE,
+title = "US Monthly Total Vehicle Sales - MA", 
+Ytitle = "Thousand of Units")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,70 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>with_detect_anomaly</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Context-manager that enable anomaly detection for the autograd engine.</h2>
+
+<h3>Description</h3>
+
+<p>This does two things:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">with_detect_anomaly(code)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>code</code></td>
+<td>
+<p>Code that will be executed in the detect anomaly context.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+
+<ul>
+<li>
+<p> Running the forward pass with detection enabled will allow the backward
+pass to print the traceback of the forward operation that created the failing
+backward function.
+</p>
+</li>
+<li>
+<p> Any backward computation that generate "nan" value will raise an error.
+</p>
+</li>
+</ul>
+<h3>Warning</h3>
+
+<p>This mode should be enabled only for debugging as the different tests
+will slow down your program execution.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+x &lt;- torch_randn(2, requires_grad = TRUE)
+y &lt;- torch_randn(1)
+b &lt;- (x^y)$sum()
+y$add_(1)
+
+try({
+  b$backward()
+
+  with_detect_anomaly({
+    b$backward()
+  })
+})
+}
+</code></pre>
+
+
+</div>

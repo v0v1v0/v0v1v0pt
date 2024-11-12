@@ -1,0 +1,196 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>transport_track</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Create a Dynamic Visualization of a Transference Plan Between Two pgrids
+</h2>
+
+<h3>Description</h3>
+
+<p>Given two objects <code>source</code> and <code>target</code> of class <code>pgrid</code> and a transference plan, typically
+the result of a call to <code>transport</code>, create an animation of the dynamic transference plan
+(a.k.a. displacement interpolation)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">  transport_track(source, target, tplan, K = 50, scmult = 1, smooth = FALSE,
+     H = matrix(c(1,0,0,1),2,2), create.file = c("none","gif_im"), 
+     file.name = "Rtransport.gif", fps = 20, cut = FALSE,
+     col=grey((0:1000)/1000),width=800,height=800)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>source, target</code></td>
+<td>
+
+<p>objects of class <code>pgrid</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tplan</code></td>
+<td>
+
+<p>a transference plan between <code>source</code> and <code>target</code>, typically an optimal transference plan
+obtained by a call to <code>transport</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+
+<p>the number of intermediate frames to be produced between <code>source</code> and <code>target</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scmult</code></td>
+<td>
+
+<p>the factor by which the number of pixels in each dimension is multiplied to obtain a smoother rendering 
+of the dynamic transference plan.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smooth</code></td>
+<td>
+
+<p>logical. Whether a kernel smoothing or a linear binning procedure is used to generate the images. Defaults to <code>FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>H</code></td>
+<td>
+
+<p>the bandwith matrix used to perform the two dimensional kernel density estimation or the linear binning respectively.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>create.file</code></td>
+<td>
+
+<p>the file type to be created or <code>"none"</code> to return only an array of intermediate mass distributions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file.name</code></td>
+<td>
+
+<p>the path for the output file. Ignored if <code>create.file</code> is <code>"none"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fps</code></td>
+<td>
+
+<p>the number of frames per second in the generated gif. The default is 20 frames per second.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cut</code></td>
+<td>
+
+<p>logical. Whether the boundary pixels are cut off. Currently the only way to deal with the edge effect (see Details).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+
+<p>the vector of RGB colours which is used to generate the gif, if create.file is not "none". See the 
+documentation of image for more details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+
+<p>interger specifying the width of the images used to generate the output gif, if create.file is not "none".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>height</code></td>
+<td>
+
+<p>interger specifying the width of the images used to generate the output gif, if create.file is not "none".
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The intermediate frames are produced by the interpolation formula <code class="reqn">[(1-t)\mathrm{pr}_1 + t\mathrm{pr}_2]_{\#} \pi</code>, 
+where <code class="reqn">\pi</code> is the transference plan, <code class="reqn">\mathrm{pr}_1</code> and <code class="reqn">\mathrm{pr}_2</code> are the first and second coordinate projections of <code class="reqn">\mathbf{R}^2 \times \mathbf{R}^2</code> onto <code class="reqn">\mathbf{R}^2</code>, and <code class="reqn">t \in \{0,1/(K+1), \ldots, K/(K+1),1\}</code>. If <code class="reqn">\pi</code> is an optimal transference plan this yields the displacement interpolation, at least if we assume 
+as underlying cost function the Euclidean metric to the <code class="reqn">p</code>-th power, where <code class="reqn">p = 1,2</code>.
+</p>
+<p>The kernel smoothing procedure gives usually nicer animations, but takes several orders of magnitudes longer. 
+</p>
+<p>There are currently visible edge effects in both the kernel smoothing and the linear binning procedure that lead to darker pixels at the boundary of the image. The cut parameter may be used to remove the boundary pixels completely and thus produce a smaller output. The edge will be dealt with more adequatly in future versions.
+</p>
+<p>Conversion to an animated gif is performed by a system call to the convert tool of ImageMagick. The latter may have to be 
+installed first.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An array containing the various interpolation images.
+</p>
+<p>Unless <code>create.file="none"</code>, the function is mainly used for its side effect (saving a file to the specified path).
+So the array is returned invisibly.
+</p>
+
+
+<h3>Warning</h3>
+
+<p>Running this function with <code>smooth=TRUE</code> and even moderate <code>K</code> can take a long time!</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Florian Heinemann <a href="mailto:florian.heinemann@uni-goettingen.de">florian.heinemann@uni-goettingen.de</a> <br>
+(slightly modified by Dominic Schuhmacher <a href="mailto:dschuhm1@uni-goettingen.de">dschuhm1@uni-goettingen.de</a>)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Function transport</code> for computing optimal transference plans.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (requireNamespace("ks", quietly = TRUE)) {
+  tplan &lt;- transport(random32a,random32b)
+  series &lt;- transport_track(random32a, random32b, tplan, scmult=3, create.file="none")
+  dev.new(width=16,height=8)
+  oldpar &lt;- par(mfrow=c(5,10), mai=rep(0.01,4))
+  for (i in 1:50) { 
+    image(series[,,i], col=grey(seq(0,1,0.005)), asp=1, axes=FALSE,zlim=c(min(series),max(series)))
+  }
+  par(oldpar)
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,194 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Models</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Model objective functions</h2>
+
+<h3>Description</h3>
+
+<p>These functions take in the dose-response data and the model parameters, and
+return a likelihood value. They are intended to be optimized using 
+<code>constrOptim</code> in the <code>tcplFit</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcplObjCnst(p, resp)
+
+tcplObjGnls(p, lconc, resp)
+
+tcplObjHill(p, lconc, resp)
+
+tcplObjCnst(p, resp)
+
+tcplObjGnls(p, lconc, resp)
+
+tcplObjHill(p, lconc, resp)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>Numeric, the parameter values. See details for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp</code></td>
+<td>
+<p>Numeric, the response values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lconc</code></td>
+<td>
+<p>Numeric, the log10 concentration values</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions produce an estimated value based on the model and given 
+parameters for each observation. Those estimated values are then used with 
+the observed values and a scale term to calculate the log-likelihood.
+</p>
+<p>Let <code class="reqn">t(z,\nu)</code> be the Student's t-distribution with <code class="reqn">\nu</code> degrees of
+freedom, <code class="reqn">y_{i}</code> be the observed response at the <code class="reqn">i^{th}</code> 
+observation, and <code class="reqn">\mu_{i}</code> be the estimated response at the <code class="reqn">i^{th}</code> 
+observation. We calculate <code class="reqn">z_{i}</code> as:
+</p>
+<p style="text-align: center;"><code class="reqn">
+z_{i} = \frac{y_{i} - \mu_{i}}{e^\sigma}
+</code>
+</p>
+
+<p>where <code class="reqn">\sigma</code> is the scale term. Then the log-likelihood is:
+</p>
+<p style="text-align: center;"><code class="reqn">
+\sum_{i=1}^{n} [ln(t(z_{i}, 4)) - \sigma]
+</code>
+</p>
+
+<p>Where <code class="reqn">n</code> is the number of observations.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The log-likelihood.
+</p>
+
+
+<h3>Constant Model (cnst)</h3>
+
+<p><code>tcplObjCnst</code> calculates the likelyhood for a constant model at 0. The
+only parameter passed to <code>tcplObjCnst</code> by <code>p</code> is the scale term
+<code class="reqn">\sigma</code>. The constant model value <code class="reqn">\mu_{i}</code> for the
+<code class="reqn">i^{th}</code> observation is given by:
+</p>
+<p style="text-align: center;"><code class="reqn">\mu_{i} = 0</code>
+</p>
+
+<p><code>tcplObjCnst</code> calculates the likelyhood for a constant model at 0. The 
+only parameter passed to <code>tcplObjCnst</code> by <code>p</code> is the scale term 
+<code class="reqn">\sigma</code>. The constant model value <code class="reqn">\mu_{i}</code> for the  
+<code class="reqn">i^{th}</code> observation is given by:
+</p>
+<p style="text-align: center;"><code class="reqn">\mu_{i} = 0</code>
+</p>
+
+
+
+<h3>Gain-Loss Model (gnls)</h3>
+
+<p><code>tcplObjGnls</code> calculates the likelyhood for a 5 parameter model as the
+product of two Hill models with the same top and both bottoms equal to 0.
+The parameters passed to <code>tcplObjGnls</code> by <code>p</code> are (in order) top
+(<code class="reqn">\mathit{tp}</code>), gain log AC50 (<code class="reqn">\mathit{ga}</code>), gain hill coefficient (<code class="reqn">gw</code>),
+loss log AC50 <code class="reqn">\mathit{la}</code>, loss hill coefficient <code class="reqn">\mathit{lw}</code>, and the scale
+term (<code class="reqn">\sigma</code>). The gain-loss model value <code class="reqn">\mu_{i}</code> for the
+<code class="reqn">i^{th}</code> observation is given by:
+</p>
+<p style="text-align: center;"><code class="reqn">
+g_{i} = \frac{1}{1 + 10^{(\mathit{ga} - x_{i})\mathit{gw}}}
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">
+l_{i} = \frac{1}{1 + 10^{(x_{i} - \mathit{la})\mathit{lw}}}
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\mu_{i} = \mathit{tp}(g_{i})(l_{i})</code>
+</p>
+
+<p>where <code class="reqn">x_{i}</code> is the log concentration for the <code class="reqn">i^{th}</code>
+observation.
+</p>
+<p><code>tcplObjGnls</code> calculates the likelyhood for a 5 parameter model as the 
+product of two Hill models with the same top and both bottoms equal to 0. 
+The parameters passed to <code>tcplObjGnls</code> by <code>p</code> are (in order) top 
+(<code class="reqn">\mathit{tp}</code>), gain log AC50 (<code class="reqn">\mathit{ga}</code>), gain hill coefficient (<code class="reqn">gw</code>), 
+loss log AC50 <code class="reqn">\mathit{la}</code>, loss hill coefficient <code class="reqn">\mathit{lw}</code>, and the scale 
+term (<code class="reqn">\sigma</code>). The gain-loss model value <code class="reqn">\mu_{i}</code> for the 
+<code class="reqn">i^{th}</code> observation is given by:
+</p>
+<p style="text-align: center;"><code class="reqn">
+g_{i} = \frac{1}{1 + 10^{(\mathit{ga} - x_{i})\mathit{gw}}}
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">
+l_{i} = \frac{1}{1 + 10^{(x_{i} - \mathit{la})\mathit{lw}}}
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\mu_{i} = \mathit{tp}(g_{i})(l_{i})</code>
+</p>
+
+<p>where <code class="reqn">x_{i}</code> is the log concentration for the <code class="reqn">i^{th}</code> 
+observation.
+</p>
+
+
+<h3>Hill Model (hill)</h3>
+
+<p><code>tcplObjHill</code> calculates the likelyhood for a 3 parameter Hill model
+with the bottom equal to 0. The parameters passed to <code>tcplObjHill</code> by
+<code>p</code> are (in order) top (<code class="reqn">\mathit{tp}</code>), log AC50 (<code class="reqn">\mathit{ga}</code>), hill
+coefficient (<code class="reqn">\mathit{gw}</code>), and the scale term (<code class="reqn">\sigma</code>). The hill model
+value <code class="reqn">\mu_{i}</code> for the <code class="reqn">i^{th}</code> observation is given
+by:
+</p>
+<p style="text-align: center;"><code class="reqn">
+\mu_{i} = \frac{tp}{1 + 10^{(\mathit{ga} - x_{i})\mathit{gw}}}
+</code>
+</p>
+
+<p>where <code class="reqn">x_{i}</code> is the log concentration for the <code class="reqn">i^{th}</code>
+observation.
+</p>
+<p><code>tcplObjHill</code> calculates the likelyhood for a 3 parameter Hill model
+with the bottom equal to 0. The parameters passed to <code>tcplObjHill</code> by 
+<code>p</code> are (in order) top (<code class="reqn">\mathit{tp}</code>), log AC50 (<code class="reqn">\mathit{ga}</code>), hill 
+coefficient (<code class="reqn">\mathit{gw}</code>), and the scale term (<code class="reqn">\sigma</code>). The hill model 
+value <code class="reqn">\mu_{i}</code> for the <code class="reqn">i^{th}</code> observation is given 
+by:
+</p>
+<p style="text-align: center;"><code class="reqn">
+\mu_{i} = \frac{tp}{1 + 10^{(\mathit{ga} - x_{i})\mathit{gw}}}
+</code>
+</p>
+
+<p>where <code class="reqn">x_{i}</code> is the log concentration for the <code class="reqn">i^{th}</code> 
+observation.
+</p>
+
+
+</div>

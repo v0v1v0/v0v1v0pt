@@ -1,0 +1,162 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>weightSMART</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>SMART Weightings</h2>
+
+<h3>Description</h3>
+
+<p>Weight a term-document matrix according to a combination of weights
+specified in SMART notation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">weightSMART(m, spec = "nnn", control = list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>m</code></td>
+<td>
+<p>A <code>TermDocumentMatrix</code> in term frequency format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spec</code></td>
+<td>
+<p>a character string consisting of three characters. The first letter
+specifies a term frequency schema, the second a document frequency
+schema, and the third a normalization schema. See <b>Details</b> for
+available built-in schemata.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>a list of control parameters. See <b>Details</b>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Formally this function is of class <code>WeightingFunction</code> with the
+additional attributes <code>name</code> and <code>acronym</code>.
+</p>
+<p>The first letter of <code>spec</code> specifies a weighting schema for term
+frequencies of <code>m</code>:
+</p>
+
+<dl>
+<dt>"n"</dt>
+<dd>
+<p>(natural) <code class="reqn">\mathit{tf}_{i,j}</code> counts the number of occurrences
+<code class="reqn">n_{i,j}</code> of a term <code class="reqn">t_i</code> in a document <code class="reqn">d_j</code>. The
+input term-document matrix <code>m</code> is assumed to be in this
+standard term frequency format already.</p>
+</dd>
+<dt>"l"</dt>
+<dd>
+<p>(logarithm) is defined as <code class="reqn">1 + \log_2(\mathit{tf}_{i,j})</code>.</p>
+</dd>
+<dt>"a"</dt>
+<dd>
+<p>(augmented) is defined as <code class="reqn">0.5 +
+      \frac{0.5 * \mathit{tf}_{i,j}}{\max_i(\mathit{tf}_{i,j})}</code>.</p>
+</dd>
+<dt>"b"</dt>
+<dd>
+<p>(boolean) is defined as 1 if <code class="reqn">\mathit{tf}_{i,j} &gt; 0</code> and 0 otherwise.</p>
+</dd>
+<dt>"L"</dt>
+<dd>
+<p>(log average) is defined as <code class="reqn">\frac{1 +
+      \log_2(\mathit{tf}_{i,j})}{1+\log_2(\mathrm{ave}_{i\in j}(\mathit{tf}_{i,j}))}</code>.</p>
+</dd>
+</dl>
+<p>The second letter of <code>spec</code> specifies a weighting schema of
+document frequencies for <code>m</code>:
+</p>
+
+<dl>
+<dt>"n"</dt>
+<dd>
+<p>(no) is defined as 1.</p>
+</dd>
+<dt>"t"</dt>
+<dd>
+<p>(idf) is defined as <code class="reqn">\log_2 \frac{N}{\mathit{df}_t}</code> where
+<code class="reqn">\mathit{df}_t</code> denotes how often term <code class="reqn">t</code> occurs in all
+documents.</p>
+</dd>
+<dt>"p"</dt>
+<dd>
+<p>(prob idf) is defined as <code class="reqn">\max(0, \log_2(\frac{N - \mathit{df}_t}{\mathit{df}_t}))</code>.</p>
+</dd>
+</dl>
+<p>The third letter of <code>spec</code> specifies a schema for normalization
+of <code>m</code>:
+</p>
+
+<dl>
+<dt>"n"</dt>
+<dd>
+<p>(none) is defined as 1.</p>
+</dd>
+<dt>"c"</dt>
+<dd>
+<p>(cosine) is defined as <code class="reqn">\sqrt{\mathrm{col\_sums}(m ^ 2)}</code>.</p>
+</dd>
+<dt>"u"</dt>
+<dd>
+<p>(pivoted unique) is defined as <code class="reqn">\mathit{slope} *
+      \sqrt{\mathrm{col\_sums}(m ^ 2)} + (1 - \mathit{slope}) *
+      \mathit{pivot}</code> where both <code>slope</code> and <code>pivot</code> must be set
+via named tags in the <code>control</code> list.</p>
+</dd>
+<dt>"b"</dt>
+<dd>
+<p>(byte size) is defined as
+<code class="reqn">\frac{1}{\mathit{CharLength}^\alpha}</code>. The parameter
+<code class="reqn">\alpha</code> must be set via the named tag <code>alpha</code>
+in the <code>control</code> list.</p>
+</dd>
+</dl>
+<p>The final result is defined by multiplication of the chosen term
+frequency component with the chosen document frequency component with
+the chosen normalization component.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The weighted matrix.
+</p>
+
+
+<h3>References</h3>
+
+<p>Christopher D. Manning and Prabhakar Raghavan and Hinrich Schütze (2008).
+<em>Introduction to Information Retrieval</em>.
+Cambridge University Press, ISBN 0521865719.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("crude")
+TermDocumentMatrix(crude,
+                   control = list(removePunctuation = TRUE,
+                                  stopwords = TRUE,
+                                  weighting = function(x)
+                                  weightSMART(x, spec = "ntc")))
+</code></pre>
+
+
+</div>

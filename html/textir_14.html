@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>we8there</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> On-Line Restaurant Reviews </h2>
+
+<h3>Description</h3>
+
+<p>Counts for 2804 bigrams in 6175 restaurant reviews from the site www.we8there.com. </p>
+
+
+<h3>Details</h3>
+
+<p> The short user-submitted reviews are accompanied by a five-star rating on four specific aspects of restaurant quality - food, service, value, and atmosphere - as well as the overall experience.  The reviews originally appear in Maua and Cozman (2009), and the parsing details behind these specific counts are in Taddy (MNIR; 2013). </p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>we8thereCounts</code></td>
+<td>
+<p> A <code>dgCMatrix</code> of phrase counts indexed by review-rows and bigram-columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>we8thereRatings</code></td>
+<td>
+<p> A <code>matrix</code> containing the associated review ratings. </p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+ 
+<p>Matt Taddy, <a href="mailto:mataddy@gmail.com">mataddy@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+ 
+<p>Maua, D.D. and Cozman, F.G. (2009), <em>Representing and classifying user reviews</em>. In ENIA '09: VIII Enconro Nacional de Inteligencia Artificial, Brazil.
+</p>
+<p>Taddy (2013, JASA), <em>Multinomial Inverse Regression for Text Analysis</em>.
+</p>
+<p>Taddy (2013, AoAS), <em>Distributed Multinomial Regression</em>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p> dmr, srproj </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## some multinomial inverse regression
+## we'll regress counts onto 5-star overall rating
+data(we8there)
+
+## cl=NULL implies a serial run. 
+## To use a parallel library fork cluster, 
+## uncomment the relevant lines below. 
+## Forking is unix only; use PSOCK for windows
+cl &lt;- NULL
+# cl &lt;- makeCluster(detectCores(), type="FORK")
+## small nlambda for a fast example
+fits &lt;- dmr(cl, we8thereRatings[,'Overall',drop=FALSE], 
+			we8thereCounts, bins=5, gamma=1, nlambda=10)
+# stopCluster(cl)
+
+## plot fits for a few individual terms
+terms &lt;- c("first date","chicken wing",
+			"ate here", "good food",
+			"food fabul","terribl servic")
+par(mfrow=c(3,2))
+for(j in terms)
+{ 	plot(fits[[j]]); mtext(j,font=2,line=2) }
+ 
+## extract coefficients
+B &lt;- coef(fits)
+mean(B[2,]==0) # sparsity in loadings
+## some big loadings in IR
+B[2,order(B[2,])[1:10]]
+B[2,order(-B[2,])[1:10]]
+
+## do MNIR projection onto factors
+z &lt;- srproj(B,we8thereCounts) 
+
+## fit a fwd model to the factors
+summary(fwd &lt;- lm(we8thereRatings$Overall ~ z)) 
+
+## truncate the fwd predictions to our known range
+fwd$fitted[fwd$fitted&lt;1] &lt;- 1
+fwd$fitted[fwd$fitted&gt;5] &lt;- 5
+## plot the fitted rating by true rating
+par(mfrow=c(1,1))
+plot(fwd$fitted ~ factor(we8thereRatings$Overall), 
+	varwidth=TRUE, col="lightslategrey")
+
+</code></pre>
+
+
+</div>

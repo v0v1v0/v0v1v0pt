@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>detect_sdg_systems</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Detect SDGs in text</h2>
+
+<h3>Description</h3>
+
+<p><code>detect_sdg_systems</code> identifies SDGs in text using multiple SDG query systems.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">detect_sdg_systems(
+  text,
+  systems = c("Aurora", "Elsevier", "Auckland", "SIRIS"),
+  sdgs = 1:17,
+  output = c("features", "documents"),
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>text</code></td>
+<td>
+<p><code>character</code> vector or object of class <code>tCorpus</code> containing text in which SDGs shall be detected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>systems</code></td>
+<td>
+<p><code>character</code> vector specifying the query systems to be used. Can be one or more of <code>"Aurora"</code>, <code>"Elsevier"</code>, <code>"Auckland"</code>, <code>"SIRIS"</code> <code>"SDSN"</code>, and <code>"SDGO"</code>. By default all systems except <code>"SDGO"</code> and <code>"SDSN"</code> are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sdgs</code></td>
+<td>
+<p><code>numeric</code> vector with integers between 1 and 17 specifying the sdgs to identify in <code>text</code>. Defaults to <code>1:17</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p><code>character</code> specifying the level of detail in the output. The default <code>"features"</code> returns a <code>tibble</code> with one row per matched query, include a variable containing the features of the query that were matched in the text. By contrast, <code>"documents"</code> returns an aggregated <code>tibble</code> with one row per matched sdg, without information on the features.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p><code>logical</code> specifying whether messages on the function's progress should be printed.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>detect_sdg_systems</code> implements six SDG query systems. Four systems developed by the Aurora Universities Network (see <code>aurora_queries</code>),  Elsevier (see <code>elsevier_queries</code>), Auckland University (see <code>elsevier_queries</code>), and SIRIS Academic (see <code>siris_queries</code>) rely on Lucene-style Boolean queries, whereas two systems, namely SDGO (see <code>sdgo_queries</code>) and SDSN (see <code>sdsn_queries</code>) rely on basic keyword matching. 'detect_sdg_systems' calls dedicated <code>detect_*</code> for each of the five system. Search of the queries is implemented using the <code>search_features</code> function from the <a href="https://cran.r-project.org/package=corpustools"><code>corpustools</code></a> package.
+</p>
+<p>By default, <code>detect_sdg_systems</code> runs only the Aurora, Elsevier, Auckland, and Siris query systems, as they are considerably less liberal than the SDSN and SDGO systems and therefore likely produce more valid SDG classifications. Users should be aware that systematic validations and comparison between the systems are largely lacking and that results should be interpreted with caution.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function returns a <code>tibble</code> containing the SDG hits found in the vector of documents. The columns of the <code>tibble</code> depend on the value of <code>output</code>. Possible columns are:
+</p>
+
+<dl>
+<dt>document</dt>
+<dd>
+<p>Index of the element in <code>text</code> where match was found. Formatted as a factor with the number of levels matching the original number of documents.</p>
+</dd>
+<dt>sdg</dt>
+<dd>
+<p>Label of the SDG found in document.</p>
+</dd>
+<dt>system</dt>
+<dd>
+<p>The name of the query system that produced the match.</p>
+</dd>
+<dt>query_id</dt>
+<dd>
+<p>Index of the query within the query system that produced the match.</p>
+</dd>
+<dt>features</dt>
+<dd>
+<p>Concatenated list of words that caused the query to match.</p>
+</dd>
+<dt>hit</dt>
+<dd>
+<p>Index of hit for a given system.</p>
+</dd>
+<dt>n_hits</dt>
+<dd>
+<p>Number of queries that produced a hit for a given system, sdg, and document.</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# run sdg detection
+hits &lt;- detect_sdg_systems(projects)
+
+# run sdg detection with Aurora only
+hits &lt;- detect_sdg_systems(projects, systems = "Aurora")
+
+# run sdg detection for sdg 3 only
+hits &lt;- detect_sdg_systems(projects, sdgs = 3)
+
+</code></pre>
+
+
+</div>

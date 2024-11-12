@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aberrantscoreslong</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert outcome to aberrant ranks</h2>
+
+<h3>Description</h3>
+
+<p>Replaces non-aberrant responses by 0 and ranks the aberrant responses by severity.
+The more aberrant responses have the highest ranks.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">aberrantscoreslong(y, cutoff, cutoff_dir = "less", tau = 0, z = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Vector of outcomes. Length is equal to the number of units</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff</code></td>
+<td>
+<p>The cutoff for whether an outcome is aberrant. Any outcome more extreme
+then this cutoff will be considered aberrant</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff_dir</code></td>
+<td>
+<p>Either 'less' or 'greater', indicating whether outcomes should be
+aberrant if they are less than the 'cutoff' or greater than the 'cutoff', respectively</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>The null treatment effect to be subtracted from all treated units
+before aberrant ranking commences. If 'tau != 0', then 'z' is required</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>Vector with length equal to that of y. Each element specifies whether a unit is treated (1) or not (0)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function serves the same function as [aberrantscores()] but takes inputs in
+the 'long' format instead of the 'wide' format (see [formattrip()] for a
+description of the two formats, their uses, and their creation).
+</p>
+<p>This can be useful for creating a column of 'sc' in [infsentrip()] if the
+aberrant rank test is desired for that variable.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Vector of aberrant ranks corresponding to 'y'
+</p>
+
+
+<h3>See Also</h3>
+
+<p>aberrantscores for the same function with inputs in the wide format instead of long
+</p>
+<p>formattrip for formatting of the triples match into wide or long format
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate some data
+set.seed(316)
+n &lt;- 30
+x &lt;- rnorm(n, 0, 1)
+nt &lt;- floor(n * 0.2)
+nc &lt;- n - nt
+z &lt;- c(rep(1, nt), rep(0, nc))
+# Create a distance matrix (all units in one stratum here)
+dist &lt;- dist_mahal(data.frame(x = x), z, rep(1, n))[[1]]
+# Conduct the triples match
+triplesm &lt;- triples_st(cost = dist, z = z, solver = "rlemon")
+# Create primary and negative outcomes with some random unit names
+y &lt;- cbind(rnorm(40), runif(40))
+rownames(y) &lt;- sample(1:40)
+# Reformat the triples match
+ylong &lt;- formattrip(m = triplesm, y = y, type = "long")
+# Aberrant ranks for primary outcome
+y[, 1] &lt;- aberrantscoreslong(y[, 1], cutoff = 0.5, cutoff_dir = "greater")
+</code></pre>
+
+
+</div>

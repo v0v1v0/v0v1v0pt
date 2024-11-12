@@ -1,0 +1,218 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>distance</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Geographic distance</h2>
+
+<h3>Description</h3>
+
+<p>If <code>x</code> is a <b>SpatRaster</b>:
+</p>
+<p>If <code>y</code> is <code>missing</code> this method computes the distance, for all cells that are <code>NA</code> in SpatRaster <code>x</code> to the nearest cell that is not <code>NA</code> (or other values, see arguments "target" and "exclude"). 
+</p>
+<p>If <code>y</code> is a numeric value, the cells with that value are ignored. That is, distance to or from these cells is not computed (only if <code>grid=FALSE</code>).
+</p>
+<p>If <code>y</code> is a SpatVector, the distance to that SpatVector is computed for all cells. For lines and polygons this is done after rasterization; and only the overlapping areas of the vector and raster are considered (for now).
+</p>
+<p>The distance is always expressed in meter if the coordinate reference system is longitude/latitude, and in map units otherwise. Map units are typically meter, but inspect <code>crs(x)</code> if in doubt.
+</p>
+<p>Results are more precise, sometimes much more precise, when using longitude/latitude rather than a planar coordinate reference system, as these distort distance. 
+</p>
+<p>If <code>x</code> is a <b>SpatVector</b>:
+</p>
+<p>If <code>y</code> is <code>missing</code>, a distance matrix between all objects in <code>x</code> is computed. A distance matrix object of class "dist" is returned. 
+</p>
+<p>If <code>y</code> is a SpatVector the geographic distance between all objects is computed (and a matrix is returned). If both sets have the same number of points, and <code>pairwise=TRUE</code>, the distance between each pair of objects is computed, and a vector is returned.
+</p>
+<p>The distance is always expressed in meter, except when the coordinate reference system is longitude/latitude AND one of the SpatVector(s) consists of lines or polygons. In that case the distance is in degrees, and thus not very useful (this will be fixed soon). Otherwise, results are more precise, sometimes much more precise, when using longitude/latitude rather than a planar coordinate reference system, as these distort distance. 
+</p>
+<p>If <code>x</code> is a <b>matrix</b>:
+</p>
+<p><code>x</code> should consist of two columns, the first with "x" (or longitude) and the second with "y" coordinates (or latitude). If <code>y</code> is a also a matrix, the distance between each points in <code>x</code> and all points in <code>y</code> is computed, unless <code>pairwise=TRUE</code>
+</p>
+<p>If <code>y</code> is missing, the distance between each points in <code>x</code> with all other points in <code>x</code> is computed, unless <code>sequential=TRUE</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster,missing'
+distance(x, y, target=NA, exclude=NULL, unit="m", haversine=TRUE, filename="", ...)
+
+## S4 method for signature 'SpatRaster,SpatVector'
+distance(x, y, unit="m", rasterize=FALSE, haversine=TRUE, filename="", ...)
+
+## S4 method for signature 'SpatVector,ANY'
+distance(x, y, sequential=FALSE, pairs=FALSE, symmetrical=TRUE, unit="m")
+
+## S4 method for signature 'SpatVector,SpatVector'
+distance(x, y, pairwise=FALSE, unit="m")
+
+## S4 method for signature 'matrix,matrix'
+distance(x, y, lonlat, pairwise=FALSE, unit="m")
+
+## S4 method for signature 'matrix,missing'
+distance(x, y, lonlat, sequential=FALSE, pairs=FALSE, symmetrical=TRUE, unit="m")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster, SpatVector, or two-column matrix with coordinates (x,y) or (lon,lat)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>missing, numeric, SpatVector, or two-column matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>numeric. The value of the cells for which distances to cells that are not <code>NA</code> should be computed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exclude</code></td>
+<td>
+<p>numeric. The value of the cells that should not be considered for computing distances</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unit</code></td>
+<td>
+<p>character. Can be either "m" or "km"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>haversine</code></td>
+<td>
+<p>logical. Use the haversine formula for lon/lat data use the haversine formula? If <code>FALSE</code>, the more precise but slower method of Karney (2003) is used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rasterize</code></td>
+<td>
+<p>logical. If <code>TRUE</code> distance is computed from the cells covered by the geometries after rasterization. This can be much faster in some cases</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sequential</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the distance between sequential geometries is returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pairwise</code></td>
+<td>
+<p>logical. If <code>TRUE</code> and if x and y have the same size (number of rows), the pairwise distances are returned instead of the distances between all elements</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lonlat</code></td>
+<td>
+<p>logical. If <code>TRUE</code> the coordinates are interpreted as angular (longitude/latitude). If <code>FALSE</code> they are interpreted as planar</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pairs</code></td>
+<td>
+<p>logical. If <code>TRUE</code> a "from", "to", "distance" matrix is returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>symmetrical</code></td>
+<td>
+<p>logical. If <code>TRUE</code> and <code>pairs=TRUE</code>, the distance between a pair is only included once. The distance between geometry 1 and 3 is included, but the (same) distance between 3 and 1 is not</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster or numeric or matrix or distance matrix (object of class "dist")
+</p>
+
+
+<h3>Note</h3>
+
+<p>A distance matrix can be coerced into a regular matrix with <code>as.matrix</code>
+</p>
+
+
+<h3>References</h3>
+
+<p>Karney, C.F.F., 2013. Algorithms for geodesics, J. Geodesy 87: 43-55. doi:10.1007/s00190-012-0578-z.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#lonlat
+r &lt;- rast(ncols=36, nrows=18, crs="+proj=longlat +datum=WGS84")
+r[500] &lt;- 1
+d &lt;- distance(r) 
+plot(d / 100000)
+
+#planar
+rr &lt;- rast(ncols=36, nrows=18, crs="+proj=utm +zone=1 +datum=WGS84")
+rr[500] &lt;- 1
+d &lt;- distance(rr) 
+
+rr[3:10, 3:10] &lt;- 99
+e &lt;- distance(rr, exclude=99) 
+
+p1 &lt;- vect(rbind(c(0,0), c(90,30), c(-90,-30)), crs="+proj=longlat +datum=WGS84")
+dp &lt;- distance(r, p1) 
+
+d &lt;- distance(p1)
+d
+as.matrix(d)
+
+p2 &lt;- vect(rbind(c(30,-30), c(25,40), c(-9,-3)), crs="+proj=longlat +datum=WGS84")
+dd &lt;- distance(p1, p2)
+dd
+pd &lt;- distance(p1, p2, pairwise=TRUE)
+pd
+pd == diag(dd)
+
+
+# polygons, lines
+crs &lt;- "+proj=utm +zone=1"
+p1 &lt;- vect("POLYGON ((0 0, 8 0, 8 9, 0 9, 0 0))", crs=crs)
+p2 &lt;- vect("POLYGON ((5 6, 15 6, 15 15, 5 15, 5 6))", crs=crs)
+p3 &lt;- vect("POLYGON ((2 12, 3 12, 3 13, 2 13, 2 12))", crs=crs)
+p &lt;- rbind(p1, p2, p3)
+L1 &lt;- vect("LINESTRING(1 11, 4 6, 10 6)", crs=crs)
+L2 &lt;- vect("LINESTRING(8 14, 12 10)", crs=crs)
+L3 &lt;- vect("LINESTRING(1 8, 12 14)", crs=crs)
+lns &lt;- rbind(L1, L2, L3)
+pts &lt;- vect(cbind(c(7,10,10), c(3,5,6)), crs=crs)
+
+distance(p1,p3)
+distance(p)
+distance(p,pts)
+distance(p,lns)
+distance(pts,lns)
+</code></pre>
+
+
+</div>

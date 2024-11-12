@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_get_holiday</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get holiday features from a time-series index</h2>
+
+<h3>Description</h3>
+
+<p>Get holiday features from a time-series index
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_get_holiday_signature(
+  idx,
+  holiday_pattern = ".",
+  locale_set = c("all", "none", "World", "US", "CA", "GB", "FR", "IT", "JP", "CH", "DE"),
+  exchange_set = c("all", "none", "NYSE", "LONDON", "NERC", "TSX", "ZURICH")
+)
+
+tk_get_holidays_by_year(years = year(today()))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>idx</code></td>
+<td>
+<p>A time-series index that is a vector of dates or datetimes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>holiday_pattern</code></td>
+<td>
+<p>A regular expression pattern to search the "Holiday Set".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>locale_set</code></td>
+<td>
+<p>Return binary holidays based on locale.
+One of: "all", "none", "World", "US", "CA", "GB", "FR", "IT", "JP", "CH", "DE".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exchange_set</code></td>
+<td>
+<p>Return binary holidays based on Stock Exchange Calendars.
+One of: "all", "none", "NYSE", "LONDON", "NERC", "TSX", "ZURICH".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>years</code></td>
+<td>
+<p>One or more years to collect holidays for.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Feature engineering holidays can help identify critical patterns for
+machine learning algorithms. <code>tk_get_holiday_signature()</code> helps by providing
+feature sets for 3 types of features:
+</p>
+<p><strong>1. Individual Holidays</strong>
+</p>
+<p>These are <strong>single holiday features</strong> that can be filtered using a pattern.
+This helps in identifying which holidays are important to a machine learning model.
+This can be useful for example in <strong>e-commerce initiatives</strong>
+(e.g. sales during Christmas and Thanskgiving).
+</p>
+<p><strong>2. Locale-Based Summary Sets</strong>
+</p>
+<p>Locale-based holdiay sets are useful for <strong>e-commerce initiatives</strong>
+(e.g. sales during Christmas and Thanskgiving). Filter on a locale to
+identify all holidays in that locale.
+</p>
+<p><strong>3. Stock Exchange Calendar Summary Sets</strong>
+</p>
+<p>Exchange-based holdiay sets are useful for identifying <strong>non-working days.</strong>
+Filter on an index to identify all holidays that are commonly non-working.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a <code>tibble</code> object describing the timeseries holidays.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>tk_augment_holiday_signature()</code> - A quick way to add holiday features to a data.frame
+</p>
+</li>
+<li> <p><code>step_holiday_signature()</code> - Preprocessing and feature engineering steps for use with <code>recipes</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(stringr)
+
+# Works with time-based tibbles
+idx &lt;- tk_make_timeseries("2017-01-01", "2017-12-31", by = "day")
+
+# --- BASIC USAGE ----
+
+tk_get_holiday_signature(idx)
+
+# ---- FILTERING WITH PATTERNS &amp; SETS ----
+
+# List available holidays - see patterns
+tk_get_holidays_by_year(2020) %&gt;%
+    filter(holiday_name %&gt;% str_detect("US_"))
+
+# Filter using holiday patterns
+# - Get New Years, Christmas and Thanksgiving Features in US
+tk_get_holiday_signature(
+    idx,
+    holiday_pattern = "(US_NewYears)|(US_Christmas)|(US_Thanks)",
+    locale_set      = "none",
+    exchange_set    = "none")
+
+# ---- APPLYING FILTERS ----
+
+# Filter with locale sets - Signals all holidays in a locale
+tk_get_holiday_signature(
+    idx,
+    holiday_pattern = "$^", # Matches nothing on purpose
+    locale_set      = "US",
+    exchange_set    = "none")
+
+# Filter with exchange sets - Signals Common Non-Business Days
+tk_get_holiday_signature(
+    idx,
+    holiday_pattern = "$^", # Matches nothing on purpose
+    locale_set      = "none",
+    exchange_set    = "NYSE")
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,226 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dwmw</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Solver for (generalized) linear MM warnings</h2>
+
+<h3>Description</h3>
+
+  
+<p>Updates a (possibly generalized) linear mixed model computed with the
+library <span class="pkg">lme4</span> functions <code>lmer</code> or <code>glmer</code>, in order to
+elude some singularity or convergence problems informed by distinct
+warnings or messages.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dwmw(lmmodel,
+     boundary_check = TRUE, scale = FALSE, scale_info = TRUE,
+     tol = 1e-4, max_message_iter = 7, pri_nAGQ = FALSE, max_nAGQ = 6,
+     next_optimizer = "bobyqa", next_optCtrl = list(maxfun = 2e5),
+     when_next = max_message_iter - 1, verbose = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+  
+<table>
+<tr style="vertical-align: top;">
+<td><code>lmmodel</code></td>
+<td>
+<p>The model of interest, output of either
+<code>lmer</code> or <code>glmer</code>, that is, an
+object of class <code>merMod</code> and
+<em>subclass</em> either <code>lmerMod</code> or <code>glmerMod</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boundary_check</code></td>
+<td>
+<p>A length 1 boolean object (<code>TRUE</code> [default]
+or <code>FALSE</code>), determining if the function removes those random
+effects which make the model singular (in the simplest situation,
+those with standard deviation almost 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>A length 1 boolean object (<code>TRUE</code> or <code>FALSE</code>
+[default]), determining if the function must rescale the numeric
+predictors when this action is asked in a <em>warning</em> or
+<em>message</em>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_info</code></td>
+<td>
+<p>A length 1 boolean object (<code>TRUE</code> [default] or
+<code>FALSE</code>), determining if the function should cat a message when
+some predictor variables are on very different scales, but are not
+rescaled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>A numeric value (default is <code>1e-4</code>), tolerance under
+which to consider if a model is singular (see <code>boundary_check</code>
+argument).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_message_iter</code></td>
+<td>
+<p>A numeric value (default is <code>7</code>),
+generally the maximum number of iterations allowed to update the
+model. For the exception, see the Details section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pri_nAGQ</code></td>
+<td>
+<p>A length 1 boolean object (<code>TRUE</code> or <code>FALSE</code> 
+[default]), determining if the function prioritizes incrising
+<code>nAGQ</code> over updating model start parameters when both are 
+possible solutions to warned issues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_nAGQ</code></td>
+<td>
+<p>A numeric value (default is <code>6</code>), maximum to
+which increase the <code>nAGQ</code> argument fitting
+<code>glmer</code> models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>next_optimizer</code></td>
+<td>
+<p>An optimizer (default is <code>"bobyqa"</code>), next
+to be used when model convergence is failing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>next_optCtrl</code></td>
+<td>
+<p>A <code>list</code> (default is
+<code>list(maxfun=2e5)</code>) of additional arguments to be passed to the
+nonlinear optimizer (see <code>Nelder_Mead</code>,
+<code>bobyqa</code>). In particular, both <code>Nelder_Mead</code>
+and <code>bobyqa</code> use <code>maxfun</code> to specify the maximum number of
+function evaluations they will try before giving up - in contrast to
+<code>optim</code> and <code>optimx</code>-wrapped optimizers, which use
+<code>maxit</code>. (Also see <code>convergence</code> for details
+of stopping tolerances for different optimizers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>when_next</code></td>
+<td>
+<p>A numeric value not greater than
+<code>max_message_iter - 1</code> (which is the default), specifying from
+which iteration a model convergence failing is approached with a new
+optimizer (<code>next_optimizer</code>) and with a new set of arguments to
+it (<code>next_optCtrl</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A length 1 boolean object (<code>TRUE</code> or <code>FALSE</code> 
+[default])</p>
+</td>
+</tr>
+</table>
+<p> specifying if function iterations and model updating 
+should be verbose.
+</p>
+
+
+<h3>Details</h3>
+
+<p>If the model does not generate any warning or message, <code>dwmw</code>
+returns itself. The function rescales numeric predictors if some
+warning or message suggests it and the <code>scale</code> argument is
+<code>TRUE</code>. If the model fails to converge, it only updates the starting
+values for the parameters in the model through the first
+<code>when_next - 1</code> iterations, while it also updates the optimizer
+and their arguments through the next iterations.
+</p>
+<p>If the model is singular (there is a
+<em>"boundary (singular)"</em>-alike message) and <code>boundary_check</code>
+is <code>TRUE</code>, the formula is updated removing the random effects
+which cause the model to be singular. If all the random effects are
+removed, a linear or generalized linear model is computed according to
+the <code>lmmodel</code> object.
+</p>
+<p>If the model has subclass <code>glmerMod</code>, a single scalar random
+effect and converges but it is nearly unidentifiable with a very large
+eigenvalue, then <code>nAGQ</code> is increased one unity while <code>nAGQ
+		&lt;= max_nAGQ</code> (and only in this case, allowing the iterations to exceed
+<code>max_message_iter</code> until <code>nAGQ == max_nAGQ</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>Generally, an object of class
+<code>merMod</code>, being either an object of
+<em>subclass</em> <code>glmerMod</code> or an object of subclass
+<code>lmerMod</code>, corresponding to the input <code>lmmodel</code>
+argument. When all random effects are removed, an object of
+class <code>glm</code> or <code>lm</code> depending also on the input
+<code>lmmodel</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Iago Giné-Vázquez, <a href="mailto:iago.gin-vaz@protonmail.com">iago.gin-vaz@protonmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>lmer</code>, <code>glmer</code>,
+<code>merMod</code> <code>lmerControl</code>,
+<code>convergence</code>, <code>troubleshooting</code>,
+<code>isSingular</code>, <code>lm</code> and
+<code>glm</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(requireNamespace("nlme")){
+	library(lme4)
+	data(Orthodont, package = "nlme")
+	Orthodont$nsex &lt;- as.numeric(Orthodont$Sex == "Male")
+	Orthodont$nsexage &lt;- with(Orthodont, nsex*age)
+	## Without using dwmw, the next model is singular
+	fmo &lt;- lmer(distance ~ age + (age|Subject) + (0+nsex|Subject) +
+		    (0 + nsexage|Subject), data = Orthodont)
+	summary(fmo)
+
+	## Using dwmw, we remove the singularity of the model
+	fmo1 &lt;- dwmw(lmer(distance ~ age + (age|Subject) + (0+nsex|Subject) +
+			  (0 + nsexage|Subject), data = Orthodont))
+	summary(fmo1)
+
+	## It also can be used on the output object
+
+	fmo2 &lt;- dwmw(fmo)
+	summary(fmo2)
+}
+
+</code></pre>
+
+
+</div>

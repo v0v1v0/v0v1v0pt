@@ -1,0 +1,180 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nlregtol.int</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nonlinear Regression Tolerance Bounds, Version 2</h2>
+
+<h3>Description</h3>
+
+<p>Provides 1-sided or 2-sided nonlinear regression tolerance bounds.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nlregtol.int(formula, xy.data = data.frame(), x.new = NULL, 
+             side = 1, alpha = 0.05, P = 0.99, maxiter = 50, 
+             new = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>A nonlinear model formula including variables and parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xy.data</code></td>
+<td>
+<p>A data frame in which to evaluate the formulas in <code>formula</code>.  The first column
+of <code>xy.data</code> must be the response variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x.new</code></td>
+<td>
+<p>Any new levels of the predictor(s) for which to report the tolerance bounds.  The number of columns must be
+1 less than the number of columns for <code>xy.data</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>side</code></td>
+<td>
+<p>Whether a 1-sided or 2-sided tolerance bound is required (determined by <code>side = 1</code> or <code>side = 2</code>,
+respectively).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The level chosen such that <code>1-alpha</code> is the confidence level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>The proportion of the population to be covered by the tolerance bound(s).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>A positive integer specifying the maximum number of iterations that the nonlinear least squares routine (<code>nls</code>)
+should run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>new</code></td>
+<td>
+<p>When <code>new = TRUE</code>, the function shows updated version of outcomes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Optional arguments passed to <code>nls</code> when estimating the nonlinear regression equation.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is highly recommended that the user specify starting values for the <code>nls</code> routine.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>npregtol.int2</code> returns a list with items:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>Data frame of original response varible <code>y</code>, fitted values <code>y.hat</code>, corresponding tolerance limits. The data frame is ordered by <code>X</code> values. If there are new data for prediction, predicted values are attached in the end.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha.P.side</code></td>
+<td>
+<p>Model specifications of critical level, content level and side.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg.type</code></td>
+<td>
+<p>Type of regression model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>The linear regression model fitted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>X values of new data for prediction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xy.data.original</code></td>
+<td>
+<p>Original data frame</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Wallis, W. A. (1951), Tolerance Intervals for Linear Regression, in <em>Second Berkeley Symposium on Mathematical
+Statistics and Probability</em>, ed. J. Neyman, Berkeley: University of CA Press, 43–51.
+</p>
+<p>Young, D. S. (2013), Regression Tolerance Intervals, <em>Communications in Statistics - Simulation and Computation</em>, <b>42</b>, 2040–2055.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>nls</code>, <code>nlregtol.int</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> 
+## 95%/95% 2-sided nonlinear regression tolerance bounds
+## for a sample of size 50.
+set.seed(100)
+x &lt;- runif(50, 5, 45)
+f1 &lt;- function(x, b1, b2) b1 + (0.49 - b1)*exp(-b2*(x - 8)) +
+  rnorm(50, sd = 0.01)
+y &lt;- f1(x, 0.39, 0.11)
+formula &lt;- as.formula(y ~ b1 + (0.49 - b1)*exp(-b2*(x - 8)))
+out1 &lt;- nlregtol.int(formula = formula,
+                     xy.data = data.frame(cbind(y, x)),
+                     x.new=c(10,20), side = 2,
+                     alpha = 0.05, P = 0.95 , new = TRUE)
+out1
+#########
+set.seed(100)
+x1 &lt;- runif(50, 5, 45)
+x2 &lt;- rnorm(50, 0, 10)
+f1 &lt;- function(x1, x2, b1, b2) {(0.49 - b1)*exp(-b2*(x1 + x2 - 8)) +
+    rnorm(50, sd = 0.01)}
+y &lt;- f1(x1 , x2 , 0.25 , 0.39)
+formula &lt;- as.formula(y ~ (0.49 - b1)*exp(-b2*(x1 + x2 - 8)))
+out2 &lt;- nlregtol.int(formula = formula,
+                     xy.data = data.frame(cbind(y, x1 , x2)),
+                     x.new=cbind(c(10,20) , c(47 , 53)), side = 2,
+                     alpha = 0.05, P = 0.95 , new = TRUE)
+out2
+</code></pre>
+
+
+</div>

@@ -1,0 +1,190 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tsglm.sim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Simulate a Time Series Following a Generalised Linear Model
+</h2>
+
+<h3>Description</h3>
+
+<p>Generates a simulated time series from a GLM-type model for time series of counts (see <code>tsglm</code> for details).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tsglm.sim(n, param = list(intercept = 1, past_obs = NULL, past_mean = NULL,
+            xreg = NULL), model = list(past_obs = NULL, past_mean = NULL,
+            external = FALSE), xreg = NULL, link = c("identity", "log"),
+            distr = c("poisson", "nbinom"), distrcoefs, fit, n_start = 50)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+
+<p>integer value giving the number of observations to be simulated.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>param</code></td>
+<td>
+
+<p>a named list giving the parameters for the linear predictor of the model, which has the following elements: 
+</p>
+
+<dl>
+<dt><code>intercept</code></dt>
+<dd>
+<p>numeric positive value for the intercept <code class="reqn">\beta_0</code>.</p>
+</dd>
+<dt><code>past_obs</code></dt>
+<dd>
+<p>numeric non-negative vector containing the coefficients <code class="reqn">\beta_1,\ldots, \beta_p</code> for regression on previous observations (see Details).</p>
+</dd>
+<dt><code>past_mean</code></dt>
+<dd>
+<p>numeric non-negative vector containing the coefficients <code class="reqn">\alpha_1,\ldots, \alpha_q</code> for regression on previous conditional means (see Details).</p>
+</dd>
+<dt><code>xreg</code></dt>
+<dd>
+<p>numeric non-negative vector specifying the size <code class="reqn">\nu_1,\ldots, \nu_r</code> of each intervention</p>
+</dd>   
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+
+<p>a named list specifying the model for the linear predictor, which has the elements <code>past_obs</code>, <code>past_mean</code> and <code>external</code> (see function <code>tsglm</code> for details). This model specification must be in accordance to the parameters given in argument <code>param</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg</code></td>
+<td>
+
+<p>matrix with covariates in the columns (see <code>tsglm</code> for details). Its number of rows must be equal to the number of observations which should be simulated.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link</code></td>
+<td>
+
+<p>character giving the link function. Default is <code>"identity"</code>, simulating from a so-called INGARCH model. Another possible choice is <code>"log"</code>, simulating from a log-linear model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+
+<p>character giving the conditional distribution. Default is <code>"poisson"</code>, i.e. a Poisson distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distrcoefs</code></td>
+<td>
+
+<p>numeric vector of additional coefficients specifying the conditional distribution. For <code>distr="poisson"</code> no additional parameters need to be provided. For <code>distr="nbinom"</code> the additional parameter <code>size</code> needs to be specified (e.g. by <code>distrcoefs=2</code>), see <code>tsglm</code> for details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fit</code></td>
+<td>
+
+<p>an object of class <code>"tsglm"</code>. Usually the result of a call to <code>tsglm</code>. If argument <code>fit</code> is not missing, the specification of the linear predictor, the link function and the estimated parameters from this argument are used instead of those in arguments <code>model</code>, <code>link</code> and <code>param</code>. The length of the simulated time series is only taken from argument <code>fit</code>, if no argument <code>n</code> is provided. The same holds for arguments <code>xreg</code>, <code>distr</code> and <code>distrcoefs</code>, which are also prefered over the respective information provided in argument <code>fit</code> if both are provided.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_start</code></td>
+<td>
+
+<p>number of observations used as a burn-in.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The definition of the model used here is like in function <code>tsglm</code>.
+</p>
+<p>Note that during the burn-in period covariates are set to zero.
+</p>
+<p>If a previous model fit is given in argument <code>fit</code> and the length of the burn-in period <code>n_start</code> is set to zero, then the a continuation of the original time series is simulated.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>ts</code></td>
+<td>
+
+<p>an object of class <code>"ts"</code> with the simulated time series.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linear.predictors</code></td>
+<td>
+
+<p>an object of class <code>"ts"</code> with the simulated linear predictors <code class="reqn">\kappa_t</code> for all <code class="reqn">t=1, \ldots, n</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xreg.effects</code></td>
+<td>
+
+<p>an object of class <code>"ts"</code> with the cumulated effect of the covariates <code class="reqn">\eta_1 X_{t,1} + \ldots + \eta_r X_{t,r}</code> for all <code class="reqn">t=1, \ldots, n</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tobias Liboschik and Philipp Probst
+</p>
+
+
+<h3>References</h3>
+
+<p>Liboschik, T., Fokianos, K. and Fried, R. (2017) tscount: An R package for analysis of count time series following generalized linear models. <em>Journal of Statistical Software</em> <b>82(5)</b>, 1–51, <a href="http://dx.doi.org/10.18637/jss.v082.i05">http://dx.doi.org/10.18637/jss.v082.i05</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tsglm</code> for fitting a GLM for time series of counts.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Simulate from an INGARCH model with two interventions:
+interventions &lt;- interv_covariate(n=200, tau=c(50, 150), delta=c(1, 0.8))
+model &lt;- list(past_obs=1, past_mean=c(1, 7), external=FALSE)
+param &lt;- list(intercept=2, past_obs=0.3, past_mean=c(0.2, 0.1), xreg=c(3, 10))
+tsglm.sim(n=200, param=param, model=model, xreg=interventions, link="identity",
+          distr="nbinom", distrcoefs=c(size=1))
+</code></pre>
+
+
+</div>

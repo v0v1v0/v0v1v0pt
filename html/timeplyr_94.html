@@ -1,0 +1,270 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_cut</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cut dates and datetimes into regularly spaced date or datetime intervals</h2>
+
+<h3>Description</h3>
+
+<p>Useful functions especially for when plotting time-series.
+<code>time_cut</code> makes approximately <code>n</code> groups of equal time range.
+It prioritises the highest time unit possible, making axes look
+less cluttered and thus prettier. <code>time_breaks</code> returns only the breaks.
+<code>time_cut_width</code> cuts the time vector into groups of equal width, e.g. a day.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_cut(
+  x,
+  n = 5,
+  time_by = NULL,
+  from = NULL,
+  to = NULL,
+  time_floor = FALSE,
+  week_start = getOption("lubridate.week.start", 1),
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA"),
+  as_interval = getOption("timeplyr.use_intervals", TRUE)
+)
+
+time_breaks(
+  x,
+  n = 5,
+  time_by = NULL,
+  from = NULL,
+  to = NULL,
+  time_floor = FALSE,
+  week_start = getOption("lubridate.week.start", 1),
+  time_type = getOption("timeplyr.time_type", "auto"),
+  roll_month = getOption("timeplyr.roll_month", "preday"),
+  roll_dst = getOption("timeplyr.roll_dst", "NA")
+)
+
+time_cut_width(
+  x,
+  time_by = NULL,
+  from = NULL,
+  as_interval = getOption("timeplyr.use_intervals", TRUE)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Time variable. <br>
+Can be a <code>Date</code>, <code>POSIXt</code>, <code>numeric</code>, <code>integer</code>, <code>yearmon</code>, or <code>yearqtr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of breaks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time unit. <br>
+Must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>Time series start date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>Time series end date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_floor</code></td>
+<td>
+<p>Logical. Should the initial date/datetime be
+floored before building the sequence?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>week_start</code></td>
+<td>
+<p>day on which week starts following ISO conventions - 1
+means Monday (default), 7 means Sunday.
+This is only used when <code>time_floor = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks, months or years are specified,
+and <code>durations</code> are used otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_month</code></td>
+<td>
+<p>Control how impossible dates are handled when
+month or year arithmetic is involved.
+Options are "preday", "boundary", "postday", "full" and "NA".
+See <code>?timechange::time_add</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roll_dst</code></td>
+<td>
+<p>See <code>?timechange::time_add</code> for the full list of details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as_interval</code></td>
+<td>
+<p>Should result be a <code>time_interval</code>?
+Default is <code>FALSE</code>. <br>
+This can be controlled globally through <code>options(timeplyr.use_intervals)</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>To retrieve regular time breaks that simply spans the range of <code>x</code>,
+use <code>time_seq()</code> or <code>time_aggregate()</code>.
+This can also be achieved in <code>time_cut()</code> by supplying <code>n = Inf</code>.
+</p>
+<p>By default <code>time_cut()</code> will try to find
+the prettiest way of cutting the interval by
+trying to cut the date/date-times into
+groups of the highest possible time units,
+starting at years and ending at milliseconds.
+</p>
+<p>When <code>x</code> is a numeric vector, <code>time_cut</code> will behave similar to <code>time_cut</code>
+except for 3 things:
+</p>
+
+<ul>
+<li>
+<p> The intervals are all right-open and of equal width.
+</p>
+</li>
+<li>
+<p> The left value of the leftmost interval is always <code>min(x)</code>.
+</p>
+</li>
+<li>
+<p> Up to <code>n</code> breaks are created, i.e <code style="white-space: pre;">⁠&lt;= n⁠</code> breaks. This is to prioritise
+pretty breaks.
+</p>
+</li>
+</ul>
+<p><code>time_cut</code> is a generalisation of <code>time_summarisev</code> such that the
+below identity should always hold:
+</p>
+<pre>
+ identical(time_cut(x, n = Inf, as_factor = FALSE), time_summarisev(x))
+</pre>
+<p>Or also:
+</p>
+<pre>
+ breaks &lt;- time_breaks(x, n = Inf)
+ identical(breaks[unclass(time_cut(x, n = Inf))], time_summarisev(x))
+</pre>
+
+
+<h3>Value</h3>
+
+<p><code>time_breaks</code> returns a vector of breaks. <br><code>time_cut</code> returns either a vector or <code>time_interval</code>. <br><code>time_cut_width</code> cuts the time vector into groups of equal width, e.g. a day,
+and returns the same object as <code>time_cut</code>. This is analogous to
+<code>ggplot2::cut_width</code> but the intervals are all right-open.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+
+time_cut(1:10, n = 5)
+# Easily create custom time breaks
+df &lt;- nycflights13::flights %&gt;%
+  fslice_sample(n = 10, seed = 8192821) %&gt;%
+  select(time_hour) %&gt;%
+  farrange(time_hour) %&gt;%
+  mutate(date = as_date(time_hour))
+
+# time_cut() and time_breaks() automatically find a
+# suitable way to cut the data
+options(timeplyr.use_intervals = TRUE)
+time_cut(df$date)
+# Works with datetimes as well
+time_cut(df$time_hour, n = 5) # &lt;= 5 breaks
+# Custom formatting
+options(timeplyr.interval_sub_formatter =
+          function(x) format(x, format = "%Y %b"))
+time_cut(df$date, time_by = "month")
+# Just the breaks
+time_breaks(df$date, n = 5, time_by = "month")
+
+cut_dates &lt;- time_cut(df$date)
+date_breaks &lt;- time_breaks(df$date)
+
+# WHen n = Inf and as_factor = FALSE, it should be equivalent to using
+# time_aggregate or time_summarisev
+identical(time_cut(df$date, n = Inf, time_by = "month"),
+          time_summarisev(df$date, time_by = "month"))
+identical(time_summarisev(df$date, time_by = "month"),
+          time_aggregate(df$date, time_by = "month"))
+
+# To get exact breaks at regular intervals, use time_expandv
+weekly_breaks &lt;- time_expandv(df$date,
+                              time_by = "5 weeks",
+                              week_start = 1, # Monday
+                              time_floor = TRUE)
+weekly_labels &lt;- format(weekly_breaks, "%b-%d")
+df %&gt;%
+  time_by(date, time_by = "week", .name = "date") %&gt;%
+  count() %&gt;%
+  mutate(date = interval_start(date)) %&gt;%
+  ggplot(aes(x = date, y = n)) +
+  geom_bar(stat = "identity") +
+  scale_x_date(breaks = weekly_breaks,
+               labels = weekly_labels)
+reset_timeplyr_options()
+
+</code></pre>
+
+
+</div>

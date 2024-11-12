@@ -1,0 +1,256 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sf_phrase</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a musical phrase from string/fret combinations</h2>
+
+<h3>Description</h3>
+
+<p>Create a musical phrase from character strings that define string numbers,
+fret numbers and note metadata. This function is a wrapper around
+<code>phrase()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sf_phrase(
+  string,
+  fret = NULL,
+  info = NULL,
+  key = "c",
+  tuning = "standard",
+  to_notes = FALSE,
+  bar = NULL
+)
+
+sfp(
+  string,
+  fret = NULL,
+  info = NULL,
+  key = "c",
+  tuning = "standard",
+  to_notes = FALSE,
+  bar = NULL
+)
+
+sf_note(...)
+
+sfn(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>string</code></td>
+<td>
+<p>character, space-delimited or vector. String numbers
+associated with notes. Alternatively, provide all information here in a
+single space-delimited string and ignore <code>fret</code> and <code>info</code>. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fret</code></td>
+<td>
+<p>character, space-delimited or vector (or integer vector) of fret
+numbers associated with notes. Same number of timesteps as <code>string</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p>character, space-delimited or vector (or integer vector if simple
+durations) giving metadata associated with notes. Same number of timesteps as
+<code>string</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>character, key signature or just specify <code>"sharp"</code> or <code>"flat"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tuning</code></td>
+<td>
+<p>character, instrument tuning.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to_notes</code></td>
+<td>
+<p>logical, return only the mapped notes character string
+rather than the entire phrase object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bar</code></td>
+<td>
+<p>character or <code>NULL</code> (default). Terminates the phrase with a
+bar or bar check. See details for <code>phrase()</code>. Also see the LilyPond help
+documentation on bar notation for all the valid options.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>sf_phrase()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note: This alternate specification wrapper is not receiving further support
+and will be removed in a future version of <code>tabr</code>.
+</p>
+<p>This alternate syntax allows for specifying string/fret combinations instead
+of unambiguous pitch as is used by <code>phrase()</code>. In order to remove ambiguity,
+it is critical to specify the instrument string tuning and key signature. It
+essentially uses <code>string</code> and <code>fret</code> in combination with a known tuning and
+key signature to generate <code>notes</code> for <code>phrase()</code>. <code>info</code> is passed straight
+through to <code>phrase()</code>, as is <code>string</code> once it is done being used to help
+derive <code>notes</code>.
+</p>
+<p>See the main function <code>phrase</code> for general details on phrase
+construction.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a phrase.
+</p>
+
+
+<h3>Comparison with <code>phrase()</code>
+</h3>
+
+<p>This function is a wrapper function for users not working with musical notes
+(what to play), but rather just position on the guitar neck (where to play).
+This approach has conveniences, but is more limiting.
+In order to remove ambiguity, it is necessary to specify the instrument
+<code>tuning</code> and the <code>key</code> signature.
+</p>
+<p>In the standard approach with <code>phrase()</code> you specify what to play;
+specifying exactly where to play is optional, but highly recommended (by
+providing <code>string</code>).
+With <code>sf_phrase()</code>, the <code>string</code> argument is of course required along with
+<code>fret</code>.
+But any time the tuning changes, this "where to play" method breaks down and
+must be redone. It is more robust to provide the string and pitch rather
+than the string and fret.
+The <code>key</code> is additionally important because it is the only way to
+indicate if accidentals should be notated as sharps or flats.
+</p>
+<p>This wrapper also increases redundancy and typing. In order to specify rests
+<code>r</code>, silent rests <code>s</code>, and tied notes <code>~</code>, these must now be providing in
+parallel in both the <code>string</code> and <code>fret</code> arguments, whereas in the standard
+method using <code>phrase()</code>, they need only be provided once to <code>notes</code>.
+A mismatch will throw an error. Despite the redundancy, this is helpful for
+ensuring proper match up between <code>string</code> and <code>fret</code>, which is essentially a
+dual entry method that aims to reduce itself inside <code>sf_phrase()</code> to a single
+<code>notes</code> string that is passed internally to <code>phrase()</code>.
+</p>
+<p>The important thing to keep in mind is that by its nature, this method of
+writing out music does not lend itself well to high detail.
+Tabs that are informed by nothing but string and fret number remove a lot of
+important information, and those that attempt to compensate with additional
+symbols in say, an ascii tab, are difficult to read.
+This wrapper function providing this alternative input method to
+<code>phrase()</code> does its job of allowing users to create phrase objects that
+are equivalent to standard <code>phrase()</code>-generated objects, including rests
+and ties.
+But practice and comfort working with <code>phrase()</code> is is highly recommended
+for greater control of development support.
+</p>
+<p>The function <code>sfp()</code> is a convenient shorthand wrapper for <code>sf_phrase()</code>.
+<code>sf_note()</code> and the alias <code>sfn()</code> are wrappers around <code>sf_phrase()</code> that
+force <code>to_notes = TRUE</code>.
+</p>
+
+
+<h3>Single-string input</h3>
+
+<p>Another way to use <code>sf_phrase()</code> is to provide all musical input to
+<code>string</code> and ignore <code>fret</code> and <code>info</code> as explicit arguments.
+Providing all three explicit arguments more closely mimics the inputs of
+<code>phrase()</code> and is useful when you have this information as three
+independent sources.
+However, in some cases the single-argument input method can reduce typing,
+though this depends on the phrase.
+More importantly, it allow you to reason about your musical inputs by time
+step rather than by argument.
+If you provide all three components as a single character string to the
+<code>string</code> argument, leaving both <code>fret</code> and <code>info</code> as <code>NULL</code>, then
+<code>sf_phrase()</code> will decompose <code>string</code> into its three component parts
+internally.
+</p>
+<p>There are some rules for single-argument input. The three components are
+separated by semicolons as <code>"string;fret;info"</code>.
+For example, <code>"3;7x7;4"</code> means begin on the third string
+(infer higher number strings muted).
+The frets are 7th and 7th, meaning two notes are played. When an <code>x</code> is
+present in the second entry it means a string is not played.
+This is how it is inferred that the string numbers starting from the third
+string are strings 3 and 1 rather than 3 and 2 in this example.
+The 4 indicates a quarter note since it is part of the third entry where the
+additional <code>info</code> is specified. This is contextual. For example, an
+<code>x</code> here would still indicate a dead note, rather than an unplayed
+string in the second entry, so this is contextual.
+</p>
+<p>A bonus when using this input method is that explicit <code>string</code> and
+<code>info</code> values persist from one timestep to the next.
+Neither needs to be provided again until there is a change in value.
+For example, <code>"3;7x7;4 7x7 ;7x7;1"</code> repeats the string and info values
+from timestep one for timestep two.
+In timestep three, string numbers repeat again, but the duration changes
+from quarter note to whole note.
+</p>
+<p>Note that except when both <code>string</code> and <code>info</code> are repeating and
+only fret numbers are provided (see timestep two above), two semicolons
+must be present so that it is unambiguous whether the sole missing component
+is a <code>string</code> or <code>info</code> (see timestep three).
+</p>
+<p>Ambiguity would arise from a case like <code>"4;4"</code> without the second semicolon.
+This type of indexing was chosen over using two different delimiters.
+</p>
+<p>If a rest, <code>r</code> or <code>s</code>, is provided for the <code>fret</code> entry, then the <code>string</code>
+entry is ignored. When using this input method, ties <code>~</code> are given in the
+info entry.
+</p>
+<p>See the examples for a comparison of two identical phrases specified using
+both input methods for <code>sf_phrase()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>phrase()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">sf_phrase("5 4 3 2 1", "1 3 3 3 1", "8*4 1", key = "b_")
+sf_phrase("6 6 12 1 21", "133211 355333 11 (13) (13)(13)", "4 4 8 8 4",
+          key = "f")
+sfp("6*2 1*4", "000232*2 2*4", "4 4 8*4", tuning = "dropD", key = "d")
+
+# compare with single-argument input
+s &lt;- "3*5 53~*3 543*2 643"
+f &lt;- "987*2 775 553 335 77~*3 545 325 210"
+i &lt;- "2*3 4. 16 4.*3 4*3"
+p1 &lt;- sfp(s, f, i)
+
+# Nominally shorter syntax, but potentially much easier to reason about
+p2 &lt;- sfp("3;987;2*2 775 ;553;4. ;335;16 5;7x7;4.~*3 ;545;4 325 6;2x10;")
+
+identical(p1, p2)
+</code></pre>
+
+
+</div>

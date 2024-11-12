@@ -1,0 +1,205 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>taxizedb-package</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>taxizedb</h2>
+
+<h3>Description</h3>
+
+<p>Taxonomic databases interface
+</p>
+
+
+<h3>Supported data sources and database structure</h3>
+
+<p>All are using SQLite as the database
+</p>
+
+<ul>
+<li>
+<p> NCBI: text files are provided by NCBI, which we stitch into a sqlite db
+</p>
+</li>
+<li>
+<p> ITIS: they provide a sqlite dump, which we use here
+</p>
+</li>
+<li>
+<p> The PlantList: created from stitching together csv files. this
+source is no longer updated as far as we can tell. they say they've
+moved focus to the World Flora Online
+</p>
+</li>
+<li>
+<p> Catalogue of Life: created from Darwin Core Archive dump. Using the
+latest monthly edition via
+http://www.catalogueoflife.org/DCA_Export/archive.php
+</p>
+</li>
+<li>
+<p> GBIF: created from Darwin Core Archive dump. right now we only have
+the taxonomy table (called gbif), but will add the other tables in the
+darwin core archive later
+</p>
+</li>
+<li>
+<p> Wikidata: aggregated taxonomy of Open Tree of Life, GLoBI and Wikidata.
+On Zenodo, created by Joritt Poelen of GLOBI.
+</p>
+</li>
+<li>
+<p> World Flora Online: http://www.worldfloraonline.org/
+</p>
+</li>
+</ul>
+<h3>Update schedule for databases</h3>
+
+
+<ul>
+<li>
+<p> NCBI: since <code>db_download_ncbi</code> creates the database when the function
+is called, it's updated whenever you run the function
+</p>
+</li>
+<li>
+<p> ITIS: since ITIS provides the sqlite database as a download, you can
+delete the old file and run <code>db_download_itis</code> to get a new dump;
+they I think update the dumps every month or so
+</p>
+</li>
+<li>
+<p> The PlantList: no longer updated, so you shouldn't need to download
+this after the first download
+</p>
+</li>
+<li>
+<p> Catalogue of Life: a GitHub Actions job runs once a day at 00:00 UTC,
+building the lastest COL data into a SQLite database thats hosted on
+Amazon S3
+</p>
+</li>
+<li>
+<p> GBIF: a GitHub Actions job runs once a day at 00:00 UTC,
+building the lastest COL data into a SQLite database thats hosted on
+Amazon S3
+</p>
+</li>
+<li>
+<p> Wikidata: last updated April 6, 2018. Scripts are available to
+update the data if you prefer to do it yourself.
+</p>
+</li>
+<li>
+<p> World Flora Online: since <code>db_download_wfo</code> creates the database when
+the function is called, it's updated whenever you run the function
+</p>
+</li>
+</ul>
+<h3>Links</h3>
+
+
+<ul>
+<li>
+<p> NCBI: ftp://ftp.ncbi.nih.gov/pub/taxonomy/
+</p>
+</li>
+<li>
+<p> ITIS: https://www.itis.gov/downloads/index.html
+</p>
+</li>
+<li>
+<p> The PlantList - http://www.theplantlist.org/
+</p>
+</li>
+<li>
+<p> Catalogue of Life:
+via http://www.catalogueoflife.org/content/annual-checklist-archive
+</p>
+</li>
+<li>
+<p> GBIF: http://rs.gbif.org/datasets/backbone/
+</p>
+</li>
+<li>
+<p> Wikidata: https://zenodo.org/record/1213477
+</p>
+</li>
+<li>
+<p> World Flora Online: http://www.worldfloraonline.org/
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(dplyr)
+
+# data source: NCBI
+db_download_ncbi()
+src &lt;- src_ncbi()
+df &lt;- tbl(src, "names")
+filter(df, name_class == "scientific name")
+
+# data source: ITIS
+## download ITIS database
+db_download_itis()
+## connect to the ITIS database
+src &lt;- src_itis()
+## use SQL syntax
+sql_collect(src, "select * from hierarchy limit 5")
+### or pipe the src to sql_collect
+src %&gt;% sql_collect("select * from hierarchy limit 5")
+## use dplyr verbs
+src %&gt;%
+  tbl("hierarchy") %&gt;%
+  filter(ChildrenCount &gt; 1000)
+## or create tbl object for repeated use
+hiers &lt;- src %&gt;% tbl("hierarchy")
+hiers %&gt;% select(TSN, level)
+
+# data source: The PlantList
+## download tpl datababase
+db_download_tpl()
+## connecto the tpl database
+src &lt;- src_tpl()
+## do queries
+tpl &lt;- tbl(src, "tpl")
+filter(tpl, Family == "Pinaceae")
+
+# data source: Catalogue of Life
+## download col datababase
+db_download_col()
+## connec to the col database
+src &lt;- src_col()
+## do queries
+names &lt;- tbl(src, "taxa")
+select(names, taxonID, scientificName)
+
+# data source: GBIF
+## download gbif datababase
+db_download_gbif()
+## connecto the gbif database
+src &lt;- src_gbif()
+## do queries
+df &lt;- tbl(src, "gbif")
+select(df, taxonID, scientificName)
+
+# data source: Wikidata
+db_download_wikidata()
+src &lt;- src_wikidata()
+df &lt;- tbl(src, "wikidata")
+filter(df, rank_id == "Q7432")
+
+# data source: World Flora Online
+db_download_wfo()
+src &lt;- src_wfo()
+df &lt;- tbl(src, "wfo")
+filter(df, taxonID == "wfo-0000000010")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

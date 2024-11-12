@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ungather_draws</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Turn tidy data frames of variables from a Bayesian model back into untidy data</h2>
+
+<h3>Description</h3>
+
+<p>Inverse operations of <code>spread_draws()</code> and <code>gather_draws()</code>, giving
+results that look like <code>tidy_draws()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ungather_draws(
+  data,
+  ...,
+  variable = ".variable",
+  value = ".value",
+  draw_indices = c(".chain", ".iteration", ".draw"),
+  drop_indices = FALSE
+)
+
+unspread_draws(
+  data,
+  ...,
+  draw_indices = c(".chain", ".iteration", ".draw"),
+  drop_indices = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A tidy data frame of draws, such as one output by <code>spread_draws</code> or <code>gather_draws</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Expressions in the form of
+<code>variable_name[dimension_1, dimension_2, ...]</code>. See <code>spread_draws()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variable</code></td>
+<td>
+<p>The name of the column in <code>data</code> that contains the names of variables from the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The name of the column in <code>data</code> that contains draws from the variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>draw_indices</code></td>
+<td>
+<p>Character vector of column names that should be treated
+as indices of draws. Operations are done within combinations of these values.
+The default is <code>c(".chain", ".iteration", ".draw")</code>, which is the same names
+used for chain, iteration, and draw indices returned by <code>tidy_draws()</code>.
+Names in <code>draw_indices</code> that are not found in the data are ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_indices</code></td>
+<td>
+<p>Drop the columns specified by <code>draw_indices</code> from the resulting data frame. Default <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions take symbolic specifications of variable names and dimensions in the same format as
+<code>spread_draws()</code> and <code>gather_draws()</code> and invert the tidy data frame back into
+a data frame whose column names are variables with dimensions in them.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>spread_draws()</code>, <code>gather_draws()</code>, <code>tidy_draws()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+
+data(RankCorr, package = "ggdist")
+
+# We can use unspread_draws to allow us to manipulate draws with tidybayes
+# and then transform the draws into a form we can use with packages like bayesplot.
+# Here we subset b[i,j] to just values of i in 1:2 and j == 1, then plot with bayesplot
+RankCorr %&gt;%
+  spread_draws(b[i,j]) %&gt;%
+  filter(i %in% 1:2, j == 1) %&gt;%
+  unspread_draws(b[i,j], drop_indices = TRUE) %&gt;%
+  bayesplot::mcmc_areas()
+
+# As another example, we could use compare_levels to plot all pairwise comparisons
+# of b[1,j] for j in 1:3
+RankCorr %&gt;%
+  spread_draws(b[i,j]) %&gt;%
+  filter(i == 1, j %in% 1:3) %&gt;%
+  compare_levels(b, by = j) %&gt;%
+  unspread_draws(b[j], drop_indices = TRUE) %&gt;%
+  bayesplot::mcmc_areas()
+
+</code></pre>
+
+
+</div>

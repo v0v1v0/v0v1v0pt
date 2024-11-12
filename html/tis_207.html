@@ -1,0 +1,205 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ti</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Time Index Objects </h2>
+
+<h3>Description</h3>
+
+<p>The function <code>ti</code> is used to create time index objects, which are
+useful for date calculations and as indexes for <code>tis</code> (time
+indexed series).
+</p>
+<p><code>as.ti</code> and <code>asTi</code> coerce an object to a time index, the
+difference being that <code>as.ti</code> calls the constructor <code>ti</code>,
+while <code>asTi</code> simply forces the class of its argument to be "ti"
+without any checking as to whether or not it makes sense to do so.
+</p>
+<p><code>is.ti</code> tests whether an object is a time index.  
+</p>
+<p><code>couldBeTi</code> tests whether or not <code>x</code> is numeric and has all
+elements within the range expected for a <code>ti</code> time index with the
+given <code>tif</code>. If <code>tif</code> is <code>NULL</code> (the default), the test
+is whether or not <code>x</code> could be a <code>ti</code> of <em>any</em>
+frequency. If so, it can be safely coerced to class <code>ti</code> by
+<code>as.ti</code>. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ti(x, ...)
+## S3 method for class 'Date'
+ti(x, ...)
+## Default S3 method:
+ti(x, tif = NULL, freq = NULL, ...)
+## S3 method for class 'jul'
+ti(x, tif = NULL, freq = NULL, hour = 0, minute = 0, second = 0, ...)
+## S3 method for class 'ssDate'
+ti(x, ...)
+## S3 method for class 'ti'
+ti(x, tif = NULL, freq = NULL, ...)
+## S3 method for class 'tis'
+ti(x, ...)
+## S3 method for class 'yearmon'
+ti(x, ...)
+## S3 method for class 'yearqtr'
+ti(x, ...)
+as.ti(x, ...)
+asTi(x)
+is.ti(x)
+couldBeTi(x, tif = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>object to be tested (<code>is.ti</code>) or converted into a <code>ti</code>
+object.  As described in the details below, the constructor function
+<code>ti</code> can deal with	several different kinds of <code>x</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hour</code></td>
+<td>
+<p>used if and only if <code>tif</code> is an intraday frequency </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minute</code></td>
+<td>
+<p>used if and only if <code>tif</code> is an intraday frequency </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>second</code></td>
+<td>
+<p>used if and only if <code>tif</code> is an intraday frequency </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>other args to be passed to the method called by the generic function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tif</code></td>
+<td>
+
+<p>a ti Frequency, given as either a numerical code or a string.
+<code>tif()</code> with no arguments returns a list of the allowable
+numerical codes and names.  Either <code>tif</code> or
+<code>freq</code> must be supplied for the variants of <code>ti()</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>freq</code></td>
+<td>
+
+<p>some <code>tif</code>'s can alternatively be specified by their frequency,
+such as 1 (annual), 2 (semiannual), 4 (quarterly), 6 (bimonthly),
+12 (monthly), 24 (semimonthly), 26 (biweekly), 36 (tenday), 52
+(weekly), 262 (business) and 365 (daily).  Either <code>tif</code> or
+<code>freq</code> must be supplied for the variants of <code>ti()</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A <code>ti</code> has a <code>tif</code> (ti Frequency) and a period.  The period
+represents the number of periods elapsed since the base period for that
+frequency.  Adding or subtracting an integer to a <code>ti</code> gives
+another <code>ti</code>.  Provided their corresponding element have matching
+<code>tif</code>s, the comparison operators <code>&lt;, &gt;, &lt;=, &gt;=, ==</code> all
+work, and subtracting one <code>ti</code> from another gives the number of
+periods between them.  See the examples section below.
+</p>
+<p>The <code>ti</code> class implements methods for a number of generic
+functions, including <code>"["</code>, <code>as.Date</code>, <code>as.POSIXct</code>,
+<code>as.POSIXlt</code>, <code>c</code>, <code>cycle</code>, <code>edit</code>, <code>format</code>,
+<code>frequency</code>, <code>jul</code>, <code>max</code>, <code>min</code>, <code>print</code>,
+<code>rep</code>, <code>seq</code>, <code>tif</code>, <code>tifName</code>, <code>time</code>,
+<code>ymd</code>.
+</p>
+<p><code>ti</code> is a generic function with specialized methods to handle
+<code>jul</code>, <code>Date</code>, <code>ti</code>. <code>tis</code>, <code>yearmon</code> and
+<code>yearqtr</code> objects.
+</p>
+<p>The default method (<code>ti.default</code>) deals with character <code>x</code> by
+calling <code>as.Date</code> on it.  Otherwise, it proceeds as follows:
+</p>
+<p>If <code>x</code> is numeric, a check is made to see if <code>x</code> could be
+a <code>ti</code> object that has somehow lost it's class attribute. Failing that,
+<code>isYmd</code> is used to see if it could be yyyymmdd date, then 
+<code>isTime</code> is called to see if <code>x</code> could be a decimal time (a
+number between 1799 and 2200). If <code>x</code> is of length 2, an attempt
+to interpret it as a <code>c(year, period)</code> pair  is made.  Finally,
+if all else fails, <code>as.Date(x)</code> is called to attempt to create a
+<code>Date</code> object that can then be used to construct a <code>ti</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>is.ti</code> and <code>couldBeTi</code> return <code>TRUE</code> or <code>FALSE</code>.
+</p>
+<p><code>as.ti</code> returns a <code>ti</code> object.
+</p>
+<p><code>asTi</code> returns its argument with the class attribute set to "ti".
+</p>
+<p><code>ti</code> constructs a <code>ti</code> object like <code>x</code>, except for two
+special cases:
+</p>
+<p>1.  If <code>x</code> is a <code>tis</code> series, the return value is a vector
+time index with elements corresponding to the observation periods of
+<code>x</code>. 
+</p>
+<p>2.  If <code>x</code> is a numeric object of length 2 interpretable as
+<code>c(year, period)</code>, the return value is a single <code>ti</code>. 
+</p>
+
+
+<h3>Note</h3>
+
+<p>The <code>as.Date(x)</code> call is not wrapped in a try-block, so it may be at
+the top of the stack when <code>ti</code> fails.
+</p>
+<p>The return value from <code>asTi</code> is not guaranteed to be a valid
+<code>ti</code> object.  For example, <code>asTi("a")</code> will not throw an
+error, and it will return the string "a" with a class attribute "ti",
+but that's not a valid time index. 
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>jul</code>, <code>ymd</code>, <code>tif</code>,
+<code>tifName</code>, <code>as.Date</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">z &lt;- ti(19971231, "monthly")   ##  monthly ti for Dec 97
+is.ti(z)                       ##  TRUE
+is.ti(unclass(z))              ##  FALSE
+couldBeTi(unclass(z))          ##  TRUE
+ymd(z + 4)                     ##  19980430
+z - ti(c(1997,6), freq = 12)   ##  monthly ti for June 1997
+ti(z, tif = "wmonday")         ##  week ending Monday June 30, 1997
+</code></pre>
+
+
+</div>

@@ -1,0 +1,83 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_continuous_tucker</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Signal tensor estimation from a noisy and incomplete data tensor based on the Tucker model.</h2>
+
+<h3>Description</h3>
+
+<p>Estimate a signal tensor from a noisy and incomplete data tensor using the Tucker model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_continuous_tucker(ttnsr,r,alpha = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ttnsr</code></td>
+<td>
+<p>A given (possibly noisy and incomplete) data tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>A rank to be fitted (Tucker rank).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>A signal level
+</p>
+<p><code>alpha = TRUE</code> If the signal level is unknown.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list containing the following:
+</p>
+<p><code>C</code> - An estimated core tensor.
+</p>
+<p><code>A</code> - Estimated factor matrices.
+</p>
+<p><code>iteration</code> - The number of iterations.
+</p>
+<p><code>cost</code> - Log-likelihood value at each iteration.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Latent parameters
+library(tensorregress)
+alpha = 10
+A_1 = matrix(runif(10*2,min=-1,max=1),nrow = 10)
+A_2 = matrix(runif(10*2,min=-1,max=1),nrow = 10)
+A_3 = matrix(runif(10*2,min=-1,max=1),nrow = 10)
+C = as.tensor(array(runif(2^3,min=-1,max=1),dim = c(2,2,2)))
+theta = ttm(ttm(ttm(C,A_1,1),A_2,2),A_3,3)@data
+theta = alpha*theta/max(abs(theta))
+adj = mean(theta)
+theta = theta-adj
+omega = c(-0.2,0.2)+adj
+
+# Observed tensor
+ttnsr &lt;- realization(theta,omega)@data
+
+# Estimation of parameters
+continuous_est = fit_continuous_tucker(ttnsr,c(2,2,2),alpha = 10)
+
+</code></pre>
+
+
+</div>

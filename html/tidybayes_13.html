@@ -1,0 +1,172 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>recover_types</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Decorate a model fit or sample with data types recovered from the input data</h2>
+
+<h3>Description</h3>
+
+<p>Decorate a Bayesian model fit or a sample from it with types for
+variable and dimension data types. Meant to be used before calling
+<code>spread_draws()</code> or <code>gather_draws()</code> so that the values returned by
+those functions are translated back into useful data types.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">recover_types(model, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A supported Bayesian model fit. Tidybayes supports a variety of model objects;
+for a full list of supported models, see tidybayes-models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Lists (or data frames) providing data prototypes used to convert
+columns returned by <code>spread_draws()</code> and <code>gather_draws()</code> back into useful data types.
+See <em>Details</em>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Each argument in <code>...</code> specifies a list or data.frame. The <code>model</code>
+is decorated with a list of constructors that can convert a numeric column
+into the data types in the lists in <code>...</code>.
+</p>
+<p>Then, when <code>spread_draws()</code> or <code>gather_draws()</code> is called on the decorated
+<code>model</code>, each list entry with the same name as the variable or a dimension
+in <code>variable_spec</code> is a used as a prototype for that variable or dimension —
+i.e., its type is taken to be the expected type of that variable or dimension.
+Those types are used to translate numeric values of variables back into
+useful values (for example, levels of a factor).
+</p>
+<p>The most common use of <code>recover_types</code> is to automatically translate
+dimensions of a variable that correspond to levels of a factor in the original data back into
+levels of that factor. The simplest way to do this is to pass in the data
+frame from which the original data came.
+</p>
+<p>Supported types of prototypes are factor, ordered, and logical. For example:
+</p>
+ <ul>
+<li>
+<p> if <code>prototypes$v</code> is a factor, the v column in the
+returned draws is translated into a factor using <code>factor(v, labels=levels(prototypes$v), ordered=is.ordered(prototypes$v))</code>.  </p>
+</li>
+<li>
+<p> if
+<code>prototypes$v</code> is a logical, the v column is translated into a logical
+using <code>as.logical(v)</code>. </p>
+</li>
+</ul>
+<p>Additional data types can be supported by providing a custom implementation
+of the generic function <code>as_constructor</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A decorated version of <code>model</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>spread_draws()</code>, <code>gather_draws()</code>, <code>compose_data()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+library(dplyr)
+library(magrittr)
+library(rstan)
+
+# Here's an example dataset with a categorical predictor (`condition`) with several levels:
+set.seed(5)
+n = 10
+n_condition = 5
+ABC = tibble(
+  condition = factor(rep(c("A","B","C","D","E"), n)),
+  response = rnorm(n * 5, c(0,1,2,1,-1), 0.5)
+)
+
+# We'll fit the following model to it:
+stan_code = "
+  data {
+    int&lt;lower=1&gt; n;
+    int&lt;lower=1&gt; n_condition;
+    int&lt;lower=1, upper=n_condition&gt; condition[n];
+    real response[n];
+  }
+  parameters {
+    real overall_mean;
+    vector[n_condition] condition_zoffset;
+    real&lt;lower=0&gt; response_sd;
+    real&lt;lower=0&gt; condition_mean_sd;
+  }
+  transformed parameters {
+    vector[n_condition] condition_mean;
+    condition_mean = overall_mean + condition_zoffset * condition_mean_sd;
+  }
+  model {
+    response_sd ~ cauchy(0, 1);       // =&gt; half-cauchy(0, 1)
+    condition_mean_sd ~ cauchy(0, 1); // =&gt; half-cauchy(0, 1)
+    overall_mean ~ normal(0, 5);
+
+    //=&gt; condition_mean ~ normal(overall_mean, condition_mean_sd)
+    condition_zoffset ~ normal(0, 1);
+
+    for (i in 1:n) {
+      response[i] ~ normal(condition_mean[condition[i]], response_sd);
+    }
+  }
+"
+
+m = stan(model_code = stan_code, data = compose_data(ABC), control = list(adapt_delta=0.99),
+  # 1 chain / few iterations just so example runs quickly
+  # do not use in practice
+  chains = 1, iter = 500)
+
+# without using recover_types(), the `condition` column returned by spread_draws()
+# will be an integer:
+m %&gt;%
+  spread_draws(condition_mean[condition]) %&gt;%
+  median_qi()
+
+# If we apply recover_types() first, subsequent calls to other tidybayes functions will
+# automatically back-convert factors so that they are labeled with their original levels
+# (assuming the same name is used)
+m %&lt;&gt;% recover_types(ABC)
+
+# now the `condition` column with be a factor with levels "A", "B", "C", ...
+m %&gt;%
+  spread_draws(condition_mean[condition]) %&gt;%
+  median_qi()
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

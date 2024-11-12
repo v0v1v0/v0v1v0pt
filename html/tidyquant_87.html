@@ -1,0 +1,182 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>excel_if_functions</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Excel Summarising "If" Functions</h2>
+
+<h3>Description</h3>
+
+<p><strong>"IFS" functions</strong> are filtering versions of their summarization counterparts.
+Simply add "cases" that filter if a condition is true.
+Multiple cases are evaluated as "AND" filtering operations.
+A single case with <code>|</code> ("OR") bars can be created to accomplish an "OR".
+See details below.
+</p>
+<p>These functions are designed to help users coming from an <strong>Excel background</strong>.
+Most functions replicate the behavior of Excel:
+</p>
+
+<ul>
+<li>
+<p> Names are similar to Excel function names
+</p>
+</li>
+<li>
+<p> By default, missing values are ignored (same as in Excel)
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">SUM_IFS(x, ...)
+
+COUNT_IFS(x, ...)
+
+AVERAGE_IFS(x, ...)
+
+MEDIAN_IFS(x, ...)
+
+MIN_IFS(x, ...)
+
+MAX_IFS(x, ...)
+
+CREATE_IFS(.f, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A vector. Most functions are designed for numeric data.
+Some functions like <code>COUNT_IFS()</code> handle multiple data types.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Add cases to evaluate. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A function to convert to an "IFS" function.
+Use <code>...</code> in this case to provide parameters to the <code>.f</code> like <code>na.rm = TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>"AND" Filtering:</strong>
+Multiple cases are evaluated as "AND" filtering operations.
+</p>
+<p><strong>"OR" Filtering:</strong>
+Compound single cases with <code>|</code> ("OR") bars can be created to accomplish an "OR".
+Simply use a statement like <code>x &gt; 10 | x &lt; -10</code> to perform an "OR" if-statement.
+</p>
+<p><strong>Creating New "Summarizing IFS" Functions:</strong>
+Users can create new "IFS" functions using the <code>CREATE_IFS()</code> function factory.
+The only requirement is that the output of your function (<code>.f</code>) must be a single
+value (scalar). See examples below.
+</p>
+
+
+<h3>Value</h3>
+
+
+<ul><li> <p><strong>Summary functions</strong> return a single value
+</p>
+</li></ul>
+<h3>Useful Functions</h3>
+
+<p><strong>Summary Functions</strong> - Return a single value from a vector
+</p>
+
+<ul>
+<li>
+<p> Sum: <code>SUM_IFS()</code>
+</p>
+</li>
+<li>
+<p> Center: <code>AVERAGE_IFS()</code>, <code>MEDIAN_IFS()</code>
+</p>
+</li>
+<li>
+<p> Count: <code>COUNT_IFS()</code>
+</p>
+</li>
+<li>
+<p> Range: <code>MIN_IFS()</code>, <code>MAX_IFS()</code>
+</p>
+</li>
+</ul>
+<p><strong>Create your own summary "IFS" function</strong>
+</p>
+
+<ul><li> <p><code>CREATE_IFS()</code>: This is a function factory that generates summary "_IFS" functions.
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(timetk, exclude = "FANG")
+library(stringr)
+library(lubridate)
+
+# --- Basic Usage ---
+
+SUM_IFS(x = 1:10, x &gt; 5)
+
+COUNT_IFS(x = letters, str_detect(x, "a|b|c"))
+
+SUM_IFS(-10:10, x &gt; 8 | x &lt; -5)
+
+# Create your own IFS function (Mind blowingly simple)!
+Q75_IFS &lt;- CREATE_IFS(.f = quantile, probs = 0.75, na.rm = TRUE)
+Q75_IFS(1:10, x &gt; 5)
+
+# --- Usage with tidyverse ---
+
+# Using multiple cases IFS cases to count the frequency of days with
+# high trade volume in a given year
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    summarise(
+        high_volume_in_2015 = COUNT_IFS(volume,
+                                        year(date) == 2015,
+                                        volume &gt; quantile(volume, 0.75))
+    )
+
+# Count negative returns by month
+FANG %&gt;%
+    mutate(symbol = forcats::as_factor(symbol)) %&gt;%
+    group_by(symbol) %&gt;%
+
+    # Collapse from daily to FIRST value by month
+    summarise_by_time(
+        .date_var  = date,
+        .by        = "month",
+        adjusted   = FIRST(adjusted)
+    ) %&gt;%
+
+    # Calculate monthly returns
+    group_by(symbol) %&gt;%
+    mutate(
+        returns = PCT_CHANGE(adjusted, fill_na = 0)
+    ) %&gt;%
+
+    # Find returns less than zero and count the frequency
+    summarise(
+        negative_monthly_returns = COUNT_IFS(returns, returns &lt; 0)
+    )
+
+</code></pre>
+
+
+</div>

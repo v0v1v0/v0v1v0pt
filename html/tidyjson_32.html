@@ -1,0 +1,65 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>issues</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Issue data for the dplyr repo from github API</h2>
+
+<h3>Description</h3>
+
+<p>Issue data for the dplyr repo from github API
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">issues
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>JSON
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+
+# issues is a long character string
+nchar(issues)
+
+# Let's make it a tbl_json object
+issues %&gt;% as.tbl_json
+
+# It begins as an array, so let's gather that
+issues %&gt;% gather_array
+
+# Now let's spread all the top level values
+issues %&gt;% gather_array %&gt;% spread_all %&gt;% glimpse
+
+# Are there any top level objects or arrays?
+issues %&gt;% gather_array %&gt;% gather_object %&gt;% json_types %&gt;%
+  count(name, type) %&gt;%
+  filter(type %in% c("array", "object"))
+
+# Count issues labels by name
+labels &lt;- issues %&gt;%
+  gather_array %&gt;%                    # stack issues as "issue.num"
+  spread_values(id = jnumber(id)) %&gt;% # capture just issue id
+  enter_object(labels) %&gt;%            # filter just those with labels
+  gather_array("label.index") %&gt;%     # stack labels
+  spread_all
+labels %&gt;% glimpse
+
+# Count number of distinct issues each label appears in
+labels %&gt;%
+  group_by(name) %&gt;%
+  summarize(num.issues = n_distinct(id))
+</code></pre>
+
+
+</div>

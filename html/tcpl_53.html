@@ -1,0 +1,100 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tcplAddModel</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Draw a tcpl Model onto an existing plot</h2>
+
+<h3>Description</h3>
+
+<p><code>tcplAddModel</code> draws a a line for one of the tcpl Models (see 
+<code>Models</code> for more information) onto an existing plot.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcplAddModel(pars, modl = NULL, adj = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>List of parameters from level 4 or 5 output</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modl</code></td>
+<td>
+<p>Character of length 1, the model to plot: 'cnst,' 'hill,' or 
+'gnls'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj</code></td>
+<td>
+<p>Numeric of length 1, an adjustment factor, see details for more
+information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>curve</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tcplAddModel</code> draws the model line assuming the x-axis represents log
+base 10 concentration.
+</p>
+<p>If <code>modl</code> is NULL, the function checks <code>pars$modl</code> and will return 
+an error if <code>pars$modl</code> is also NULL.
+</p>
+<p><code>adj</code> is intended to scale the models, so that models with different 
+response units can be visualized on a single plot. The recommended value for 
+<code>adl</code> is <code>1/(3*bmad)</code> for level 4 data and <code>1/coff</code> for level 
+5 data. If <code>adj</code> is NULL the function will check <code>pars$adj</code> and 
+set <code>adj</code> to 1 if <code>pars$adj</code> is also NULL.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Models</code>, <code>tcplPlotFits</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Create some dummy data to plot
+logc &lt;- 1:10
+r1 &lt;- sapply(logc, tcplHillVal, ga = 5, tp = 50, gw = 0.5)
+r2 &lt;- log2(sapply(logc, tcplHillVal, ga = 4, tp = 30, gw = 0.5))
+p1 &lt;- tcplFit(logc = logc, resp = r1, bmad = 10)
+p2 &lt;- tcplFit(logc = logc, resp = r2, bmad = log2(1.5))
+
+## In the dummy data above, the two plots are on very different scales
+plot(r1 ~ logc, pch = 16, ylab = "raw response")
+tcplAddModel(pars = p1, modl = "hill")
+points(r2 ~ logc)
+tcplAddModel(pars = p2, modl = "hill", lty = "dashed")
+
+## To visualize the two curves on the same plot for comparison, we can 
+## scale the values to the bmad, such that a scaled response of 1 will equal
+## the bmad for each curve.
+plot(r1/10 ~ logc, pch = 16, ylab = "scaled response")
+tcplAddModel(pars = p1, modl = "hill", adj = 1/10)
+points(r2/log2(5) ~ logc)
+tcplAddModel(pars = p2, modl = "hill", adj = 1/log2(5), lty = "dashed")
+
+</code></pre>
+
+
+</div>

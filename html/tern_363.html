@@ -1,0 +1,295 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>survival_coxph_pairwise</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Analyze a pairwise Cox-PH model</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>coxph_pairwise()</code> creates a layout element to analyze a pairwise Cox-PH model.
+</p>
+<p>This function can return statistics including p-value, hazard ratio (HR), and HR confidence intervals from both
+stratified and unstratified Cox-PH models. The variable(s) to be analyzed is specified via the <code>vars</code> argument and
+any stratification factors via the <code>strata</code> argument.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">coxph_pairwise(
+  lyt,
+  vars,
+  strata = NULL,
+  control = control_coxph(),
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  var_labels = "CoxPH",
+  show_labels = "visible",
+  table_names = vars,
+  .stats = c("pvalue", "hr", "hr_ci"),
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_coxph_pairwise(
+  df,
+  .ref_group,
+  .in_ref_col,
+  .var,
+  is_event,
+  strata = NULL,
+  strat = lifecycle::deprecated(),
+  control = control_coxph()
+)
+
+a_coxph_pairwise(
+  df,
+  .ref_group,
+  .in_ref_col,
+  .var,
+  is_event,
+  strata = NULL,
+  strat = lifecycle::deprecated(),
+  control = control_coxph()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names for the primary analysis variable to be iterated over.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>(<code>character</code> or <code>NULL</code>)<br> variable names indicating stratification factors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> parameters for comparison details, specified by using the helper function
+<code>control_coxph()</code>. Some possible parameter options are:
+</p>
+
+<ul>
+<li> <p><code>pval_method</code> (<code>string</code>)<br> p-value method for testing the null hypothesis that hazard ratio = 1. Default
+method is <code>"log-rank"</code> which comes from <code>survival::survdiff()</code>, can also be set to <code>"wald"</code> or <code>"likelihood"</code>
+(from <code>survival::coxph()</code>).
+</p>
+</li>
+<li> <p><code>ties</code> (<code>string</code>)<br> specifying the method for tie handling. Default is <code>"efron"</code>,
+can also be set to <code>"breslow"</code> or <code>"exact"</code>. See more in <code>survival::coxph()</code>.
+</p>
+</li>
+<li> <p><code>conf_level</code> (<code>proportion</code>)<br> confidence level of the interval for HR.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var_labels</code></td>
+<td>
+<p>(<code>character</code>)<br> variable labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_labels</code></td>
+<td>
+<p>(<code>string</code>)<br> label visibility: one of "default", "visible" and "hidden".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run <code>get_stats("coxph_pairwise")</code>
+to see available statistics for this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.ref_group</code></td>
+<td>
+<p>(<code>data.frame</code> or <code>vector</code>)<br> the data corresponding to the reference group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.in_ref_col</code></td>
+<td>
+<p>(<code>flag</code>)<br><code>TRUE</code> when working with the reference level, <code>FALSE</code> otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var</code></td>
+<td>
+<p>(<code>string</code>)<br> single variable name that is passed by <code>rtables</code> when requested
+by a statistics function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_event</code></td>
+<td>
+<p>(<code>flag</code>)<br><code>TRUE</code> if event, <code>FALSE</code> if time to event is censored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strat</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Please use the <code>strata</code> argument instead.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>coxph_pairwise()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_coxph_pairwise()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_coxph_pairwise()</code> returns the statistics:
+</p>
+
+<ul>
+<li> <p><code>pvalue</code>: p-value to test the null hypothesis that hazard ratio = 1.
+</p>
+</li>
+<li> <p><code>hr</code>: Hazard ratio.
+</p>
+</li>
+<li> <p><code>hr_ci</code>: Confidence interval for hazard ratio.
+</p>
+</li>
+<li> <p><code>n_tot</code>: Total number of observations.
+</p>
+</li>
+<li> <p><code>n_tot_events</code>: Total number of events.
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li> <p><code>a_coxph_pairwise()</code> returns the corresponding list with formatted <code>rtables::CellValue()</code>.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>coxph_pairwise()</code>: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_coxph_pairwise()</code>: Statistics function which analyzes HR, CIs of HR, and p-value of a Cox-PH model.
+</p>
+</li>
+<li> <p><code>a_coxph_pairwise()</code>: Formatted analysis function which is used as <code>afun</code> in <code>coxph_pairwise()</code>.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+adtte_f &lt;- tern_ex_adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  mutate(is_event = CNSR == 0)
+
+df &lt;- adtte_f %&gt;% filter(ARMCD == "ARM A")
+df_ref_group &lt;- adtte_f %&gt;% filter(ARMCD == "ARM B")
+
+basic_table() %&gt;%
+  split_cols_by(var = "ARMCD", ref_group = "ARM A") %&gt;%
+  add_colcounts() %&gt;%
+  coxph_pairwise(
+    vars = "AVAL",
+    is_event = "is_event",
+    var_labels = "Unstratified Analysis"
+  ) %&gt;%
+  build_table(df = adtte_f)
+
+basic_table() %&gt;%
+  split_cols_by(var = "ARMCD", ref_group = "ARM A") %&gt;%
+  add_colcounts() %&gt;%
+  coxph_pairwise(
+    vars = "AVAL",
+    is_event = "is_event",
+    var_labels = "Stratified Analysis",
+    strata = "SEX",
+    control = control_coxph(pval_method = "wald")
+  ) %&gt;%
+  build_table(df = adtte_f)
+
+</code></pre>
+
+
+</div>

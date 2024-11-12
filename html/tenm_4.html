@@ -1,0 +1,147 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>clean_dup</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function to thin longitude and latitude data</h2>
+
+<h3>Description</h3>
+
+<p>Cleans up duplicated or redundant occurrence records that present overlapping
+longitude and latitude coordinates. Thinning can be performed using either a
+geographical distance threshold or a pixel neighborhood approach.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">clean_dup(
+  data,
+  longitude,
+  latitude,
+  threshold = 0,
+  by_mask = FALSE,
+  raster_mask = NULL,
+  n_ngbs = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data.frame with longitude and latitude of occurrence records.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>longitude</code></td>
+<td>
+<p>A character vector indicating the column name of the
+"longitude" variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>latitude</code></td>
+<td>
+<p>A character vector indicating the column name of the
+"latitude" variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>A numeric value representing the distance threshold between
+coordinates to be considered duplicates. Units depend on whether
+<code>by_mask</code> is <code>T</code> or <code>F</code>. If <code>T</code>, the user needs to specify the number
+of pixels that define the neighborhood of duplicates (see n_ngbs parameter).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by_mask</code></td>
+<td>
+<p>Logical. If <code>T</code>, the thinning process will use a raster layer
+as a mask for defining distance in pixel units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>raster_mask</code></td>
+<td>
+<p>An object of class SpatRaster that serves as a reference
+to thin the occurrence data. Required if <code>by_mask</code> is <code>T</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_ngbs</code></td>
+<td>
+<p>Number of pixels used to define the neighborhood matrix that
+helps determine which occurrences are duplicates:
+</p>
+
+<ul>
+<li>
+<p> 0 removes occurrences within the same pixel, keeping one.
+</p>
+</li>
+<li>
+<p> 1 considers duplicates all occurrences within a distance of one pixel.
+</p>
+</li>
+<li>
+<p> n considers duplicates all occurrences within a distance of n pixels.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function cleans up duplicated occurrences based on the specified
+distance threshold. If <code>by_mask</code> is <code>T</code>, the distance is interpreted as
+pixel distance using the provided raster_mask; otherwise, it is interpreted
+as geographic distance.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a data.frame with cleaned occurrence records, excluding
+duplicates based on the specified criteria.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(abronia)
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+tenm_mask &lt;- terra::rast(file.path(tempora_layers_dir,"1939/bio_01.tif"))
+# Clean duplicates without raster mask (just by distance threshold)
+# First check the number of occurrence records
+print(nrow(abronia))
+# Clean duplicated records using a distance of ~ 18 km (0.1666667 grades)
+ab_1 &lt;- tenm::clean_dup(data =abronia,
+                        longitude = "decimalLongitude",
+                        latitude = "decimalLatitude",
+                        threshold = terra::res(tenm_mask),
+                        by_mask = FALSE,
+                        raster_mask = NULL)
+# Check number of records
+print(nrow(ab_1))
+# Clean duplicates using a raster mask
+ab_2 &lt;- tenm::clean_dup(data =abronia,
+                        longitude = "decimalLongitude",
+                        latitude = "decimalLatitude",
+                        threshold = terra::res(tenm_mask)[1],
+                        by_mask = TRUE,
+                        raster_mask = tenm_mask,
+                        n_ngbs = 1)
+# Check number of records
+print(nrow(ab_2))
+</code></pre>
+
+
+</div>

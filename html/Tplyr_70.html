@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>set_format_strings</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set the format strings and associated summaries to be performed in a layer</h2>
+
+<h3>Description</h3>
+
+<p>'Tplyr' gives you extensive control over how strings are presented.
+<code>set_format_strings</code> allows you to apply these string formats to your
+layer. This behaves slightly differently between layers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">set_format_strings(e, ...)
+
+## S3 method for class 'desc_layer'
+set_format_strings(e, ..., cap = getOption("tplyr.precision_cap"))
+
+## S3 method for class 'count_layer'
+set_format_strings(e, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>e</code></td>
+<td>
+<p>Layer on which to bind format strings</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Named parameters containing calls to <code>f_str</code> to set the format strings</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cap</code></td>
+<td>
+<p>A named character vector containing an 'int' element for the cap
+on integer precision, and a 'dec' element for the cap on decimal precision.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Format strings are one of the most powerful components of 'Tplyr'.
+Traditionally, converting numeric values into strings for presentation can
+consume a good deal of time. Values and decimals need to align between
+rows, rounding before trimming is sometimes forgotten - it can become a
+tedious mess that, in the grand scheme of things, is not an important part
+of the analysis being performed. 'Tplyr' makes this process as simple as we
+can, while still allowing flexibility to the user.
+</p>
+<p>In a count layer, you can simply provide a single <code>f_str</code>
+object to specify how you want your n's, percentages, and denominators formatted.
+If you are additionally supplying a statistic, like risk difference using
+<code>add_risk_diff</code>, you specify the count formats using the name
+'n_counts'. The risk difference formats would then be specified using the
+name 'riskdiff'. In a descriptive statistic layer,
+<code>set_format_strings</code> allows you to do a couple more things:
+</p>
+
+<ul>
+<li>
+<p>By naming parameters with character strings, those character strings
+become a row label in the resulting data frame
+</p>
+</li>
+<li>
+<p>The actual summaries that are performed come from the variable names
+used within the <code>f_str</code> calls
+</p>
+</li>
+<li>
+<p>Using multiple summaries (declared by your <code>f_str</code>
+calls), multiple summary values can appear within the same line. For
+example, to present "Mean (SD)" like displays.
+</p>
+</li>
+<li>
+<p>Format strings in the desc layer also allow you to configure how
+empty values should be presented. In the <code>f_str</code> call, use the
+<code>empty</code> parameter to specify how missing values should present. A
+single element character vector should be provided. If the vector is
+unnamed, that value will be used in the format string and fill the space
+similar to how the numbers will display. Meaning - if your empty string is
+'NA' and your format string is 'xx (xxx)', the empty values will populate
+as 'NA ( NA)'. If you name the character vector in the 'empty' parameter
+'.overall', like <code>empty = c(.overall='')</code>, then that exact string will
+fill the value instead. For example, providing 'NA' will instead create the
+formatted string as 'NA' exactly.
+</p>
+</li>
+</ul>
+<p>See the <code>f_str</code> documentation for more details about how this
+implementation works.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The layer environment with the format string binding added
+</p>
+<p>tplyr_layer object with formats attached
+</p>
+<p>Returns the modified layer object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Load in pipe
+library(magrittr)
+
+# In a count layer
+tplyr_table(mtcars, gear) %&gt;%
+  add_layer(
+    group_count(cyl) %&gt;%
+      set_format_strings(f_str('xx (xx%)', n, pct))
+  ) %&gt;%
+  build()
+
+# In a descriptive statistics layer
+tplyr_table(mtcars, gear) %&gt;%
+  add_layer(
+    group_desc(mpg) %&gt;%
+      set_format_strings(
+        "n"         = f_str("xx", n),
+        "Mean (SD)" = f_str("xx.x", mean, empty='NA'),
+        "SD"        = f_str("xx.xx", sd),
+        "Median"    = f_str("xx.x", median),
+        "Q1, Q3"    = f_str("xx, xx", q1, q3, empty=c(.overall='NA')),
+        "Min, Max"  = f_str("xx, xx", min, max),
+        "Missing"   = f_str("xx", missing)
+      )
+  ) %&gt;%
+  build()
+
+# In a shift layer
+tplyr_table(mtcars, am) %&gt;%
+  add_layer(
+    group_shift(vars(row=gear, column=carb), by=cyl) %&gt;%
+    set_format_strings(f_str("xxx (xx.xx%)", n, pct))
+  ) %&gt;%
+  build()
+
+</code></pre>
+
+
+</div>

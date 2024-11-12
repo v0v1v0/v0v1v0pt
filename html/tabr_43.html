@@ -1,0 +1,189 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>scale-deg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Scale degrees and mappings</h2>
+
+<h3>Description</h3>
+
+<p>These functions assist with mapping between scale degrees, notes and chords.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">scale_degree(
+  notes,
+  key = "c",
+  scale = "diatonic",
+  use_root = TRUE,
+  strict_accidentals = TRUE,
+  naturalize = FALSE,
+  roman = FALSE
+)
+
+scale_note(deg, key = "c", scale = "diatonic", collapse = FALSE, ...)
+
+note_in_scale(
+  notes,
+  key = "c",
+  scale = "diatonic",
+  use_root = TRUE,
+  strict_accidentals = TRUE
+)
+
+chord_degree(
+  notes,
+  key = "c",
+  scale = "diatonic",
+  strict_accidentals = TRUE,
+  naturalize = FALSE,
+  roman = FALSE
+)
+
+is_in_scale(notes, key = "c", scale = "diatonic", strict_accidentals = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>notes</code></td>
+<td>
+<p>character, a string of notes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>character, key signature (or root note) for scale, depending on
+the type of <code>scale</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>character, the suffix of a supported <code style="white-space: pre;">⁠scale_*⁠</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_root</code></td>
+<td>
+<p>logical, use lowest pitch in chord. Otherwise yield an
+<code>NA</code> in output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strict_accidentals</code></td>
+<td>
+<p>logical, whether representation must match key and
+scale. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>naturalize</code></td>
+<td>
+<p>logical, whether to naturalize any sharps or flats before
+obtaiuning the scale degree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>roman</code></td>
+<td>
+<p>logical, return integer scale degrees as Roman numerals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deg</code></td>
+<td>
+<p>integer, roman class, or character roman, the scale degree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>collapse</code></td>
+<td>
+<p>logical, collapse result into a single string ready for
+phrase construction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to the scale function, e.g.,
+<code>sharp = FALSE</code> for <code>scale_chromatic()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Obtain the scale degree of a note in a supported scale with <code>scale_degree()</code>.
+This function works on any noteworthy string. It ignores octave numbering.
+Rests and any note not explicitly in the scale return <code>NA</code>. If <code>deg</code> is
+greater than the number of degrees in the scale, it is recycled, e.g., in C
+major 8 starts over as C.
+</p>
+<p>By default, flats and sharps checked strictly against the scale. Setting
+<code>strict_accidentals = FALSE</code> will convert any flats or sharps present,
+if necessary based on the combination of <code>key</code> signature and
+<code>scale</code>. The chromatic scale is a special case where strict accidental
+is always ignored.
+</p>
+<p>Not any arbitrary combination of valid <code>key</code> and valid <code>scale</code> is valid. For
+example, <code>key = "am"</code> and <code>scale = "harmonic"</code> is valid, but not with
+<code>key = "a"</code>.
+</p>
+<p><code>note_in_scale()</code> is a wrapper around <code>scale_degree()</code>. To check if full
+chords are diatonic to the scale, see <code>is_diatonic()</code>.
+</p>
+<p>The inverse of <code>scale_degree()</code> is <code>scale_note()</code>, for obtaining the note
+associated with a scale degree. This could be done simply by calling a
+<code style="white-space: pre;">⁠scale_*⁠</code> function and indexing its output directly, but this wrapper is
+provided to complement <code>scale_degree()</code>.
+Additionally, it accepts the common Roman numeral input for the degree.
+This can be with the <code>roman</code> class or as a character string.
+Degrees return <code>NA</code> if outside the scale degree range.
+</p>
+
+
+<h3>Value</h3>
+
+<p>integer, or roman class if <code>roman = TRUE</code> for <code>scale_degree()</code>;
+character for <code>scale_note()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>scale-helpers()</code>, <code>is_diatonic()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">scale_degree("r c, e3 g~ g s g# ceg")
+note_in_scale("r c, e3 g~ g s g# ceg")
+
+scale_degree("c e g", roman = TRUE)
+
+scale_degree("c c# d_ e", key = "d")
+scale_degree("c c# d_ e", key = "d", strict_accidentals = FALSE)
+
+scale_degree("c, e_3 g' f#ac#", use_root = FALSE)
+scale_degree("c, e_3 g' f#ac#", naturalize = TRUE) # lowest chord pitch: c#
+
+scale_degree("c# d_ e_' e4 f f# g", key = "c#", scale = "chromatic")
+
+scale_note(1:3, key = "am")
+scale_note(c(1, 3, 8), "d", collapse = TRUE)
+all(sapply(list(4, "IV", as.roman(4)), scale_note) == "f")
+
+x &lt;- "d dfa df#a f#ac#"
+chord_degree(x, "d")
+is_in_scale(x, "d")
+</code></pre>
+
+
+</div>

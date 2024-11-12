@@ -1,0 +1,292 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>textcnt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Term or Pattern Counting of Text Documents</h2>
+
+<h3>Description</h3>
+
+<p>This function provides a common interface to perform typical term or
+pattern counting tasks on text documents.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">textcnt(x, n = 3L, split = "[[:space:][:punct:][:digit:]]+",
+        tolower = TRUE, marker = "_", words = NULL, lower = 0L,
+        method = c("ngram", "string", "prefix", "suffix"),
+        recursive = FALSE, persistent = FALSE, useBytes = FALSE,
+        perl = TRUE, verbose = FALSE, decreasing = FALSE)
+
+## S3 method for class 'textcnt'
+format(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a (list of) vector(s) of character representing one (or more)
+text document(s).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>the maximum number of characters considered in ngram,
+prefix, or suffix counting (for word counting see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split</code></td>
+<td>
+<p>the regular expression pattern (PCRE) to be used in word
+splitting (if <code>NULL</code>, do nothing).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolower</code></td>
+<td>
+<p>option to transform the documents to lowercase (after
+word splitting).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>marker</code></td>
+<td>
+<p>the string used to mark word boundaries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>words</code></td>
+<td>
+<p>the number of words to use from the beginning of a
+document (if <code>NULL</code>, all words are used).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>the lower bound for a count to be included in the result
+set(s).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>the type of counts to compute.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recursive</code></td>
+<td>
+<p>option to compute counts for individual documents
+(default all documents).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>persistent</code></td>
+<td>
+<p>option to count documents incrementally.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>useBytes</code></td>
+<td>
+<p>option to process byte-by-byte instead of
+character-by-character.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perl</code></td>
+<td>
+<p>option to use PCRE in word splitting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>option to obtain timing statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decreasing</code></td>
+<td>
+<p>option to return the counts in decreasing order.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further (unused) arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The following counting methods are currently implemented:
+</p>
+
+<dl>
+<dt><code>ngram</code></dt>
+<dd>
+<p>Count all word n-grams of order 1,...,<code>n</code>.</p>
+</dd>
+<dt><code>string</code></dt>
+<dd>
+<p>Count all word sequence n-grams of order <code>n</code>.</p>
+</dd>
+<dt><code>prefix</code></dt>
+<dd>
+<p>Count all word prefixes of at most length <code>n</code>.</p>
+</dd>
+<dt><code>suffix</code></dt>
+<dd>
+<p>Count all word suffixes of at most length <code>n</code>.</p>
+</dd>
+</dl>
+<p>The n-grams of a word are defined to be the substrings of length
+<code>n = min(length(word), n)</code> starting at positions
+1,...,<code>length(word)-n</code>.  Note that the value of <code>marker</code>
+is pre- and appended to word before counting. However, the empty word
+is never marked and therefore not counted. Note that
+<code>marker = "\1"</code> is reserved for counting of an efficient set
+of ngrams and <code>marker = "\2"</code> for the set proposed by Cavnar
+and Trenkle (see references).
+</p>
+<p>If <code>method = "string"</code> word-sequences of and only of length
+<code>n</code> are counted. Therefore, documents with less than <code>n</code>
+words are omitted.
+</p>
+<p>By default all documents are preprocessed and counted using a single C
+function call. For large document collections this may come at the
+price of considerable memory consumption. If <code>persistent = TRUE</code> and
+<code>recursive = TRUE</code> documents are counted incrementally, i.e., into a
+persistent prefix tree using as many C function calls as there are
+documents. Further, if <code>persistent = TRUE</code> and <code>recursive = FALSE</code>
+the documents are counted using a single call but no result is returned
+until the next call with <code>persistent = FALSE</code>. Thus, <code>persistent</code>
+acts as a switch with the counts being accumulated until release. Timing
+statistics have shown that incremental counting can be order of
+magnitudes faster than the default. 
+</p>
+<p>Be aware that the character strings in the documents are translated
+to the encoding of the current locale if the encoding is set (see
+<code>Encoding</code>). Therefore, with the possibility of <code>"unknown"</code>
+encodings when in an <code>"UTF-8"</code> locale, or invalid <code>"UTF-8"</code>
+strings declared to be in <code>"UTF-8"</code>, the code checks if each string
+is a valid <code>"UTF-8"</code> string and stops if not. Otherwise, strings
+are processed bytewise without any checks. However, embedded <code>nul</code>
+bytes are always removed from a string. Finally, note that during
+incremental counting a change of locale is not allowed (and a change
+in method is not recommended).
+</p>
+<p>Note that the C implementation counts words into a prefix tree.  Whereas this is highly efficient for n-gram, prefix, or suffix counting
+it may be less efficient for simple word counting. That is, implementations
+which use hash tables may be more efficient if the dictionary is large.
+</p>
+<p><code>format.textcnt</code> pretty prints a named vector of counts (see below)
+including information about the rank and encoding details of the strings.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Either a single vector of counts of mode <code>integer</code> with the names
+indexing the patterns counted, or a list of such vectors with the
+components corresponding to the individual documents. Note that by
+default the counts are in prefix tree (byte) order (for
+<code>method = "suffix"</code> this is the order of the reversed strings).
+Otherwise, if <code>decreasing = TRUE</code> the counts are sorted in 
+decreasing order. Note that the (default) order of ties is preserved
+(see <code>sort</code>).
+</p>
+
+
+<h3>Note</h3>
+
+<p>The C functions can be interrupted by <kbd>CTRL-C</kbd>. This is convenient in
+interactive mode but comes at the price that the C code cannot clean
+up the internal prefix tree. This is a known problem of the R API
+and the workaround is to defer the cleanup to the next function call.
+</p>
+<p>The C code calls <code>translateChar</code> for all input strings which is
+documented to release the allocated memory no sooner than when
+returning from the <code>.Call</code>/<code>.External</code> interface.
+Therefore, in order to avoid excessive memory consumption it is
+recommended to either translate the input data to the current locale
+or to process the data incrementally.
+</p>
+<p><code>useBytes</code> may not be fully functional with R versions where
+<code>strsplit</code> does not support that argument.
+</p>
+<p>If <code>useBytes = TRUE</code> the character strings of <code>names</code> will
+never be declared to be in an encoding.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Christian Buchta</p>
+
+
+<h3>References</h3>
+
+<p>W.B. Cavnar and J.M. Trenkle (1994).
+N-Gram Based Text Categorization.
+In Proceedings of SDAIR-94, 3rd Annual Symposium on Document
+Analysis and Information Retrieval, 161–175.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## the classic
+txt &lt;- "The quick brown fox jumps over the lazy dog."
+
+##
+textcnt(txt, method = "ngram")
+textcnt(txt, method = "prefix", n = 5L)
+
+r &lt;- textcnt(txt, method = "suffix", lower = 1L)
+data.frame(counts = unclass(r), size = nchar(names(r)))
+format(r)
+
+## word sequences
+textcnt(txt, method = "string")
+
+## inefficient
+textcnt(txt, split = "", method = "string", n = 1L)
+
+## incremental
+textcnt(txt, method = "string", persistent = TRUE, n = 1L)
+textcnt(txt, method = "string", n = 1L)
+
+## subset
+textcnt(txt, method = "string", words = 5L, n = 1L)
+
+## non-ASCII
+txt &lt;- "The quick br\xfcn f\xf6x j\xfbmps \xf5ver the lazy d\xf6\xf8g."
+Encoding(txt) &lt;- "latin1"
+txt
+
+## implicit translation
+r &lt;- textcnt(txt, method = "suffix")
+table(Encoding(names(r)))
+r
+## efficient sets
+textcnt("is",     n = 3L, marker = "\1")
+textcnt("is",     n = 4L, marker = "\1")
+textcnt("corpus", n = 5L, marker = "\1")
+## CT sets
+textcnt("corpus", n = 5L, marker = "\2")
+</code></pre>
+
+
+</div>

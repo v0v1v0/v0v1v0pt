@@ -1,0 +1,167 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aha</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Solve Transportation Problem by Aurenhammer–Hoffmann–Aronov Method
+</h2>
+
+<h3>Description</h3>
+
+<p>Solve transportation problem by Aurenhammer–Hoffmann–Aronov Method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">aha(a, b, nscales = 1, scmult = 2, factr = 1e+05, maxit = 10000, powerdiag=FALSE,
+    wasser = FALSE, wasser.spt = NA, approx=FALSE, ...)
+transport_apply(a, tplan)
+transport_error(a, b, tplan)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+
+<p>an <code class="reqn">m \times n</code> matrix. <code>a</code> is treated as a measure on <code class="reqn">[0,m] \times [0,n]</code> with constant density on each unit square <code class="reqn">[i,i+1) \times [j,j+1)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+
+<p>either a matrix such that <code>dim(a)==dim(b)</code> and <code>sum(a)==sum(b)</code> or a data frame with three variables named <code>x</code>, <code>y</code> and <code>mass</code> such that <code>sum(a)==sum(b$mass)</code>,
+representing a discrete measure on <code class="reqn">[0,m]) \times [0,n]</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tplan</code></td>
+<td>
+
+<p>a transference plan from a (to b), typically an optimal transference plan obtained by a call to <code>aha</code>.  	
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nscales, scmult</code></td>
+<td>
+
+<p>the number of scales to use for the multiscale approach (the default is <code class="reqn">1</code> meaning no multiscale approach), and the factor
+by which the number of pixels in each dimension is multiplied to get from a coarser to the next finer scale.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factr, maxit</code></td>
+<td>
+
+<p>parameters passed to the underlying L-BFGS-B algorithm (via the argument <code>control</code> in the R-function <code>optim</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>powerdiag</code></td>
+<td>
+
+<p>logical. Instead of an optimal transference plan, should the parameters for the optimal power diagram be returned? 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wasser</code></td>
+<td>
+
+<p>logical. Instead of an optimal transference plan, should only the <code class="reqn">L_2</code>-Wasserstein-distance between <code>a</code> and <code>b</code> be returned?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wasser.spt</code></td>
+<td>
+
+<p>the number of support points used to approximate the discrete measure <code>b</code>. Defaults to <code>NA</code> meaning the full set of support
+points of <code>b</code> is used. If this argument is not <code>NA</code>, <code>wasser</code> is set to <code>TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>approx</code></td>
+<td>
+
+<p>logical. If <code>TRUE</code>, an approximation to the objective function is used during optimization.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>further arguments passed to <code>optim</code> via its argument <code>control</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>aha</code> implements the algorithm by Aurenhammer, Hoffmann and Aronov (1998) for finding optimal transference plans in terms
+of the squared Euclidean distance in two dimensions. It follows the more detailed description given in Mérigot (2011) and also implements
+the multiscale version presented in the latter paper.
+</p>
+<p>The functions <code>transport_apply</code> and <code>transport_error</code> serve for checking the accuracy of the transference plan obtained by <code>aha</code>.
+Since this transference plan is obtained by continuous optimization it will not transport exactly to the measure <code>b</code>, but to the measure
+<code>transport_apply(a, tplan)</code>. By <code>transport_error(a, b, tplan)</code> the sum of absolut errors between the transported <code>a</code>-measure and the <code>b</code>-measure is obtained.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>powerdiag</code> and <code>wasser</code> are both <code>FALSE</code>, a data frame with columns <code>from</code>, <code>to</code> and <code>mass</code>, which specify from which knot to which other knot what amount of mass is sent in the optimal transference plan. Knots are given as indices in terms of the usual column major enumeration of the matrices <code>a</code> and <code>b</code>. There are <code>plot</code> methods for the classes <code>pgrid</code> and <code>pp</code>, which can plot this solution.
+</p>
+<p>If <code>powerdiag</code> is TRUE and <code>wasser</code> is <code>FALSE</code>, a list with components <code>xi</code>, <code>eta</code>, <code>w</code> and <code>rect</code>, which specify the parameters for the optimal power diagram in the same format as needed for the function <code>power_diagram</code>. Note that rect is always <code>c(0,m,0,n)</code>. Since version 0.10-0 the list has a further component <code>wasser.dist</code> containing the Wasserstein distance.
+</p>
+<p>If <code>wasser</code> is <code>TRUE</code>, a data frame with columns <code>wasser.dist</code> and <code>error.bound</code> of length one, where <code>error.bound</code> gives a bound on the absolute error in the Wasserstein distance due to approximating the measure <code>b</code> by a measure on a smaller number of support points.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Björn Bähre <a href="mailto:bjobae@gmail.com">bjobae@gmail.com</a> <br>
+(slightly modified by Dominic Schuhmacher <a href="mailto:dschuhm1@uni-goettingen.de">dschuhm1@uni-goettingen.de</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>F. Aurenhammer, F. Hoffmann and B. Aronov (1998). Minkowski-type theorems and least-squares clustering. Algorithmica 20(1), 61–76.
+</p>
+<p>Q. Mérigot (2011). A multiscale approach to optimal transport. Eurographics Symposium on Geometry Processing 30(5), 1583–1592.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>transport</code>, which is a convenient wrapper function for various optimal transportation algorithms.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># There is one particular testing configuration on MacOS where the following
+# command does not return (to be investigated)
+# res &lt;- aha(random32a$mass, random32b$mass)
+# plot(random32a, random32b, res, lwd=0.75)
+
+aha(random64a$mass, random64b$mass, nscales=3, scmult=5, wasser.spt=512, approx=TRUE)
+</code></pre>
+
+
+</div>

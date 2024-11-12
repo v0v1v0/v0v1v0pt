@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>make_server</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create server side thrift API</h2>
+
+<h3>Description</h3>
+
+<p>Create server side thrift API
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">make_server(service, handler, host = "localhost", port = 9090,
+  proto_factory = TBinaryProtocolFactory$new(),
+  trans_factory = TBufferedTransportFactory$new())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>service</code></td>
+<td>
+<p>parsed service</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>handler</code></td>
+<td>
+<p>R6 class implementing service</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>host</code></td>
+<td>
+<p>server host</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>port</code></td>
+<td>
+<p>port server tcp port</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proto_factory</code></td>
+<td>
+<p>factory that generates protocol implementation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trans_factory</code></td>
+<td>
+<p>factory that generates transport implementation</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# File calc.thrift content:
+# service Calculator {
+#   i32 add(1:i32 a, 2:i32 b);
+#   i32 sub(1:i32 a, 2:i32 b);
+#   i32 mult(1:i32 a, 2:i32 b);
+#   i32 div(1:i32 a, 2:i32 b);
+# }
+#
+
+calc_thrift &lt;- thriftr::t_load("calc.thrift", module_name="calc_thrift")
+
+Dispatcher &lt;- R6::R6Class("Dispatcher",
+  public = list(
+    add = function(a, b) {
+      print(sprintf("add -&gt; %s + %s", a, b))
+      return(a + b)
+    },
+    sub = function(a, b) {
+      print(sprintf("sub -&gt; %s - %s", a, b))
+      return(a - b)
+    },
+    mult = function(a, b) {
+      print(sprintf("mult -&gt; %s * %s", a, b))
+      return(a * b)
+    },
+    div = function(a, b) {
+      print(sprintf("div -&gt; %s / %s", a, b))
+      return(a / b)
+    }
+  )
+)
+
+server &lt;- thriftr::make_server(
+    calc_thrift$Calculator,
+    Dispatcher$new(),
+    "127.0.0.1",
+    6000)
+
+print("serving...")
+
+server$serve()
+
+## End(Not run)
+</code></pre>
+
+
+</div>

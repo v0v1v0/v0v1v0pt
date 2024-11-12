@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>draggable_buckets</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Draggable Buckets</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+A custom widget with draggable elements that can be put into buckets.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">draggable_buckets(input_id, label, elements = character(), buckets)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_id</code></td>
+<td>
+<p>(<code>character(1)</code>) the <code>HTML</code> id of this widget</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code> or <code>shiny.tag</code>) the header of this widget</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>elements</code></td>
+<td>
+<p>(<code>character</code>) the elements to drag into buckets</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>buckets</code></td>
+<td>
+<p>(<code>character</code> or <code>list</code>) the names of the buckets the elements can be put in or a list of key-pair
+values where key is a name of a bucket and value is a character vector of elements in a bucket</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>shinyvalidate</code> validation can be used with this widget. See example below.
+</p>
+
+
+<h3>Value</h3>
+
+<p>the <code>HTML</code> code comprising an instance of this widget
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+ui &lt;- shiny::fluidPage(
+  draggable_buckets("id", "Choices #1", c("a", "b"), c("bucket1", "bucket2")),
+  draggable_buckets("id2", "Choices #2", letters, c("vowels", "consonants")),
+  shiny::verbatimTextOutput("out"),
+  shiny::verbatimTextOutput("out2")
+)
+server &lt;- function(input, output) {
+  iv &lt;- shinyvalidate::InputValidator$new()
+  iv$add_rule(
+    "id",
+    function(data) if (length(data[["bucket1"]]) == 0) "There should be stuff in bucket 1"
+  )
+  iv$enable()
+
+  shiny::observeEvent(list(input$id, input$id2), {
+    print(isolate(input$id))
+    print(isolate(input$id2))
+  })
+  output$out &lt;- shiny::renderPrint({
+    iv$is_valid()
+    input$id
+  })
+  output$out2 &lt;- shiny::renderPrint(input$id2)
+}
+if (interactive()) shiny::shinyApp(ui, server)
+
+# With default elements in the bucket
+ui &lt;- shiny::fluidPage(
+  draggable_buckets("id", "Choices #1", c("a", "b"), list(bucket1 = character(), bucket2 = c("c"))),
+  shiny::verbatimTextOutput("out")
+)
+server &lt;- function(input, output) {
+  shiny::observeEvent(input$id, {
+    print(shiny::isolate(input$id))
+  })
+  output$out &lt;- shiny::renderPrint(input$id)
+}
+if (interactive()) shiny::shinyApp(ui, server)
+</code></pre>
+
+
+</div>

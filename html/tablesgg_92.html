@@ -1,0 +1,179 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>textTable.xtable</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a <code>texttable</code> from an <code>xtable</code> Object </h2>
+
+<h3>Description</h3>
+
+<p>Create a <code>textTable</code> from an <code>xtable</code> object produced by the
+<code>xtable</code> package.  The <code>textTable</code> can then be styled and
+plotted.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'xtable'
+textTable(x, title, subtitle=character(0), foot=character(0), 
+    row.names="", na="", mathExponents=TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An <code>xtable</code> object as produced by the <code>xtable</code> package.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>Optional character vector containing title lines for the table.  May be
+empty (<code>character(0)</code>).  The default is to use the first element of
+the <code>caption</code> attribute of <code>x</code>, if present.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtitle, foot</code></td>
+<td>
+<p>Optional character vectors providing additional annotation for the table.
+May be empty (i.e., <code>character(0)</code>, the default).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>row.names</code></td>
+<td>
+<p>A logical scalar or a character string.  If FALSE, the row names of
+<code>x</code> are not included in the table.  If TRUE, the row names are
+included as row headers, with a row header label of "row.names".  If a
+character string, row names are included as row headers, and if the string
+is not empty, it is used as the row header label.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na</code></td>
+<td>
+<p>String to be used to represent missing values in <code>x</code>.  The default
+value is the empty string "".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mathExponents</code></td>
+<td>
+<p>Logical scalar.  If TRUE, then numerical values in <code>x</code> that are
+formatted into scientific notation (i.e., strings like "3.14e-02",
+specified by values of <code>e</code> or <code>E</code> in the <code>display</code>
+attribute of <code>x</code>) will be plotted in math style, with the power of 10
+shown as a superscript.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional named arguments passed to <code>formatC</code>, when converting
+values in <code>x</code> to character strings.  They must not include
+<code>digits</code> or <code>format</code>, which are specified within <code>x</code>
+itself.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function was designed based on the structure of objects produced by
+version 1.8-4 of the <code>xtable</code> package.
+</p>
+<p>An <code>xtable</code> object is a data frame that contains the columns of the
+table and attributes that specify how those columns are to be formatted.
+This function uses those attributes to created formatted character strings
+for each table entry, and assembles them into a <code>textTable</code> object,
+which may then be styled and plotted.
+</p>
+<p>Formatting is done by <code>formatC</code> using the <code>digits</code> and
+<code>display</code> attributes of <code>x</code>.  The <code>align</code> attribute is used
+to set the <code>justification</code> attributes in the returned
+<code>textTable</code>.  (Vertical rule characters, <code>|</code>, within
+<code>align</code> are ignored; use an <code>hvruleStyle</code> or the
+<code>addHvrule</code> function to insert vertical rules into the plotted table,
+as shown in the examples.)
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object with S3 class <code>textTable</code>.  See the documentation for the
+generic for details about its structure.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># 'tli_xtab' is an 'xtable' object created using 'xtable::xtable':
+class(tli_xtab)
+# This package provides a 'textTable' method for such objects:
+ttbl &lt;- textTable(tli_xtab)
+plot(ttbl)
+
+if (requireNamespace("xtable", quietly=TRUE)) withAutoprint({
+  data(tli, package="xtable")
+  
+  # ANOVA table.
+  fm1 &lt;- aov(tlimth ~ sex + ethnicty + grade + disadvg, data = tli)
+  plt1 &lt;- plot(textTable(fm1.table &lt;- xtable::xtable(fm1), 
+                         title="xtable: ANOVA table"))
+
+  # Table of linear regression results.
+  fm2 &lt;- lm(tlimth ~ sex*ethnicty, data = tli)
+  plt2 &lt;- plot(textTable(fm2.table &lt;- xtable::xtable(fm2), 
+                         title="xtable: Linear regression"))
+  
+  # Time series table.
+  temp.ts &lt;- ts(cumsum(1 + round(rnorm(100), 0)), start = c(1954, 7), 
+                frequency = 12)
+  plt3 &lt;- plot(textTable(xtable::xtable(temp.ts, digits = 0), 
+                         title="xtable: Time series"))
+  
+  # Math style for scientific notation.
+  plt4 &lt;- plot(textTable(xtable::xtable(data.frame(text = c("foo","bar"),
+                                                   googols = c(10e10,50e10),
+                                                   small = c(8e-24,7e-5),
+                                                   row.names = c("A","B")),
+                                        display = c("s","s","g","g")),
+                         mathExponents = TRUE, 
+                     title=c("xtable:", "Math style for scientific notation")))
+  print(plt1, position=c(0.1, 0.9))
+  print(plt2, position=c(0.1, 0.5), newpage=FALSE)
+  print(plt3, position=c(0.1, 0.1), newpage=FALSE)
+  print(plt4, position=c(0.9, 0.9), newpage=FALSE)
+  
+  # By default vertical rules specified by '|' characters in 'align' are 
+  # ignored.  They can be added afterward using the 'addHvrule' function 
+  # as follows:
+  tli.table &lt;- xtable::xtable(tli[1:10, ])
+  xtable::align(tli.table) &lt;- "|rrl|l|lr|"
+  plt &lt;- plot(textTable(tli.table, 
+                        title="xtable: Vertical rules derived from 'align'"))
+  pipe_posn &lt;- which(unlist(strsplit(attr(tli.table, "align"), "")) == "|")
+  vrule_acol &lt;- pipe_posn - seq_along(pipe_posn) + 0.5
+  for (ac in vrule_acol)  plt &lt;- addHvrule(plt, direction="vrule", acols=ac, 
+                                           arows=arow(plt, "colhead_and_body"), 
+                                           props=element_hvrule(linetype=1, 
+                                                                color="black"))
+  plt
+})
+  </code></pre>
+
+
+</div>

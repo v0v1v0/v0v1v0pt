@@ -1,0 +1,190 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>IRT.simulate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Simulating Item Response Models
+</h2>
+
+<h3>Description</h3>
+
+<p>Defines an S3 method for simulation of item response models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">IRT.simulate(object, ...)
+
+## S3 method for class 'tam.mml'
+IRT.simulate(object, iIndex=NULL, theta=NULL, nobs=NULL, ...)
+
+## S3 method for class 'tam.mml.2pl'
+IRT.simulate(object, iIndex=NULL, theta=NULL, nobs=NULL, ...)
+
+## S3 method for class 'tam.mml.mfr'
+IRT.simulate(object, iIndex=NULL, theta=NULL, nobs=NULL, ...)
+
+## S3 method for class 'tam.mml.3pl'
+IRT.simulate(object, iIndex=NULL, theta=NULL, nobs=NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>An object of class <code>tam.mml</code>, <code>tam.mml.2pl</code>, <code>tam.mml.mfr</code> or
+<code>tam.mml.3pl</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iIndex</code></td>
+<td>
+<p>Optional vector of item indices</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Optional matrix of <code>theta</code> values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nobs</code></td>
+<td>
+<p>Optional numeric containing the number of observations to be simulated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Further objects to be passed
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Data frame with simulated item responses
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: Simulating Rasch model
+#############################################################################
+
+data(data.sim.rasch)
+
+#** (1) estimate model
+mod1 &lt;- TAM::tam.mml(resp=data.sim.rasch )
+
+#** (2) simulate data
+sim.dat &lt;- TAM::IRT.simulate(mod1)
+
+## Not run: 
+#** (3) use a subset of items with the argument iIndex
+set.seed(976)
+iIndex &lt;- sort(sample(ncol(data.sim.rasch), 15))  # randomly select 15 items
+sim.dat &lt;- TAM::IRT.simulate(mod1, iIndex=iIndex)
+mod.sim.dat &lt;- TAM::tam.mml(sim.dat)
+
+#** (4) specify number of persons in addition
+sim.dat &lt;- TAM::IRT.simulate(mod1, nobs=1500, iIndex=iIndex)
+
+# Rasch - constraint="items" ----
+mod1 &lt;- TAM::tam.mml(resp=data.sim.rasch,  constraint="items",
+                control=list( xsi.start0=1, fac.oldxsi=.5) )
+
+# provide abilities
+theta0 &lt;- matrix( rnorm(1500, mean=0.5, sd=sqrt(mod1$variance)), ncol=1 )
+# simulate data
+data &lt;- TAM::IRT.simulate(mod1, theta=theta0 )
+# estimate model based on simulated data
+xsi.fixed &lt;- cbind(1:nrow(mod1$item), mod1$item$xsi.item)
+mod2 &lt;- TAM::tam.mml(data, xsi.fixed=xsi.fixed )
+summary(mod2)
+
+#############################################################################
+# EXAMPLE 2: Simulating 2PL model
+#############################################################################
+
+data(data.sim.rasch)
+# estimate 2PL
+mod2 &lt;- TAM::tam.mml.2pl(resp=data.sim.rasch, irtmodel="2PL")
+# simulate 2PL
+sim.dat &lt;- TAM::IRT.simulate(mod2)
+mod.sim.dat &lt;- TAM::tam.mml.2pl(resp=sim.dat, irtmodel="2PL")
+
+#############################################################################
+# EXAMPLE 3: Simulate multiple group model
+#############################################################################
+
+# Multi-Group ----
+set.seed(6778)
+N &lt;- 3000
+theta &lt;- c( stats::rnorm(N/2,mean=0,sd=1.5), stats::rnorm(N/2,mean=.5,sd=1)  )
+I &lt;- 20
+p1 &lt;- stats::plogis( outer( theta, seq( -2, 2, len=I ), "-" ) )
+resp &lt;- 1 * ( p1 &gt; matrix( stats::runif( N*I ), nrow=N, ncol=I ) )
+colnames(resp) &lt;- paste("I", 1:I, sep="")
+group &lt;- rep(1:2, each=N/2 )
+mod3 &lt;- TAM::tam.mml(resp, group=group)
+
+# simulate data
+sim.dat.g1 &lt;- TAM::IRT.simulate(mod3,
+                   theta=matrix( stats::rnorm(N/2, mean=0, sd=1.5), ncol=1) )
+sim.dat.g2 &lt;- TAM::IRT.simulate(mod3,
+                   theta=matrix( stats::rnorm(N/2, mean=.5, sd=1), ncol=1) )
+sim.dat &lt;- rbind( sim.dat.g1, sim.dat.g2)
+# estimate model
+mod3s &lt;- TAM::tam.mml( sim.dat, group=group)
+
+#############################################################################
+# EXAMPLE 4: Multidimensional model and latent regression
+#############################################################################
+
+set.seed(6778)
+N &lt;- 2000
+Y &lt;- cbind( stats::rnorm(N), stats::rnorm(N))
+theta &lt;- mvtnorm::rmvnorm(N, mean=c(0,0), sigma=matrix(c(1,.5,.5,1), 2, 2))
+theta[,1] &lt;- theta[,1] + .4 * Y[,1] + .2 * Y[,2]  # latent regression model
+theta[,2] &lt;- theta[,2] + .8 * Y[,1] + .5 * Y[,2]  # latent regression model
+I &lt;- 20
+p1 &lt;- stats::plogis(outer(theta[, 1], seq(-2, 2, len=I), "-"))
+resp1 &lt;- 1 * (p1 &gt; matrix(stats::runif(N * I), nrow=N, ncol=I))
+p1 &lt;- stats::plogis(outer(theta[, 2], seq(-2, 2, len=I ), "-" ))
+resp2 &lt;- 1 * (p1 &gt; matrix(stats::runif(N * I), nrow=N, ncol=I))
+resp &lt;- cbind(resp1, resp2)
+colnames(resp) &lt;- paste("I", 1 : (2 * I), sep="")
+
+# (2) define loading Matrix
+Q &lt;- array(0, dim=c(2 * I, 2))
+Q[cbind(1:(2*I), c(rep(1, I), rep(2, I)))] &lt;- 1
+Q
+
+# (3) estimate models
+mod4 &lt;- TAM::tam.mml(resp=resp, Q=Q, Y=Y, control=list(  maxiter=15))
+
+# simulate new item responses
+theta &lt;- mvtnorm::rmvnorm(N, mean=c(0,0), sigma=matrix(c(1,.5,.5,1), 2, 2))
+theta[,1] &lt;- theta[,1] + .4 * Y[,1] + .2 * Y[,2]  # latent regression model
+theta[,2] &lt;- theta[,2] + .8 * Y[,1] + .5 * Y[,2]  # latent regression model
+
+sim.dat &lt;- TAM::IRT.simulate(mod4, theta=theta)
+mod.sim.dat &lt;- TAM::tam.mml(resp=sim.dat, Q=Q, Y=Y, control=list( maxiter=15))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

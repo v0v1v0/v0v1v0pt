@@ -1,0 +1,203 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>props&lt;-</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Update Graphical Properties for Selected Table Elements </h2>
+
+<h3>Description</h3>
+
+<p>Update the graphical properties for selected table entries, hvrules, or
+blocks in a plotted table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">props(x, id=NULL, regex=NULL, setEnabled=TRUE, mustMatch=TRUE, 
+    ...) &lt;- value
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>pltdTable</code> object containing a plotted table.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Optional character vector of the ID's of the elements (or of table parts
+containing the elements) to be modified.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regex</code></td>
+<td>
+<p>Optional character string containing a regular expression.  This will be
+used to find table entries whose text matches the regular expression.
+(Only valid when <code>value</code> is an <code>element_entry</code> or
+<code>element_refmark</code> object.)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>setEnabled</code></td>
+<td>
+<p>Logical scalar.  If TRUE then any element whose properties are updated by
+this function will have its <code>enabled</code> value set to TRUE (and thus
+will be displayed in a plot).  <code>enabled</code> will not be changed for
+elements that are not updated.  If <code>setEnabled</code> is FALSE,
+<code>enabled</code> is not changed for any elements.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mustMatch</code></td>
+<td>
+<p>Logical scalar.  If TRUE, any strings in argument <code>id</code> that do not
+match an element or part ID in <code>x</code> will be treated as an error.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>grepl</code> when <code>regex</code> is used to
+select table entries.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>An <code>element_entry</code>, <code>element_refmark</code>, <code>element_hvrule</code>, or
+<code>element_block</code> object that contains the new values for graphical
+properties.  See DETAILS.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>There are three similar functions that can be used to modify the graphical
+properties of table elements: <code>props&lt;-</code>, <code>propsa&lt;-</code>, and
+<code>propsd&lt;-</code>.  They differ only in how one specifies which elements are
+to be modified.  <code>props&lt;-</code> uses element or block ID's, or searches
+the text content of entries.  <code>propsa&lt;-</code> uses explicit row and column
+numbers within the augmented row-column grid.  <code>propsd&lt;-</code> uses the
+values of element descriptors (as described in <code>?elements</code>).
+</p>
+<p>The type of elements that are updated is determined by <code>value</code>: if
+<code>value</code> is an <code>element_entry</code> or <code>element_refmark</code> object
+then entries are updated; if it is an <code>element_hvrule</code> object then
+hvrules are; if it is an <code>element_block</code> object then blocks are.  See
+the documentation of those functions for the available properties.  As an
+example, <code style="white-space: pre;">⁠element_entry(color="red", fontface=3, hpad=rel(0.8))⁠</code>
+specifies that all the updated entries will be displayed in red italics,
+and padding on their left and right will be reduced to 80% of the current
+amount.  Any graphical properties not mentioned in the call that creates
+the <code>element_*</code> object are left unchanged.
+</p>
+<p>There are two special properties: <code>enabled</code> and <code>textspec</code> (the
+latter only for entries).  <code>enabled</code> is a logical scalar.  If
+<code>enabled</code> is set to FALSE the selected elements will not be
+displayed, and disabled entries/hvrules will not be allocated any space in
+the plotted table. <code>textspec</code> is a character string, one of "plain",
+"plotmath", or "markdown".  If "plotmath", entry text will be treated as
+an expression that allows display of mathematical symbols and notation,
+including subscripts and superscripts (see <code>?plotmath</code>).  If
+"markdown", entry text may contain markdown or HTML tags that affect the
+appearance of the displayed text.  (This requires the <code>ggtext</code>
+package, and only a subset of HTML tags is supported.  See the
+<code>ggtext</code> package documentation for more information.)
+</p>
+<p><code>element_refmark</code> is used to add a reference mark to the selected
+entries.  (A reference mark is a symbol placed before or after entry text
+to indicate cross-references; e.g. for footnotes.)  It may also update any
+of the graphical properties accepted by <code>element_entry</code>, except
+<code>textspec</code> and <code>text</code>.
+</p>
+<p>Arguments <code>id</code> and <code>regex</code> indicate which elements are to be
+updated.  When <code>value</code> indicates that table entries are to be
+modified, <code>id</code> may specify the ID's of individual entries or the ID's
+of table parts or blocks.  In the latter case, all entries completely or
+partially contained in the parts or blocks are selected.  Thus, for
+example, specifying <code>id="table"</code> will update every entry in the
+table, while <code>id="body"</code> will update only entries in the table body.
+Argument <code>regex</code> is only valid for modifying table entries;
+<code>grepl</code> is used to identify the entries whose text matches the
+<code>regex</code> pattern.  If both <code>id</code> and <code>regex</code> are specified,
+then only entries selected by both are modified.
+</p>
+<p>When <code>value</code> indicates that hvrules are to be modified, <code>id</code>
+should contain the ID's of individual hvrules and/or table blocks.  In the
+latter case, any hvrule associated with a listed block (that is, the
+hvrule was defined as running along one of the sides of the block) will be
+updated.
+</p>
+<p>When <code>value</code> indicates that blocks are to be modified, <code>id</code>
+should contain the ID's of individual table blocks.
+</p>
+<p>See <code>?elements</code> for the format of element ID strings.
+</p>
+<p>This function overrides graphical properties in <code>x</code> that may have
+been set by a style.  Therefore the value of <code>style_row</code> is set to NA
+for any elements whose properties are updated by this function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object like <code>x</code>, with updated graphical properties for the
+selected elements.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>element_entry</code>, <code>element_refmark</code>,
+<code>element_hvrule</code>, <code>element_block</code>,
+<code>ids</code>, <code>propsa&lt;-</code>, <code>propsd&lt;-</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">ttbl &lt;- textTable(iris2_tab, title="The iris data", 
+                  subtitle=c("Summary statistics by species", 
+                             "A second subtitle line"), 
+                  foot="sd = standard deviation")
+plt &lt;- plot(ttbl)
+# Change properties of elements:
+props(plt, id="body") &lt;- element_entry(fontface=3, fill="gray85")
+# This may include changing text:
+props(plt, id="subtitle,2") &lt;- element_entry(text="Properties changed by 'props&lt;-'", 
+                                             fill="gray85")
+# Use property 'enabled' to control whether an element is displayed:
+props(plt, id="rowhead_and_body_bottom") &lt;- element_hvrule(enabled=FALSE)
+plt
+
+# Add reference marks to entries with abbreviation "sd":
+plt &lt;- plot(ttbl)
+props(plt, regex="^sd$") &lt;- element_refmark(mark="*", side="after")
+props(plt, regex="^sd =") &lt;- element_refmark(mark="*", side="before")
+plt
+# If both 'id' and 'regex' are specified only the intersection is modified:
+plt &lt;- plot(ttbl)
+props(plt, regex="^sd$", id="rowblock/B/2/1") &lt;- 
+  element_refmark(mark="*", side="after")
+props(plt, regex="^sd =") &lt;- element_refmark(mark="*", side="before")
+plt
+
+  </code></pre>
+
+
+</div>

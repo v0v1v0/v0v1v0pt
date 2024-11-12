@@ -1,0 +1,187 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summarize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarize</h2>
+
+<h3>Description</h3>
+
+<p>Compute summary statistics for cells, either across layers or between layers (parallel summary). 
+</p>
+<p>The following summary methods are available for SpatRaster: <code>any, anyNA, all, allNA, max, min, mean, median, prod, range, stdev, sum, which.min, which.max</code>. See <code>modal</code> to compute the mode and <code>app</code> to compute summary statistics that are not included here.
+</p>
+<p>Because generic functions are used, the method applied is chosen based on the first argument: "<code>x</code>". This means that if <code>r</code> is a SpatRaster, <code>mean(r, 5)</code> will work, but <code>mean(5, r)</code> will not work.
+</p>
+<p>The <code>mean</code> method has an argument "trim" that is ignored.
+</p>
+<p>If <code>pop=TRUE</code> <code>stdev</code> computes the population standard deviation, computed as:
+</p>
+<p><code>f &lt;- function(x) sqrt(sum((x-mean(x))^2) / length(x))</code>
+</p>
+<p>This is different than the sample standard deviation returned by <code>sd</code> (which uses <code>n-1</code> as denominator). 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+min(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+max(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+range(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+prod(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+sum(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+any(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+all(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+range(x, ..., na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+which.min(x)
+
+## S4 method for signature 'SpatRaster'
+which.max(x)
+
+## S4 method for signature 'SpatRaster'
+stdev(x, ..., pop=TRUE, na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+mean(x, ..., trim=NA, na.rm=FALSE)
+
+## S4 method for signature 'SpatRaster'
+median(x, na.rm=FALSE, ...)
+
+## S4 method for signature 'SpatRaster'
+anyNA(x)
+
+## S4 method for signature 'SpatRaster'
+countNA(x, n=0)
+
+## S4 method for signature 'SpatRaster'
+noNA(x, falseNA=FALSE)
+
+## S4 method for signature 'SpatRaster'
+allNA(x, falseNA=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional SpatRasters or numeric values; and arguments <code>par</code> for parallel summarization (see Details), and <code>filename</code>, <code>overwrite</code> and <code>wopt</code> as for <code>writeRaster</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>NA</code> values are ignored. If <code>FALSE</code>, <code>NA</code> is returned if <code>x</code> has any <code>NA</code> values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trim</code></td>
+<td>
+<p>ignored</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pop</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the population standard deviation is computed. Otherwise the sample standard deviation is computed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>falseNA</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, cells that would otherwise be <code>FALSE</code> are set to <code>NA</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>integer. If <code>n &gt; 0</code>, cell values are <code>TRUE</code> if at least <code>n</code> of its layers are <code>NA</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Additional argument <code>par</code> can be used for "parallel" summarizing a SpatRaster and a numeric or logical value. If a SpatRaster <code>x</code> has three layers, <code>max(x, 5)</code> will return a single layer (the number five is treated as a layer in which all cells have value five). In contrast <code>max(x, 5, par=TRUE)</code> returns three layers (the number five is treated as another SpatRaster with a single layer with all cells having the value five.
+</p>
+
+
+<h3>Value</h3>
+
+<p>SpatRaster</p>
+
+
+<h3>See Also</h3>
+
+<p><code>app</code>, <code>Math-methods</code>, <code>modal</code>, <code>which.lyr</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(0)
+r &lt;- rast(nrows=10, ncols=10, nlyrs=3)
+values(r) &lt;- runif(ncell(r) * nlyr(r))
+
+x &lt;- mean(r)
+# note how this returns one layer
+x &lt;- sum(c(r, r[[2]]), 5)
+
+# and this returns three layers
+y &lt;- sum(r, r[[2]], 5)
+
+max(r)
+
+## when adding a number, do you want 1 layer or all layers?
+# 1 layer
+max(r, 0.5)
+
+# all layers
+max(r, 0.5, par=TRUE)
+
+y &lt;- stdev(r)
+# not the same as 
+yy &lt;- app(r, sd)
+
+z &lt;- stdev(r, r*2)
+
+x &lt;- mean(r, filename=paste0(tempfile(), ".tif"))
+
+
+v &lt;- values(r)
+set.seed(3)
+v[sample(length(v), 50)] &lt;- NA
+values(r) &lt;- v
+is.na(r)
+anyNA(r)
+allNA(r)
+countNA(r)
+countNA(r, 2)
+</code></pre>
+
+
+</div>

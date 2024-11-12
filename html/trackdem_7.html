@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>identifyParticles</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Identify moving particles</h2>
+
+<h3>Description</h3>
+
+<p><code>identifyParticles</code> identifies moving particles using the
+subtracted images obtained from <code>subtractBackground</code>. Function
+uses Connected Component Labeling and obtains particle statistics based on
+code developed for the orphaned
+package SDMTools (written by Jeremy VanDerWal).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">identifyParticles(
+  sbg,
+  threshold = -0.1,
+  pixelRange = NULL,
+  qthreshold = NULL,
+  select = "dark",
+  colorimages = NULL,
+  autoThres = FALSE,
+  perFrame = FALSE,
+  frames = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sbg</code></td>
+<td>
+<p>Array containing images containing all moving particles,
+as obtained from <code>subtractBackground</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>Thresholds for including particles. A numeric vector
+containing three values; one for each color. Otherwise, supply one value
+which is to be used for all three colors. For a chosen quantile
+for each frame, use <code>qthreshold</code>. Default is <code>threshold=-0.1</code>,
+which works for dark particles on a light background. Alternatively,
+set <code>autoThres</code> below for an automatic threshold.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pixelRange</code></td>
+<td>
+<p>Default is <code>NULL</code>. Numeric vector with minimum and
+maximum particle size (area), used as a
+first filter to identify particles. Use if particle of interest are of a
+known size range (in pixels).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>qthreshold</code></td>
+<td>
+<p>Default is <code>NULL</code>. Supply a value, to do thresholding
+based on quantile. Quantile is calculated for each
+frame separately.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p>Select dark particles (<code>'dark'</code>), light particles
+(<code>'light'</code>), or both (<code>'both'</code>), compared to background.
+Default is <code>'dark'</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colorimages</code></td>
+<td>
+<p>Array containing original color images. By default, the
+original color images are obtained from global environment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>autoThres</code></td>
+<td>
+<p>Logical. <code>TRUE</code> to get an automated threshold for each
+color layer. Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perFrame</code></td>
+<td>
+<p>Logical. If <code>autoThres=TRUE</code>, set at <code>TRUE</code>
+to calculate a threshold for
+each frame separately. Default is <code>FALSE</code>. Note that is can be
+computationally intensive to calculate a threshold for each frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frames</code></td>
+<td>
+<p>When <code>autoThres=TRUE</code> and <code>allFrames=FALSE</code>, supply a
+numeric vector specifying over which frames the automated threshold
+should be calculated on (e.g. <code>c(1,3,5,7,9,11)</code> for all odd frames
+from 1 to 11).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns a dataframe of class 'TrDm' and 'particles', containing
+particle statistics with identified particles for each frame
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Marjolein Bruijning, Caspar A. Hallmann &amp; Marco D. Visser
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+dir.create("images")
+## Create image sequence
+traj &lt;- simulTrajec(path="images",
+                    nframes=30,nIndividuals=20,domain="square",
+                    h=0.01,rho=0.9,
+                    sizes=runif(20,0.004,0.006))
+## Load images
+dir &lt;- "images"
+allFullImages &lt;- loadImages (dirPictures=dir,nImages=1:30)
+stillBack &lt;- createBackground(allFullImages,method="mean")
+allImages &lt;- subtractBackground(stillBack)
+partIden &lt;- identifyParticles(allImages,threshold=-0.1,
+                                   pixelRange=c(3,400))
+plot(partIden)
+summary(partIden)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

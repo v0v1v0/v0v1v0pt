@@ -1,0 +1,237 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>wav.diff.trend.est</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wavelet Thresholding Trend Estimation of Time Series</h2>
+
+<h3>Description</h3>
+
+<p>Internal function to compute the wavelet thresholding trend estimate for a time
+series that may be second-order nonstationary. The function calculates the
+wavelet transform of the time series, thresholds the coefficients based on
+an estimate of their variance, and inverts to give the trend estimate.
+This function is not intended for general use by regular users of the package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">wav.diff.trend.est(
+  x,
+  spec.est,
+  filter.number = 4,
+  family = "DaubExPhase",
+  thresh.type = "hard",
+  normal = TRUE,
+  transform.type = "nondec",
+  max.scale = floor(0.7 * log2(length(x))),
+  boundary.handle = FALSE,
+  T.CI = FALSE,
+  reps = 199,
+  sig.lvl = 0.05,
+  confint.type = "normal",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The time series you want to estimate the trend function of.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spec.est</code></td>
+<td>
+<p>You must supply the estimate of the evolutionary wavelet
+spectrum of the time series. This is the output of the <code>ewspec.diff</code>
+function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter.number</code></td>
+<td>
+<p>Selects the index of the wavelet used in the estimation
+procedure. For Daubechies compactly supported wavelets the filter number is
+the number of vanishing moments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>Selects the wavelet family to use. Recommended to only use the
+Daubechies compactly supported wavelets DaubExPhase and DaubLeAsymm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thresh.type</code></td>
+<td>
+<p>The type of thresholding function used. Currently only
+<code>"soft"</code> and <code>"hard"</code> (default) are available.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normal</code></td>
+<td>
+<p>If TRUE, uses a threshold assuming the data are normally
+distributed. If FALSE, uses a larger threshold to reflect non-normality.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform.type</code></td>
+<td>
+<p>String giving the type of wavelet transform used.
+Can be <code>"dec"</code>, in which case a standard (decimated) wavelet transform is used, or <code>"nondec"</code>,
+(default) in which case a nondecimated transform is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.scale</code></td>
+<td>
+<p>Selects the number of scales of the wavelet transform to
+apply thresholding to. Should be a value from 1 (finest) to J-1 (coarsest),
+where <code class="reqn">n =2^J</code> is the length of the time series. Recommended to use <code class="reqn">0.7 J</code>
+scales.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boundary.handle</code></td>
+<td>
+<p>Logical variable, decides if boundary handling should
+be applied to the time series before estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T.CI</code></td>
+<td>
+<p>Logical variable. If <code>TRUE</code>, a bootstrapped <code>(1-sig.lvl)</code>
+pointwise confidence interval is computed for the trend estimate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reps</code></td>
+<td>
+<p>Used only if <code>T.CI = TRUE</code>; the number of bootstrap
+replications used to calculate the confidence interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sig.lvl</code></td>
+<td>
+<p>Used only if <code>T.CI = TRUE</code>; a numeric value
+(<code>0 &lt;= sig.lvl &lt;= 1</code>) with which a <code>(1-sig.lvl)</code> pointwise
+confidence interval for the trend estimate is generated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>confint.type</code></td>
+<td>
+<p>Used only if <code>T.CI = TRUE</code>; the type of confidence
+interval computed. Can be <code>"percentile"</code>, in which case empirical percentiles are used, or
+<code>"normal"</code> (default), in which case the normal approximation is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to the <code>ewspec.diff</code>
+call, only to be used if <code>T.CI = TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Estimates the trend function of a locally stationary time series, by
+incorporating the evolutionary wavelet spectrum estimate in a wavelet
+thresholding procedure. To use this function, first compute the spectral
+estimate of the time series, using the function ewspec.diff.
+</p>
+<p>The function works as follows:
+</p>
+<p>1. The wavelet transform of the time series is calculated.
+</p>
+<p>2. The wavelet coefficients at scale <code class="reqn">j</code> and location <code class="reqn">k</code> are individually thresholded using the universal
+threshold <code class="reqn">\hat{\sigma}_{j,k}\sqrt{2 \log n}</code>, where <code class="reqn">\hat{\sigma}_{j,k}^2</code> is an estimate of their variance. The variance
+estimate is calculated using the spectral estimate, supplied by the user in
+the <code>spec</code> argument.
+</p>
+<p>3. The inverse wavelet transform is applied to obtain the final estimate.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>list</code> object containing the following fields:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Input data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter.number, family</code></td>
+<td>
+<p>Input wavelet parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform.type, max.scale, boundary.handle, thresh.type, normal,  T.CI</code></td>
+<td>
+<p>Input parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T</code></td>
+<td>
+<p>A vector of length <code>length(x)</code> containing the trend estimate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower.CI</code></td>
+<td>
+<p>Returned if <code>T.CI = TRUE</code>. The lower limit of the pointwise confidence interval</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper.CI</code></td>
+<td>
+<p>Returned if <code>T.CI = TRUE</code>. The upper limit of the pointwise confidence interval</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reps</code></td>
+<td>
+<p>Returned if <code>T.CI = TRUE</code>. The number of bootstrap replicates used to compute
+pointwise confidence interval</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sig.lvl</code></td>
+<td>
+<p>Returned if <code>T.CI = TRUE</code>. The significance level of the pointwise confidence interval</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>McGonigle, E. T., Killick, R., and Nunes, M. (2022). Modelling
+time-varying first and second-order structure of time series via wavelets
+and differencing. <em>Electronic Journal of Statistics</em>, 6(2), 4398-4448.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TLSW</code>
+</p>
+
+
+</div>

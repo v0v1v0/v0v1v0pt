@@ -1,0 +1,223 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trip-methods</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function to handle animal track data, organized as <code>trip</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>Create an object of class <code>trip</code>, extending the basic functionality
+of <code>SpatialPointsDataFrame-class</code> by specifying the data columns
+that define the "TimeOrdered" quality of the records.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trip(obj, TORnames, correct_all = TRUE)
+
+trip(obj) &lt;- value
+
+## S4 method for signature 'trip,ANY'
+split(x, f, drop = FALSE, ...)
+
+## S4 method for signature 'trip,ANY,ANY,ANY'
+x[i, j, ..., drop = TRUE]
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>A data frame, a grouped data frame or a <code>SpatialPointsDataFrame-class</code>
+containing at least two columns with the DateTime and ID data as per <code>TORnames</code>.  See
+Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TORnames</code></td>
+<td>
+<p>Either a <code>TimeOrderedRecords</code> object, or a 2-element
+character vector specifying the DateTime and ID column of <code>obj</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correct_all</code></td>
+<td>
+<p>logical value, if <code>TRUE</code> the input data is corrected for common problems</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>A 4-element character vector specifying the X, Y, DateTime coordinates
+and ID of <code>obj</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>trip object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p>grouping vector as per <code>split()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>unused but necessary for method consistency</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>i, j, ...</code></td>
+<td>
+<p>indices specifying elements to extract</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The original form of <code>trip()</code> required very strict input as a 'SpatialPointsDataFrame' and
+specifying which were the time and ID columns, but the input can be more flexible. If the object is a
+grouped data frame ('dplyr-style') then the (first) grouping is assumed to define individual trips and that
+columns 1, 2, 3 are the x-, y-, time-coordinates in that order. It can also be a <code>trip</code> object for
+redefining <code>TORnames</code>.
+</p>
+<p>The <code>trip()</code> function can ingest <code>track_xyt</code>, <code>telemetry</code>, <code>SpatialPointsDataFrame</code>, <code>sf</code>,
+<code>trackeRdata</code>, <code>grouped_df</code>, <code>data.frame</code>, <code>tbl_df</code>, <code>mousetrap</code>, and in some cases
+lists of those objects. Please get in touch if you think something that should work does not.
+</p>
+<p>Track data often contains problems, with missing values in location or time,
+times out of order or with duplicated times. The <code>correct_all</code> argument is
+set to <code>TRUE</code> by default and will report any inconsistencies. Data really should
+be checked first rather than relying on this auto-cleanup. The following problems are common:
+</p>
+
+<ul>
+<li>
+<p> duplicated records (every column with the same value in another row)
+</p>
+</li>
+<li>
+<p> duplicated date-time values
+</p>
+</li>
+<li>
+<p> missing date-time values, or missing x or y coordinates
+</p>
+</li>
+<li>
+<p> records out of order within trip ID
+</p>
+</li>
+</ul>
+<p>For some data types there's no formal structure, but a simple convention such as
+a set of names in a data frame. For example, the VTrack package has <code>AATAMS1</code> which may be
+turned into a trip with
+<code style="white-space: pre;">⁠trip(AATAMS1 %&gt;% dplyr::select(longitude, latitude, timestamp, tag.ID, everything())⁠</code>
+In time we can add support for all kinds of variants, detected by the names and contents.
+</p>
+<p>See <a href="https://figshare.utas.edu.au/articles/thesis/The_tag_location_problem/23209538">Chapter 2 of the trip thesis</a> for more details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A trip object, with the usual slots of a
+<code>SpatialPointsDataFrame-class</code> and the added
+<code>TimeOrderedRecords</code>. For the most part this can be treated as a
+<code>data.frame</code> with <code>Spatial</code> coordinates.
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Most of the methods available are by virtue of the sp package.  Some, such
+as <code>split.data.frame</code> have been added to SPDF so that trip has the same
+functionality.
+</p>
+
+<dl>
+<dt>trip</dt>
+<dd>
+<p><code>signature(obj="SpatialPointsDataFrame",
+TORnames="ANY")</code></p>
+</dd>
+</dl>
+<p>The main construction.
+</p>
+<dl>
+<dt>trip</dt>
+<dd>
+<p><code>signature(obj="SpatialPointsDataFrame",
+TORnames="TimeOrderedRecords")</code></p>
+</dd>
+</dl>
+<p> Object and TimeOrdered records class
+</p>
+<dl>
+<dt>trip</dt>
+<dd>
+<p><code>signature(obj="ANY", TORnames="TimeOrderedRecords")</code>:
+create a <code>trip</code> object from a data frame.</p>
+</dd>
+<dt>trip</dt>
+<dd>
+<p><code>signature(obj="trip", TORnames="ANY")</code>: (Re)-create a
+<code>trip</code> object using a character vector for <code>TORnames</code>.</p>
+</dd>
+<dt>trip</dt>
+<dd>
+<p><code>signature(obj="trip", TORnames="TimeOrderedRecords")</code>:
+(re)-create a trip object using a <code>TimeOrderedRecords</code> object.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>speedfilter</code>, and <code>tripGrid</code> for simplistic
+speed filtering and spatial time spent gridding.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+d &lt;- data.frame(x=1:10, y=rnorm(10), tms=Sys.time() + 1:10, id=gl(2, 5))
+
+## the simplest way to create a trip is by order of columns
+
+trip(d)
+
+tr &lt;- trip(d)
+ ## real world data in CSV
+mi_dat &lt;- read.csv(system.file("extdata/MI_albatross_sub10.csv", package = "trip"),
+            stringsAsFactors = FALSE)
+mi_dat$gmt &lt;- as.POSIXct(mi_dat$gmt, tz = "UTC")
+mi_dat$sp_id &lt;-  sprintf("%s%s_%s_%s", mi_dat$species,
+         substr(mi_dat$breeding_status, 1, 1), mi_dat$band, mi_dat$tag_ID)
+sp::coordinates(mi_dat) &lt;- c("lon", "lat")
+## there are many warnings, but the outcome is fine
+## (sp_id == 'WAi_14030938_2123' has &lt; 3 locations as does LMi_12143650_14257)
+mi_dat &lt;- trip(mi_dat, c("gmt", "sp_id") )
+plot(mi_dat, pch = ".")
+#lines(mi_dat)  ## ugly
+
+mi_dat_polar &lt;- reproj(mi_dat, "+proj=stere +lat_0=-90 +lon_0=154 +datum=WGS84")
+plot(mi_dat_polar, pch = ".")
+lines(mi_dat_polar)
+
+
+</code></pre>
+
+
+</div>

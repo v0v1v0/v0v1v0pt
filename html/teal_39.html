@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>init</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create the server and UI function for the <code>shiny</code> app</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>End-users: This is the most important function for you to start a
+<code>teal</code> app that is composed of <code>teal</code> modules.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">init(
+  data,
+  modules,
+  filter = teal_slices(),
+  title = build_app_title(),
+  header = tags$p(),
+  footer = tags$p(),
+  id = character(0)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>teal_data</code> or <code>teal_data_module</code>)
+For constructing the data object, refer to <code>teal_data()</code> and <code>teal_data_module()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modules</code></td>
+<td>
+<p>(<code>list</code> or <code>teal_modules</code> or <code>teal_module</code>)
+nested list of <code>teal_modules</code> or <code>teal_module</code> objects or a single
+<code>teal_modules</code> or <code>teal_module</code> object. These are the specific output modules which
+will be displayed in the <code>teal</code> application. See <code>modules()</code> and <code>module()</code> for
+more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter</code></td>
+<td>
+<p>(<code>teal_slices</code>)
+Specifies the initial filter using <code>teal_slices()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>(<code>shiny.tag</code> or <code>character(1)</code>)
+The browser window title. Defaults to a title "teal app" with the icon of NEST.
+Can be created using the <code>build_app_title()</code> or
+by passing a valid <code>shiny.tag</code> which is a head tag with title and link tag.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>header</code></td>
+<td>
+<p>(<code>shiny.tag</code> or <code>character(1)</code>)
+The header of the app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>footer</code></td>
+<td>
+<p>(<code>shiny.tag</code> or <code>character(1)</code>)
+The footer of the app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>(<code>character</code>)
+Optional string specifying the <code>shiny</code> module id in cases it is used as a <code>shiny</code> module
+rather than a standalone <code>shiny</code> app. This is a legacy feature.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When initializing the <code>teal</code> app, if <code>datanames</code> are not set for the <code>teal_data</code> object,
+defaults from the <code>teal_data</code> environment will be used.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Named list with server and UI functions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">app &lt;- init(
+  data = teal_data(
+    new_iris = transform(iris, id = seq_len(nrow(iris))),
+    new_mtcars = transform(mtcars, id = seq_len(nrow(mtcars))),
+    code = "
+      new_iris &lt;- transform(iris, id = seq_len(nrow(iris)))
+      new_mtcars &lt;- transform(mtcars, id = seq_len(nrow(mtcars)))
+    "
+  ),
+  modules = modules(
+    module(
+      label = "data source",
+      server = function(input, output, session, data) {},
+      ui = function(id, ...) div(p("information about data source")),
+      datanames = "all"
+    ),
+    example_module(label = "example teal module"),
+    module(
+      "Iris Sepal.Length histogram",
+      server = function(input, output, session, data) {
+        output$hist &lt;- renderPlot(
+          hist(data()[["new_iris"]]$Sepal.Length)
+        )
+      },
+      ui = function(id, ...) {
+        ns &lt;- NS(id)
+        plotOutput(ns("hist"))
+      },
+      datanames = "new_iris"
+    )
+  ),
+  filter = teal_slices(
+    teal_slice(dataname = "new_iris", varname = "Species"),
+    teal_slice(dataname = "new_iris", varname = "Sepal.Length"),
+    teal_slice(dataname = "new_mtcars", varname = "cyl"),
+    exclude_varnames = list(new_iris = c("Sepal.Width", "Petal.Width")),
+    module_specific = TRUE,
+    mapping = list(
+      `example teal module` = "new_iris Species",
+      `Iris Sepal.Length histogram` = "new_iris Species",
+      global_filters = "new_mtcars cyl"
+    )
+  ),
+  title = "App title",
+  header = tags$h1("Sample App"),
+  footer = tags$p("Copyright 2017 - 2023")
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

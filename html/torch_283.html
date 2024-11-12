@@ -1,0 +1,113 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_layer_norm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Layer normalization</h2>
+
+<h3>Description</h3>
+
+<p>Applies Layer Normalization over a mini-batch of inputs as described in
+the paper <a href="https://arxiv.org/abs/1607.06450">Layer Normalization</a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_layer_norm(normalized_shape, eps = 1e-05, elementwise_affine = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>normalized_shape</code></td>
+<td>
+<p>(int or list): input shape from an expected input
+of size
+<code class="reqn">[* \times \mbox{normalized\_shape}[0] \times \mbox{normalized\_shape}[1] \times \ldots \times \mbox{normalized\_shape}[-1]]</code>
+If a single integer is used, it is treated as a singleton list, and this module will
+normalize over the last dimension which is expected to be of that specific size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>a value added to the denominator for numerical stability. Default: 1e-5</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>elementwise_affine</code></td>
+<td>
+<p>a boolean value that when set to <code>TRUE</code>, this module
+has learnable per-element affine parameters initialized to ones (for weights)
+and zeros (for biases). Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn">
+  y = \frac{x - \mathrm{E}[x]}{ \sqrt{\mathrm{Var}[x] + \epsilon}} * \gamma + \beta
+</code>
+</p>
+
+<p>The mean and standard-deviation are calculated separately over the last
+certain number dimensions which have to be of the shape specified by
+<code>normalized_shape</code>.
+</p>
+<p><code class="reqn">\gamma</code> and <code class="reqn">\beta</code> are learnable affine transform parameters of
+<code>normalized_shape</code> if <code>elementwise_affine</code> is <code>TRUE</code>.
+</p>
+<p>The standard-deviation is calculated via the biased estimator, equivalent to
+<code>torch_var(input, unbiased=FALSE)</code>.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, *)</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, *)</code> (same shape as input)
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>Unlike Batch Normalization and Instance Normalization, which applies
+scalar scale and bias for each entire channel/plane with the
+<code>affine</code> option, Layer Normalization applies per-element scale and
+bias with <code>elementwise_affine</code>.
+</p>
+<p>This layer uses statistics computed from input data in both training and
+evaluation modes.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+input &lt;- torch_randn(20, 5, 10, 10)
+# With Learnable Parameters
+m &lt;- nn_layer_norm(input$size()[-1])
+# Without Learnable Parameters
+m &lt;- nn_layer_norm(input$size()[-1], elementwise_affine = FALSE)
+# Normalize over last two dimensions
+m &lt;- nn_layer_norm(c(10, 10))
+# Normalize over last dimension of size 10
+m &lt;- nn_layer_norm(10)
+# Activating the module
+output &lt;- m(input)
+}
+</code></pre>
+
+
+</div>

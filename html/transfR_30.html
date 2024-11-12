@@ -1,0 +1,102 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rapriori</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Net rainfall a priori estimation</h2>
+
+<h3>Description</h3>
+
+<p>A priori estimate of net rainfall as required for the inversion.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">rapriori(Qobs, ...)
+
+## Default S3 method:
+rapriori(Qobs, area, lagtime, deltat, ...)
+
+## S3 method for class 'units'
+rapriori(Qobs, area, lagtime, deltat, ...)
+
+## S3 method for class 'transfR'
+rapriori(Qobs, verbose = TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Qobs</code></td>
+<td>
+<p>vector of discharge value or object of class <code>transfR</code>. If no unit is provided,
+<code>Qobs</code> is assumed to be in [m3/s].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>area</code></td>
+<td>
+<p>drainage area of the catchment. If no unit is provided, <code>area</code> is assumed to be in [km2].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lagtime</code></td>
+<td>
+<p>lag time value of the catchment. If no unit is provided, <code>lagtime</code> is assumed to be in [h].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deltat</code></td>
+<td>
+<p>time step of the time series. If no unit is provided, <code>deltat</code> is assumed to be in [min].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>boolean indicating if information messages should be written to the console</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function estimates an a priori of the net rainfall from Qobs. It converts Qobs to specific
+discharge and removes the delay caused by transfer time in the river network (given by <code>lagtime</code>
+and that could be estimated from the function lagtime). If an object of class <code>transfR</code> is provided,
+<code>area</code> is estimated from its <code>st</code> attribute. Results are stored as a new space-time attribute,
+called "RnAp", in the <code>transfR</code> object.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of the same class of <code>Qobs</code>. If <code>Qobs</code> is a transfR object,
+the same transfR object incremented by the new "RnAp" computed attributes.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(Oudon)
+icatch &lt;- 1
+Qobs &lt;- Oudon$obs[["Qobs"]][,icatch]
+Qspec &lt;- units::set_units(Qobs/st_area(st_geometry(Oudon$obs)[icatch]), "mm/h")
+deltat &lt;- units::set_units(1,"h")
+uc &lt;- velocity(hl = Oudon$hl[[icatch]])
+uh &lt;- uh(hl = Oudon$hl[[icatch]], uc = uc, deltat = deltat)$prob
+RnAp &lt;- rapriori(Qobs = Qspec, lagtime = lagtime(hl = Oudon$hl[[icatch]], uc = uc),
+deltat = deltat)
+</code></pre>
+
+
+</div>

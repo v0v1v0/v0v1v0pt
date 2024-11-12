@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>congress109</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Ideology in Political Speeches </h2>
+
+<h3>Description</h3>
+
+<p> Phrase counts and ideology scores by speaker for members of the 109th US congress. </p>
+
+
+<h3>Details</h3>
+
+<p> This data originally appear in Gentzkow and Shapiro
+(GS; 2010) and considers text of the 2005 Congressional Record,
+containing all speeches in that year for members of the United States
+House and Senate. In particular, GS record the number times each of
+529 legislators used terms in a list of 1000 phrases (i.e., each
+document is a year of transcripts for a single speaker). Associated
+sentiments are repshare – the two-party vote-share from each
+speaker's constituency (congressional district for representatives;
+state for senators) obtained by George W. Bush in the 2004
+presidential election – and the speaker's first and second
+common-score values (from http://voteview.com). Full
+parsing and sentiment details are in Taddy (2013; Section 2.1). </p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>congress109Counts</code></td>
+<td>
+<p> A <code>dgCMatrix</code> of phrase counts indexed by speaker-rows and phrase-columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>congress109Ideology</code></td>
+<td>
+<p> A <code>data.frame</code> containing the associated <code>repshare</code> and common scores <code>[cs1,cs2]</code>, as well as speaker
+characteristics: <code>party</code> (‘R’epublican, ‘D’emocrat, or ‘I’ndependent), <code>state</code>, and <code>chamber</code> (‘H’ouse or ‘S’enate). </p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+ 
+<p>Matt Taddy, <a href="mailto:mataddy@gmail.com">mataddy@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+ 
+<p>Gentzkow, M. and J. Shapiro (2010), <em>What drives media slant? Evidence from U.S. daily newspapers</em>. Econometrica 78, 35-7.  The full dataset is at <a href="http://dx.doi.org/10.3886/ICPSR26242">http://dx.doi.org/10.3886/ICPSR26242</a>.
+</p>
+<p>Taddy (2013), <em>Multinomial Inverse Regression for Text Analysis</em>.
+<a href="http://arxiv.org/abs/1012.2098">http://arxiv.org/abs/1012.2098</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p> srproj, pls, dmr, we8there </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(congress109)
+
+## Bivariate sentiment factors (roll-call vote common scores)
+covars &lt;- data.frame(gop=congress109Ideology$party=="R",
+					cscore=congress109Ideology$cs1)
+covars$cscore &lt;- covars$cscore - 
+	tapply(covars$cscore,covars$gop,mean)[covars$gop+1]
+rownames(covars) &lt;- rownames(congress109Ideology)
+
+## cl=NULL implies a serial run. 
+## To use a parallel library fork cluster, 
+## uncomment the relevant lines below. 
+## Forking is unix only; use PSOCK for windows
+cl &lt;- NULL
+# cl &lt;- makeCluster(detectCores(), type="FORK")
+## small nlambda for a fast example
+fitCS &lt;- dmr(cl, covars, congress109Counts, gamma=1, nlambda=10)
+# stopCluster(cl)
+
+## plot the fit
+par(mfrow=c(1,2))
+for(j in c("estate.tax","death.tax")){
+	plot(fitCS[[j]], col=c("red","green"))
+	mtext(j,line=2) }
+legend("topright",bty="n",fill=c("red","green"),legend=names(covars))
+
+
+## plot the IR sufficient reduction space
+Z &lt;- srproj(fitCS, congress109Counts)
+par(mfrow=c(1,1))
+plot(Z, pch=21, bg=c(4,3,2)[congress109Ideology$party], main="SR projections")
+## two pols
+Z[c(68,388),]
+</code></pre>
+
+
+</div>

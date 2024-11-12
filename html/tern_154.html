@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_logistic</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit for logistic regression</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Fit a (conditional) logistic regression model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_logistic(
+  data,
+  variables = list(response = "Response", arm = "ARMCD", covariates = NULL, interaction =
+    NULL, strata = NULL),
+  response_definition = "response"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the data frame on which the model was fit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>string</code>)<br> list of additional analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response_definition</code></td>
+<td>
+<p>(<code>string</code>)<br> the definition of what an event is in terms of <code>response</code>.
+This will be used when fitting the (conditional) logistic regression model on the left hand
+side of the formula.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A fitted logistic regression model.
+</p>
+
+
+<h3>Model Specification</h3>
+
+<p>The <code>variables</code> list needs to include the following elements:
+</p>
+
+<ul>
+<li> <p><code>arm</code>: Treatment arm variable name.
+</p>
+</li>
+<li> <p><code>response</code>: The response arm variable name. Usually this is a 0/1 variable.
+</p>
+</li>
+<li> <p><code>covariates</code>: This is either <code>NULL</code> (no covariates) or a character vector of covariate variable names.
+</p>
+</li>
+<li> <p><code>interaction</code>: This is either <code>NULL</code> (no interaction) or a string of a single covariate variable name already
+included in <code>covariates</code>. Then the interaction with the treatment arm is included in the model.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+adrs_f &lt;- tern_ex_adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  filter(RACE %in% c("ASIAN", "WHITE", "BLACK OR AFRICAN AMERICAN")) %&gt;%
+  mutate(
+    Response = case_when(AVALC %in% c("PR", "CR") ~ 1, TRUE ~ 0),
+    RACE = factor(RACE),
+    SEX = factor(SEX)
+  )
+formatters::var_labels(adrs_f) &lt;- c(formatters::var_labels(tern_ex_adrs), Response = "Response")
+mod1 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE")
+  )
+)
+mod2 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE"),
+    interaction = "AGE"
+  )
+)
+
+</code></pre>
+
+
+</div>

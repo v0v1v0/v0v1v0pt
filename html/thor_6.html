@@ -1,0 +1,449 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mdb_txn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use mdb transactions</h2>
+
+<h3>Description</h3>
+
+<p>Transactions are required for every mdb operation.  Even when
+using the convenience functions in <code>mdb_env</code>
+(<code>get</code>, etc), a transaction is created and committed each
+time.  Within a transaction, either everything happens or nothing
+happens, and everything gets a single consistent view of the
+database.
+</p>
+
+
+<h3>Details</h3>
+
+<p>There can be many read transactions per environment, but only one
+write transactions.  Because R is single-threaded, that means that
+you can only simultaneously write from an mdb environment from a
+single object - any further attempts to open write transactions it
+would block forever while waiting for a lock that can't be
+released because there is only one thread!
+</p>
+
+
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>id</code></dt>
+<dd>
+<p>Return the mdb internal id of the transaction
+</p>
+<p><em>Usage:</em>
+<code>id()</code>
+</p>
+<p><em>Value</em>:
+An integer
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_txn_id()</code>
+</p>
+</dd>
+<dt><code>stat</code></dt>
+<dd>
+<p>Brief statistics about the database.  This is the same as <code>mdb_env</code>'s <code>stat()</code> but applying to the transaction
+</p>
+<p><em>Usage:</em>
+<code>stat()</code>
+</p>
+<p><em>Value</em>:
+An integer vector with elements <code>psize</code> (the size of a database page), <code>depth</code> (depth of the B-tree), <code>brancb_pages</code> (number of internal non-leaf) pages), <code>leaf_pages</code> (number of leaf pages), <code>overflow_pages</code> (number of overflow pages) and <code>entries</code> (number of data items).
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_stat()</code>
+</p>
+</dd>
+<dt><code>commit</code></dt>
+<dd>
+<p>Commit all changes made in this transaction to the database, and invalidate the transaction, and any cursors belonging to it (i.e., once committed the transaction cannot be used again)
+</p>
+<p><em>Usage:</em>
+<code>commit()</code>
+</p>
+<p><em>Value</em>:
+Nothing, called for its side effects only
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_txn_commit()</code>
+</p>
+</dd>
+<dt><code>abort</code></dt>
+<dd>
+<p>Abandon all changes made in this transaction to the database, and invalidate the transaction, and any cursors belonging to it (i.e., once aborted the transaction cannot be used again).  For read-only transactions there is no practical difference between abort and commit, except that using <code>abort</code> allows the transaction to be recycled more efficiently.
+</p>
+<p><em>Usage:</em>
+<code>abort(cache = TRUE)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>cache</code>:   Logical, indicating if a read-only transaction should be cached for recycling
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+Nothing, called for its side effects only
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_txn_abort()</code>
+</p>
+</dd>
+<dt><code>cursor</code></dt>
+<dd>
+<p>Create a <code>mdb_cursor</code> object in this transaction. This can be used for more powerful database interactions.
+</p>
+<p><em>Usage:</em>
+<code>cursor()</code>
+</p>
+<p><em>Value</em>:
+A <code>mdb_cursor</code> object.
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_cursor_open()</code>
+</p>
+</dd>
+<dt><code>get</code></dt>
+<dd>
+<p>Retrieve a value from the database
+</p>
+<p><em>Usage:</em>
+<code>get(key, missing_is_error = TRUE, as_proxy = FALSE, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   A string (or raw vector) - the key to get
+
+</p>
+</li>
+<li>
+<p><code>missing_is_error</code>:   Logical, indicating if a missing value is an error (by default it is).  Alternatively, with <code>missing_is_error = FALSE</code>, a missing value will return <code>NULL</code>.  Because no value can be <code>NULL</code> (all values must have nonzero length) a <code>NULL</code> is unambiguously missing.
+
+</p>
+</li>
+<li>
+<p><code>as_proxy</code>:   Return a "proxy" object, which defers doing a copy into R.  See <code>mdb_proxy</code> for more information.
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Either <code>NULL</code>, or a logical, to indicate the result type required.  With <code>as_raw = NULL</code>, the default, the value will be returned as a string if possible.  If not possible it will return a raw vector.  With <code>as_raw = TRUE</code>, <code>get()</code> will <em>always</em> return a raw vector, even when it is possibly to represent the value as a string.  If <code>as_raw = FALSE</code>, <code>get</code> will return a string, but throw an error if this is not possible.  This is discussed in more detail in the thor vignette (<code>vignette("thor")</code>)
+
+</p>
+</li>
+</ul>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_get()</code>
+</p>
+</dd>
+<dt><code>put</code></dt>
+<dd>
+<p>Put values into the database.  In other systems, this might be called "<code>set</code>".
+</p>
+<p><em>Usage:</em>
+<code>put(key, value, overwrite = TRUE, append = FALSE)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The name of the key (string or raw vector)
+
+</p>
+</li>
+<li>
+<p><code>value</code>:   The value to save (string or raw vector)
+
+</p>
+</li>
+<li>
+<p><code>overwrite</code>:   Logical - when <code>TRUE</code> it will overwrite existing data; when <code>FALSE</code> throw an error
+
+</p>
+</li>
+<li>
+<p><code>append</code>:   Logical - when <code>TRUE</code>, append the given key/value to the end of the database.  This option allows fast bulk loading when keys are already known to be in the correct order.  But if you load unsorted keys with <code>append = TRUE</code> an error will be thrown
+
+</p>
+</li>
+</ul>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_put()</code>
+</p>
+</dd>
+<dt><code>del</code></dt>
+<dd>
+<p>Remove a key/value pair from the database
+</p>
+<p><em>Usage:</em>
+<code>del(key)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>key</code>:   The name of the key (string or raw vector)
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+A scalar logical, indicating if the value was deleted
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_del()</code>
+</p>
+</dd>
+<dt><code>exists</code></dt>
+<dd>
+<p>Test if a key exists in the database.
+</p>
+<p><em>Usage:</em>
+<code>exists(key)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>key</code>:   The name of the key to test (string or raw vector).  Unlike <code>get</code>, <code>put</code> and <code>del</code> (but like <code>mget</code>, <code>mput</code> and <code>mdel</code>), <code>exists</code> is <em>vectorised</em>.  So the input here can be; a character vector of any length (returning the same length logical vector), a raw vector (representing one key, returning a scalar logical) or a <code>list</code> with each element being either a scalar character or a raw vector, returning a logical the same length as the list.
+
+</p>
+</li></ul>
+<p><em>Details:</em>
+This is an extension of the raw LMDB API and works by using <code>mdb_get</code> for each key (which for lmdb need not copy data) and then testing whether the return value is <code>MDB_SUCCESS</code> or <code>MDB_NOTFOUND</code>.
+</p>
+<p><em>Value</em>:
+A logical vector
+</p>
+</dd>
+<dt><code>list</code></dt>
+<dd>
+<p>List keys in the database
+</p>
+<p><em>Usage:</em>
+<code>list(starts_with = NULL, as_raw = FALSE, size = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>starts_with</code>:   Optionally, a prefix for all strings.  Note that is not a regular expression or a filename glob.  Using <code>foo</code> will match <code>foo</code>, <code>foo:bar</code> and <code>foobar</code> but not <code>fo</code> or <code>FOO</code>.  Because LMDB stores keys in a sorted tree, using a prefix can greatly reduce the number of keys that need to be tested.
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   Same interpretation as <code>as_raw</code> in <code>$get()</code> but with a different default.  It is expected that most of the time keys will be strings, so by default we'll try and return a character vector <code>as_raw = FALSE</code>.  Change the default if your database contains raw keys.
+
+</p>
+</li>
+<li>
+<p><code>size</code>:   For use with <code>starts_with</code>, optionally a guess at the number of keys that would be returned.  with <code>starts_with = NULL</code> we can look the number of keys up directly so this is ignored.
+
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>mget</code></dt>
+<dd>
+<p>Get values for multiple keys at once (like <code>$get</code> but vectorised over <code>key</code>)
+</p>
+<p><em>Usage:</em>
+<code>mget(key, as_proxy = FALSE, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The keys to get values for.  Zero, one or more keys are allowed.
+
+</p>
+</li>
+<li>
+<p><code>as_proxy</code>:   Logical, indicating if a list of <code>mdb_proxy</code> objects should be returned.
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   As for <code>$get()</code>, logical (or <code>NULL</code>) indicating if raw or string output is expected or desired.
+
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>mput</code></dt>
+<dd>
+<p>Put multiple values into the database (like <code>$put</code> but vectorised over <code>key</code>/<code>value</code>).
+</p>
+<p><em>Usage:</em>
+<code>mput(key, value, overwrite = TRUE, append = FALSE)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The keys to set
+
+</p>
+</li>
+<li>
+<p><code>value</code>:   The values to set against these keys.  Must be the same length as <code>key</code>.
+
+</p>
+</li>
+<li>
+<p><code>overwrite</code>:   As for <code>$put</code>
+
+</p>
+</li>
+<li>
+<p><code>append</code>:   As for <code>$put</code>
+
+</p>
+</li>
+</ul>
+<p><em>Details:</em>
+The implementation simply calls <code>mdb_put</code> repeatedly (but with a single round of error checking) so duplicate <code>key</code> entries will result in the last key winning.
+</p>
+</dd>
+<dt><code>mdel</code></dt>
+<dd>
+<p>Delete multiple values from the database (like <code>$del</code> but vectorised over <code>key</code>).
+</p>
+<p><em>Usage:</em>
+<code>mdel(key)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul><li>
+<p><code>key</code>:   The keys to delete
+
+</p>
+</li></ul>
+<p><em>Value</em>:
+A logical vector, the same length as <code>key</code>, indicating if each key was deleted.
+</p>
+</dd>
+<dt><code>replace</code></dt>
+<dd>
+<p>Use a temporary cursor to replace an item; this function will replace the data held at <code>key</code> and return the previous value (or <code>NULL</code> if it doesn't exist).  See <code>mdb_cursor</code> for fuller documentation.
+</p>
+<p><em>Usage:</em>
+<code>replace(key, value, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key to replace
+
+</p>
+</li>
+<li>
+<p><code>value</code>:   The new value value to st <code>key</code> to
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   For the returned value, how should the data be returned?
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+As for <code>$get()</code>, a single data item as either a string or raw vector.
+</p>
+</dd>
+<dt><code>pop</code></dt>
+<dd>
+<p>Use a temporary cursor to "pop" an item; this function will delete an item but return the value that it had as it deletes it.
+</p>
+<p><em>Usage:</em>
+<code>pop(key, as_raw = NULL)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>key</code>:   The key to pop
+
+</p>
+</li>
+<li>
+<p><code>as_raw</code>:   For the returned value, how should the data be returned?
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+As for <code>$get()</code>, a single data item as either a string or raw vector.
+</p>
+</dd>
+<dt><code>cmp</code></dt>
+<dd>
+<p>Compare two keys for ordering
+</p>
+<p><em>Usage:</em>
+<code>cmp(a, b)</code>
+</p>
+<p><em>Arguments:</em>
+</p>
+
+<ul>
+<li>
+<p><code>a</code>:   A key (string or raw); it need not be in the database
+
+</p>
+</li>
+<li>
+<p><code>b</code>:   A key to compare with b (string or raw)
+
+</p>
+</li>
+</ul>
+<p><em>Value</em>:
+A scalar integer, being -1 (if a &lt; b), 0 (if a == b) or 1 (if a &gt; b).
+</p>
+<p><em>Note</em>: In lmdb.h this is <code>mdb_cmp()</code>
+</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Start by creating a new environment, and within that a write
+# transaction
+env &lt;- thor::mdb_env(tempfile())
+txn &lt;- env$begin(write = TRUE)
+
+# With this transaction we can write values and see them as set
+txn$put("a", "hello")
+txn$get("a")
+
+# But because the transaction is not committed, any new
+# transaction will not see the values:
+env$get("a", missing_is_error = FALSE) # NULL
+txn2 &lt;- env$begin()
+txn2$get("a", missing_is_error = FALSE) # NULL
+
+# Once we commit a transaction, *new* transactions will see the
+# value
+txn$commit()
+env$get("a") # "hello"
+env$begin()$get("a") # "hello"
+
+# But old transactions retain their consistent view of the database
+txn2$get("a", missing_is_error = FALSE)
+
+# Cleanup
+env$destroy()
+</code></pre>
+
+
+</div>

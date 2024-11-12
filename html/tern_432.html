@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidy.glm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Custom tidy method for binomial GLM results</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Helper method (for <code>broom::tidy()</code>) to prepare a data frame from a <code>glm</code> object
+with <code>binomial</code> family.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'glm'
+tidy(x, conf_level = 0.95, at = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>glm</code>)<br> logistic regression model fitted by <code>stats::glm()</code> with "binomial" family.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>proportion</code>)<br> confidence level of the interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>at</code></td>
+<td>
+<p>(<code>numeric</code> or <code>NULL</code>)<br> optional values for the interaction variable. Otherwise the median is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> containing the tidied model.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>h_logistic_regression for relevant helper functions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(broom)
+
+adrs_f &lt;- tern_ex_adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  filter(RACE %in% c("ASIAN", "WHITE", "BLACK OR AFRICAN AMERICAN")) %&gt;%
+  mutate(
+    Response = case_when(AVALC %in% c("PR", "CR") ~ 1, TRUE ~ 0),
+    RACE = factor(RACE),
+    SEX = factor(SEX)
+  )
+formatters::var_labels(adrs_f) &lt;- c(formatters::var_labels(tern_ex_adrs), Response = "Response")
+mod1 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE")
+  )
+)
+mod2 &lt;- fit_logistic(
+  data = adrs_f,
+  variables = list(
+    response = "Response",
+    arm = "ARMCD",
+    covariates = c("AGE", "RACE"),
+    interaction = "AGE"
+  )
+)
+
+df &lt;- tidy(mod1, conf_level = 0.99)
+df2 &lt;- tidy(mod2, conf_level = 0.99)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,165 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>to_tabr</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Music notation syntax converters</h2>
+
+<h3>Description</h3>
+
+<p>Convert alternative representations of music notation to <code>tabr</code> syntax.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">to_tabr(id, ...)
+
+from_chorrrds(x, key = "c", guitar = FALSE, gc_args = list())
+
+from_music21(x, accidentals = c("flat", "sharp"), output = c("music", "list"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>character, suffix of <code style="white-space: pre;">⁠from_*⁠</code> function, e.g., <code>"chorrrds"</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to the function matched by <code>id</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>character, general syntax input. See details and examples for how
+inputs are structured for each converter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>key signature, used to enforce consistent use of flats or sharps.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>guitar</code></td>
+<td>
+<p>logical, attempt to match input chords to known guitar chords
+in <code>guitarChords()</code>. Otherwise by default standard piano chords of
+consecutive pitches covering minimum pitch range are returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gc_args</code></td>
+<td>
+<p>named list of additional arguments passed to <code>gc_info()</code>, used
+when <code>guitar = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>accidentals</code></td>
+<td>
+<p>character, represent accidentals, <code>"flat"</code> or <code>"sharp"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>character, type of output when multiple options are available.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions convert music notation from other data sources into the style
+used by <code>tabr</code> for music analysis and sheet music transcription.
+</p>
+
+
+<h3>Value</h3>
+
+<p>noteworthy string for chorrrds; music string or list for music21.
+</p>
+
+
+<h3>Syntax converter for chorrrds</h3>
+
+<p>The input <code>x</code> is a character vector of chords output from the <code>chorrrds</code>
+package, as shown in the examples. Output is a noteworthy string object.
+</p>
+<p>Some sources do not offer as complete or explicit information in order to
+make sheet music. However, what is available in those formats is converted
+to the extent possible and available function arguments can allow the user
+to add some additional specification. Different input syntax makes use of a
+different syntax converter. Depending on the format, different arguments
+may be available and/or required. The general wrapper function for all of
+the available syntax converters is <code>to_tabr()</code>. This function takes an
+<code>id</code> argument for the appropriate converter function. See examples.
+</p>
+<p>For example, output from the <code>chorrrds</code> package that scrapes chord
+information from the Cifraclub website only provides chords, not note for
+note transcription data for any particular instrument. This means the result
+of syntax conversion still yields only chords, which is fine for data
+analysis but doesn't add anything useful for sheet music transcription.
+</p>
+<p>The input in this case also does not specify distinct pitches by assigning
+octaves numbers to a chord's notes, not even the root note. It remains up to
+the user if they want to apply the information. By default, every chord
+starts in octave three. It is also ambiguous how the chord is played since
+all that is provided is a generic chord symbol. By default a standard chord
+is constructed if it can be determined.
+</p>
+<p>Setting <code>guitar = TRUE</code> switches to using the <code>guitarChords()</code> dataset to
+find matching guitar chords using <code>gc_info()</code>, which can be provided
+additional arguments in a named list to <code>gc_args</code>. For guitar, this allows
+some additional control over the actual structure of the chord, its shape and
+position on the guitar neck. The options will never work perfectly for all
+chords in <code>chords</code>, but at a minimum, typical default component pitches
+will be determined and returned in <code>tabr</code> notation style.
+</p>
+
+
+<h3>Syntax converter for music21</h3>
+
+<p>The input <code>x</code> is a character vector of in music21 tiny notation syntax,
+as shown in the examples. Default output is a music object. Setting
+<code>output = "list"</code> returns a list of three elements: a noteworthy string,
+a note info string, and the time signature.
+</p>
+<p>The recommendation for music21 syntax is to keep it simple. Do not use the
+letter <code>n</code> for explicit natural notes. Do not add text annotations such
+as lyrics. Double flats and sharps are not supported. The examples
+demonstrate what is currently supported.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># chorrrds package output
+chords &lt;- c("Bb", "Bbm", "Bbm7", "Bbm7(b5)", "Bb7(#5)/G", "Bb7(#5)/Ab")
+from_chorrrds(chords)
+to_tabr(id = "chorrrds", x = chords)
+
+from_chorrrds(chords, guitar = TRUE)
+to_tabr(id = "chorrrds", x = chords, guitar = TRUE)
+
+# music21 tiny notation
+x &lt;- "4/4 CC#FF4.. trip{c#8eg# d'- e-' f g a'} D4~# D E F r B16"
+from_music21(x)
+
+from_music21(x, accidentals = "sharp")
+
+from_music21(x, output = "list")
+</code></pre>
+
+
+</div>

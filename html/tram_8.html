@@ -1,0 +1,263 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Compris</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Competing Risk Regression
+</h2>
+
+<h3>Description</h3>
+
+<p>An alternative approach to competing risk regression via multivariate
+transformation models
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Compris(formula, data, subset, weights, na.action, offset, 
+        primary = c("Coxph", "Colr", "BoxCox"), 
+        competing = switch(primary, Coxph = "weibull", 
+                                    Colr = "loglogistic", 
+                                    BoxCox = "lognormal"), 
+        NPlogLik = FALSE, theta = NULL,
+        optim = mltoptim(auglag = list(maxtry = 5)),
+        args = list(seed = 1, type = c("MC", "ghalton"), M = 1000),
+        scale = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>an object of class <code>"formula"</code>: a symbolic description 
+of the model structure to be
+fitted.  The details of model specification are given under
+Details and in the package vignette. The left-hand side must be
+a <code>Surv</code> object, where <code>"event"</code> is specified by a factor
+that has levels indicating the independent censoring event,
+the primary event of interest and then the competing events (in this order).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an optional data frame, list or environment (or object
+coercible by <code>as.data.frame</code> to a data frame) containing the
+variables in the model.  If not found in <code>data</code>, the
+variables are taken from <code>environment(formula)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>an optional vector specifying a subset of observations to be
+used in the fitting process.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>an optional vector of case weights to be used in the fitting
+process.  Should be <code>NULL</code> or a numeric vector. If present,
+the weighted log-likelihood is maximised.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>a function which indicates what should happen when the data
+contain <code>NA</code>s.  The default is set to <code>na.omit</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>this can be used to specify an _a priori_ known component to
+be included in the linear predictor during fitting.  This
+should be <code>NULL</code> or a numeric vector of length equal to the
+number of cases.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>primary</code></td>
+<td>
+<p>a character defining the marginal model for the primary
+event of interest, that is, the first status level.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>competing</code></td>
+<td>
+<p>a character defining the marginal models for the
+remaining competing events.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>NPlogLik</code></td>
+<td>
+<p>logical, optimise nonparametric likelihood defined in
+terms of multivariate probabilities.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>optional starting values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optim</code></td>
+<td>
+<p>see <code>Mmlt</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>args</code></td>
+<td>
+<p>a list of arguments for <code>lpmvnorm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>logical defining if variables in the linear predictor shall
+be scaled. Scaling is internally used for model estimation,
+rescaled coefficients are reported in model output.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>addition arguments passed to primary or competing model
+function.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This is a highly experimental approach to an alternative competing risk
+regression framework described by Czado and Van Keilegom (2023) and Deresa
+and Van Keilegom (2023).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>Mmlt</code>, allowing to derive marginal time-to-event
+distributions for the primary event of interest and all competing events.
+</p>
+
+
+<h3>References</h3>
+
+<p>Claudia Czado and Ingrid Van Keilegom (2023). Dependent Censoring Based on Parametric Copulas.
+<em>Biometrika</em>, <b>110</b>(3), 721–738, <a href="https://doi.org/10.1093/biomet/asac067">doi:10.1093/biomet/asac067</a>.
+</p>
+<p>Negera Wakgari Deresa and Ingrid Van Keilegom (2023).  Copula Based Cox Proportional Hazards 
+Models for Dependent Censoring. <em>Journal of the American Statistical
+Association</em>, <b>119</b>(546), 1044–1054, <a href="https://doi.org/10.1080/01621459.2022.2161387">doi:10.1080/01621459.2022.2161387</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  
+  if (require("randomForestSRC")) {
+    library("survival")
+    
+    ## Competing risk data set involving follicular cell lymphoma
+    ##   (from doi:10.1002/9780470870709)
+    data("follic", package = "randomForestSRC")
+  
+    ## Therapy:
+    ### Radiotherapy alone (RT) or Chemotherapy + Radiotherapy (CMTRT)
+    follic$ch &lt;- factor(as.character(follic$ch),
+      levels = c("N", "Y"), labels = c("RT", "CMTRT")) 
+  
+    ## Clinical state
+    follic$clinstg &lt;- factor(follic$clinstg,
+      levels = 2:1, labels = c("II", "I"))
+  
+    ## Pre-processing as in Deresa &amp; Van Keilegom (2023)
+    follic$time &lt;- round(follic$time, digits = 3)
+    follic$age &lt;- with(follic, (age - mean(age)) / sd(age)) ## standardised
+    follic$hgb &lt;- with(follic, (hgb - mean(hgb)) / sd(hgb)) ## standardised 
+    
+    ## Setup `Surv' object for fitting Compris():
+    ### "status" indicator with levels:
+    ###   (1) independent censoring (admin_cens)
+    ###   (2) primary event of interest (relapse)
+    ###   (3) dependent censoring (death)
+    follic$status &lt;- factor(follic$status,
+      levels = 0:2, labels = c("admin_cens", "relapse", "death"))
+    
+    follic$y &lt;- with(follic, Surv(time = time, event = status))
+  
+    ## Fit a Gaussian Copula-based Cox Proportional Hazards Model with
+    ##   a marginal "Coxph" model for the primary event of interest and 
+    ##   a Weibull "Survreg" model for dependent censoring
+    ## Use very informative starting values to keep CRAN happy
+    cf &lt;- c(
+            "Event_relapse.Event_relapse.Bs1(Event_relapse)" = -1.89058, 
+            "Event_relapse.Event_relapse.Bs2(Event_relapse)" = -1.6566, 
+            "Event_relapse.Event_relapse.Bs3(Event_relapse)" = -0.50329, 
+            "Event_relapse.Event_relapse.Bs4(Event_relapse)" = -0.50329, 
+            "Event_relapse.Event_relapse.Bs5(Event_relapse)" = -0.07402, 
+            "Event_relapse.Event_relapse.Bs6(Event_relapse)" = 0.53156, 
+            "Event_relapse.Event_relapse.Bs7(Event_relapse)" = 0.67391, 
+            "Event_relapse.Event_relapse.chCMTRT" = -0.2861, 
+            "Event_relapse.Event_relapse.age" = 0.43178, 
+            "Event_relapse.Event_relapse.hgb" = 0.02913, 
+            "Event_relapse.Event_relapse.clinstgI" = -0.55601, 
+            "Event_death.Event_death.(Intercept)" = -2.20056, 
+            "Event_death.Event_death.log(Event_death)" = 0.98102, 
+            "Event_death.Event_death.chCMTRT" = 0.25012, 
+            "Event_death.Event_death.age" = -0.64826, 
+            "Event_death.Event_death.hgb" = -0.02312, 
+            "Event_death.Event_death.clinstgI" = 0.57684, 
+            "Event_death.Event_relapse.(Intercept)" = -3.48595
+           )
+    ### gave up after multiple submissions to CRAN resulting
+    ### in 5.02 &gt; 5 secs
+    
+    m &lt;- Compris(y ~ ch + age + hgb + clinstg, data = follic, log_first = TRUE,
+                 ### arguments below speed-up example, don't use!
+                 theta = cf, 		### informativ starting values
+                 optim = mltoptim(),    ### no hessian
+                 args  = list(type = "ghalton", 
+                              M = 80))	### only 80 MC integration points
+
+    ### log-likelihood
+    logLik(m)
+
+    ## Similar to Table 4 of Deresa &amp; Van Keilegom (2023),
+    ## but using a Gaussian copula instead of a Gumbel copula.
+    ## marginal parameters
+    coef(m, type = "marginal")    
+    ## Kendall's tau
+    coef(m, type = "Kendall")
+    
+
+  }
+</code></pre>
+
+
+</div>

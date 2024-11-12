@@ -1,0 +1,270 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tcplhit2_core</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Hitcalling Function</h2>
+
+<h3>Description</h3>
+
+<p>Core of hitcalling function. This method chooses the winning model from tcplfit2_core,
+extracts the top and ac50, computes the hitcall, and calculates bmd/bmdl/bmdu among other
+statistics. Nested model selection is used to choose between poly1/poly2, then
+the model with the lowest AIC (or AICc) is declared the winner. Continuous
+hitcalls requires tcplfit2_core to be run with force.fit = TRUE and "cnst" never to
+be chosen as the winner.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcplhit2_core(
+  params,
+  conc,
+  resp,
+  cutoff,
+  onesd,
+  bmr_scale = 1.349,
+  bmed = 0,
+  conthits = TRUE,
+  aicc = FALSE,
+  identifiers = NULL,
+  bmd_low_bnd = NULL,
+  bmd_up_bnd = NULL,
+  poly2.biphasic = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>The output from tcplfit2_core</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conc</code></td>
+<td>
+<p>list of concentrations (not in log units)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp</code></td>
+<td>
+<p>list of corresponding responses</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff</code></td>
+<td>
+<p>noise cutoff</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>onesd</code></td>
+<td>
+<p>1 standard deviation of the noise (for bmd calculation)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bmr_scale</code></td>
+<td>
+<p>bmr scaling factor. Default = 1.349</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bmed</code></td>
+<td>
+<p>median of noise estimate. Default 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conthits</code></td>
+<td>
+<p>conthits = TRUE uses continuous hitcalls, otherwise they're
+discrete. Default TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aicc</code></td>
+<td>
+<p>aicc = TRUE uses corrected AIC to choose winning method; otherwise
+regular AIC. Default FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>identifiers</code></td>
+<td>
+<p>A one-row data frame containing identifiers of the concentration-response profile,
+such as the chemical name or other identifiers, and any assay identifiers. The column names
+identify the type of value. This can be NULL. The values will be included in the output
+summary data frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bmd_low_bnd</code></td>
+<td>
+<p>Multiplier for bmd lower bound, must be between 0 and 1
+(excluding 0). A value of 0.1 would require the bmd is no lower than a
+of 1/10th of the lowest tested concentration (i.e. lower threshold).
+If the bmd is less than the threshold, the bmd and its confidence
+interval will be censored and shifted right.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bmd_up_bnd</code></td>
+<td>
+<p>Multiplier for the bmd upper bound, must be greater than
+or equal to 1. A value of 10 would require the bmd is no larger than 10
+times the highest tested concentration (i.e. upper threshold). If the bmd
+is greater than the threshold, the bmd and its confidence interval will be
+censored and shifted left.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>poly2.biphasic</code></td>
+<td>
+<p>If poly2.biphasic = TRUE, allows for biphasic polynomial 2
+model fits (i.e. both monotonic and non-monotonic). (Defaults to TRUE.)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of with the detailed results from all of the different model fits.
+The elements of summary are:
+</p>
+
+<ul>
+<li>
+<p> any elements of the identifiers input
+</p>
+</li>
+<li>
+<p> n_gt_cutoff - number of data points above the cutoff
+</p>
+</li>
+<li>
+<p> cutoff - noise cutoff
+</p>
+</li>
+<li>
+<p> fit_method - curve fit method
+</p>
+</li>
+<li>
+<p> top_over_cutoff - top divided by cutoff
+</p>
+</li>
+<li>
+<p> rmse - RMSE of the data points around the best model curve
+</p>
+</li>
+<li>
+<p> a - fitting parameter methods: exp2, exp3, poly1, poly2, pow
+</p>
+</li>
+<li>
+<p> b - fitting parameter methods: exp2, exp3, ploy2
+</p>
+</li>
+<li>
+<p> p - fitting parameter methods: exp3, exp5, gnls, hill, pow
+</p>
+</li>
+<li>
+<p> q - fitting parameter methods: gnls,
+</p>
+</li>
+<li>
+<p> tp - top of the curve
+</p>
+</li>
+<li>
+<p> ga - ac50 for the rising curve in a gnls model or the Hill model
+</p>
+</li>
+<li>
+<p> la - ac50 for the falling curve in a gnls model
+</p>
+</li>
+<li>
+<p> er - fitted error term for plotting error bars
+</p>
+</li>
+<li>
+<p> bmr - benchmark response; level at which bmd is calculated = onesd*bmr_scale default bmr_scale is 1.349
+</p>
+</li>
+<li>
+<p> bmd - benchmark dose, curve value at bmr
+</p>
+</li>
+<li>
+<p> bmdl - lower limit on the bmd
+</p>
+</li>
+<li>
+<p> bmdu - upper limit on the bmd
+</p>
+</li>
+<li>
+<p> caikwt - one factor used in calculating the continuous hitcall. It is calcalated from the formula
+= exp(-aic(cnst)/2)/(exp(-aic(cnst)/2) + exp(-aic(fit_method)/2)) and measures how much lower the
+selected method AIC is than that for the constant model
+</p>
+</li>
+<li>
+<p> mll - another factor used in calcualting the continuous hitcall = length(modpars) - aic(fit_method)/2
+</p>
+</li>
+<li>
+<p> hitcall - the final hitcall, a value ranging from 0 to 1
+</p>
+</li>
+<li>
+<p> top - curve top
+</p>
+</li>
+<li>
+<p> ac50 - curve value at 50% of top, curve value at cutoff
+</p>
+</li>
+<li>
+<p> lc50 - curve value at 50% of top corresponding to the loss side of the gain-loss curve
+</p>
+</li>
+<li>
+<p> ac5 - curve value at 5% of top
+</p>
+</li>
+<li>
+<p> ac10 - curve value at 10% of top
+</p>
+</li>
+<li>
+<p> ac20 - curve value at 20% of top
+</p>
+</li>
+<li>
+<p> acc - curve value at cutoff
+</p>
+</li>
+<li>
+<p> ac1sd - curve value at 1 standard deviation
+</p>
+</li>
+<li>
+<p> conc - conc string separated by |'s
+</p>
+</li>
+<li>
+<p> resp - response string separated by |'s
+</p>
+</li>
+</ul>
+</div>

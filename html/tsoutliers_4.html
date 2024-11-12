@@ -1,0 +1,196 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>discard.outliers</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Stage II of the Procedure: Discard Outliers</h2>
+
+<h3>Description</h3>
+
+<p>This functions tests for the significance of a given set of outliers 
+in a time series model that is fitted including the outliers as regressor variables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">discard.outliers(x, y, cval = NULL, 
+  method = c("en-masse", "bottom-up"), 
+  delta = 0.7, tsmethod.call = NULL, 
+  fdiff = NULL, logfile = NULL, check.rank = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a list. The output returned by <code>locate.outliers.oloop</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>a time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cval</code></td>
+<td>
+<p>a numeric. The critical value to determine the significance of each type of outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>a character. The method to discard/remove outliers. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr>
+</table>
+<table><tr style="vertical-align: top;">
+<td><code>tsmethod.call</code></td>
+<td>
+<p>an optional <code>call</code> object. The call to the function used to fit the time 
+series model.</p>
+</td>
+</tr></table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>fdiff</code></td>
+<td>
+<p>currently ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logfile</code></td>
+<td>
+<p>a character or <code>NULL</code>. It is the path to the file where 
+tracking information is printed. Ignored if <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check.rank</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, variables generating perfect multicollinearity 
+are removed (tentative implementation).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<p>In the regressions involved in this function, the variables included as regressors 
+stand for the effects of the outliers on the data. 
+These variables are the output returned by <code>outliers.effects</code> 
+not by <code>outliers.regressors</code>, which returns the regressors used in the 
+auxiliar regression where outliers are located 
+(see second equation defined in <code>locate.outliers</code>).
+</p>
+<p>The outliers are defined in input <code>x</code>. If there are regressor variables 
+in <code>tsmethod.call$xreg</code> they are considered as other regressor variables 
+that are included in the regression to test for the significance of outliers.
+</p>
+<p>Given a set of potential outliers detected by <code>locate.outliers</code> and 
+<code>locate.outliers.oloop</code>, three methods are considered in order to 
+determine which outliers are not significant after refitting the model 
+(including all the potential outliers):
+
+</p>
+
+<ul>
+<li> <p><code>"en-masse"</code>: The complete set of outliers is included as regressor variables and the 
+model is fitted again. Those outliers that turn out to be not significant for the critical 
+value <code>cval</code> are discarded/removed. The procedure is iterated until all the outliers are significant 
+in the final set of outliers.
+
+</p>
+</li>
+<li> <p><code>"bottom-up"</code>: First the, the outlier with larger <code class="reqn">t</code>-statistic is included in the 
+model. If it is significant the presence of the outlier is confirmed. Otherwise it is discarded. 
+Then, the next outlier with larger <code class="reqn">t</code>-statistic is included along with the first outlier and 
+tested for significance. 
+If after including a new outlier, e.g. the <code class="reqn">i</code>-th outlier, the outliers that have been 
+confirmed so far significant become not significant, then the <code class="reqn">i</code>-th outlier is discarded 
+regardless of the value of its <code class="reqn">t</code>-statistic.
+
+
+
+
+
+
+</p>
+</li>
+</ul>
+<p>The option <code>"en-masse"</code> may be preferred to <code>"bottom-up"</code> when there are are several outliers,
+since it may be hard to fit an ARIMA model with many regressor variables.
+</p>
+
+
+
+
+
+
+<h3>Value</h3>
+
+<p>A list containing the following elements: 
+<code>xreg</code>, the variables used as regressors;
+<code>xregcoefs</code>, the coefficients of the outlier regressors;
+<code>xregtstats</code>, the <code class="reqn">t</code>-statistics of the outlier regressors;;
+<code>iter</code>, the number of iterations used by method <code>"en-masse"</code>;
+<code>fit</code>, the fitted model;
+<code>outliers</code>, the set of outliers after removing those that were not significant.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Gómez, V. and Maravall, A. (1996). 
+<em>Programs TRAMO and SEATS. Instructions for the user</em>.
+Banco de España, Servicio de Estudios. Working paper number 9628.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers</code>, <code>tso</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("hicp")
+y &lt;- log(hicp[["011600"]])
+fit &lt;- arima(y, order = c(1, 1, 0), seasonal = list(order = c(2, 0, 2)))
+# initial set of outliers
+res &lt;- locate.outliers.oloop(y, fit, types = c("AO", "LS", "TC"))
+res$outliers
+# given the model fitted above, the effect on the data of some of 
+# the outliers is not significant (method = "en-masse")
+discard.outliers(res, y, method = "en-masse", 
+  tsmethod.call = fit$call)$outliers
+# in this case, using method = "bottom-up" the first four 
+# outliers with higher t-statistic are kept
+discard.outliers(res, y, method = "bottom-up", 
+  tsmethod.call = fit$call)$outliers
+
+## End(Not run)
+</code></pre>
+
+
+</div>

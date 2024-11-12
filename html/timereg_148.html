@@ -1,0 +1,366 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>timecox</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fit Cox model with partly timevarying effects.</h2>
+
+<h3>Description</h3>
+
+<p>Fits proportional hazards model with some effects time-varying and some
+effects constant.  Time dependent variables and counting process data
+(multiple events per subject) are possible.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">timecox(
+  formula = formula(data),
+  data,
+  weights,
+  subset,
+  na.action,
+  start.time = 0,
+  max.time = NULL,
+  id = NULL,
+  clusters = NULL,
+  n.sim = 1000,
+  residuals = 0,
+  robust = 1,
+  Nit = 20,
+  bandwidth = 0.5,
+  method = "basic",
+  weighted.test = 0,
+  degree = 1,
+  covariance = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula object with the response on the left of a '~'
+operator, and the independent terms on the right as regressors. The response
+must be a survival object as returned by the ‘Surv’ function. Time-invariant
+regressors are specified by the wrapper const(), and cluster variables (for
+computing robust variances) by the wrapper cluster().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with the variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>for analysis</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>to subset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>to have na.action</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start.time</code></td>
+<td>
+<p>start of observation period where estimates are computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.time</code></td>
+<td>
+<p>end of observation period where estimates are computed.
+Estimates thus computed from [start.time, max.time]. Default is max of data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>For timevarying covariates the variable must associate each record
+with the id of a subject.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clusters</code></td>
+<td>
+<p>cluster variable for computation of robust variances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.sim</code></td>
+<td>
+<p>number of simulations in resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>to returns residuals that can be used for model validation
+in the function cum.residuals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robust</code></td>
+<td>
+<p>to compute robust variances and construct processes for
+resampling. May be set to 0 to save memory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nit</code></td>
+<td>
+<p>number of iterations for score equations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bandwidth</code></td>
+<td>
+<p>bandwidth for local iterations. Default is 50 % of the
+range of the considered observation period.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Method for estimation. This refers to different
+parametrisations of the baseline of the model. Options are "basic" where the
+baseline is written as <code class="reqn">\lambda_0(t) = \exp(\alpha_0(t))</code> or the
+"breslow" version where the baseline is parametrised as <code class="reqn">\lambda_0(t)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted.test</code></td>
+<td>
+<p>to compute a variance weighted version of the
+test-processes used for testing time-varying effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degree</code></td>
+<td>
+<p>gives the degree of the local linear smoothing, that is local
+smoothing. Possible values are 1 or 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covariance</code></td>
+<td>
+<p>to compute covariance estimates for nonparametric terms
+rather than just the variances.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Resampling is used for computing p-values for tests of timevarying effects.
+</p>
+<p>The modelling formula uses the standard survival modelling given in the
+<b>survival</b> package.
+</p>
+<p>The data for a subject is presented as multiple rows or 'observations', each
+of which applies to an interval of observation (start, stop].  When counting
+process data with the )start,stop] notation is used, the 'id' variable is
+needed to identify the records for each subject. The program assumes that
+there are no ties, and if such are present random noise is added to break
+the ties.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of type "timecox". With the following arguments:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>cum</code></td>
+<td>
+<p>cumulative timevarying regression coefficient estimates are
+computed within the estimation interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.cum</code></td>
+<td>
+<p>the martingale
+based pointwise variance estimates.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robvar.cum</code></td>
+<td>
+<p>robust pointwise
+variances estimates.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>estimate of parametric components of
+model.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.gamma</code></td>
+<td>
+<p>variance for gamma.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>robvar.gamma</code></td>
+<td>
+<p>robust
+variance for gamma.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>list with residuals. Estimated
+martingale increments (dM) and corresponding time vector (time).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeq0</code></td>
+<td>
+<p>observed absolute value of supremum of cumulative
+components scaled with the variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeq0</code></td>
+<td>
+<p>p-value for
+covariate effects based on supremum test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeq0</code></td>
+<td>
+<p>resampled
+supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC</code></td>
+<td>
+<p>observed absolute value of supremum of
+difference between observed cumulative process and estimate under null of
+constant effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC</code></td>
+<td>
+<p>p-value based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeqC</code></td>
+<td>
+<p>resampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC.is</code></td>
+<td>
+<p>observed integrated squared differences between
+observed cumulative and estimate under null of constant effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC.is</code></td>
+<td>
+<p>p-value based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.testBeqC.is</code></td>
+<td>
+<p>resampled supremum values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.band</code></td>
+<td>
+<p>resampling based constant to construct robust 95% uniform
+confidence bands. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test.procBeqC</code></td>
+<td>
+<p>observed test-process of difference
+between observed cumulative process and estimate under null of constant
+effect over time.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.test.procBeqC</code></td>
+<td>
+<p>list of 50 random realizations
+of test-processes under null based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>schoenfeld.residuals</code></td>
+<td>
+<p>Schoenfeld residuals are returned for "breslow"
+parametrisation.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>Martinussen and Scheike, Dynamic Regression Models for Survival
+Data, Springer (2006).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(sTRACE)
+# Fits time-varying Cox model 
+out&lt;-timecox(Surv(time/365,status==9)~age+sex+diabetes+chf+vf,
+data=sTRACE,max.time=7,n.sim=100)
+
+summary(out)
+par(mfrow=c(2,3))
+plot(out)
+par(mfrow=c(2,3))
+plot(out,score=TRUE)
+
+# Fits semi-parametric time-varying Cox model
+out&lt;-timecox(Surv(time/365,status==9)~const(age)+const(sex)+
+const(diabetes)+chf+vf,data=sTRACE,max.time=7,n.sim=100)
+
+summary(out)
+par(mfrow=c(2,3))
+plot(out)
+
+</code></pre>
+
+
+</div>

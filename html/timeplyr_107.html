@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_is_regular</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Is time a regular sequence? (Experimental)</h2>
+
+<h3>Description</h3>
+
+<p>This function is a fast way to check if a time vector
+is a regular sequence, possibly for many groups.
+Regular in this context means that the lagged time differences are a
+whole multiple of the specified time unit. <br>
+This means <code>x</code> can be a regular sequence with or without gaps in time.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_is_regular(
+  x,
+  time_by = NULL,
+  g = NULL,
+  use.g.names = TRUE,
+  na.rm = TRUE,
+  time_type = getOption("timeplyr.time_type", "auto"),
+  allow_gaps = TRUE,
+  allow_dups = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A vector. Can be a
+<code>Date</code>, <code>POSIXt</code>, <code>numeric</code>, <code>integer</code>, <code>yearmon</code>, or <code>yearqtr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_by</code></td>
+<td>
+<p>Time unit. <br>
+Must be one of the three:
+</p>
+
+<ul>
+<li>
+<p> string, specifying either the unit or the number and unit, e.g
+<code>time_by = "days"</code> or <code>time_by = "2 weeks"</code>
+</p>
+</li>
+<li>
+<p> named list of length one, the unit being the name, and
+the number the value of the list, e.g. <code>list("days" = 7)</code>.
+For the vectorized time functions, you can supply multiple values,
+e.g. <code>list("days" = 1:10)</code>.
+</p>
+</li>
+<li>
+<p> Numeric vector. If time_by is a numeric vector and x is not a date/datetime,
+then arithmetic is used, e.g <code>time_by = 1</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>Grouping object passed directly to <code>collapse::GRP()</code>.
+This can for example be a vector or data frame. <br>
+Note that when <code>g</code> is supplied the output is a logical with length
+matching the number of unique groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use.g.names</code></td>
+<td>
+<p>Should the result include group names?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>Should <code>NA</code> values be removed before calculation?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_type</code></td>
+<td>
+<p>If "auto", <code>periods</code> are used for
+the time expansion when days, weeks,
+months or years are specified, and <code>durations</code>
+are used otherwise. If <code>durations</code>
+are used the output is always of class <code>POSIXt</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_gaps</code></td>
+<td>
+<p>Should gaps be allowed? Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_dups</code></td>
+<td>
+<p>Should duplicates be allowed? Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A logical vector the same length as the number of supplied groups.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(lubridate)
+library(dplyr)
+
+x &lt;- 1:5
+y &lt;- c(1, 1, 2, 3, 5)
+
+time_is_regular(x)
+time_is_regular(y)
+
+increment &lt;- 1
+
+# No duplicates allowed
+time_is_regular(x, increment, allow_dups = FALSE)
+time_is_regular(y, increment, allow_dups = FALSE)
+
+# No gaps allowed
+time_is_regular(x, increment, allow_gaps = FALSE)
+time_is_regular(y, increment, allow_gaps = FALSE)
+
+# Grouped
+eu_stock &lt;- ts_as_tibble(EuStockMarkets)
+eu_stock &lt;- eu_stock %&gt;%
+  mutate(date = as_date(
+    date_decimal(time)
+  ))
+
+time_is_regular(eu_stock$date, g = eu_stock$group,
+                time_by = 1)
+# This makes sense as no trading occurs on weekends and holidays
+time_is_regular(eu_stock$date, g = eu_stock$group,
+                time_by = 1,
+                allow_gaps = FALSE)
+
+</code></pre>
+
+
+</div>

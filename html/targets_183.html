@@ -1,0 +1,166 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_repository_cas_local_gc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Local CAS garbage collection</h2>
+
+<h3>Description</h3>
+
+<p>Garbage collection for a local content-addressable
+storage system.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_repository_cas_local_gc(
+  path = NULL,
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>Character string, file path to the CAS repository
+where all the data object files will be stored. <code>NULL</code> to default to
+<code>file.path(tar_config_get("store"), "cas")</code> (usually <code>"_targets/cas/"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Deletes all the files in the local CAS which are not in
+<code>tar_meta(targets_only = TRUE)$data</code>, including all locally saved
+historical data of the pipeline. This clears disk space, but
+at the expense of removing historical data and data from
+other colleagues who worked on the same project.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code> (invisibly). Called for its side effects.
+Removes files from the CAS repository at <code>path</code>.
+</p>
+
+
+<h3>Content-addressable storage</h3>
+
+<p>Normally, <code>targets</code> organizes output data
+based on target names. For example,
+if a pipeline has a single target <code>x</code> with default settings,
+then <code>tar_make()</code> saves the output data to the file
+<code style="white-space: pre;">⁠_targets/objects/x⁠</code>. When the output of <code>x</code> changes, <code>tar_make()</code>
+overwrites <code style="white-space: pre;">⁠_targets/objects/x⁠</code>.
+In other words, no matter how many changes happen to <code>x</code>,
+the data store always looks like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+    objects/
+        x
+</pre></div>
+<p>By contrast, with content-addressable storage (CAS),
+<code>targets</code> organizes outputs based on the hashes of their contents.
+The name of each output file is its hash, and the
+metadata maps these hashes to target names. For example, suppose
+target <code>x</code> has <code>repository = tar_repository_cas_local("my_cas")</code>.
+When the output of <code>x</code> changes, <code>tar_make()</code> creates a new file
+inside <code style="white-space: pre;">⁠my_cas/⁠</code> without overwriting or deleting any other files
+in that folder. If you run <code>tar_make()</code> three different times
+with three different values of <code>x</code>, then storage will look like this:
+</p>
+<div class="sourceCode"><pre>_targets/
+    meta/
+        meta
+my_cas/
+    1fffeb09ad36e84a
+    68328d833e6361d3
+    798af464fb2f6b30
+</pre></div>
+<p>The next call to <code>tar_read(x)</code> uses <code>tar_meta(x)$data</code>
+to look up the current hash of <code>x</code>. If <code>tar_meta(x)$data</code> returns
+<code>"1fffeb09ad36e84a"</code>, then <code>tar_read(x)</code> returns the data from
+<code style="white-space: pre;">⁠my_cas/1fffeb09ad36e84a⁠</code>. Files <code style="white-space: pre;">⁠my_cas/68328d833e6361d3⁠</code> and
+and <code style="white-space: pre;">⁠my_cas/798af464fb2f6b30⁠</code> are left over from previous values of <code>x</code>.
+</p>
+<p>Because CAS accumulates historical data objects,
+it is ideal for data versioning and collaboration.
+If you commit the <code style="white-space: pre;">⁠_targets/meta/meta⁠</code> file to version control
+alongside the source code,
+then you can revert to a previous state of your pipeline with all your
+targets up to date, and a colleague can leverage your hard-won
+results using a fork of your code and metadata.
+</p>
+<p>The downside of CAS is the cost of accumulating many data objects
+over time. Most pipelines that use CAS
+should have a garbage collection system or retention policy
+to remove data objects when they no longer needed.
+</p>
+<p>The <code>tar_repository_cas()</code> function lets you create your own CAS system
+for <code>targets</code>. You can supply arbitrary custom methods to upload,
+download, and check for the existence of data objects. Your custom
+CAS system can exist locally on a shared file system or remotely
+on the cloud (e.g. in an AWS S3 bucket).
+See the "Repository functions" section and the documentation
+of individual arguments for advice on how
+to write your own methods.
+</p>
+<p>The <code>tar_repository_cas_local()</code> function has an example
+CAS system based on a local folder on disk.
+It uses <code>tar_cas_u()</code> for uploads,
+<code>tar_cas_d()</code> for downloads, and
+<code>tar_cas_e()</code> for existence.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other content-addressable storage: 
+<code>tar_repository_cas()</code>,
+<code>tar_repository_cas_local()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  tar_option_set(seed = NA, repository = tar_repository_cas_local())
+  list(tar_target(x, sample.int(n = 9e9, size = 1)))
+})
+for (index in seq_len(3)) tar_make(reporter = "silent")
+list.files("_targets/cas")
+tar_repository_cas_local_gc()
+list.files("_targets/cas")
+tar_meta(names = any_of("x"), fields = any_of("data"))
+})
+}
+</code></pre>
+
+
+</div>

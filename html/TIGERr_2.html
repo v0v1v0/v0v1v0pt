@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compute_targetVal</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute target values for ensemble learning architecture</h2>
+
+<h3>Description</h3>
+
+<p>This function provides an advanced option to calculate the target values of one reference dataset (i.e. <code>QC_num</code>, numeric values of quality control samples). The generated target values (a list) can be further passed to argument <code>targetVal_external</code> in function <code>run_TIGER</code> such that TIGER can align the <code>test_samples</code> with the reference dataset. This is useful for longitudinal datasets correction and cross-kit adjustment. See case study section of our original paper for detailed explanation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compute_targetVal(
+  QC_num,
+  sampleType,
+  batchID = NULL,
+  targetVal_method = c("mean", "median"),
+  targetVal_batchWise = FALSE,
+  targetVal_removeOutlier = !targetVal_batchWise,
+  coerce_numeric = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>QC_num</code></td>
+<td>
+<p>a numeric data.frame including the metabolite values of quality control (QC) samples. Missing values and infinite values will not be taken into account. Row: sample. Column: metabolite variable. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sampleType</code></td>
+<td>
+<p>a vector corresponding to <code>QC_num</code> to specify the type of each QC sample. QC samples of the <strong>same type</strong> should have the <strong>same type name</strong>. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batchID</code></td>
+<td>
+<p>a vector corresponding to <code>QC_num</code> to specify the batch of each sample. Ignored if <code>targetVal_batchWise = FALSE</code>. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>targetVal_method</code></td>
+<td>
+<p>a character string specifying how the target values are computed. Can be <code>"mean"</code> (default) or <code>"median"</code>. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>targetVal_batchWise</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the target values will be computed based on each batch, otherwise, based on the whole dataset. Setting <code>TRUE</code> might be useful if your dataset has very obvious batch effects, but this may also make the algorithm less robust. See Details. Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>targetVal_removeOutlier</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, outliers will be removed before the computation. Outliers are determined with 1.5 * IQR (interquartile range) rule. We recommend turning this off when the target values are computed based on batches. See Details. Default: <code>!targetVal_batchWise</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coerce_numeric</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, values in <code>QC_num</code> will be coerced to numeric before the computation. The columns cannot be coerced will be removed (with warnings). See Examples. Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <code>run_TIGER</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>targetVal_batchWise = FALSE</code>, the function returns a list of length one containing the target values computed on the whole dataset.
+</p>
+<p>If <code>targetVal_batchWise = TRUE</code>, a list containing the target values computed on different batches is returned. The length of the returned list equals the number of batch specified by <code>batchID</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(FF4_qc) # load demo dataset
+QC_num &lt;- FF4_qc[-c(1:5)] # only contain numeric metabolite values.
+
+# target values computed on the whole dataset:
+tarVal_1 &lt;- compute_targetVal(QC_num = QC_num,
+                              sampleType = FF4_qc$sampleType,
+                              batchID = FF4_qc$plateID,
+                              targetVal_method = "mean",
+                              targetVal_batchWise = FALSE,
+                              targetVal_removeOutlier = TRUE)
+
+# target values computed on batches:
+tarVal_2 &lt;- compute_targetVal(QC_num = QC_num,
+                              sampleType = FF4_qc$sampleType,
+                              batchID = FF4_qc$plateID,
+                              targetVal_method = "mean",
+                              targetVal_batchWise = TRUE,
+                              targetVal_removeOutlier = FALSE)
+
+# If coerce_numeric = TRUE,
+# columns cannot be coerced to numeric will be removed (with warnings):
+tarVal_3 &lt;- compute_targetVal(QC_num = FF4_qc[-c(4:5)],
+                              sampleType = FF4_qc$sampleType,
+                              batchID = FF4_qc$plateID,
+                              targetVal_method = "mean",
+                              targetVal_batchWise = TRUE,
+                              targetVal_removeOutlier = FALSE,
+                              coerce_numeric = TRUE)
+identical(tarVal_2, tarVal_3)  # identical to tarVal_2
+
+## Not run: 
+
+# will throw errors if input data have non-numeric columns
+# and coerce_numeric = FALSE:
+
+tarVal_4 &lt;- compute_targetVal(QC_num = FF4_qc,
+                              sampleType = FF4_qc$sampleType,
+                              batchID = FF4_qc$plateID,
+                              targetVal_method = "mean",
+                              targetVal_batchWise = TRUE,
+                              targetVal_removeOutlier = FALSE,
+                              coerce_numeric = FALSE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

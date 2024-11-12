@@ -1,0 +1,362 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compare_variables</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compare variables between groups</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>compare_vars()</code> creates a layout element to summarize and compare one or more variables, using
+the S3 generic function <code>s_summary()</code> to calculate a list of summary statistics. A list of all available statistics
+for numeric variables can be viewed by running <code>get_stats("analyze_vars_numeric", add_pval = TRUE)</code> and for
+non-numeric variables by running <code>get_stats("analyze_vars_counts", add_pval = TRUE)</code>. Use the <code>.stats</code> parameter to
+specify the statistics to include in your output summary table.
+</p>
+<p>Prior to using this function in your table layout you must use <code>rtables::split_cols_by()</code> to create a column
+split on the variable to be used in comparisons, and specify a reference group via the <code>ref_group</code> parameter.
+Comparisons can be performed for each group (column) against the specified reference group by including the p-value
+statistic.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compare_vars(
+  lyt,
+  vars,
+  var_labels = vars,
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  na.rm = TRUE,
+  show_labels = "default",
+  table_names = vars,
+  section_div = NA_character_,
+  .stats = c("n", "mean_sd", "count_fraction", "pval"),
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_compare(x, .ref_group, .in_ref_col, ...)
+
+## S3 method for class 'numeric'
+s_compare(x, .ref_group, .in_ref_col, ...)
+
+## S3 method for class 'factor'
+s_compare(x, .ref_group, .in_ref_col, denom = "n", na.rm = TRUE, ...)
+
+## S3 method for class 'character'
+s_compare(
+  x,
+  .ref_group,
+  .in_ref_col,
+  denom = "n",
+  na.rm = TRUE,
+  .var,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'logical'
+s_compare(x, .ref_group, .in_ref_col, na.rm = TRUE, denom = "n", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names for the primary analysis variable to be iterated over.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var_labels</code></td>
+<td>
+<p>(<code>character</code>)<br> variable labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>s_compare()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether <code>NA</code> values should be removed from <code>x</code> prior to analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_labels</code></td>
+<td>
+<p>(<code>string</code>)<br> label visibility: one of "default", "visible" and "hidden".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>section_div</code></td>
+<td>
+<p>(<code>string</code>)<br> string which should be repeated as a section divider after each group
+defined by this split instruction, or <code>NA_character_</code> (the default) for no section divider.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run
+<code>get_stats("analyze_vars_numeric", add_pval = TRUE)</code> to see statistics available for numeric variables, and
+<code>get_stats("analyze_vars_counts", add_pval = TRUE)</code> for statistics available for non-numeric variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Each element of the vector
+should be a name-value pair with name corresponding to a statistic specified in <code>.stats</code> and value the indentation
+for that statistic's row label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>numeric</code>)<br> vector of numbers we want to analyze.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.ref_group</code></td>
+<td>
+<p>(<code>data.frame</code> or <code>vector</code>)<br> the data corresponding to the reference group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.in_ref_col</code></td>
+<td>
+<p>(<code>flag</code>)<br><code>TRUE</code> when working with the reference level, <code>FALSE</code> otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>denom</code></td>
+<td>
+<p>(<code>string</code>)<br> choice of denominator for factor proportions,
+can only be <code>n</code> (number of values in this row and column intersection).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var</code></td>
+<td>
+<p>(<code>string</code>)<br> single variable name that is passed by <code>rtables</code> when requested
+by a statistics function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether warnings and messages should be printed. Mainly used
+to print out information about factor casting. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>compare_vars()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_compare()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_compare()</code> returns output of <code>s_summary()</code> and comparisons versus the reference group in the form of p-values.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>compare_vars()</code>: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_compare()</code>: S3 generic function to produce a comparison summary.
+</p>
+</li>
+<li> <p><code>s_compare(numeric)</code>: Method for <code>numeric</code> class. This uses the standard t-test
+to calculate the p-value.
+</p>
+</li>
+<li> <p><code>s_compare(factor)</code>: Method for <code>factor</code> class. This uses the chi-squared test
+to calculate the p-value.
+</p>
+</li>
+<li> <p><code>s_compare(character)</code>: Method for <code>character</code> class. This makes an automatic
+conversion to <code>factor</code> (with a warning) and then forwards to the method for factors.
+</p>
+</li>
+<li> <p><code>s_compare(logical)</code>: Method for <code>logical</code> class. A chi-squared test
+is used. If missing values are not removed, then they are counted as <code>FALSE</code>.
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+
+<ul>
+<li>
+<p> For factor variables, <code>denom</code> for factor proportions can only be <code>n</code> since the purpose is to compare proportions
+between columns, therefore a row-based proportion would not make sense. Proportion based on <code>N_col</code> would
+be difficult since we use counts for the chi-squared test statistic, therefore missing values should be accounted
+for as explicit factor levels.
+</p>
+</li>
+<li>
+<p> If factor variables contain <code>NA</code>, these <code>NA</code> values are excluded by default. To include <code>NA</code> values
+set <code>na.rm = FALSE</code> and missing values will be displayed as an <code>NA</code> level. Alternatively, an explicit
+factor level can be defined for <code>NA</code> values during pre-processing via <code>df_explicit_na()</code> - the
+default <code>na_level</code> (<code>"&lt;Missing&gt;"</code>) will also be excluded when <code>na.rm</code> is set to <code>TRUE</code>.
+</p>
+</li>
+<li>
+<p> For character variables, automatic conversion to factor does not guarantee that the table
+will be generated correctly. In particular for sparse tables this very likely can fail.
+Therefore it is always better to manually convert character variables to factors during pre-processing.
+</p>
+</li>
+<li>
+<p> For <code>compare_vars()</code>, the column split must define a reference group via <code>ref_group</code> so that the comparison
+is well defined.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>s_summary()</code> which is used internally to compute a summary within <code>s_compare()</code>, and <code>a_summary()</code>
+which is used (with <code>compare = TRUE</code>) as the analysis function for <code>compare_vars()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># `compare_vars()` in `rtables` pipelines
+
+## Default output within a `rtables` pipeline.
+lyt &lt;- basic_table() %&gt;%
+  split_cols_by("ARMCD", ref_group = "ARM B") %&gt;%
+  compare_vars(c("AGE", "SEX"))
+build_table(lyt, tern_ex_adsl)
+
+## Select and format statistics output.
+lyt &lt;- basic_table() %&gt;%
+  split_cols_by("ARMCD", ref_group = "ARM C") %&gt;%
+  compare_vars(
+    vars = "AGE",
+    .stats = c("mean_sd", "pval"),
+    .formats = c(mean_sd = "xx.x, xx.x"),
+    .labels = c(mean_sd = "Mean, SD")
+  )
+build_table(lyt, df = tern_ex_adsl)
+
+# `s_compare.numeric`
+
+## Usual case where both this and the reference group vector have more than 1 value.
+s_compare(rnorm(10, 5, 1), .ref_group = rnorm(5, -5, 1), .in_ref_col = FALSE)
+
+## If one group has not more than 1 value, then p-value is not calculated.
+s_compare(rnorm(10, 5, 1), .ref_group = 1, .in_ref_col = FALSE)
+
+## Empty numeric does not fail, it returns NA-filled items and no p-value.
+s_compare(numeric(), .ref_group = numeric(), .in_ref_col = FALSE)
+
+# `s_compare.factor`
+
+## Basic usage:
+x &lt;- factor(c("a", "a", "b", "c", "a"))
+y &lt;- factor(c("a", "b", "c"))
+s_compare(x = x, .ref_group = y, .in_ref_col = FALSE)
+
+## Management of NA values.
+x &lt;- explicit_na(factor(c("a", "a", "b", "c", "a", NA, NA)))
+y &lt;- explicit_na(factor(c("a", "b", "c", NA)))
+s_compare(x = x, .ref_group = y, .in_ref_col = FALSE, na.rm = TRUE)
+s_compare(x = x, .ref_group = y, .in_ref_col = FALSE, na.rm = FALSE)
+
+# `s_compare.character`
+
+## Basic usage:
+x &lt;- c("a", "a", "b", "c", "a")
+y &lt;- c("a", "b", "c")
+s_compare(x, .ref_group = y, .in_ref_col = FALSE, .var = "x", verbose = FALSE)
+
+## Note that missing values handling can make a large difference:
+x &lt;- c("a", "a", "b", "c", "a", NA)
+y &lt;- c("a", "b", "c", rep(NA, 20))
+s_compare(x,
+  .ref_group = y, .in_ref_col = FALSE,
+  .var = "x", verbose = FALSE
+)
+s_compare(x,
+  .ref_group = y, .in_ref_col = FALSE, .var = "x",
+  na.rm = FALSE, verbose = FALSE
+)
+
+# `s_compare.logical`
+
+## Basic usage:
+x &lt;- c(TRUE, FALSE, TRUE, TRUE)
+y &lt;- c(FALSE, FALSE, TRUE)
+s_compare(x, .ref_group = y, .in_ref_col = FALSE)
+
+## Management of NA values.
+x &lt;- c(NA, TRUE, FALSE)
+y &lt;- c(NA, NA, NA, NA, FALSE)
+s_compare(x, .ref_group = y, .in_ref_col = FALSE, na.rm = TRUE)
+s_compare(x, .ref_group = y, .in_ref_col = FALSE, na.rm = FALSE)
+
+</code></pre>
+
+
+</div>

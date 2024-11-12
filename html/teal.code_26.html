@@ -1,0 +1,173 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>join</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Join <code>qenv</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>Checks and merges two <code>qenv</code> objects into one <code>qenv</code> object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">join(x, y)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>qenv</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>(<code>qenv</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Any common code at the start of the <code>qenvs</code> is only placed once at the start of the joined <code>qenv</code>.
+This allows consistent behavior when joining <code>qenvs</code> which share a common ancestor.
+See below for an example.
+</p>
+<p>There are some situations where <code>join()</code> cannot be properly performed, such as these three scenarios:
+</p>
+
+<ol>
+<li>
+<p> Both <code>qenv</code> objects contain an object of the same name but are not identical.
+</p>
+<p>Example:
+</p>
+<div class="sourceCode r"><pre>x &lt;- eval_code(qenv(), expression(mtcars1 &lt;- mtcars))
+y &lt;- eval_code(qenv(), expression(mtcars1 &lt;- mtcars['wt']))
+
+z &lt;- join(x, y)
+# Error message will occur
+</pre></div>
+<p>In this example, <code>mtcars1</code> object exists in both <code>x</code> and <code>y</code> objects but the content are not identical.
+<code>mtcars1</code> in the <code style="white-space: pre;">⁠x qenv⁠</code> object has more columns than <code>mtcars1</code> in the <code style="white-space: pre;">⁠y qenv⁠</code> object (only has one column).
+</p>
+</li>
+<li> <p><code>join()</code> will look for identical <code style="white-space: pre;">⁠@id⁠</code> values in both <code>qenv</code> objects.
+The index position of these <code style="white-space: pre;">⁠@id⁠</code>s must be the same to determine the evaluation order.
+Otherwise, <code>join()</code> will throw an error message.
+</p>
+<p>Example:
+</p>
+<div class="sourceCode r"><pre>common_q &lt;- eval_code(qenv(), expression(v &lt;- 1))
+x &lt;- eval_code(
+  common_q,
+  "x &lt;- v"
+)
+y &lt;- eval_code(
+  common_q,
+  "y &lt;- v"
+)
+z &lt;- eval_code(
+  y,
+  "z &lt;- v"
+)
+q &lt;- join(x, y)
+join_q &lt;- join(q, z)
+# Error message will occur
+
+# Check the order of evaluation based on the id slot
+shared_ids &lt;- intersect(q@id, z@id)
+match(shared_ids, q@id) # Output: 1 3
+match(shared_ids, z@id) # Output: 1 2
+</pre></div>
+<p>The error occurs because the index position of identical <code style="white-space: pre;">⁠@id⁠</code> between the two objects is not the same.
+</p>
+</li>
+<li>
+<p> The usage of temporary variable in the code expression could cause <code>join()</code> to fail.
+</p>
+<p>Example:
+</p>
+<div class="sourceCode r"><pre>common_q &lt;- qenv()
+x &lt;- eval_code(
+  common_q,
+  "x &lt;- numeric(0)
+   for (i in 1:2) {
+     x &lt;- c(x, i)
+   }"
+)
+y &lt;- eval_code(
+  common_q,
+  "y &lt;- numeric(0)
+   for (i in 1:3) {
+     y &lt;- c(y, i)
+   }"
+)
+q &lt;- join(x,y)
+# Error message will occur
+
+# Check the value of temporary variable i in both objects
+x@env$i # Output: 2
+y@env$i # Output: 3
+</pre></div>
+<p><code>join()</code> fails to provide a proper result because of the temporary variable <code>i</code> exists
+in both objects but has different value.
+To fix this, we can set <code>i &lt;- NULL</code> in the code expression for both objects.
+</p>
+<div class="sourceCode r"><pre>common_q &lt;- qenv()
+x &lt;- eval_code(
+  common_q,
+  "x &lt;- numeric(0)
+   for (i in 1:2) {
+     x &lt;- c(x, i)
+   }
+   # dummy i variable to fix it
+   i &lt;- NULL"
+)
+y &lt;- eval_code(
+  common_q,
+  "y &lt;- numeric(0)
+   for (i in 1:3) {
+     y &lt;- c(y, i)
+   }
+   # dummy i variable to fix it
+   i &lt;- NULL"
+)
+q &lt;- join(x,y)
+</pre></div>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p><code>qenv</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">q &lt;- qenv()
+q1 &lt;- eval_code(q, expression(iris1 &lt;- iris, mtcars1 &lt;- mtcars))
+q2 &lt;- q1
+q1 &lt;- eval_code(q1, "iris2 &lt;- iris")
+q2 &lt;- eval_code(q2, "mtcars2 &lt;- mtcars")
+qq &lt;- join(q1, q2)
+get_code(qq)
+
+common_q &lt;- eval_code(q, quote(x &lt;- 1))
+y_q &lt;- eval_code(common_q, quote(y &lt;- x * 2))
+z_q &lt;- eval_code(common_q, quote(z &lt;- x * 3))
+join_q &lt;- join(y_q, z_q)
+# get_code only has "x &lt;- 1" occurring once
+get_code(join_q)
+
+</code></pre>
+
+
+</div>

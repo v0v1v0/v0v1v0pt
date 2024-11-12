@@ -1,0 +1,487 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmle</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Targeted Maximum Likelihood Estimation</h2>
+
+<h3>Description</h3>
+
+<p>Targeted maximum likelihood estimation of parameters of a marginal structural model, and of marginal treatment effects of a binary point treatment on an outcome. In addition to the additive treatment effect, risk ratio and odds ratio estimates are reported for binary outcomes. The <code>tmle</code> function is generally called with arguments <code>(Y,A,W)</code>, where  <code>Y</code> is a continuous or binary outcome variable, <code>A</code> is a binary treatment variable, (<code>A=1</code> for treatment, <code>A=0</code> for control), and <code>W</code> is a matrix or dataframe of baseline covariates. The population mean outcome is calculated when there is no variation in <code>A</code>. If values of binary mediating variable <code>Z</code> are supplied, estimates are returned at each level of <code>Z</code>. Missingness in the outcome is accounted for in the estimation procedure if missingness indicator <code>Delta</code> is 0 for some observations.  Repeated measures can be identified using the <code>id</code> argument. Option to adjust for biased sampling using the <code>obsWeights</code> argument. Targeted bootstrap inference can be obtained in addition to IC-based inference by setting <code>B</code> to a value greater than 1 (10,000 recommended for analyses requiring high precision).</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tmle(Y, A, W, Z=NULL, Delta = rep(1,length(Y)), Q = NULL, Q.Z1 = NULL, Qform = NULL, 
+     Qbounds = NULL, Q.SL.library = c("SL.glm", "tmle.SL.dbarts2", "SL.glmnet"), 
+     cvQinit = TRUE, g1W = NULL, gform = NULL, 
+     gbound = NULL,  pZ1=NULL,
+     g.Zform = NULL, pDelta1 = NULL, g.Deltaform = NULL, 
+     g.SL.library = c("SL.glm", "tmle.SL.dbarts.k.5", "SL.gam"),
+     g.Delta.SL.library =  c("SL.glm", "tmle.SL.dbarts.k.5", "SL.gam"),
+     family = "gaussian", fluctuation = "logistic", alpha = 0.9995, id=1:length(Y), 
+     V.Q = 10, V.g=10, V.Delta=10, V.Z = 10,
+     verbose = FALSE, Q.discreteSL=FALSE, g.discreteSL=FALSE, g.Delta.discreteSL=FALSE,
+     prescreenW.g=TRUE, min.retain = 5, target.gwt = TRUE, automate=FALSE,
+     obsWeights = NULL, alpha.sig = 0.05, B = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>continuous or binary outcome variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>binary treatment indicator, <code>1</code> - treatment, <code>0</code> - control</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>vector, matrix, or dataframe containing baseline covariates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>optional binary indicator for intermediate covariate for controlled direct effect estimation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Delta</code></td>
+<td>
+<p>indicator of missing outcome or treatment assignment.  <code>1</code> - observed, <code>0</code> - missing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q</code></td>
+<td>
+<p>optional <code class="reqn">n \times 2</code> matrix of initial values for <code class="reqn">Q</code> portion of the likelihood, <code class="reqn">(E(Y|A=0,W), E(Y|A=1,W))</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.Z1</code></td>
+<td>
+<p>optional <code class="reqn">n \times 2</code> matrix of initial values for <code class="reqn">Q</code> portion of the likelihood, <code class="reqn">(E(Y|Z=1,A=0,W), E(Y|Z=1,A=1,W))</code>. (When specified, values for <code class="reqn">E(Y|Z=0,A=0,W), E(Y|Z=0,A=1,W)</code> are passed in using the <code>Q</code> argument</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qform</code></td>
+<td>
+<p>optional regression formula for estimation of <code class="reqn">E(Y|A,W)</code>, suitable for call to <code>glm</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qbounds</code></td>
+<td>
+<p>vector of upper and lower bounds on <code>Y</code> and predicted values for initial <code>Q</code>. Defaults to the range of <code>Y</code>, widened by 1% of the min and max values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of initial <code>Q</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvQinit</code></td>
+<td>
+<p>logical, if <code>TRUE</code>, estimates cross-validated predicted values, default=<code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g1W</code></td>
+<td>
+<p>optional vector of conditional treatment assingment probabilities, <code class="reqn">P(A=1|W)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gform</code></td>
+<td>
+<p>optional regression formula of the form <code>A~W</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gbound</code></td>
+<td>
+<p>value between (0,1) for truncation of predicted probabilities. See <code>Details</code> section for more information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pZ1</code></td>
+<td>
+<p>optional<code class="reqn">n \times 2</code> matrix of conditional probabilities <code class="reqn">P(Z=1|A=0,W), P(Z=1|A=1,W)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Zform</code></td>
+<td>
+<p>optional regression formula of the form <code>Z~A+W</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pDelta1</code></td>
+<td>
+<p>optional matrix of conditional probabilities for missingness mechanism, <code class="reqn">n \times 2</code> when <code>Z</code> is <code>NULL</code> <code class="reqn">P(Delta=1|A=0,W), P(Delta=1|A=1,W)</code>. <code class="reqn">n \times 4</code> otherwise, <code class="reqn">P(Delta=1|Z=0,A=0,W), P(Delta=1|Z=0,A=1,W), P(Delta=1|Z=1,A=0,W), P(Delta=1|Z=1,A=1,W)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Deltaform</code></td>
+<td>
+<p>optional regression formula of the form <code>Delta~A+W</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of <code>g1W</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Delta.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of <code>pDelta1</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>family specification for working regression models, generally ‘gaussian’ for continuous outcomes (default), ‘binomial’ for binary outcomes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fluctuation</code></td>
+<td>
+<p>‘logistic’ (default), or ‘linear’</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>used to keep predicted initial values bounded away from (0,1) for logistic fluctuation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>optional subject identifier</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.Q</code></td>
+<td>
+<p>Number of cross-validation folds for super learner estimation of Q</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.g</code></td>
+<td>
+<p>Number of cross-validation folds for super learner estimation of g</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.Delta</code></td>
+<td>
+<p>Number of cross-validation folds for super learner estimation of missingness mechanism</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.Z</code></td>
+<td>
+<p>Number of cross-validation folds for super learner estimation of intermediate variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>status messages printed if set to <code>TRUE</code> (default=<code>FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.discreteSL</code></td>
+<td>
+<p>if TRUE, discreteSL is used instead of ensemble SL. Ignored when SL not used to estimate Q</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.discreteSL</code></td>
+<td>
+<p>if TRUE, discreteSL is used instead of ensemble SL. Ignored when SL not used to estimate g1W</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Delta.discreteSL</code></td>
+<td>
+<p>if TRUE, discreteSL is used instead of ensemble SL. Ignored when SL not used to estimate P(Delta = 1 | A,W)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prescreenW.g</code></td>
+<td>
+<p>Option to screen covariates before estimating g in order to retain only those associated with the outcome (Recommend FALSE in low dimensional datasets)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.retain</code></td>
+<td>
+<p>Minimum number of covariates to retain when prescreening covariates for g. Ignored when prescreenW.g=FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target.gwt</code></td>
+<td>
+<p>When TRUE, move g from denominator of clever covariate to the weight when fitting epsilon</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>automate</code></td>
+<td>
+<p>When TRUE, all tuning parameters are set to their default values. Number of cross validation folds, truncation level for g, and
+decision to prescreen covariates for modeling g are set data-adaptively based on sample size (see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obsWeights</code></td>
+<td>
+<p>Optional observation weights to account for biased sampling</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha.sig</code></td>
+<td>
+<p>significance level for constructing <code>1-alpha.sig</code> confidence intervals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>Number of boostrap iterations. Set <code class="reqn">B&gt;1</code> to obtain targeted bootstrap based inference in addition to IC-based inference (see Details).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>gbounds</code> Lower bound defaults to lb = <code class="reqn">5/sqrt(n)/log(n)</code>. For treatment effect estimates and population mean outcome the upper bound defaults to 1. For ATT and ATC, the upper bound defaults to 1- lb.
+</p>
+<p><code>W</code> may contain factors. These are converted to indicators via a call to <code>model.matrix</code>.
+</p>
+<p>Controlled direct effects are estimated when binary covariate <code>Z</code> is non-null. The tmle function returns an object of class <code>tmle.list</code>, a list of two items of class <code>tmle</code>.  The first corresponds to estimates obtained when <code>Z</code> is fixed at <code class="reqn">0</code>, the second corresponds to estimates obtained when <code>Z</code> is fixed at <code class="reqn">1</code>.
+</p>
+<p>When automate = TRUE the sample size determines the number of cross validation folds, V based on the effective sample size. When Y is continuous n.effective = n. When Y is binary n.effective =  5 * size of minority class. When n.effective &lt;= 30 V= n.effective; When n.effective &lt;= 500 V= 20; When 500 &lt; n &lt;=1000 V=10; When 1000 &lt; n &lt;= 10000 V=5; Otherwise V=2. Bounds on <code>g</code> set to <code class="reqn">(5/sqrt(n)/log(n), 1)</code>, except for ATT and ATE, where upper bound is 1-lower bound. <code>Wretain.g</code> set to TRUE when number of covariates <code class="reqn">&gt;= n.effective  / 5</code>.
+</p>
+<p>Set <code>B</code> = 10,000 to obtain high precision targeted bootstrap quantile-based confidence intervals and variance of bootstrap point estimates. Set <code>B</code> = 1,000 for rough approximation, and <code>B</code> = 1 for IC-based inference only.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>estimates</code></td>
+<td>
+<p>list with elements EY1 (population mean), ATE (additive treatment effect), ATT (additive treatment effect among the treated), ATC (additive treatment effect among the controls), RR (relative risk), OR (odds ratio). Each element in the estimates of these is itself a list containing 
+</p>
+
+<ul>
+<li>
+<p> psi - parameter estimate 
+</p>
+</li>
+<li>
+<p> pvalue - two-sided p-value
+</p>
+</li>
+<li>
+<p> CI - 95% confidence interval
+</p>
+</li>
+<li>
+<p> var.psi - Influence-curve based variance of estimate (ATE parameter only)
+</p>
+</li>
+<li>
+<p> log.psi - Parameter estimate on log scale (RR and OR parameters)
+</p>
+</li>
+<li>
+<p> var.log.psi - Influence-curve based variance of estimate on log scale (RR and OR parameters)
+</p>
+</li>
+<li>
+<p> bs.var - Variance of bootstrap point estimates (when <code>B &gt; 1</code>)              
+</p>
+</li>
+<li>
+<p> bs.CI.twosided - Quantile-based 2-sided confidence interval bounds     
+</p>
+</li>
+<li>
+<p> bs.CI.onesided.lower - Quantile-based 1-sided lower confidence interval bounds
+</p>
+</li>
+<li>
+<p> bs.CI.onesided.upper - Quantile-based 1-sided upper confidence interval bounds
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qinit</code></td>
+<td>
+<p>initial estimate of <code>Q</code>. <code>Qinit$coef</code> are the coefficients for a <code>glm</code> model for <code>Q</code>, if applicable.  <code>Qinit$Q</code> is an <code class="reqn">n \times 2</code> matrix, where <code>n</code> is the number of observations.  Columns contain predicted values for <code>Q(0,W),Q(1,W)</code> using the initial fit.  <code>Qinit$type</code> is method for estimating <code>Q</code>. <code>Qinit$Rsq</code> is Rsq for initial estimate of Q. <code>Qinit$Rsq.type</code> empirical or cross-validated (depends on value of cvQinit), Rsq or pseudo-Rsq when Y is binary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qstar</code></td>
+<td>
+<p>targeted estimate of <code>Q</code>, an <code class="reqn">n \times 2</code> matrix with predicted values for <code>Q(0,W), Q(1,W)</code> using the updated fit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>treatment mechanism estimate. A list with four items: <code>g$g1W</code> contains estimates of <code class="reqn">P(A=1|W)</code> for each observation, <code>g$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g$type</code> estimation procedure, <code>g$discreteSL</code> flag, <code>g$AUC</code> empirical AUC if ROCR package is available</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Z</code></td>
+<td>
+<p>intermediate covariate assignment estimate (when applicable). A list with four items: <code>g.Z$g1W</code> an <code class="reqn">n \times 2</code> matrix containing values of <code class="reqn">P(Z=1|A=1,W), P(Z=1|A=0,W)</code> for each observation, <code>g.Z$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g.Z$type</code> estimation procedure, <code>g.Z$discreteSL</code> flag</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Delta</code></td>
+<td>
+<p>missingness mechanism estimate. A list with four items: <code>g.Delta$g1W</code> an <code class="reqn">n \times 4</code> matrix containing values of <code class="reqn">P(Delta=1|Z,A,W)</code> for each observation, with (Z=0,A=0), (Z=0,A=1), (Z=1,A=0),(Z=1,A=1). (When <code>Z</code> is <code>NULL</code>, columns 3 and 4 are duplicates of 1 and 2.) <code>g.Delta$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g.Delta$type</code> estimation procedure, <code>g.Delta$discreteSL</code> flag</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gbound</code></td>
+<td>
+<p>bounds used to truncate g</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gbound.ATT</code></td>
+<td>
+<p>bounds used to truncated g for ATT and ATC estimation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W.retained</code></td>
+<td>
+<p>names of covariates used to model the components of g</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Susan Gruber <a href="mailto:sgruber@cal.berkeley.edu">sgruber@cal.berkeley.edu</a>, in collaboration with Mark van der Laan.</p>
+
+
+<h3>References</h3>
+
+<p>1. Gruber, S. and van der Laan, M.J. (2012), tmle: An R Package for Targeted Maximum Likelihood Estimation. <em>Journal of Statistical Software</em>, 51(13), 1-35. <a href="https://www.jstatsoft.org/v51/i13/">https://www.jstatsoft.org/v51/i13/</a>
+</p>
+<p>2. Gruber, S. and van der Laan, M.J. (2009), Targeted Maximum Likelihood Estimation: A Gentle Introduction. <em>U.C. Berkeley Division of Biostatistics Working Paper Series</em>.  Working Paper 252.  <a href="https://biostats.bepress.com/ucbbiostat/paper252/">https://biostats.bepress.com/ucbbiostat/paper252/</a>
+</p>
+<p>3. Gruber, S. and van der Laan, M.J.  (2010), A Targeted Maximum Likelihood Estimator of a Causal Effect on a Bounded Continuous Outcome. <em>The International Journal of Biostatistics</em>, 6(1), 2010.
+</p>
+<p>4. Rosenblum, M. and van der Laan, M.J. (2010).Targeted Maximum Likelihood Estimation of the Parameter of a Marginal Structural Model. <em>The International Journal of Biostatistics</em>, 6(2), 2010.
+</p>
+<p>5. van der Laan, M.J. and Rubin, D. (2006), Targeted Maximum Likelihood Learning. <em>The International Journal of Biostatistics</em>, 2(1). <a href="https://biostats.bepress.com/ucbbiostat/paper252/">https://biostats.bepress.com/ucbbiostat/paper252/</a>
+</p>
+<p>6. van der Laan, M.J., Rose, S., and Gruber,S., editors, (2009) Readings in Targeted Maximum Likelihood Estimation . <em>U.C. Berkeley Division of Biostatistics Working Paper Series</em>.  Working Paper 254. <a href="https://biostats.bepress.com/ucbbiostat/paper254/">https://biostats.bepress.com/ucbbiostat/paper254/</a>
+</p>
+<p>7. van der Laan, M.J. and Gruber S. (2016), One-Step Targeted Minimum Loss-based Estimation Based on Universal Least Favorable One-Dimensional Submodels. <em>The International Journal of Biostatistics</em>, 12 (1), 351-378.
+</p>
+<p>8. Gruber, S., Phillips, R.V., Lee, H., van der Laan, M.J. Data-Adaptive Selection of the Propensity Score Truncation Level for Inverse Probability Weighted and Targeted Maximum Likelihood Estimators of Marginal Point Treatment Effects. <em>American Journal of Epidemiology</em> 2022; 191(9), 1640-1651.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.tmle</code>,
+<code>estimateQ</code>,
+<code>estimateG</code>,
+<code>calcParameters</code>,
+<code>oneStepATT</code>,
+<code>tmleMSM</code>,
+<code>calcSigma</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tmle)
+  set.seed(1)
+  n &lt;- 250
+  W &lt;- matrix(rnorm(n*3), ncol=3)
+  A &lt;- rbinom(n,1, 1/(1+exp(-(.2*W[,1] - .1*W[,2] + .4*W[,3]))))
+  Y &lt;- A + 2*W[,1] + W[,3] + W[,2]^2 + rnorm(n)
+
+# Example 1. Simplest function invocation 
+# SuperLearner called to estimate Q, g
+# Delta defaults to 1 for all observations   
+## Not run: 
+  result1 &lt;- tmle(Y,A,W)
+  summary(result1)
+
+## End(Not run)
+# Example 2: 
+# User-supplied regression formulas to estimate Q and g
+# binary outcome
+  n &lt;- 250
+  W &lt;- matrix(rnorm(n*3), ncol=3)
+  colnames(W) &lt;- paste("W",1:3, sep="")
+  A &lt;- rbinom(n,1, plogis(0.6*W[,1] +0.4*W[,2] + 0.5*W[,3]))
+  Y &lt;- rbinom(n,1, plogis(A + 0.2*W[,1] + 0.1*W[,2] + 0.2*W[,3]^2 ))
+  result2 &lt;- tmle(Y,A,W, family="binomial", Qform="Y~A+W1+W2+W3", gform="A~W1+W2+W3")
+  summary(result2)
+
+## Not run: 
+# Example 3:
+# Incorporate sampling weights and
+# request targeted bootstrap-based inference along with IC-based results
+  pi &lt;- .25 + .5*W[,1] &gt; 0
+  enroll &lt;- sample(1:n, size = n/2, p = pi)
+  result3 &lt;- tmle(Y[enroll],A[enroll],W[enroll,], family="binomial", Qform="Y~A+W1+W2+W3",
+             gform="A~W1+W2+W3", obsWeights = 1/pi[enroll],B=1000)
+  summary(result3)
+
+# Example 4: Population mean outcome
+# User-supplied (misspecified) model for Q, 
+# Super learner called to estimate g, g.Delta
+# V set to 2 for demo, not recommended at this sample size
+# approx. 20
+  Y &lt;- W[,1] + W[,2]^2 + rnorm(n)
+  Delta &lt;- rbinom(n, 1, 1/(1+exp(-(1.7-1*W[,1]))))
+  result4 &lt;- tmle(Y,A=NULL,W, Delta=Delta, Qform="Y~A+W1+W2+W3", V.g=2, V.Delta=2)
+  print(result4)
+
+# Example 5: Controlled direct effect
+# User-supplied models for g, g.Z
+# V set to 2 for demo, not recommended at this sample size
+  A &lt;- rbinom(n,1,.5)
+  Z &lt;- rbinom(n, 1, plogis(.5*A + .1*W[,1]))
+  Y &lt;- 1 + A + 10*Z + W[,1]+ rnorm(n)
+  
+  CDE &lt;- tmle(Y,A,W, Z, gform="A~1", g.Zform = "Z ~ A + W1", V.Q=2, V.g=2)
+  print(CDE)
+  total.effect &lt;- tmle(Y,A, W,  gform="A~1")
+  print(total.effect)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

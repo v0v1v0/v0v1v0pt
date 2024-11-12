@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrajExpectedSquareDisplacement</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Trajectory expected square displacement</h2>
+
+<h3>Description</h3>
+
+<p>Calculates the expected square displacement for a trajectory assuming it is a
+correlated random walk, using the formula in Kareiva &amp; Shigesada, (1983).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TrajExpectedSquareDisplacement(
+  trj,
+  n = nrow(trj),
+  eqn1 = TRUE,
+  compass.direction = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>trj</code></td>
+<td>
+<p>A Trajectory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of steps to calculate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eqn1</code></td>
+<td>
+<p>If <code>TRUE</code>, calculate using equation 1, otherwise using
+equation 2. Equation 2 applies when the mean of turning angles is 0,
+i.e.turns are unbiased.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>compass.direction</code></td>
+<td>
+<p>If not <code>NULL</code>, step angles are calculated
+relative to this angle (in radians), otherwise they are calculated relative
+to the previous step angle.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that Cheung, Zhang, Stricker, and Srinivasan (2007) define an
+alternative formulation for expected maximum displacement, Emax (see
+<code>TrajEmax</code>).
+</p>
+
+
+<h3>References</h3>
+
+<p>Cheung, A., Zhang, S., Stricker, C., &amp; Srinivasan, M. V. (2007). Animal
+navigation: the difficulty of moving in a straight line. Biological
+Cybernetics, 97(1), 47-61. doi:10.1007/s00422-007-0158-0
+</p>
+<p>Kareiva, P. M., &amp; Shigesada, N. (1983). Analyzing insect movement as a
+correlated random walk. Oecologia, 56(2), 234-238. doi:10.1007/bf00379695
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TrajEmax</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(1)
+# A random walk
+trj &lt;- TrajGenerate(200)
+smoothed &lt;- TrajSmoothSG(trj)
+
+# Calculate actual squared displacement at all points along the trajectory
+sd2 &lt;- sapply(2:nrow(smoothed), function(n) TrajDistance(smoothed, 1, n) ^ 2)
+# Calculate expected squared displacement
+ed2_1 &lt;- sapply(2:nrow(smoothed), function(n) TrajExpectedSquareDisplacement(smoothed, n, TRUE))
+ed2_2 &lt;- sapply(2:nrow(smoothed), function(n) TrajExpectedSquareDisplacement(smoothed, n, FALSE))
+
+# Plot expected against actual. According to Kareiva &amp; Shigesada, (1983), if actual
+# (approximately) matches expected, the trajectory is probably a correlated random walk
+par(mar = c(5, 5, 0.1, 0.1) + .1)
+plot(2:nrow(smoothed), sd2, type = 'l', pch = 16, cex = .2, lwd = 2,
+     xlab = 'Number of consecutive moves',
+     ylab = expression('Squared displacement, ' * R[n]^2))
+lines(2:nrow(smoothed), ed2_1, col = "grey", lwd = 2)
+lines(2:nrow(smoothed), ed2_2, col = "pink", lwd = 2)
+
+legend("bottomright",
+       c(expression("Actual displacement"^2),
+         expression("Expected displacement"^2 * " (eqn 1)"),
+         expression("Expected displacement"^2 * " (eqn 2)")),
+       col = c('black', 'grey', 'pink'), lwd = 2,
+       inset = c(0.01, 0.02))
+
+</code></pre>
+
+
+</div>

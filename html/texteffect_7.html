@@ -1,0 +1,156 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sibp_param_search</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Search Parameter Configurations for Supervised Indian Buffet Process (sibp)</h2>
+
+<h3>Description</h3>
+
+<p><code>sibp_param_search</code> runs sibp for a variety of parameter configurations, so that
+the user can then test the effects fo the most interesting treatments.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">	  sibp_param_search(X, Y, K, alphas, sigmasq.ns, iters, 
+	  a = 0.1, b = 0.1, sigmasq.A = 5, train.ind = train.ind,
+	  G = NULL, seed = 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>The covariates for the full data set.  The division between the training and test set is handled inside the function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>The outcomes for the full data set.  The division between the training and test set is handled inside the function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The number of treatments to be discovered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alphas</code></td>
+<td>
+<p>A vector of values of alpha to try.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigmasq.ns</code></td>
+<td>
+<p>A vector of values of sigmasq.n to try.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iters</code></td>
+<td>
+<p>The number of starting values to attempt for each combination of alpha and sigmasq.n.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>A parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>A parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigmasq.A</code></td>
+<td>
+<p>A parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>train.ind</code></td>
+<td>
+<p>The indices of the observations in the training set, usually obtained from get_training_set().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>G</code></td>
+<td>
+<p>An optional group membership matrix.  The AMCE for a given treatment is permitted to vary as a function of the individual's group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>The seed to be used, so the result can be replicated.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Fits a supervised Indian Buffet Process using variational inference for combinations of alpha and sigmasq.n.  alpha influences how common the treatments are (where larger alphas imply more common treatments) and sigmasq.n influences how much of the variation of the outcome must be explained by the treatments.  These parameters are the most important for determining the quality of the treatments discovered, so it is usually a good idea to experiment with many combinations.  Because the treatments discovered can be sensitive to starting values, it is also usually a good idea to try each combination of alpha and sigmasq.n several times by setting iters &gt; 1.
+</p>
+<p>Because this function uses only the training data, the user can experiment with many parameter configurations without corrupting the inferences made with the test set.  The choice of parameters is equivalent to the choice of hypotheses to test, so the analyst should choose the parameter configuration that leads to the most substantively interesting treatments.  sibp_top_words can be applied to each element of the list returned by this function to determine which parameter configurations lead to interesting treatments.  Often, it will be impractical to manually investigate every parameter configuration.  In such cases, sibp_rank_runs can be used to automatically identify some of the most promising candidates.</p>
+
+
+<h3>Value</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>paramslist</code></td>
+<td>
+</td>
+</tr></table>
+<h3>Author(s)</h3>
+
+<p>Christian Fong</p>
+
+
+<h3>References</h3>
+
+<p>Fong, Christian and Justin Grimmer.  2016. “Discovery of Treatments from Text Corpora” Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics. <a href="https://aclweb.org/anthology/P/P16/P16-1151.pdf">https://aclweb.org/anthology/P/P16/P16-1151.pdf</a></p>
+
+
+<h3>See Also</h3>
+
+<p>sibp_rank_runs, sibp_top_words, sibp_amce</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">##Load the sample of Wikipedia biography data
+data(BioSample)
+
+# Divide into training and test sets
+Y &lt;- BioSample[,1]
+X &lt;- BioSample[,-1]
+set.seed(1)
+train.ind &lt;- sample(1:nrow(X), size = 0.5*nrow(X), replace = FALSE)
+
+# Search sIBP for several parameter configurations; fit each to the training set
+sibp.search &lt;- sibp_param_search(X, Y, K = 2, alphas = c(2,4),
+                                 sigmasq.ns = c(0.8, 1), iters = 1,
+							     train.ind = train.ind)
+								 
+## Not run: 
+# Get metric for evaluating most promising parameter configurations
+sibp_rank_runs(sibp.search, X, 10)
+
+# Qualitatively look at the top candidates
+sibp_top_words(sibp.search[["4"]][["0.8"]][[1]], colnames(X), 10, verbose = TRUE)
+sibp_top_words(sibp.search[["4"]][["1"]][[1]], colnames(X), 10, verbose = TRUE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

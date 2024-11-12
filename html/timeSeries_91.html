@@ -1,0 +1,144 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>monthly</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Special monthly series</h2>
+
+<h3>Description</h3>
+
+<p>Functions and methods dealing with special monthly 
+<code>"timeSeries"</code> objects.      
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">   
+rollMonthlyWindows(x, period = "12m", by = "1m") 
+
+rollMonthlySeries(x, period = "12m", by = "1m", FUN, ...)
+countMonthlyRecords(x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>a <code>"timeSeries"</code> object.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period,by</code></td>
+<td>
+
+<p>character strings specifying the rollling period composed by the
+length of the period and its unit. Examples: <code>"3m"</code>,
+<code>"6m"</code>, <code>"12m"</code>, and <code>"24m"</code> represent quarterly,
+semi-annual, annual and bi-annual shifts, respectively.  It is the
+responsibility of the user to determine proper start of the series.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN</code></td>
+<td>
+
+<p>the function for the statistic to be applied. For example,
+<code>colMean</code> in the case of aggregation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>arguments passed to the function <code>FUN</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>rollMonthlySeries</code> computes the statistics defined by the
+function <code>FUN</code> over rolling windows, internally computed by the
+function <code>rollMonthlyWindows</code>.  Note, the periods may be
+overlapping, may be dense, or even may have gaps.
+</p>
+<p><code>countMonthlyRecords</code> computes a <code>"timeSeries"</code> that holds
+the number of records for each month, see examples. The dates are set
+to the end of the month.
+</p>
+<p><code>rollMonthlyWindows</code> computes start and end dates for rolling
+time windows. Argument <code>period</code> specifies the length of the
+periods over which <code>FUN</code> is applied, while <code>by</code> gives the
+amount by which the window is shifted. Non-overlapping windows
+correspond to <code>by &gt;= period</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>for <code>countMonthlyRecords</code> and <code>rollMonthlySeries</code>,
+a <code>"timeSeries"</code> object.
+</p>
+<p>for <code>rollMonthlyWindows</code>, a list with attribute <code>"control"</code> keeping
+the <code>start</code> and <code>end</code> dates of the series.
+The components of the list are:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>from</code></td>
+<td>
+<p>an object from class <code>"timeDate"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to</code></td>
+<td>
+<p>an object from class <code>"timeDate"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>isMonthly</code>,
+<code>isRegular</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## load Microsoft daily dataset
+x &lt;- MSFT 
+
+## count monthly records
+head(x)   # 3 obs. for Sep 2000
+counts &lt;- countMonthlyRecords(x)
+counts
+
+## diy computation of the counts
+diy &lt;- rollMonthlySeries(x[ , 1], period = "1m", by = "1m", FUN = NROW)
+
+## difference is only in some attributes (e.g. column names)
+all.equal(diy,  counts)
+
+   
+## quaterly non-overlapping time periods
+windows &lt;- rollMonthlyWindows(counts[-1, ], period = "3m", by = "3m") 
+windows
+## nicely print results as a data.frame, each row is a time window
+data.frame(cbind(FROM = format(windows$from), TO = format(windows$to)))
+   
+## compute the average number of monthly trading days per quarter
+rollMonthlySeries(counts[-1, ], period = "3m", by = "3m", FUN = mean)
+</code></pre>
+
+
+</div>

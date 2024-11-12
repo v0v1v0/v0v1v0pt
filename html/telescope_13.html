@@ -1,0 +1,235 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>samplePoisMixture</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Telescoping sampling of a Bayesian finite Poisson mixture with a
+prior on the number of components K.</h2>
+
+<h3>Description</h3>
+
+
+<ul>
+<li>
+<p> The MCMC scheme is implemented as suggested in Frühwirth-Schnatter et al (2021).
+</p>
+</li>
+<li>
+<p> The priors on the model parameters are specified as in
+Frühwirth-Schnatter et al (2021) and Früwirth-Schnatter and
+Malsiner-Walli (2019), see the vignette for details and notation.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">samplePoisMixture(
+  y,
+  S,
+  mu,
+  eta,
+  a0,
+  b0,
+  h0,
+  H0,
+  M,
+  burnin,
+  thin,
+  Kmax,
+  G = c("MixDynamic", "MixStatic"),
+  priorOnK,
+  priorOnWeights,
+  verbose = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A numeric matrix; containing the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>A numeric matrix; containing the initial cluster
+assignments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu</code></td>
+<td>
+<p>A numeric matrix; containing the initial cluster-specific
+rate values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>A numeric vector; containing the initial cluster sizes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a0</code></td>
+<td>
+<p>A numeric vector; hyperparameter of the prior on the rate <code class="reqn">\mu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b0</code></td>
+<td>
+<p>A numeric vector; hyperparameter of the prior on the rate <code class="reqn">\mu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h0</code></td>
+<td>
+<p>A numeric vector; hyperparameter of the prior on the rate <code class="reqn">\mu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>H0</code></td>
+<td>
+<p>A numeric vector; hyperparameter of the prior on the rate <code class="reqn">\mu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M</code></td>
+<td>
+<p>A numeric scalar; specifying the number of recorded
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>A numeric scalar; specifying the number of burn-in
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thin</code></td>
+<td>
+<p>A numeric scalar; specifying the thinning used for the
+iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Kmax</code></td>
+<td>
+<p>A numeric scalar; the maximum number of components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>G</code></td>
+<td>
+<p>A character string; either <code>"MixDynamic"</code> or <code>"MixStatic"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorOnK</code></td>
+<td>
+<p>A named list; providing the prior on the number of components K, see <code>priorOnK_spec()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorOnWeights</code></td>
+<td>
+<p>A named list; providing the prior on the mixture weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical; indicating if some intermediate clustering
+results should be printed.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named list containing:
+</p>
+
+<ul>
+<li> <p><code>"Mu"</code>: sampled rate <code class="reqn">\mu</code>.
+</p>
+</li>
+<li> <p><code>"Eta"</code>: sampled weights.
+</p>
+</li>
+<li> <p><code>"S"</code>: sampled assignments.
+</p>
+</li>
+<li> <p><code>"Nk"</code>: number of observations assigned to the different components, for each iteration.
+</p>
+</li>
+<li> <p><code>"K"</code>: sampled number of components.
+</p>
+</li>
+<li> <p><code>"Kplus"</code>: number of filled, i.e., non-empty components, for each iteration.
+</p>
+</li>
+<li> <p><code>"e0"</code>: sampled Dirichlet parameter of the prior on the weights (if <code class="reqn">e_0</code> is random).
+</p>
+</li>
+<li> <p><code>"alpha"</code>: sampled Dirichlet parameter of the prior on the weights (if <code class="reqn">\alpha</code> is random).
+</p>
+</li>
+<li> <p><code>"acc"</code>: logical vector indicating acceptance in the Metropolis-Hastings step when sampling either e0 or <code class="reqn">\alpha</code>.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">N &lt;- 200
+z &lt;- sample(1:2, N, prob = c(0.5, 0.5), replace = TRUE)
+y &lt;- rpois(N, c(1, 6)[z])
+
+Mmax &lt;- 200
+thin &lt;- 1
+burnin &lt;- 100
+M &lt;- Mmax/thin
+
+Kmax &lt;- 50  
+Kinit &lt;- 10
+
+G &lt;- "MixDynamic"
+priorOnAlpha &lt;- priorOnAlpha_spec("gam_1_2")
+priorOnK &lt;- priorOnK_spec("BNB_143")
+
+a0 &lt;- 0.1 
+h0 &lt;- 0.5 
+b0 &lt;- a0/mean(y) 
+H0 &lt;- h0/b0
+
+cl_y &lt;- kmeans(y, centers = Kinit, nstart = 100)
+S_0 &lt;- cl_y$cluster
+mu_0 &lt;- t(cl_y$centers)
+eta_0 &lt;- rep(1/Kinit, Kinit)
+
+result &lt;- samplePoisMixture(
+  y, S_0, mu_0, eta_0, 
+  a0, b0, h0, H0,
+  M, burnin, thin, Kmax, 
+  G, priorOnK, priorOnAlpha)
+
+K &lt;- result$K
+Kplus &lt;- result$Kplus
+
+plot(seq_along(K), K, type = "l", ylim = c(0, max(K)), 
+     xlab = "iteration", main = "",
+     ylab = expression("K" ~ "/" ~ K["+"]), col = 1)
+lines(seq_along(Kplus), Kplus, col = 2)
+legend("topright", legend = c("K", expression(K["+"])),
+       col = 1:2, lty = 1, box.lwd = 0)
+
+</code></pre>
+
+
+</div>

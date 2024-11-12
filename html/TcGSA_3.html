@@ -1,0 +1,386 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>clustTrend</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cluster the genes dynamics into different dominant trends.</h2>
+
+<h3>Description</h3>
+
+<p>This function clusters the genes dynamics of one gene sets into different
+dominant trends.  The optimal number of clusters is computed thanks to the gap
+statistics.  See <code>clusGap</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">clustTrend(
+  tcgs,
+  expr,
+  Subject_ID,
+  TimePoint,
+  threshold = 0.05,
+  myproc = "BY",
+  nbsimu_pval = 1e+06,
+  baseline = NULL,
+  only.signif = TRUE,
+  group.var = NULL,
+  Group_ID_paired = NULL,
+  ref = NULL,
+  group_of_interest = NULL,
+  FUNcluster = NULL,
+  clustering_metric = "euclidian",
+  clustering_method = "ward",
+  B = 100,
+  max_trends = 4,
+  aggreg.fun = "median",
+  na.rm.aggreg = TRUE,
+  trend.fun = "median",
+  methodOptiClust = "firstSEmax",
+  indiv = "genes",
+  verbose = TRUE
+)
+
+## S3 method for class 'ClusteredTrends'
+print(x, ...)
+
+## S3 method for class 'ClusteredTrends'
+plot(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tcgs</code></td>
+<td>
+<p>a <b>tcgsa</b> object for <code>clustTrend</code>, or a
+<b>ClusteredTrends</b> object for <code>print.ClusteredTrends</code> and
+<code>plot.ClusteredTrends</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>either a matrix or dataframe of gene expression upon which
+dynamics are to be calculated, or a list of gene sets estimation of gene
+expression.  In the case of a matrix or dataframe, its dimension are <code class="reqn">n</code>
+x <code class="reqn">p</code>, with the <code class="reqn">p</code> sample in column and the <code class="reqn">n</code> genes in row.
+In the case of a list, its length should correspond to the number of gene
+sets under scrutiny and each element should be an 3 dimension array of
+estimated gene expression, such as for the list returned in the
+<code>'Estimations'</code> element of <code>TcGSA.LR</code>.  See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Subject_ID</code></td>
+<td>
+<p>a factor of length <code class="reqn">p</code> that is in the same order as the
+columns of <code>expr</code> (when it is a dataframe) and that contains the patient
+identifier of each sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TimePoint</code></td>
+<td>
+<p>a numeric vector or a factor of length <code class="reqn">p</code> that is in
+the same order as <code>Subject_ID</code> and the columns of <code>expr</code> (when it
+is a dataframe), and that contains the time points at which gene expression
+was measured.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>the threshold at which the FDR or the FWER should be
+controlled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>myproc</code></td>
+<td>
+<p>a vector of character strings containing the names of the
+multiple testing procedures for which adjusted p-values are to be computed.
+This vector should include any of the following: "<code>Bonferroni</code>",
+"<code>Holm</code>", "<code>Hochberg</code>", "<code>SidakSS</code>", "<code>SidakSD</code>",
+"<code>BH</code>", "<code>BY</code>", "<code>ABH</code>", "<code>TSBH</code>". See
+<code>mt.rawp2adjp</code> for details.  Default is
+"<code>BY</code>", the Benjamini &amp; Yekutieli (2001) step-up FDR-controlling
+procedure (general dependency structures).  In order to control the FWER(in
+case of an analysis that is more a hypothesis confirmation than an
+exploration of the expression data), we recommend to use "<code>Holm</code>", the
+Holm (1979) step-down adjusted p-values for strong control of the FWER.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbsimu_pval</code></td>
+<td>
+<p>the number of observations under the null distribution to
+be generated in order to compute the p-values.  Default is <code>1e+06</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline</code></td>
+<td>
+<p>a character string which is the value of <code>TimePoint</code>
+that can be used as a baseline.  Default is <code>NULL</code>, in which case no
+time point is used as a baseline value for gene expression.  Has to be
+<code>NULL</code> when comparing several treatment groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>only.signif</code></td>
+<td>
+<p>logical flag for analyzing the trends in only the
+significant gene sets.  If <code>FALSE</code>, all the gene sets from the
+<b>gmt</b> object contained in <code>x</code> are clustered.  Default is
+<code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group.var</code></td>
+<td>
+<p>in the case of several treatment groups, this is a factor of
+length <code class="reqn">p</code> that is in the same order as <code>Timepoint</code>,
+<code>Subject_ID</code> and the columns of <code>expr</code>.  It indicates to which
+treatment group each sample belongs to.  Default is <code>NULL</code>, which means
+that there is only one treatment group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Group_ID_paired</code></td>
+<td>
+<p>a character vector of length <code class="reqn">p</code> that is in the
+same order as <code>Timepoint</code>,  <code>Subject_ID</code>, <code>group.var</code> and the
+columns of <code>expr</code>.  This argument must not be <code>NULL</code> in the case of
+a paired analysis, and must be <code>NULL</code> otherwise.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>the group which is used as reference in the case of several
+treatment groups.  Default is <code>NULL</code>, which means that reference is the
+first group in alphabetical order of the labels of <code>group.var</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_of_interest</code></td>
+<td>
+<p>the group of interest, for which dynamics are to be
+computed in the case of several treatment groups.  Default is <code>NULL</code>,
+which means that group of interest is the second group in alphabetical order
+of the labels of <code>group.var</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUNcluster</code></td>
+<td>
+<p>the clustering function used to agglomerate genes in
+trends.  Default is <code>NULL</code>, in which a hierarchical clustering is
+performed via the function <code>agnes</code>, using the
+metric <code>clustering_metric</code> and the method <code>clustering_method</code>.  See
+<code>clusGap</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_metric</code></td>
+<td>
+<p>character string specifying the metric to be used
+for calculating dissimilarities between observations in the hierarchical
+clustering when <code>FUNcluster</code> is <code>NULL</code>.  The currently available
+options are <code>"euclidean"</code> and <code>"manhattan"</code>.  Default is
+<code>"euclidean"</code>.  See <code>agnes</code>.  Also, a <code>"sts"</code> option 
+is available in TcGSA.  It implements the 'Short Time Series' distance 
+[Moller-Levet et al., Fuzzy Clustering of short time series and unevenly distributed 
+sampling points, <em>Advances in Intelligent Data Analysis V</em>:330-340 Springer, 2003]
+designed specifically for clustering time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_method</code></td>
+<td>
+<p>character string defining the agglomerative method
+to be used in the hierarchical clustering when <code>FUNcluster</code> is
+<code>NULL</code>.  The six methods implemented are <code>"average"</code> ([unweighted
+pair-]group average method, UPGMA), <code>"single"</code> (single linkage),
+<code>"complete"</code> (complete linkage), <code>"ward"</code> (Ward's method),
+<code>"weighted"</code> (weighted average linkage).  Default is <code>"ward"</code>.  See
+<code>agnes</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>integer specifying the number of Monte Carlo ("bootstrap") samples
+used to compute the gap statistics.  Default is <code>500</code>.  See
+<code>clusGap</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_trends</code></td>
+<td>
+<p>integer specifying the maximum number of different clusters
+to be tested.  Default is <code>4</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggreg.fun</code></td>
+<td>
+<p>a character string such as <code>"mean"</code>, <code>"median"</code>
+or the name of any other defined statistics function that returns a single
+numeric value.  It specifies the function used to aggregate the observations
+before the clustering.  Default is to <code>median</code>.  Default is
+<code>"median"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm.aggreg</code></td>
+<td>
+<p>a logical flag indicating whether <code>NA</code> should be remove to prevent 
+propagation through <code>aggreg.fun</code>. Can be useful to set to TRUE with 
+unbalanced design as those will generate structural <code>NA</code>s in 
+<code>$Estimations</code>. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trend.fun</code></td>
+<td>
+<p>a character string such as <code>"mean"</code>, <code>"median"</code> or
+the name of any other function that returns a single numeric value.  It
+specifies the function used to calculate the trends of the identified
+clustered.  Default is to <code>median</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>methodOptiClust</code></td>
+<td>
+<p>character string indicating how the "optimal" number
+of clusters is computed from the gap statistics and their standard
+deviations. Possible values are <code>"globalmax"</code>, <code>"firstmax"</code>,
+<code>"Tibs2001SEmax"</code>, <code>"firstSEmax"</code> and <code>"globalSEmax"</code>.
+Default is <code>"firstSEmax"</code>.  See <code>'method'</code> in
+<code>clusGap</code>, Details and <em>Tibshirani et al.,
+2001</em> in References.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indiv</code></td>
+<td>
+<p>a character string indicating by which unit observations are
+aggregated (through <code>aggreg.fun</code>) before the clustering.  Possible
+values are <code>"genes"</code> or <code>"patients"</code>.  Default is <code>"genes"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical flag enabling verbose messages to track the computing
+status of the function.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class '<code>ClusteredTrends</code>'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>expr</code> is a matrix or a dataframe, then the genes dynamics are
+clustered on the "original" data.  On the other hand, if <code>expr</code> is a
+list returned in the <code>'Estimations'</code> element of <code>TcGSA.LR</code>,
+then the dynamics are computed on the estimations made by the
+<code>TcGSA.LR</code> function.
+</p>
+<p>This function uses the Gap statistics to determine the optimal number of
+clusters in the plotted gene set.  See
+<code>clusGap</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <b>ClusteredTrends</b> which is a list with
+the 4 following components: </p>
+
+<ul>
+<li> <p><code>NbClust</code> a vector that contains the optimal number of clusters for
+each analyzed gene sets.
+</p>
+</li>
+<li> <p><code>ClustsMeds</code> a list of the same length as <code>NsClust</code> (the
+number of analyzed gene sets). Each element of the list is a data frame, in
+which there is as many column as the optimal number of clusters for the
+corresponding gene sets for each cluster.  Each column of the data frame
+contains the median trend values for the corresponding cluster.
+</p>
+</li>
+<li> <p><code>GenesPartition</code> a list of the same length as <code>NsClust</code> (the
+number of analyzed gene sets).  Each element of the list is a vector which
+gives the partition of the genes inside the corresponding gene set.
+</p>
+</li>
+<li> <p><code>MaxNbClust</code> an integer storing the maximum number of different
+clusters tested, as given by the argument <code>'max_trends'</code>.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Boris P. Hejblum
+</p>
+
+
+<h3>References</h3>
+
+<p>Tibshirani, R., Walther, G. and Hastie, T., 2001, Estimating the
+number of data clusters via the Gap statistic, <em>Journal of the Royal
+Statistical Society, Series B (Statistical Methodology)</em>, <b>63</b>, 2:
+41–423.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot1GS</code>, <code>TcGSA.LR</code>,
+<code>clusGap</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(interactive()){
+data(data_simu_TcGSA)
+
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE)
+ 
+CT &lt;- clustTrend(tcgsa_sim_1grp,
+    expr=expr_1grp, Subject_ID=design$Subject_ID, TimePoint=design$TimePoint)
+CT
+plot(CT)
+
+CT$NbClust
+CT$NbClust["Gene set 5"]
+CT$ClustMeds[["Gene set 4"]]
+CT$ClustMeds[["Gene set 5"]]
+}
+
+</code></pre>
+
+
+</div>

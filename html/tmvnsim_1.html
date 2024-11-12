@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmvnsim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Truncated Multivariate Normal Simulation</h2>
+
+<h3>Description</h3>
+
+<p>This function simulates an importance sample from the truncated multivariate 
+normal distribution with mean equal to <code>mean</code> and covariance matrix
+<code>sigma</code>, lower and upper truncation points <code>lower</code> and <code>upper</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tmvnsim(nsamp, k, lower=rep(-Inf,k), upper=rep(Inf,k), imod=rep(FALSE, k)
+		, means=rep(0, k), sigma=diag(1, k))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nsamp</code></td>
+<td>
+<p>Number of samples to generate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>Dimension</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>Vector of lower truncation points, 
+default is <code>rep(-Inf, length = k)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper</code></td>
+<td>
+<p>Vector of upper truncation points, 
+default is <code>rep( Inf, length = k)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>imod</code></td>
+<td>
+<p>Logical vector indicating whether truncation bounds of a 
+particular dimension should be applied on the modulus (absolute value) 
+of that component. Defaults to FALSE for all components</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>means</code></td>
+<td>
+<p>Mean vector, default is 0 for all components</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>Covariance matrix, default is identity matrix</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The simulation of truncated multivariate normal is done using importance sampling
+(GHK simulator) that uses a Cholesky decomposition of the covariance matrix to 
+convert the problem of covering the truncation region to a recursive sampling from
+certain univariate truncated normals. Importance sampling weights are simultaneously 
+returned. The original GHK algorithm has been slightly modified to allow truncation 
+of some or all components using absolute value (modulus).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the following two components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>samp</code></td>
+<td>
+<p>A matrix of nsamp rows and k columns containing the simulated samples</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wts</code></td>
+<td>
+<p>A vector of length nsamp containing the importance sampling weights</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Samsiddhi Bhattacharjee &lt;sb1@nibmg.ac.in&gt;</p>
+
+
+<h3>References</h3>
+
+<p>Geweke, J. 1989. Bayesian inference in econometric models using Monte Carlo 
+integration. Econometrica 57: 1317-1339.
+</p>
+<p>Hajivassiliou, V., and D. McFadden. 1998. The method of simulated scores for the
+estimation of LDV models. Econometrica 66: 863-896.
+</p>
+<p>Keane, M. P. 1994. A computationally practical simulation estimator for panel data.
+Econometrica 62: 95-116
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">low &lt;- rep(1, 5)
+high &lt;- rep(2, 5)
+sig &lt;- matrix(0.1, 5, 5)
+diag(sig) &lt;- 1
+res &lt;- tmvnsim(nsamp=1000, k=5, lower=low, upper=high, imod=rep(TRUE, 5)
+		, means=rep(0, 5), sigma=sig)
+head(res$samp)
+head(res$wts)
+cat("Probability of the region:\n")
+mean(res$wts)
+cat("Mean of Z-bar conditonal on truncation region:\n")
+sum(rowMeans(res$samp) * res$wts)/sum(res$wts)
+</code></pre>
+
+
+</div>

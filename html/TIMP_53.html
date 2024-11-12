@@ -1,0 +1,367 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fitModel</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Performs optimization of (possibly multidataset) models.</h2>
+
+<h3>Description</h3>
+
+<p>Performs optimization of (possibly multidataset) models and
+outputs plots and files representing the fit of the model to the data. </p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fitModel(data, modspec=list(), datasetind = vector(),
+modeldiffs = list(), opt = opt(),lprogress=FALSE )
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>list of objects of class <code>dat</code> containing the data
+to be modeled</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modspec</code></td>
+<td>
+<p>list whose elements are models of class <code>dat</code>
+describing the models as results from a
+call to the function <code>initModel</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datasetind</code></td>
+<td>
+<p>vector that has the same length as <code>data</code>;
+for each dataset in <code>data</code> specify the model it should have as
+an index into <code>modspec</code>; default mapping is that all datasets
+use the first model given in <code>modspec</code>  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modeldiffs</code></td>
+<td>
+<p> list whose elements specify any dataset-specific
+model differences.
+</p>
+
+<ul>
+<li>
+<p>linkclp list of vectors containing the indices of datasets.  If the
+two dataset indices are in the same vector, their conditionally linear
+parameters will be equated if they represent the same condition (e.g., a
+wavelength) within <code>thresh</code>.  For example,
+<code>linkclp = list(1:10, 11:15)</code> will let datasets 1-10 and 11-15
+have the same clp.  Note that if <code>linkclp</code> is not given, it will
+default to <code>list{1:length(data)}</code>, so that the clp from all datasets
+are equated when they represent conditions within <code>thresh</code> of each
+other.
+</p>
+<p>Consider the situation where the clp from many different datasets are
+equated.  <b>
+Then it is important to note that the specification of constraints
+applicable to the clp will also be equated, and will be read from the model
+assigned to the first dataset in the group. </b>
+</p>
+
+</li>
+<li>
+<p>dscal list of lists specifying linear scaling relations between
+datasets; each list has elements <code>to, from, value</code>.  The index of the
+dataset to be scaled is given in <code>to</code>; the index of the dataset on
+which the scaling is to be based is given in <code>from</code>.  The starting
+value parameterizing the relationship is given as <code>value</code>. For
+example, <code>dscal = list(list(to=2,from=1,value=.457))</code>. 
+</p>
+</li>
+<li>
+<p>thresh numeric describing the tolerance with which clp from
+different datasets are to be considered as equal.
+For instance, for
+two datasets containing data at 750 and 751 nm, respectively,
+<code>thresh=1.5</code> will equate the clp at 750 and 751 between datasets.
+Specify a negative
+value of <code>thresh</code> to estimate clp per-dataset.
+See Section 2.2 of the paper in the references for the model equations. 
+</p>
+</li>
+<li>
+<p>free list of lists specifying individual
+parameters to free for a given dataset. each sublist has
+named elements
+</p>
+
+<dl>
+<dt>what</dt>
+<dd>
+<p>character string naming parameter type, e.g., "kinpar"</p>
+</dd>
+<dt>ind</dt>
+<dd>
+<p>vector of indices into parameter vector or list, e.g.,
+<code>c(2,3)</code> or <code>4</code></p>
+</dd>
+<dt>dataset</dt>
+<dd>
+<p>dataset index in which parameter is to be freed</p>
+</dd>
+<dt>start</dt>
+<dd>
+<p>starting value for freed parameter</p>
+</dd>
+</dl>
+<p>For example, <code>free = list(
+list(what = "irfpar", ind = 1, dataset = 2, start=-.1932),
+list(what = "kinpar", ind = 5, dataset = 2, start=.0004),
+list(what = "kinpar", ind = 4, dataset = 2, start= .0159))</code>.
+
+</p>
+</li>
+<li>
+<p>remove list of lists specifying individual
+parameters to remove from
+parameter groups for a given dataset. each sublist has
+named elements
+</p>
+
+<ul>
+<li>
+<p>what character string naming parameter type, e.g., "kinpar"
+</p>
+</li>
+<li>
+<p>dataset dataset index in which parameter group is to be removed
+</p>
+</li>
+<li>
+<p>ind vector of indices into parameter vector or list, e.g.,
+<code>c(2,3)</code> or <code>4</code> where parameter should be removed 
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>add list of lists specifying individual
+parameters to add to parameter groups for a given dataset. each sublist has
+named elements
+</p>
+
+<ul>
+<li>
+<p>what character string naming parameter type, e.g., "kinpar"
+</p>
+</li>
+<li>
+<p>dataset dataset index in which parameter group is to change
+</p>
+</li>
+<li>
+<p>start starting value for added parameter
+</p>
+</li>
+<li>
+<p>ind vector of indices into parameter vector or list, e.g.,
+<code>c(2,3)</code> or <code>4</code> where parameter should be added. 
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>changelist of lists specifying entire parameter groups to change
+for a given dataset.
+each sublist has named elements
+</p>
+
+<ul>
+<li>
+<p>what character string naming parameter type, e.g., "kinpar"
+</p>
+</li>
+<li>
+<p>dataset dataset index in which parameter group is to change
+</p>
+</li>
+<li>
+<p>spec new specification that in initModel would follow "what",
+e.g., for <code>c(.1, .3)</code> if what="kinpar"
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>rel
+list of lists specifying parameters to relate between datasets
+each sublist has named elements
+</p>
+
+<ul>
+<li>
+<p>what1 character string naming parameter type to be determined in
+relation to some other parameter type , e.g., "kinpar"
+</p>
+</li>
+<li>
+<p>what2 character string naming parameter type on which another
+parameter type is to depend, e.g., "kinpar"
+</p>
+</li>
+<li>
+<p>ind1 vector of indices into parameter vector or
+list, e.g., <code>c(2,3)</code> or <code>4</code> of the dependent parameter. 
+</p>
+</li>
+<li>
+<p>ind2 vector or numeric of indices into parameter vector or
+list, e.g., <code>c(2,3)</code> or <code>4</code> of the parameter on which another
+parameter will depend 
+</p>
+</li>
+<li>
+<p>dataset1 dataset index of the dependent parameter
+</p>
+</li>
+<li>
+<p>dataset2 dataset index of the parameter on which another parameter
+will depend
+</p>
+</li>
+<li>
+<p>rel optional character string describing functional relationship
+between parameters; defaults to "lin" for linear relationship 
+</p>
+</li>
+<li>
+<p>start starting value or vector of values parameterizing
+relationship between parameters  
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>weightlist List of new weights for the datasets returned
+by the function <code>outlierCorrs</code> (as the element
+<code>weightList</code> of the list that is the return value of this function).
+
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opt</code></td>
+<td>
+<p>Object of class <code>kinopt</code> or <code>specopt</code> specifying
+fitting and plotting options. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lprogress</code></td>
+<td>
+<p>Logical specifying
+whether textual output of fitting progress is returned </p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function applies the <code>nls</code> function internally to
+optimize nonlinear parameters and to solve for conditionally linear parameters
+(clp) via the partitioned variable projection algorithm.
+</p>
+
+
+<h3>Value</h3>
+
+<p> A list is returned containing the following elements:
+</p>
+
+<ul>
+<li>
+<p>currTheta is a list of objects
+of class <code>theta</code> whose elements contain the parameter estimates
+associated with each dataset modeled.
+</p>
+</li>
+<li>
+<p>currModel is an object of class <code>multimodel</code>
+containing the results of fitting as well as the model
+specification
+</p>
+</li>
+<li>
+<p>toPlotter is a list containing all arguments used by the plotting
+function; it is used to regenerate plots and other output by the
+<code>examineFit</code>  function
+</p>
+</li>
+<li>
+<p>nlsprogress if lprogress = TRUE textual output of the fitting progress
+is returned as an array of strings
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Katharine M. Mullen, Ivo H. M. van Stokkum</p>
+
+
+<h3>References</h3>
+
+<p>Mullen KM, van Stokkum IHM (2007).
+“TIMP: an R package for modeling
+multi-way spectroscopic measurements.” Journal of Statistical Software,
+18(3). <a href="https://doi.org/10.18637/jss.v018.i03">doi:10.18637/jss.v018.i03</a></p>
+
+
+<h3>See Also</h3>
+
+ <p><code>readData</code>, <code>initModel</code>,
+<code>examineFit</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## 2 simulated concentration profiles in time
+C &lt;- matrix(nrow = 51, ncol = 2)
+k &lt;- c(.5, 1)
+t &lt;- seq(0, 2, by = 2/50)
+C[, 1] &lt;- exp( - k[1] * t)
+C[, 2] &lt;- exp( - k[2] * t)
+
+## 2 simulated spectra in wavelength
+E &lt;- matrix(nrow = 51, ncol = 2)
+wavenum &lt;- seq(18000,28000, by=200)
+location &lt;- c(25000, 20000)
+delta &lt;- c(5000, 7000)
+amp &lt;- c(1, 2)
+E[, 1] &lt;- amp[1] * exp( - log(2) * (2 * (wavenum - location[1])/delta[1])^2)
+E[, 2] &lt;- amp[2] * exp( - log(2) * (2 * (wavenum - location[2])/delta[2])^2)
+
+## simulated time-resolved spectra
+sigma &lt;- .001
+Psi_q  &lt;- C %*% t(E) + sigma * rnorm(nrow(C) * nrow(E))
+
+## as an object of class dat
+Psi_q_data &lt;- dat(psi.df = Psi_q, x = t, nt = length(t), x2 = wavenum, nl =
+length(wavenum))
+
+## model for the data in the time-domain
+kinetic_model &lt;- initModel(mod_type = "kin", seqmod = FALSE,
+kinpar = c(.1, 2))
+
+## fit the model
+kinetic_fit &lt;- fitModel(data = list(Psi_q_data),
+modspec = list(kinetic_model), opt = kinopt(iter=4, plot=FALSE))
+</code></pre>
+
+
+</div>

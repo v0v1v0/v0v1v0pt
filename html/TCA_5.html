@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tensor</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extracting hidden 3D signals from 2D input</h2>
+
+<h3>Description</h3>
+
+<p>Estimates 3-dimensional signals (features by observations by sources) from input of mixtures (features by observations), under the assumption of the TCA model that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of  tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), <code>tensor</code> allows to estimate a tensor of cell-type-specific levels for each individual in each methylation site (i.e. a tensor of methylation sites by individuals by cell types).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tensor(
+  X,
+  tca.mdl,
+  scale = FALSE,
+  parallel = FALSE,
+  num_cores = NULL,
+  log_file = "TCA.log",
+  debug = FALSE,
+  verbose = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>An <code>m</code> by <code>n</code> matrix of measurements of <code>m</code> features for <code>n</code> observations. Each column in <code>X</code> is assumed to be a mixture of <code>k</code> sources. Note that <code>X</code> must include row names and column names and that NA values are currently not supported. <code>X</code> should not include features that are constant across all observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tca.mdl</code></td>
+<td>
+<p>The value returned by applying the function <code>tca</code> to <code>X</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>A logical value indicating whether to divide the estimate of each entry in the tensor by its estimated standard deviation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>A logical value indicating whether to use parallel computing (possible when using a multi-core machine).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_cores</code></td>
+<td>
+<p>A numeric value indicating the number of cores to use (activated only if <code>parallel == TRUE</code>). If <code>num_cores == NULL</code> then all available cores except for one will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log_file</code></td>
+<td>
+<p>A path to an output log file. Note that if the file <code>log_file</code> already exists then logs will be appended to the end of the file. Set <code>log_file</code> to <code>NULL</code> to prevent output from being saved into a file; note that if <code>verbose == FALSE</code> then no output file will be generated regardless of the value of <code>log_file</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debug</code></td>
+<td>
+<p>A logical value indicating whether to set the logger to a more detailed debug level; set <code>debug</code> to <code>TRUE</code> before reporting issues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical value indicating whether to print logs.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See tca for notations and details about the TCA model. Given estimates of the parameters of the model (given by tca), <code>tensor</code> uses the conditional distribution <code class="reqn">Z_{hj}^i|X_{ji}=x_{ji}</code> for estimating the <code class="reqn">k</code> source-specific levels of each observation <code class="reqn">i</code> in each feature <code class="reqn">j</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the estimated source-specific values. The first element in the list is an <code>m</code> by <code>n</code> matrix (features by observations) corresponding to the estimated values coming from the first source, the second element in the list is another <code>m</code> by <code>n</code> matrix (features by observations) corresponding to the estimated values coming from the second source and so on.
+</p>
+
+
+<h3>References</h3>
+
+<p>Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2019.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data &lt;- test_data(50, 20, 3, 2, 2, 0.01)
+tca.mdl &lt;- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
+Z_hat &lt;- tensor(data$X, tca.mdl)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_swats</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>SWATS optimizer</h2>
+
+<h3>Description</h3>
+
+<p>R implementation of the SWATS optimizer proposed
+by Shekar and Sochee (2018).
+We used the implementation available at
+https://github.com/jettify/pytorch-optimizer/
+Thanks to Nikolay Novik for providing the pytorch code.
+</p>
+<p>From the abstract by the paper by Shekar and Sochee (2018):
+Adaptive optimization methods such as Adam, Adagrad or RMSprop
+have been found to generalize poorly compared to
+Stochastic gradient descent (SGD). These methods tend to perform well i
+in the initial portion of training but are outperformed by SGD at
+later stages of training. We investigate a hybrid strategy that begins
+training with an adaptive method and switches to SGD
+when a triggering condition is satisfied.
+The condition we propose relates to the projection of Adam
+steps on the gradient subspace. By design, the monitoring process
+for this condition adds very little overhead and does not increase
+the number of hyperparameters in the optimizer.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_swats(
+  params,
+  lr = 0.01,
+  betas = c(0.9, 0.999),
+  eps = 1e-08,
+  weight_decay = 0,
+  nesterov = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>List of parameters to optimize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>Learning rate (default: 1e-3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>betas</code></td>
+<td>
+<p>Coefficients computing running averages of gradient
+and its square (default: (0.9, 0.999)).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Term added to the denominator to improve numerical
+stability (default: 1e-8).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decay</code></td>
+<td>
+<p>Weight decay (L2 penalty) (default: 0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nesterov</code></td>
+<td>
+<p>Enables Nesterov momentum (default: False).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A torch optimizer object implementing the <code>step</code> method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilberto Camara, <a href="mailto:gilberto.camara@inpe.br">gilberto.camara@inpe.br</a>
+</p>
+<p>Daniel Falbel, <a href="mailto:daniel.falble@gmail.com">daniel.falble@gmail.com</a>
+</p>
+<p>Rolf Simoes, <a href="mailto:rolf.simoes@inpe.br">rolf.simoes@inpe.br</a>
+</p>
+<p>Felipe Souza, <a href="mailto:lipecaso@gmail.com">lipecaso@gmail.com</a>
+</p>
+<p>Alber Sanchez, <a href="mailto:alber.ipia@inpe.br">alber.ipia@inpe.br</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Nitish Shirish Keskar, Richard Socher
+"Improving Generalization Performance by Switching from Adam to SGD".
+International Conference on Learning Representations (ICLR) 2018.
+https://arxiv.org/abs/1712.07628
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch::torch_is_installed()) {
+# function to demonstrate optimization
+beale &lt;- function(x, y) {
+    log((1.5 - x + x * y)^2 + (2.25 - x - x * y^2)^2 + (2.625 - x + x * y^3)^2)
+ }
+# define optimizer
+optim &lt;- torchopt::optim_swats
+# define hyperparams
+opt_hparams &lt;- list(lr = 0.01)
+
+# starting point
+x0 &lt;- 3
+y0 &lt;- 3
+# create tensor
+x &lt;- torch::torch_tensor(x0, requires_grad = TRUE)
+y &lt;- torch::torch_tensor(y0, requires_grad = TRUE)
+# instantiate optimizer
+optim &lt;- do.call(optim, c(list(params = list(x, y)), opt_hparams))
+# run optimizer
+steps &lt;- 400
+x_steps &lt;- numeric(steps)
+y_steps &lt;- numeric(steps)
+for (i in seq_len(steps)) {
+    x_steps[i] &lt;- as.numeric(x)
+    y_steps[i] &lt;- as.numeric(y)
+    optim$zero_grad()
+    z &lt;- beale(x, y)
+    z$backward()
+    optim$step()
+}
+print(paste0("starting value = ", beale(x0, y0)))
+print(paste0("final value = ", beale(x_steps[steps], y_steps[steps])))
+}
+</code></pre>
+
+
+</div>

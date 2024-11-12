@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>g_step</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a STEP graph</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Based on the STEP results, creates a <code>ggplot</code> graph showing the estimated HR or OR
+along the continuous biomarker value subgroups.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">g_step(
+  df,
+  use_percentile = "Percentile Center" %in% names(df),
+  est = list(col = "blue", lty = 1),
+  ci_ribbon = list(fill = getOption("ggplot2.discrete.colour")[1], alpha = 0.5),
+  col = getOption("ggplot2.discrete.colour")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>tibble</code>)<br> result of <code>tidy.step()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_percentile</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether to use percentiles for the x axis or actual
+biomarker values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>est</code></td>
+<td>
+<p>(named <code>list</code>)<br><code>col</code> and <code>lty</code> settings for estimate line.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_ribbon</code></td>
+<td>
+<p>(named <code>list</code> or <code>NULL</code>)<br><code>fill</code> and <code>alpha</code> settings for the confidence interval
+ribbon area, or <code>NULL</code> to not plot a CI ribbon.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>(<code>character</code>)<br> color(s).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>ggplot</code> STEP graph.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Custom tidy method <code>tidy.step()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(nestcolor)
+library(survival)
+lung$sex &lt;- factor(lung$sex)
+
+# Survival example.
+vars &lt;- list(
+  time = "time",
+  event = "status",
+  arm = "sex",
+  biomarker = "age"
+)
+
+step_matrix &lt;- fit_survival_step(
+  variables = vars,
+  data = lung,
+  control = c(control_coxph(), control_step(num_points = 10, degree = 2))
+)
+step_data &lt;- broom::tidy(step_matrix)
+
+# Default plot.
+g_step(step_data)
+
+# Add the reference 1 horizontal line.
+library(ggplot2)
+g_step(step_data) +
+  ggplot2::geom_hline(ggplot2::aes(yintercept = 1), linetype = 2)
+
+# Use actual values instead of percentiles, different color for estimate and no CI,
+# use log scale for y axis.
+g_step(
+  step_data,
+  use_percentile = FALSE,
+  est = list(col = "blue", lty = 1),
+  ci_ribbon = NULL
+) + scale_y_log10()
+
+# Adding another curve based on additional column.
+step_data$extra &lt;- exp(step_data$`Percentile Center`)
+g_step(step_data) +
+  ggplot2::geom_line(ggplot2::aes(y = extra), linetype = 2, color = "green")
+
+# Response example.
+vars &lt;- list(
+  response = "status",
+  arm = "sex",
+  biomarker = "age"
+)
+
+step_matrix &lt;- fit_rsp_step(
+  variables = vars,
+  data = lung,
+  control = c(
+    control_logistic(response_definition = "I(response == 2)"),
+    control_step()
+  )
+)
+step_data &lt;- broom::tidy(step_matrix)
+g_step(step_data)
+
+</code></pre>
+
+
+</div>

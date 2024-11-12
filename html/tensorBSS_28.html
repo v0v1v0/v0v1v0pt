@@ -1,0 +1,276 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tPCAaug</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Order Determination for Tensorial PCA Using Augmentation 
+</h2>
+
+<h3>Description</h3>
+
+<p>In a tensorial PCA context the dimensions of a core tensor are estimated based on augmentation of additional noise components. Information from both eigenvectors and eigenvalues are then used to obtain the dimension estimates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tPCAaug(x, noise = "median", naug = 1, nrep = 1, 
+  sigma2 = NULL, alpha = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>array of an order at least three with the last dimension corresponding to the sampling units.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noise</code></td>
+<td>
+
+<p>specifies how to estimate the noise variance. Can be one of  
+<code>"median"</code>, <code>"quantile"</code>, <code>"last"</code>, <code>"known"</code>. Default is <code>"median"</code>. 
+See details for further information.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>naug</code></td>
+<td>
+
+<p>number of augmented variables in each mode.  Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nrep</code></td>
+<td>
+
+<p>number of repetitions for the augmentation. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma2</code></td>
+<td>
+
+<p>if <code>noise = "known"</code> the value of the noise variance.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+
+<p>if <code>noise = "quantile"</code> this specifies the quantile to be used.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For simplicity details are given for matrix valued observations.
+</p>
+<p>Assume having a sample of <code class="reqn">p_1 \times p_2</code> matrix-valued observations which are realizations of the model
+<code class="reqn">X = U_L Z U_R'+ N</code>,
+where <code class="reqn">U_L</code> and <code class="reqn">U_R</code> are matrices with orthonormal columns, <code class="reqn">Z</code> is the random, zero mean <code class="reqn">k_1 \times k_2</code> core matrix with <code class="reqn">k_1 \leq p_1</code> and <code class="reqn">k_2 \leq p_2</code>. 
+<code class="reqn">N</code> is <code class="reqn">p_1 \times p_2</code> matrix-variate noise that follows a matrix variate spherical distribution with <code class="reqn">E(N) = 0</code> and <code class="reqn">E(N N') = \sigma^2 I_{p_1}</code> and is independent from <code class="reqn">Z</code>. The goal is to estimate <code class="reqn">k_1</code> and <code class="reqn">k_2</code>. For that purpose the eigenvalues and eigenvectors of the left and right covariances are used. To evaluate the variation in the eigenvectors, in each mode the matrix <code class="reqn">X</code> is augmented with <code>naug</code> normally distributed components appropriately scaled by noise standard deviation. The procedure can be repeated <code>nrep</code> times to reduce random variation in the estimates. 
+</p>
+<p>The procedure needs an estimate of the noise variance and four options are available via the argument <code>noise</code>:
+</p>
+
+<ol>
+<li> <p><code>noise = "median"</code>: Assumes that at least half of components are noise and uses thus the median of the pooled and scaled eigenvalues as an estimate.
+</p>
+</li>
+<li> <p><code>noise = "quantile"</code>: Assumes that at least  100 <code>alpha</code> % of the components are noise and uses the mean of the lower <code>alpha</code> quantile of the pooled and scaled eigenvalues from all modes as an estimate.
+</p>
+</li>
+<li> <p><code>noise = "last"</code>: Uses the pooled information from all modes and then the smallest eigenvalue as estimate.
+</p>
+</li>
+<li> <p><code>noise = "known"</code>: Assumes the error variance is known and needs to be provided via <code>sigma2</code>. 
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<p>A list of class 'taug' inheriting from class 'tladle' and containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>U</code></td>
+<td>
+<p>list containing the modewise rotation matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+<p>list containing the modewise eigenvalues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>array of the same size as <code>x</code> containing the principal components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ResMode</code></td>
+<td>
+<p>a list with the modewise results which are lists containing:
+</p>
+
+<dl>
+<dt>mode</dt>
+<dd>
+<p>label for the mode.</p>
+</dd>
+<dt>k</dt>
+<dd>
+<p>the order estimated for that mode.</p>
+</dd>
+<dt>fn</dt>
+<dd>
+<p>vector giving the measures of variation of the eigenvectors.</p>
+</dd>
+<dt>phin</dt>
+<dd>
+<p>normalized eigenvalues.</p>
+</dd>
+<dt>lambda</dt>
+<dd>
+<p>the unnormalized eigenvalues used to compute phin.</p>
+</dd>
+<dt>gn</dt>
+<dd>
+<p>the main criterion augmented order estimator.</p>
+</dd>
+<dt>comp</dt>
+<dd>
+<p>vector from 0 to the number of dimensions to be evaluated.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xmu</code></td>
+<td>
+<p>the data location</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.name</code></td>
+<td>
+<p>string with the name of the input data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>string <code>tPCA</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Sigma2</code></td>
+<td>
+<p>estimate of standardized sigma2 from the model described above or the standardized provided value. Sigma2 is the estimate for the variance of individual entries of <code>N</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AllSigHat2</code></td>
+<td>
+<p>vector of noise variances used for each mode.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen, Una Radojicic
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Radojicic, U., Lietzen, N., Nordhausen, K. and Virta, J. (2021): Dimension Estimation in Two-Dimensional PCA. In S. Loncaric, T. Petkovic and D. Petrinovic (editors) "Proceedings of the 12 International Symposium on Image and Signal Processing and Analysis (ISPA 2021)", 16-22. <a href="https://doi.org/10.1109/ISPA52656.2021.9552114">doi:10.1109/ISPA52656.2021.9552114</a>.</cite>
+</p>
+<p><cite>Radojicic, U., Lietzen, N., Nordhausen, K. and Virta, J. (2022): Order Determination for Tensor-valued Observations Using Data Augmentation. &lt;arXiv:2207.10423&gt;.</cite>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tPCA</code>, <code>tPCAladle</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(ICtest)
+
+
+# matrix-variate example
+n &lt;- 200
+sig &lt;- 0.6
+
+Z &lt;- rbind(sqrt(0.7)*rt(n,df=5)*sqrt(3/5),
+           sqrt(0.3)*runif(n,-sqrt(3),sqrt(3)),
+           sqrt(0.3)*(rchisq(n,df=3)-3)/sqrt(6),
+           sqrt(0.9)*(rexp(n)-1),
+           sqrt(0.1)*rlogis(n,0,sqrt(3)/pi),
+           sqrt(0.5)*(rbeta(n,2,2)-0.5)*sqrt(20)
+)
+
+dim(Z) &lt;- c(3, 2, n)
+
+U1 &lt;- rorth(12)[,1:3]
+U2 &lt;- rorth(8)[,1:2]
+U &lt;- list(U1=U1, U2=U2)
+Y &lt;- tensorTransform2(Z,U,1:2)
+EPS &lt;- array(rnorm(12*8*n, mean=0, sd=sig), dim=c(12,8,n))
+X &lt;- Y + EPS
+
+
+TEST &lt;- tPCAaug(X)
+# Dimension should be 3 and 2 and (close to) sigma2 0.36
+TEST
+
+# Noise variance in i-th mode is equal to Sigma2 multiplied by the product 
+# of number of colums of all modes except i-th one
+
+TEST$Sigma2*c(8,12)
+# This is returned as
+TEST$AllSigHat2
+
+# higher order tensor example
+
+Z2 &lt;- rnorm(n*3*2*4*10)
+
+dim(Z2) &lt;- c(3,2,4,10,n)
+
+U2.1 &lt;- rorth(12)[ ,1:3]
+U2.2 &lt;- rorth(8)[ ,1:2]
+U2.3 &lt;- rorth(5)[ ,1:4]
+U2.4 &lt;- rorth(20)[ ,1:10]
+
+U2 &lt;- list(U1 = U2.1, U2 = U2.2, U3 = U2.3, U4 = U2.4)
+Y2 &lt;- tensorTransform2(Z2, U2, 1:4)
+EPS2 &lt;- array(rnorm(12*8*5*20*n, mean=0, sd=sig), dim=c(12, 8, 5, 20, n))
+X2 &lt;- Y2 + EPS2
+
+
+TEST2 &lt;- tPCAaug(X2, noise = "quantile", alpha =0.3)
+TEST2
+</code></pre>
+
+
+</div>

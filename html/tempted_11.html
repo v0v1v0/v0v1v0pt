@@ -1,0 +1,137 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ratio_feature</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Take log ratio of the abundance of top features over bottom features</h2>
+
+<h3>Description</h3>
+
+<p>Top and bottom ranking features are picked based on feature loadings (and their contrasts).
+The log ratio abundance of the top ranking features over the bottom ranking features is produced as the main result.
+This function and its result is designed for longitudinal microbiome data,
+and may not be meaningful for other type of temporal data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ratio_feature(
+  res_tempted,
+  datlist,
+  pct = 0.05,
+  absolute = FALSE,
+  contrast = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>res_tempted</code></td>
+<td>
+<p>Output of <code>tempted</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datlist</code></td>
+<td>
+<p>Output of <code>format_tempted(, transform="none")</code>, the temporal tensor that include the raw read counts.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pct</code></td>
+<td>
+<p>The percent of features to sum up. Default is 0.05, i.e. 5%.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>absolute</code></td>
+<td>
+<p><code>absolute = TRUE</code> means features are ranked by the absolute value of feature loadings,
+and the top <code>pct</code> percent of features are picked.
+<code>absolute = FALSE</code> means features are ranked by the original value of feature loadings,
+and the top and bottom <code>pct</code> percent of features are picked.
+Then ratio is taken as the abundance of the features with positive loading
+over the abundance of the features with negative loading.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>contrast</code></td>
+<td>
+<p>A matrix choosing how components are combined,
+each column is a contrast of length r and used to calculate the linear combination of
+the feature loadings of r components.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of results:
+</p>
+
+<dl>
+<dt>metafeature_ratio</dt>
+<dd>
+<p>The log ratio abundance of the top over bottom ranking features. It is a data.frame with five columns: "value" for the log ratio values, "subID" for the subject ID, and "timepoint" for the time points, and "PC" indicating which component was used to construct the meta feature.</p>
+</dd>
+<dt>contrast</dt>
+<dd>
+<p>The contrast used to linearly combine the components from input.</p>
+</dd>
+<dt>toppct</dt>
+<dd>
+<p>A matrix of TRUE/FALSE indicating which features are ranked top in each component (and contrast) and used as the numerator of the log ratio.</p>
+</dd>
+<dt>bottompct</dt>
+<dd>
+<p>A matrix of TRUE/FALSE indicating which features are ranked bottom in each component (and contrast) and used as the denominator of the log ratio.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Shi P, Martino C, Han R, Janssen S, Buck G, Serrano M, Owzar K, Knight R, Shenhav L, Zhang AR. (2023) <em>Time-Informed Dimensionality Reduction for Longitudinal Microbiome Studies</em>. bioRxiv. doi: 10.1101/550749. <a href="https://www.biorxiv.org/content/10.1101/550749">https://www.biorxiv.org/content/10.1101/550749</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Take a subset of the samples so the example runs faster
+
+# Here we are taking samples from the odd months
+sub_sample &lt;- rownames(meta_table)[(meta_table$day_of_life%/%12)%%2==1]
+count_table_sub &lt;- count_table[sub_sample,]
+processed_table_sub &lt;- processed_table[sub_sample,]
+meta_table_sub &lt;- meta_table[sub_sample,]
+
+datlist &lt;- format_tempted(count_table_sub,
+                          meta_table_sub$day_of_life,
+                          meta_table_sub$studyid,
+                          pseudo=0.5,
+                          transform="clr")
+
+mean_svd &lt;- svd_centralize(datlist, r=1)
+
+res_tempted &lt;- tempted(mean_svd$datlist, r=2, smooth=1e-5)
+
+datalist_raw &lt;- format_tempted(count_table_sub, meta_table_sub$day_of_life, meta_table_sub$studyid,
+transform="none")
+
+contrast &lt;- cbind(c(1,1), c(1,-1))
+
+res_ratio &lt;- ratio_feature(res_tempted, datalist_raw, pct=0.1,
+absolute=FALSE, contrast=contrast)
+
+group &lt;- unique(meta_table[, c("studyid", "delivery")])
+
+# plot the log ratios
+
+plot_metafeature(res_ratio$metafeature_ratio, group, bws=30)
+
+</code></pre>
+
+
+</div>

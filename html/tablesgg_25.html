@@ -1,0 +1,538 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>elements</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract Table Elements from a Plotted Table </h2>
+
+<h3>Description</h3>
+
+<p>Extract table elements (entries, blocks, or hvrules) from a plotted table,
+as a simple data frame with one row per element.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">elements(x, type=c("entry", "block", "hvrule"), enabledOnly=TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>pltdTable</code> object, containing a plotted table.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character scalar indicating the type of elements to extract: one of
+"entry", "block", or "hvrule".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>enabledOnly</code></td>
+<td>
+<p>Logical scalar.  If TRUE, only elements that are currently enabled in
+<code>x</code> are returned.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A plotted table (<code>pltdTable</code> object) has three types of elements:
+entries, blocks, and hvrules.  <em>Entries</em> are the text strings (and
+associated properties) displayed in table cells.  <em>Blocks</em> are
+rectangular sets of contiguous table cells.  And <em>hvrules</em> are
+spacers, with or without a visible line (or "rule"), used to separate or
+group table rows and columns.  See the package vignette for more
+information.
+</p>
+<p>This function allows one to inspect these elements.  The purpose is
+primarily informational: an easy way to view all the elements of a table,
+their descriptors (e.g., as used by styles and the <code>propsd&lt;-</code>
+function), and the graphical properties they have been assigned.  It is
+not intended as a way to edit or modify elements.  For that, see
+<code>update</code> methods for <code>textTable</code> and <code>pltdTable</code> objects,
+the <code>props&lt;-</code> set of functions, and section 4 of the package
+vignette.
+</p>
+<p>The remainder of this section describes the columns in the returned data
+frame, for each element type.
+</p>
+<p><strong>Columns in <code>elements(x, type="entry")</code></strong>
+</p>
+<p><em>Entry descriptors:</em>
+</p>
+ <dl>
+<dt>id</dt>
+<dd>
+<p>Character string that uniquely identifies the entry.
+The format is <code>&lt;part&gt;,&lt;partrow&gt;,&lt;partcol&gt;</code> for table parts that are
+matrices (<code>rowhead</code>, <code>rowheadLabels</code>, <code>colhead</code>, and
+<code>body</code>), and <code>&lt;part&gt;,&lt;partrow&gt;</code> for table parts that are vectors
+(annotation parts <code>title</code>, <code>subtitle</code>, and <code>foot</code>).</p>
+</dd>
+<dt>part</dt>
+<dd>
+<p>Character string identifying the part of the table to which
+the entry belongs: one of "body", "rowhead", "colhead", "rowheadLabels",
+"title", "subtitle", or "foot".</p>
+</dd> <dt>subpart</dt>
+<dd>
+<p>Character string with
+further information about the nature of of the entry within its part of
+the table.  May be NA.</p>
+</dd> <dt>partrow, partcol</dt>
+<dd>
+<p>Row number, column number
+of the entry within its table part.  For parts that are vectors rather
+than matrices, <code>partrow</code> will be the element number within the
+vector, and <code>partcol</code> will be NA.  If an entry spans more than one
+row or column, the minimum row/column number of the spanned cells is
+used.</p>
+</dd> <dt>headlayer</dt>
+<dd>
+<p>How far (in number of rows or columns) from the
+body of the table the entry is.  By definition this is 0 for entries in
+the body of the table.  It is 1 for row/column headers immediately
+adjacent to the body, 2 for headers one row/column further out, and so on.
+The layer numbers for row header labels match those for the corresponding
+columns of row headers.  The layers for titles, subtitles, and foot lines
+are the number of _rows_ from the body of the table.  When a table is
+created with <code>rowheadInside</code> set to TRUE, the <code>headlayer</code> value
+for the outermost layer of row headers (and for its label, if any) is
+changed to 0, since the headers become interleaved with the table body.</p>
+</dd>
+<dt>level_in_layer</dt>
+<dd>
+<p>Numbering of entries within a given part and
+headlayer.  For row and column headers this is based their hierarchical
+structure (see the descriptors for blocks, below).  For other table parts
+it is just an integer from 1 to the number of entries in that layer of
+that part.</p>
+</dd> <dt>multirow, multicolumn</dt>
+<dd>
+<p>Logicals indicating whether the
+entry spans multiple rows or columns of the table.</p>
+</dd> <dt>text</dt>
+<dd>
+<p>Character
+string containing the formatted content of the entry, for display.  It may
+use <code>plotmath</code> notation for mathematical notation, or markdown/HTML
+tags; see <code>textspec</code> below.</p>
+</dd> <dt>type</dt>
+<dd>
+<p>Character string identifying
+the type of value the entry represents (e.g., "numeric").  May be NA.  The
+default for table annotation (<code>title</code>, <code>subtitle</code>, <code>foot</code>)
+and <code>rowheadLabels</code> is "character".</p>
+</dd> <dt>textspec</dt>
+<dd>
+<p>Character string
+indicating any special features of the text in <code>text</code>.  Currently
+supported values are "plain", "plotmath", and "markdown".  "plotmath"
+indicates that the entry text contains mathematical notation as described
+in <code>?plotmath</code>.  "markdown" means the text may contain markdown or
+HTML tags to control its appearance; this requires the <code>ggtext</code>
+package.</p>
+</dd> <dt>enabled</dt>
+<dd>
+<p>Logical indicating whether the entry is to be
+displayed when the table is plotted.  If FALSE the entry is ignored when
+laying out the table or determining its size.</p>
+</dd> <dt>arow1, arow2, acol1,
+acol2</dt>
+<dd>
+<p>Range of row and column numbers occupied by an entry, with respect
+to the augmented row-column grid for the table.  <code>arow1</code> &lt;
+<code>arow2</code> and/or <code>acol1</code> &lt; <code>acol2</code> means the entry spans
+multiple rows and/or columns.</p>
+</dd> </dl>
+<p><em>Graphical properties for entries</em>.  Values for these are assigned by
+a <em>style</em>, either a default style (see <code>?tablesggOpt</code>) or
+user-specified.
+</p>
+ <dl>
+<dt>hjust</dt>
+<dd>
+<p>Numeric horizontal justification for entry text
+(0=left, 0.5=center, 1=right).</p>
+</dd> <dt>vjust</dt>
+<dd>
+<p>Numeric vertical
+justification for entry text (0=top, 0.5=center, 1=bottom).</p>
+</dd>
+<dt>color</dt>
+<dd>
+<p>Character string; color for entry text.</p>
+</dd> <dt>alpha</dt>
+<dd>
+<p>Numeric
+value in [0, 1] specifying transparency of entry text (0=transparent,
+1=opaque).</p>
+</dd> <dt>size</dt>
+<dd>
+<p>Font size for entry text, in points (72.27 points
+= 1 inch, 2.845 points = 1 mm).</p>
+</dd> <dt>family</dt>
+<dd>
+<p>Character string, the font
+to use for entry text.  "serif", "sans", and "mono" will work for all
+graphics devices.  Other fonts may or may not be available on a particular
+device.</p>
+</dd> <dt>fontface</dt>
+<dd>
+<p>Numeric indicating 1=plain, 2=bold, 3=italic,
+4=bold and italic.</p>
+</dd> <dt>lineheight</dt>
+<dd>
+<p>Numeric multiplier that adjusts
+interline spacing for multi-line entry text. 1.0 gives the default
+spacing.</p>
+</dd> <dt>angle</dt>
+<dd>
+<p>Rotation angle for entry text, in degrees
+counter-clockwise from horizontal.</p>
+</dd> <dt>hpad, vpad</dt>
+<dd>
+<p>Padding added around
+the sides of entry text to keep it from touching cell borders, in
+millimeters.  <code>hpad</code> is added on both the left and right sides of the
+text, and <code>vpad</code> is added on both the top and bottom.</p>
+</dd>
+<dt>fill</dt>
+<dd>
+<p>Character string; background color for the cell(s) containing
+the entry.  NA means no background color.</p>
+</dd> <dt>fill_alpha</dt>
+<dd>
+<p>Numeric value
+in [0, 1] specifying transparency of the cell background color
+(0=transparent, 1=opaque).</p>
+</dd> <dt>border_size</dt>
+<dd>
+<p>Thickness of the border to
+draw around the cell(s) containing the entry text, in millimeters.</p>
+</dd>
+<dt>border_color</dt>
+<dd>
+<p>Character string; color for the border around entry
+text.  NA means no border.</p>
+</dd> <dt>minwidth, maxwidth</dt>
+<dd>
+<p>Minimum and maximum
+width for the cell(s) spanned by the entry.  (Here <em>width</em> is with
+respect to the text itself; i.e., the direction of reading for English
+text, and therefore measured vertically if the text is rotated by 90 or
+270 degrees.)  They may be expressed in two forms.  Positive values are
+interpreted as absolute widths in millimeters, and should include the
+amount of padding specified by <code>hpad</code> (when <code>angle</code> is 0 or 180
+degrees) or <code>vpad</code> (when <code>angle</code> is 90 or 270 degrees).
+Negative values are interpreted as multiples of the natural width of the
+text itself, <em>without</em> including padding.  Thus setting
+<code>minwidth</code> for an entry to <code>-1</code> will guarantee that the width of
+the spanned cell(s) will be at least enough to contain the text without
+wrapping. </p>
+ <ul>
+<li>
+<p> An NA value for <code>minwidth</code> means there is
+no constraint on minimum width, and is equivalent to 0.  An <code>Inf</code>
+value for <code>maxwidth</code> means there is no constraint on maximum width.
+(However in the absence of constraints, the internal algorithm favors
+widths as close as possible to the natural width of the entry text,
+without wrapping.) </p>
+</li>
+<li>
+<p> An NA value for <code>maxwidth</code> means the maximum
+width will be determined passively from the <code>maxwidth</code> values of
+other entries in the same table column(s) (if <code>angle</code> is 0 or 180) or
+row(s) (if <code>angle</code> is 90 or 270).  (It will never be less than
+<code>minwidth</code>.) This may be useful for table titles and footnotes, where
+long text should be wrapped to fit widths implied by the other table
+entries. </p>
+</li>
+<li>
+<p> Setting <code>maxwidth</code> to NA or to a finite value <code>&gt;
+-1</code> and <code>&lt; Inf</code> means the spanned cell(s) may not be wide enough to
+hold the text without wrapping it into multiple lines.  Therefore option
+<code>tablesggOpt("allowWrap")</code> must be TRUE, and a warning will be raised
+and <code>maxwidth</code> will be ignored if not. </p>
+</li>
+<li>
+<p> The general effect of
+setting <code>minwidth</code> to a non-zero value is to reduce or prevent text
+wrapping, while the general effect of setting <code>maxwidth</code> to NA or a
+finite value is to encourage wrapping.  Settings for one entry may affect
+the width and wrapping of other entries, because column widths and row
+heights for the table as a whole must satisfy the constraints for all
+their entries. </p>
+</li>
+<li>
+<p> Text representing <code>plotmath</code> expressions cannot
+be wrapped, so <code>maxwidth</code> should be <code>Inf</code> or <code>&lt;= -1</code> for
+such entries. </p>
+</li>
+</ul>
+</dd> </dl>
+<p><strong>Columns in <code>elements(x, type="block")</code></strong>
+</p>
+<p><em>Block descriptors:</em>
+</p>
+ <dl>
+<dt>id</dt>
+<dd>
+<p>Character string that uniquely identifies the block.
+The format is just <code>&lt;type&gt;</code> for blocks types that are unique.  For
+blocks associated with row or column headers, or with row groups formed by
+the plot option <code>rowgroupSize</code>, ID's begin with
+<code>&lt;type&gt;/&lt;subtype&gt;/&lt;headlayer&gt;/&lt;level_in_layer&gt;</code>.  See Appendix B of
+the package vignette for details about the definitions and ID's of these
+blocks.</p>
+</dd> <dt>type</dt>
+<dd>
+<p>Character string that specifies the nature or
+structural role of the block.  One of </p>
+ <dl>
+<dt>"table"</dt>
+<dd>
+<p>The whole
+table (all cells).</p>
+</dd> <dt>"title", "subtitle", "colhead", "rowhead",
+"rowheadLabels", "body", "foot"</dt>
+<dd>
+<p> The standard table parts.  (If there are
+interior row header entries, "rowhead" and "body" are omitted because the
+interleaving of headers and body means neither are valid blocks.)</p>
+</dd>
+<dt>"titles"</dt>
+<dd>
+<p>The union of the <code>title</code> and <code>subtitle</code> parts.</p>
+</dd>
+<dt>"stub"</dt>
+<dd>
+<p>If we exclude the title/subtitle and foot annotations, a
+table has four quadrants: the body at the lower right, the row headers at
+the lower left, the column headers at the upper right, and a stub at the
+upper left.  That is, the stub consists of the cells above the row headers
+and to the left of the column headers.  (If there are row header
+labels–block "rowheadLabels"–they will be in the bottom row of the
+stub.)</p>
+</dd> <dt>"colhead_and_stub", "rowhead_and_stub"</dt>
+<dd>
+<p>The unions of "stub"
+with "colhead" and "rowhead", respectively.</p>
+</dd> <dt>"colhead_and_body",
+"rowhead_and_body"</dt>
+<dd>
+<p>The unions of "body" with "colhead" and "rowhead",
+respectively.</p>
+</dd> <dt>"rowblock", "colblock"</dt>
+<dd>
+<p>Collections of blocks
+associated with row and column headers, reflecting their hierarchical
+structure.  "rowblock" is also the type for blocks representing row groups
+formed by plot option <code>rowgroupSize</code>.  See Appendix B of the package
+vignette for details.</p>
+</dd> </dl>
+</dd> <dt>subtype</dt>
+<dd>
+<p>Character string refining block
+type.  For types "rowblock" and "colblock", subtypes are "A", "B", "C",
+and (for "rowblock" only) "G".  See Appendix B of the package vignette for
+their meaning.  For other block types the subtype is set to missing (NA).</p>
+</dd>
+<dt>headlayer</dt>
+<dd>
+<p>For "rowblock" and "colblock" blocks, the header layer
+number with which the block is associated.  (Layer numbers increase from
+innermost to outermost layer.)  For other block types, <code>headlayer</code> is
+NA.</p>
+</dd> <dt>level_in_layer</dt>
+<dd>
+<p>For "rowblock" and "colblock" blocks, the level
+number (within the header layer) with which the block is associated.
+Levels are numbered from 1 to the maximum number of levels in that layer.
+For other block types, <code>level_in_layer</code> is NA.</p>
+</dd>
+<dt>group_in_level</dt>
+<dd>
+<p>For "rowblock" blocks of subtype "G" (representing
+sets of rows grouped according to <code>rowgroupSize</code>), the group number
+within a header layer and level.  NA for other block types/subtypes.</p>
+</dd>
+<dt>had_enabled_entries</dt>
+<dd>
+<p>Logical, set to TRUE if there were _enabled_
+table entries in <code>x</code> that intersect the block.  This is set at the
+time the plotted table (<code>pltdTable</code> object) is created.  It is not
+updated if entries are later enabled/disabled using <code>props&lt;-</code>, for
+example.</p>
+</dd> <dt>nr, nc</dt>
+<dd>
+<p>The number of rows and columns, respectively, that
+the block spans.  May be 0 for empty blocks.</p>
+</dd> <dt>arow1, arow2, acol1,
+acol2</dt>
+<dd>
+<p>First and last row and column numbers spanned by the block, with
+respect to the augmented row-column grid for the table.  Empty blocks,
+with no rows or no columns (<code>nr</code> or <code>nc</code> equal to 0), will have
+the corresponding <code>arow*</code> or <code>acol*</code> set to NA.</p>
+</dd>
+<dt>enabled</dt>
+<dd>
+<p>Logical indicating whether the block is to be displayed
+when the table is plotted.  This applies only to highlighting the
+rectangular region occupied by the block using a fill color or border.  It
+has no effect on display of entries or hvrules contained within the
+block.</p>
+</dd> </dl>
+<p><em>Graphical properties for blocks</em>.  Values for these are assigned by
+a <em>style</em>, either a default style (see <code>?tablesggOpt</code>) or
+user-specified.
+</p>
+ <dl>
+<dt>fill</dt>
+<dd>
+<p>Character string; color used to fill the
+rectangular region contained in the block.  NA means the region is not
+colored.  (Blocks are drawn before table entries or hvrules, so the block
+fill color will not hide those elements even if it is opaque.)</p>
+</dd>
+<dt>fill_alpha</dt>
+<dd>
+<p>Numeric value in [0, 1] specifying transparency of the
+block fill color (0=transparent, 1=opaque).</p>
+</dd> <dt>border_size</dt>
+<dd>
+<p>Thickness
+of the border to draw around the block, in millimeters.</p>
+</dd>
+<dt>border_color</dt>
+<dd>
+<p>Character string; color for the border around the
+block.  NA means no border.</p>
+</dd> </dl>
+<p><strong>Columns in <code>elements(x, type="hvrules")</code></strong>
+</p>
+<p><em>hvrule descriptors:</em>
+</p>
+ <dl>
+<dt>id</dt>
+<dd>
+<p>Character string that uniquely identifies the hvrule.
+The format is <code>&lt;block&gt;_&lt;side&gt;</code>.</p>
+</dd> <dt>direction</dt>
+<dd>
+<p>Character string,
+either "hrule" for a horizontal rule or "vrule" for a vertical rule.</p>
+</dd>
+<dt>block</dt>
+<dd>
+<p>The ID of the block along the side of which the hvrule runs.</p>
+</dd>
+<dt>side</dt>
+<dd>
+<p>Which side of the block the hvrule runs along, "top",
+"bottom", "left", or "right".</p>
+</dd> <dt>adjacent_blocks</dt>
+<dd>
+<p>Character string
+containing the IDs of blocks that are adjacent to <code>block</code> on the same
+side as the hvrule.  (I.e., blocks that are separated from <code>block</code> by
+the hvrule.)  Block IDs within the string are separated by semicolons.  If
+there are no adjacent blocks the string will be empty ("").</p>
+</dd> <dt>arow1,
+arow2, acol1, acol2</dt>
+<dd>
+<p>Location of the hvrule with respect to the augmented
+row-column grid of the table.  An hrule is inserted between table rows,
+and therefore <code>arow1</code> and <code>arow2</code> are the same and equal to a
+half-integer.  For example, an hrule inserted between rows 3 and 4 has
+<code>arow1 = arow2 = 3.5</code>.  <code>acol1</code> and <code>acol2</code> for the hrule
+are integers indicating the range of columns that it spans.  Analogously,
+a vrule is inserted between table columns, so <code>acol1</code> and
+<code>acol2</code> are identical and equal to a half-integer, while <code>arow1</code>
+and <code>arow2</code> are integers that indicate the range of rows spanned by
+the vrule.</p>
+</dd> <dt>enabled</dt>
+<dd>
+<p>Logical indicating whether the hvrule is to be
+displayed when the table is plotted.  If FALSE the hvrule is ignored when
+laying out the table or determining its size.</p>
+</dd> </dl>
+<p><em>Graphical properties for hvrules</em>.  Values for these are assigned by
+a <em>style</em>, either a default style (see <code>?tablesggOpt</code>) or
+user-specified.
+</p>
+ <dl>
+<dt>linetype</dt>
+<dd>
+<p>Integer indicating the type of line to display.
+1 = solid line; 2 = dashed; 3 = dotted.  (See the documentation of
+<code>lty</code> in <code>?par</code> for the full set of choices.)  A line type of 0
+means no line will be drawn, so the hvrule just inserts empty space
+between table rows or columns.</p>
+</dd> <dt>size</dt>
+<dd>
+<p>Thickness of the line, in
+millimeters.</p>
+</dd> <dt>color</dt>
+<dd>
+<p>Character string; the color of the line.</p>
+</dd>
+<dt>alpha</dt>
+<dd>
+<p>Numeric value in [0, 1] specifying transparency of the line
+color (0=transparent, 1=opaque).</p>
+</dd> <dt>space</dt>
+<dd>
+<p>The width (for a vertical
+rule) or height (for a horizontal rule) of the rectangle inserted between
+columns or rows by the hvrule.  (A line, if any, is drawn within this
+rectangle.)  This is the amount of space the rule adds to the width or
+height of the table, in millimeters.</p>
+</dd> <dt>fill</dt>
+<dd>
+<p>Character string; color
+used to fill the rectangle containing the hvrule.  NA means the region is
+not colored.</p>
+</dd> <dt>fill_alpha</dt>
+<dd>
+<p>Numeric value in [0, 1] specifying
+transparency of the fill color (0=transparent, 1=opaque).</p>
+</dd> </dl>
+<h3>Value</h3>
+
+<p>A data frame with one row per element.  Columns include element
+descriptors and graphical properties assigned to each element.  The row
+names of the data frame will be the element ID's.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tablesggOpt</code>, <code>styleObj</code>, <code>ids</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">plt &lt;- plot(iris2_tab)
+str(elements(plt, type="entry"))
+str(elements(plt, type="block"))  # 0 rows, none are enabled for display
+str(elements(plt, type="block", enabledOnly=FALSE))
+str(elements(plt, type="hvrule"))
+  </code></pre>
+
+
+</div>

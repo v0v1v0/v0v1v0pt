@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>AddTip</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add a tip to a phylogenetic tree</h2>
+
+<h3>Description</h3>
+
+<p><code>AddTip()</code> adds a tip to a phylogenetic tree at a specified location.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">AddTip(
+  tree,
+  where = sample.int(tree[["Nnode"]] * 2 + 2L, size = 1) - 1L,
+  label = "New tip",
+  nodeLabel = "",
+  edgeLength = 0,
+  lengthBelow = NULL,
+  nTip = NTip(tree),
+  nNode = tree[["Nnode"]],
+  rootNode = RootNode(tree)
+)
+
+AddTipEverywhere(tree, label = "New tip", includeRoot = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A tree of class <code>phylo</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>where</code></td>
+<td>
+<p>The node or tip that should form the sister taxon to the new
+node.  To add a new tip at the root, use <code>where = 0</code>.  By default, the
+new tip is added to a random edge.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>Character string providing the label to apply to the new tip.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nodeLabel</code></td>
+<td>
+<p>Character string providing a label to apply to the newly
+created node, if <code>tree$node.label</code> is specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>edgeLength</code></td>
+<td>
+<p>Numeric specifying length of new edge. If <code>NULL</code>,
+defaults to <code>lengthBelow</code>.
+This will become the default behaviour in a
+future release; please manually specify the desired behaviour in your code.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lengthBelow</code></td>
+<td>
+<p>Numeric specifying length below neighbour at which to
+graft new edge. Values greater than the length of the edge will result
+in negative edge lengths. If <code>NULL</code>, the default, the new tip will be added
+at the midpoint of the broken edge. If inserting at the root (<code>where = 0</code>),
+a new edge of length <code>lengthBelow</code> will be inserted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTip, nNode, rootNode</code></td>
+<td>
+<p>Optional integer vectors specifying number of tips
+and nodes in <code>tree</code>, and index of root node.
+Not checked for correctness: specifying values here yields a marginal speed
+increase at the cost of code safety.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>includeRoot</code></td>
+<td>
+<p>Logical; if <code>TRUE</code>, each position adjacent
+to the root edge is considered to represent distinct edges; if <code>FALSE</code>,
+they are treated as a single edge.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>AddTip()</code> extends <code>bind.tree</code>, which cannot handle
+single-taxon trees.
+</p>
+<p><code>AddTipEverywhere()</code> adds a tip to each edge in turn.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>AddTip()</code> returns a tree of class <code>phylo</code> with an additional tip
+at the desired location.
+</p>
+<p><code>AddTipEverywhere()</code> returns a list of class <code>multiPhylo</code> containing
+the trees produced by adding <code>label</code> to each edge of <code>tree</code> in turn.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Add one tree to another: <code>bind.tree()</code>
+</p>
+<p>Other tree manipulation: 
+<code>CollapseNode()</code>,
+<code>ConsensusWithout()</code>,
+<code>DropTip()</code>,
+<code>EnforceOutgroup()</code>,
+<code>ImposeConstraint()</code>,
+<code>KeptPaths()</code>,
+<code>KeptVerts()</code>,
+<code>LeafLabelInterchange()</code>,
+<code>MakeTreeBinary()</code>,
+<code>Renumber()</code>,
+<code>RenumberTips()</code>,
+<code>RenumberTree()</code>,
+<code>RootTree()</code>,
+<code>SortTree()</code>,
+<code>Subtree()</code>,
+<code>TipTimedTree()</code>,
+<code>TrivialTree</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tree &lt;- BalancedTree(10)
+
+# Add a leaf below an internal node
+plot(tree)
+ape::nodelabels()
+node &lt;- 15
+ape::nodelabels(bg = ifelse(NodeNumbers(tree) == node, "green", "grey"))
+
+plot(AddTip(tree, 15, "NEW_TIP"))
+
+# Add edge lengths for an ultrametric tree
+tree$edge.length &lt;- rep(c(rep(1, 5), 2, 1, 2, 2), 2)
+
+# Add a leaf to an external edge
+leaf &lt;- 5
+plot(tree)
+ape::tiplabels(bg = ifelse(seq_len(NTip(tree)) == leaf, "green", "grey"))
+
+plot(AddTip(tree, 5, "NEW_TIP", edgeLength = NULL))
+
+# Set up multi-panel plot
+oldPar &lt;- par(mfrow = c(2, 4), mar = rep(0.3, 4), cex = 0.9)
+
+# Add leaf to each edge on a tree in turn
+backbone &lt;- BalancedTree(4)
+# Treating the position of the root as instructive:
+additions &lt;- AddTipEverywhere(backbone, includeRoot = TRUE)
+xx &lt;- lapply(additions, plot)
+
+par(mfrow = c(2, 3))
+# Don't treat root edges as distinct:
+additions &lt;- AddTipEverywhere(backbone, includeRoot = FALSE)
+xx &lt;- lapply(additions, plot)
+
+# Restore original plotting parameters
+par(oldPar)
+
+</code></pre>
+
+
+</div>

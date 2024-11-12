@@ -1,0 +1,273 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TRAMPknowns</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>TRAMPknowns Objects</h2>
+
+<h3>Description</h3>
+
+<p>These functions create and interact with
+<code>TRAMPknowns</code> objects (collections of known TRFLP
+patterns).  Knowns contrast with “samples” (see
+<code>TRAMPsamples</code>) in that knowns contain identified
+profiles, while samples contain unidentified profiles.  Knows must
+have at most one peak per enzyme/primer combination (see Details).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TRAMPknowns(data, info, cluster.pars=list(), file.pat=NULL,
+            warn.factors=TRUE, ...)
+
+
+## S3 method for class 'TRAMPknowns'
+labels(object, ...)
+## S3 method for class 'TRAMPknowns'
+summary(object, include.info=FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame containing peak information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p>data.frame, describing individual samples (see Details for
+definitions of both data.frames).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cluster.pars</code></td>
+<td>
+<p>Parameters used when clustering the knowns
+database.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file.pat</code></td>
+<td>
+<p>Optional partial filename in which to store knowns
+database after modification.  Files <code>&lt;file.pat&gt;_info.csv</code>
+and <code>&lt;file.pat&gt;_data.csv</code> will be created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warn.factors</code></td>
+<td>
+<p>Logical: Should a warning be given if any columns
+in <code>info</code> or <code>data</code> are converted into factors?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>A <code>TRAMPknowns</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include.info</code></td>
+<td>
+<p>Logical: Should the output be augmented with the
+contents of the <code>info</code> component of the <code>TRAMPknowns</code>
+object?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p><code>TRAMPknowns</code>: Additional objects to incorportate
+into a <code>TRAMPknowns</code> object.  Other methods: Further arguments
+passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The object has at least two components, which relate to each other (in
+the sense of a relational database).  <code>info</code> holds information
+about the individual samples, and <code>data</code> holds information about
+individual peaks (many of which may belong to a single sample).
+</p>
+<p>Column definitions:
+</p>
+
+<ul>
+<li> <p><code>info</code>:
+</p>
+
+<dl>
+<dt>
+<code>knowns.pk</code>:</dt>
+<dd>
+<p>Unique positive integer, used to identify
+individual knowns (i.e. a “primary key”).</p>
+</dd>
+<dt>
+<code>species</code>:</dt>
+<dd>
+<p>Character, giving species name.</p>
+</dd>
+</dl>
+</li>
+<li> <p><code>data</code>:
+</p>
+
+<dl>
+<dt>
+<code>knowns.fk</code>:</dt>
+<dd>
+<p>Positive integer, indicating which sample
+the peak belongs to (by matching against <code>info$knowns.pk</code>)
+(i.e. a “foreign key”).</p>
+</dd>
+<dt>
+<code>primer</code>:</dt>
+<dd>
+<p>Character, giving the name of the primer
+used.</p>
+</dd>
+<dt>
+<code>enzyme</code>:</dt>
+<dd>
+<p>Character, giving the name of the
+restriction digest enzyme used.</p>
+</dd>
+<dt>
+<code>size</code>:</dt>
+<dd>
+<p>Numeric, giving size (in base pairs) of the
+peak.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In addition, <code>TRAMPknowns</code> will create additional columns holding
+clustering information (see <code>group.knowns</code>).  Additional
+columns are allowed (and retained, but ignored) in both data.frames.
+Additional objects are allowed as part of the <code>TRAMPknowns</code>
+object, but these will not be written by
+<code>write.TRAMPknowns</code>; any extra objects passed (via
+<code>...</code>) will be included in the final <code>TRAMPknowns</code> object.
+</p>
+<p>The <code>cluster.pars</code> argument controls how knowns will be clustered
+(this will happen automatically as needed).  Elements of the list
+<code>cluster.pars</code> may be any of the three arguments to
+<code>group.knowns</code>, and will be used as defaults in
+subsequent calls to <code>group.knowns</code>.  If not provided, default
+values are: <code>dist.method="maximum"</code>,
+<code>hclust.method="complete"</code>, <code>cut.height=2.5</code> (if only some
+elements of <code>cluster.pars</code> are provided, the remaining elements
+default to the values above).  To change values of clustering
+parameters in an existing <code>TRAMPknowns</code> object, use
+<code>group.knowns</code>.
+</p>
+<p>A known contains at most one peak per enzyme/primer combination.
+Where a species is known to have multiple TRFLP profiles, these should
+be treated as separate knowns with different, unique, <code>knowns.pk</code>
+values, but with identical <code>species</code> values.  A sample containing
+either pattern will then be recorded as having that species present
+(see <code>group.knowns</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>TRAMPknowns</code></td>
+<td>
+<p>A new <code>TRAMPknowns</code> object: a list with
+components <code>info</code>, <code>data</code> (the provided data.frames, with
+clustering information added to <code>info</code>), <code>cluster.pars</code>
+and <code>file.pat</code>, plus any extra objects passed as <code>...</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels.TRAMPknowns</code></td>
+<td>
+<p>A sorted vector of the unique samples
+present in <code>x</code> (from <code>info$knowns.pk</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summary.TRAMPknowns</code></td>
+<td>
+<p>A data.frame, with the size of the peak (if
+present) for each enzyme/primer combination, with each known
+(indicated by <code>knowns.pk</code>) as rows and each combination (in the
+format <code>&lt;primer&gt;_&lt;enzyme&gt;</code>) as columns.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Across a <code>TRAMPknowns</code> object, primer and enzyme names must be
+<em>exactly</em> the same (including case and whitespace) to be
+considered the same.  For example <code>"ITS4"</code>, <code>"Its4"</code>,
+<code>"ITS 4"</code> and <code>"ITS4 "</code> would be considered to be four
+different primers.
+</p>
+<p>Factors will not merge correctly (with
+<code>combine.TRAMPknowns</code> or <code>add.known</code>).
+<code>TRAMPknowns</code> will attempt to catch factor columns and convert
+them into characters for the <code>info</code> and <code>data</code> data.frames.
+Other objects (passed as part of <code>...</code>) will not be altered.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TRAMPsamples</code>, which constructs an analagous object to
+hold “samples” data.
+</p>
+<p><code>plot.TRAMPknowns</code>, which creates a graphical
+representation of the knowns data.
+</p>
+<p><code>TRAMP</code>, for matching unknown TRFLP patterns to
+<code>TRAMPknowns</code> objects.
+</p>
+<p><code>group.knowns</code>, which groups similar knowns (generally
+called automatically).
+</p>
+<p><code>add.known</code> and <code>combine.TRAMPknowns</code>, which
+provide tools for adding knowns from a sample data set and merging
+knowns databases.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## This example builds a TRAMPknowns object from completely artificial
+## data:
+
+## The info data.frame:
+knowns.info &lt;-
+  data.frame(knowns.pk=1:8,
+             species=rep(paste("Species", letters[1:5]), length=8))
+knowns.info
+
+## The data data.frame:
+knowns.data &lt;- expand.grid(knowns.fk=1:8,
+                           primer=c("ITS1F", "ITS4"),
+                           enzyme=c("BsuRI", "HpyCH4IV"))
+knowns.data$size &lt;- runif(nrow(knowns.data), min=40, max=800)
+
+## Construct the TRAMPknowns object:
+demo.knowns &lt;- TRAMPknowns(knowns.data, knowns.info, warn.factors=FALSE)
+
+## A plot of the pretend knowns:
+plot(demo.knowns, cex=1, group.clusters=TRUE)
+</code></pre>
+
+
+</div>

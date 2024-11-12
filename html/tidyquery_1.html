@@ -1,0 +1,97 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>query</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Query an R data frame with SQL</h2>
+
+<h3>Description</h3>
+
+<p><code>query</code> takes a SQL <code>SELECT</code> statement and uses it to
+query an R data frame
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">query(data, sql)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data frame or data frame-like object (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sql</code></td>
+<td>
+<p>a character string containing a SQL <code>SELECT</code> statement</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If the <code>data</code> argument is not specified, then the <code>FROM</code>
+clause of the SQL statement determines which data frame to query.
+</p>
+<p>The names of data frames and columns are case-sensitive (like in R).
+Keywords and function names are not case-sensitive (like in SQL).
+</p>
+<p>In addition to R data frames and tibbles (<code>tbl_df</code> objects), this
+function can query <code>dtplyr_step</code> objects created by <span class="pkg">dtplyr</span>, a
+<span class="pkg">data.table</span> backend for <span class="pkg">dbplyr</span>. It is also possible to use this
+function together with <span class="pkg">dbplyr</span> to query remote database tables
+(<code>tbl_sql</code> objects), but this depends on which database and which
+backend package (if any) you are using, so results may vary.
+</p>
+<p>This function is subject to the
+<a href="https://cran.r-project.org/package=queryparser/readme/README.html#current-limitations">current
+limitations of the <span class="pkg">queryparser</span> package</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of the same class as <code>data</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+iris %&gt;% query("SELECT Species, AVG(Petal.Length) GROUP BY Species")
+
+query("SELECT Species, AVG(Petal.Length) FROM iris GROUP BY Species")
+
+iris %&gt;%
+  filter(Petal.Length &gt; 4) %&gt;%
+  query("SELECT Species, MAX(Sepal.Length) AS max_sep_len
+           GROUP BY Species") %&gt;%
+  arrange(desc(max_sep_len))
+
+library(nycflights13)
+
+query &lt;- "SELECT origin, dest,
+    COUNT(flight) AS num_flts,
+    round(AVG(distance)) AS dist,
+    round(AVG(arr_delay)) AS avg_delay
+  FROM flights
+  WHERE distance BETWEEN 200 AND 300
+    AND air_time IS NOT NULL
+  GROUP BY origin, dest
+  HAVING num_flts &gt; 5000
+  ORDER BY num_flts DESC, avg_delay DESC
+  LIMIT 100;"
+
+query(query)
+</code></pre>
+
+
+</div>

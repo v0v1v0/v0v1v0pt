@@ -1,0 +1,418 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_tokenize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tokenization of Character Variables</h2>
+
+<h3>Description</h3>
+
+<p><code>step_tokenize()</code> creates a <em>specification</em> of a recipe step that will
+convert a character predictor into a <code>token</code> variable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_tokenize(
+  recipe,
+  ...,
+  role = NA,
+  trained = FALSE,
+  columns = NULL,
+  training_options = list(),
+  options = list(),
+  token = "words",
+  engine = "tokenizers",
+  custom_token = NULL,
+  skip = FALSE,
+  id = rand_id("tokenize")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>One or more selector functions to choose which
+variables are affected by the step. See <code>recipes::selections()</code>
+for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>Not used by this step since no new variables are
+created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variable names that will
+be populated (eventually) by the <code>terms</code> argument. This is <code>NULL</code>
+until the step is trained by <code>recipes::prep.recipe()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>training_options</code></td>
+<td>
+<p>A list of options passed to the tokenizer when it is
+being trained. Only applicable for engine == "tokenizers.bpe".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>options</code></td>
+<td>
+<p>A list of options passed to the tokenizer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>token</code></td>
+<td>
+<p>Unit for tokenizing. See details for options. Defaults to
+"words".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>engine</code></td>
+<td>
+<p>Package that will be used for tokenization. See details for
+options. Defaults to "tokenizers".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom_token</code></td>
+<td>
+<p>User supplied tokenizer. Use of this argument will
+overwrite the token and engine arguments. Must take a character vector as
+input and output a list of character vectors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the
+recipe is baked by <code>recipes::bake.recipe()</code>? While all operations are baked
+when <code>recipes::prep.recipe()</code> is run, some operations may not be able to be
+conducted on new data (e.g. processing the outcome variable(s)).
+Care should be taken when using <code>skip = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Tokenization is the act of splitting a character string into smaller parts to
+be further analyzed. This step uses the <code>tokenizers</code> package which includes
+heuristics on how to to split the text into paragraphs tokens, word tokens,
+among others. <code>textrecipes</code> keeps the tokens as a <code>token</code>
+variable and other steps will do their tasks on those <code>token</code>
+variable before transforming them back to numeric variables.
+</p>
+<p>Working will <code>textrecipes</code> will almost always start by calling
+<code>step_tokenize</code> followed by modifying and filtering steps. This is not always
+the case as you sometimes want to do apply pre-tokenization steps, this can
+be done with <code>recipes::step_mutate()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An updated version of <code>recipe</code> with the new step added
+to the sequence of existing steps (if any).
+</p>
+
+
+<h3>Engines</h3>
+
+<p>The choice of <code>engine</code> determines the possible choices of <code>token</code>.
+</p>
+<p>The following is some small example data used in the following examples
+</p>
+<div class="sourceCode r"><pre>text_tibble &lt;- tibble(
+  text = c("This is words", "They are nice!")
+)
+</pre></div>
+
+
+<h4>tokenizers</h4>
+
+<p>The tokenizers package is the default <code>engine</code> and it comes with the
+following unit of <code>token</code>. All of these options correspond to a function in
+the tokenizers package.
+</p>
+
+<ul>
+<li>
+<p> "words" (default)
+</p>
+</li>
+<li>
+<p> "characters"
+</p>
+</li>
+<li>
+<p> "character_shingles"
+</p>
+</li>
+<li>
+<p> "ngrams"
+</p>
+</li>
+<li>
+<p> "skip_ngrams"
+</p>
+</li>
+<li>
+<p> "sentences"
+</p>
+</li>
+<li>
+<p> "lines"
+</p>
+</li>
+<li>
+<p> "paragraphs"
+</p>
+</li>
+<li>
+<p> "regex"
+</p>
+</li>
+<li>
+<p> "ptb" (Penn Treebank)
+</p>
+</li>
+<li>
+<p> "skip_ngrams"
+</p>
+</li>
+<li>
+<p> "word_stems"
+</p>
+</li>
+</ul>
+<p>The default tokenizer is <code>"word"</code> which splits the text into a series of
+words. By using <code>step_tokenize()</code> without setting any arguments you get word
+tokens
+</p>
+<div class="sourceCode r"><pre>recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(text) %&gt;%
+  show_tokens(text)
+#&gt; [[1]]
+#&gt; [1] "this"  "is"    "words"
+#&gt; 
+#&gt; [[2]]
+#&gt; [1] "they" "are"  "nice"
+</pre></div>
+<p>This tokenizer has arguments that change how the tokenization occurs and can
+accessed using the <code>options</code> argument by passing a named list. Here we are
+telling tokenizers::tokenize_words that we don't want to turn the words to
+lowercase
+</p>
+<div class="sourceCode r"><pre>recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(text,
+                options = list(lowercase = FALSE)) %&gt;%
+  show_tokens(text)
+#&gt; [[1]]
+#&gt; [1] "This"  "is"    "words"
+#&gt; 
+#&gt; [[2]]
+#&gt; [1] "They" "are"  "nice"
+</pre></div>
+<p>We can also stop removing punctuation.
+</p>
+<div class="sourceCode r"><pre>recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(text,
+                options = list(strip_punct = FALSE,
+                               lowercase = FALSE)) %&gt;%
+  show_tokens(text)
+#&gt; [[1]]
+#&gt; [1] "This"  "is"    "words"
+#&gt; 
+#&gt; [[2]]
+#&gt; [1] "They" "are"  "nice" "!"
+</pre></div>
+<p>The tokenizer can be changed by setting a different <code>token</code>. Here we change
+it to return character tokens.
+</p>
+<div class="sourceCode r"><pre>recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(text, token = "characters") %&gt;%
+  show_tokens(text)
+#&gt; [[1]]
+#&gt;  [1] "t" "h" "i" "s" "i" "s" "w" "o" "r" "d" "s"
+#&gt; 
+#&gt; [[2]]
+#&gt;  [1] "t" "h" "e" "y" "a" "r" "e" "n" "i" "c" "e"
+</pre></div>
+<p>It is worth noting that not all these token methods are appropriate but are
+included for completeness.
+</p>
+
+
+
+<h4>spacyr</h4>
+
+
+<ul><li>
+<p> "words"
+</p>
+</li></ul>
+<h4>tokenizers.bpe</h4>
+
+<p>The tokeenizers.bpe engine performs Byte Pair Encoding Text Tokenization.
+</p>
+
+<ul><li>
+<p> "words"
+</p>
+</li></ul>
+<p>This tokenizer is trained on the training set and will thus need to be passed
+training arguments. These are passed to the <code>training_options</code> argument and
+the most important one is <code>vocab_size</code>. The determines the number of unique
+tokens the tokenizer will produce. It is generally set to a much higher
+value, typically in the thousands, but is set to 22 here for demonstration
+purposes.
+</p>
+<div class="sourceCode r"><pre>recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(
+    text,
+    engine = "tokenizers.bpe",
+    training_options = list(vocab_size = 22)
+  ) %&gt;%
+  show_tokens(text)
+</pre></div>
+<div class="sourceCode"><pre>#&gt; [[1]]
+#&gt;  [1] "_Th" "is"  "_"   "is"  "_"   "w"   "o"   "r"   "d"   "s"  
+#&gt; 
+#&gt; [[2]]
+#&gt;  [1] "_Th" "e"   "y"   "_"   "a"   "r"   "e"   "_"   "n"   "i"   "c"   "e"  
+#&gt; [13] "!"
+</pre></div>
+
+
+
+<h4>udpipe</h4>
+
+
+<ul><li>
+<p> "words"
+</p>
+</li></ul>
+<h4>custom_token</h4>
+
+<p>Sometimes you need to perform tokenization that is not covered by the
+supported engines. In that case you can use the <code>custom_token</code> argument to
+pass a function in that performs the tokenization you want.
+</p>
+<p>Below is an example of a very simple space tokenization. This is a very fast
+way of tokenizing.
+</p>
+<div class="sourceCode r"><pre>space_tokenizer &lt;- function(x) {
+  strsplit(x, " +")
+}
+
+recipe(~ text, data = text_tibble) %&gt;%
+  step_tokenize(
+    text,
+    custom_token = space_tokenizer
+  ) %&gt;%
+  show_tokens(text)
+#&gt; [[1]]
+#&gt; [1] "This"  "is"    "words"
+#&gt; 
+#&gt; [[2]]
+#&gt; [1] "They"  "are"   "nice!"
+</pre></div>
+
+
+
+<h3>Tidying</h3>
+
+<p>When you <code>tidy()</code> this step, a tibble with columns <code>terms</code>
+(the selectors or variables selected) and <code>value</code> (unit of tokenization).
+</p>
+
+
+<h3>Tuning Parameters</h3>
+
+<p>This step has 1 tuning parameters:
+</p>
+
+<ul><li> <p><code>token</code>: Token Unit (type: character, default: words)
+</p>
+</li></ul>
+<h3>Case weights</h3>
+
+<p>The underlying operation does not allow for case weights.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>step_untokenize()</code> to untokenize.
+</p>
+<p>Other Steps for Tokenization: 
+<code>step_tokenize_bpe()</code>,
+<code>step_tokenize_sentencepiece()</code>,
+<code>step_tokenize_wordpiece()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(modeldata)
+data(tate_text)
+
+tate_rec &lt;- recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium)
+
+tate_obj &lt;- tate_rec %&gt;%
+  prep()
+
+bake(tate_obj, new_data = NULL, medium) %&gt;%
+  slice(1:2)
+
+bake(tate_obj, new_data = NULL) %&gt;%
+  slice(2) %&gt;%
+  pull(medium)
+
+tidy(tate_rec, number = 1)
+tidy(tate_obj, number = 1)
+
+tate_obj_chars &lt;- recipe(~., data = tate_text) %&gt;%
+  step_tokenize(medium, token = "characters") %&gt;%
+  prep()
+
+bake(tate_obj, new_data = NULL) %&gt;%
+  slice(2) %&gt;%
+  pull(medium)
+</code></pre>
+
+
+</div>

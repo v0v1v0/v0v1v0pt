@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>outliers.regressors</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Regressor Variables for the Detection of Outliers</h2>
+
+<h3>Description</h3>
+
+<p>These functions create regressor variables to be used included in the 
+regression where tests for presence will be applied.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">outliers.regressors(pars, mo, n, weights = TRUE,
+  delta = 0.7, freq = 12)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>a list containing the parameters of the model. 
+See details section in <code>locate.outliers</code>.</p>
+</td>
+</tr></table>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mo</code></td>
+<td>
+<p>a data frame defining the type, location and weight of the outliers to be created.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>a numeric. The length of the variable that will contain the outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the variables are weighted by the 
+values in column <code>"coefhat"</code> of the data frame <code>mo</code>. Otherwise, 
+unit weights are considered.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>freq</code></td>
+<td>
+<p>a numeric. The periodicity of the data. 
+Used only for the seasonal level shift, <code>"SLS"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The variables returned by these functions are the regressors that take part in 
+the second equation defined in <code>locate.outliers</code>,
+(equation (20) in Chen-Liu (1993), equation (3) in the documentat 
+attached to the package).
+</p>
+<p>Regressions are not actually run since the <code class="reqn">t</code>-statistics
+can be obtained more conveniently as indicated in equation (14) in Chen-Liu (1993).
+These variables are used in function <code>locate.outliers.iloop</code> to  
+adjust the residuals at each iteration.
+</p>
+<p>The function <code>outliers</code> can be used to easily create the input 
+argument <code>mo</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A matrix containing the regressors by columms.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Kaiser, R., and Maravall, A. (1999). 
+<em>Seasonal Outliers in Time Series</em>.
+Banco de España, Servicio de Estudios. Working paper number 9915.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers</code>, <code>outliers</code>, 
+<code>outliers.tstatistics</code>, <code>tso</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># regression of the residuals from the ARIMA model 
+# on the corresponding regressors for three additive outliers
+# at the 5% level, the first AO is not significant, the others are significant
+data("hicp")
+y &lt;- log(hicp[["011600"]])
+fit &lt;- arima(y, order = c(1, 1, 0), seasonal = list(order = c(2, 0, 2)))
+resid &lt;- residuals(fit)
+pars &lt;- coefs2poly(fit)
+mo &lt;- outliers(rep("AO", 3), c(10, 79, 224))
+xreg &lt;- outliers.regressors(pars, mo, length(y))
+summary(lm(residuals(fit) ~ 0 + xreg)) 
+</code></pre>
+
+
+</div>

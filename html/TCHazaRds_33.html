@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TCHazaRdsWindTimeSereies</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute the Wind Hazards Associated Over the Period of a TCs Event at one Given Location</h2>
+
+<h3>Description</h3>
+
+<p>Compute the Wind Hazards Associated Over the Period of a TCs Event at one Given Location
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TCHazaRdsWindTimeSereies(
+  outdate = NULL,
+  GEO_land = NULL,
+  TC,
+  paramsTable,
+  returnWaves = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>outdate</code></td>
+<td>
+<p>array of POSITx date times to linearly interpolate TC track,optional.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GEO_land</code></td>
+<td>
+<p>dataframe hazard geometry generated with land_geometry</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TC</code></td>
+<td>
+<p>SpatVector of Tropical cyclone track parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramsTable</code></td>
+<td>
+<p>Global parameters to compute TC Hazards.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returnWaves</code></td>
+<td>
+<p>Return ocean wave parameters (default = FALSE)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function calculates wind speed and direction time series from a tropical cyclone track using various wind profile models.
+</p>
+
+
+<h3>Value</h3>
+
+<p>list() containing a timeseries</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   abbreviated attribute </td>
+<td style="text-align: left;"> description </td>
+<td style="text-align: left;"> units </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   date </td>
+<td style="text-align: left;"> POSIX data time object of TC or outdate if provided </td>
+<td style="text-align: left;"> as.POSIX </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   P </td>
+<td style="text-align: left;"> Atmospheric pressure </td>
+<td style="text-align: left;"> hPa </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Uw </td>
+<td style="text-align: left;"> Meridional  wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Vw </td>
+<td style="text-align: left;"> Zonal wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Sw </td>
+<td style="text-align: left;"> Wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   R </td>
+<td style="text-align: left;"> distance to TC centre </td>
+<td style="text-align: left;"> m </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   rMax </td>
+<td style="text-align: left;"> radius of maximum wind </td>
+<td style="text-align: left;"> km </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   vMax </td>
+<td style="text-align: left;"> TC maximum velocity </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   b </td>
+<td style="text-align: left;"> TC wind profile exponent </td>
+<td style="text-align: left;"> - </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   CP </td>
+<td style="text-align: left;"> TC central Pressure </td>
+<td style="text-align: left;"> hPa </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   dPdt </td>
+<td style="text-align: left;"> change in TC CP per hour </td>
+<td style="text-align: left;"> hPa/hr </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   vFm </td>
+<td style="text-align: left;"> velocity of TC forward motion </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Hs0 </td>
+<td style="text-align: left;"> Deep water significant wave height </td>
+<td style="text-align: left;"> m </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Tp0 </td>
+<td style="text-align: left;"> Deep water Peak wave period </td>
+<td style="text-align: left;"> s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Dp0 </td>
+<td style="text-align: left;"> The peak direction in which wave are heading </td>
+<td style="text-align: left;"> deg clockwise from true north. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">GEO_land = data.frame(dem=0,lons = 147,lats=-18,f=-4e-4,inlandD = 0)
+
+require(terra)
+TCi &lt;- vect(system.file("extdata/YASI/YASI.shp", package="TCHazaRds"))
+TCi$PRES &lt;- TCi$BOM_PRES
+
+paramsTable = read.csv(system.file("extdata/tuningParams/defult_params.csv",package = "TCHazaRds"))
+HAZts = TCHazaRdsWindTimeSereies(GEO_land=GEO_land,TC=TCi,paramsTable = paramsTable)
+main =  paste(TCi$NAME[1],TCi$SEASON[1],"at",GEO_land$lons,GEO_land$lats)
+#with(HAZts,plot(date,Sw,format = "%b-%d %H",type="l",main = main,ylab = "Wind speed [m/s]"))
+</code></pre>
+
+
+</div>

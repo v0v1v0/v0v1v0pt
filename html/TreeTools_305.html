@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SplitInformation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Phylogenetic information content of splitting leaves into two partitions</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the phylogenetic information content (<em>sensu</em>
+Steel and Penny 2006) of a split, which
+reflects the probability that a uniformly selected random tree will contain#
+the split: a split that is consistent with a smaller number of trees will
+have a higher information content.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">SplitInformation(A, B = A[1])
+
+MultiSplitInformation(partitionSizes)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>A, B</code></td>
+<td>
+<p>Integer specifying the number of taxa in each partition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>partitionSizes</code></td>
+<td>
+<p>Integer vector specifying the number of taxa in each
+partition of a multi-partition split.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>SplitInformation()</code> addresses bipartition splits, which correspond to
+edges in an unrooted phylogeny; <code>MultiSplitInformation()</code> supports splits
+that subdivide taxa into multiple partitions, which may correspond to
+multi-state characters in a phylogenetic matrix.
+</p>
+<p>A simple way to characterise trees is to count the number of edges.
+(Edges are almost, but not quite, equivalent to nodes.)
+Counting edges (or nodes) provides a quick measure of a tree's resolution,
+and underpins the Robinson-Foulds tree distance measure.
+Not all edges, however, are created equal.
+</p>
+<p>An edge splits the leaves of a tree into two subdivisions.  The more equal
+these subdivisions are in size, the more instructive this edge is.
+Intuitively, the division of mammals from reptiles is a profound revelation
+that underpins much of zoology; recognizing that two species of bat are more
+closely related to each other than to any other mammal or reptile is still
+instructive, but somewhat less fundamental.
+</p>
+<p>Formally, the phylogenetic (Shannon) information content of a split <em>S</em>,
+<em>h(S)</em>, corresponds to the probability that a uniformly selected random tree
+will contain the split, <em>P(S)</em>: <em>h(S)</em> = -log <em>P(S)</em>.
+Base 2 logarithms are typically employed to yield an information content in
+bits.
+</p>
+<p>As an example, the split <code>AB|CDEF</code> occurs in 15 of the 105 six-leaf trees;
+<em>h</em>(<code>AB|CDEF</code>) = -log <em>P</em>(<code>AB|CDEF</code>) = -log(15/105) ~ 2.81 bits.  The split
+<code>ABC|DEF</code> subdivides the leaves more evenly, and is thus more instructive:
+it occurs in just nine of the 105 six-leaf trees, and
+<em>h</em>(<code>ABC|DEF</code>) = -log(9/105) ~ 3.54 bits.
+</p>
+<p>As the number of leaves increases, a single even split may contain more
+information than multiple uneven splits – see the examples section below.
+</p>
+<p>Summing the information content of all splits within a tree, perhaps using
+the '<a href="https://ms609.github.io/TreeDist/">TreeDist</a>' function
+<a href="https://ms609.github.io/TreeDist/reference/TreeInfo.html"><code>SplitwiseInfo()</code></a>,
+arguably gives a more instructive picture of its resolution than simply
+counting the number of splits that are present – though with the caveat
+that splits within a tree are not independent of one another, so some
+information may be double counted.  (This same charge applies to simply
+counting nodes, too.)
+</p>
+<p>Alternatives would be to count the number of quartets that are resolved,
+perhaps using the '<a href="https://ms609.github.io/Quartet/">Quartet</a>' function
+<a href="https://ms609.github.io/Quartet/reference/QuartetState.html"><code>QuartetStates()</code></a>,
+or to use a different take on the information contained within a split, the
+clustering information: see the 'TreeDist' function
+<a href="https://ms609.github.io/TreeDist/reference/TreeInfo.html"><code>ClusteringInfo()</code></a>
+for details.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>SplitInformation()</code> and <code>MultiSplitInformation()</code> return the
+phylogenetic information content, in bits, of a split that subdivides leaves
+into partitions of the specified sizes.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Steel MA, Penny D (2006).
+“Maximum parsimony and the phylogenetic information in multistate characters.”
+In Albert VA (ed.), <em>Parsimony, Phylogeny, and Genomics</em>, 163–178.
+Oxford University Press, Oxford.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Sum the phylogenetic information content of splits within a tree:
+<a href="https://ms609.github.io/TreeDist/reference/TreeInfo.html"><code>TreeDist::SplitwiseInfo()</code></a>
+</p>
+<p>Sum the clustering information content of splits within a tree:
+<a href="https://ms609.github.io/TreeDist/reference/TreeInfo.html"><code>TreeDist::ClusteringInfo()</code></a>
+</p>
+<p>Other split information functions: 
+<code>CharacterInformation()</code>,
+<code>SplitMatchProbability()</code>,
+<code>TreesMatchingSplit()</code>,
+<code>UnrootedTreesMatchingSplit()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Eight leaves can be split evenly:
+SplitInformation(4, 4)
+
+# or unevenly, which is less informative:
+SplitInformation(2, 6)
+
+# A single split that evenly subdivides 50 leaves contains more information
+# that seven maximally uneven splits on the same leaves:
+SplitInformation(25, 25)
+7 * SplitInformation(2, 48)
+# Three ways to split eight leaves into multiple partitions:
+MultiSplitInformation(c(2, 2, 4))
+MultiSplitInformation(c(2, 3, 3))
+MultiSplitInformation(rep(2, 4))
+
+
+</code></pre>
+
+
+</div>

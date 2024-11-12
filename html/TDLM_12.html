@@ -1,0 +1,234 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>run_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate mobility flows based on different trip distribution models</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates mobility flows using different distribution models.
+As described in Lenormand et al. (2016), we
+propose a two-step approach to generate mobility flows by separating the trip
+distribution law, gravity or intervening opportunities, from the modeling
+approach used to generate the flows from this law. This function only uses
+the second step to generate mobility flow based on a matrix of probabilities
+using different models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">run_model(
+  proba,
+  model = "UM",
+  nb_trips = 1000,
+  out_trips = NULL,
+  in_trips = out_trips,
+  average = FALSE,
+  nbrep = 3,
+  maxiter = 50,
+  mindiff = 0.01,
+  check_names = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>proba</code></td>
+<td>
+<p>a squared matrix of probability. The sum of the matrix element
+must be equal to 1. It will be normalized automatically if it is not the
+case.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>a character indicating which model to use.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nb_trips</code></td>
+<td>
+<p>a numeric value indicating the total number of trips. Must
+be an integer if <code>average = FALSE</code> (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out_trips</code></td>
+<td>
+<p>a numeric vector representing the number of outgoing
+trips per location. Must be a vector of integers
+if <code>average = FALSE</code> (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>in_trips</code></td>
+<td>
+<p>a numeric vector representing the number of incoming
+trips per location. Must be a vector of integers
+if <code>average = FALSE</code> (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>average</code></td>
+<td>
+<p>a boolean indicating if the average mobility flow matrix
+should be generated instead of the <code>nbrep</code> matrices based on
+random draws (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbrep</code></td>
+<td>
+<p>an integer indicating the number of replications
+associated to the model run. Note that <code>nbrep = 1</code> if <code>average = TRUE</code>
+(see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>an integer indicating the maximal number of iterations for
+adjusting the Doubly Constrained Model (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mindiff</code></td>
+<td>
+<p>a numeric strictly positive value indicating the
+stopping criterion for adjusting the Doubly Constrained Model (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check_names</code></td>
+<td>
+<p>a boolean indicating if the ID location are used as
+vector names, matrix rownames and colnames and if they should be checked
+(see Note).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<script id="MathJax-script" async src="../../mathjaxr/doc/mathjax/es5/tex-chtml-full.js"></script><p>We propose four constrained models to generate the flow from the matrix
+of probabilities. These models respect different level of
+constraints. These constraints can preserve the total number of trips
+(argument <code>nb_trips</code>) OR the number of out-going trips
+\(O_{i}\) (argument <code>out_trips</code>) AND/OR the number of in-coming
+\(D_{j}\) (argument <code>in_trips</code>) according to the model. The sum of
+out-going trips \(\sum_{i} O_{i}\) should be equal to the
+sum of in-coming trips \(\sum_{j} D_{j}\).
+</p>
+
+<ol>
+<li>
+<p> Unconstrained model (<code>model = "UM"</code>). Only <code>nb_trips</code> will be preserved
+(arguments <code>out_trips</code> and <code>in_trips</code> will not be used).
+</p>
+</li>
+<li>
+<p> Production constrained model (<code>model = "PCM"</code>). Only <code>out_trips</code> will be
+preserved (arguments <code>nb_trips</code> and <code>in_trips</code> will not be used).
+</p>
+</li>
+<li>
+<p> Attraction constrained model (<code>model = "ACM"</code>). Only <code>in_trips</code> will be
+preserved (arguments <code>nb_trips</code> and <code>out_trips</code> will not be used).
+</p>
+</li>
+<li>
+<p> Doubly constrained model (<code>model = "DCM"</code>). Both <code>out_trips</code> and
+<code>in_trips</code> will be preserved (arguments <code>nb_trips</code>will not be used). The
+doubly constrained model is based on an Iterative Proportional Fitting
+process (Deming and Stephan 1940). The arguments <code>maxiter</code> (50 by
+default) and <code>mindiff</code> (0.01 by default) can be used to tune the model.
+<code>mindiff</code> is the minimal tolerated relative error between the
+simulated and observed marginals. <code>maxiter</code>
+ensures that the algorithm stops even if it has not converged toward the
+<code>mindiff</code> wanted value.
+</p>
+</li>
+</ol>
+<p>By default, when <code>average = FALSE</code>, <code>nbrep</code> matrices are generated from
+<code>proba</code> with multinomial random draws that will take different forms
+according to the model used. In this case, the models will deal with positive
+integers as inputs and outputs. Nevertheless, it is also possible to generate
+an average matrix based on a multinomial distribution (based on an infinite
+number of drawings). In this case, the models' inputs can be either positive
+integer or real numbers and the output (<code>nbrep = 1</code> in this case) will be a
+matrix of positive real numbers.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>TDLM</code>. A list of matrices containing the
+<code>nbrep</code> simulated matrices.
+</p>
+
+
+<h3>Note</h3>
+
+<p>All the inputs should be based on the same number of
+locations sorted in the same order. It is recommended to use the location ID
+as vector names, matrix rownames and matrix colnames and to set
+<code>check_names = TRUE</code> to verify that everything is in order before running
+this function (<code>check_names = FALSE</code> by default). Note that the function
+<code>check_format_names()</code> can be used to control the validity of all the inputs
+before running the main package's functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Maxime Lenormand (<a href="mailto:maxime.lenormand@inrae.fr">maxime.lenormand@inrae.fr</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Lenormand M, Bassolas A, Ramasco JJ (2016).
+“Systematic comparison of trip distribution laws and models.”
+<em>Journal of Transport Geography</em>, <b>51</b>, 158-169.
+</p>
+<p>Deming WE, Stephan FF (1940).
+“On a Least Squares Adjustment of a Sample Frequency Table When the Expected Marginal Totals Are Known.”
+<em>Annals of Mathematical Statistics</em>, <b>11</b>, 427-444.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gof()</code> <code>run_law_model()</code> <code>run_law()</code> <code>check_format_names()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(mass)
+data(od)
+
+proba &lt;- od / sum(od)
+
+Oi &lt;- as.numeric(mass[, 2])
+Dj &lt;- as.numeric(mass[, 3])
+
+res &lt;- run_model(
+  proba = proba,
+  model = "DCM", nb_trips = NULL, out_trips = Oi, in_trips = Dj,
+  average = FALSE, nbrep = 3, maxiter = 50, mindiff = 0.01,
+  check_names = FALSE
+)
+
+# print(res)
+
+</code></pre>
+
+
+</div>

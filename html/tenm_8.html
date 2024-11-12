@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cov_center</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Function to compute the covariance matrix of an ellipsoid niche model.</h2>
+
+<h3>Description</h3>
+
+<p>Computes the covariance matrix, niche centroid, volume, and other
+ellipsoid parameter based on the values of niche variables from
+occurrence points.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cov_center(data, mve = TRUE, level, vars = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data.frame or matrix containing numeric values of variables
+used to model the niche.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mve</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, computes a minimum volume ellipsoid using
+the <code>cov.mve</code> function from the MASS package. If
+<code>FALSE</code>, uses the covariance matrix of the input data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>Proportion of data to be used for computing the ellipsoid,
+applicable when mve is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>Vector specifying column indexes or names of variables in
+the input data used to fit the ellipsoid model.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list containing the following components:
+</p>
+
+<ul>
+<li> <p><code>centroid</code>: Centroid (mean vector) of the ellipsoid.
+</p>
+</li>
+<li> <p><code>covariance_matrix</code>: Covariance matrix based on the input data.
+</p>
+</li>
+<li> <p><code>volume</code>: Volume of the ellipsoid.
+</p>
+</li>
+<li> <p><code>semi_axes_lengths</code>: Lengths of semi-axes of the ellipsoid.
+</p>
+</li>
+<li> <p><code>axis_coordinates</code>: Coordinates of ellipsoid axes.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tenm)
+data("abronia")
+tempora_layers_dir &lt;- system.file("extdata/bio",package = "tenm")
+abt &lt;- tenm::sp_temporal_data(occs = abronia,
+                              longitude = "decimalLongitude",
+                              latitude = "decimalLatitude",
+                              sp_date_var = "year",
+                              occ_date_format="y",
+                              layers_date_format= "y",
+                              layers_by_date_dir = tempora_layers_dir,
+                              layers_ext="*.tif$")
+abtc &lt;- tenm::clean_dup_by_date(abt,threshold = 10/60)
+future::plan("multisession",workers=2)
+abex &lt;- tenm::ex_by_date(abtc,train_prop=0.7)
+future::plan("sequential")
+mod &lt;- tenm::cov_center(data = abex$env_data,
+                        mve = TRUE,
+                        level = 0.975,
+                        vars = c("bio_05","bio_06","bio_12"))
+# Print model parameters
+print(mod)
+
+</code></pre>
+
+
+</div>

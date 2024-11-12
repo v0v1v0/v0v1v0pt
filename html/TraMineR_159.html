@@ -1,0 +1,136 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqST</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sequences turbulence</h2>
+
+<h3>Description</h3>
+
+<p>Elzinga's turbulence for each sequence in a sequence data set.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R"> seqST(seqdata, norm=FALSE, silent=TRUE, with.missing=FALSE, type=1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>a state sequence object as returned by the the <code>seqdef</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm</code></td>
+<td>
+<p>logical: should the turbulence index be normalized?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>logical: should messages about running operations (extracting dss and durations, computing turbulence) be displayed?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>logical: should non-void missing values be treated as a regular state? If <code>FALSE</code> (default) missing values are ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>either 1 or 2. Type of duration variance. The default <code>type=1</code> ignores non visited states. Type 2 takes into account the 0-time spent in non-visited states  (see <code>seqivardur</code>).
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Sequence turbulence is a measure proposed by <cite>Elzinga
+&amp; Liefbroer (2007)</cite>. It is based on the number <code class="reqn">\phi(x)</code>
+of distinct subsequences that can be extracted from the distinct
+successive state (DSS) sequence and the variance of the consecutive times <code class="reqn">t_i</code>
+spent in the distinct states. For a sequence <code class="reqn">x</code>, the formula is
+</p>
+<p style="text-align: center;"><code class="reqn">T(x)=\log_{2}(\phi(x)\,\frac{s_{t,max}^2(x) + 1}{s_t^2(x) + 1})</code>
+</p>
+
+<p>where <code class="reqn">s_t^2(x)</code> is the variance of the successive state
+durations in sequence <code class="reqn">x</code> and <code class="reqn">s_{t,max}^2(x)</code> is the maximum
+value that this variance can take given the number of spells and the total
+duration of the sequence. For <code>type=1</code>, this maximum is computed as
+</p>
+<p style="text-align: center;"><code class="reqn">s_{t,max}^2 =(d-1)(1-\bar{t})^2</code>
+</p>
+
+<p>where <code class="reqn">\bar{t}</code> is the mean consecutive time spent in the
+distinct states, i.e. the sequence duration <code class="reqn">t</code> divided by the number
+<code class="reqn">d</code> of distinct states in the sequence.
+For <code>type=2</code>, the variance takes into account the 0-time spent in non-visited states and the maximum is adjusted for the maximum number of non-visited states for the number of spells (see <cite>Ritschard, 2021</cite>).
+</p>
+<p>When <code>with.missing=TRUE</code>, the function searches for missing states in the sequences and if found, adds the missing state to the alphabet for the computation of the turbulence. In this case the <code>seqdss</code> and <code>seqdur</code> functions for extracting the distinct successive state sequences and the associated durations are called with the <code>{with.missing=TRUE}</code> argument. Thus, a missing state in a sequence is considered as the occurrence of an additional symbol of the alphabet and two or more consecutive missing states are considered as two or more occurrences of this additional state. E.g. the DSS of <code>A-A-*-*-*-B-B-C-C-D</code> is <code>A-*-B-C-D</code> and the associated durations are <code>2-3-2-2-1</code>.
+</p>
+<p>The normalized value is obtained by subtracting 1 to the index and then dividing by the resulting value for a sequence made by the successive repetition of the alphabet up to the maximal length in <code>seqdata</code> (<cite>Ritschard, 2021)</cite>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a sinlge-column matrix of length equal to the number of sequences in
+<code>seqdata</code> containing the turbulence value of each sequence. Normalized values are returned when <code>norm=TRUE</code>.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Alexis Gabadinho and Gilbert Ritschard</p>
+
+
+<h3>References</h3>
+
+<p>Elzinga, Cees H. and Liefbroer, Aart C. (2007).
+De-standardization of Family-Life Trajectories of Young Adults: A Cross-National Comparison Using Sequence Analysis.
+<em>European Journal of Population</em>, 23, 225-250.
+</p>
+<p>Ritschard, G. (2023), "Measuring the nature of individual sequences", <em>Sociological Methods and Research</em>, 52(4), 2016-2049. <a href="https://doi.org/10.1177/00491241211036156">doi:10.1177/00491241211036156</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqdss</code>, <code>seqdur</code>, <code>seqsubsn</code>. For alternative measures of sequence complexity see <code>seqivolatility</code>,  <code>seqici</code>, <code>seqindic</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  ## Loading the 'actcal' example data set
+  data(actcal)
+  ## Here we consider only the first 10 sequences
+  actcal &lt;- actcal[1:10,]
+
+  ## Defining a sequence object with data in columns 13 to 24
+  ## (activity status from January to December 2000)
+  actcal.seq &lt;- seqdef(actcal[,13:24], informat='STS')
+
+  ## Computing the sequences turbulence
+  turb &lt;- seqST(actcal.seq)
+
+  ## Normalized turbulence
+  turb.norm &lt;- seqST(actcal.seq, norm=TRUE)
+
+  ## Normalized turbulence taking non-visited states into account.
+  turb2.norm &lt;- seqST(actcal.seq, norm=TRUE, type=2)
+
+</code></pre>
+
+
+</div>

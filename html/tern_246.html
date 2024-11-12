@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_map_for_count_abnormal</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper function to create a map data frame for <code>trim_levels_to_map()</code>
+</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Helper function to create a map data frame from the input dataset, which can be used as an argument in the
+<code>trim_levels_to_map</code> split function. Based on different method, the map is constructed differently.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_map_for_count_abnormal(
+  df,
+  variables = list(anl = "ANRIND", split_rows = c("PARAM"), range_low = "ANRLO",
+    range_high = "ANRHI"),
+  abnormal = list(low = c("LOW", "LOW LOW"), high = c("HIGH", "HIGH HIGH")),
+  method = c("default", "range"),
+  na_str = "&lt;Missing&gt;"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>string</code>)<br> list of additional analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>abnormal</code></td>
+<td>
+<p>(named <code>list</code>)<br> identifying the abnormal range level(s) in <code>df</code>. Based on the levels of
+abnormality of the input dataset, it can be something like <code>list(Low = "LOW LOW", High = "HIGH HIGH")</code> or
+<code style="white-space: pre;">⁠abnormal = list(Low = "LOW", High = "HIGH"))⁠</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>(<code>string</code>)<br> indicates how the returned map will be constructed. Can be <code>"default"</code> or <code>"range"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A map <code>data.frame</code>.
+</p>
+
+
+<h3>Note</h3>
+
+<p>If method is <code>"default"</code>, the returned map will only have the abnormal directions that are observed in the
+<code>df</code>, and records with all normal values will be excluded to avoid error in creating layout. If method is
+<code>"range"</code>, the returned map will be based on the rule that at least one observation with low range &gt; 0
+for low direction and at least one observation with high range is not missing for high direction.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">adlb &lt;- df_explicit_na(tern_ex_adlb)
+
+h_map_for_count_abnormal(
+  df = adlb,
+  variables = list(anl = "ANRIND", split_rows = c("LBCAT", "PARAM")),
+  abnormal = list(low = c("LOW"), high = c("HIGH")),
+  method = "default",
+  na_str = "&lt;Missing&gt;"
+)
+
+df &lt;- data.frame(
+  USUBJID = c(rep("1", 4), rep("2", 4), rep("3", 4)),
+  AVISIT = c(
+    rep("WEEK 1", 2),
+    rep("WEEK 2", 2),
+    rep("WEEK 1", 2),
+    rep("WEEK 2", 2),
+    rep("WEEK 1", 2),
+    rep("WEEK 2", 2)
+  ),
+  PARAM = rep(c("ALT", "CPR"), 6),
+  ANRIND = c(
+    "NORMAL", "NORMAL", "LOW",
+    "HIGH", "LOW", "LOW", "HIGH", "HIGH", rep("NORMAL", 4)
+  ),
+  ANRLO = rep(5, 12),
+  ANRHI = rep(20, 12)
+)
+df$ANRIND &lt;- factor(df$ANRIND, levels = c("LOW", "HIGH", "NORMAL"))
+h_map_for_count_abnormal(
+  df = df,
+  variables = list(
+    anl = "ANRIND",
+    split_rows = c("PARAM"),
+    range_low = "ANRLO",
+    range_high = "ANRHI"
+  ),
+  abnormal = list(low = c("LOW"), high = c("HIGH")),
+  method = "range",
+  na_str = "&lt;Missing&gt;"
+)
+
+</code></pre>
+
+
+</div>

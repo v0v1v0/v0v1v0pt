@@ -1,0 +1,105 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>generateCVRuns</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Generate cross-validation partitions
+</h2>
+
+<h3>Description</h3>
+
+<p>This function generates a set of partitions for a cross-validation. It can be employed if the same cross-validation settings should be used in the objective functions of several experiments. The resulting fold list can be passed to the cross-validation objective functions (see <code>predefinedObjectiveFunctions</code>) and the internal cross-validation precalculation function <code>crossValidation</code>. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">generateCVRuns(labels, 
+               ntimes = 10, 
+               nfold = 10, 
+               leaveOneOut = FALSE, 
+               stratified = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+
+<p>A vector of class labels of the data set to be used for the cross-validation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nfold</code></td>
+<td>
+
+<p>The number of groups of the cross-validation. Ignored if <code>leaveOneOut=TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ntimes</code></td>
+<td>
+
+<p>The number of repeated runs of the cross-validation. Ignored if <code>leaveOneOut=TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>leaveOneOut</code></td>
+<td>
+
+<p>If this is true, a leave-one-out cross-validation is performed, i.e. each sample is left out once in the training phase and used as a test sample
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stratified</code></td>
+<td>
+
+<p>If set to true, a stratified cross-validation is carried out. That is, the percentage of samples from different classes in the cross-validation folds corresponds to the class sizes in the complete data set. If set to false, the folds may be unbalanced.
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with <code>ntimes</code> elements, each representing a cross-validation run. Each of the runs is a list of <code>nfold</code> vectors specifying the indices of the samples to be left out in the folds.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>predefinedObjectiveFunctions</code>, <code>crossValidation</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# precalculate the cross-validation partitions
+foldList &lt;- generateCVRuns(labels = iris[, ncol(iris)],
+                           ntimes = 10,
+                           nfold = 10,
+                           stratified=TRUE)
+
+ # build a list of objective functions
+objectiveFunctions &lt;- list(cvError(foldList=foldList),
+                           cvSensitivity(foldList=foldList,caseClass="setosa"))
+
+# pass them to tunePareto
+print(tunePareto(data = iris[, -ncol(iris)], 
+                 labels = iris[, ncol(iris)],
+                 classifier = tunePareto.knn(),
+                 k = c(3,5,7,9),
+                 objectiveFunctions = objectiveFunctions))
+</code></pre>
+
+
+</div>

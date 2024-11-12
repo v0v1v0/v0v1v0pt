@@ -1,0 +1,230 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>stress2grid</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Spatial interpolation of SHmax</h2>
+
+<h3>Description</h3>
+
+<p>Stress field interpolation and wavelength analysis using a kernel (weighted)
+mean/median and standard deviation/IQR of stress data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">stress2grid(
+  x,
+  stat = c("mean", "median"),
+  grid = NULL,
+  lon_range = NULL,
+  lat_range = NULL,
+  gridsize = 2,
+  min_data = 3L,
+  threshold = 25,
+  arte_thres = 200,
+  method_weighting = FALSE,
+  quality_weighting = TRUE,
+  dist_weight = c("inverse", "linear", "none"),
+  idp = 1,
+  qp = 1,
+  mp = 1,
+  dist_threshold = 0.1,
+  R_range = seq(50, 1000, 50),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p><code>sf</code> object containing
+</p>
+
+<dl>
+<dt>azi</dt>
+<dd>
+<p>SHmax in degree</p>
+</dd>
+<dt>unc</dt>
+<dd>
+<p>(optional) Uncertainties of SHmax in degree</p>
+</dd>
+<dt>type</dt>
+<dd>
+<p>(optional) Methods used for the determination of the direction
+of SHmax</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stat</code></td>
+<td>
+<p>whether the direction of interpolated SHmax is based on the
+circular mean and standard deviation (<code>"mean"</code>, the default) or the
+circular median and interquartile range (<code>"median"</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>(optional) Point object of class <code>sf</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lon_range, lat_range</code></td>
+<td>
+<p>(optional) numeric vector specifying the minimum
+and maximum longitudes and latitudes (ignored if <code>grid</code> is specified).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gridsize</code></td>
+<td>
+<p>numeric. Target spacing of the regular grid in decimal
+degree. Default is <code>2.5</code>. (is ignored if <code>grid</code> is specified)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min_data</code></td>
+<td>
+<p>integer. Minimum number of data per bin. Default is <code>3</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+<p>numeric. Threshold for deviation of direction. Default is
+25</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arte_thres</code></td>
+<td>
+<p>numeric. Maximum distance (in km) of the grid point to the
+next data point. Default is <code>200</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method_weighting</code></td>
+<td>
+<p>logical. If a method weighting should be applied:
+Default is <code>FALSE</code>. If <code>FALSE</code>, overwrites <code>mp</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quality_weighting</code></td>
+<td>
+<p>logical. If a quality weighting should be applied:
+Default is <code>TRUE</code>. If <code>FALSE</code>, overwrites <code>qp</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist_weight</code></td>
+<td>
+<p>Distance weighting method which should be used. One of
+<code>"none"</code>, <code>"linear"</code>, or <code>"inverse"</code> (the default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>idp, qp, mp</code></td>
+<td>
+<p>numeric. The weighting power of inverse distance, quality
+and method. Default is <code>1</code>. The higher the value, the more weight it will
+put. When set to <code>0</code>, no weighting is applied. <code>idp</code> is only effective if
+inverse distance weighting (<code>dist_weight="inverse"</code>) is applied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist_threshold</code></td>
+<td>
+<p>numeric. Distance weight to prevent overweight of data
+nearby (0 to 1). Default is <code>0.1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R_range</code></td>
+<td>
+<p>numeric value or vector specifying the kernel half-width(s),
+i.e. the search radius (in km). Default is <code>seq(50, 1000, 50)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>(optional) arguments to <code>dist_greatcircle()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This is a modified version of the MATLAB script "stress2grid"
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>sf</code> object containing
+</p>
+
+<dl>
+<dt>lon,lat</dt>
+<dd>
+<p>longitude and latitude in degrees</p>
+</dd>
+<dt>azi</dt>
+<dd>
+<p>Mean SHmax in degree</p>
+</dd>
+<dt>sd</dt>
+<dd>
+<p>Standard deviation of SHmax in degrees</p>
+</dd>
+<dt>R</dt>
+<dd>
+<p>Search radius in km</p>
+</dd>
+<dt>mdr</dt>
+<dd>
+<p>Mean distance of datapoints per search radius</p>
+</dd>
+<dt>N</dt>
+<dd>
+<p>Number of data points in search radius</p>
+</dd>
+</dl>
+<h3>Source</h3>
+
+<p><a href="https://github.com/MorZieg/Stress2Grid">https://github.com/MorZieg/Stress2Grid</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Ziegler, M. and Heidbach, O. (2019).
+Matlab Script Stress2Grid v1.1. GFZ Data Services. <a href="https://doi.org/10.5880/wsm.2019.002">doi:10.5880/wsm.2019.002</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dist_greatcircle()</code>, <code>PoR_stress2grid()</code>, <code>compact_grid()</code>,
+<code>circular_mean()</code>, <code>circular_median()</code>, <code>circular_sd()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("san_andreas")
+stress2grid(san_andreas, stat = "median")
+</code></pre>
+
+
+</div>

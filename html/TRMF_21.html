@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TRMF_trend</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add Trend Model to a TRMF Object</h2>
+
+<h3>Description</h3>
+
+<p>Creates a regularization scheme that favors trend-like solutions and adds it to a TRMF object. In matrix optimization form, it adds the following term to the TRMF cost function:  <code class="reqn">R(x) = lambdaD^2||w(DX_s)||^2 + lambdaA^2||X_s||^2</code>  where <code class="reqn">X_s</code> is sub-set of the Xm matrix controlled by this model and D is a finite difference matrix.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TRMF_trend(obj,numTS = 1,order = 1,lambdaD=1,lambdaA=0.0001,weight=1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>A TRMF object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>numTS</code></td>
+<td>
+<p>number of latent time series in this model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>The order of derivative for finite difference constraint matrix. Fractionally and negative values allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambdaD</code></td>
+<td>
+<p>regularization parameter for temporal constraint matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambdaA</code></td>
+<td>
+<p>regularization parameter to apply simple L2 regularization to this time series model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>optional vector of weights to weight constraints, i.e. R(x) = lambdaD^2*||w*(D%*%X)||^2</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>An arbitrary number of time series models can be added. <code>TRMF_trend(order = 1)</code> fits a random walk. <code>TRMF_trend(order = 2)</code> fits a cubic smoothing spline. For a single time series, <code>TRMF_trend(order = 2)</code> is basically equivalent to the Hodge-Prescot filter. A fractional value for order minimizes a squared fractional derivative. A negative value minimizes a (possibly fractional order) squared integral of time-series. Using a fractional or negative order for <code>TRMF_trend</code> could drastically reduce the sparsity of constraint matrix and slow down training. Fractional or negative order has only been lightly tested, so use with care. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an updated object of class TRMF.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Unlike <code>TRMF_columns()</code>, these lambdas are squared in the code.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Chad Hammerquist
+</p>
+
+
+<h3>References</h3>
+
+<p>Yu, Hsiang-Fu, Nikhil Rao, and Inderjit S. Dhillon. "High-dimensional time series prediction with missing values." arXiv preprint arXiv:1509.08333 (2015).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>create_TRMF</code>, <code>TRMF_columns</code>, <code>TRMF_simple</code>, <code>TRMF_seasonal</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# create test data
+xm = poly(x = (-10:10)/10,degree=4)
+fm = matrix(runif(40),4,10)
+Am = xm%*%fm+rnorm(210,0,.1)
+
+# create model
+obj = create_TRMF(Am)
+obj = TRMF_columns(obj,reg_type ="interval")
+obj = TRMF_trend(obj,numTS=4,order=2,lambdaD=2)
+out = train(obj)
+plot(out)
+
+# more complex model
+require(magrittr) # for pipes
+
+obj = create_TRMF(Am)%&gt;%
+    TRMF_columns(reg_type ="interval")%&gt;%
+    TRMF_trend(numTS=2,order=1,lambdaD=4)%&gt;%
+    TRMF_trend(numTS=2,order=2,lambdaD=4)%&gt;%
+    TRMF_trend(numTS=1,order=1.5)
+
+out = train(obj)
+plot(out)
+</code></pre>
+
+
+</div>

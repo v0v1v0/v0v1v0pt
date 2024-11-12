@@ -1,0 +1,165 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>se.tsglm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Standard Errors of a Fitted Generalised Linear Model for Time Series of Counts
+</h2>
+
+<h3>Description</h3>
+
+<p>Computes the standard errors for the parameters of a fitted GLM-type model for time series of counts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tsglm'
+se(object, B, parallel, level=0.95, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>an object of class <code>"tsglm"</code>. Usually the result of a call to <code>tsglm</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+
+<p>positive integer value giving the number of bootstrap samples to use for estimation of the standard errors. If missing the standard errors are based on a normal approximation.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+
+<p>logical value. If <code>parallel=TRUE</code>, the bootstrap is distributed to multiple cores parallely. Requires a computing cluster to be initialised and registered as the default cluster by <code>makeCluster</code> and <code>setDefaultCluster</code> from package <code>parallel</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+
+<p>numeric value determining the desired coverage rate of confidence intervals.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>additional arguments to be passed to the fitting function <code>tsglm</code>. Only made use of if the standard errors are computed by a bootstrap procedure.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>By default the standard errors and confidence intervals are based on a normal approximation of the (quasi) maximum likelihood estimator. The standard errors are the square roots of the diagonal elements of the inverse of the information matrix. Because there is no analytical approximation of the standard error for the overdispersion coefficient <code>sigmasq</code>, its standard error and its confidence interval are set to <code>NA</code>.
+</p>
+<p>If the number of bootstrap samples <code>B</code> is given, the standard errors and condidence intervals are computed by a parametric bootstrap. The standard errors are the empirical standard deviation of the parameter estimations of <code>B</code> random samples drawn from the fitted model given in argument <code>object</code>. The confidence intervals are the <code>a</code>- and <code>(1-a)</code>-quantile of this bootstrap sample with <code>a=(1-level)/2</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>est</code></td>
+<td>
+<p>a vector of the maximum likelihood estimated coefficients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>se</code></td>
+<td>
+<p>a vector of the standard errors of each estimated coefficient.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci</code></td>
+<td>
+<p>a matrix with the columns <code>"lower"</code> and <code>"upper"</code> giving the lower and upper boundaries of confidence intervals for the model parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>numerical value giving the coverage rate of the confidence intervals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>a character value <code>"normapprox"</code> or <code>"bootstrap"</code> giving how the standard errors are computed.</p>
+</td>
+</tr>
+</table>
+<p>If the standard errors are computed by a parametric bootstrap procedure, the following component is additionally returned:
+</p>
+<table><tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>positive integer value giving the number of bootstrap samples used for estimation of the standard errors.</p>
+</td>
+</tr></table>
+<h3>Author(s)</h3>
+
+<p>Tobias Liboschik and Philipp Probst
+</p>
+
+
+<h3>References</h3>
+
+<p>Liboschik, T., Fokianos, K. and Fried, R. (2017) tscount: An R package for analysis of count time series following generalized linear models. <em>Journal of Statistical Software</em> <b>82(5)</b>, 1–51, <a href="http://dx.doi.org/10.18637/jss.v082.i05">http://dx.doi.org/10.18637/jss.v082.i05</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tsglm</code> for fitting a GLM for time series of counts.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###Road casualties in Great Britain (see help("Seatbelts"))
+timeseries &lt;- Seatbelts[, "VanKilled"]
+regressors &lt;- cbind(PetrolPrice=Seatbelts[, c("PetrolPrice")],
+                    linearTrend=seq(along=timeseries)/12)
+#Logarithmic link function with Poisson distribution:                    
+seatbeltsfit &lt;- tsglm(ts=timeseries, link="log",
+  model=list(past_obs=c(1, 12)), xreg=regressors, distr="poisson")
+  
+se(seatbeltsfit) #by normal approximation
+
+## Not run: 
+system.time(stderror &lt;- se(seatbeltsfit, B=100)) #by bootstrap
+stderror
+#This estimation of bootstrap standard errors takes several minutes on a single
+#processing unit, of course depending on its speed.
+#Parallel computation for shorter run time on a cluster:
+library(parallel)
+ntasks &lt;- 3
+clust &lt;- makeCluster(ntasks)
+setDefaultCluster(cl=clust)
+system.time(stderror &lt;- se(seatbeltsfit, B=100, parallel=TRUE))
+## End(Not run)
+</code></pre>
+
+
+</div>

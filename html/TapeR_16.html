@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>resVar</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Functions to put different size of uncertainty on given measurements</h2>
+
+<h3>Description</h3>
+
+<p>When estimating a tree specific taper curve based on given
+measurements one can modify the assumed measurement uncertainty by these
+functions
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">resVar(relH, fn, sig2, par = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>relH</code></td>
+<td>
+<p>relative tree height for which the assumed residual variance
+should be calculated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fn</code></td>
+<td>
+<p>name of function to be applied as character string</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sig2</code></td>
+<td>
+<p>residual variance from fitted model, cf.
+<code>TapeR_FIT_LME.f</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par</code></td>
+<td>
+<p>either NULL or a list with parameters to the different functions.
+See details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When estimating a tree specific taper curve based on given
+measurements the residual variance of the model is taken into account to
+estimate the tree specific random effects. Alternatively, it is possible to
+make assumptions about the measurement error, eventually at specific
+relative heights. With that, one can e.g. force the taper curve through the
+given measurements. Standard behaviour not necessarily leads to passing the
+measurements, if more than one is given.
+</p>
+<p>Different functions are available. <code>sig2</code> applies the model residual
+variance and hence is the default behaviour.
+<code>zero</code> means assuming no residual variance and forcing the taper curve
+through the given measurements. Care has to be taken in this case because
+forcing the taper curve through a lot of measurements might result in
+implausible results.
+<code>linear</code> interpolates between zero and the given residual variance along
+the stem, i.e. from bottom to tree top.
+<code>bilinear</code> puts zero variance not at zero but at a predefined location
+(can be given via <code>par</code>). Below and above a linear interpolation is
+done up to the given residual variance. If zero variance position is not
+given, it is set at 5% of tree height (approximately height of dbh).
+<code>laglinear</code> assumes zero variance up to a predefined location (defaults
+to 5% of tree height) and interpolates upwards to the given residual
+variance of the model.
+<code>quadratic</code> function distributes residual variance according to a
+quadratic function along the stem. It is build so that zero variance is put
+at a predefined location (defaults to 5% of tree height) and model residual
+variance (as a default) at tree top.
+<code>dnorm</code> and <code>dlnorm</code> put residual variance in form of an inverse
+normal or an inverse log-normal distribution along the stem with a
+zero-minimum at a predefined location (defaults to 5% of tree height).
+See examples for a visualisation.
+</p>
+<p>For all functions (except <code>zero</code> and <code>sig2</code>) the point of zero
+residual variance is defined by <code>par$zrv</code> if given, otherwise set to 0.05.
+For <code>dnorm</code> one can additionally provide the parameter <code>sd</code> to
+determine standard deviation. By default it is set to <code>zrv/3</code>; in case
+of <code>dlnorm</code> one can define <code>lsd</code> (sdlog, cf. <code>dlnorm</code>),
+which is by default set to <code>1-sqrt(zrv)</code>. It is up to the user to define
+meaningful parameters and use the functions in appropriate context.
+</p>
+
+
+<h3>Value</h3>
+
+<p>vector of assumed residual variance
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Christian Vonderach
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">curve(resVar(relH=x, fn = "sig2", 0.5))
+curve(resVar(relH=x, fn = "zero", 0.5))
+curve(resVar(relH=x, fn = "linear", 0.5))
+curve(resVar(relH=x, fn = "bilinear", 0.5))
+curve(resVar(relH=x, fn = "laglinear", 0.5))
+curve(resVar(relH=x, fn = "quadratic", 0.5))
+curve(resVar(relH=x, fn = "dnorm", 0.5))
+curve(resVar(relH=x, fn = "dnorm", 0.5, par=list(zrv=0.2, sd=0.2/3)))
+curve(resVar(relH=x, fn = "dlnorm", 0.5))
+curve(resVar(relH=x, fn = "dlnorm", 0.5, par=list(zrv=0.2)))
+invisible(sapply(seq(0.01, 0.99, length.out=20), function(a){
+  curve(resVar(relH=x, fn = "dlnorm", 0.5, par=list(zrv=a, lsd=(1-sqrt(a)))),
+  n=1000)
+}))
+</code></pre>
+
+
+</div>

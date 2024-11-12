@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_tongfen_us_census</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get US census data for 2000 and 2010 census on common census tract based geography</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#maturing"><img src="../help/figures/lifecycle-maturing.svg" alt="[Maturing]"></a>
+</p>
+<p>This wraps data acquisition via the tidycensus package and tongfen on a common geography into
+a single convenience function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_tongfen_us_census(
+  regions,
+  meta,
+  level = "tract",
+  survey = "census",
+  base_geo = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>regions</code></td>
+<td>
+<p>list with regions to query the data for. At this stage, the only
+valid list is a vector of states, i.e. 'regions = list(state=c("CA","OR"))“</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meta</code></td>
+<td>
+<p>metadata for variables to retrieve</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level</code></td>
+<td>
+<p>aggregation level to return the data on. At this stage, the only valid levels are 'tract' and 'county subdivision'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>survey</code></td>
+<td>
+<p>survey to get data for, supported options is "census"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base_geo</code></td>
+<td>
+<p>census year to use as base geography, default is '2010'.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>sf object with (wide form) census variables with census year as suffix (separated by underdcore "_").
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Get US census data on population and households for 2000 and 2010 censuses on a uniform geography
+# based on census tracts.
+## Not run: 
+variables=c(population="H011001",households="H013001")
+
+meta &lt;- c(2000,2010) %&gt;%
+  lapply(function(year){
+    v &lt;- variables %&gt;% setNames(paste0(names(.),"_",year))
+    meta_for_additive_variables(paste0("dec",year),v)
+  }) %&gt;%
+  bind_rows()
+census_data &lt;- get_tongfen_us_census(regions = list(state="CA"), meta=meta, level="tract") %&gt;%
+  mutate(change=population_2010/households_2010-population_2000/households_2000)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

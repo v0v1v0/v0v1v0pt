@@ -1,0 +1,333 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sens</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Monte Carlo Bayesian Sensitivity Analysis</h2>
+
+<h3>Description</h3>
+
+<p>Fully Bayesian Monte Carlo sensitivity analysis scheme,
+based upon any of the regression models contained in the <span class="pkg">tgp</span>
+package.  Random Latin hypercube samples are drawn at each MCMC
+iteration in order to estimate main effects as well as 1st order
+and total sensitivity indices.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sens(X, Z, nn.lhs, model = btgp, ngrid = 100, span = 0.3,
+     BTE = c(3000,8000,10), rect = NULL, shape = NULL, mode = NULL,
+     ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p><code>data.frame</code>, <code>matrix</code>, or vector of inputs <code>X</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p> Vector of output responses <code>Z</code> of length equal to the
+leading dimension (rows) of <code>X</code>, i.e., <code>length(Z) ==
+      nrow(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nn.lhs</code></td>
+<td>
+<p>Size of each Latin hypercube drawn for
+use in the Monte Carlo integration scheme. Total number of locations
+for prediction is <code>nn.lhs*(ncol(X)+2)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Either the regression model used for prediction, or
+<code>NULL</code>.  If <code>model=NULL</code>, then the function just returns
+the <code>sens.p</code> vector of parameters to be passed with a
+regression model call.  This can be used to perform sensitivity
+analysis through the <code>predict.tgp</code> framework</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngrid</code></td>
+<td>
+<p>The number of grid points in each input dimension upon
+which main effects will be estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>span</code></td>
+<td>
+<p>Smoothing parameter for main effects integration:
+the fraction of <code>nn.lhs</code> points that will be included
+in a moving average window that is used to estimate main effects
+at the <code>ngrid</code> locations in each input dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BTE</code></td>
+<td>
+<p> 3-vector of Monte-Carlo parameters (B)urn in, (T)otal, and
+(E)very. Predictive samples are saved every E MCMC rounds starting
+at round B, stopping at T </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rect</code></td>
+<td>
+<p> Rectangle describing the domain of the uncertainty
+distribution with respect to which the sensitivity is to be
+determined.  This defines the domain from which the LH sample
+is to be taken.  The rectangle should be a <code>matrix</code> or
+<code>data.frame</code> with <code>ncol(rect) = 2</code>, and number of rows
+equal to the dimension of the domain.  For 1-d data, a vector of
+length 2 is allowed.  Defaults to the input data range (<code>X</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shape</code></td>
+<td>
+<p> Optional vector of shape parameters for the Beta
+distribution. Vector of length equal to the dimension of the domain,
+with elements &gt; 1. If specified, the uncertainty distribution
+(i.e. the LH sample) is proportional to a joint pdf formed by
+independent Beta distributions in each dimension of the domain,
+scaled and shifted to have support defined by <code>rect</code>.
+Only concave Beta distributions with <code>shape</code> &gt; 1 are
+supported. If unspecified, the uncertainty distribution
+is uniform over <code>rect</code>. The specification <code>shape[i]=0</code>
+instructs <code>sens</code> to treat the i'th dimension as a binary 
+variable. In this case, <code>mode[i]</code> is the probability
+parameter for a bernoulli uncertainty distribution, and 
+we must also have <code>rect[i,]=c(0,1)</code>.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode</code></td>
+<td>
+<p> Optional vector of mode values for the Beta
+uncertainty distribution. Vector of length equal to the dimension
+of the domain, with elements within the support defined by
+<code>rect</code>.  If <code>shape</code> is specified, but this is not,
+then the scaled Beta distributions will be symmetric. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Extra arguments to the <span class="pkg">tgp</span> <code>model</code>. </p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Saltelli (2002) describes a Latin Hypercube sampling based method for
+estimation of the 'Sobal' sensitivity indices:
+</p>
+<p>1st Order for input <code class="reqn">i</code>,
+</p>
+<p style="text-align: center;"><code class="reqn">S(i) = \mbox{Var}(E[f|x_i])/\mbox{Var}(f),</code>
+</p>
+
+<p>where <code class="reqn">x_i</code> is the  <code class="reqn">i</code>-th input.
+</p>
+<p>Total Effect for input <code class="reqn">i</code>,
+</p>
+<p style="text-align: center;"><code class="reqn">T(i) = E[\mbox{Var}(f|x_{-i})]/\mbox{Var}(f),</code>
+</p>
+
+<p>where <code class="reqn">x_{-i}</code> is all inputs except for the <code class="reqn">i</code>-th.
+</p>
+<p>All moments are with respect to the appropriate marginals of the
+uncertainty distribution <code class="reqn">U</code> – that is, the probability
+distribution on the inputs with respect to which sensitivity is being
+investigated.
+Under this approach, the integrals involved are approximated through
+averages over properly chosen samples based on two LH samples
+proportional to U. If <code>nn.lhs</code> is the sample size for the
+Monte Carlo estimate, this scheme requires <code>nn.lhs*(ncol(X)+2)</code>
+function evaluations.
+</p>
+<p>The <code>sens</code> function implements the method for unknown functions
+<code class="reqn">f</code>, through prediction via one of the <span class="pkg">tgp</span> regression
+models conditional on an observed set of <code>X</code> locations.
+At each MCMC iteration of the <span class="pkg">tgp</span> model fitting,
+the <code>nn.lhs*(ncol(X)+2)</code> locations are drawn randomly from the
+LHS scheme and realizations of the sensitivity indices are
+calculated. Thus we obtain a posterior sample of the indices,
+incorporating variability from both the Monte Carlo estimation and
+uncertainty about the function output. Since a subset of the
+predictive locations are actually an LHS proportional to the
+uncertainty distribution, we can also estimate the main effects
+through simple non-parametric regression (a moving average).
+</p>
+<p>Please see <code>vignette("tgp2")</code> for a detailed illustration
+</p>
+
+
+<h3>Value</h3>
+
+<p>The output is a <code>"tgp"</code>-class object.  The details for <code>btgp</code>
+contain a complete description of this output.  The list entry that
+is relevance to sensitivity analysis is <code>sens</code>, which itself has entries:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>par</code></td>
+<td>
+<p> This contains a <code>list</code> of the input parameters used in the
+sensitivity analysis, as outlined above.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xgrid</code></td>
+<td>
+<p>A <code>matrix</code> containing a grid in each input dimension (by column)
+over which the main effects are estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.mean</code></td>
+<td>
+<p>A <code>matrix</code>, where each column contains the mean
+main effects over the corresponding column of <code>sens.Xgrid</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.q1</code></td>
+<td>
+<p>A <code>matrix</code>, where each column contains the 5th percentile
+main effects over the corresponding column of <code>sens.Xgrid</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.q2</code></td>
+<td>
+<p>A <code>matrix</code>, where each column contains the 5th percentile
+main effects over the corresponding column of <code>sens.Xgrid</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>A <code>matrix</code>, where each column contains the posterior sample
+of 1st order sensitivity indices for the corresponding input dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T</code></td>
+<td>
+<p>A <code>matrix</code>, where each column contains the posterior sample
+of total sensitivity indices for the corresponding input dimension.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>The quality of sensitivity analysis is dependent on the size of
+the LH samples used for integral approximation; as with any Monte
+Carlo integration scheme, the sample size (<code>nn.lhs</code>) must
+increase with the dimensionality of the problem.  The total
+sensitivity indices <code class="reqn">T</code> are forced non-negative,
+and if negative values occur it is necessary to increase
+<code>nn.lhs</code>. The <code>plot.tgp</code> function replaces negative values with zero
+for illustration.
+</p>
+
+
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+ 
+<p>Gramacy, R. B. (2020) <em>Surrogates: Gaussian Process Modeling,
+Design and Optimization for the Applied Sciences</em>. Boca Raton,
+Florida: Chapman Hall/CRC.  (See Chapter 8.)
+<a href="https://bobby.gramacy.com/surrogates/">https://bobby.gramacy.com/surrogates/</a>
+</p>
+<p>R.D. Morris, A. Kottas, M. Taddy, R. Furfaro, and B. Ganapol. (2009)
+<em>A statistical framework for the sensitivity analysis of radiative
+transfer models.</em> IEEE Transactions on Geoscience and Remote Sensing,
+to appear.
+</p>
+<p>Saltelli, A. (2002) 
+<em>Making best use of model evaluations to compute sensitivity indices.</em>
+Computer Physics Communications, 145, 280-297.
+</p>
+
+
+<h3>See Also</h3>
+
+  <p><code>btgp</code>, <code>plot.tgp</code>,
+<code>predict.tgp</code>, <code>lhs</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Take a look at the air quality in New York: Sensitivity of
+# ozone levels with respect to solar radiation, wind, and
+# temperature. See help(airquality) for details.  
+X &lt;- airquality[,2:4]
+Z &lt;- airquality$Ozone
+
+# Uncertainty distribution is the default: uniform over range(X)
+# There is missing data, which is removed automatically by tgp
+# range(X).
+
+s &lt;- suppressWarnings(sens(X=X, Z=Z, nn.lhs=300, model=btgp,
+          ngrid=100, span=0.3, BTE=c(5000,10000,10)))
+
+# plot the results
+plot(s, layout="sens", ylab="Ozone", main="main effects") 
+
+# plot only the sensitivity indices
+plot(s, layout="sens", ylab="Ozone", maineff=FALSE) 
+
+# plot only the main effects, side by side
+plot(s, layout="sens", ylab="Ozone", main="", maineff=t(1:3))
+
+
+# build a 'sens.p' parameter vector for a data-dependent
+# informative uncertainty distribution.  For each variable,
+# the input distribution will be a scaled Beta with shape=2,
+# and mode equal to the data mean
+rect &lt;- t(apply(X, 2, range, na.rm=TRUE))
+mode &lt;- apply(X , 2, mean, na.rm=TRUE)
+shape &lt;- rep(2,3)
+
+# plot a sample from the marginal uncertainty distribution.
+Udraw &lt;- lhs(300, rect=rect, mode=mode, shape=shape)
+par(mfrow=c(1,3))
+for(i in 1:3) hist(Udraw[,i], breaks=15,xlab=names(X)[i]) 
+
+# build sens.p with the 'sens' function.
+sens.p &lt;- suppressWarnings(sens(X=X, Z=Z, nn.lhs=300, model=NULL,
+               ngrid=100, rect=rect, shape=shape, mode=mode))
+
+# Use predict.tgp to quickly analyze with respect to this new
+# uncertainty distribution without re-running the MCMC, then
+# plot the results.
+
+s.new &lt;- predict(s, BTE=c(1,1000,1), sens.p=sens.p, verb=1) 
+plot(s.new, layout="sens", ylab="Ozone", main="main effects")
+
+</code></pre>
+
+
+</div>

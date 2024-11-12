@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_nodes</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract nodes from a SEM model object</h2>
+
+<h3>Description</h3>
+
+<p>Attempts to extract nodes from a SEM model object, where nodes
+are defined as observed or latent variables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_nodes(x, label = paste2(name, est_sig, sep = "\n"), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A model object of class <code>mplusObject</code> or <code>lavaan</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>Either a character, indicating which column to use for node
+labels, or an expression. See Details.
+Defaults to <code>paste(name, est_sig, sep = "\n"</code>,
+which gives the node name followed by the estimated value with
+significance asterisks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters passed to <code>table_results</code>. For
+example, users can pass the <code>digits</code> argument to control the number of
+digits in the node label, or pass the <code>columns</code> argument to retain
+auxiliary columns in the <code>tidy_nodes data.frame</code> for further processing
+(see Examples).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>get_nodes</code> identifies all dependent and
+independent variables in the model as nodes. If a mean structure / intercepts
+are included in the model, the output of <code>table_results</code> for those
+means / intercepts is used to label the nodes.
+</p>
+
+
+<h4>Custom labels</h4>
+
+<p>One way to create custom node labels is by passing an expression to
+<code>label</code>, as in the default value of the argument. When an expression is
+passed to <code>label</code>, it is evaluated in the context of a <code>data.frame</code>
+containing the results
+of a call to <code>table_results</code> on the <code>x</code> argument, with an
+additional column labeled <code>name</code>, which contains the node names.
+</p>
+<p>Another way to create custom labels is by requesting auxiliary variables
+using the <code>columns</code> argument (which is passed to
+<code>table_results</code>), and then using these columns to construct a new
+label. See examples.
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>An object of class 'tidy_nodes'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Standard use extracts node names and shape
+# (rect for observed, oval for latent)
+library(lavaan)
+res &lt;- sem("dist ~ speed", cars)
+get_nodes(res)
+
+# To label nodes with mean values, include meanstructure in the model
+# Note that it is possible to pass the argument 'digits' to table_results
+# through '...'
+res &lt;- sem("dist ~ speed", cars, meanstructure = TRUE)
+get_nodes(res, digits = 3)
+
+# Pass an expression to the 'label' argument for custom labels
+get_nodes(res, label = paste0(name, " ", est_sig, "\n", confint))
+
+# Pass the argument 'columns' to table_results through '...' to retain
+# auxiliary columns for further processing
+nod &lt;- get_nodes(res, columns = c("est_sig", "confint"))
+nod
+nod &lt;- within(nod, {label &lt;- paste0(name, " ", est_sig, "\n", confint)})
+nod
+</code></pre>
+
+
+</div>

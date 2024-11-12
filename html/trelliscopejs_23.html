@@ -1,0 +1,234 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trelliscope</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a Trelliscope Display</h2>
+
+<h3>Description</h3>
+
+<p>Create a Trelliscope Display
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trelliscope(
+  x,
+  name,
+  group = "common",
+  panel_col = NULL,
+  desc = "",
+  md_desc = "",
+  path,
+  height = 500,
+  width = 500,
+  auto_cog = FALSE,
+  state = NULL,
+  nrow = 1,
+  ncol = 1,
+  jsonp = TRUE,
+  split_sig = NULL,
+  self_contained = FALSE,
+  thumb = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object to create at trelliscope display for</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name of the display</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>group that the display belongs to</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>panel_col</code></td>
+<td>
+<p>optional string specifying the column to use for panels (if there are multiple plot columns in <code>x</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>desc</code></td>
+<td>
+<p>optional text description of the display</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>md_desc</code></td>
+<td>
+<p>optional string of markdown that will be shown in the viewer for additional context about the display</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>the base directory of the trelliscope application</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>height</code></td>
+<td>
+<p>height in pixels of each panel</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>width in pixels of each panel</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>auto_cog</code></td>
+<td>
+<p>should auto cogs be computed (if possible)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state</code></td>
+<td>
+<p>the initial state the display will open in</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nrow</code></td>
+<td>
+<p>the number of rows of panels to display by default</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncol</code></td>
+<td>
+<p>the number of columns of panels to display by default</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>jsonp</code></td>
+<td>
+<p>should json for display object be jsonp (TRUE) or json (FALSE)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split_sig</code></td>
+<td>
+<p>optional string that specifies the "signature" of the data splitting. If not specified, this is calculated as the md5 hash of the sorted unique facet variables. This is used to identify "related displays" - different displays that are based on the same faceting scheme. This parameter should only be specified manually if a display's faceting is mostly similar to another display's.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>self_contained</code></td>
+<td>
+<p>should the Trelliscope display be a self-contained html document? (see note)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thumb</code></td>
+<td>
+<p>should a thumbnail be created?</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Note that <code>self_contained</code> is severely limiting and should only be used in cases where you would either like your display to show up in the RStudio viewer pane, in an interactive R Markdown Notebook, or in a self-contained R Markdown html document.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(plotly)
+library(ggplot2)
+
+# tidyverse + plotly
+d &lt;- mpg %&gt;%
+  nest(data = !one_of(c("manufacturer", "class"))) %&gt;%
+  mutate(
+    mean_city_mpg = map_dbl(data, ~ mean(.$cty)),
+    panel = map_plot(data, function(x) {
+      plot_ly(data = x, x = ~cty, y = ~hwy,
+        type = "scatter", mode = "markers")
+    })
+  )
+
+d %&gt;% trelliscope(name = "city_vs_highway_mpg")
+
+# set default layout
+d %&gt;% trelliscope(name = "city_vs_highway_mpg", nrow = 2, ncol = 3)
+
+# set the output path for where files will be stored
+my_displays &lt;- tempfile()
+d %&gt;% trelliscope(name = "city_vs_highway_mpg", path = my_displays)
+
+# multiple displays can be added to the same path and all will be available in the viewer
+d %&gt;% trelliscope(name = "city_vs_highway_mpg2", path = my_displays)
+
+# ordering the data frame will set default sort order of the display
+d %&gt;%
+  arrange(-mean_city_mpg) %&gt;%
+  trelliscope(name = "city_vs_highway_mpg")
+
+# tidyverse + ggplot2
+mpg %&gt;%
+  nest(data = !one_of(c("manufacturer", "class"))) %&gt;%
+  mutate(
+    panel = map_plot(data, ~
+      qplot(cty, hwy, data = .) + xlab("cty") + ylab("hwy") +
+        xlim(7, 37) + ylim(9, 47) + theme_bw())) %&gt;%
+  trelliscope(name = "tidy_gg")
+
+# computing additional cognostics
+mpg_cog &lt;- mpg %&gt;%
+  nest(data = !one_of(c("manufacturer", "class"))) %&gt;%
+  mutate(
+    cogs = map_cog(data, ~ tibble(
+      mean_city_mpg = mean(.$cty),
+      mean_hwy_mpg = mean(.$hwy),
+      most_common_drv = tail(names(table(.$drv)), 1)
+    ))
+  )
+
+# computing additional cognostics explicitly using cog()
+# so we can specify descriptions, etc.
+mpg_cog2 &lt;- mpg %&gt;%
+  nest(data = !one_of(c("manufacturer", "class"))) %&gt;%
+  mutate(
+    cogs = map_cog(data, ~ tibble(
+      mean_city_mpg = cog(mean(.$cty), desc = "Mean city mpg"),
+      mean_hwy_mpg = cog(mean(.$hwy), desc = "Mean highway mpg"),
+      most_common_drv = cog(tail(names(table(.$drv)), 1), desc = "Most common drive type")
+    )),
+    panel = map_plot(data, function(x) {
+      plot_ly(data = x, x = ~cty, y = ~hwy,
+        type = "scatter", mode = "markers") %&gt;%
+        layout(
+          xaxis = list(range = c(9, 47)),
+          yaxis = list(range = c(7, 37)))
+    })
+  )
+
+mpg_cog2 %&gt;%
+  trelliscope(name = "city_vs_highway_mpg", nrow = 1, ncol = 2)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

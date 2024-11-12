@@ -1,0 +1,482 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>transport</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Find Optimal Transport Plan Between Two Objects
+</h2>
+
+<h3>Description</h3>
+
+<p>Given two objects <code>a</code> and <code>b</code> that specify distributions of mass and an object that specifies (a way to compute) costs,
+find the transport plan for going from <code>a</code> to <code>b</code> that minimizes the total cost.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">transport(a, b, ...)
+## Default S3 method:
+transport(a, b, costm, method = c("networkflow", "shortsimplex", "revsimplex",
+"primaldual"), fullreturn=FALSE, control = list(), threads=1, ...)
+## S3 method for class 'pgrid'
+transport(a, b, p = NULL, method = c("auto", "networkflow", "revsimplex", "shortsimplex",
+  "shielding", "aha", "primaldual"), fullreturn=FALSE,
+  control = list(), threads=1,...)
+## S3 method for class 'pp'
+transport(a, b, p = 1, method = c("auction", "auctionbf", "networkflow", "shortsimplex",
+  "revsimplex", "primaldual"), fullreturn=FALSE, control = list(), threads=1, ...)
+## S3 method for class 'wpp'
+transport(a, b, p = 1, method = c("networkflow", "revsimplex", "shortsimplex",
+  "primaldual"), fullreturn=FALSE, control = list(), threads=1, ...) 
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a, b</code></td>
+<td>
+
+<p>two objects that describe mass distributions, between which the optimal transport map is to be computed. For the default
+method these are vectors of non-negative values. For the other three methods these are objects of the respective classes.
+It is also possible to have <code>a</code> of class <code>pgrid</code> and <code>b</code> of class <code>wpp</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>costm</code></td>
+<td>
+
+<p>for the default method a <code>length(a)</code> by <code>length(b)</code> matrix specifying the cost of transporting single
+units of mass between the corresponding source and destination points. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+
+<p>for the three specialized methods the power <code class="reqn">\geq 1</code> to which the Euclidean distance between points is taken in order
+to compute costs.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>the name of the algorithm to use. See details below.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fullreturn</code></td>
+<td>
+
+<p>A boolean specifying whether the output of the function should also include the dual solution, the optimal transport cost between a and b and the transport plan in matrix form should be returned as well.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+
+<p>a named list of parameters for the chosen method or the result of a call to <code>trcontrol</code>. Any parameters
+that are not set by the control argument will get reasonable (sometimes problem specific) defaults.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p> An Integer specifying the number of threads used in parallel computing. Currently only
+available for the method "networkflow".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>currently without effect.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>There is a number of algorithms that are currently implemented and more will be added in future versions of the package. 
+The following is a brief description of each key word used. Much more details can be found in the cited references 
+and in a forthcoming package vignette.
+</p>
+<p><code>aha</code>: The Aurenhammer–Hoffmann–Aronov (1998) method with the multiscale approach presented in Mérigot (2011). The original theory was limited to <code class="reqn">p=2</code>. We refer by <code>aha</code> also to the extension of the same idea for <code class="reqn">p=1</code> as presented in Hartmann and Schuhmacher (2017) and for more general <code class="reqn">p</code> (currently not implemented).
+</p>
+<p><code>auction</code>: The auction algorithm by Bertsekas (1988) with epsilon-scaling, see Bertsekas (1992).
+</p>
+<p><code>auctionbf</code>: A refined auction algorithm that combines forward and revers auction, see Bertsekas (1992).
+</p>
+<p><code>networkflow</code>: The fast implementation of the network simplex algorithm by Nicolas Bonneel based on the LEMON Library (see citations below).
+</p>
+<p><code>primaldual</code>: The primal-dual algorithm as described in Luenberger (2003, Section 5.9).
+</p>
+<p><code>revsimplex</code>: The revised simplex algorithm as described in Luenberger and Ye (2008, Section 6.4) with various speed improvements, including a multiscale approach.
+</p>
+<p><code>shielding</code>: The shielding (or shortcut) method, as described in Schmitzer (2016).
+</p>
+<p><code>shortsimplex</code>: The shortlist method based an a revised simplex algorithm, as described in Gottschlich and Schuhmacher (2014).
+</p>
+<p>The order of the <em>default</em> key words specified for the argument <code>method</code> gives a rough idea of the relative efficiency of the algorithms for the corresponding class of objects. For a given <code>a</code> and <code>b</code> the actual computation times may deviate significantly from this order.
+For class <code>pgrid</code> the default method is <code>"auto"</code>, which resolves to <code>"revsimplex"</code> if <code>p</code> is not 2 or the problem is very small, and to <code>"shielding"</code> otherwise.
+</p>
+<p>The following table gives information about the applicability of the various algorithms (or sometimes rather
+their current implementations).
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+  	                 </td>
+<td style="text-align: left;"> default </td>
+<td style="text-align: left;"> pgrid </td>
+<td style="text-align: left;">  pp  </td>
+<td style="text-align: left;">  wpp   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  	aha (p=1 or 2!)  </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   @   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    auction          </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   -   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    auctionbf        </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   -   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    networkflow      </td>
+<td style="text-align: left;">   +     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   +   </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+    primaldual       </td>
+<td style="text-align: left;">   *     </td>
+<td style="text-align: left;">   *   </td>
+<td style="text-align: left;">   *   </td>
+<td style="text-align: left;">   +   </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+    revsimplex       </td>
+<td style="text-align: left;">   +     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   *   </td>
+<td style="text-align: left;">   +   </td>
+</tr>
+<tr>
+<td style="text-align: left;">      
+    shielding (p=2!) </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   -   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    shortsimplex     </td>
+<td style="text-align: left;">   +     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   *   </td>
+<td style="text-align: left;">   +   </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+  </td>
+</tr>
+</table>
+<p>where: + recommended, * applicable (may be slow), - no implementation planned or combination does not make sense; @ indicates that the aha algorithm is available in the special combination where <code>a</code> is a <code>pgrid</code> object and <code>b</code> is a <code>wpp</code> object (and <code>p</code> is 2). For more details on this combination see the function <code>semidiscrete</code>.   
+</p>
+<p>Each algorithm has certain parameters supplied by the <code>control</code> argument. The following table gives an overview of parameter names and 
+their applicability.
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+  	                               </td>
+<td style="text-align: left;"> <code>start</code> </td>
+<td style="text-align: left;"> multiscale </td>
+<td style="text-align: left;"> individual parameters    </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+
+    <code>aha</code> (<code class="reqn">p=2</code>!)        </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">   <code>factr</code>, <code>maxit</code>  </td>
+</tr>
+<tr>
+<td style="text-align: left;">  	                        
+  	<code>auction</code>                 </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   <code>lasteps</code>, <code>epsfac</code>   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  	<code>auctionbf</code>               </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   <code>lasteps</code>, <code>epsfac</code>   </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  	<code>networkflow</code>             </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">      </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  	<code>primaldual</code>              </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">      </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  	<code>revsimplex</code>              </td>
+<td style="text-align: left;">   +     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">      </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+  	<code>shielding</code> (<code class="reqn">p=2</code>!)  </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   +   </td>
+<td style="text-align: left;">      </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+    <code>shortsimplex</code>            </td>
+<td style="text-align: left;">   -     </td>
+<td style="text-align: left;">   -   </td>
+<td style="text-align: left;">   <code>slength</code>, <code>kfound</code>, <code>psearched</code>   </td>
+</tr>
+<tr>
+<td style="text-align: left;">  
+  </td>
+</tr>
+</table>
+<p><code>start</code> specifies the algorithm for computing a starting solution (if needed). Currently the Modified Row Minimum Rule
+(<code>start="modrowmin"</code>), the North-West Corner Rule (<code>start="nwcorner"</code>) and the method by Russell (1969) (<code>start="russell"</code>)
+are implemented. When <code>start="auto"</code> (the default) the ModRowMin Rule is chosen. However,
+for <code>transport.pgrid</code> and <code>p</code> larger than 1, there are two cases where an automatic multiscale procedure is also performed, i.e. the optimal transport is first computed on coarser grids and information from these solutions is then used for the finer girds.
+This happens for 
+<code>method = "revsimplex"</code>, where a single coarsening at factor <code>scmult=2</code> is performed, and for <code>method = "shielding"</code>, where a number of coarsenings adapted to the dimensions of the array is performed.   
+</p>
+<p>For <code>p=1</code> and <code>method="revsimplex"</code>, as well as <code>p=2</code> and <code>method="aha"</code> there are multiscale versions of
+the corresponding algorithms that allows for finer control via the parameters
+<code>nscales</code>, <code>scmult</code> and <code>returncoarse</code>. The default value of <code>nscales=1</code> suppresses
+the multiscale version. For larger problems it is advisable to use the multiscale version, which currently is only implemented for
+square pgrids in two dimensions. The algorithm proceeds then by coarsening the pgrid <code>nscales-1</code> times, summarizing
+each time <code>scmult^2</code> pixels into one larger pixels, and then solving the various transport problems starting from the coarsest and
+using each previous problem to compute a starting solution to the next finer problem. If <code>returncoarse</code> is <code>TRUE</code>, the coarser
+problems and their solutions are returned as well (<code>revsimplex</code> only).
+</p>
+<p><code>factr</code>, <code>maxit</code> are the corresponding components of the <code>control</code> argument in the <code>optim</code> L-BFGS-B method.
+</p>
+<p><code>lasteps</code>, <code>epsfac</code> are parameters used for epsilon scaling in the auction algortihm. The algorithm starts with a “transaction cost” per bid of <code>epsfac^k * lasteps</code> for some reasonable <code>k</code> generating finer and finer approximate solutions as the <code>k</code> counts down to zero. Note that in order for the procedure to make sense, <code>epsfac</code> should be larger than one (typically two- to three-digit) and in order for the final solution to be exact <code>lasteps</code> should be smaller than <code>1/n</code>, where <code>n</code> is the total number of points in either of the point patterns.
+<code>slength</code>, <code>kfound</code>, <code>psearched</code> are the shortlist length, the number of pivot candidates needed, and the percentage of
+shortlists searched, respectively.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame with columns <code>from</code>, <code>to</code> and <code>mass</code> that specifies from which element of <code>a</code> to which element of <code>b</code> what amount of mass is sent in the optimal transport plan. For class <code>pgrid</code> elements are specified as vector indices in terms of the usual column major enumeration of the matrices <code>a$mass</code> and <code>b$mass</code>. There are <code>plot</code> methods for the classes <code>pgrid</code> and <code>pp</code>, which can plot this solution.
+</p>
+<p>If <code>returncoarse</code> is <code>TRUE</code> for the <code>revsimplex</code> method, a list with components <code>sol</code> and <code>prob</code> giving the solutions and problems on the various scales considered. The solution on the finest scale (i.e. the output we obtain when setting <code>returncoarse</code> to <code>FALSE</code>) is in <code>sol[[1]]</code>.
+</p>
+<p>If <code>a</code> is of class <code>pgrid</code> and <code>b</code> of class <code>wpp</code> (and <code>p=2</code>), an object of class <code>power_diagram</code> as described in the help for the function <code>semidiscrete</code>. The <code>plot</code> method for class <code>pgrid</code> can plot this solution.
+</p>
+
+
+<h3>Use of CPLEX</h3>
+
+<p>The combination of the shielding-method with the CPLEX numerical solver outperforms the other algorithms by an order of magnitude for large problems (only applicable for <code>p=2</code> and objects of class <code>"pgrid"</code>). If a local installation of CPLEX is available, the transport package can be linked against it during installation. See the file src/Makevars in the source package for instructions.
+</p>
+
+
+<h3>Use of CGAL</h3>
+
+<p>The combination of the aha-method with <code>p=1</code> requires the use of CGAL (the Computational Geometry Algorithms Library) for dealing with Apollonius diagrams. If you require this functionality, install it from https://www.cgal.org/download.html and adapt the file src/Makevars of this package according to the instructions given in that file. Then re-install 'transport' from source as usual.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Dominic Schuhmacher <a href="mailto:schuhmacher@math.uni-goettingen.de">schuhmacher@math.uni-goettingen.de</a>
+</p>
+<p>Björn Bähre <a href="mailto:bjobae@gmail.com">bjobae@gmail.com</a> (code for <code>aha</code>-method for <code>p=2</code>)
+</p>
+<p>Nicolas Bonneel <a href="mailto:nicolas.bonneel@liris.cnrs.fr">nicolas.bonneel@liris.cnrs.fr</a> <br> (adaption of LEMON code for fast <code>networkflow</code> method)
+</p>
+<p>Carsten Gottschlich <a href="mailto:gottschlich@math.uni-goettingen.de">gottschlich@math.uni-goettingen.de</a> <br> (original java code for <code>shortlist</code> and <code>revsimplex</code> methods)
+</p>
+<p>Valentin Hartmann <a href="mailto:valentin.hartmann@epfl.ch">valentin.hartmann@epfl.ch</a> (code for <code>aha</code> method for <code>p=1</code>)
+</p>
+<p>Florian Heinemann <a href="mailto:florian.heinemann@uni-goettingen.de">florian.heinemann@uni-goettingen.de</a> <br> (integration of <code>networkflow</code> method)
+</p>
+<p>Bernhard Schmitzer <a href="mailto:schmitzer@uni-muenster.de">schmitzer@uni-muenster.de</a> (code for <code>shielding</code>-method)
+</p>
+
+
+<h3>References</h3>
+
+<p>F. Aurenhammer, F. Hoffmann and B. Aronov (1998). Minkowski-type theorems and least-squares clustering. Algorithmica 20(1), 61–76.
+</p>
+<p>D. P. Bertsekas (1988). The auction algorithm: a distributed relaxation method for the assignment problem. Annals of Operations Research 14(1), 105–123.
+</p>
+<p>D. P. Bertsekas (1992). Auction algorithms for network flow problems: a tutorial introduction. Computational Optimization and Applications 1, 7–66. 
+</p>
+<p>N. Bonneel (2018). Fast Network Simplex for Optimal Transport. Github repository, <a href="https://github.com/nbonneel/network_simplex">nbonneel/network_simplex</a>.
+</p>
+<p>N. Bonneel, M. van de Panne, S. Paris and W. Heidrich (2011). Displacement interpolation using Lagrangian mass transport. ACM Transactions on Graphics (SIGGRAPH ASIA 2011) 30(6).
+</p>
+<p>Egervary Research Group on Combinatorial Optimization, EGRES (2014). LEMON Graph Library v1.3.1.
+<a href="https://lemon.cs.elte.hu/trac/lemon">lemon.cs.elte.hu/trac/lemon</a>.
+</p>
+<p>C. Gottschlich and D. Schuhmacher (2014). The shortlist method for fast computation of the earth mover's distance and finding optimal solutions to transportation problems. PLOS ONE 9(10), e110214. <a href="https://doi.org/10.1371/journal.pone.0110214">doi:10.1371/journal.pone.0110214</a>
+</p>
+<p>V. Hartmann and D. Schuhmacher (2020). Semi-discrete optimal transport: a solution procedure for the unsquared Euclidean distance case, Mathematical Methods of Operations Research 92, 133–163. <a href="https://doi.org/10.1007/s00186-020-00703-z">doi:10.1007/s00186-020-00703-z</a>
+</p>
+<p>D.G. Luenberger (2003). Linear and nonlinear programming, 2nd ed. Kluwer.
+</p>
+<p>D.G. Luenberger and Y. Ye (2008). Linear and nonlinear programming, 3rd ed. Springer.
+</p>
+<p>Q. Mérigot (2011). A multiscale approach to optimal transport. Computer Graphics Forum 30(5), 1583–1592. <a href="https://doi.org/10.1111/j.1467-8659.2011.02032.x">doi:10.1111/j.1467-8659.2011.02032.x</a>
+</p>
+<p>B. Schmitzer (2016). A sparse multiscale algorithm for dense optimal transport. J. Math. Imaging Vision 56(2), 238–259. <a href="https://arxiv.org/abs/1510.05466">https://arxiv.org/abs/1510.05466</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot</code>,
+<code>wasserstein</code>,
+<code>unbalanced</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#
+# example for the default method
+#
+a &lt;- c(100, 200, 80, 150, 50, 140, 170, 30, 10, 70)
+b &lt;- c(60, 120, 150, 110, 40, 90, 160, 120, 70, 80)
+set.seed(24)
+costm &lt;- matrix(sample(1:20, 100, replace=TRUE), 10, 10)  
+res &lt;- transport(a,b,costm)
+
+# pretty-print solution in matrix form for very small problems:
+transp &lt;- matrix(0,10,10)
+transp[cbind(res$from,res$to)] &lt;- res$mass
+rownames(transp) &lt;- paste(ifelse(nchar(a)==2," ",""),a,sep="")
+colnames(transp) &lt;- paste(ifelse(nchar(b)==2," ",""),b,sep="")
+print(transp)	
+
+	
+#
+# example for class 'pgrid'
+#
+dev.new(width=9, height=4.5)
+par(mfrow=c(1,2), mai=rep(0.1,4))
+image(random32a$mass, col = grey(0:200/200), axes=FALSE)
+image(random32b$mass, col = grey(0:200/200), axes=FALSE)
+res &lt;- transport(random32a,random32b)
+dev.new()
+par(mai=rep(0,4))
+plot(random32a,random32b,res,lwd=1)
+
+
+#
+# example for class 'pp'
+#
+set.seed(27)
+x &lt;- pp(matrix(runif(400),200,2))
+y &lt;- pp(matrix(runif(400),200,2))
+res &lt;- transport(x,y)
+dev.new()
+par(mai=rep(0.02,4))
+plot(x,y,res)
+
+
+#
+# example for class 'wpp'
+#
+set.seed(30)
+m &lt;- 30
+n &lt;- 60
+massx &lt;- rexp(m)
+massx &lt;- massx/sum(massx)
+massy &lt;- rexp(n)
+massy &lt;- massy/sum(massy)
+x &lt;- wpp(matrix(runif(2*m),m,2),massx)
+y &lt;- wpp(matrix(runif(2*n),n,2),massy)
+res &lt;- transport(x,y,method="revsimplex")
+plot(x,y,res)
+
+
+#
+# example for semidiscrete transport between class
+# 'pgrid' and class 'wpp' (p=2)
+#
+set.seed(33)
+n &lt;- 100
+massb &lt;- rexp(n)
+massb &lt;- massb/sum(massb)*1e5
+b &lt;- wpp(matrix(runif(2*n),n,2),massb)
+res &lt;- transport(random32a,b,p=2)
+plot(random32a,b,res)
+
+
+#
+# example for semidiscrete transport between class
+# 'pgrid' and class 'wpp' (p=1)
+#
+if (transport:::cgal_present()) {
+  set.seed(33)
+  n &lt;- 30
+  massb &lt;- rexp(n)
+  massb &lt;- massb/sum(massb)*1e5
+  b &lt;- wpp(matrix(runif(2*n),n,2),massb)
+  res &lt;- transport(random32a,b,p=1)
+  plot(random32a,b,res)
+}
+</code></pre>
+
+
+</div>

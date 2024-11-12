@@ -1,0 +1,277 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>iptw</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Inverse probability of treatment weighting for marginal structural models.</h2>
+
+<h3>Description</h3>
+
+<p><code>iptw</code> calculates propensity scores for sequential treatments using gradient boosted logistic
+regression and diagnoses the resulting propensity scores using a variety of
+methods
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">iptw(
+  formula,
+  data,
+  timeInvariant = NULL,
+  cumulative = TRUE,
+  timeIndicators = NULL,
+  ID = NULL,
+  priorTreatment = TRUE,
+  n.trees = 10000,
+  interaction.depth = 3,
+  shrinkage = 0.01,
+  bag.fraction = 1,
+  n.minobsinnode = 10,
+  perm.test.iters = 0,
+  print.level = 2,
+  verbose = TRUE,
+  stop.method = c("es.max"),
+  sampw = NULL,
+  version = "gbm",
+  ks.exact = NULL,
+  n.keep = 1,
+  n.grid = 25,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>Either a single formula (long format) or a list with formulas.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The dataset, includes treatment assignment as well as covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeInvariant</code></td>
+<td>
+<p>An optional formula (with no left-hand variable) specifying time-invariant
+chararacteristics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cumulative</code></td>
+<td>
+<p>If <code>TRUE</code>, the time t model includes time-varying characteristics from times 1
+through t-1. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeIndicators</code></td>
+<td>
+<p>For long format fits, a vector of times for each observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ID</code></td>
+<td>
+<p>For long format fits, a vector of numeric identifiers for unique analytic units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorTreatment</code></td>
+<td>
+<p>For long format fits, includes treatment levels from previous times if <code>TRUE</code>. This
+argument is ignored for wide format fits. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.trees</code></td>
+<td>
+<p>Number of gbm iterations passed on to <code>gbm::gbm()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interaction.depth</code></td>
+<td>
+<p>A positive integer denoting the tree depth used in
+gradient boosting. Default: 3.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shrinkage</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the learning rate.
+See <code>gbm</code> for more details. Default: 0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bag.fraction</code></td>
+<td>
+<p>A numeric value between 0 and 1 denoting the fraction of
+the observations randomly selected in each iteration of the gradient
+boosting algorithm to propose the next tree. See <code>gbm</code> for
+more details. Default: 1.0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.minobsinnode</code></td>
+<td>
+<p>An integer specifying the minimum number of observations 
+in the terminal nodes of the trees used in the gradient boosting. See <code>gbm</code> for
+more details. Default: 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perm.test.iters</code></td>
+<td>
+<p>A non-negative integer giving the number of iterations
+of the permutation test for the KS statistic. If <code>perm.test.iters=0</code>
+then the function returns an analytic approximation to the p-value. Setting
+<code>perm.test.iters=200</code> will yield precision to within 3% if the true
+p-value is 0.05. Use <code>perm.test.iters=500</code> to be within 2%. Default: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print.level</code></td>
+<td>
+<p>The amount of detail to print to the screen. Default: 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>If <code>TRUE</code>, lots of information will be printed to monitor the
+the progress of the fitting. Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stop.method</code></td>
+<td>
+<p>A method or methods of measuring and summarizing balance across pretreatment
+variables. Current options are <code>ks.mean</code>, <code>ks.max</code>, <code>es.mean</code>, and <code>es.max</code>. <code>ks</code> refers to the
+Kolmogorov-Smirnov statistic and es refers to standardized effect size. These are summarized
+across the pretreatment variables by either the maximum (<code>.max</code>) or the mean (<code>.mean</code>). 
+Default: <code>c("es.max")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sampw</code></td>
+<td>
+<p>Optional sampling weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>version</code></td>
+<td>
+<p><code>"gbm"</code>, <code>"xgboost"</code>, or <code>"legacy"</code>, indicating which version of the twang package to use.
+</p>
+
+<dl>
+<dt><code>"gbm"</code></dt>
+<dd>
+<p> uses gradient boosting from the <code>gbm</code> package.</p>
+</dd>
+<dt><code>"xgboost"</code></dt>
+<dd>
+<p> uses gradient boosting from the <code>xgboost</code> package.</p>
+</dd>
+<dt><code>"legacy"</code></dt>
+<dd>
+<p> uses the prior implementation of the <code>ps</code> function.</p>
+</dd>
+</dl>
+<p>Default: <code>"gbm"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ks.exact</code></td>
+<td>
+<p><code>NULL</code> or a logical indicating whether the
+Kolmogorov-Smirnov p-value should be based on an approximation of exact
+distribution from an unweighted two-sample Kolmogorov-Smirnov test. If
+<code>NULL</code>, the approximation based on the exact distribution is computed
+if the product of the effective sample sizes is less than 10,000.
+Otherwise, an approximation based on the asymptotic distribution is used.
+**Warning:** setting <code>ks.exact = TRUE</code> will add substantial
+computation time for larger sample sizes. Default: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.keep</code></td>
+<td>
+<p>A numeric variable indicating the algorithm should only
+consider every <code>n.keep</code>-th iteration of the propensity score model and
+optimize balance over this set instead of all iterations. Default: 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.grid</code></td>
+<td>
+<p>A numeric variable that sets the grid size for an initial
+search of the region most likely to minimize the <code>stop.method</code>. A
+value of <code>n.grid=50</code> uses a 50 point grid from <code>1:n.trees</code>. It
+finds the minimum, say at grid point 35. It then looks for the actual
+minimum between grid points 34 and 36. If specified with <code>n.keep&gt;1</code>, <code>n.grid</code> 
+corresponds to a grid of points on the kept iterations as defined by '<code>n.keep</code>. Default: 25.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments that are passed to ps function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For user more comfortable with the options of 
+<code>xgboost::xgboost()</code>,
+the options for <code>iptw</code> controlling the behavior of the gradient boosting
+algorithm can be specified using the <code>xgboost</code> naming
+scheme. This includes <code>nrounds</code>, <code>max_depth</code>, <code>eta</code>, and
+<code>subsample</code>. In addition, the list of parameters passed to
+<code>xgboost</code> can be specified with <code>params</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object of class <code>iptw</code>, a list containing
+</p>
+
+<dl>
+<dt><code>psList</code></dt>
+<dd>
+<p> A list of <code>ps</code> objects with length equal to the number of time periods.</p>
+</dd>
+<dt><code>estimand</code></dt>
+<dd>
+<p> The specified estimand.</p>
+</dd>
+<dt><code>stop.methods</code></dt>
+<dd>
+<p> The stopping rules used to optimize <code>iptw</code> balance.</p>
+</dd>
+<dt><code>nFits</code></dt>
+<dd>
+<p> The number of <code>ps</code> objects (i.e., the number of distinct time points).</p>
+</dd>
+<dt><code>uniqueTimes</code></dt>
+<dd>
+<p> The unique times in the specified model.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>ps</code>, <code>mnps</code>, <code>gbm</code>, <code>xgboost</code>, <code>plot</code>, <code>bal.table</code>
+</p>
+
+
+</div>

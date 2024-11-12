@@ -1,0 +1,178 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trans.local.DAG</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Structural transfer learning of non-Gaussian DAG.</h2>
+
+<h3>Description</h3>
+
+<p>Structural transfer learning of non-Gaussian DAG.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trans.local.DAG(t.data, A.data, hardth=0.5, hardth.A=hardth, criti.val=0.01,
+                       precision.method="glasso", precision.method.A = "CLIME",
+                       cov.method="opt", cn.lam2=seq(1,2.5,length.out=10),
+                       precision.refit=TRUE, ini.prec=TRUE, cut.off=TRUE,
+                       preselect.aux=0, sel.type="L2")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>t.data</code></td>
+<td>
+<p>The target data, a n * p matrix, where n is the sample size and p is data dimension.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A.data</code></td>
+<td>
+<p>The auxiliary data in K auxiliary domains, a list with K elements, each of which is a nk * p matrix, where nk is the sample size of the k-th auxiliary domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hardth</code></td>
+<td>
+<p>The hard threshold of regression in the target domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hardth.A</code></td>
+<td>
+<p>The hard threshold of regression in the auxiliary domains.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>criti.val</code></td>
+<td>
+<p>The critical value of independence test based on distance covariance, and the default setting is 0.01.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precision.method</code></td>
+<td>
+<p>The initial method of estimating the target precision matrix, which can be selected as "CLIME" or "glasso".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precision.method.A</code></td>
+<td>
+<p>The initial method of estimating the auxiliary precision matrices, which can be selected as "CLIME" or "glasso".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov.method</code></td>
+<td>
+<p>The method of aggregating K auxiliary covariance matrices, which can be selected as "size" (the sum weighted by the sample sizes), "weight" (the sum weighted by the differences), or "opt" (select the optimal one).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cn.lam2</code></td>
+<td>
+<p>A vector or a float value: the coefficients set in tuning parameters used to solve the target precision matrix, default is cn.lam2*sqrt( log(p) / n ).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>precision.refit</code></td>
+<td>
+<p>Whether to perform regression for re-fitting the coefficients in the precision matrix to improve estimation accuracy, after determining the non-zero elements of the precision matrix. The default is True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ini.prec</code></td>
+<td>
+<p>Whether to store the initial estimation of the precision matrix, and the default is True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cut.off</code></td>
+<td>
+<p>Whether to truncate the finally estimated coefficients in the structural equation models at threshold "hardth", and the default is True.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preselect.aux</code></td>
+<td>
+<p>Whether to pre-select informative auxiliary domains based on the distance between initially estimated auxiliary and target parameters. The default is 0, which means that pre-selection will not be performed. If "preselect.aux" is specified as a real number greater than zero, then the threshold value is forpreselect.aux<em>s</em>sqrt( log(p) / n ).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sel.type</code></td>
+<td>
+<p>If pre-selection should be performed, "sel.type" is the type of distance. The default is L2 norm, and can be specified as "L1" to use L1 norm.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A result list including:
+</p>
+
+<dl>
+<dt>A</dt>
+<dd>
+<p>The information of layer.</p>
+</dd>
+<dt>B</dt>
+<dd>
+<p>The coefficients in structural equation models.</p>
+</dd>
+<dt>prec.res0</dt>
+<dd>
+<p>The results about estimating the prscision matrix via transfer learning.</p>
+</dd>
+<dt>prec.res0$Theta.hat</dt>
+<dd>
+<p>The estimated prscision matrix via transfer learning.</p>
+</dd>
+<dt>prec.res0$Theta.hat0</dt>
+<dd>
+<p>The estimated prscision matrix based on the target domain only.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Mingyang Ren <a href="mailto:renmingyang17@mails.ucas.ac.cn">renmingyang17@mails.ucas.ac.cn</a>, Xin He, and Junhui Wang
+</p>
+
+
+<h3>References</h3>
+
+<p>Ren, M., He X., and Wang J. (2023). Structural transfer learning of non-Gaussian DAG.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(TransGraph)
+# load example data from github repository
+# Please refer to https://github.com/Ren-Mingyang/example_data_TransGraph
+# for detailed data information
+githublink = "https://github.com/Ren-Mingyang/example_data_TransGraph/"
+load(url(paste0(githublink,"raw/main/example.data.DAG.RData")))
+t.data = example.data.DAG$target.DAG.data$X
+true_adjace = example.data.DAG$target.DAG.data$true_adjace
+A.data = example.data.DAG$auxiliary.DAG.data$X.list.A
+
+# transfer method
+res.trans = trans.local.DAG(t.data, A.data)
+# Topological Layer method-based single-task learning (JLMR, 2022)
+res.single = TLLiNGAM(t.data)
+
+Evaluation.DAG(res.trans$B, true_adjace)$Eval_result
+Evaluation.DAG(res.single$B, true_adjace)$Eval_result
+
+
+
+</code></pre>
+
+
+</div>

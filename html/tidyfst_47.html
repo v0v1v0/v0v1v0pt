@@ -1,0 +1,114 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>group_dt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Data manipulation within groups</h2>
+
+<h3>Description</h3>
+
+<p>Carry out data manipulation within specified groups.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">group_dt(.data, by = NULL, ...)
+
+rowwise_dt(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A data.frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+<p>Variables to group by,unquoted name of grouping variable of list of unquoted names of grouping variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Any data manipulation arguments that could be implemented on a data.frame.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If you want to use <code>summarise_dt</code> and <code>mutate_dt</code> in
+<code>group_dt</code>, it is better to use the "by" parameter in those functions,
+that would be much faster because you don't have to use <code>.SD</code> (which takes
+extra time to copy).
+</p>
+
+
+<h3>Value</h3>
+
+<p>data.table
+</p>
+
+
+<h3>References</h3>
+
+<p>https://stackoverflow.com/questions/36802385/use-by-each-row-for-data-table
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">iris %&gt;% group_dt(by = Species,slice_dt(1:2))
+iris %&gt;% group_dt(Species,filter_dt(Sepal.Length == max(Sepal.Length)))
+iris %&gt;% group_dt(Species,summarise_dt(new = max(Sepal.Length)))
+
+# you can pipe in the `group_dt`
+iris %&gt;% group_dt(Species,
+                  mutate_dt(max= max(Sepal.Length)) %&gt;%
+                    summarise_dt(sum=sum(Sepal.Length)))
+
+# for users familiar with data.table, you can work on .SD directly
+# following codes get the first and last row from each group
+iris %&gt;%
+  group_dt(
+    by = Species,
+    rbind(.SD[1],.SD[.N])
+  )
+
+#' # for summarise_dt, you can use "by" to calculate within the group
+mtcars %&gt;%
+  summarise_dt(
+   disp = mean(disp),
+   hp = mean(hp),
+   by = cyl
+)
+
+  # but you could also, of course, use group_dt
+ mtcars %&gt;%
+   group_dt(by =.(vs,am),
+     summarise_dt(avg = mean(mpg)))
+
+  # and list of variables could also be used
+ mtcars %&gt;%
+   group_dt(by =list(vs,am),
+            summarise_dt(avg = mean(mpg)))
+
+# examples for `rowwise_dt`
+df &lt;- data.table(x = 1:2, y = 3:4, z = 4:5)
+
+df %&gt;% mutate_dt(m = mean(c(x, y, z)))
+
+df %&gt;% rowwise_dt(
+  mutate_dt(m = mean(c(x, y, z)))
+)
+</code></pre>
+
+
+</div>

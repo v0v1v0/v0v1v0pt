@@ -1,0 +1,343 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TopDom</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Identify Topological Domains from a Hi-C Contact Matrix</h2>
+
+<h3>Description</h3>
+
+<p>Identify Topological Domains from a Hi-C Contact Matrix
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TopDom(
+  data,
+  window.size,
+  outFile = NULL,
+  statFilter = TRUE,
+  ...,
+  debug = getOption("TopDom.debug", FALSE)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A TopDomData object, or the pathname to a normalized
+Hi-C contact matrix file as read by <code>readHiC()</code>, that specify N bins.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window.size</code></td>
+<td>
+<p>The number of bins to extend (as a non-negative integer).
+Recommended range is in 5, ..., 20.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outFile</code></td>
+<td>
+<p>(optional) The filename without extension of the three
+result files optionally produced. See details below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>statFilter</code></td>
+<td>
+<p>(logical) Specifies whether non-significant
+topological-domain boundaries should be dropped or not.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>readHiC()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debug</code></td>
+<td>
+<p>If <code>TRUE</code>, debug output is produced.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named list of class <code>TopDom</code> with data.frame elements
+<code>binSignal</code>, <code>domain</code>, and <code>bed</code>.
+</p>
+
+<ul>
+<li>
+<p> The <code>binSignal</code> data frame (N-by-7) holds mean contact frequency,
+local extreme, and p-value for every bin. The first four columns
+represent basic bin information given by matrix file, such as
+bin id (<code>id</code>), chromosome(<code>chr</code>), start coordinate (<code>from.coord</code>),
+and end coordinate (<code>to.coord</code>) for each bin.
+The last three columns (<code>local.ext</code>, <code>mean.cf</code>, and <code>p-value</code>) represent
+computed values by the TopDom algorithm.
+The columns are:
+</p>
+
+<ul>
+<li> <p><code>id</code>: Bin ID
+</p>
+</li>
+<li> <p><code>chr</code>: Chromosome
+</p>
+</li>
+<li> <p><code>from.coord</code>: Start coordinate of bin
+</p>
+</li>
+<li> <p><code>to.coord</code>: End coordinate of bin
+</p>
+</li>
+<li> <p><code>local.ext</code>:
+</p>
+
+<ul>
+<li> <p><code>-1</code>: Local minima.
+</p>
+</li>
+<li> <p><code>-0.5</code>: Gap region.
+</p>
+</li>
+<li> <p><code>0</code>: General bin.
+</p>
+</li>
+<li> <p><code>1</code>: Local maxima.
+</p>
+</li>
+</ul>
+</li>
+<li> <p><code>mean.cf</code>: Average of contact frequencies between lower and upper
+regions for bin <em>i = 1,2,...,N</em>.
+</p>
+</li>
+<li> <p><code>p-value</code>: Computed p-value by Wilcox rank sum test.
+See Shin et al. (2016) for more details.
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p> The <code>domain</code> data frame (D-by-7):
+Every bin is categorized by basic building block, such as gap, domain,
+or boundary.
+Each row indicates a basic building block.
+The first five columns include the basic information about the block,
+'tag' column indicates the class of the building block.
+</p>
+
+<ul>
+<li> <p><code>id</code>: Identifier of block
+</p>
+</li>
+<li> <p><code>chr</code>: Chromosome
+</p>
+</li>
+<li> <p><code>from.id</code>: Start bin index of the block
+</p>
+</li>
+<li> <p><code>from.coord</code>: Start coordinate of the block
+</p>
+</li>
+<li> <p><code>to.id</code>: End bin index of the block
+</p>
+</li>
+<li> <p><code>to.coord</code>: End coordinate of the block
+</p>
+</li>
+<li> <p><code>tag</code>: Categorized name of the block. Three possible blocks exists:
+</p>
+
+<ul>
+<li> <p><code>gap</code>
+</p>
+</li>
+<li> <p><code>domain</code>
+</p>
+</li>
+<li> <p><code>boundary</code>
+</p>
+</li>
+</ul>
+</li>
+<li> <p><code>size</code>: size of the block
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p> The <code>bed</code> data frame (D-by-4) is a representation of the <code>domain</code>
+data frame in the
+<a href="https://genome.ucsc.edu/FAQ/FAQformat.html#format1">BED file format</a>.
+It has four columns:
+</p>
+
+<ul>
+<li> <p><code>chrom</code>: The name of the chromosome.
+</p>
+</li>
+<li> <p><code>chromStart</code>: The starting position of the feature in the chromosome.
+The first base in a chromosome is numbered 0.
+</p>
+</li>
+<li> <p><code>chromEnd</code>: The ending position of the feature in the chromosome.
+The <code>chromEnd</code> base is <em>not</em> included in the feature. For example,
+the first 100 bases of a chromosome are defined as <code>chromStart=0</code>,
+<code>chromEnd=100</code>, and span the bases numbered 0-99.
+</p>
+</li>
+<li> <p><code>name</code>: Defines the name of the BED line. This label is displayed to
+the left of the BED line in the
+<a href="https://genome.ucsc.edu/cgi-bin/hgGateway">UCSC Genome Browser</a>
+window when the track is open to full display mode or directly to
+the left of the item in pack mode.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>If argument <code>outFile</code> is non-<code>NULL</code>, then the three elements (<code>binSignal</code>,
+<code>domain</code>, and <code>bed</code>) returned are also written to tab-delimited files
+with file names ‘<span class="file">&lt;outFile&gt;.binSignal</span>’, ‘<span class="file">&lt;outFile&gt;.domain</span>’, and
+‘<span class="file">&lt;outFile&gt;.bed</span>’, respectively.  None of the files have row names,
+and all but the BED file have column names.
+</p>
+
+
+<h3>Windows size</h3>
+
+<p>The <code>window.size</code> parameter is by design the only tuning parameter in the
+TopDom method and affects the amount of smoothing applied when calculating
+the TopDom bin signals.  The binning window extends symmetrically downstream
+and upstream from the bin such that the bin signal is the average
+<code>window.size^2</code> contact frequencies.
+For details, see Equation (1) and Figure 1 in Shin et al. (2016).
+Typically, the number of identified TDs decreases while their average
+lengths increase as this window-size parameter increases (Figure 2).
+The default is <code>window.size = 5</code> (bins), which is motivated as:
+"Considering the previously reported minimum TD size (approx. 200 kb)
+(Dixon et al., 2012) and our bin size of 40 kb, <em>w</em>[indow.size] = 5 is a
+reasonable setting" (Shin et al., 2016).
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hanjun Shin, Harris Lazaris, and Gangqing Hu.
+<span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> package, help, and code refactoring by Henrik Bengtsson.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li>
+<p> Shin et al.,
+TopDom: an efficient and deterministic method for identifying
+topological domains in genomes,
+<em>Nucleic Acids Research</em>, 44(7): e70, April 2016.
+DOI: 10.1093/nar/gkv1505,
+PMCID: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4838359/">PMC4838359</a>,
+PMID: <a href="https://pubmed.ncbi.nlm.nih.gov/26704975/">26704975</a>
+</p>
+</li>
+<li>
+<p> Shin et al., <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> script ‘<span class="file">TopDom_v0.0.2.R</span>’, 2017 (originally from
+<code>http://zhoulab.usc.edu/TopDom/</code>;
+later available on <a href="https://github.com/jasminezhoulab/TopDom">https://github.com/jasminezhoulab/TopDom</a> via
+<a href="https://zhoulab.dgsom.ucla.edu/pages/software">https://zhoulab.dgsom.ucla.edu/pages/software</a>)
+</p>
+</li>
+<li>
+<p> Shin et al., TopDom Manual, 2016-07-08 (original from
+<code>http://zhoulab.usc.edu/TopDom/TopDom%20Manual_v0.0.2.pdf</code>;
+later available on <a href="https://github.com/jasminezhoulab/TopDom">https://github.com/jasminezhoulab/TopDom</a> via
+<a href="https://zhoulab.dgsom.ucla.edu/pages/software">https://zhoulab.dgsom.ucla.edu/pages/software</a>)
+</p>
+</li>
+<li>
+<p> Hanjun Shin, Understanding the 3D genome organization in topological
+domain level, Doctor of Philosophy Dissertation,
+University of Southern California, March 2017,
+<a href="http://digitallibrary.usc.edu/cdm/ref/collection/p15799coll40/id/347735">http://digitallibrary.usc.edu/cdm/ref/collection/p15799coll40/id/347735</a>
+</p>
+</li>
+<li>
+<p> Dixon JR, Selvaraj S, Yue F, Kim A, et al. Topological domains in
+mammalian genomes identified by analysis of chromatin interactions.
+<em>Nature</em>; 485(7398):376-80, April 2012.
+DOI: 10.1038/nature11082,
+PMCID: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3356448/">PMC3356448</a>,
+PMID: 22495300.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">path &lt;- system.file("exdata", package = "TopDom", mustWork = TRUE)
+
+## Original count data (on a subset of the bins to speed up example)
+chr &lt;- "chr19"
+pathname &lt;- file.path(path, sprintf("nij.%s.gz", chr))
+data &lt;- readHiC(pathname, chr = chr, binSize = 40e3, bins = 1:500)
+print(data)  ## a TopDomData object
+
+## Find topological domains using the TopDom method
+fit &lt;- TopDom(data, window.size = 5L)
+print(fit)  ## a TopDom object
+
+## Display the largest domain
+td &lt;- subset(subset(fit$domain, tag == "domain"), size == max(size))
+print(td) ## a data.frame
+
+## Subset TopDomData object
+data_s &lt;- subsetByRegion(data, region = td, margin = 0.9999)
+print(data_s)  ## a TopDomData object
+
+vp &lt;- grid::viewport(angle = -45, width = 0.7, y = 0.3)
+gg &lt;- ggCountHeatmap(data_s)
+gg &lt;- gg + ggDomain(td, color = "#cccc00") + ggDomainLabel(td)
+print(gg, newpage = TRUE, vp = vp)
+
+gg &lt;- ggCountHeatmap(data_s, colors = list(mid = "white", high = "black"))
+gg_td &lt;- ggDomain(td, delta = 0.08)
+dx &lt;- attr(gg_td, "gg_params")$dx
+gg &lt;- gg + gg_td + ggDomainLabel(td, vjust = 2.5)
+print(gg, newpage = TRUE, vp = vp)
+
+## Subset TopDom object
+fit_s &lt;- subsetByRegion(fit, region = td, margin = 0.9999)
+print(fit_s)  ## a TopDom object
+for (kk in seq_len(nrow(fit_s$domain))) {
+  gg &lt;- gg + ggDomain(fit_s$domain[kk, ], dx = dx * (4 + kk %% 2), color = "red", size = 1)
+}
+
+print(gg, newpage = TRUE, vp = vp)
+
+
+gg &lt;- ggCountHeatmap(data_s)
+gg_td &lt;- ggDomain(td, delta = 0.08)
+dx &lt;- attr(gg_td, "gg_params")$dx
+gg &lt;- gg + gg_td + ggDomainLabel(td, vjust = 2.5)
+fit_s &lt;- subsetByRegion(fit, region = td, margin = 0.9999)
+for (kk in seq_len(nrow(fit_s$domain))) {
+  gg &lt;- gg + ggDomain(fit_s$domain[kk, ], dx = dx * (4 + kk %% 2), color = "blue", size = 1)
+}
+
+print(gg, newpage = TRUE, vp = vp)
+</code></pre>
+
+
+</div>

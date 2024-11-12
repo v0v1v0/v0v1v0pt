@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TrajFromCoords</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a Trajectory Object</h2>
+
+<h3>Description</h3>
+
+<p><code>TrajFromCoords</code> creates a new trajectory object from a set of
+2-dimensional cartesian coordinates, times and some metadata. The coordinates
+are sometimes referred to as "relocations". Rows containing <code>NA</code>
+coordinate or time values at the start or end of the trajectory are
+discarded. <code>NA</code> coordinates or times in the middle of the trajectory
+generate an error.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TrajFromCoords(
+  track,
+  xCol = 1,
+  yCol = 2,
+  timeCol = NULL,
+  fps = 50,
+  spatialUnits = "m",
+  timeUnits = "s"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>track</code></td>
+<td>
+<p>data frame containing cartesian coordinates and optionally times
+for the points in the trajectory.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xCol</code></td>
+<td>
+<p>Name or index of the <code>x</code> column in <code>track</code> (default 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>yCol</code></td>
+<td>
+<p>Name or index of the <code>y</code> column in <code>track</code> (default 2).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeCol</code></td>
+<td>
+<p>optional name or index of the column which contains coordinate
+times.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fps</code></td>
+<td>
+<p>Frames per second - used to calculate relative coordinate times if
+<code>track</code> does not contain a <code>time</code> column. Time intervals between
+coordinate are assumed to be constant throught the entire track.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spatialUnits</code></td>
+<td>
+<p>Abbreviation for the x and y units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeUnits</code></td>
+<td>
+<p>Abbreviation for the units that time is recorded in.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>timeCol</code> is specified, <code>track[,timeCol]</code> is expected to contain
+the time (in some numeric units) of each coordinate. Otherwise, times are
+calculated for each point as <code>(coord - 1) / fps</code> where <code>coord</code> is
+the index of the point; in other words, sampling at constant time intervals
+is assumed. Time values require conversion if they are not numeric. It may be
+possible to use 'strptime' for this purpose, or <code>TrajConvertTime</code>
+can be used to convert multiple field time values.
+</p>
+<p><code>x</code> and <code>y</code> must be square units. Longitude and latitude are not
+suitable for use as <code>x</code> and <code>y</code> values, since in general, <code>1°
+lat != 1° lon</code>. To create a trajectory from positions in latitude and
+longitude, it is first necessary to transform the positions to a suitable
+spatial projection such as UTM (possibly by using <code>spTransform</code> from the
+<code>rgdal</code> package).
+</p>
+<p>Leading and trailing rows with <code>NA</code> coordinate values are discarded.
+<code>NA</code> coordinate values within a trajectory generate an error.
+</p>
+<p>Since columns in <code>coords</code> are preserved in the returned trajectory, if
+<code>coords</code> contains an <code>x</code> or <code>y</code> column which is not identified
+by <code>xCol</code> or <code>yCal</code> respectively, an error will occur. This is to
+prevent columns being inadvertently overwritten.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object with class "<code>Trajectory</code>", which is a data.frame with
+the following components: </p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>X coordinates of trajectory points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Y coordinates of trajectory points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Time (in
+<code>timeUnits</code>) for each point. if <code>timeCol</code> is specified, values
+are <code>track[,timeCol]</code>, otherwise values are calculated from
+<code>fps</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>displacementTime</code></td>
+<td>
+<p>Relative frame/observation times, with
+frame/observation 1 at time <code>0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>polar</code></td>
+<td>
+<p>Coordinates represented
+as complex numbers, to simplify working with segment angles. Beware when
+using complex numbers in R; <code>Arg(0+0i)</code> should be undefined but
+actually returns <code>0</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>displacement</code></td>
+<td>
+<p>Displacement vectors (represented as complex numbers)
+between each pair of consecutive points.</p>
+</td>
+</tr>
+</table>
+<p>In addition, any other columns <code>coords</code> are include in the data frame.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TrajsBuild</code>, <code>Traj3DFromCoords</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+coords &lt;- data.frame(x = c(1, 1.5, 2, 2.5, 3, 4),
+                     y = c(0, 0, 1, 1, 2, 1),
+                     times = c(0, 1, 2, 3, 4, 5))
+trj &lt;- TrajFromCoords(coords, timeCol = "times")
+
+par(mar = c(4, 4, 0.5, 0.5) + 0.1)
+plot(trj)
+
+</code></pre>
+
+
+</div>

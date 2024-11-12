@@ -1,0 +1,239 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tensorReg2D</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fitting Second-order Tensor Generalized Regression</h2>
+
+<h3>Description</h3>
+
+<p><kbd>tensorReg2D</kbd> is used to fit second-order tensor generalized regression model. It mainly
+focus on parameter estimation, including parameter coefficients and standard
+deviation. The function is built upon <strong>Alternating Least Square
+Algorithm</strong>, so we provide two criterion to determine optimal result (see more
+details below in Arguments). Also, we offer model complexity
+measurement,including AIC and BIC.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tensorReg2D(y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, tol = 10^(-7))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A numerical vector. Dependent variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A numerical 3-D array Independent variable(3-D tensor).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>A numerical matrix. Independent variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_R</code></td>
+<td>
+<p>A numerical constant. A predefined value determines the rank of
+the approximate matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>Family of <kbd>generalized linear model</kbd>. Provide three options for model.(see more details in
+<strong>Details</strong>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opt</code></td>
+<td>
+<p>Optimization options. Provide two options for optimization
+stopping criterion. <strong>opt = 1 or 2</strong>. (see more details in
+<strong>Details</strong>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_ite</code></td>
+<td>
+<p>Maximum iteration. The value of maximum iterations for the
+algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>Tolerance. The value of tolerance with respect to optimization.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><kbd>tensorReg2D</kbd> focuses on second-order tensor generalized regression problems.
+To be more specific, it provides statistical inference for input variables.
+Moreover, the function isn't restricted to second-order tensor input <kbd>X</kbd>;
+it could combine with other meaningful numerical variables <kbd>W</kbd>.
+</p>
+<p>Since <kbd>tensorReg2D</kbd> is based on <strong>Alternating Least Square
+Algorithm</strong>, we need to pre-define following arguments to meet favorable
+optimization result.
+</p>
+<p><kbd>n_R</kbd>: In the case of regression with the order 2, P-by-G-by-n tensor, we
+can break a unknown parameter matrix <strong>B</strong>(P-by-G) into multiplication
+of two matrix <strong>B_1</strong>(P-by-R) and <strong>t(B_2)</strong> (R-by-G), which means
+that we can estimate the original matrix <strong>B</strong> by iteratively updating
+<strong>B_1</strong> and <strong>B_2</strong>. In this scenario, <kbd>n_R</kbd> equals to the rank
+of these two approximate matrix <strong>B_1</strong> and <strong>B_2</strong>. Conceivably,
+<kbd>1 &lt;= n_R &lt;= min(P,G)</kbd>, and by properly pre-appointing <kbd>n_R</kbd>, we can
+estimate a unknown parameter matrix. By default, <kbd>n_R = 1</kbd>.
+</p>
+<p><kbd>opt</kbd>: In optimization algorithm, we have to determine stopping
+criterion. In <kbd>tensorReg2D</kbd>, we offer two criteria. <kbd>If opt = 1</kbd>, the
+criterion is that we stop our execution when the maximum difference between
+the elements among an estimated parameter matrix <strong>B</strong> with an estimated
+parameter vector <strong>b</strong> and preceding ones is less than predefined
+tolerance (<kbd>tol</kbd>) . <kbd>If opt = 2</kbd>, the criterion is that we stop our
+execution when the maximum difference between the elements among an estimated
+approximate parameter matrix <strong>B_1</strong> , <strong>B_2</strong> with an estimated
+parameter vector <strong>b</strong> and preceding ones is less than predefined
+tolerance (<kbd>tol</kbd>).
+</p>
+<p><kbd>family</kbd>: In <kbd>tensorReg2D</kbd>, we provide three options for specific generalized regression
+problem. First, <kbd>family = "gaussian"</kbd> using <kbd>identity</kbd> link function corresponds to linear regression
+model, where dependent variable is real number. Next, <kbd>family = "binomial"</kbd> based on <kbd>logit</kbd> link function
+corresponds to logistic regression, where dependent variable is restricted to zero or one binary variable. Finally,
+<kbd>family = "poisson"</kbd> built upon <kbd>log</kbd> link function corresponds to poisson regression, where dependent
+variable is non-negative integer.
+</p>
+<p><kbd>max_ite</kbd>: In optimization algorithm, we have to beforehand determine maximum iteration beforehand.
+By default, <kbd>max_ite = 100</kbd>.
+</p>
+<p><kbd>tol</kbd>: In optimization algorithm, we have to beforehand determine maximum tolerance to cooperate with
+stopping criterion(<kbd>opt</kbd>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>tensorReg2D returns an object of <kbd>"tsglm"</kbd>.
+</p>
+<p>The function, <code>summary.tsglm</code> a customized method from generic function
+<code>summary</code>, can be used to obtain and print a summary and analysis
+of variance table of the results.
+</p>
+<p>An object of class <kbd>tsglm</kbd> is a list containing at least the following components:
+</p>
+<p><kbd>ite</kbd>: The number of executed times when stopping the function.
+</p>
+<p><kbd>b_EST</kbd>: The estimated coefficients for numerical variables.
+</p>
+<p><kbd>b_SD</kbd>: The estimated standard deviation for numerical variables.
+</p>
+<p><kbd>b_PV</kbd>: The p-value for numerical variables.
+</p>
+<p><kbd>B_EST</kbd>: The estimated coefficients for 3-D tensor variables.
+</p>
+<p><kbd>B_SD</kbd>: The estimated standard deviation for 3-D tensor variables.
+</p>
+<p><kbd>B_PV</kbd>: The p-value for 3-D tensor variables.
+</p>
+<p><kbd>Residuals</kbd>: The differences between true values and prediction values. Provide for
+<kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>Dev_res</kbd>: Deviance residuals for glm. Provide for model except <kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>Dev</kbd>: The value of Null deviances and Residual deviance. Provide for model except
+<kbd>family = "gaussian"</kbd>.
+</p>
+<p><kbd>IC</kbd>: The value of AIC and BIC.
+</p>
+<p><kbd>DoF</kbd>: Degree of freedom.
+</p>
+<p><kbd>call</kbd>: The formula of fitted model.
+</p>
+<p><kbd>family</kbd>: The family for model.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sheng-Mao Chang
+</p>
+
+
+<h3>References</h3>
+
+<p>Mengyun Wu, Jian Huang, and Shuangge Ma (2017). Identifying gene-gene
+interactions using penalized tensor regression.
+</p>
+<p>Sheng-Mao Chang, Meng Yang, Wenbin Lu, Yu-Jyun Huang, Yueyang Huang, Hung Hung,
+Jeffrey C Miecznikowski, Tzu-Pin Lu, Jung-Ying Tzeng,
+Gene-set integrative analysis of multi-omics data using tensor-based association test,
+Bioinformatics, 2021;, btab125,
+(<a href="https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/btab125/6154849">Link</a>))
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Simulation data
+n &lt;- 500 # number of observations
+n_P &lt;- 3; n_G &lt;- 64 # dimension of 3-D tensor variables.
+n_d &lt;- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
+beta_True &lt;- rep(1, n_d)
+B_True &lt;- c(1,1,1)%*%t(rnorm(n_G)) + c(0, .5, .5)%*%t(rnorm(n_G))
+B_True &lt;- B_True / 10
+W &lt;- matrix(rnorm(n*n_d), n, n_d); W[,1] &lt;- 1
+X &lt;- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
+## Regression
+y_R&lt;- as.vector(W%*%beta_True + X%hp%B_True + rnorm(n))
+DATA_R &lt;- list(y = y_R, X = X, W = W)
+## Binomial
+p_B &lt;- exp(W%*%beta_True + X%hp%B_True); p_B &lt;- p_B/(1+p_B)
+y_B &lt;- rbinom(n, 1, p_B)
+DATA_B &lt;- list(y = y_B, W = W, X = X)
+## Poisson
+p_P &lt;- exp(W%*%beta_True + X%hp%B_True)
+y_P &lt;- rpois(n, p_P)
+y_P[which(y_P &gt; 170)] &lt;- 170 # If y_P &gt; 170, factorial(y_P) == inf.
+DATA_P &lt;- list(y = y_P, W = W, X = X)
+
+# Execution
+## Regression
+result_R &lt;- tensorReg2D(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+## Visualization
+image(B_True);image(result_R$B_EST)
+head(predict(result_R, DATA_R$X))
+
+## Binomial
+result_B &lt;- tensorReg2D(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+## Visualization
+image(B_True);image(result_B$B_EST)
+head(predict(result_B, DATA_B$X))
+
+## Poisson
+result_P &lt;- tensorReg2D(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+opt = 1, max_ite = 100, tol = 10^(-7) )
+## Visualization
+image(B_True);image(result_P$B_EST)
+head(predict(result_P, DATA_P$X))
+
+</code></pre>
+
+
+</div>

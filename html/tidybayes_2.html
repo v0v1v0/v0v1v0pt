@@ -1,0 +1,113 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>add_draws</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add draws to a data frame in tidy format</h2>
+
+<h3>Description</h3>
+
+<p>Add draws from a matrix of draws (usually draws from a predictive distribution) to a data frame in tidy format. This is
+a generic version of <code>add_predicted_draws()</code> that can be used with model types
+that have their own prediction functions that are not yet supported by tidybayes.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">add_draws(data, draws, value = ".value")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Data frame to add draws to, with M rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>draws</code></td>
+<td>
+<p>N by M matrix of draws, with M columns corresponding to the M rows in <code>data</code>, and N draws in each column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The name of the output column; default <code>".value"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given a data frame with M rows and an N by M matrix of N draws, adds a <code>.row</code>, <code>.draw</code>, and <code>.value</code>
+column (or another name if <code>value</code> is set) to <code>data</code>, and expands <code>data</code> into a long-format dataframe of draws.
+</p>
+<p><code>add_epred_draws(df, m)</code> is roughly equivalent to <code>add_draws(df, posterior_epred(m, newdata = df))</code>, except
+that <code>add_epred_draws</code> standardizes argument names and values across packages and has additional features for some
+model types (like handling ordinal responses and distributional parameters in brms).
+</p>
+<p><code>add_predicted_draws(df, m)</code> is roughly equivalent to <code>add_draws(df, posterior_predict(m, newdata = df))</code>, except
+that <code>add_predicted_draws</code> standardizes argument names and values across packages.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame (actually, a tibble) with a <code>.row</code> column (a
+factor grouping rows from the input <code>data</code>), a <code>.draw</code> column (a unique index corresponding to each draw
+from the distribution), and a column with its name specified by the <code>value</code> argument (default is <code>.value</code>)
+containing the values of draws from <code>draws</code>. The data frame is grouped by all rows in <code>data</code> plus the <code>.row</code> column.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>add_predicted_draws()</code>, <code>add_draws()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+library(ggplot2)
+library(dplyr)
+library(brms)
+library(modelr)
+
+theme_set(theme_light())
+
+m_mpg = brm(mpg ~ hp * cyl, data = mtcars,
+  # 1 chain / few iterations just so example runs quickly
+  # do not use in practice
+  chains = 1, iter = 500)
+
+# plot posterior predictive intervals
+mtcars %&gt;%
+  group_by(cyl) %&gt;%
+  data_grid(hp = seq_range(hp, n = 101)) %&gt;%
+  # the line below is roughly equivalent to add_epred_draws(m_mpg), except
+  # that it does not standardize arguments across model types.
+  add_draws(posterior_epred(m_mpg, newdata = .)) %&gt;%
+  ggplot(aes(x = hp, y = mpg, color = ordered(cyl))) +
+  stat_lineribbon(aes(y = .value), alpha = 0.25) +
+  geom_point(data = mtcars) +
+  scale_fill_brewer(palette = "Greys")
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

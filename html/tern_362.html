@@ -1,0 +1,227 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>survival_biomarkers_subgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tabulate biomarker effects on survival by subgroup</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The <code>tabulate_survival_biomarkers()</code> function creates a layout element to tabulate the estimated effects of multiple
+continuous biomarker variables on survival across subgroups, returning statistics including median survival time and
+hazard ratio for each population subgroup. The table is created from <code>df</code>, a list of data frames returned by
+<code>extract_survival_biomarkers()</code>, with the statistics to include specified via the <code>vars</code> parameter.
+</p>
+<p>A forest plot can be created from the resulting table using the <code>g_forest()</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tabulate_survival_biomarkers(
+  df,
+  vars = c("n_tot", "n_tot_events", "median", "hr", "ci", "pval"),
+  groups_lists = list(),
+  control = control_coxreg(),
+  label_all = lifecycle::deprecated(),
+  time_unit = NULL,
+  na_str = default_na_str(),
+  .indent_mods = 0L
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> containing all analysis variables, as returned by
+<code>extract_survival_biomarkers()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> the names of statistics to be reported among:
+</p>
+
+<ul>
+<li> <p><code>n_tot_events</code>: Total number of events per group.
+</p>
+</li>
+<li> <p><code>n_tot</code>: Total number of observations per group.
+</p>
+</li>
+<li> <p><code>median</code>: Median survival time.
+</p>
+</li>
+<li> <p><code>hr</code>: Hazard ratio.
+</p>
+</li>
+<li> <p><code>ci</code>: Confidence interval of hazard ratio.
+</p>
+</li>
+<li> <p><code>pval</code>: p-value of the effect.
+Note, one of the statistics <code>n_tot</code> and <code>n_tot_events</code>, as well as both <code>hr</code> and <code>ci</code> are required.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups_lists</code></td>
+<td>
+<p>(named <code>list</code> of <code>list</code>)<br> optionally contains for each <code>subgroups</code> variable a
+list, which specifies the new group levels via the names and the
+levels that belong to it in the character vectors that are elements of the list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> a list of parameters as returned by the helper function <code>control_coxreg()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_all</code></td>
+<td>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated"><img src="../help/figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a><br> please assign the <code>label_all</code> parameter within the
+<code>extract_survival_biomarkers()</code> function when creating <code>df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_unit</code></td>
+<td>
+<p>(<code>string</code>)<br> label with unit of median survival time. Default <code>NULL</code> skips displaying unit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions create a layout starting from a data frame which contains
+the required statistics. The tables are then typically used as input for forest plots.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An <code>rtables</code> table summarizing biomarker effects on survival by subgroup.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul><li> <p><code>tabulate_survival_biomarkers()</code>: Table-creating function which creates a table
+summarizing biomarker effects on survival by subgroup.
+</p>
+</li></ul>
+<h3>Note</h3>
+
+<p>In contrast to <code>tabulate_survival_subgroups()</code> this tabulation function does
+not start from an input layout <code>lyt</code>. This is because internally the table is
+created by combining multiple subtables.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>h_tab_surv_one_biomarker()</code> which is used internally, <code>extract_survival_biomarkers()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+adtte &lt;- tern_ex_adtte
+
+# Save variable labels before data processing steps.
+adtte_labels &lt;- formatters::var_labels(adtte)
+
+adtte_f &lt;- adtte %&gt;%
+  filter(PARAMCD == "OS") %&gt;%
+  mutate(
+    AVALU = as.character(AVALU),
+    is_event = CNSR == 0
+  )
+labels &lt;- c("AVALU" = adtte_labels[["AVALU"]], "is_event" = "Event Flag")
+formatters::var_labels(adtte_f)[names(labels)] &lt;- labels
+
+# Typical analysis of two continuous biomarkers `BMRKR1` and `AGE`,
+# in multiple regression models containing one covariate `RACE`,
+# as well as one stratification variable `STRATA1`. The subgroups
+# are defined by the levels of `BMRKR2`.
+
+df &lt;- extract_survival_biomarkers(
+  variables = list(
+    tte = "AVAL",
+    is_event = "is_event",
+    biomarkers = c("BMRKR1", "AGE"),
+    strata = "STRATA1",
+    covariates = "SEX",
+    subgroups = "BMRKR2"
+  ),
+  label_all = "Total Patients",
+  data = adtte_f
+)
+df
+
+# Here we group the levels of `BMRKR2` manually.
+df_grouped &lt;- extract_survival_biomarkers(
+  variables = list(
+    tte = "AVAL",
+    is_event = "is_event",
+    biomarkers = c("BMRKR1", "AGE"),
+    strata = "STRATA1",
+    covariates = "SEX",
+    subgroups = "BMRKR2"
+  ),
+  data = adtte_f,
+  groups_lists = list(
+    BMRKR2 = list(
+      "low" = "LOW",
+      "low/medium" = c("LOW", "MEDIUM"),
+      "low/medium/high" = c("LOW", "MEDIUM", "HIGH")
+    )
+  )
+)
+df_grouped
+
+## Table with default columns.
+tabulate_survival_biomarkers(df)
+
+## Table with a manually chosen set of columns: leave out "pval", reorder.
+tab &lt;- tabulate_survival_biomarkers(
+  df = df,
+  vars = c("n_tot_events", "ci", "n_tot", "median", "hr"),
+  time_unit = as.character(adtte_f$AVALU[1])
+)
+
+## Finally produce the forest plot.
+
+g_forest(tab, xlim = c(0.8, 1.2))
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>IRT.linearCFA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Linear Approximation of a Confirmatory Factor Analysis
+</h2>
+
+<h3>Description</h3>
+
+<p>This function approximates a fitted item response model by a linear
+confirmatory factor analysis. I.e., given item response functions, the
+expectation <code class="reqn">E(X_i | \theta_1, \ldots, \theta_D)</code> is
+linearly approximated by <code class="reqn">a_{i1} \theta _1 + \ldots + a_{iD} \theta_D</code>.
+See Vermunt and Magidson (2005) for details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">IRT.linearCFA( object, group=1)
+
+## S3 method for class 'IRT.linearCFA'
+summary(object,  ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>Fitted item response model for which the <code>IRT.expectedCounts</code>
+method is defined.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>Group identifier which defines the selected group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list with following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>loadings</code></td>
+<td>
+<p>Data frame with factor loadings. <code>Mlat</code> and
+<code>SDlat</code> denote the model-implied item mean and standard deviation.
+The values <code>ResidVar</code> and <code>h2</code> denote residual variances
+and item communality.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stand.loadings</code></td>
+<td>
+<p>Data frame with standardized factor loadings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M.trait</code></td>
+<td>
+<p>Mean of factors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SD.trait</code></td>
+<td>
+<p>Standard deviations of factors</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Vermunt, J. K., &amp; Magidson, J. (2005). Factor Analysis with categorical
+indicators: A comparison between traditional and latent class approaches.
+In A. Van der Ark, M.A. Croon &amp; K. Sijtsma (Eds.),
+<em>New Developments in Categorical Data Analysis for the Social and
+Behavioral Sciences</em> (pp. 41-62). Mahwah: Erlbaum
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See <code>tam.fa</code> for confirmatory factor analysis in <span class="pkg">TAM</span>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(lavaan)
+
+#############################################################################
+# EXAMPLE 1: Two-dimensional confirmatory factor analysis data.Students
+#############################################################################
+
+data(data.Students, package="CDM")
+# select variables
+vars &lt;- scan(nlines=1, what="character")
+    sc1 sc2 sc3 sc4 mj1 mj2 mj3 mj4
+dat &lt;- data.Students[, vars]
+
+# define Q-matrix
+Q &lt;- matrix( 0, nrow=8, ncol=2 )
+Q[1:4,1] &lt;- Q[5:8,2] &lt;- 1
+
+#*** Model 1: Two-dimensional 2PL model
+mod1 &lt;- TAM::tam.mml.2pl( dat, Q=Q, control=list( nodes=seq(-4,4,len=12) ) )
+summary(mod1)
+
+# linear approximation CFA
+cfa1 &lt;- TAM::IRT.linearCFA(mod1)
+summary(cfa1)
+
+# linear CFA in lavaan package
+lavmodel &lt;- "
+    sc=~ sc1+sc2+sc3+sc4
+    mj=~ mj1+mj2+mj3+mj4
+    sc1 ~ 1
+    sc ~~ mj
+    "
+mod1b &lt;- lavaan::sem( lavmodel, data=dat, missing="fiml", std.lv=TRUE)
+summary(mod1b, standardized=TRUE, fit.measures=TRUE )
+
+#############################################################################
+# EXAMPLE 2: Unidimensional confirmatory factor analysis data.Students
+#############################################################################
+
+data(data.Students, package="CDM")
+# select variables
+vars &lt;- scan(nlines=1, what="character")
+    sc1 sc2 sc3 sc4
+dat &lt;- data.Students[, vars]
+
+#*** Model 1: 2PL model
+mod1 &lt;- TAM::tam.mml.2pl( dat )
+summary(mod1)
+
+# linear approximation CFA
+cfa1 &lt;- TAM::IRT.linearCFA(mod1)
+summary(cfa1)
+
+# linear CFA
+lavmodel &lt;- "
+    sc=~ sc1+sc2+sc3+sc4
+    "
+mod1b &lt;- lavaan::sem( lavmodel, data=dat, missing="fiml", std.lv=TRUE)
+summary(mod1b, standardized=TRUE, fit.measures=TRUE )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

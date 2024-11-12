@@ -1,0 +1,320 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tgp.default.params</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Default Treed Gaussian Process Model Parameters </h2>
+
+<h3>Description</h3>
+
+<p>Construct a default list of parameters to the <code>b*</code> 
+functions– the interfaces to treed Gaussian process
+modeling
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tgp.default.params(d, meanfn = c("linear", "constant"),
+                   corr = c("expsep", "exp", "mrexpsep", "matern", "sim", "twovar"),
+                   splitmin = 1, basemax = d, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>d</code></td>
+<td>
+<p> number of input dimensions <code>ncol(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meanfn</code></td>
+<td>
+<p> A choice of mean function for the process.  When
+<code>meanfn = "linear"</code> (default), then we have the process
+</p>
+<p style="text-align: center;"><code class="reqn">Z = (\mathbf{1}  \;\; \mathbf{X}) \beta + W(\mathbf{X})</code>
+</p>
+
+<p>where <code class="reqn">W(\mathbf{X})</code> represents the Gaussian process
+part of the model (if present).  Otherwise, when
+<code>meanfn = "constant"</code>, then</p>
+<p style="text-align: center;"><code class="reqn">Z = \beta_0 + W(\mathbf{X})</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>corr</code></td>
+<td>
+<p> Gaussian process correlation model. Choose between the isotropic
+power exponential family (<code>"exp"</code>) or the separable power exponential 
+family (<code>"expsep"</code>, default); the current version also supports 
+the isotropic Matern (<code>"matern"</code>) and single-index model
+(<code>"sim"</code>) and <code>"twovar"</code> as “beta”	functionality.  
+The option <code>"mrexpsep"</code> uses a multi-resolution GP model, 
+a depricated feature in the package
+(docs removed)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splitmin</code></td>
+<td>
+<p> Indicates which column of the inputs <code>X</code> should
+be the first to allow splits via treed partitioning.  This is useful
+for excluding certain input directions from the partitioning
+mechanism</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basemax</code></td>
+<td>
+<p> Indicates which column of the inputs <code>X</code> should
+be the last be fit under the base model (e.g., LM or GP).  This is useful
+for allowing some input directions (e.g., binary indicators) to only
+influence the tree partitioning mechanism, and not the base model(s)
+at the leaves of the tree</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p> These ellipses arguments are interpreted as augmentations
+to the prior specification. You may use these to specify
+a custom setting of any of default parameters in the output list 
+detailed below</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The output is the following list of <code>params</code>...
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>dimension of regression coefficients <code class="reqn">
+	 \beta</code>: 1 for input <code>meanfn = "constant"</code>, or
+<code>ncol(X)+1</code> for <code>meanfn = "linear"</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meanfn</code></td>
+<td>
+<p> copied from the inputs </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>corr</code></td>
+<td>
+<p> copied from the inputs </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bprior</code></td>
+<td>
+<p>Linear (beta) prior, default is <code>"bflat"</code>
+which gives an “improper” prior which can perform badly 
+when the signal-to-noise ratio is low.  In these cases the 
+“proper” hierarchical specification <code>"b0"</code>,
+<code>"bmzt"</code>, or <code>"bmznot"</code> prior may perform better
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p><code>rep(0,col)</code> starting values for beta linear parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p><code>c(0.5,2,max(c(10,col+1)),1,d)</code> indicating the tree prior 
+process parameters <code class="reqn">\alpha</code>, <code class="reqn">\beta</code>, <em>minpart</em>,
+<em>splitmin</em> and <em>basemax</em>:
+</p>
+<p style="text-align: center;"><code class="reqn">p_{\mbox{\tiny split}}(\eta, \mathcal{T}) =
+       \alpha*(1+\eta)^\beta</code>
+</p>
+
+<p>with zero probability given to trees
+with partitions containing less than <code>nmin</code> data points;
+<em>splitmin</em> indicates the first column of <code>X</code> which 
+where treed partitioning is allowed; <em>basemax</em> gives the
+last column where the base model is used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s2.p</code></td>
+<td>
+<p><code>c(5,10)</code> <code class="reqn">\sigma^2</code> inverse-gamma prior
+parameters <code>c(a0, g0)</code> where <code>g0</code> is rate parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau2.p</code></td>
+<td>
+<p><code>c(5,10)</code> <code class="reqn">\tau^2</code> inverse-gamma
+prior parameters <code>c(a0, g0)</code> where <code>g0</code> is rate parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d.p</code></td>
+<td>
+<p>c(1.0,20.0,10.0,10.0) Mixture of gamma prior parameter (initial values)
+for the range parameter(s) <code>c(a1,g1,a2,g2)</code> where <code>g1</code> and
+<code>g2</code> are rate parameters.  If
+<code>corr="mrexpsep"</code>, then this is a vector of length 8: The
+first four parameters remain the same and correspond to the
+"coarse" process, and the
+second set of four values, which default to <code>c(1,10,1,10)</code>,
+are the equivalent prior parameters for the range parameter(s) in the residual "fine" process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nug.p</code></td>
+<td>
+<p><code>c(1,1,1,1)</code> Mixture of gamma prior parameter (initial values)
+for the nugget parameter <code>c(a1,g1,a2,g2)</code> where <code>g1</code> and
+<code>g2</code> are rate parameters; default reduces to simple exponential prior;
+specifying <code>nug.p = 0</code> fixes the nugget parameter to the “starting” 
+value in <code>gd[1]</code>, i.e., it is excluded from the MCMC</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p><code>c(10,0.2,10)</code>
+LLM parameters c(g, t1, t2), with growth parameter <code>g &gt; 0</code>
+minimum parameter <code>t1 &gt;= 0</code> and maximum parameter <code>t1 &gt;= 0</code>, where
+<code>t1 + t2 &lt;= 1</code> specifies </p>
+<p style="text-align: center;"><code class="reqn">p(b|d)=t_1 +
+	  \exp\left\{\frac{-g(t_2-t_1)}{d-0.5}\right\}</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d.lam</code></td>
+<td>
+<p><code>"fixed"</code> Hierarchical exponential distribution
+parameters to <code>a1</code>, <code>g1</code>, <code>a2</code>, and <code>g2</code>
+of the prior distribution for the range parameter <code>d.p</code>;
+<code>"fixed"</code> indicates that the hierarchical prior is “turned off”</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nug.lam</code></td>
+<td>
+<p><code>"fixed"</code> Hierarchical exponential
+distribution parameters to <code>a1</code>, <code>g1</code>,
+<code>a2</code>, and <code>g2</code> of the prior distribution for the nug
+parameter <code>nug.p</code>; <code>"fixed"</code> indicates that the
+hierarchical prior is “turned off”</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s2.lam</code></td>
+<td>
+<p><code>c(0.2,10)</code> Hierarchical exponential distribution prior for 
+<code>a0</code> and <code>g0</code> of the prior distribution for the s2
+parameter <code>s2.p</code>; <code>"fixed"</code> indicates that the
+hierarchical prior is “turned off”</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau2.lam</code></td>
+<td>
+<p><code>c(0.2,0.1)</code> Hierarchical exponential distribution prior for 
+<code>a0</code> and <code>g0</code> of the prior distribution for the s2
+parameter <code>tau2.p</code>; <code>"fixed"</code> indicates that the
+hierarchical prior is “turned off”</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.p</code></td>
+<td>
+<p><code>c(1,1,1,1)</code>  Parameters in the mixture of gammas prior
+on the delta scaling parameter for <code>corr="mrexpsep"</code>:
+<code>c(a1,g1,a2,g2)</code> where <code>g1</code> and
+<code>g2</code> are rate parameters; default reduces to simple
+exponential prior.  Delta scales the variance of the residual "fine" process with respect to
+the variance of the underlying "coarse" process. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nugf.p</code></td>
+<td>
+<p><code>c(1,1,1,1)</code>  Parameters in the mixture of gammas prior
+on the residual “fine” process nugget parameter for
+<code>corr="mrexpsep"</code>: <code>c(a1,g1,a2,g2)</code> where <code>g1</code> and
+<code>g2</code> are rate parameters; default reduces to simple
+exponential prior.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dp.sim</code></td>
+<td>
+<p><code>basemax * basemax</code> RW-MVN
+proposal covariance matrix for GP-SIM models; only appears when
+<code>corr="sim"</code>, the default is <code>diag(rep(0.2, basemax))</code></p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Please refer to the examples for the functions in
+"See Also" below, <code>vignette("tgp")</code> and <code>vignette(tgp2)</code>
+</p>
+
+
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gramacy, R. B. (2007). <em><span class="pkg">tgp</span>: An <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> Package for
+Bayesian Nonstationary, Semiparametric Nonlinear
+Regression and Design by Treed Gaussian Process Models.</em>
+Journal of Statistical Software, <b>19</b>(9).
+<a href="https://www.jstatsoft.org/v19/i09">https://www.jstatsoft.org/v19/i09</a>
+<a href="https://doi.org/10.18637/jss.v019.i09">doi:10.18637/jss.v019.i09</a>
+</p>
+<p>Robert B. Gramacy, Matthew Taddy (2010). <em>Categorical Inputs,
+Sensitivity Analysis, Optimization and Importance Tempering with <span class="pkg">tgp</span>
+Version 2, an <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> Package for Treed Gaussian Process Models.</em>
+Journal of Statistical Software, <b>33</b>(6), 1–48.
+<a href="https://www.jstatsoft.org/v33/i06/">https://www.jstatsoft.org/v33/i06/</a>
+<a href="https://doi.org/10.18637/jss.v033.i06">doi:10.18637/jss.v033.i06</a>
+</p>
+<p>Gramacy, R. B., Lee, H. K. H. (2008).
+<em>Bayesian treed Gaussian process models with an application
+to computer modeling</em>. Journal of the American Statistical Association, 
+103(483), pp. 1119-1130.  Also available as ArXiv article 0710.4536 
+<a href="https://arxiv.org/abs/0710.4536">https://arxiv.org/abs/0710.4536</a>
+</p>
+<p>Robert B. Gramacy, Heng Lian (2011).
+<em>Gaussian process single-index models as emulators for computer
+experiments</em>.  Available as ArXiv article 1009.4241
+<a href="https://arxiv.org/abs/1009.4241">https://arxiv.org/abs/1009.4241</a>
+</p>
+<p><a href="https://bobby.gramacy.com/r_packages/tgp/">https://bobby.gramacy.com/r_packages/tgp/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>blm</code>, <code>btlm</code>, <code>bgp</code>,
+<code>btgp</code>, <code>bgpllm</code>, <code>btgpllm</code> </p>
+
+
+</div>

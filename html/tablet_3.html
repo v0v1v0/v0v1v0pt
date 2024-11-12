@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as_kable.tablet</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Coerce Tablet to Kable</h2>
+
+<h3>Description</h3>
+
+<p>Renders a tablet.  Calls <code>kbl</code> and implements
+special features like grouped columns.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tablet'
+as_kable(
+  x,
+  ...,
+  booktabs = TRUE,
+  escape = FALSE,
+  escape_latex = tablet::escape_latex,
+  escape_html = function(x, ...) x,
+  variable = " ",
+  col.names = NA,
+  linebreak = TRUE,
+  align = "c",
+  double_escape = FALSE,
+  linebreaker = "\n",
+  pack_rows = list(escape = escape),
+  secondary = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p><code>tablet</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>passed to <code>kbl</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>booktabs</code></td>
+<td>
+<p>passed to <code>kbl</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>escape</code></td>
+<td>
+<p>passed to <code>kbl</code>; defaults FALSE to allow header linebreaks</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>escape_latex</code></td>
+<td>
+<p>a function to pre-process column names and content if 'escape' is FALSE (e.g., manual escaping, latex only); default <code>escape_latex</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>escape_html</code></td>
+<td>
+<p>a function to pre-process column names and content if 'escape' is FALSE (e.g., manual escaping, html only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variable</code></td>
+<td>
+<p>a column name for the variables</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col.names</code></td>
+<td>
+<p>passed to <code>kbl</code> after any linebreaking</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linebreak</code></td>
+<td>
+<p>whether to invoke <code>linebreak</code> for column names</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>align</code></td>
+<td>
+<p>passed to <code>linebreak</code> for column names</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>double_escape</code></td>
+<td>
+<p>passed to <code>linebreak</code> for column names</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linebreaker</code></td>
+<td>
+<p>passed to <code>linebreak</code> for column names in latex; for html, linebreaker is replaced with &lt;br/&gt;</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pack_rows</code></td>
+<td>
+<p>named list passed to <code>pack_rows</code> for finer control of variable names</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>secondary</code></td>
+<td>
+<p>passed to escape_latex</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See also <code>tablet.data.frame</code>.
+Column <code>_tablet_name</code> must inherit 'character' and
+by default (in a latex render context) its values
+will eventually be processed by <code>escape_latex</code>.
+Thus, if <code>_tablet_name</code> is of class 'latex'
+it will be handled by method <code>escape_latex.latex</code>
+(which tries not to re-escape metacharacters).
+</p>
+
+
+<h3>Value</h3>
+
+<p>like <code>kbl</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(boot)
+library(dplyr)
+library(magrittr)
+library(haven)
+library(yamlet)
+library(spork)
+melanoma %&gt;%
+  select(-time, -year) %&gt;%
+  mutate(sex = factor(sex), ulcer = factor(ulcer)) %&gt;%
+  group_by(status) %&gt;%
+  tablet %&gt;%
+  as_kable
+
+x &lt;- system.file(package = 'tablet', 'shiny-examples/mesa/data/adsl.sas7bdat')
+x %&lt;&gt;% read_sas %&gt;% data.frame
+decorations(x) 
+
+# calculate BMI by assuming all males are 1.75 m, all females 1.63 cm
+x %&lt;&gt;% mutate(height = ifelse(sex == 'F', 1.63, 1.75))
+x %&lt;&gt;% mutate(bmi = signif(digits = 3, weight / (height^2)))
+x %&lt;&gt;% filter(saffl == 'Y')
+x %&lt;&gt;% select(trt01a, age, sex, weight, bmi)
+x %&lt;&gt;% redecorate('
+trt01a: [ Treatment, [ Placebo, TRT 10 mg, TRT 20 mg ]]
+age:    [ Age, year ]
+sex:    [ Sex, [ Female: F, Male: M ]]
+weight: [ Body Weight, kg ]
+bmi:    [ Index_body mass, kg/m^2 ]
+')
+x %&lt;&gt;% resolve
+x %&lt;&gt;% group_by(trt01a)
+
+x %&gt;% tablet %&gt;% as_kable
+
+# supply default and unit-conditional latex titles
+x %&lt;&gt;% modify(title = concatenate(as_latex(as_spork(c(.data$label)))))
+x %&lt;&gt;% modify(
+age, weight, bmi,
+  title = concatenate(
+    sep = '',  # default ok in pdf
+    as_latex(
+      as_spork(
+        c(.data$label, ' (', .data$units, ')')
+      )
+    )
+  )
+)
+x %&gt;% tablet %&gt;% as_kable
+</code></pre>
+
+
+</div>

@@ -1,0 +1,137 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>infsentrip</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sensitivity analysis for triples matches informed by tests for unmeasured bias</h2>
+
+<h3>Description</h3>
+
+<p>This function is very similar to [informedSen::informedsen()], with a few minor differences.
+This version allows for matches to contain either two treated units and one control unit
+or two controls and one treated unit
+([informedSen::informedsen()] requires only one treated unit and a fixed number of controls in each match).
+This version also allows the primary hypothesis test to be one-sided.
+To use this function, the optimization software 'gurobi' and its R package must be installed.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">infsentrip(gamma, sc, z, mset, alpha, alternative = "both")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>The sensitivity parameter <code class="reqn">\Gamma \geq 1</code>. Setting <code class="reqn">\Gamma = 1</code>
+performs a randomization test that assumes ignorable treatment assignment
+given the matched triples</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sc</code></td>
+<td>
+<p>A matrix with N rows and at least two columns. The first column is the primary outcome
+and the remaining columns are unaffected outcomes used to test for bias</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>A vector of length N with 0s for control and 1s for treated units</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mset</code></td>
+<td>
+<p>A vector of length N indicating the matched triple</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>A vector with length equal to the number of columns of 'sc'. Each coordinate
+contains the level of the test applied to the corresponding column of 'sc'. If 'alpha'
+is a scalar, it is repeated for each column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alternative</code></td>
+<td>
+<p>One of 'greater', 'less' or 'both'. 'greater' implies the
+alternative hypothesis is that the treatment has a positive effect on the scores of the primary outcome,
+'less' implies the alternative hypothesis is that the treatment has a negative
+effect on the scores of the primary outcome, and 'both' conducts a two-sided hypothesis test.
+The negative outcomes will always be two-sided tests (since one does not expect an effect in either direction)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<dl>
+<dt>result </dt>
+<dd>
+<p>Text indicating whether or not the test for bias rejects all biases of magnitude Gamma or less.  If yes, then the conclusion is that you must increase Gamma to continue.  If no, then the test on the primary outcome is conducted inside the confidence set defined by a test for bias.</p>
+</dd>
+<dt>optimization.problem </dt>
+<dd>
+<p>Reiterates the result above, where the word yes means the optimization problem is infeasible, and the word no means it is feasible.  See the conclusion for a scientific interpretation of this aspect of the output.</p>
+</dd>
+<dt>conclusion </dt>
+<dd>
+<p>Text indicating the result of the test for effect on the primary outcome.</p>
+</dd>
+<dt>deviates </dt>
+<dd>
+<p>A vector of standardized deviates that might be compared with the standard Normal distribution.  There is one deviate for each column of 'sc'.  If 'sc' has column names, then the column names label the
+deviates.  The deviates are computed at the treatment assignment probabilities, theta, that solve the constrained optimization problem.</p>
+</dd>
+<dt>alphas </dt>
+<dd>
+<p>A vector of significance levels used for the deviates, together with their total.  The total is relevant if the Bonferroni inequality is used to ensure joint level of all the tests.  The absolute deviates might be compared with qnorm(1-alphas/2) for a two-sided test.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p>formattrip for easily creating inputs to this function.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Generate some data
+set.seed(316)
+n &lt;- 30
+x &lt;- rnorm(n, 0, 1)
+nt &lt;- floor(n * 0.2)
+nc &lt;- n - nt
+z &lt;- c(rep(1, nt), rep(0, nc))
+# Create a distance matrix (all units in one stratum here)
+dist &lt;- dist_mahal(data.frame(x = x), z, rep(1, n))[[1]]
+# Conduct the triples match
+triplesm &lt;- triples_st(cost = dist, z = z, solver = "rlemon")
+# Create primary and negative outcomes with some random unit names
+y &lt;- cbind(rnorm(40), runif(40))
+rownames(y) &lt;- sample(1:40)
+# Reformat the triples match
+ylong &lt;- formattrip(m = triplesm, y = y, type = "long")
+# Score the outcomes, in this case aberrant ranks for primary outcome and
+#      ranks for unaffected outcome
+y[, 1] &lt;- aberrantscoreslong(y[, 1], cutoff = 0.5, cutoff_dir = "greater")
+y[, 2] &lt;- rank(y[, 2])
+# Run the informed sensitivity analysis at gamma of 1.5
+inf1 &lt;- infsentrip(gamma = 1.5, sc = ylong$y, z = ylong$z, ylong$mset,
+                  alpha = 0.05, alternative = "both")
+
+</code></pre>
+
+
+</div>

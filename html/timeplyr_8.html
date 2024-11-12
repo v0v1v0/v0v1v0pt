@@ -1,0 +1,263 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>group_id</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fast group IDs</h2>
+
+<h3>Description</h3>
+
+<p>These are tidy-based functions for calculating group IDs, row IDs and
+group orders. <br></p>
+
+<ul>
+<li> <p><code>group_id()</code> returns an integer vector of group IDs the same size as the data.
+</p>
+</li>
+<li> <p><code>row_id()</code> returns an integer vector of row IDs.
+</p>
+</li>
+<li> <p><code>group_order()</code> returns the order of the groups.
+</p>
+</li>
+</ul>
+<p>The <code>add_</code> variants add a column of group IDs/row IDs/group orders.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">group_id(
+  data,
+  ...,
+  order = TRUE,
+  ascending = TRUE,
+  .by = NULL,
+  .cols = NULL,
+  as_qg = FALSE
+)
+
+add_group_id(
+  data,
+  ...,
+  order = TRUE,
+  ascending = TRUE,
+  .by = NULL,
+  .cols = NULL,
+  .name = NULL,
+  as_qg = FALSE
+)
+
+row_id(data, ..., ascending = TRUE, .by = NULL, .cols = NULL)
+
+## S3 method for class 'GRP'
+row_id(data, ascending = TRUE, ...)
+
+add_row_id(data, ..., ascending = TRUE, .by = NULL, .cols = NULL, .name = NULL)
+
+group_order(data, ..., ascending = TRUE, .by = NULL, .cols = NULL)
+
+add_group_order(
+  data,
+  ...,
+  ascending = TRUE,
+  .by = NULL,
+  .cols = NULL,
+  .name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame or vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional groups using tidy <code>data-masking</code> rules. <br>
+To specify groups using <code>tidyselect</code>, simply use the <code>.by</code> argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>Should the groups be ordered?
+<b>THE PHYSICAL ORDER OF THE DATA IS NOT CHANGED.</b> <br>
+When order is <code>TRUE</code> (the default) the group IDs will be
+ordered but not sorted.<br>
+The expression
+</p>
+<pre>
+identical(order(x, na.last = TRUE),
+          order(group_id(x, order = TRUE)))
+</pre>
+<p>or in the case of a data frame
+</p>
+<pre>
+identical(order(x1, x2, x3, na.last = TRUE),
+          order(group_id(data, x1, x2, x3, order = TRUE)))
+</pre>
+<p>should always hold.<br>
+If <code>FALSE</code> the order of the group IDs will be based on first appearance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ascending</code></td>
+<td>
+<p>Should the group order be ascending or descending?
+The default is <code>TRUE</code>. <br>
+For <code>row_id()</code> this determines if the row IDs are increasing or decreasing. <br><b>NOTE</b> - When <code>order = FALSE</code>, the <code>ascending</code> argument is
+ignored. This is something that will be fixed in a later version.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>Alternative way of supplying groups using <code>tidyselect</code> notation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.cols</code></td>
+<td>
+<p>(Optional) alternative to <code>...</code> that accepts
+a named character vector or numeric vector.
+If speed is an expensive resource, it is recommended to use this.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as_qg</code></td>
+<td>
+<p>Should the group IDs be returned as a
+collapse "qG" class? The default (<code>FALSE</code>) always returns
+an integer vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name</code></td>
+<td>
+<p>Name of the added ID column which should be a
+character vector of length 1.
+If <code>.name = NULL</code> (the default),
+<code>add_group_id()</code> will add a column named "group_id",
+and if one already exists, a unique name will be used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It's important to note for data frames, these functions by default assume
+no groups unless you supply them.
+</p>
+<p>This means that when no groups are supplied:
+</p>
+
+<ul>
+<li> <p><code>group_id(iris)</code> returns a vector of ones
+</p>
+</li>
+<li> <p><code>row_id(iris)</code> returns the plain row id numbers
+</p>
+</li>
+<li> <p><code>group_order(iris) == row_id(iris)</code>.
+</p>
+</li>
+</ul>
+<p>One can specify groups in the second argument like so:
+</p>
+
+<ul>
+<li> <p><code>group_id(iris, Species)</code>
+</p>
+</li>
+<li> <p><code>row_id(iris, across(all_of("Species")))</code>
+</p>
+</li>
+<li> <p><code>group_order(iris, across(where(is.numeric), desc))</code>
+</p>
+</li>
+</ul>
+<p>If you want <code>group_id</code> to always use all the columns of a data frame
+for grouping
+while simultaneously utilising the <code>group_id</code> methods, one can use the below
+function.
+</p>
+<pre>
+group_id2 &lt;- function(data, ...){
+ group_id(data, ..., .cols = names(data))
+}
+</pre>
+
+
+<h3>Value</h3>
+
+<p>An integer vector.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(timeplyr)
+library(dplyr)
+library(ggplot2)
+
+group_id(iris) # No groups
+group_id(iris, Species) # Species groups
+row_id(iris) # Plain row IDs
+row_id(iris, Species) # Row IDs by group
+# Order of Species + descending Petal.Width
+group_order(iris, Species, desc(Petal.Width))
+# Same as
+order(iris$Species, -xtfrm(iris$Petal.Width))
+
+# Tidy data-masking/tidyselect can be used
+group_id(iris, across(where(is.numeric))) # Groups across numeric values
+# Alternatively using tidyselect
+group_id(iris, .by = where(is.numeric))
+
+# Group IDs using a mixtured order
+group_id(iris, desc(Species), Sepal.Length, desc(Petal.Width))
+
+# add_ helpers
+iris %&gt;%
+  distinct(Species) %&gt;%
+  add_group_id(Species)
+iris %&gt;%
+  add_row_id(Species) %&gt;%
+  pull(row_id)
+
+# Usage in data.table
+library(data.table)
+iris_dt &lt;- as.data.table(iris)
+iris_dt[, group_id := group_id(.SD, .cols = names(.SD)),
+        .SDcols = "Species"]
+
+# Or if you're using this often you can write a wrapper
+set_add_group_id &lt;- function(x, ..., .name = "group_id"){
+  id &lt;- group_id(x, ...)
+  data.table::set(x, j = .name, value = id)
+}
+set_add_group_id(iris_dt, desc(Species))[]
+
+mm_mpg &lt;- mpg %&gt;%
+  select(manufacturer, model) %&gt;%
+  arrange(desc(pick(everything())))
+
+# Sorted/non-sorted groups
+mm_mpg %&gt;%
+  add_group_id(across(everything()),
+               .name = "sorted_id", order = TRUE) %&gt;%
+  add_group_id(manufacturer, model,
+               .name = "not_sorted_id", order = FALSE) %&gt;%
+  distinct()
+
+</code></pre>
+
+
+</div>

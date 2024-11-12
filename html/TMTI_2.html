@@ -1,0 +1,170 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>adjust_TMTI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adjust all p-values using a Closed Testing Procedeure and the
+TMTI family of tests.</h2>
+
+<h3>Description</h3>
+
+<p>Adjust all p-values using a Closed Testing Procedeure and the
+TMTI family of tests.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">adjust_TMTI(
+  pvals,
+  alpha = 0.05,
+  B = 1000,
+  gammaList = NULL,
+  tau = NULL,
+  K = NULL,
+  is.sorted = FALSE,
+  EarlyStop = FALSE,
+  verbose = FALSE,
+  mc.cores = 1L,
+  chunksize = 4 * mc.cores,
+  direction = "increasing",
+  parallel.direction = "breadth",
+  AdjustAll = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pvals</code></td>
+<td>
+<p>vector of p-values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>significance level. Defaults to 0.05.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>Number of bootstrap replications. Only relevant if length(pvals) &gt; 100
+and no gammaList is supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gammaList</code></td>
+<td>
+<p>A list of functions. These functions should be the CDFs of
+the chosen TMTI test for different m.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>Number between 0 and 1 or NULL, describing the truncation level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>Integer between &gt;1 and m describing the truncation index.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is.sorted</code></td>
+<td>
+<p>Logical, indicating whether the supplied p-values are already
+sorted. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>EarlyStop</code></td>
+<td>
+<p>Logical; set to TRUE to stop as soon as a hypothesis can be
+accepted at level alpha. This speeds up the procedure, but now only provides
+upper bounds on the adjusted p-values that are below alpha.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical; set to TRUE to print progress. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mc.cores</code></td>
+<td>
+<p>Number of cores to parallelize onto.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chunksize</code></td>
+<td>
+<p>Integer indicating the size of chunks to parallelize. E.g.,
+if setting chunksize = mc.cores, each time a parallel computation is set up,
+each worker will perform only a single task. If mc.cores &gt; chunksize, some
+threads will be inactive.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+<p>String that is equal to either "increasing"/"i", "decreasing"/"d" or "binary"/"b".
+Determines the search direction. When set to"increasing", the function computes the exact adjusted p-value
+for all those hypotheses that can be rejected (while controlling the FWER),
+but is potentially slower than "decreasing". "decreasing"identifies all hypotheses that can
+be rejected with FWER control, but does not compute the actual adjusted p-values.
+"binary" performs a binary search for the number of hypotheses
+that can be rejected with FWER control.  Defaults to "increasing". Note that
+'binary' does not work with parallel.direction == 'breadth'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel.direction</code></td>
+<td>
+<p>A string that is either "breadth" or "depth"
+(or abbreviated to "b" or "d), indicating in which direction to parallelize.
+Breadth-first parallelization uses a more efficient C++ implementation to
+adjust each p-value, but depth-first parallelization potentially finishes
+faster if using early stopping (EarlyStop = TRUE) and very few hypotheses
+can be rejected.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>AdjustAll</code></td>
+<td>
+<p>Logical, indicating whether to adjust all p-values (TRUE)
+or only those that are marginally significant (FALSE). Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a data.frame containing adjusted p-values and their respective indices.
+If direction == 'decreasing' or 'binary', an integer describing the number of
+hypotheses that can be rejected with FWER control is returned.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">p = sort(runif(100)) # Simulate and sort p-values
+p[1:10] = p[1:10]**3 # Make the bottom 10 smaller, such that they correspond to false hypotheses
+adjust_TMTI(p, alpha = 0.05, is.sorted = TRUE)
+</code></pre>
+
+
+</div>

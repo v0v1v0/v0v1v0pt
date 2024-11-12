@@ -1,0 +1,75 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmplate-package</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+'Code Generation Based on Templates'
+</h2>
+
+<h3>Description</h3>
+
+<p>Define general templates with tags that can be replaced by content depending on arguments and objects to modify the final output of the document.
+</p>
+
+
+<h3>Details</h3>
+
+<p>Function <code>translate</code> receives a template (as a character vector with the lines of a template file which contains tags either for content or R code) a list of argument variables that will be used to translate those tags to content. The evaluation is performed in an environment defined by the user and replaces its output in the template returning a character vector with the lines of the resulting template.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tmplate)
+#
+### use the following template file
+T &lt;- readLines(system.file("examples/template.txt", package = "tmplate"))
+#
+### translate template content using the following values as input arguments
+TT &lt;- translate(
+SHELL_CALL='#!/bin/bash',
+SLURM_SBATCH=ifelse(.Platform$OS.type=="unix", 
+ifelse(system("clu=$(sinfo --version 2&gt;&amp;1) || clu=`echo -1`; echo $clu", intern = TRUE)=="-1",
+'&lt;:MISS:&gt;','#SBATCH '),'&lt;:MISS:&gt;'),
+SLURM_PARTITION='&lt;:SLURM_SBATCH:&gt;--partition=defq',
+SLURM_ASK_NODES=2,
+SLURM_NODES='&lt;:SLURM_SBATCH:&gt;--nodes=&lt;:SLURM_ASK_NODES:&gt;',
+SLURM_ASK_TASKS=4,
+SLURM_TASKS='&lt;:SLURM_SBATCH:&gt;--ntasks-per-node=&lt;:SLURM_ASK_TASKS:&gt;',
+SLURM_MEMORY='&lt;:SLURM_SBATCH:&gt;--memory=2gb',
+SLURM_TIME='&lt;:SLURM_SBATCH:&gt;--time=1:00:00',
+SLURM_ARRAY="&lt;:MISS:&gt;",
+MODULES_LOAD='module load module/for/openmpi module/for/R',
+WORKDIR=ifelse('&lt;:SLURM_SBATCH:&gt;'!='#SBATCH','# no slurm machine','cd ${SLURM_SUBMIT_DIR}'),
+TASK="&lt;:MISS:&gt;",
+PASS_TASK="&lt;:MISS:&gt;",
+PASS_TASK_VAR="&lt;:MISS:&gt;",
+MPI_N="&lt;:MISS:&gt;",
+MPI_ASK_N='&lt;r@ &lt;:SLURM_ASK_NODES:&gt; * &lt;:SLURM_ASK_TASKS:&gt; @&gt;',
+R_HOME=R.home("bin"),
+R_OPTIONS='--no-save --no-restore',
+R_FILE_INPUT='script.R',
+R_ARGS='',
+R_FILE_OUTPUT='output.Rout',
+MPIRUN='mpirun --mca mpi_warn_on_fork 0 -n &lt;:MPI_ASK_N:&gt; / 
+&lt;:R_HOME:&gt;/Rscript &lt;:R_OPTIONS:&gt; "&lt;:R_FILE_INPUT:&gt;" /
+&lt;r@ ifelse(!any(grepl("^&lt;:MISS:&gt;$","&lt;:SLURM_ARRAY:&gt;")),"&lt;:PASS_TASK_VAR:&gt;","") @&gt; /
+&lt;:R_ARGS:&gt; &gt; &lt;:R_FILE_OUTPUT:&gt;',
+MESSAGE_CLOSE='echo "Job submitted on $(date)."',
+drop = TRUE,
+default = "MISS",
+template = T
+)
+#
+### run TT to display resulting output (or print using 'cat' with newline as separator)
+TT
+#
+### Or See instructions in the following file:
+### (example present in the vignette)
+source(system.file("examples/example.R", package = "tmplate"))
+</code></pre>
+
+
+</div>

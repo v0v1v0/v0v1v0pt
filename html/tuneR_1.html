@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tuneR</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tuneR</h2>
+
+<h3>Description</h3>
+
+<p>tuneR, a collection of examples</p>
+
+
+<h3>Functions in tuneR</h3>
+
+<p><em>tuneR</em> consists of several functions to work with and to analyze Wave files.
+In the following examples, some of the functions 
+to generate some data (such as <code>sine</code>),
+to read and write Wave files (<code>readWave</code>, <code>writeWave</code>),
+to represent or construct (multi channel) Wave files (<code>Wave</code>, <code>WaveMC</code>),
+to transform  Wave objects (<code>bind</code>, <code>channel</code>, 
+<code>downsample</code>, <code>extractWave</code>, <code>mono</code>, <code>stereo</code>),
+and to <code>play</code> Wave objects are used.
+</p>
+<p>Other functions and classes are available to 
+calculate several periodograms of a signal (<code>periodogram</code>, <code>Wspec</code>),
+to estimate the corresponding fundamental frequencies (<code>FF</code>, <code>FFpure</code>),
+to derive the corresponding notes (<code>noteFromFF</code>), 
+and to apply a <code>smoother</code>.
+Now, the melody and corresponding energy values can be plotted using the function 
+<code>melodyplot</code>.
+</p>
+<p>A next step is the quantization (<code>quantize</code>) and a corresponding plot 
+(<code>quantplot</code>) showing the note values for binned data.
+Moreover, a function called <code>lilyinput</code> 
+(and a data-preprocessing function <code>quantMerge</code>)
+can prepare a data frame to be presented as sheet music by 
+postprocessing with the music typesetting software LilyPond.
+</p>
+<p>Of course, print (show), plot and summary methods are available for most classes.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Uwe Ligges &lt;ligges@statistik.tu-dortmund.de&gt; with contributions
+from Sebastian Krey, Olaf Mersmann, Sarah Schnackenberg,
+Andrea Preusser, Anita Thieler, and Claus Weihs, as well as code fragments
+and ideas from the former package <span class="pkg">sound</span> by Matthias Heymann
+and functions from ‘rastamat’ by Daniel P. W. Ellis.
+The included parts of the libmad MPEG audio decoder library are
+authored by Underbit Technologies.</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("tuneR") # in a regular session, we are loading tuneR
+  
+# constructing a mono Wave object (2 sec.) containing sinus 
+# sound with 440Hz and folled by 220Hz:
+Wobj &lt;- bind(sine(440), sine(220))
+show(Wobj)
+plot(Wobj) # it does not make sense to plot the whole stuff
+plot(extractWave(Wobj, from = 1, to = 500))
+## Not run: 
+play(Wobj) # listen to the sound
+
+## End(Not run)
+
+tmpfile &lt;- file.path(tempdir(), "testfile.wav")
+# write the Wave object into a Wave file (can be played with any player):
+writeWave(Wobj, tmpfile)
+# reading it in again:
+Wobj2 &lt;- readWave(tmpfile)
+
+Wobjm &lt;- mono(Wobj, "left") # extract the left channel
+# and downsample to 11025 samples/sec.:
+Wobjm11 &lt;- downsample(Wobjm, 11025)
+# extract a part of the signal interactively (click for left/right limits):
+## Not run: 
+Wobjm11s &lt;- extractWave(Wobjm11)
+
+## End(Not run)
+# or extract some values reproducibly 
+Wobjm11s &lt;- extractWave(Wobjm11, from=1000, to=17000)
+
+# calculating periodograms of sections each consisting of 1024 observations,
+# overlapping by 512 observations:
+WspecObject &lt;- periodogram(Wobjm11s, normalize = TRUE, width = 1024, overlap = 512)
+# Let's look at the first periodogram:
+plot(WspecObject, xlim = c(0, 2000), which = 1)
+# or a spectrogram
+image(WspecObject, ylim = c(0, 1000))
+# calculate the fundamental frequency:
+ff &lt;- FF(WspecObject)
+print(ff)
+# derive note from FF given diapason a'=440
+notes &lt;- noteFromFF(ff, 440)
+# smooth the notes:
+snotes &lt;- smoother(notes)
+# outcome should be 0 for diapason "a'" and -12 (12 halftones lower) for "a"
+print(snotes) 
+# plot melody and energy of the sound:
+melodyplot(WspecObject, snotes)
+
+# apply some quantization (into 8 parts): 
+qnotes &lt;- quantize(snotes, WspecObject@energy, parts = 8) 
+# an plot it, 4 parts a bar (including expected values):
+quantplot(qnotes, expected = rep(c(0, -12), each = 4), bars = 2)
+# now prepare for LilyPond
+qlily &lt;- quantMerge(snotes, 4, 4, 2)
+qlily
+</code></pre>
+
+
+</div>

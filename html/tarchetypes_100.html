@@ -1,0 +1,613 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_quarto_rep</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Parameterized Quarto with dynamic branching.</h2>
+
+<h3>Description</h3>
+
+<p>Targets to render a parameterized Quarto document
+with multiple sets of parameters.
+</p>
+<p><code>tar_quarto_rep()</code> expects an unevaluated symbol for the <code>name</code>
+argument and an unevaluated expression for the <code>exectue_params</code> argument.
+<code>tar_quarto_rep_raw()</code> expects a character string for the <code>name</code>
+argument and an evaluated expression object
+for the <code>exectue_params</code> argument.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_quarto_rep(
+  name,
+  path,
+  working_directory = NULL,
+  execute_params = data.frame(),
+  batches = NULL,
+  extra_files = character(0),
+  execute = TRUE,
+  cache = NULL,
+  cache_refresh = FALSE,
+  debug = FALSE,
+  quiet = TRUE,
+  quarto_args = NULL,
+  pandoc_args = NULL,
+  rep_workers = 1,
+  tidy_eval = targets::tar_option_get("tidy_eval"),
+  packages = targets::tar_option_get("packages"),
+  library = targets::tar_option_get("library"),
+  format = targets::tar_option_get("format"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  deployment = targets::tar_option_get("deployment"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  retrieval = targets::tar_option_get("retrieval"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+
+tar_quarto_rep_raw(
+  name,
+  path,
+  working_directory = NULL,
+  execute_params = expression(NULL),
+  batches = NULL,
+  extra_files = character(0),
+  execute = TRUE,
+  cache = NULL,
+  cache_refresh = FALSE,
+  debug = FALSE,
+  quiet = TRUE,
+  quarto_args = NULL,
+  pandoc_args = NULL,
+  rep_workers = 1,
+  packages = targets::tar_option_get("packages"),
+  library = targets::tar_option_get("library"),
+  format = targets::tar_option_get("format"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  deployment = targets::tar_option_get("deployment"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  retrieval = targets::tar_option_get("retrieval"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Name of the target.
+<code>tar_quarto_rep()</code> expects an unevaluated symbol for the <code>name</code>
+argument, and
+<code>tar_quarto_rep_raw()</code> expects a character string for <code>name</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path</code></td>
+<td>
+<p>Character string, path to the Quarto source file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>working_directory</code></td>
+<td>
+<p>Optional character string,
+path to the working directory
+to temporarily set when running the report.
+The default is <code>NULL</code>, which runs the report from the
+current working directory at the time the pipeline is run.
+This default is recommended in the vast majority of cases.
+To use anything other than <code>NULL</code>, you must manually set the value
+of the <code>store</code> argument relative to the working directory in all calls
+to <code>tar_read()</code> and <code>tar_load()</code> in the report. Otherwise,
+these functions will not know where to find the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>execute_params</code></td>
+<td>
+<p>Code to generate
+a data frame or <code>tibble</code> with one row per rendered report
+and one column per Quarto parameter.
+<code>tar_quarto_rep()</code> expects an unevaluated expression for the
+<code>exectue_params</code> argument, whereas
+<code>tar_quarto_rep_raw()</code> expects an evaluated expression object.
+</p>
+<p>You may also include an
+<code>output_file</code> column in the parameters
+to specify the path of each rendered report.
+If included, the <code>output_file</code> column must be a character vector
+with one and only one output file for each row of parameters.
+If an <code>output_file</code> column is not included,
+then the output files are automatically determined using the parameters,
+and the default file format is determined by the YAML front-matter
+of the Quarto source document. Only the first file format is used,
+the others are not generated.
+Quarto parameters must not be named <code>tar_group</code> or <code>output_file</code>.
+This <code>execute_params</code> argument is converted into the command for a target
+that supplies the Quarto parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batches</code></td>
+<td>
+<p>Number of batches. This is also the number of dynamic
+branches created during <code>tar_make()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>extra_files</code></td>
+<td>
+<p>Character vector of extra files and
+directories to track for changes. The target will be invalidated
+(rerun on the next <code>tar_make()</code>) if the contents of these files changes.
+No need to include anything already in the output of <code>tar_quarto_files()</code>,
+the list of file dependencies automatically detected through
+<code>quarto::quarto_inspect()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>execute</code></td>
+<td>
+<p>Whether to execute embedded code chunks.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache</code></td>
+<td>
+<p>Cache execution output (uses knitr cache and jupyter-cache
+respectively for Rmd and Jupyter input files).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache_refresh</code></td>
+<td>
+<p>Force refresh of execution cache.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>debug</code></td>
+<td>
+<p>Leave intermediate files in place after render.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quiet</code></td>
+<td>
+<p>Suppress warning and other messages.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quarto_args</code></td>
+<td>
+<p>Character vector of other <code>quarto</code> CLI arguments to append
+to the Quarto command executed by this function. This is mainly intended for
+advanced usage and useful for CLI arguments which are not yet mirrored in a
+dedicated parameter of this <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> function. See <code style="white-space: pre;">⁠quarto render --help⁠</code> for options.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pandoc_args</code></td>
+<td>
+<p>Additional command line arguments to pass on to Pandoc.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rep_workers</code></td>
+<td>
+<p>Positive integer of length 1, number of local R
+processes to use to run reps within batches in parallel. If 1,
+then reps are run sequentially within each batch. If greater than 1,
+then reps within batch are run in parallel using a PSOCK cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tidy_eval</code></td>
+<td>
+<p>Logical of length 1, whether to use tidy evaluation
+to resolve <code>execute_params</code>. Similar to the <code>tidy_eval</code>
+argument of <code>targets::tar_target()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>packages</code></td>
+<td>
+<p>Character vector of packages to load right before
+the target runs or the output data is reloaded for
+downstream targets. Use <code>tar_option_set()</code> to set packages
+globally for all subsequent targets you define.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>library</code></td>
+<td>
+<p>Character vector of library paths to try
+when loading <code>packages</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Optional storage format for the target's return value.
+With the exception of <code>format = "file"</code>, each target
+gets a file in <code style="white-space: pre;">⁠_targets/objects⁠</code>, and each format is a different
+way to save and load this file. See the "Storage formats" section
+for a detailed list of possible data storage formats.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iteration</code></td>
+<td>
+<p>Character of length 1, name of the iteration mode
+of the target. Choices:
+</p>
+
+<ul>
+<li> <p><code>"vector"</code>: branching happens with <code>vectors::vec_slice()</code> and
+aggregation happens with <code>vctrs::vec_c()</code>.
+</p>
+</li>
+<li> <p><code>"list"</code>, branching happens with <code style="white-space: pre;">⁠[[]]⁠</code> and aggregation happens with
+<code>list()</code>. In the case of list iteration, <code>tar_read(your_target)</code>
+will return a list of lists, where the outer list has one element per
+batch and each inner list has one element per rep within batch.
+To un-batch this nested list, call
+<code>tar_read(your_target, recursive = FALSE)</code>.
+</p>
+</li>
+<li> <p><code>"group"</code>: <code>dplyr::group_by()</code>-like functionality to branch over
+subsets of a data frame. The target's return value must be a data
+frame with a special <code>tar_group</code> column of consecutive integers
+from 1 through the number of groups. Each integer designates a group,
+and a branch is created for each collection of rows in a group.
+See the <code>tar_group()</code> function in <code>targets</code> to see how you can
+create the special <code>tar_group</code> column with <code>dplyr::group_by()</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error</code></td>
+<td>
+<p>Character of length 1, what to do if the target
+stops and throws an error. Options:
+</p>
+
+<ul>
+<li> <p><code>"stop"</code>: the whole pipeline stops and throws an error.
+</p>
+</li>
+<li> <p><code>"continue"</code>: the whole pipeline keeps going.
+</p>
+</li>
+<li> <p><code>"null"</code>: The errored target continues and returns <code>NULL</code>.
+The data hash is deliberately wrong so the target is not
+up to date for the next run of the pipeline.
+</p>
+</li>
+<li> <p><code>"abridge"</code>: any currently running targets keep running,
+but no new targets launch after that.
+</p>
+</li>
+<li> <p><code>"trim"</code>: all currently running targets stay running. A queued
+target is allowed to start if:
+</p>
+
+<ol>
+<li>
+<p> It is not downstream of the error, and
+</p>
+</li>
+<li>
+<p> It is not a sibling branch from the same <code>tar_target()</code> call
+(if the error happened in a dynamic branch).
+</p>
+</li>
+</ol>
+<p>The idea is to avoid starting any new work that the immediate error
+impacts. <code>error = "trim"</code> is just like <code>error = "abridge"</code>,
+but it allows potentially healthy regions of the dependency graph
+to begin running.
+(Visit <a href="https://books.ropensci.org/targets/debugging.html">https://books.ropensci.org/targets/debugging.html</a>
+to learn how to debug targets using saved workspaces.)
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>memory</code></td>
+<td>
+<p>Character of length 1, memory strategy.
+If <code>"persistent"</code>, the target stays in memory
+until the end of the pipeline (unless <code>storage</code> is <code>"worker"</code>,
+in which case <code>targets</code> unloads the value from memory
+right after storing it in order to avoid sending
+copious data over a network).
+If <code>"transient"</code>, the target gets unloaded
+after every new target completes.
+Either way, the target gets automatically loaded into memory
+whenever another target needs the value.
+For cloud-based dynamic files
+(e.g. <code>format = "file"</code> with <code>repository = "aws"</code>),
+this memory strategy applies to the
+temporary local copy of the file:
+<code>"persistent"</code> means it remains until the end of the pipeline
+and is then deleted,
+and <code>"transient"</code> means it gets deleted as soon as possible.
+The former conserves bandwidth,
+and the latter conserves local storage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical, whether to run <code>base::gc()</code>
+just before the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deployment</code></td>
+<td>
+<p>Character of length 1. If <code>deployment</code> is
+<code>"main"</code>, then the target will run on the central controlling R process.
+Otherwise, if <code>deployment</code> is <code>"worker"</code> and you set up the pipeline
+with distributed/parallel computing, then
+the target runs on a parallel worker. For more on distributed/parallel
+computing in <code>targets</code>, please visit
+<a href="https://books.ropensci.org/targets/crew.html">https://books.ropensci.org/targets/crew.html</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priority</code></td>
+<td>
+<p>Numeric of length 1 between 0 and 1. Controls which
+targets get deployed first when multiple competing targets are ready
+simultaneously. Targets with priorities closer to 1 get dispatched earlier
+(and polled earlier in <code>tar_make_future()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resources</code></td>
+<td>
+<p>Object returned by <code>tar_resources()</code>
+with optional settings for high-performance computing
+functionality, alternative data storage formats,
+and other optional capabilities of <code>targets</code>.
+See <code>tar_resources()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>retrieval</code></td>
+<td>
+<p>Character of length 1, only relevant to
+<code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+Must be one of the following values:
+</p>
+
+<ul>
+<li> <p><code>"main"</code>: the target's dependencies are loaded on the host machine
+and sent to the worker before the target runs.
+</p>
+</li>
+<li> <p><code>"worker"</code>: the worker loads the targets dependencies.
+</p>
+</li>
+<li> <p><code>"none"</code>: the dependencies are not loaded at all.
+This choice is almost never recommended. It is only for
+niche situations, e.g. the data needs to be loaded
+explicitly from another language.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cue</code></td>
+<td>
+<p>An optional object from <code>tar_cue()</code> to customize the
+rules that decide whether the target is up to date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>description</code></td>
+<td>
+<p>Character of length 1, a custom free-form human-readable
+text description of the target. Descriptions appear as target labels
+in functions like <code>tar_manifest()</code> and <code>tar_visnetwork()</code>,
+and they let you select subsets of targets for the <code>names</code> argument of
+functions like <code>tar_make()</code>. For example,
+<code>tar_manifest(names = tar_described_as(starts_with("survival model")))</code>
+lists all the targets whose descriptions start with the character
+string <code>"survival model"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_quarto_rep()</code> is an alternative to <code>tar_target()</code> for
+a parameterized Quarto document that depends on other targets.
+Parameters must be given as a data frame with one row per
+rendered report and one column per parameter. An optional
+<code>output_file</code> column may be included to set the output file path
+of each rendered report. (See the <code>execute_params</code> argument for details.)
+</p>
+<p>The Quarto source should mention other dependency targets
+<code>tar_load()</code> and <code>tar_read()</code> in the active code chunks
+(which also allows you to render the report
+outside the pipeline if the <code style="white-space: pre;">⁠_targets/⁠</code> data store already exists
+and appropriate defaults are specified for the parameters).
+(Do not use <code>tar_load_raw()</code> or <code>tar_read_raw()</code> for this.)
+Then, <code>tar_quarto()</code> defines a special kind of target. It
+1. Finds all the <code>tar_load()</code>/<code>tar_read()</code> dependencies in the report
+and inserts them into the target's command.
+This enforces the proper dependency relationships.
+(Do not use <code>tar_load_raw()</code> or <code>tar_read_raw()</code> for this.)
+2. Sets <code>format = "file"</code> (see <code>tar_target()</code>) so <code>targets</code>
+watches the files at the returned paths and reruns the report
+if those files change.
+3. Configures the target's command to return the output
+report files: the rendered document, the source file,
+and file paths mentioned in <code>files</code>. All these file paths
+are relative paths so the project stays portable.
+4. Forces the report to run in the user's current working directory
+instead of the working directory of the report.
+5. Sets convenient default options such as <code>deployment = "main"</code>
+in the target and <code>quiet = TRUE</code> in <code>quarto::quarto_render()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of target objects to render the Quarto
+reports. Changes to the parameters, source file, dependencies, etc.
+will cause the appropriate targets to rerun during <code>tar_make()</code>.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>Replicate-specific seeds</h3>
+
+<p>In ordinary pipelines, each target has its own unique deterministic
+pseudo-random number generator seed derived from its target name.
+In batched replicate, however, each batch is a target with multiple
+replicate within that batch. That is why <code>tar_rep()</code>
+and friends give each <em>replicate</em> its own unique seed.
+Each replicate-specific seed is created
+based on the dynamic parent target name,
+<code>tar_option_get("seed")</code> (for <code>targets</code> version 0.13.5.9000 and above),
+batch index, and rep-within-batch index.
+The seed is set just before the replicate runs.
+Replicate-specific seeds are invariant to batching structure.
+In other words,
+<code>tar_rep(name = x, command = rnorm(1), batches = 100, reps = 1, ...)</code>
+produces the same numerical output as
+<code>tar_rep(name = x, command = rnorm(1), batches = 10, reps = 10, ...)</code>
+(but with different batch names).
+Other target factories with this seed scheme are <code>tar_rep2()</code>,
+<code>tar_map_rep()</code>, <code>tar_map2_count()</code>, <code>tar_map2_size()</code>,
+and <code>tar_render_rep()</code>.
+For the <code style="white-space: pre;">⁠tar_map2_*()⁠</code> functions,
+it is possible to manually supply your own seeds
+through the <code>command1</code> argument and then invoke them in your
+custom code for <code>command2</code> (<code>set.seed()</code>, <code>withr::with_seed</code>,
+or <code>withr::local_seed()</code>). For <code>tar_render_rep()</code>,
+custom seeds can be supplied to the <code>params</code> argument
+and then invoked in the individual R Markdown reports.
+Likewise with <code>tar_quarto_rep()</code> and the <code>execute_params</code> argument.
+</p>
+
+
+<h3>Literate programming limitations</h3>
+
+<p>Literate programming files are messy and variable,
+so functions like <code>tar_render()</code> have limitations:
+* Child documents are not tracked for changes.
+* Upstream target dependencies are not detected if <code>tar_read()</code>
+and/or <code>tar_load()</code> are called from a user-defined function.
+In addition, single target names must be mentioned and they must
+be symbols. <code>tar_load("x")</code> and <code>tar_load(contains("x"))</code> may not
+detect target <code>x</code>.
+* Special/optional input/output files may not be detected in all cases.
+* <code>tar_render()</code> and friends are for local files only. They do not
+integrate with the cloud storage capabilities of <code>targets</code>.
+</p>
+
+
+<h3>Quarto troubleshooting</h3>
+
+<p>If you encounter difficult errors, please read
+<a href="https://github.com/quarto-dev/quarto-r/issues/16">https://github.com/quarto-dev/quarto-r/issues/16</a>.
+In addition, please try to reproduce the error using
+<code>quarto::quarto_render("your_report.qmd", execute_dir = getwd())</code>
+without using <code>targets</code> at all. Isolating errors this way
+makes them much easier to solve.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Literate programming targets: 
+<code>tar_knit()</code>,
+<code>tar_quarto()</code>,
+<code>tar_render()</code>,
+<code>tar_render_rep()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+# Parameterized Quarto:
+lines &lt;- c(
+  "---",
+  "title: 'report.qmd file'",
+  "output_format: html_document",
+  "params:",
+  "  par: \"default value\"",
+  "---",
+  "Assume these lines are in a file called report.qmd.",
+  "```{r}",
+  "print(params$par)",
+  "```"
+)
+writeLines(lines, "report.qmd") # In tar_dir(), not the user's file space.
+# The following pipeline will run the report for each row of params.
+targets::tar_script({
+  library(tarchetypes)
+  list(
+    tar_quarto_rep(
+      name = report,
+      path = "report.qmd",
+      execute_params = tibble::tibble(par = c(1, 2))
+    ),
+    tar_quarto_rep_raw(
+      name = "report",
+      path = "report.qmd",
+      execute_params = quote(tibble::tibble(par = c(1, 2)))
+    )
+  )
+}, ask = FALSE)
+# Then, run the targets pipeline as usual.
+})
+}
+</code></pre>
+
+
+</div>

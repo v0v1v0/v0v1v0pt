@@ -1,0 +1,100 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tryCatch2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Condition Handling and Recovery</h2>
+
+<h3>Description</h3>
+
+<p>Variants of <code>tryCatch()</code> that accept an
+<code>else.</code> argument, similar to <code>try except</code> in ‘<a href="https://www.python.org/">Python</a>’.
+</p>
+<p><code>last.condition</code> will be the last thrown and caught condition in
+<code>tryCatch3()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tryCatch2(expr, ..., else., finally)
+tryCatch3(expr, ..., else., finally)
+
+last.condition
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>expression to be evaluated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>for <code>tryCatch2()</code>, condition handlers. for
+<code>tryCatch3()</code>, expressions to be conditionally evaluated.
+</p>
+<p>Arguments which are missing will use the next non-missing argument. If
+there is no next non-missing argument, <code>NULL</code> will be returned
+invisibly.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>else.</code></td>
+<td>
+<p>expression to be evaluated if evaluating <code>expr</code> does not
+throw an error nor a condition is caught.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>finally</code></td>
+<td>
+<p>expression to be evaluated before returning or exiting.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The use of the <code>else.</code> argument is better than adding additional code to
+<code>expr</code> because it avoids accidentally catching a condition that was not
+being protected by the <code>tryCatch()</code> call.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">FILES &lt;- tempfile(c("existent-file_", "non-existent-file_"))
+writeLines("line1\nline2", FILES[[1L]])
+for (FILE in FILES) {
+    conn &lt;- file(FILE)
+    tryCatch2({
+        open(conn, "r")
+    }, condition = function(cond) {
+        cat("cannot open", FILE, "\n")
+    }, else. = {
+        cat(FILE, "has", length(readLines(conn)), "lines\n")
+    }, finally = {
+        close(conn)
+    })
+    # ## or more naturely with tryCatch3:
+    # tryCatch3({
+    #     open(conn, "r")
+    # }, condition = {
+    #     cat("cannot open", FILE, "\n")
+    # }, else. = {
+    #     cat(FILE, "has", length(readLines(conn)), "lines\n")
+    # }, finally = {
+    #     close(conn)
+    # })
+}
+unlink(FILES)
+</code></pre>
+
+
+</div>

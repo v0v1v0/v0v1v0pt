@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>hyper_array</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract NetCDF data as an array</h2>
+
+<h3>Description</h3>
+
+<p>Extract the raw array data as a list of  one or more arrays. This can be the
+entire variable/s or after dimension-slicing using <code>hyper_filter()</code>
+expressions. This is a delay-breaking function and causes data to be read
+from the source into R native arrays. This list of arrays is
+lightly classed as tidync_data, with methods for <code>print()</code> and <code>tidync()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">hyper_array(
+  x,
+  select_var = NULL,
+  ...,
+  raw_datavals = FALSE,
+  force = FALSE,
+  drop = TRUE
+)
+
+hyper_slice(
+  x,
+  select_var = NULL,
+  ...,
+  raw_datavals = FALSE,
+  force = FALSE,
+  drop = TRUE
+)
+
+## S3 method for class 'tidync'
+hyper_array(
+  x,
+  select_var = NULL,
+  ...,
+  raw_datavals = FALSE,
+  force = FALSE,
+  drop = TRUE
+)
+
+## S3 method for class 'character'
+hyper_array(
+  x,
+  select_var = NULL,
+  ...,
+  raw_datavals = FALSE,
+  force = FALSE,
+  drop = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>NetCDF file, connection object, or tidync object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select_var</code></td>
+<td>
+<p>optional vector of variable names to select</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>passed to <code>hyper_filter()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>raw_datavals</code></td>
+<td>
+<p>logical to control whether scaling in the NetCDF is
+applied or not</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>force</code></td>
+<td>
+<p>ignore caveats about large extraction and just do it</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>collapse degenerate dimensions, defaults to <code>TRUE</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>hyper_array()</code> is used by <code>hyper_tibble()</code> and <code>hyper_tbl_cube()</code>
+to actually extract data arrays from NetCDF, if a result would be particularly large
+there is a check made and user-opportunity to cancel. This is controllable as an
+option <code>getOption('tidync.large.data.check')</code>, and can be set to never check with
+<code>options(tidync.large.data.check = FALSE)</code>.
+</p>
+<p>The function <code>hyper_array()</code> will act on an existing tidync object or a source
+string.
+</p>
+<p>By default all variables in the active grid are returned, use <code>select_var</code> to
+specify one or more desired variables.
+</p>
+<p>The transforms are stored as a list of tables in an attribute 'transforms“,
+access these with <code>hyper_transforms()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>print.tidync_data for a description of the print summary,
+<code>hyper_tbl_cube()</code> and <code>hyper_tibble()</code> which are also delay-breaking
+functions that cause data to be read
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">f &lt;- "S20080012008031.L3m_MO_CHL_chlor_a_9km.nc"
+l3file &lt;- system.file("extdata/oceandata", f, package= "tidync")
+
+## extract a raw list by filtered dimension
+library(dplyr)
+araw1 &lt;- tidync(l3file) %&gt;%
+ hyper_filter(lat = between(lat, -78, -75.8), 
+              lon = between(lon, 165, 171)) %&gt;%
+ hyper_array()
+
+araw &lt;- tidync(l3file) %&gt;% 
+         hyper_filter(lat = abs(lat) &lt; 10, 
+                     lon = index &lt; 100) %&gt;%
+  hyper_array()
+
+## hyper_array will pass the expressions to hyper_filter
+braw &lt;- tidync(l3file) %&gt;% 
+  hyper_array(lat = abs(lat) &lt; 10, lon = index &lt; 100)
+
+## get the transforms tables (the axis coordinates)
+lapply(attr(braw, "transforms"), 
+   function(x) nrow(dplyr::filter(x, selected)))
+## the selected axis coordinates should match in order and in size
+lapply(braw, dim)
+</code></pre>
+
+
+</div>

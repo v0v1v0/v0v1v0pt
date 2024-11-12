@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ts_maintune</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Time Series Tune</h2>
+
+<h3>Description</h3>
+
+<p>Time Series Tune
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ts_maintune(
+  input_size,
+  base_model,
+  folds = 10,
+  preprocess = list(daltoolbox::ts_norm_gminmax()),
+  augment = list(ts_aug_none())
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_size</code></td>
+<td>
+<p>input size for machine learning model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base_model</code></td>
+<td>
+<p>base model for tuning</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>folds</code></td>
+<td>
+<p>number of folds for cross-validation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preprocess</code></td>
+<td>
+<p>list of preprocessing methods</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>augment</code></td>
+<td>
+<p>data augmentation method</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>ts_maintune</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(daltoolbox)
+data(sin_data)
+ts &lt;- ts_data(sin_data$y, 10)
+
+samp &lt;- ts_sample(ts, test_size = 5)
+io_train &lt;- ts_projection(samp$train)
+io_test &lt;- ts_projection(samp$test)
+
+tune &lt;- ts_maintune(input_size=c(3:5), base_model = ts_elm(), preprocess = list(ts_norm_gminmax()))
+ranges &lt;- list(nhid = 1:5, actfun=c('purelin'))
+
+# Generic model tunning
+model &lt;- fit(tune, x=io_train$input, y=io_train$output, ranges)
+
+prediction &lt;- predict(model, x=io_test$input[1,], steps_ahead=5)
+prediction &lt;- as.vector(prediction)
+output &lt;- as.vector(io_test$output)
+
+ev_test &lt;- evaluate(model, output, prediction)
+ev_test
+</code></pre>
+
+
+</div>

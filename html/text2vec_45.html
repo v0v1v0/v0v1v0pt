@@ -1,0 +1,77 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>perplexity</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Perplexity of a topic model</h2>
+
+<h3>Description</h3>
+
+<p>Given document-term matrix, topic-word distribution, document-topic
+distribution calculates perplexity
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">perplexity(X, topic_word_distribution, doc_topic_distribution)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>sparse document-term matrix which contains terms counts. Internally <code>Matrix::RsparseMatrix</code> is used.
+If <code>!inherits(X, 'RsparseMatrix')</code> function will try to coerce <code>X</code> to <code>RsparseMatrix</code>
+via <code>as()</code> call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>topic_word_distribution</code></td>
+<td>
+<p>dense matrix for topic-word distribution. Number of rows = <code>n_topics</code>,
+number of columns = <code>vocabulary_size</code>. Sum of elements in each row should be equal to 1 -
+each row is a distribution of words over topic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>doc_topic_distribution</code></td>
+<td>
+<p>dense matrix for document-topic distribution. Number of rows = <code>n_documents</code>,
+number of columns = <code>n_topics</code>. Sum of elements in each row should be equal to 1 -
+each row is a distribution of topics over document.</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(text2vec)
+data("movie_review")
+n_iter = 10
+train_ind = 1:200
+ids = movie_review$id[train_ind]
+txt = tolower(movie_review[['review']][train_ind])
+names(txt) = ids
+tokens = word_tokenizer(txt)
+it = itoken(tokens, progressbar = FALSE, ids = ids)
+vocab = create_vocabulary(it)
+vocab = prune_vocabulary(vocab, term_count_min = 5, doc_proportion_min = 0.02)
+dtm = create_dtm(it, vectorizer = vocab_vectorizer(vocab))
+n_topic = 10
+model = LDA$new(n_topic, doc_topic_prior = 0.1, topic_word_prior = 0.01)
+doc_topic_distr  =
+  model$fit_transform(dtm, n_iter = n_iter, n_check_convergence = 1,
+                      convergence_tol = -1, progressbar = FALSE)
+topic_word_distr_10 = model$topic_word_distribution
+perplexity(dtm, topic_word_distr_10, doc_topic_distr)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

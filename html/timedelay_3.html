@@ -1,0 +1,353 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bayesian.multiband</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimating the time delay between doubly-lensed multi-band light curves in a Bayesian way</h2>
+
+<h3>Description</h3>
+
+<p><code>bayesian.multiband</code> produces posterior samples of all the model parameters including the time delay between doubly-lensed multi-band light curves.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bayesian.multiband(data.band1, data.band2, n.bands = 2,
+  theta.ini = c(0.01, 0.01, 100, 100, 0.5),
+  delta.ini, delta.uniform.range = c(-500, 500), delta.proposal.scale = 1,
+  tau.proposal.scale = 1, tau.prior.shape = 1, tau.prior.scale = 1,
+  sigma2.proposal.scale = 0.5, sigma2.prior.shape = 1, sigma2.prior.scale = 1e-7,
+  rho.proposal.scale = 0.1, beta.prior.diag = 10 * c(0.1, 0.01, 1e-3, 1e-5)^2,
+  micro = 3, timesc = 100, adaptive.frequency = 100,
+  adaptive.delta.factor = 0.1, adaptive.tau.factor = 0.1,
+  adaptive.sigma2.factor = 0.1, adaptive.rho.factor = 0.1,
+  sample.size, warmingup.size)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data.band1</code></td>
+<td>
+
+<p>A (<code class="reqn">n_1</code> by 5) matrix composed of the data for doubly-lensed images oberved in band 1; the first column contains <code class="reqn">n_1</code> observation times, the second column contains <code class="reqn">n_1</code> magnitudes for image A, the third column has <code class="reqn">n_1</code> measurement error standard deviations for image A, the fourth column include <code class="reqn">n_1</code> magnitudes for image B, and the fifth column contains <code class="reqn">n_1</code> measurement error standard deviations for image B.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.band2</code></td>
+<td>
+
+<p>A (<code class="reqn">n_2</code> by 5) matrix composed of the data for doubly-lensed images oberved in band 2; the first column contains <code class="reqn">n_2</code> observation times, the second column contains <code class="reqn">n_2</code> magnitudes for image A, the third column has <code class="reqn">n_2</code> measurement error standard deviations for image A, the fourth column include <code class="reqn">n_2</code> magnitudes for image B, and the fifth column contains <code class="reqn">n_2</code> measurement error standard deviations for image B.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.bands</code></td>
+<td>
+
+<p>The number of bands used to obtain the data. For now, only two bands are allowed. The authors plan to modify the code to allow more bands in the near future.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta.ini</code></td>
+<td>
+
+<p>A vector for initial values of the OU processes for two bands, i.e., (<code class="reqn">\sigma_1</code>, <code class="reqn">\sigma_2</code>, <code class="reqn">\tau_1</code>, <code class="reqn">\tau_2</code>, <code class="reqn">\rho</code>), where <code class="reqn">\sigma_1</code> is the short-term variability (standard deviation) for band 1, <code class="reqn">\sigma_2</code> is the short-term variability (standard deviation) for band 2, <code class="reqn">\tau_1</code> is the timescale for band 1, and <code class="reqn">\tau_2</code> is the timescale for band 2, and <code class="reqn">\rho</code> is the cross-correlation parameter between two bands. Defaults are (<code class="reqn">0.01</code>, <code class="reqn">0.01</code>, 100, 100, 0.5).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.ini</code></td>
+<td>
+
+<p>Initial values of the time delay.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.uniform.range</code></td>
+<td>
+
+<p>The range of the Uniform prior distribution for the time delay. Default range is set to <code class="reqn">(-500, 500)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis step for the time delay. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis-Hastings step for <code class="reqn">\tau_j</code> (<code class="reqn">j=1, 2</code>) Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.prior.shape</code></td>
+<td>
+
+<p>The shape parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\tau_j</code>. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.prior.scale</code></td>
+<td>
+
+<p>The scale parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\tau_j</code>. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma2.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis-Hastings step for <code class="reqn">\sigma^2_j</code> (<code class="reqn">j=1, 2</code>). Default is 0.5.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma2.prior.shape</code></td>
+<td>
+
+<p>The shape parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\sigma^2_j</code>. Default is 1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma2.prior.scale</code></td>
+<td>
+
+<p>The scale parameter of the Inverse-Gamma hyper-prior distribution for <code class="reqn">\sigma^2_j</code>. If no prior information is available, we recommend using 1e-7 (default).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho.proposal.scale</code></td>
+<td>
+
+<p>The proposal scale of the Metropolis-Hastings step for <code class="reqn">\rho</code>. Default is 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta.prior.diag</code></td>
+<td>
+
+<p>The diagonal elements of the covariance matrix in the multivariate Gaussian prior for <code class="reqn">\beta</code> (polynomial regression coefficients for microlensing adjustment). If such information is not available, these are set to <code>10 * c(0.1)^2</code> if <code>micro = 0</code>, <code>10 * c(0.1, 0.01)^2</code> if <code>micro = 1</code>, <code>10 * c(0.1, 0.01, 1e-3)^2</code> if <code>micro = 2</code>, and <code>10 * c(0.1, 0.01, 1e-3, 1e-5)^2</code> if <code>micro = 3</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>micro</code></td>
+<td>
+
+<p>A non-negative integer less than or equal to 3. It determines the order of a polynomial regression model that accounts for the long-term trend of microlensing effect. Default is 3.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timesc</code></td>
+<td>
+
+<p>It scales the observation time for fitting polynomial of microlensing, i.e., time / timesc, so that the coefficients are not too small. Default is 100.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.frequency</code></td>
+<td>
+
+<p>The adaptive MCMC is applied for every specified frequency. If it is specified as 500, the adaptive MCMC is applied to every 500th iterstion. Default is 100.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.delta.factor</code></td>
+<td>
+
+<p>The factor, exp(<code class="reqn">\pm</code>adaptive.delta.factor), multiplied by the proposal scale of the time delay for adaptive MCMC. Default is 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.tau.factor</code></td>
+<td>
+
+<p>The factor, exp(<code class="reqn">\pm</code>adaptive.tau.factor), multiplied by the proposal scale of <code class="reqn">\tau_j</code> for adaptive MCMC. Default is 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.sigma2.factor</code></td>
+<td>
+
+<p>The factor, exp(<code class="reqn">\pm</code>adaptive.tau.factor), multiplied by the proposal scale of <code class="reqn">\sigma^2_j</code> for adaptive MCMC. Default is 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adaptive.rho.factor</code></td>
+<td>
+
+<p>The factor, exp(<code class="reqn">\pm</code>adaptive.tau.factor), multiplied by the proposal scale of <code class="reqn">\rho</code> for adaptive MCMC. Default is 0.1.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample.size</code></td>
+<td>
+
+<p>The number of the posterior samples of each model parameter.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warmingup.size</code></td>
+<td>
+
+<p>The number of burn-in samples for MCMC.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>bayesian.multiband</code> produces posterior samples of the model parameters, where the time delay (delta) is of primary interest. For now, this function only supports doubly-lensed data observed in two bands. The authors plan to generalize this code to account for more than two bands and more than two lens.
+</p>
+<p>Please note that when astronomical time series data are loaded on R by <code>read.table</code>, <code>read.csv</code>, etc., some decimal places of the the observation times are automatically rounded because R's default is to load seven effective digits. For example, R will load the observation time 51075.412789 as 51075.41. This default will produce many ties in observation times even though there is actually no tie in observation times. To prevent this, please type "<code>options(digits = 11)</code>" before loading the data if the observation times are in seven effective digits.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The outcomes of <code>bayesian.multiband</code> are composed of:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>A vector for <code class="reqn">m</code> posterior samples of the time delay.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>An <code class="reqn">m</code> by <code class="reqn">k + 1</code> matrix containing posterior samples of the polynomial regression coefficients, where <code class="reqn">m</code> is the size of the posterior sample, and <code class="reqn">k</code> is the polynomial order for microlensing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>A vector for <code class="reqn">m</code> posterior samples of the cross-correlation parameter.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>An <code class="reqn">m</code> by <code class="reqn">2</code> matrix containing posterior samples of the short-term variability (standard deviation) of the O-U process. The first column is composed ot the <code class="reqn">m</code> posterior samples of <code class="reqn">\sigma_1</code> in band 1, and the second column contains the <code class="reqn">m</code> posterior samples of <code class="reqn">\sigma_2</code> in band 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>An <code class="reqn">m</code> by <code class="reqn">2</code> matrix containing posterior samples of the timescale of the O-U process. The first column is composed ot the <code class="reqn">m</code> posterior samples of <code class="reqn">\tau_1</code> in band 1, and the second column contains the <code class="reqn">m</code> posterior samples of <code class="reqn">\tau_2</code> in band 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for <code class="reqn">\tau_1</code> and <code class="reqn">\tau_2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for <code class="reqn">\sigma_1</code> and <code class="reqn">\sigma_2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for the time delay</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho.accept.rate</code></td>
+<td>
+<p>The acceptance rate of the MCMC for <code class="reqn">\rho</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Zhirui Hu and Hyungsuk Tak
+</p>
+
+
+<h3>References</h3>
+
+<p>Hyungsuk Tak, Kaisey Mandel, David A. van Dyk, Vinay L. Kashyap, Xiao-Li Meng, and Aneta Siemiginowska (2017). "Bayesian Estimates of Astronomical Time Delays between Gravitationally Lensed Stochastic Light Curves," The Annals of Applied Statistics, 11 (3), 1309-1348.
+Hyungsuk Tak, Xiao-Li Meng, and David A. van Dyk (2018), "A Repelling-Attracting Metropolis Algorithm for Multimodality", Journal of Computational and Graphical Statistics, 27 (3), 479-490.
+Zhirui Hu and Hyungsuk Tak (2020+), "Modeling Stochastic Variability in  Multi-Band Time Series Data," arXiv:2005.08049.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  # Loading datasets 
+  data(simple.band1)
+  data(simple.band2)
+
+  # Doubly-lensed quasar data set observed in two bands
+  # Each data set contains doubly-lensed light curves observed in one band. 
+  head(simple.band1)
+  head(simple.band2)
+
+  # The length of each data set (i.e., number of observation times)
+  # do not need to be the same.
+
+  dim(simple.band1)
+  dim(simple.band2)
+
+  ###############################################
+  # Time delay estimation via Bayesian approach #
+  ###############################################
+
+  # Cubic microlensing model (m = 3)
+  
+  output &lt;- bayesian.multiband(data.band1 = simple.band1, 
+              data.band2 = simple.band2, n.bands = 2, 
+              theta.ini = c(0.01, 0.01, 100, 100, 0.5),
+              delta.ini = 100, delta.uniform.range = c(-500, 500), 
+              tau.proposal.scale = 1, tau.prior.shape = 1, tau.prior.scale = 1, 
+              sigma2.proposal.scale = 0.5, sigma2.prior.shape = 1, sigma2.prior.scale = 1e-7, 
+              rho.proposal.scale = 0.1, beta.prior.diag = 10 * c(0.1, 0.01, 1e-3, 1e-5)^2, 
+              micro = 3, timesc = 100, adaptive.frequency = 100,
+              adaptive.delta.factor = 0.1, adaptive.tau.factor = 0.1,
+              adaptive.sigma2.factor = 0.1, adaptive.rho.factor = 0.1,
+              sample.size = 100, warmingup.size = 100)
+  names(output)
+  
+
+  # hist(output$delta, 20)
+  # plot(output$delta, type = "l")
+  # acf(output$delta)
+  # output$delta.accept.rate
+
+</code></pre>
+
+
+</div>

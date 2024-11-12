@@ -1,0 +1,301 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>count_patients_with_event</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Count the number of patients with a particular event</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>count_patients_with_event()</code> creates a layout element to calculate patient counts for a
+user-specified set of events.
+</p>
+<p>This function analyzes primary analysis variable <code>vars</code> which indicates unique subject identifiers. Events
+are defined by the user as a named vector via the <code>filters</code> argument, where each name corresponds to a
+variable and each value is the value(s) that that variable takes for the event.
+</p>
+<p>If there are multiple records with the same event recorded for a patient, only one occurrence is counted.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">count_patients_with_event(
+  lyt,
+  vars,
+  filters,
+  riskdiff = FALSE,
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  table_names = vars,
+  .stats = "count_fraction",
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_count_patients_with_event(
+  df,
+  .var,
+  filters,
+  .N_col,
+  .N_row,
+  denom = c("n", "N_row", "N_col")
+)
+
+a_count_patients_with_event(
+  df,
+  .var,
+  filters,
+  .N_col,
+  .N_row,
+  denom = c("n", "N_row", "N_col")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names for the primary analysis variable to be iterated over.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filters</code></td>
+<td>
+<p>(<code>character</code>)<br> a character vector specifying the column names and flag variables
+to be used for counting the number of unique identifiers satisfying such conditions.
+Multiple column names and flags are accepted in this format
+<code>c("column_name1" = "flag1", "column_name2" = "flag2")</code>.
+Note that only equality is being accepted as condition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>riskdiff</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether a risk difference column is present. When set to <code>TRUE</code>, <code>add_riskdiff()</code> must be
+used as <code>split_fun</code> in the prior column split of the table layout, specifying which columns should be compared.
+See <code>stat_propdiff_ci()</code> for details on risk difference calculation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run <code>get_stats("count_patients_with_event")</code>
+to see available statistics for this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var</code></td>
+<td>
+<p>(<code>string</code>)<br> name of the column that contains the unique identifier.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.N_col</code></td>
+<td>
+<p>(<code>integer(1)</code>)<br> column-wise N (column count) for the full column being analyzed that is typically
+passed by <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.N_row</code></td>
+<td>
+<p>(<code>integer(1)</code>)<br> row-wise N (row group count) for the group of observations being analyzed
+(i.e. with no column-based subsetting) that is typically passed by <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>denom</code></td>
+<td>
+<p>(<code>string</code>)<br> choice of denominator for proportion. Options are:
+</p>
+
+<ul>
+<li> <p><code>n</code>: number of values in this row and column intersection.
+</p>
+</li>
+<li> <p><code>N_row</code>: total number of values in this row across columns.
+</p>
+</li>
+<li> <p><code>N_col</code>: total number of values in this column across rows.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>count_patients_with_event()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_count_patients_with_event()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_count_patients_with_event()</code> returns the count and fraction of unique identifiers with the defined event.
+</p>
+</li></ul>
+<ul><li> <p><code>a_count_patients_with_event()</code> returns the corresponding list with formatted <code>rtables::CellValue()</code>.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>count_patients_with_event()</code>: Layout-creating function which can take statistics function
+arguments and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_count_patients_with_event()</code>: Statistics function which counts the number of patients for which
+the defined event has occurred.
+</p>
+</li>
+<li> <p><code>a_count_patients_with_event()</code>: Formatted analysis function which is used as <code>afun</code>
+in <code>count_patients_with_event()</code>.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>count_patients_with_flags
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># `count_patients_with_event()`
+
+lyt &lt;- basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  add_colcounts() %&gt;%
+  count_values(
+    "STUDYID",
+    values = "AB12345",
+    .stats = "count",
+    .labels = c(count = "Total AEs")
+  ) %&gt;%
+  count_patients_with_event(
+    "SUBJID",
+    filters = c("TRTEMFL" = "Y"),
+    .labels = c(count_fraction = "Total number of patients with at least one adverse event"),
+    table_names = "tbl_all"
+  ) %&gt;%
+  count_patients_with_event(
+    "SUBJID",
+    filters = c("TRTEMFL" = "Y", "AEOUT" = "FATAL"),
+    .labels = c(count_fraction = "Total number of patients with fatal AEs"),
+    table_names = "tbl_fatal"
+  ) %&gt;%
+  count_patients_with_event(
+    "SUBJID",
+    filters = c("TRTEMFL" = "Y", "AEOUT" = "FATAL", "AEREL" = "Y"),
+    .labels = c(count_fraction = "Total number of patients with related fatal AEs"),
+    .indent_mods = c(count_fraction = 2L),
+    table_names = "tbl_rel_fatal"
+  )
+
+build_table(lyt, tern_ex_adae, alt_counts_df = tern_ex_adsl)
+
+# `s_count_patients_with_event()`
+
+s_count_patients_with_event(
+  tern_ex_adae,
+  .var = "SUBJID",
+  filters = c("TRTEMFL" = "Y")
+)
+
+s_count_patients_with_event(
+  tern_ex_adae,
+  .var = "SUBJID",
+  filters = c("TRTEMFL" = "Y", "AEOUT" = "FATAL")
+)
+
+s_count_patients_with_event(
+  tern_ex_adae,
+  .var = "SUBJID",
+  filters = c("TRTEMFL" = "Y", "AEOUT" = "FATAL"),
+  denom = "N_col",
+  .N_col = 456
+)
+
+# `a_count_patients_with_event()`
+
+a_count_patients_with_event(
+  tern_ex_adae,
+  .var = "SUBJID",
+  filters = c("TRTEMFL" = "Y"),
+  .N_col = 100,
+  .N_row = 100
+)
+
+</code></pre>
+
+
+</div>

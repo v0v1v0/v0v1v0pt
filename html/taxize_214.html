@@ -1,0 +1,329 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gnr_resolve</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Resolve names using Global Names Resolver</h2>
+
+<h3>Description</h3>
+
+<p>See section <strong>Age of datasets in the Global Names Resolver</strong>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gnr_resolve(
+  sci,
+  data_source_ids = NULL,
+  resolve_once = FALSE,
+  with_context = FALSE,
+  canonical = FALSE,
+  highestscore = TRUE,
+  best_match_only = FALSE,
+  preferred_data_sources = NULL,
+  with_canonical_ranks = FALSE,
+  http = "get",
+  cap_first = TRUE,
+  fields = "minimal",
+  names = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sci</code></td>
+<td>
+<p>character; taxonomic names to be resolved. Doesn't work for
+vernacular/common names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_source_ids</code></td>
+<td>
+<p>character; IDs to specify what data source
+is searched. See <code>gnr_datasources()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resolve_once</code></td>
+<td>
+<p>logical; Find the first available match instead of
+matches across all data sources with all possible renderings of a name.
+When <code>TRUE</code>, response is rapid but incomplete.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with_context</code></td>
+<td>
+<p>logical; Reduce the likelihood of matches to taxonomic
+homonyms. When <code>TRUE</code> a common taxonomic context is calculated for
+all supplied names from matches in data sources that have classification
+tree paths. Names out of determined context are penalized during score
+calculation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>canonical</code></td>
+<td>
+<p>logical; If <code>FALSE</code> (default), gives back names with
+taxonomic authorities. If <code>TRUE</code>, returns canocial names
+(without tax. authorities and abbreviations).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>highestscore</code></td>
+<td>
+<p>logical; Return those names with the highest score for
+each searched name? Defunct</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>best_match_only</code></td>
+<td>
+<p>(logical) If <code>TRUE</code>, best match only returned.
+Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preferred_data_sources</code></td>
+<td>
+<p>(character) A vector of one or more data
+source IDs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with_canonical_ranks</code></td>
+<td>
+<p>(logical) Returns names with infraspecific
+ranks, if present. If <code>TRUE</code>, we force <code>canonical=TRUE</code>, otherwise
+this parameter would have no effect. Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>http</code></td>
+<td>
+<p>The HTTP method to use, one of "get" or "post". Default: "get".
+Use <code>http="post"</code> with large queries. Queries with &gt; 300 records
+use "post" automatically because "get" would fail</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cap_first</code></td>
+<td>
+<p>(logical) For each name, fix so that the first name part is
+capitalized, while others are not. This web service is sensitive to
+capitalization, so you'll get different results depending on capitalization.
+First name capitalized is likely what you'll want and is the default.
+If <code>FALSE</code>, names are not modified. Default: <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fields</code></td>
+<td>
+<p>(character) One of minimal (default) or all. Minimal gives
+back just four fields, whereas all gives all fields back.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>Deprecated, see <code>sci</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Curl options passed on to crul::HttpClient</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data.frame with one attribute <code>not_known</code>: a character
+vector of taxa unknown to the Global Names Index. Access like
+<code>attr(output, "not_known")</code>, or <code>attributes(output)$not_known</code>.
+</p>
+<p>Columns of the output data.frame:
+</p>
+
+<ul>
+<li>
+<p> user_supplied_name (character) - the name you passed in to the
+<code>names</code> parameter, unchanged.
+</p>
+</li>
+<li>
+<p> submitted_name (character) - the actual name submitted to the GNR
+service
+</p>
+</li>
+<li>
+<p> data_source_id (integer/numeric) - data source ID
+</p>
+</li>
+<li>
+<p> data_source_title (character) - data source name
+</p>
+</li>
+<li>
+<p> gni_uuid (character) - Global Names Index UUID (aka identifier)
+</p>
+</li>
+<li>
+<p> matched_name (character) - the matched name in the GNR service
+</p>
+</li>
+<li>
+<p> matched_name2 (character) - returned if <code>canonical=TRUE</code>, in
+which case <strong>matched_name</strong> is not returned
+</p>
+</li>
+<li>
+<p> classification_path (character) - names of the taxonomic
+classification tree, with names separated by pipes (<code>|</code>)
+</p>
+</li>
+<li>
+<p> classification_path_ranks (character) - ranks of the taxonomic
+classification tree, with names separated by pipes (<code>|</code>)
+</p>
+</li>
+<li>
+<p> classification_path_ids (character) - identifiers of the taxonomic
+classification tree, with names separated by pipes (<code>|</code>)
+</p>
+</li>
+<li>
+<p> taxon_id (character) - taxon identifier
+</p>
+</li>
+<li>
+<p> edit_distance (integer/numeric) - edit distance
+</p>
+</li>
+<li>
+<p> imported_at (character) - date imported
+</p>
+</li>
+<li>
+<p> match_type (integer/numeric) - match type
+</p>
+</li>
+<li>
+<p> match_value (character) - description of match type
+</p>
+</li>
+<li>
+<p> prescore (character) - pre score
+</p>
+</li>
+<li>
+<p> score (numeric) - score
+</p>
+</li>
+<li>
+<p> local_id (character) - local identifier
+</p>
+</li>
+<li>
+<p> url (character) - URL for taxon
+</p>
+</li>
+<li>
+<p> global_id (character) - global identifier
+</p>
+</li>
+<li>
+<p> current_taxon_id (character) - current taxon id
+</p>
+</li>
+<li>
+<p> current_name_string (character) - current name string
+</p>
+</li>
+</ul>
+<p>Note that names (i.e. rows) are dropped that are NA, are zero length
+strings, are not character vectors, or are not found by the API.
+</p>
+
+
+<h3>Age of datasets in the Global Names Resolver</h3>
+
+<p>IMPORTANT: Datasets used in the Global Names Resolver vary in how recently
+they've been updated. See the <code>updated_at</code> field in the
+output of <code>gnr_datasources()</code> for dates when each dataset
+was last updated.
+</p>
+
+
+<h3>preferred_data_sources</h3>
+
+<p>If <code>preferred_data_sources</code> is used, only the preferred data
+is returned - if it has any results.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Scott Chamberlain
+</p>
+
+
+<h3>References</h3>
+
+<p>http://gnrd.globalnames.org/api
+http://gnrd.globalnames.org/
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gnr_datasources()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+gnr_resolve(sci = c("Helianthus annuus", "Homo sapiens"))
+gnr_resolve(sci = c("Asteraceae", "Plantae"))
+
+# Using data source 12 (Encyclopedia of Life)
+sources &lt;- gnr_datasources()
+sources
+eol &lt;- sources$id[sources$title == 'EOL']
+gnr_resolve(names=c("Helianthos annuus","Homo sapians"), data_source_ids=eol)
+
+# Two species in the NE Brazil catalogue
+sps &lt;- c('Justicia brasiliana','Schinopsis brasiliensis')
+gnr_resolve(sci = sps, data_source_ids = 145)
+
+# Best match only, compare the two
+gnr_resolve(sci = "Helianthus annuus", best_match_only = FALSE)
+gnr_resolve(sci = "Helianthus annuus", best_match_only = TRUE)
+
+# Preferred data source
+gnr_resolve(sci = "Helianthus annuus", preferred_data_sources = c(3,4))
+
+# Return canonical names - default is canonical=FALSE
+head(gnr_resolve(sci = "Helianthus annuus"))
+head(gnr_resolve(sci = "Helianthus annuus", canonical=TRUE))
+
+# Return canonical names with authority stripped but
+# ranks still present
+gnr_resolve("Scorzonera hispanica L. subsp. asphodeloides Wallr.")
+## vs.
+gnr_resolve("Scorzonera hispanica L. subsp. asphodeloides Wallr.",
+   with_canonical_ranks = TRUE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

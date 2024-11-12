@@ -1,0 +1,274 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_spline</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Spline-based representation of functional data</h2>
+
+<h3>Description</h3>
+
+<p>Represent curves as a weighted sum of spline basis functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_spline(data, ...)
+
+## S3 method for class 'data.frame'
+tfb_spline(
+  data,
+  id = 1,
+  arg = 2,
+  value = 3,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'matrix'
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'numeric'
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'list'
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'tfd'
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## S3 method for class 'tfb'
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+
+## Default S3 method:
+tfb_spline(
+  data,
+  arg = NULL,
+  domain = NULL,
+  penalized = TRUE,
+  global = FALSE,
+  verbose = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>matrix</code>, <code>data.frame</code> or <code>list</code> of suitable shape, or another
+<code>tf</code>-object containing functional data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments to the calls to <code>mgcv::s()</code> setting up the basis (and
+to <code>mgcv::magic()</code> or <code>mgcv::gam.fit()</code> if <code>penalized = TRUE</code>). Uses <code>k = 25</code> cubic regression spline basis functions (<code>bs = "cr"</code>) by default, but
+should be set appropriately by the user. See Details and examples in the
+vignettes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>The name or number of the column defining which data belong to
+which function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arg</code></td>
+<td>
+<p><code>numeric</code>, or list of <code>numeric</code>s. The evaluation grid.
+For the <code>data.frame</code>-method: the
+name/number of the column defining the evaluation grid. The <code>matrix</code> method
+will try to guess suitable <code>arg</code>-values from the column names of <code>data</code> if
+<code>arg</code> is not supplied. Other methods fall back on integer sequences
+(<code style="white-space: pre;">⁠1:&lt;length of data&gt;⁠</code>) as the default if not provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The name or number of the column containing the function
+evaluations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>domain</code></td>
+<td>
+<p>range of the <code>arg</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalized</code></td>
+<td>
+<p><code>TRUE</code> (default) estimates regularized/penalized basis
+coefficients via <code>mgcv::magic()</code> or <code>mgcv::gam.fit()</code>, <code>FALSE</code> yields
+ordinary least squares / ML estimates for basis coefficients. <code>FALSE</code> is
+much faster but will overfit for noisy data if <code>k</code> is (too) large.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global</code></td>
+<td>
+<p>Defaults to <code>FALSE</code>. If <code>TRUE</code> and <code>penalized = TRUE</code>, all
+functions share the same smoothing parameter (see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p><code>TRUE</code> (default) outputs statistics about the fit achieved by
+the basis and other diagnostic messages.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The basis to be used is set up via a call to <code>mgcv::s()</code> and all the spline
+bases discussed in <code>mgcv::smooth.terms()</code> are available, in principle.
+Depending on the value of the <code>penalized</code>- and <code>global</code>-flags, the
+coefficient vectors for each observation are then estimated via fitting a GAM
+(separately for each observation, if <code>!global</code>) via <code>mgcv::magic()</code> (least
+square error, the default) or <code>mgcv::gam()</code> (if a <code>family</code> argument was
+supplied) or unpenalized least squares / maximum likelihood.
+</p>
+<p>After the "smoothed" representation is computed, the amount of smoothing that
+was performed is reported in terms of the "percentage of variability
+preserved", which is the variance (or the explained deviance, in the general
+case if <code>family</code> was specified) of the smoothed function values divided by the variance of the original
+values (the null deviance, in the general case). Reporting can be switched off
+with <code>verbose = FALSE</code>.
+</p>
+<p>The <code>...</code> arguments supplies arguments to both the
+spline basis (via <code>mgcv::s()</code>) and the estimation (via
+<code>mgcv::magic()</code> or <code>mgcv::gam()</code>), the most important arguments are:
+</p>
+
+<ul>
+<li> <p><strong><code>k</code></strong>: how many basis functions should the spline basis use, default is 25.
+</p>
+</li>
+<li> <p><strong><code>bs</code></strong>: which type of spline basis should be used, the default is cubic
+regression splines (<code>bs = "cr"</code>)
+</p>
+</li>
+<li> <p><strong><code>family</code></strong> argument: use this if minimizing squared errors is not
+a reasonable criterion for the representation accuracy (see
+<code>mgcv::family.mgcv()</code> for what's available) and/or if function values are
+restricted to be e.g. positive (<code>family = Gamma()/tw()/...</code>), in
+<code class="reqn">[0,1]</code>  (<code>family = betar()</code>), etc.
+</p>
+</li>
+<li> <p><strong><code>sp</code></strong>: numeric value for the smoothness penalty weight, for manually
+setting the amount of smoothing for all curves, see <code>mgcv::s()</code>. This
+(drastically) reduces computation time. Defaults to <code>-1</code>, i.e., automatic
+optimization of <code>sp</code> using <code>mgcv::magic()</code> (LS fits) or <code>mgcv::gam()</code> (GLM),
+source code in <code>R/tfb-spline-utils.R</code>.
+</p>
+</li>
+</ul>
+<p>If <strong><code>global == TRUE</code></strong>, this uses a small subset of curves (10<code style="white-space: pre;">⁠%⁠</code> of curves,
+at least 5, at most 100; non-random sample using every j-th curve in the
+data) on which smoothing parameters per curve are estimated and then takes
+the mean of the log smoothing parameter of those as <code>sp</code> for all curves. This
+is much faster than optimizing for each curve on large data sets. For very
+sparse or noisy curves, estimating a common smoothing parameter based on the
+data for all curves simultaneously is likely to yield better results, this is
+<em>not</em> what's implemented here.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tfb</code>-object
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul>
+<li> <p><code>tfb_spline(data.frame)</code>: convert data frames
+</p>
+</li>
+<li> <p><code>tfb_spline(matrix)</code>: convert matrices
+</p>
+</li>
+<li> <p><code>tfb_spline(numeric)</code>: convert matrices
+</p>
+</li>
+<li> <p><code>tfb_spline(list)</code>: convert lists
+</p>
+</li>
+<li> <p><code>tfb_spline(tfd)</code>: convert <code>tfd</code> (raw functional data)
+</p>
+</li>
+<li> <p><code>tfb_spline(tfb)</code>: convert <code>tfb</code>: modify basis representation, smoothing.
+</p>
+</li>
+<li> <p><code>tfb_spline(default)</code>: convert <code>tfb</code>: default method, returning prototype
+when data is missing
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>mgcv::smooth.terms()</code> for spline basis options.
+</p>
+<p>Other tfb-class: 
+<code>fpc_wsvd()</code>,
+<code>tfb</code>,
+<code>tfb_fpc()</code>
+</p>
+
+
+</div>

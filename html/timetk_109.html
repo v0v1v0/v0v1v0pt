@@ -1,0 +1,266 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_series_cv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Time Series Cross Validation</h2>
+
+<h3>Description</h3>
+
+<p>Create <code>rsample</code> cross validation sets for time series.
+This function produces a sampling plan starting with the most recent
+time series observations, rolling backwards. The sampling procedure
+is similar to <code>rsample::rolling_origin()</code>, but places the focus
+of the cross validation on the most recent time series data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_series_cv(
+  data,
+  date_var = NULL,
+  initial = 5,
+  assess = 1,
+  skip = 1,
+  lag = 0,
+  cumulative = FALSE,
+  slice_limit = n(),
+  point_forecast = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>date_var</code></td>
+<td>
+<p>A date or date-time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial</code></td>
+<td>
+<p>The number of samples used for analysis/modeling in the
+initial resample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assess</code></td>
+<td>
+<p>The number of samples used for each assessment resample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A integer indicating how many (if any) <em>additional</em> resamples
+to skip to thin the total amount of data points in the analysis resample.
+See the example below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>A value to include an lag between the assessment
+and analysis set. This is useful if lagged predictors will be used
+during training and testing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cumulative</code></td>
+<td>
+<p>A logical. Should the analysis resample grow beyond the
+size specified by <code>initial</code> at each resample?.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>slice_limit</code></td>
+<td>
+<p>The number of slices to return. Set to <code>dplyr::n()</code>,
+which returns the maximum number of slices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>point_forecast</code></td>
+<td>
+<p>Whether or not to have the testing set be a single point forecast or to be a forecast horizon.
+The default is to be a forecast horizon. Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>These dots are for future extensions and must be empty.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Time-Based Specification</strong>
+</p>
+<p>The <code>initial</code>, <code>assess</code>, <code>skip</code>, and <code>lag</code> variables can be specified as:
+</p>
+
+<ul>
+<li>
+<p> Numeric: <code>initial = 24</code>
+</p>
+</li>
+<li>
+<p> Time-Based Phrases: <code>initial = "2 years"</code>, if the <code>data</code> contains
+a <code>date_var</code> (date or datetime)
+</p>
+</li>
+</ul>
+<p><strong>Initial (Training Set) and Assess (Testing Set)</strong>
+</p>
+<p>The main options, <code>initial</code> and <code>assess</code>, control the number of
+data points from the original data that are in the analysis (training set)
+and the assessment (testing set), respectively.
+</p>
+<p><strong>Skip</strong>
+</p>
+<p><code>skip</code> enables the function to not use every data point in the resamples.
+When <code>skip = 1</code>, the resampling data sets will increment by one position.
+</p>
+<p>Example: Suppose that the rows of a data set are consecutive days. Using <code>skip = 7</code>
+will make the analysis data set operate on <em>weeks</em> instead of days. The
+assessment set size is not affected by this option.
+</p>
+<p><strong>Lag</strong>
+</p>
+<p>The Lag parameter creates an overlap between the Testing set. This is needed
+when lagged predictors are used.
+</p>
+<p><strong>Cumulative vs Sliding Window</strong>
+</p>
+<p>When <code>cumulative = TRUE</code>, the <code>initial</code> parameter is ignored and the
+analysis (training) set will grow as
+resampling continues while the assessment (testing) set size will always remain
+static.
+</p>
+<p>When <code>cumulative = FALSE</code>, the <code>initial</code> parameter fixes the analysis (training)
+set and resampling occurs over a fixed window.
+</p>
+<p><strong>Slice Limit</strong>
+</p>
+<p>This controls the number of slices. If <code>slice_limit = 5</code>, only the most recent
+5 slices will be returned.
+</p>
+<p><strong>Point Forecast</strong>
+</p>
+<p>A point forecast is sometimes desired such as if you want to forecast a value
+"4-weeks" into the future. You can do this by setting the following parameters:
+</p>
+
+<ul>
+<li>
+<p> assess = "4 weeks"
+</p>
+</li>
+<li>
+<p> point_forecast = TRUE
+</p>
+</li>
+</ul>
+<p><strong>Panel Data / Time Series Groups / Overlapping Timestamps</strong>
+</p>
+<p>Overlapping timestamps occur when your data has more than one
+time series group. This is sometimes called <em>Panel Data</em> or <em>Time Series Groups</em>.
+</p>
+<p>When timestamps are duplicated (as in the case of "Panel Data" or "Time Series Groups"),
+the resample calculation applies a sliding window of
+fixed length to the dataset. See the example using <code>walmart_sales_weekly</code>
+dataset below.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An tibble with classes <code>time_series_cv</code>, <code>rset</code>, <code>tbl_df</code>, <code>tbl</code>,
+and <code>data.frame</code>. The results include a column for the data split objects
+and a column called <code>id</code> that has a character string with the resample
+identifier.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>time_series_cv()</code> and <code>rsample::rolling_origin()</code> - Functions used to create
+time series resample specifications.
+</p>
+</li>
+<li> <p><code>plot_time_series_cv_plan()</code> - The plotting function used for visualizing the
+time series resample plan.
+</p>
+</li>
+<li> <p><code>time_series_split()</code> - A convenience function to return a single time series
+split containing a training/testing sample.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# DATA ----
+m750 &lt;- m4_monthly %&gt;% dplyr::filter(id == "M750")
+
+
+# RESAMPLE SPEC ----
+resample_spec &lt;- time_series_cv(data = m750,
+                                initial     = "6 years",
+                                assess      = "24 months",
+                                skip        = "24 months",
+                                cumulative  = FALSE,
+                                slice_limit = 3)
+
+resample_spec
+
+# VISUALIZE CV PLAN ----
+
+# Select date and value columns from the tscv diagnostic tool
+resample_spec %&gt;% tk_time_series_cv_plan()
+
+# Plot the date and value columns to see the CV Plan
+resample_spec %&gt;%
+    plot_time_series_cv_plan(date, value, .interactive = FALSE)
+
+
+# PANEL DATA / TIME SERIES GROUPS ----
+# - Time Series Groups are processed using an *ungrouped* data set
+# - The data has sliding windows applied starting with the beginning of the series
+# - The seven groups of weekly time series are
+#   processed together for &lt;split [358/78]&gt; dimensions
+
+walmart_tscv &lt;- walmart_sales_weekly %&gt;%
+    time_series_cv(
+        date_var    = Date,
+        initial     = "12 months",
+        assess      = "3 months",
+        skip        = "3 months",
+        slice_limit = 4
+    )
+
+walmart_tscv
+
+walmart_tscv %&gt;%
+    plot_time_series_cv_plan(Date, Weekly_Sales, .interactive = FALSE)
+
+</code></pre>
+
+
+</div>

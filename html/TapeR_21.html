@@ -1,0 +1,240 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TapeR_FIT_LME.f</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fits a taper curve model to the specified diameter-height data</h2>
+
+<h3>Description</h3>
+
+<p>Fits a taper curve model with random effects on tree-level based
+on B-Splines to the specified diameter-height data. Number and position of
+nodes and order of B-Splines can be specified.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TapeR_FIT_LME.f(
+  Id,
+  x,
+  y,
+  knt_x,
+  ord_x,
+  knt_z,
+  ord_z,
+  IdKOVb = "pdSymm",
+  control = list(),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Id</code></td>
+<td>
+<p>Vector of tree identifiers of same length as diameter and height
+measurements.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Numeric vector of height measurements (explanatory variables) along
+the stem relative to the tree height.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Numeric vector of diameter measurements (response) along the stem
+(in centimeters).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>knt_x</code></td>
+<td>
+<p>Numeric vector of relative knot positions for fixed effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ord_x</code></td>
+<td>
+<p>Numeric scalar. Order of fixed effects Spline (4=cubic).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>knt_z</code></td>
+<td>
+<p>Numeric vector of relative knot positions for random effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ord_z</code></td>
+<td>
+<p>Numeric scalar. Order of random effects Spline (4=cubic).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IdKOVb</code></td>
+<td>
+<p>Character string. Type of covariance matrix used by
+<code>lme</code>. Only "pdSymm" makes sense. Rather reduce number of knots if
+function does not converge.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>a list of control values for the estimation algorithm to
+replace the default values returned by the function
+<code>lmeControl</code>. Defaults to an empty list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not currently used</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If too few trees are given, the linear mixed model (lme) will not
+converge. See examples for a suggestion of node positions.
+</p>
+<p>The variance parameters <code>theta</code> are stored in the natural parametrization
+(Pinheiro and Bates (2004), p. 93). This means log for variances and logit for
+covariances. <code>theta</code> is the vectorized triangle of the random effects
+covariance matrix + the residual variance (lSigma). Given there are 2 inner
+knots for random effects, the structure will be
+c(sig^2_b1, sig_b1 sig_b2, sig_b1 sig_b3, sig_b1 sig_b4, sig^2_b2,...,sig^2_b4, lSigma)
+</p>
+
+
+<h3>Value</h3>
+
+<p>List of model properties
+</p>
+
+<ul>
+<li>
+<p>fit.lmeSummary of the fitted lme model.
+</p>
+</li>
+<li>
+<p>par.lmeList of model parameters (e.g., coefficients and
+variance-covariance matrices) needed for volume estimation and other
+functions in this package.
+Components of the <code>par.lme</code> list
+</p>
+
+<ul>
+<li>
+<p>knt_xRelative positions of the fixed effects Spline knots along the stem.
+</p>
+</li>
+<li>
+<p>pad_knt_xPadded version of knt_x, as used to define B-Spline design matrix.
+</p>
+</li>
+<li>
+<p>ord_xOrder of the spline.
+</p>
+</li>
+<li>
+<p>knt_zRelative positions of the random effects Spline knots along
+the stem.
+</p>
+</li>
+<li>
+<p>pad_knt_zPadded version of knt_z, as used to define B-Spline design matrix.
+</p>
+</li>
+<li>
+<p>ord_zOrder of the spline.
+</p>
+</li>
+<li>
+<p>b_fixFixed-effects spline coefficients.
+</p>
+</li>
+<li>
+<p>KOVb_fixCovariance of fixed-effects.
+</p>
+</li>
+<li>
+<p>sig2_epsResidual variance.
+</p>
+</li>
+<li>
+<p>dfResResidual degrees of freedom.
+</p>
+</li>
+<li>
+<p>KOVb_rndCovariance of random effects.
+</p>
+</li>
+<li>
+<p>thetaVariance parameters in natural parametrization. See Details. 
+</p>
+</li>
+<li>
+<p>KOV_thetaApproximate asymptotic covariance matrix of variance parameters.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Edgar Kublin
+</p>
+
+
+<h3>References</h3>
+
+<p>Kublin, E., Breidenbach, J., Kaendler, G. (2013) A flexible stem
+taper and volume prediction method based on mixed-effects B-spline
+regression, Eur J For Res, 132:983-997.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>E_DHx_HmDm_HT.f</code>, <code>E_DHx_HmDm_HT_CIdHt.f</code>,
+<code>E_HDx_HmDm_HT.f</code>, <code>E_VOL_AB_HmDm_HT.f</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># load example data
+data(DxHx.df)
+
+# prepare the data (could be defined in the function directly)
+Id = DxHx.df[,"Id"]
+x = DxHx.df[,"Hx"]/DxHx.df[,"Ht"]#calculate relative heights
+y = DxHx.df[,"Dx"]
+
+# define the relative knot positions and order of splines
+knt_x = c(0.0, 0.1, 0.75, 1.0);	ord_x = 4 # B-Spline knots: fix effects; order (cubic = 4)
+knt_z = c(0.0, 0.1       ,1.0); ord_z = 4 # B-Spline knots: rnd effects
+
+# fit the model
+taper.model &lt;- TapeR_FIT_LME.f(Id, x, y, knt_x, ord_x, knt_z, ord_z,
+                               IdKOVb = "pdSymm")
+
+## save model parameters for documentation or dissimination
+## parameters can be load()-ed and used to predict the taper
+## or volume using one or several measured dbh
+#spruce.taper.pars &lt;- taper.model$par.lme
+#save(spruce.taper.pars, file="spruce.taper.pars.rdata")
+</code></pre>
+
+
+</div>

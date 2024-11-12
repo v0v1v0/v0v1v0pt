@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>geocode_OSM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Geocodes a location using OpenStreetMap Nominatim</h2>
+
+<h3>Description</h3>
+
+<p>Geocodes a location (based on a search query) to coordinates and a bounding box. Similar to geocode from the ggmap package. It uses OpenStreetMap Nominatim. For processing large amount of queries, please read the usage policy (<a href="https://operations.osmfoundation.org/policies/nominatim/">https://operations.osmfoundation.org/policies/nominatim/</a>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">geocode_OSM(
+  q,
+  projection = NULL,
+  return.first.only = TRUE,
+  keep.unfound = FALSE,
+  details = FALSE,
+  as.data.frame = NA,
+  as.sf = FALSE,
+  geometry = c("point", "bbox"),
+  server = "https://nominatim.openstreetmap.org"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>q</code></td>
+<td>
+<p>a character (vector) that specifies a search query. For instance <code>"India"</code> or <code>"CBS Weg 11, Heerlen, Netherlands"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>projection</code></td>
+<td>
+<p>projection in which the coordinates and bounding box are returned. See <code>st_crs</code> for details. By default latitude longitude coordinates (EPSG 4326).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return.first.only</code></td>
+<td>
+<p>Only return the first result</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep.unfound</code></td>
+<td>
+<p>Keep list items / data.frame rows with <code>NA</code>s for unfound search terms. By default <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>details</code></td>
+<td>
+<p>provide output details, other than the point coordinates and bounding box</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as.data.frame</code></td>
+<td>
+<p>Return the output as a <code>data.frame</code>. If <code>FALSE</code>, a list is returned with at least two items: <code>"coords"</code>, a vector containing the coordinates, and <code>"bbox"</code>, the corresponding bounding box. By default false, unless <code>q</code> contains multiple queries. If <code>as.sf = TRUE</code> (see below), <code>as.data.frame</code> will set to <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as.sf</code></td>
+<td>
+<p>Return the output as <code>sf</code> object. If <code>TRUE</code>, <code>return.first.only</code> will be set to <code>TRUE</code>. Two geometry columns are added: <code>bbox</code> and <code>point</code>. The argument <code>geometry</code> determines which of them is set to the default geometry.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geometry</code></td>
+<td>
+<p>When <code>as.sf</code>, this argument determines which column (<code>bbox</code> or <code>point</code>) is set as geometry column. Note that the geometry can be changed afterwards with <code>st_set_geometry</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>server</code></td>
+<td>
+<p>OpenStreetMap Nominatim server name. Could also be a local OSM Nominatim server.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>If <code>as.sf</code> then a <code>sf</code> object is returned. Else, if <code>as.data.frame</code>, then a <code>data.frame</code> is returned, else a list.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>rev_geocode_OSM</code>, <code>bb</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+if (require(tmap)) {
+    geocode_OSM("India")
+    geocode_OSM("CBS Weg 1, Heerlen")
+    geocode_OSM("CBS Weg 1, Heerlen", projection = 28992)
+
+    data(metro)
+
+    # sample 5 cities from the metro dataset
+    five_cities &lt;- metro[sample(length(metro), 5), ]
+
+    # obtain geocode locations from their long names
+    five_cities_geocode &lt;- geocode_OSM(five_cities$name_long, as.sf = TRUE)
+
+    # change to interactive mode
+    current.mode &lt;- tmap_mode("view")
+
+    # plot metro coordinates in red and geocode coordinates in blue
+    # zoom in to see the differences
+    tm_shape(five_cities) +
+    	tm_dots(col = "blue") +
+    tm_shape(five_cities_geocode) +
+    	tm_dots(col = "red")
+
+    # restore current mode
+    tmap_mode(current.mode)
+}
+
+## End(Not run)
+</code></pre>
+
+
+</div>

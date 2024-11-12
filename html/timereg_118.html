@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>recurrent.marginal.coxmean</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimates marginal mean of recurrent events  based on two cox models</h2>
+
+<h3>Description</h3>
+
+<p>Fitting two Cox models for death and recurent events these are
+combined to prducte the estimator 
+</p>
+<p style="text-align: center;"><code class="reqn"> \int_0^t  S(u|x=0) dR(u|x=0) </code>
+</p>
+<p> the mean number of recurrent events, here
+</p>
+<p style="text-align: center;"><code class="reqn"> S(u|x=0) </code>
+</p>
+<p>  is the probability of survival, and 
+</p>
+<p style="text-align: center;"><code class="reqn"> dR(u|x=0) </code>
+</p>
+<p>  is the probability of an event among survivors. 
+For now the estimator is based on the two-baselines so </p>
+<p style="text-align: center;"><code class="reqn">x=0</code>
+</p>
+<p>, but covariates
+can be rescaled to look at different x's and extensions possible.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">recurrent.marginal.coxmean(recurrent, death)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recurrent</code></td>
+<td>
+<p>aalen model for recurrent events</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>death</code></td>
+<td>
+<p>cox.aalen (cox) model for death events</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>IID versions along the lines of Ghosh &amp; Lin (2000) variance. See also mets package for 
+quick version of this for large data. 
+IID versions used for Ghosh &amp; Lin (2000) variance. See also mets package for 
+quick version of this for large data mets:::recurrent.marginal, these two 
+version should give the same when there are now ties.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>Ghosh and Lin (2002) Nonparametric Analysis of Recurrent events and death, 
+Biometrics, 554–562.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+### do not test because iid slow  and uses data from mets
+library(mets)
+data(base1cumhaz)
+data(base4cumhaz)
+data(drcumhaz)
+dr &lt;- drcumhaz
+base1 &lt;- base1cumhaz
+base4 &lt;- base4cumhaz
+rr &lt;- simRecurrent(100,base1,death.cumhaz=dr)
+rr$x &lt;- rnorm(nrow(rr)) 
+rr$strata &lt;- floor((rr$id-0.01)/50)
+drename(rr) &lt;- start+stop~entry+time
+
+ar &lt;- cox.aalen(Surv(start,stop,status)~+1+prop(x)+cluster(id),data=rr,
+                   resample.iid=1,,max.clust=NULL,max.timepoint.sim=NULL)
+ad &lt;- cox.aalen(Surv(start,stop,death)~+1+prop(x)+cluster(id),data=rr,
+                   resample.iid=1,,max.clust=NULL,max.timepoint.sim=NULL)
+mm &lt;- recurrent.marginal.coxmean(ar,ad)
+with(mm,plot(times,mu,type="s"))
+with(mm,lines(times,mu+1.96*se.mu,type="s",lty=2))
+with(mm,lines(times,mu-1.96*se.mu,type="s",lty=2))
+
+</code></pre>
+
+
+</div>

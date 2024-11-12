@@ -1,0 +1,279 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqcost</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate substitution and indel costs</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>seqcost</code> proposes different ways to generate substitution costs
+(supposed to represent state dissimilarities) and possibly indel costs. Proposed methods are:
+<code>"CONSTANT"</code> (same cost for all substitutions), <code>"TRATE"</code> (derived from the observed transition rates), <code>"FUTURE"</code> (Chi-squared distance between conditional state distributions <code>lag</code> positions ahead), <code>"FEATURES"</code> (Gower distance between state features), <code>"INDELS"</code>, <code>"INDELSLOG"</code> (based on estimated indel costs).
+The substitution-cost matrix is intended to serve as <code>sm</code> argument in the <code>seqdist</code> function that computes distances between sequences. <code>seqsubm</code> is an alias that returns only the substitution cost matrix, i.e., no indel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqcost(seqdata, method, cval = NULL, with.missing = FALSE, miss.cost = NULL,
+  time.varying = FALSE, weighted = TRUE, transition = "both", lag = 1,
+  miss.cost.fixed = NULL, state.features = NULL, feature.weights = NULL,
+  feature.type = list(), proximities = FALSE)
+
+seqsubm(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>A sequence object as returned by the seqdef function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>String. How to generate the costs. One of <code>"CONSTANT"</code> (same cost for all substitutions), <code>"TRATE"</code> (derived from the observed transition rates), <code>"FUTURE"</code> (Chi-squared distance between conditional state distributions <code>lag</code> positions ahead), <code>"FEATURES"</code> (Gower distance between state features), <code>"INDELS"</code>, <code>"INDELSLOG"</code> (based on estimated indel costs).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cval</code></td>
+<td>
+<p>Scalar. For method <code>"CONSTANT"</code>, the single substitution cost. <br>
+For method <code>"TRATE"</code>, a base value from which transition probabilities are subtracted.<br>
+If <code>NULL</code>, <code>cval=2</code> is used, unless <code>transition</code>
+is <code>"both"</code> and <code>time.varying</code> is <code>TRUE</code>, in which case <code>cval=4</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should an additional entry be added in the matrix for the missing states?
+If <code>TRUE</code>, the ‘missing’ state is also added to the alphabet. Set as <code>TRUE</code> if you want to use the costs for distances between sequences containing non deleted (non void) missing values. Forced as <code>FALSE</code> when there are no non-void missing values in <code>seqdata</code>. See <cite>Gabadinho et al. (2010)</cite> for more details on the options for handling missing values when creating the state sequence object with <code>seqdef</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miss.cost</code></td>
+<td>
+<p>Scalar or vector. Cost for substituting the missing state. Default is <code>cval</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miss.cost.fixed</code></td>
+<td>
+<p>Logical. Should the substitution cost for missing be set as the <code>miss.cost</code> value. When <code>NULL</code> (default) it will be set as <code>FALSE</code> when <code>method = "INDELS"</code> or <code>"INDELSLOG"</code>, and <code>TRUE</code> otherwise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.varying</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> return an <code>array</code> with a distinct matrix for each time unit. Time is the third dimension (subscript) of the returned array. Time varying works only with <code>method='CONSTANT'</code>, <code>'TRATE'</code>, <code>'INDELS'</code>, and <code>'INDELSLOG'</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. Should weights in <code>seqdata</code> be used when applicable?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transition</code></td>
+<td>
+<p>String. Only used if <code>method="TRATE"</code> and <code>time.varying=TRUE</code>. On which transition are rates based? Should be one of <code>"previous"</code> (from previous state), <code>"next"</code> (to next state) or <code>"both"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>Integer. For methods <code>TRATE</code> and <code>FUTURE</code> only. Time ahead to which transition rates are computed
+(default is <code>lag=1</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state.features</code></td>
+<td>
+<p>Data frame with features values for each state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>feature.weights</code></td>
+<td>
+<p>Vector of feature weights with a weight per column of <code>state.features</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>feature.type</code></td>
+<td>
+<p>List of feature types. See <code>daisy</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>proximities</code></td>
+<td>
+<p>Logical: should state proximities be returned instead of substitution costs?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>seqcost</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The substitution-cost matrix has dimension <code class="reqn">ns*ns</code>, where
+<code class="reqn">ns</code> is the number of states in the alphabet of the
+sequence object. The element <code class="reqn">(i,j)</code> of the matrix is the cost of
+substituting state <code class="reqn">i</code> with state <code class="reqn">j</code>. It represents the dissimilarity between the states <code class="reqn">i</code> and <code class="reqn">j</code>. The indel cost of the cost of inserting or deleting a state.
+</p>
+<p>With method <code>CONSTANT</code>, the substitution costs are all set equal to the <code>cval</code> value, the default value being 2.
+</p>
+<p>With method <code>TRATE</code>
+(transition rates), the transition probabilities between all pairs of
+states is first computed (using the seqtrate function). Then, the
+substitution cost between states <code class="reqn">i</code> and <code class="reqn">j</code> is obtained with
+the formula
+</p>
+<p style="text-align: center;"><code class="reqn">SC(i,j) = cval - P(i|j) -P(j|i)</code>
+</p>
+
+<p>where <code class="reqn">P(i|j)</code> is the probability of transition from state <code class="reqn">j</code> to
+<code class="reqn">i</code> <code>lag</code> positions ahead. Default <code>cval</code> value is 2. When <code>time.varying=TRUE</code> and <code>transition="both"</code>, the substitution cost at position <code class="reqn">t</code> is set as
+</p>
+<p style="text-align: center;"><code class="reqn">SC(i,j,t) = cval - P(i|j,t-1) -P(j|i,t-1) - P(i|j,t) - P(j|i,t)</code>
+</p>
+
+<p>where <code class="reqn">P(i|j,t-1)</code> is the probability to transit from state <code class="reqn">j</code> at <code class="reqn">t-1</code> to <code class="reqn">i</code> at <code class="reqn">t</code>. Here, the default <code>cval</code> value is 4.
+</p>
+<p>With method <code>FUTURE</code>, the cost between <code class="reqn">i</code> and <code class="reqn">j</code> is the Chi-squared distance between the vector (<code class="reqn">d(alphabet | i)</code>) of probabilities of transition from states <code class="reqn">i</code> and
+<code class="reqn">j</code> to all the states in the alphabet <code>lag</code> positions ahead:
+</p>
+<p style="text-align: center;"><code class="reqn">SC(i,j) = ChiDist(d(alphabet | i), d(alphabet | j))</code>
+</p>
+
+<p>With method <code>FEATURES</code>, each state is characterized by the variables <code>state.features</code>, and the cost between <code class="reqn">i</code> and <code class="reqn">j</code> is computed as the Gower distance between their vectors of <code>state.features</code> values.
+</p>
+<p>With methods <code>INDELS</code> and <code>INDELSLOG</code>, values of indels are first derived from the state relative frequencies <code class="reqn">f_i</code>. For <code>INDELS</code>, <code class="reqn">indel_i = 1/f_i</code> is used, and for <code>INDELSLOG</code>, <code class="reqn">indel_i = \log[2/(1 + f_i)]</code>.
+Substitution costs are then set as <code class="reqn">SC(i,j) = indel_i + indel_j</code>.
+</p>
+<p>For all methods but <code>INDELS</code> and <code>INDELSLOG</code>, the indel is set as <code class="reqn">\max(sm)/2</code> when <code>time.varying=FALSE</code> and as <code class="reqn">1</code> otherwise.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>seqcost</code>, a list of two elements, <code>indel</code> and <code>sm</code> or <code>prox</code>:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>indel</code></td>
+<td>
+
+<p>The indel cost. Either a scalar or a vector of size <code class="reqn">ns</code>. When <code>time.varying=TRUE</code> and <code>method</code> is one of <code>"INDELS"</code> or <code>"INDELSLOG"</code>, a matrix with indels per time point in columns.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sm</code></td>
+<td>
+
+<p>The substitution-cost matrix (or array) when <code>proximities = FALSE</code> (default).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prox</code></td>
+<td>
+
+<p>The state proximity matrix when <code>proximities = TRUE</code>.
+</p>
+</td>
+</tr>
+</table>
+<p><code>sm</code> and <code>prox</code> are, when <code>time.varying = FALSE</code>, a matrix of size <code class="reqn">ns * ns</code>, where <code class="reqn">ns</code>
+is the number of states in the alphabet of the sequence object. When <code>time.varying = TRUE</code>, they are a three dimensional array of size <code class="reqn">ns * ns * L</code>, where <code class="reqn">L</code> is the maximum sequence length.
+</p>
+<p>For <code>seqsubm</code>, only one element, the matrix (or array) <code>sm</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard and Matthias Studer (and Alexis Gabadinho for first version of <code>seqsubm</code>)</p>
+
+
+<h3>References</h3>
+
+<p>Gabadinho, A., G. Ritschard, N. S. Müller and M. Studer (2011). Analyzing and Visualizing State Sequences in R with TraMineR. <em>Journal of Statistical Software</em> <b>40</b>(4), 1-37.
+</p>
+<p>Gabadinho, A., G. Ritschard, M. Studer and N. S. Müller (2010). Mining Sequence Data in
+<code>R</code> with the <code>TraMineR</code> package: A user's guide. Department of Econometrics and
+Laboratory of Demography, University of Geneva.
+</p>
+<p>Studer, M. &amp; Ritschard, G. (2016), "What matters in differences between life trajectories: A comparative review of sequence dissimilarity measures", <em>Journal of the Royal Statistical Society, Series A</em>. <b>179</b>(2), 481-511. <a href="https://doi.org/10.1111/rssa.12125">doi:10.1111/rssa.12125</a>
+</p>
+<p>Studer, M. and G. Ritschard (2014). "A Comparative Review of Sequence Dissimilarity Measures". <em>LIVES Working Papers</em>, <b>33</b>. NCCR LIVES, Switzerland, 2014. <a href="https://doi.org/10.12682/lives.2296-1658.2014.33">doi:10.12682/lives.2296-1658.2014.33</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqtrate</code>, <code>seqdef</code>, <code>seqdist</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Defining a sequence object with columns 10 to 25
+## of a subset of the 'biofam' example data set.
+data(biofam)
+biofam.seq &lt;- seqdef(biofam[501:600,10:25])
+
+## Indel and substitution costs based on log of inverse state frequencies
+lifcost &lt;- seqcost(biofam.seq, method="INDELSLOG")
+## Here lifcost$indel is a vector
+biofam.om &lt;- seqdist(biofam.seq, method="OM", indel=lifcost$indel, sm=lifcost$sm)
+
+## Optimal matching using transition rates based substitution-cost matrix
+## and the associated indel cost
+## Here trcost$indel is a scalar
+trcost &lt;- seqcost(biofam.seq, method="TRATE")
+biofam.om &lt;- seqdist(biofam.seq, method="OM", indel=trcost$indel, sm=trcost$sm)
+
+## Using costs based on FUTURE with a forward lag of 4
+fucost &lt;- seqcost(biofam.seq, method="FUTURE", lag=4)
+biofam.om &lt;- seqdist(biofam.seq, method="OM", indel=fucost$indel, sm=fucost$sm)
+
+## Optimal matching using a unique substitution cost of 2
+## and an insertion/deletion cost of 3
+ccost &lt;- seqsubm(biofam.seq, method="CONSTANT", cval=2)
+biofam.om.c2 &lt;- seqdist(biofam.seq, method="OM",indel=3, sm=ccost)
+
+## Displaying the distance matrix for the first 10 sequences
+biofam.om.c2[1:10,1:10]
+
+## =================================
+## Example with weights and missings
+## =================================
+data(ex1)
+ex1.seq &lt;- seqdef(ex1[,1:13], weights=ex1$weights)
+
+## Unweighted
+subm &lt;- seqcost(ex1.seq, method="INDELSLOG", with.missing=TRUE, weighted=FALSE)
+ex1.om &lt;- seqdist(ex1.seq, method="OM", indel=subm$indel, sm=subm$sm, with.missing=TRUE)
+
+## Weighted
+subm.w &lt;- seqcost(ex1.seq, method="INDELSLOG", with.missing=TRUE, weighted=TRUE)
+ex1.omw &lt;- seqdist(ex1.seq, method="OM", indel=subm.w$indel, sm=subm.w$sm, with.missing=TRUE)
+
+ex1.om == ex1.omw
+</code></pre>
+
+
+</div>

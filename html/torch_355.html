@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>local_autocast</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Autocast context manager</h2>
+
+<h3>Description</h3>
+
+<p>Allow regions of your code to run in mixed precision.
+In these regions, ops run in an op-specific dtype chosen by autocast
+to improve performance while maintaining accuracy.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">local_autocast(
+  device_type,
+  dtype = NULL,
+  enabled = TRUE,
+  cache_enabled = NULL,
+  ...,
+  .env = parent.frame()
+)
+
+with_autocast(
+  code,
+  ...,
+  device_type,
+  dtype = NULL,
+  enabled = TRUE,
+  cache_enabled = NULL
+)
+
+set_autocast(device_type, dtype = NULL, enabled = TRUE, cache_enabled = NULL)
+
+unset_autocast(context)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>device_type</code></td>
+<td>
+<p>a character string indicating whether to use 'cuda' or 'cpu' device</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtype</code></td>
+<td>
+<p>a torch data type indicating whether to use <code>torch_float16()</code> or <code>torch_bfloat16()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>enabled</code></td>
+<td>
+<p>a logical value indicating whether autocasting should be enabled in the region. Default: TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache_enabled</code></td>
+<td>
+<p>a logical value indicating whether the weight cache inside autocast should be enabled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>currently unused.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.env</code></td>
+<td>
+<p>The environment to use for scoping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>code</code></td>
+<td>
+<p>code to be executed with no gradient recording.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>context</code></td>
+<td>
+<p>Returned by <code>set_autocast</code> and should be passed when unsetting it.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When entering an autocast-enabled region, Tensors may be any type.
+You should not call <code>half()</code> or <code>bfloat16()</code> on your model(s) or inputs
+when using autocasting.
+</p>
+<p><code>autocast</code> should only be enabled during the forward pass(es) of your network,
+including the loss computation(s).  Backward passes under autocast are not
+recommended. Backward ops run in the same type that autocast used for
+corresponding forward ops.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>with_autocast()</code>: A with context for automatic mixed precision.
+</p>
+</li>
+<li> <p><code>set_autocast()</code>: Set the autocast context. For advanced users only.
+</p>
+</li>
+<li> <p><code>unset_autocast()</code>: Unset the autocast context.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>cuda_amp_grad_scaler()</code> to perform dynamic gradient scaling.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+x &lt;- torch_randn(5, 5, dtype = torch_float32())
+y &lt;- torch_randn(5, 5, dtype = torch_float32())
+
+foo &lt;- function(x, y) {
+  local_autocast(device = "cpu")
+  z &lt;- torch_mm(x, y)
+  w &lt;- torch_mm(z, x)
+  w
+}
+
+out &lt;- foo(x, y)
+}
+</code></pre>
+
+
+</div>

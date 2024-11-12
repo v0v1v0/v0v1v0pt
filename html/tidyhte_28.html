@@ -1,0 +1,76 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimate_QoI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate Quantities of Interest</h2>
+
+<h3>Description</h3>
+
+<p><code>estimate_QoI</code> takes a dataframe already prepared with split IDs,
+plugin estimates and pseudo-outcomes and calculates the requested
+quantities of interest (QoIs).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_QoI(data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data frame (already prepared with <code>attach_config</code>, <code>make_splits</code>,
+<code>produce_plugin_estimates</code> and <code>construct_pseudo_outcomes</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Unquoted names of moderators to calculate QoIs for.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>To see an example analysis, read <code>vignette("experimental_analysis")</code> in the context
+of an experiment, <code>vignette("experimental_analysis")</code> for an observational study, or
+<code>vignette("methodological_details")</code> for a deeper dive under the hood.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>attach_config()</code>, <code>make_splits()</code>, <code>produce_plugin_estimates()</code>,
+<code>construct_pseudo_outcomes()</code>,
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("dplyr")
+if(require("palmerpenguins")) {
+data(package = 'palmerpenguins')
+penguins$unitid = seq_len(nrow(penguins))
+penguins$propensity = rep(0.5, nrow(penguins))
+penguins$treatment = rbinom(nrow(penguins), 1, penguins$propensity)
+cfg &lt;- basic_config() %&gt;% 
+add_known_propensity_score("propensity") %&gt;%
+add_outcome_model("SL.glm.interaction") %&gt;%
+remove_vimp()
+attach_config(penguins, cfg) %&gt;%
+make_splits(unitid, .num_splits = 4) %&gt;%
+produce_plugin_estimates(outcome = body_mass_g, treatment = treatment, species, sex) %&gt;%
+construct_pseudo_outcomes(body_mass_g, treatment) %&gt;%
+estimate_QoI(species, sex)
+}
+</code></pre>
+
+
+</div>

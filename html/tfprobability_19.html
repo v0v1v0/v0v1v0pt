@@ -1,0 +1,221 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>layer_dense_local_reparameterization</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Densely-connected layer class with local reparameterization estimator.</h2>
+
+<h3>Description</h3>
+
+<p>This layer implements the Bayesian variational inference analogue to
+a dense layer by assuming the <code>kernel</code> and/or the <code>bias</code> are drawn
+from distributions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">layer_dense_local_reparameterization(
+  object,
+  units,
+  activation = NULL,
+  activity_regularizer = NULL,
+  trainable = TRUE,
+  kernel_posterior_fn = tfp$layers$util$default_mean_field_normal_fn(),
+  kernel_posterior_tensor_fn = function(d) d %&gt;% tfd_sample(),
+  kernel_prior_fn = tfp$layers$util$default_multivariate_normal_fn,
+  kernel_divergence_fn = function(q, p, ignore) tfd_kl_divergence(q, p),
+  bias_posterior_fn = tfp$layers$util$default_mean_field_normal_fn(is_singular = TRUE),
+  bias_posterior_tensor_fn = function(d) d %&gt;% tfd_sample(),
+  bias_prior_fn = NULL,
+  bias_divergence_fn = function(q, p, ignore) tfd_kl_divergence(q, p),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>What to compose the new <code>Layer</code> instance with. Typically a
+Sequential model or a Tensor (e.g., as returned by <code>layer_input()</code>).
+The return value depends on <code>object</code>. If <code>object</code> is:
+</p>
+
+<ul>
+<li>
+<p> missing or <code>NULL</code>, the <code>Layer</code> instance is returned.
+</p>
+</li>
+<li>
+<p> a <code>Sequential</code> model, the model with an additional layer is returned.
+</p>
+</li>
+<li>
+<p> a Tensor, the output tensor from <code>layer_instance(object)</code> is returned.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+<p>integer dimensionality of the output space</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>activation</code></td>
+<td>
+<p>Activation function. Set it to None to maintain a linear activation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>activity_regularizer</code></td>
+<td>
+<p>Regularizer function for the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trainable</code></td>
+<td>
+<p>Whether the layer weights will be updated during training.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_posterior_fn</code></td>
+<td>
+<p>Function which creates <code>tfd$Distribution</code> instance representing the surrogate
+posterior of the <code>kernel</code> parameter. Default value: <code>default_mean_field_normal_fn()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_posterior_tensor_fn</code></td>
+<td>
+<p>Function which takes a <code>tfd$Distribution</code> instance and returns a representative
+value. Default value: <code>function(d) d %&gt;% tfd_sample()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_prior_fn</code></td>
+<td>
+<p>Function which creates <code>tfd$Distribution</code> instance. See <code>default_mean_field_normal_fn</code> docstring for required
+parameter signature. Default value: <code>tfd_normal(loc = 0, scale = 1)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_divergence_fn</code></td>
+<td>
+<p>Function which takes the surrogate posterior distribution, prior distribution and random variate
+sample(s) from the surrogate posterior and computes or approximates the KL divergence. The
+distributions are <code>tfd$Distribution</code>-like instances and the sample is a <code>Tensor</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias_posterior_fn</code></td>
+<td>
+<p>Function which creates a <code>tfd$Distribution</code> instance representing the surrogate
+posterior of the <code>bias</code> parameter. Default value:  <code>default_mean_field_normal_fn(is_singular = TRUE)</code> (which creates an
+instance of <code>tfd_deterministic</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias_posterior_tensor_fn</code></td>
+<td>
+<p>Function which takes a <code>tfd$Distribution</code> instance and returns a representative
+value. Default value: <code>function(d) d %&gt;% tfd_sample()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias_prior_fn</code></td>
+<td>
+<p>Function which creates <code>tfd</code> instance. See <code>default_mean_field_normal_fn</code> docstring for required parameter
+signature. Default value: <code>NULL</code> (no prior, no variational inference)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias_divergence_fn</code></td>
+<td>
+<p>Function which takes the surrogate posterior distribution, prior distribution and random variate sample(s)
+from the surrogate posterior and computes or approximates the KL divergence. The
+distributions are <code>tfd$Distribution</code>-like instances and the sample is a <code>Tensor</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional keyword arguments passed to the <code>keras::layer_dense</code> constructed by this layer.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>By default, the layer implements a stochastic
+forward pass via sampling from the kernel and bias posteriors,
+</p>
+<div class="sourceCode"><pre>kernel, bias ~ posterior
+outputs = activation(matmul(inputs, kernel) + bias)
+</pre></div>
+<p>It uses the local reparameterization estimator (Kingma et al., 2015),
+which performs a Monte Carlo approximation of the distribution on the hidden
+units induced by the <code>kernel</code> and <code>bias</code>. The default <code>kernel_posterior_fn</code>
+is a normal distribution which factorizes across all elements of the weight
+matrix and bias vector. Unlike that paper's multiplicative parameterization, this
+distribution has trainable location and scale parameters which is known as
+an additive noise parameterization (Molchanov et al., 2017).
+</p>
+<p>The arguments permit separate specification of the surrogate posterior
+(<code>q(W|x)</code>), prior (<code>p(W)</code>), and divergence for both the <code>kernel</code> and <code>bias</code>
+distributions.
+</p>
+<p>Upon being built, this layer adds losses (accessible via the <code>losses</code>
+property) representing the divergences of <code>kernel</code> and/or <code>bias</code> surrogate
+posteriors and their respective priors. When doing minibatch stochastic
+optimization, make sure to scale this loss such that it is applied just once
+per epoch (e.g. if <code>kl</code> is the sum of <code>losses</code> for each element of the batch,
+you should pass <code>kl / num_examples_per_epoch</code> to your optimizer).
+You can access the <code>kernel</code> and/or <code>bias</code> posterior and prior distributions
+after the layer is built via the <code>kernel_posterior</code>, <code>kernel_prior</code>,
+<code>bias_posterior</code> and <code>bias_prior</code> properties.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a Keras layer
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="https://arxiv.org/abs/1506.02557">Diederik Kingma, Tim Salimans, and Max Welling. Variational Dropout and the Local Reparameterization Trick. In <em>Neural Information Processing Systems</em>, 2015.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1701.05369">Dmitry Molchanov, Arsenii Ashukha, Dmitry Vetrov. Variational Dropout Sparsifies Deep Neural Networks. In <em>International Conference on Machine Learning</em>, 2017.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other layers: 
+<code>layer_autoregressive()</code>,
+<code>layer_conv_1d_flipout()</code>,
+<code>layer_conv_1d_reparameterization()</code>,
+<code>layer_conv_2d_flipout()</code>,
+<code>layer_conv_2d_reparameterization()</code>,
+<code>layer_conv_3d_flipout()</code>,
+<code>layer_conv_3d_reparameterization()</code>,
+<code>layer_dense_flipout()</code>,
+<code>layer_dense_reparameterization()</code>,
+<code>layer_dense_variational()</code>,
+<code>layer_variable()</code>
+</p>
+
+
+</div>

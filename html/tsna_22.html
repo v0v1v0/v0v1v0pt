@@ -1,0 +1,235 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tSnaStats</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Apply the sna package's static graph- and vertex-level network descriptive statistics at multiple time points
+</h2>
+
+<h3>Description</h3>
+
+<p>Samples collapsed static networks at regular intervals along a network dynamic object, applies the named static <code>sna</code> descriptive statistic function to each network, and returns the result as a time series. Additional arguments to the function can be included via <code>...</code> . Set the sna function's directedness and self-loops flags appropriately by default. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tSnaStats(nd, snafun, start, end, time.interval = 1, aggregate.dur=0, rule='latest', ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nd</code></td>
+<td>
+
+<p>a <code>networkDynamic</code> object to be evaluated
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>snafun</code></td>
+<td>
+
+<p>character string giving the name of the <code>sna</code> package function to be applied. i.e 'mutuality'
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+
+<p>optional numeric time value at which evaluation should start (default is first observed time)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+
+<p>optional numeric time value at which evaluation should end (default is last observed time)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.interval</code></td>
+<td>
+
+<p>optional numeric value giving time interval between evaluations (default is 1)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggregate.dur</code></td>
+<td>
+
+<p>optional numeric value giving the duration of time bin to aggregate over for each evaluation (default 0). See <code>network.collapse</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rule</code></td>
+<td>
+
+<p>character vector describing rule to be used if multiple attribute values are encountred when using non-zero <code>aggregate.dur</code>. Default is <code>latest</code>. See <code>network.collapse</code> for details
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>additional arguments to be passed on to the sna function. See docs for each function for possible arguments.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This wrapper directly calls functions in the <code>sna</code> package, so it will only work if that package is installed. Below is a list of supported functions:
+</p>
+<p>Graph-Level statistics:
+</p>
+
+<ul>
+<li> <p><code>components</code> Number of (Maximal) Components Within a Given Graph
+</p>
+</li>
+<li> <p><code>triad.census</code> Davis and Leinhardt Triad Census
+</p>
+</li>
+<li> <p><code>connectedness</code> Graph Connectedness Scores
+</p>
+</li>
+<li> <p><code>dyad.census</code> Holland and Leinhardt MAN Dyad Census
+</p>
+</li>
+<li> <p><code>efficiency</code> Graph Efficiency Scores
+</p>
+</li>
+<li> <p><code>gden</code> Graph Density
+</p>
+</li>
+<li> <p><code>grecip</code> Graph Reciprocity
+</p>
+</li>
+<li> <p><code>gtrans</code> Graph Transitivity
+</p>
+</li>
+<li> <p><code>hierarchy</code> Graph Hierarchy Scores
+</p>
+</li>
+<li> <p><code>lubness</code> Graph LUBness Scores
+</p>
+</li>
+<li> <p><code>mutuality</code> Graph Mutuality
+</p>
+</li>
+<li> <p><code>centralization</code> Graph Centralization (must provide centrality measure)
+</p>
+</li>
+</ul>
+<p>Vertex-level statistics:
+</p>
+
+<ul>
+<li> <p><code>closeness</code> Vertex Closeness Centrality Scores
+</p>
+</li>
+<li> <p><code>betweenness</code> Vertex Betweenness Centrality Scores
+</p>
+</li>
+<li> <p><code>bonpow</code> Vertex Bonacich Power Centrality Scores
+</p>
+</li>
+<li> <p><code>degree</code> Vertex Degree Centrality Scores
+</p>
+</li>
+<li> <p><code>evcent</code> Vertex Eigenvector Centrality Scores
+</p>
+</li>
+<li> <p><code>flowbet</code> Vertex Flow Betweenness Scores
+</p>
+</li>
+<li> <p><code>graphcent</code> Vertex (Harary) Graph Centrality Scores
+</p>
+</li>
+<li> <p><code>infocent</code> Vertex Information Centrality Scores 
+</p>
+</li>
+<li> <p><code>loadcent</code> Vertex Load Centrality Scores
+</p>
+</li>
+<li> <p><code>prestige</code> Vertex Prestige Scores
+</p>
+</li>
+</ul>
+<p>Most of the sna functions involve converting the network to a matrix and can be quite expensive to calculate for a single time point, so use care when applying to large or long-duration networks.
+</p>
+<p>Some of the sna functions are undefined or produce numerical errors when applied to networks with certain configurations (such as zero edges).
+</p>
+<p>The sna functions generally cannot handle networks with no vertices, so stats will be replaced with NA when they are encountered. 
+</p>
+<p>There may be some overlap with ergm terms available through <code>tErgmStats</code> and the ergm version will generally be faster
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>ts</code> (time series) object. A matrix in which rows correspond to the time points evaluated and columns correspond to values of statistics produced.  In the case of vertex-level indices, there will be one column per vertex. For the census measures, each column will correspond to a census element.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Note that this is an early DRAFT implementation.  Does not yet include binning options needed for non-discrete time networks, and has not been tested with networks that have changing vertex activity. 
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>skyebend@uw.edu
+</p>
+
+
+<h3>References</h3>
+
+<p>Carter T. Butts (2014). sna: Tools for Social Network Analysis. R package version
+2.3-2. http://CRAN.R-project.org/package=sna
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See also <code>tErgmStats</code>,
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(networkDynamicData)
+data(harry_potter_support)
+
+# compute triad census scores for each time point
+tSnaStats(harry_potter_support,snafun='triad.census')
+
+# compute graph transitivities
+tSnaStats(harry_potter_support,snafun='gtrans')
+## Not run: 
+data(concurrencyComparisonNets)
+# since thes are big nets, with lots of timepoints, 
+# set time.interval to avoid evaluating every step
+tSnaStats(base,'prestige',time.interval=25,rescale=TRUE)
+
+# since it is time series, easy to plot
+plot(tSnaStats(base,'components',time.interval=10))
+
+## End(Not run)
+</code></pre>
+
+
+</div>

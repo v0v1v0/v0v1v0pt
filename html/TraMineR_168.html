@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqtree</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Tree structured analysis of a state sequence object.
+</h2>
+
+<h3>Description</h3>
+
+<p>Facility for growing a regression tree for a state sequence object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqtree(formula, data = NULL, weighted = TRUE, min.size = 0.05,
+  max.depth = 5, R = 1000, pval = 0.01, weight.permutation = "replicate",
+  seqdist.args = list(method = "LCS", norm = "auto"), diss = NULL,
+  squared = FALSE, first = NULL, minSize, maxdepth, seqdist_arg)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula where the left hand side is a state sequence object (see <code>seqdef</code>)  and the right hand specifies the candidate variables for partitioning the set of sequences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, use the weights of the state sequence object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data frame where variables in the formula will be searched</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.size</code></td>
+<td>
+<p>minimum number of cases in a node, in percentage if less than 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.depth</code></td>
+<td>
+<p>maximum depth of the tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>Number of permutations used to assess the significance of the split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval</code></td>
+<td>
+<p>Maximum p-value, in percent.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight.permutation</code></td>
+<td>
+<p>Weights permutation method: "diss" (attach weights to the dissimilarity matrix), "replicate" (replicate case according to the <code>weights</code> arguments), "rounded-replicate" (replicate case according to the rounded <code>weights</code> arguments), "random-sampling" (random assignment of covariate profiles to the objects using distributions defined by the weights.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seqdist.args</code></td>
+<td>
+<p>list of arguments directly passed to <code>seqdist</code>, only used if <code>diss=NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diss</code></td>
+<td>
+<p>An optional dissimilarity matrix. If not provided, a dissimilarity matrix is computed using <code>seqdist</code> and <code>seqdist.args</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>squared</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, the dissimilarity matrix is squared</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>first</code></td>
+<td>
+<p>Character. An optional variable name to force the first split.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minSize</code></td>
+<td>
+<p>Deprecated. Use <code>min.size</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxdepth</code></td>
+<td>
+<p>Deprecated. Use <code>max.depth</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seqdist_arg</code></td>
+<td>
+<p>Deprecated. Use <code>seqdist.args</code> instead.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function provides a simplified interface for applying <code>disstree</code> on state sequence objects.
+</p>
+<p>The <code>seqtree</code> objects can be "plotted" with <code>seqtreedisplay</code>. A print method is also available which prints the medoid sequence for each terminal node.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>seqtree</code> object with same attributes as <code>disstree</code> objects.
+</p>
+<p>The leaf membership is in the first column of the fitted attribute. For example, the leaf memberships for a tree <code>dt</code>  are in <code>dt$fitted[,1]</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthias Studer (with Gilbert Ritschard for the help page)</p>
+
+
+<h3>References</h3>
+
+<p>Studer, M., G. Ritschard, A. Gabadinho and N. S. Müller (2011). Discrepancy analysis of state sequences, <em>Sociological Methods and Research</em>, Vol. 40(3), 471-510, <a href="https://doi.org/10.1177/0049124111415372">doi:10.1177/0049124111415372</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqtreedisplay</code>, <code>disstree</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(mvad)
+
+## Defining a state sequence object
+mvad.seq &lt;- seqdef(mvad[, 17:86])
+
+## Growing a seqtree from Hamming distances:
+##   Warning: The R=10 used here to save computation time is
+##   much too small and will generate strongly unstable results.
+##   We recommend to set R at least as R=1000.
+##   To comply with this small R value, we set pval = 0.1.
+seqt &lt;- seqtree(mvad.seq~ male + Grammar + funemp + gcse5eq + fmpr + livboth,
+    data=mvad, R=10, pval=0.1, seqdist.arg=list(method="HAM", norm="auto"))
+print(seqt)
+
+## Growing a seqtree from an existing distance matrix
+mvad.dhd &lt;- seqdist(mvad.seq, method="DHD")
+seqt &lt;- seqtree(mvad.seq~ male + Grammar + funemp + gcse5eq + fmpr + livboth,
+    data=mvad, R=10, pval=0.1, diss=mvad.dhd)
+print(seqt)
+
+
+### Following commands only work if GraphViz is properly installed
+## Not run: 
+seqtreedisplay(seqt, type="d", border=NA)
+seqtreedisplay(seqt, type="I", sortv=cmdscale(mvad.dhd, k=1))
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,167 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>OptStiefelGBB</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Optimization on Stiefel manifold</h2>
+
+<h3>Description</h3>
+
+<p>Curvilinear search algorithm for optimization on Stiefel manifold developed by Wen and Yin (2013).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">OptStiefelGBB(X, fun, opts = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>Initial value to start the optimization. A <code class="reqn">n</code> by <code class="reqn">k</code> orthonormal matrix such that <code class="reqn">X^T X = I_k</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>The function that returns the objective function value and its gradient. The syntax for <code>fun</code> is <code>fun(X, data1, data2)</code> where <code>data1, data2</code> are additional data passed to <code>...</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opts</code></td>
+<td>
+<p>A list specifying additional user-defined arguments for the curvilinear search algorithm. Some important ones are listed in the following:
+</p>
+
+<ul>
+<li> <p><code>maxiter</code>: The maximal number of iterations.
+</p>
+</li>
+<li> <p><code>xtol</code>: The convergence tolerance for <code class="reqn">X</code>, e.g., <code class="reqn">||X^{(t)} - X^{(t-1)}||_F/\sqrt{k}</code>.
+</p>
+</li>
+<li> <p><code>gtol</code>: The convergence tolerance for the gradient of the Lagrangian function, e.g., <code class="reqn">||G^{(t)} - X^{(t)} (G^{(t)})^T X^{(t)}||_F</code>.
+</p>
+</li>
+<li> <p><code>ftol</code>: The convergence tolerance for objective function <code class="reqn">F</code>, e.g., <code class="reqn">|F^{(t)} - F^{(t-1)}|/(1+|F^{(t-1)}|)</code>. Usually, <code>max{xtol, gtol} &gt; ftol</code>.
+</p>
+</li>
+</ul>
+<p>The default values are: <code>maxiter=500; xtol=1e-08; gtol=1e-08; ftol=1e-12.</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional input passed to <code>fun</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The calling syntax is <code>OptStiefelGBB(X, fun, opts, data1, data2)</code>, where <code>fun(X, data1, data2)</code> returns the objective function value and its gradient.
+</p>
+<p>For example, for <code class="reqn">n</code> by <code class="reqn">k</code> matrix <code class="reqn">X</code>, the optimization problem is
+</p>
+<p style="text-align: center;"><code class="reqn">min_{X} -tr(X^T W X), \mbox{ such that } X^T X = I_k.</code>
+</p>
+
+<p>The objective function and its gradient are
+</p>
+<p style="text-align: center;"><code class="reqn">F(X) = -tr(X^T W X), \; G(X) = - 2 W X.</code>
+</p>
+
+<p>Then we need to provide the function <code>fun(X, W)</code> which returns <code class="reqn">F(X)</code> and <code class="reqn">G(X)</code>. See <strong>Examples</strong> for details.
+</p>
+<p>For more details of the termination rules and the tolerances, we refer the interested readers to Section 5.1 of Wen and Yin (2013).
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>The converged solution of the optimization problem.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out</code></td>
+<td>
+<p>Output information, including estimation error, function value, iteration times etc.
+</p>
+
+<ul>
+<li>
+<p><code>nfe</code>: The total number of line search attempts.
+</p>
+</li>
+<li>
+<p><code>msg</code>: Message: "convergence" | "exceed max iteration".
+</p>
+</li>
+<li>
+<p><code>feasi</code>: The feasibility of solution: <code class="reqn">||X^TX - I_k||_F</code>.
+</p>
+</li>
+<li>
+<p><code>nrmG</code>: The convergence criterion based on the projected gradient <code class="reqn">||G - X G^T X||_F</code>.
+</p>
+</li>
+<li>
+<p><code>fval</code>: The objective function value <code class="reqn">F(X)</code> at termination.
+</p>
+</li>
+<li>
+<p><code>iter</code>: The number of iterations.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Wen, Z. and Yin, W., 2013. A feasible method for optimization with orthogonality constraints. Mathematical Programming, 142(1-2), pp.397-434.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 1000
+k &lt;- 6
+
+# Randomly generated matrix M
+W &lt;- matrix(rnorm(n^2), n, n)
+W &lt;- t(W) %*% W
+
+# Randomly generated orthonormal initial matrix
+X0 &lt;- matrix(rnorm(n*k), n, k)
+X0 &lt;- qr.Q(qr(X0))
+
+# The objective function and its gradient
+fun &lt;- function(X, W){
+  F &lt;- - sum(diag(t(X) %*% W %*% X))
+  G &lt;- - 2*(W %*% X)
+  return(list(F = F, G = G))
+}
+
+# Options list
+opts&lt;-list(record = 0, maxiter = 1000, xtol = 1e-5, gtol = 1e-5, ftol = 1e-8)
+
+# Main part
+output &lt;- OptStiefelGBB(X0, fun, opts, W)
+X &lt;- output$X
+out &lt;- output$out
+
+</code></pre>
+
+
+</div>

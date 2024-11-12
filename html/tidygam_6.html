@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict_gam</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get predictions from a GAM model</h2>
+
+<h3>Description</h3>
+
+<p>Return predictions from a GAM model generated with mgcv. The output can be plotted with <code>plot()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">predict_gam(
+  model,
+  length_out = 10,
+  values = NULL,
+  series = NULL,
+  exclude_terms = NULL,
+  ci_z = 1.96,
+  tran_fun = NULL,
+  separate = NULL,
+  sep_by = "\\."
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A <code>gam</code> or <code>bam</code> model object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>length_out</code></td>
+<td>
+<p>An integer indicating how many values to use along the
+numeric variables for predicting the response (the default is <code>10</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>values</code></td>
+<td>
+<p>User supplied values for specific variables as a named list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>series</code></td>
+<td>
+<p>A string specifying the variable that corresponds to the series
+to be plotted on the $x$-axis. If a string is given, the other numeric
+variables in the model are set to their mean value, unless specific values
+are given in <code>values</code>. If a character vector of two strings is given, the
+two variables will be taken as the elements of a tensor product smooth.
+This allows the user to plot 2D raster plots.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exclude_terms</code></td>
+<td>
+<p>Terms to be excluded from the prediction. Term names
+should be given as they appear in the model summary (for example,
+<code>"s(x0,x1)"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci_z</code></td>
+<td>
+<p>The z-value for calculating the CIs (the default is <code>1.96</code> for
+95 percent CI).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tran_fun</code></td>
+<td>
+<p>Function to use for transforming the predicted values and CIs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>separate</code></td>
+<td>
+<p>Names list of factor interaction variables to be separated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep_by</code></td>
+<td>
+<p>Character to separate by (the default is <code style="white-space: pre;">⁠\\.⁠</code>).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A tibble with predictions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(mgcv)
+set.seed(10)
+
+sim_data_1 &lt;- gamSim(1, n = 200, scale = 2)
+model &lt;- gam(y ~ x0 + s(I(x1^2)) + s(x2) + offset(x3), data = sim_data_1)
+predict_gam(model)
+predict_gam(model, values = list(x0 = mean(sim_data_1$x0)))
+predict_gam(model, series = "x2")
+predict_gam(model, exclude_terms = "s(I(x1^2))")
+
+# By-variables
+sim_data_2 &lt;- gamSim(4)
+model_2 &lt;- gam(y ~ s(x2, by = fac) + s(x0), data = sim_data_2)
+predict_gam(model_2)
+
+# Poisson data
+sim_data_3 &lt;- sim_data_2
+sim_data_3$y &lt;- round(sim_data_2$y) + 20
+model_3 &lt;- gam(y ~ s(x2, by = fac), data = sim_data_3, family = poisson)
+predict_gam(model_3, length_out = 50)
+predict_gam(model_3, length_out = 50, tran_fun = exp)
+
+# Bivariate smooths
+model_4 &lt;- gam(y ~ te(x1, x2), data = sim_data_1)
+predict_gam(model_4)
+</code></pre>
+
+
+</div>

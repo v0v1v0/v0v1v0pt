@@ -1,0 +1,164 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqindic.dyn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Dynamic index
+
+</h2>
+
+<h3>Description</h3>
+
+<p>Dynamic (i.e. successive) values of an individual index. For each sequence, the values of the selected index is computed on sliding windows.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqindic.dyn(seqdata, indic="cplx", window.size = .2, sliding=TRUE,
+      wstep=1, with.missing=FALSE, endmiss.as.void=FALSE, silent.indic=TRUE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>state sequence object (<code>stslist</code>) as produced by <code>seqdef</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indic</code></td>
+<td>
+<p>character string: the individual index. Can be any value supported by <code>seqindic</code> except index group names.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>window.size</code></td>
+<td>
+<p>integer or real. If an integer &gt; 1, window size in number of positions. If real number in the range ]0,1), the window size is set as that proportion of the length of the longest sequence.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sliding</code></td>
+<td>
+<p>logical: Should indic be computed on sliding windows? If <code>FALSE</code>, windows are incremented starting with a window of size <code>window.size</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wstep</code></td>
+<td>
+<p>integer: size of position gap between successive windows.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>logical. Should the missing state be treated as a state of the alphabet?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>endmiss.as.void</code></td>
+<td>
+<p>logical. When <code>with.missing=FALSE</code>, should missings at end of windows be considered as voids, i.e. should the sequence end before end missings? When <code>FALSE</code> (default), the index is set as <code>NA</code> for windows that end with a void and, when <code>TRUE</code>, for windows that end with a void or a missing. Ignored when <code>with.missing=TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent.indic</code></td>
+<td>
+<p>logical. Should messages issued during computation of indic be suppressed?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>seqindic</code>
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function implements the dynamic sequence analysis approach of <cite>Pelletier et al. (2020)</cite> and generalizes the method to any of the over 20 indicators provided by <code>seqindic</code>.
+</p>
+<p>The values of the <code>indic</code> index are computed for each sequence either on sliding windows of size <code>window.size</code> or on incremental windows starting from a first window of size <code>window.size</code>.
+</p>
+<p>Column names refer to the end the windows.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A matrix of class <code>dynin</code> with attributes <code>xtstep</code>, <code>tick.last</code>, <code>weights</code>, <code>window.size</code>, <code>sliding</code>, and <code>indic</code>. The first three as well as the row and column names are taken from <code>seqdata</code>.
+</p>
+<p>There are <code>print</code> and <code>plot</code> methods for <code>dynin</code> objects. See <code>plot.dynin</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard
+</p>
+
+
+<h3>References</h3>
+
+<p>Pelletier, D., Bignami-Van Assche, S., &amp; Simard-Gendron, A. (2020) Measuring Life Course Complexity with Dynamic Sequence Analysis, <em>Social Indicators Research</em> <a href="https://doi.org/10.1007/s11205-020-02464-y">doi:10.1007/s11205-020-02464-y</a>.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>seqindic</code>, <code>plot.dynin</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(actcal)
+cases &lt;- 1:100
+actcal &lt;- actcal[cases,] ## Here, only a subset
+actcal.seq &lt;- seqdef(actcal[,13:24], alphabet=c('A','B','C','D'))
+
+## Using windows every three positions
+a.dyn &lt;- seqindic.dyn(actcal.seq, indic='cplx', with.missing=FALSE, wstep=3)
+plot(a.dyn, group=actcal[cases,'sex'])
+
+## Trimmed mean (to illustrate fstat with specific arguments)
+plot(a.dyn, group=actcal[cases,'sex'], fstat=function(x)mean(x, trim=.02))
+
+## Incremental windows
+ai.dyn &lt;- seqindic.dyn(actcal.seq, indic='cplx', with.missing=FALSE, wstep=3,
+                sliding=FALSE)
+plot(ai.dyn, group=actcal[cases,'sex'])
+
+#############
+## Sequences of different lengths, and with missing values and weights
+data(ex1)
+s.ex1 &lt;- seqdef(ex1[,1:13],weights=ex1[,"weights"])
+seqlength(s.ex1)
+seqlength(s.ex1, with.missing=FALSE)
+group &lt;- c(1,1,1,2,2,2,2)
+
+ind.d &lt;- seqindic.dyn(s.ex1, indic='cplx', with.missing=FALSE)
+plot(ind.d, group=group, fstat=weighted.mean, na.rm=TRUE, conf=TRUE, ret=TRUE)
+
+## Treating 'missing' as a regular state
+ind.dm &lt;- seqindic.dyn(s.ex1, indic='cplx', with.missing=TRUE)
+plot(ind.dm, group=group, fstat=weighted.mean, na.rm=TRUE, conf=TRUE, ret=TRUE)
+</code></pre>
+
+
+</div>

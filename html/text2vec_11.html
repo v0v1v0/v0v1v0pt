@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>create_dtm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Document-term matrix construction</h2>
+
+<h3>Description</h3>
+
+<p>This is a high-level function for creating a document-term
+matrix.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">create_dtm(it, vectorizer, type = c("dgCMatrix", "dgTMatrix",
+  "dgRMatrix", "CsparseMatrix", "TsparseMatrix", "RsparseMatrix"), ...)
+
+## S3 method for class 'itoken'
+create_dtm(it, vectorizer, type = c("dgCMatrix",
+  "dgTMatrix", "dgRMatrix", "CsparseMatrix", "TsparseMatrix",
+  "RsparseMatrix"), ...)
+
+## S3 method for class 'itoken_parallel'
+create_dtm(it, vectorizer,
+  type = c("dgCMatrix", "dgTMatrix", "dgRMatrix", "CsparseMatrix",
+  "TsparseMatrix", "RsparseMatrix"), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>it</code></td>
+<td>
+<p>itoken iterator or <code>list</code> of <code>itoken</code> iterators.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vectorizer</code></td>
+<td>
+<p><code>function</code> vectorizer function; see
+vectorizers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p><code>character</code>, one of <code>c("CsparseMatrix", "TsparseMatrix")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>placeholder for additional arguments (not used at the moment).
+over <code>it</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If a parallel backend is registered and first argument is a list of <code>itoken</code>,
+iterators, function will construct the DTM in multiple threads.
+User should keep in mind that he or she should split the data itself and provide a list of
+itoken iterators. Each element of <code>it</code> will be handled in separate
+thread and combined at the end of processing.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A document-term matrix
+</p>
+
+
+<h3>See Also</h3>
+
+<p>itoken vectorizers
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data("movie_review")
+N = 1000
+it = itoken(movie_review$review[1:N], preprocess_function = tolower,
+             tokenizer = word_tokenizer)
+v = create_vocabulary(it)
+#remove very common and uncommon words
+pruned_vocab = prune_vocabulary(v, term_count_min = 10,
+ doc_proportion_max = 0.5, doc_proportion_min = 0.001)
+vectorizer = vocab_vectorizer(v)
+it = itoken(movie_review$review[1:N], preprocess_function = tolower,
+             tokenizer = word_tokenizer)
+dtm = create_dtm(it, vectorizer)
+# get tf-idf matrix from bag-of-words matrix
+dtm_tfidf = transformer_tfidf(dtm)
+
+## Example of parallel mode
+it = token_parallel(movie_review$review[1:N], tolower, word_tokenizer, movie_review$id[1:N])
+vectorizer = hash_vectorizer()
+dtm = create_dtm(it, vectorizer, type = 'TsparseMatrix')
+
+## End(Not run)
+</code></pre>
+
+
+</div>

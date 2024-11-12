@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>conditional-expectations</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Expectations: consistency</h2>
+
+<h3>Description</h3>
+
+<p>These functions test whether multiple conditions coexist.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">expect_cond(cond1, cond2, data = get_testdata())
+
+expect_base(
+  var,
+  base,
+  miss = getOption("testdat.miss"),
+  missing_valid = FALSE,
+  data = get_testdata()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>cond1</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; First condition
+(antecedent) for consistency check.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cond2</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Second condition
+(consequent) for consistency check.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame to test. The global test data is used
+by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var</code></td>
+<td>
+<p>An unquoted column name to test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>base</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; The condition that
+determines which records should be non-missing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miss</code></td>
+<td>
+<p>A vector of values to be treated as missing. The
+testdat.miss option is used by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>missing_valid</code></td>
+<td>
+<p>Should missing values be treated as valid for records
+meeting the <code>base</code> condition? This allows 'one way' base checks. This is
+<code>FALSE</code> by default.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code style="white-space: pre;">⁠expect_*()⁠</code> functions are mainly called for their side effects. The
+expectation signals its result (e.g. "success", "failure"), which is logged
+by the current test reporter. In a non-testing
+context the expectation will raise an error with class
+<code>expectation_failure</code> if it fails.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>expect_cond()</code>: Checks the coexistence of two
+conditions. It can be read as "if <code>cond1</code> then <code>cond2</code>".
+</p>
+</li>
+<li> <p><code>expect_base()</code>: A special case that checks missing data
+against a specified condition. It can be read as "if <code>base</code> then <code>var</code> not
+missing, if not <code>base</code> then <code>var</code> missing".
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other data expectations: 
+<code>datacomp-expectations</code>,
+<code>date-expectations</code>,
+<code>exclusivity-expectations</code>,
+<code>expect_depends()</code>,
+<code>generic-expectations</code>,
+<code>label-expectations</code>,
+<code>pattern-expectations</code>,
+<code>proportion-expectations</code>,
+<code>text-expectations</code>,
+<code>uniqueness-expectations</code>,
+<code>value-expectations</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">my_survey &lt;- data.frame(
+  resp_id = 1:5,
+  q1a = c(0, 1, 0, 1, 0),
+  q1b = c(NA, NA, NA, 1, 0), # Asked if q1a %in% 1
+  q2a = c(90, 80, 60, 40, 90),
+  q2b = c("", "", NA, "Some reason for low rating", "") # Asked if q2a &lt; 50
+)
+
+# Check that q1b has a value if and only if q1a %in% 1
+try(expect_base(q1b, q1a %in% 1, data = my_survey)) # Fails for resp_id 2 and 5
+
+# Check that q2b has a value if and only if q2a &lt; 50
+expect_base(q2b, q2a &lt; 50, data = my_survey)
+
+# Check that if q1a %in% 0 then q2a &gt; 50 (but not vice-versa)
+expect_cond(q1a %in% 0, q2a &gt; 50, data = my_survey)
+
+</code></pre>
+
+
+</div>

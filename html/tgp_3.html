@@ -1,0 +1,893 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>btgp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Bayesian Nonparametric &amp; Nonstationary Regression Models</h2>
+
+<h3>Description</h3>
+
+<p> The seven functions described below implement Bayesian
+regression models of varying complexity: linear model, linear CART,
+Gaussian process (GP), GP with jumps to the limiting linear model
+(LLM), treed GP, and treed GP LLM. </p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">blm(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        BTE = c(1000, 4000, 3), R = 1, m0r1 = TRUE, itemps = NULL,
+        pred.n = TRUE, krige = TRUE, zcov = FALSE, Ds2x = FALSE,
+        improv = FALSE, sens.p = NULL, trace = FALSE, verb = 1, ...)
+btlm(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        tree = c(0.5, 2), BTE = c(2000, 7000, 2), R = 1, m0r1 = TRUE, 
+	itemps = NULL, pred.n = TRUE, krige = TRUE, zcov = FALSE,
+        Ds2x = FALSE, improv = FALSE, sens.p = NULL, trace = FALSE,
+        verb = 1, ...)
+bcart(X, Z, XX = NULL, bprior = "bflat", tree = c(0.5, 2),
+        BTE = c(2000, 7000, 2), R = 1, m0r1 = TRUE, itemps = NULL,
+        pred.n = TRUE, krige = TRUE, zcov = FALSE, Ds2x = FALSE,
+        improv=FALSE, sens.p = NULL, trace = FALSE, verb = 1, ...)
+bgp(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        corr = "expsep", BTE = c(1000, 4000, 2), R = 1, m0r1 = TRUE, 
+	itemps = NULL, pred.n = TRUE, krige = TRUE, zcov = FALSE,
+        Ds2x = FALSE, improv = FALSE, sens.p = NULL, nu = 1.5,
+        trace = FALSE, verb = 1, ...)
+bgpllm(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        corr = "expsep", gamma=c(10,0.2,0.7), BTE = c(1000, 4000, 2),
+        R = 1, m0r1 = TRUE, itemps = NULL, pred.n = TRUE,
+        krige = TRUE, zcov = FALSE, Ds2x = FALSE, improv = FALSE,
+        sens.p = NULL, nu = 1.5, trace = FALSE, verb = 1, ...)
+btgp(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        corr = "expsep", tree = c(0.5, 2), BTE = c(2000, 7000, 2),
+        R = 1, m0r1 = TRUE, linburn = FALSE, itemps = NULL, 
+	pred.n = TRUE, krige = TRUE, zcov = FALSE, Ds2x = FALSE,
+        improv = FALSE, sens.p = NULL, nu = 1.5, trace = FALSE,
+        verb = 1, ...)
+btgpllm(X, Z, XX = NULL, meanfn = "linear", bprior = "bflat",
+        corr = "expsep", tree = c(0.5, 2), gamma=c(10,0.2,0.7), 
+	BTE = c(2000, 7000, 2), R = 1, m0r1 = TRUE, linburn = FALSE,
+        itemps = NULL, pred.n = TRUE, krige = TRUE, zcov = FALSE,
+        Ds2x = FALSE, improv = FALSE, sens.p = NULL, nu = 1.5,
+        trace = FALSE, verb = 1, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<p>Each of the above functions takes some subset of the following arguments...
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p><code>data.frame</code>, <code>matrix</code>, or vector of inputs <code>X</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p> Vector of output responses <code>Z</code> of length equal to the
+leading dimension (rows) of <code>X</code>, i.e., <code>length(Z) == nrow(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>XX</code></td>
+<td>
+<p> Optional <code>data.frame</code>, <code>matrix</code>,
+or vector of predictive input locations 
+with the same number of columns as <code>X</code>, i.e.,
+<code>ncol(XX) == ncol(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meanfn</code></td>
+<td>
+<p> A choice of mean function for the process.  When
+<code>meanfn = "linear"</code> (default), then we have the process
+</p>
+<p style="text-align: center;"><code class="reqn">Z = (\mathbf{1}  \;\; \mathbf{X}) \beta + W(\mathbf{X})</code>
+</p>
+
+<p>where <code class="reqn">W(\mathbf{X})</code> represents the Gaussian process
+part of the model (if present).  Otherwise, when
+<code>meanfn = "constant"</code>, then </p>
+<p style="text-align: center;"><code class="reqn">Z = \beta_0 + W(\mathbf{X})</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bprior</code></td>
+<td>
+<p>Linear (beta) prior, default is <code>"bflat"</code>;
+alternates include <code>"b0"</code> hierarchical Normal prior,
+<code>"bmle"</code> empirical Bayes Normal prior, <code>"b0not"</code> Bayesian
+treed LM-style prior from Chipman et al. (same as <code>"b0"</code> but
+without <code>tau2</code>), <code>"bmzt"</code> a independent Normal
+prior (mean zero) with inverse-gamma variance (<code>tau2</code>),
+and <code>"bmznot"</code> is the same as <code>"bmznot"</code> without <code>tau2</code>.
+The default <code>"bflat"</code> gives
+an “improper” prior which can perform badly when the
+signal-to-noise ratio is low.  In these cases the “proper” hierarchical
+specification <code>"b0"</code> or independent <code>"bmzt"</code> or <code>"bmznot"</code>
+priors may perform better</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p> a 2-vector containing the tree process prior parameterization
+<code>c(alpha, beta)</code> specifying
+</p>
+<p style="text-align: center;"><code class="reqn">p_{\mbox{\tiny split}}(\eta, \mathcal{T}) =
+      \alpha*(1+\eta)^\beta</code>
+</p>
+
+<p>automatically giving zero probability to trees
+with partitions containing less than <code>min(c(10,nrow(X)+1))</code>
+data points.  You may also specify a longer vector, writing over
+more of the components of the <code>$tree</code> output from <code>tgp.default.params</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>Limiting linear model parameters <code>c(g, t1, t2)</code>,
+with growth parameter <code>g &gt; 0</code>
+minimum parameter <code>t1 &gt;= 0</code> and maximum parameter <code>t1 &gt;= 0</code>, where
+<code>t1 + t2 &lt;= 1</code> specifies
+</p>
+<p style="text-align: center;"><code class="reqn">p(b|d)=t_1 +\exp\left\{\frac{-g(t_2-t_1)}{d-0.5}\right\}</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>corr</code></td>
+<td>
+<p> Gaussian process correlation model. Choose between the isotropic
+power exponential family (<code>"exp"</code>) or the separable power exponential 
+family (<code>"expsep"</code>, default); the current version also supports 
+the isotropic Matern (<code>"matern"</code>) and single-index Model (<code>"sim"</code>) 
+as “beta” functionality.  
+
+
+
+
+
+
+
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BTE</code></td>
+<td>
+<p> 3-vector of Monte-carlo parameters (B)urn in, (T)otal, and
+(E)very. Predictive samples are saved every E MCMC rounds starting
+at round B, stopping at T. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p> Number of repeats or restarts of <code>BTE</code> MCMC rounds,
+default <code>R=1</code> is no restarts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>m0r1</code></td>
+<td>
+<p>If <code>TRUE</code> (default) the responses <code>Z</code> will be
+scaled to have a mean of zero and a range of 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linburn</code></td>
+<td>
+<p>If <code>TRUE</code> initializes MCMC with <code>B</code> (additional) 
+rounds of Bayesian Linear CART (<code>btlm</code>); default is <code>FALSE</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itemps</code></td>
+<td>
+<p> Importance tempering (IT) inverse temperature ladder, 
+or powers to improve mixing.  See <code>default.itemps</code>.
+The default is no IT <code>itemps = NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pred.n</code></td>
+<td>
+<p><code>TRUE</code> (default) value results in prediction at
+the inputs <code>X</code>; <code>FALSE</code> 
+skips prediction at <code>X</code> resulting in a faster
+implementation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>krige</code></td>
+<td>
+<p><code>TRUE</code> (default) value results in collection of kriging
+means and variances at predictive (and/or data) locations; <code>FALSE</code> 
+skips the gathering of kriging statistics giving a savings in
+storage</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zcov</code></td>
+<td>
+<p>If <code>TRUE</code> then the predictive covariance matrix is
+calculated– can be computationally (and memory) intensive if
+<code>X</code> or <code>XX</code> is large.  Otherwise only the variances
+(diagonal of covariance matrices) are calculated (default).  See
+outputs <code>Zp.s2</code>, <code>ZZ.s2</code>, etc., below</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ds2x</code></td>
+<td>
+<p><code>TRUE</code> results in ALC (Active Learning–Cohn)
+computation of expected reduction in uncertainty calculations at the
+<code>XX</code> locations, which can be used for adaptive sampling;
+<code>FALSE</code> (default) skips this computation, resulting in
+a faster implementation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>improv</code></td>
+<td>
+<p><code>TRUE</code> results in samples from the
+improvement at locations <code>XX</code> with respect to the observed
+data minimum. These samples are used to calculate the expected
+improvement over <code>XX</code>, as well as to rank all of the points in
+<code>XX</code> in the order that they should be sampled to minimize the
+expected multivariate improvement (refer to Schonlau et al, 1998).
+Alternatively, <code>improv</code> can be set to any positive integer 'g',
+in which case the ranking is performed with respect to the expectation
+for improvement raised to the power 'g'. Increasing 'g' leads to
+rankings that are more oriented towards a global optimization.
+The option <code>FALSE</code> (default) skips these computations,
+resulting in a faster implementation.  Optionally, a two-vector
+can be supplied where <code>improv[2]</code> is interpreted as the 
+(maximum) number of points to rank by improvement.  See the note below.
+If not specified, the entire <code>XX</code> matrix is ranked. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sens.p</code></td>
+<td>
+<p> Either <code>NULL</code> or a vector of parameters for
+sensitivity analysis, built by the function <code>sens</code>.
+Refer there for details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+ <p>“beta” functionality: fixed smoothness parameter for
+the Matern correlation function; <code>nu + 0.5</code> times differentiable
+predictive surfaces result</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+ <p><code>TRUE</code> results in a saving of samples from the
+posterior distribution for most of the parameters in the model.  The
+default is <code>FALSE</code> for speed/storage reasons. See note below </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verb</code></td>
+<td>
+<p> Level of verbosity of R-console print statements: from 0
+(none); 1 (default) which shows the “progress meter”; 2
+includes an echo of initialization parameters; up to 3 and 4 (max)
+with more info about successful tree operations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p> These ellipses arguments are interpreted as augmentations
+to the prior specification generated by
+</p>
+<p><code>params &lt;- tgp.default.params(ncol(X)+1)</code>.
+</p>
+<p>You may use these to specify a custom setting of any of default
+parameters in the output list <code>params</code>
+except those for which a specific argument is already provided
+(e.g., <code>params$corr</code> or <code>params$bprior</code>) or those which contradict
+the type of <code>b*</code> function being called (e.g.,
+<code>params$tree</code> or <code>params$gamma</code>); these redundant or
+possibly conflicting specifications will be ignored.  Refer to
+<code>tgp.default.params</code> for details on the prior specification</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The functions and their arguments can be categorized by whether or not
+they use treed partitioning (T), GP models, and jumps to the LLM (or LM)
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+  blm </td>
+<td style="text-align: left;"> LM </td>
+<td style="text-align: left;"> Linear Model </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  btlm </td>
+<td style="text-align: left;"> T, LM </td>
+<td style="text-align: left;"> Treed Linear Model </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  bcart </td>
+<td style="text-align: left;"> T </td>
+<td style="text-align: left;"> Treed Constant Model </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  bgp </td>
+<td style="text-align: left;"> GP </td>
+<td style="text-align: left;"> GP Regression </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  bgpllm </td>
+<td style="text-align: left;"> GP, LLM </td>
+<td style="text-align: left;"> GP with jumps to the LLM </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  btgp </td>
+<td style="text-align: left;"> T, GP </td>
+<td style="text-align: left;"> treed GP Regression </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+  btgpllm </td>
+<td style="text-align: left;"> T, GP, LLM </td>
+<td style="text-align: left;"> treed GP with jumps to the LLM
+  </td>
+</tr>
+</table>
+<p>Each function implements a special case of the generic function 
+<code>tgp</code> which is an interface to C/C++ code for treed Gaussian process 
+modeling of varying parameterization.  Documentation for <code>tgp</code>
+has been declared redundant, and has subsequently been removed.  To see
+how the <code>b*</code> functions use <code>tgp</code> simply examine the
+function.  In the latest version, with the addition of the ellipses
+“...” argument, there is nothing that can be done
+with the direct <code>tgp</code> function that cannot also be done with a
+<code>b*</code> function
+</p>
+<p>Only functions in the T (tree) category take the <code>tree</code> argument;
+GP category functions take the <code>corr</code> argument; and LLM category
+functions take the <code>gamma</code> argument.  Non-tree class functions omit
+the <code>parts</code> output, see below
+</p>
+<p><code>bcart</code> is the same as <code>btlm</code> except that only the
+intercept term in the LM is estimated; the others are zero, thereby
+implementing a Bayesian version of the original CART model
+</p>
+<p>The <code>sens.p</code> argument contains a vector of parameters for 
+sensitivity analysis.  It should be <code>NULL</code> unless created by the 
+<code>sens</code> function.  Refer to <code>help(sens)</code> for details.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>If <code>itemps =! NULL</code> then importance tempering (IT) is performed
+to get better mixing.  After each restart (when <code>R &gt; 1</code>) the
+observation counts are used to update the pseudo-prior.  Stochastic
+approximation is performed in the first burn-in rounds (for <code>B-T</code>
+rounds, not <code>B</code>) when <code>c0</code> and <code>n0</code> are positive.
+Every subsequent burn-in after the first restart is for <code>B</code>
+rounds in order to settle-in after using the observation counts.  See
+<code>default.itemps</code> for more details and an example
+</p>
+<p>Please see <code>vignette("tgp")</code> for a detailed illustration
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>bgp</code> returns an object of class <code>"tgp"</code>.
+The function <code>plot.tgp</code>
+can be used to help visualize results.
+</p>
+<p>An object of class <code>"tgp"</code> is a list containing at least the
+following components...  The <code>parts</code> output is unique to the T
+(tree) category functions. Tree viewing is supported by
+<code>tgp.trees</code>
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>Input argument: <code>data.frame</code> of inputs <code>X</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Number of rows in <code>X</code>, i.e., <code>nrow(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d</code></td>
+<td>
+<p>Number of cols in <code>X</code>, i.e., <code>ncol(X)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>Vector of output responses <code>Z</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>XX</code></td>
+<td>
+<p>Input argument: <code>data.frame</code> of predictive locations <code>XX</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nn</code></td>
+<td>
+<p>Number of rows in <code>XX</code>, i.e., <code>nrow(XX)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BTE</code></td>
+<td>
+<p>Input argument: Monte-carlo parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>Input argument: restarts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linburn</code></td>
+<td>
+<p>Input argument: initialize MCMC with linear CART</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p><code>list</code> of model parameters generated by 
+<code>tgp.default.params</code> and subsequently modified according
+to the calling <code>b*</code> function and its arguments</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dparams</code></td>
+<td>
+<p>Double-representation of model input parameters used by the C-code</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itemps</code></td>
+<td>
+<p><code>data.frame</code> containing the importance tempering
+ladders and pseudo-prior: <code>$k</code> has inverse
+inverse temperatures (from the input argument), <code>$k</code> has an
+<em>updated</em> pseudo-prior based on observation
+counts and (possibly) stochastic approximation during burn-in
+and (input) stochastic approximation parameters <code class="reqn">c_0</code> and
+<code class="reqn">n_0</code>.  See <code>default.itemps</code> for more info</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.mean</code></td>
+<td>
+<p>Vector of mean predictive estimates at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.q1</code></td>
+<td>
+<p>Vector of 5% predictive quantiles at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.q2</code></td>
+<td>
+<p>Vector of 95% predictive quantiles at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.q</code></td>
+<td>
+<p>Vector of quantile norms <code>Zp.q2-Zp.q1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.s2</code></td>
+<td>
+<p>If input <code>zcov = TRUE</code>, then this is a predictive
+covariance matrix for the inputs at locations <code>X</code>;  otherwise
+then this is a vector of predictive variances at the <code>X</code>
+locations (diagonal of the predictive covariance matrix).  Only
+appears when input <code>pred.n = TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.km</code></td>
+<td>
+<p>Vector of (expected) kriging means at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.vark</code></td>
+<td>
+<p>Vector of posterior variance for kriging surface (no additive noise) at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Zp.ks2</code></td>
+<td>
+<p>Vector of (expected) predictive kriging variances at <code>X</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.mean</code></td>
+<td>
+<p>Vector of mean predictive estimates at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.q1</code></td>
+<td>
+<p>Vector of 5% predictive quantiles at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.q2</code></td>
+<td>
+<p>Vector of 95% predictive quantiles at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.q</code></td>
+<td>
+<p>Vector of quantile norms <code>ZZ.q2-ZZ.q1</code>, used by the 
+ALM adaptive sampling algorithm</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.s2</code></td>
+<td>
+<p>If input <code>zcov = TRUE</code>, then this is a predictive
+covariance matrix for predictive locations <code>XX</code>;  otherwise
+then this is a vector of predictive variances at the <code>XX</code>
+locations (diagonal of the predictive covariance matrix).  Only
+appears when input <code>XX != NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZpZZ.s2</code></td>
+<td>
+<p>If input <code>zcov = TRUE</code>, then this is a predictive
+<code>n * nn</code> covariance matrix between locations in <code>X</code> and
+<code>XX</code>; Only appears when <code>zcov = TRUE</code> and both
+<code>pred.n = TRUE</code> and <code>XX != NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.km</code></td>
+<td>
+<p>Vector of (expected) kriging means at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.vark</code></td>
+<td>
+<p>Vector of posterior variance for kriging surface (no additive noise) at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ZZ.ks2</code></td>
+<td>
+<p>Vector of (expected) predictive kriging variances at <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ds2x</code></td>
+<td>
+<p>If argument <code>Ds2x=TRUE</code>, this vector contains ALC
+statistics for <code>XX</code> locations</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>improv</code></td>
+<td>
+<p>If argument <code>improv</code> is <code>TRUE</code> or a
+positive integer, this is a 'matrix' with first column set to the expected
+improvement statistics for <code>XX</code> locations, and the second
+column set to a ranking in the order that they should be sampled to
+minimize the expected multivariate improvement raised to a power
+determined by the argument <code>improv</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response</code></td>
+<td>
+<p>Name of response <code>Z</code> if supplied by <code>data.frame</code> 
+in argument, or "z" if none provided</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parts</code></td>
+<td>
+<p>Internal representation of the regions depicted by partitions of
+the maximum a' posteriori (MAP) tree</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trees</code></td>
+<td>
+<p><code>list</code> of trees (<span class="pkg">maptree</span> representation) which
+were MAP as a function
+of each tree height sampled between MCMC rounds <code>B</code> and
+<code>T</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>If <code>trace==TRUE</code>, this <code>list</code>
+contains traces of most of the model parameters and posterior
+predictive distributions at input locations
+<code>XX</code>.  Otherwise the entry is <code>FALSE</code>.  See note below</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ess</code></td>
+<td>
+<p>Importance tempering effective sample size (ESS).  If
+<code>itemps==NULL</code> this corresponds to the total number of
+samples collected, i.e..
+</p>
+<p><code>R*(BTE[2]-BTE[1])/BTE[3]</code>.
+</p>
+<p>Otherwise the ESS will be lower due to a non-zero coefficient of
+variation of the calculated importance tempering weights</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sens</code></td>
+<td>
+<p> See <code>sens</code> documentation for more details</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p> Inputs <code>X, XX, Z</code> containing <code>NaN, NA</code>, or <code>Inf</code> are
+discarded with non-fatal warnings
+</p>
+<p>Upon execution, MCMC reports are made every 1,000 rounds to indicate
+progress
+</p>
+<p>Stationary (non-treed) processes on larger inputs (e.g., <code>X,Z</code>) 
+of size greater than 500, *might* be slow in execution, especially on
+older machines. Once the C code starts executing, it can be interrupted
+in the usual way: either via Ctrl-C (Unix-alikes) or pressing the Stop
+button in the <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span>-GUI.  When this happens, interrupt messages will
+indicate which required cleanup measures completed before returning
+control to <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span>.
+</p>
+<p>Whereas most of the <span class="pkg">tgp</span> models will work reasonably well with
+little or no change to the default prior specification, GP's with the
+<code>"mrexpsep"</code> correlation imply a very specific relationship between
+fine and coarse data, and a careful prior specification is usually
+required.
+</p>
+<p>The ranks provided in the second column of the <code>improv</code> field
+of a <code>tgp</code> object are based on the expectation of a multivariate
+improvement that may or may not be raised to a positive integer power.
+They can thus differ significantly from a simple ranking of the first
+column of expected univariate improvement values.
+</p>
+<p>Regarding <code>trace=TRUE</code>: Samples from the posterior will be
+collected for all parameters in the model.  GP parameters are collected
+with reference to the locations in <code>XX</code>, resulting
+<code>nn=nrow{XX}</code> traces of <code>d,g,s2,tau2</code>, etc.  Therefore, it
+is recommended that <code>nn</code> is chosen to be a small, representative,
+set of input locations.  Besides GP parameters, traces are saved for
+the tree partitions, areas under the LLM, log posterior (as a function
+of tree height), and samples from the posterior predictive
+distributions. Note that since some traces are stored in
+files, multiple <code>tgp</code>/<span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> sessions in the same working
+directory can clobber the trace files of other sessions
+</p>
+
+
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gramacy, R. B. (2020) <em>Surrogates: Gaussian Process Modeling, 
+Design and Optimization for the Applied Sciences</em>. Boca Raton, 
+Florida: Chapman Hall/CRC.  (See Chapter 9.)
+<a href="https://bobby.gramacy.com/surrogates/">https://bobby.gramacy.com/surrogates/</a>
+</p>
+<p>Gramacy, R. B. (2007). <em><span class="pkg">tgp</span>: An <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> Package for
+Bayesian Nonstationary, Semiparametric Nonlinear Regression
+and Design by Treed Gaussian Process Models.</em>
+Journal of Statistical Software, <b>19</b>(9).
+<a href="https://www.jstatsoft.org/v19/i09">https://www.jstatsoft.org/v19/i09</a>
+<a href="https://doi.org/10.18637/jss.v019.i09">doi:10.18637/jss.v019.i09</a>
+</p>
+<p>Robert B. Gramacy, Matthew Taddy (2010). <em>Categorical Inputs,
+Sensitivity Analysis, Optimization and Importance Tempering with <span class="pkg">tgp</span>
+Version 2, an <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span> Package for Treed Gaussian Process Models.</em>
+Journal of Statistical Software, <b>33</b>(6), 1–48.
+<a href="https://www.jstatsoft.org/v33/i06/">https://www.jstatsoft.org/v33/i06/</a>
+<a href="https://doi.org/10.18637/jss.v033.i06">doi:10.18637/jss.v033.i06</a>
+</p>
+<p>Gramacy, R. B., Lee, H. K. H. (2007).
+<em>Bayesian treed Gaussian process models with an application
+to computer modeling</em>. Journal of the American Statistical Association, 
+103(483), pp. 1119-1130.  Also available as ArXiv article 0710.4536 
+<a href="https://arxiv.org/abs/0710.4536">https://arxiv.org/abs/0710.4536</a>
+</p>
+<p>Gramacy, R. B. and Lee, K.H. (2008). <em>Gaussian Processes and
+Limiting Linear Models.</em>
+Computational Statistics and Data Analysis, 53, pp. 123-136.
+Also available as ArXiv article 0804.4685
+<a href="https://arxiv.org/abs/0804.4685">https://arxiv.org/abs/0804.4685</a>
+</p>
+<p>Gramacy, R. B., Lee, H. K. H. (2009).
+<em>Adaptive design and analysis of supercomputer experiments.</em>
+Technometrics, 51(2), pp. 130-145. 
+Also avaliable on ArXiv article 0805.4359
+<a href="https://arxiv.org/abs/0805.4359">https://arxiv.org/abs/0805.4359</a>
+</p>
+<p>Robert B. Gramacy, Heng Lian (2011).
+<em>Gaussian process single-index models as emulators for computer
+experiments</em>.  Available as ArXiv article 1009.4241
+<a href="https://arxiv.org/abs/1009.4241">https://arxiv.org/abs/1009.4241</a>
+</p>
+<p>Chipman, H., George, E., &amp; McCulloch, R. (1998).
+<em>Bayesian CART model search (with discussion).</em>
+Journal of the American Statistical Association, <b>93</b>,
+935–960.
+</p>
+<p>Chipman, H., George, E., &amp; McCulloch, R. (2002).
+<em>Bayesian treed models.</em>
+Machine Learning, <b>48</b>, 303–324.
+</p>
+<p>M. Schonlau and Jones, D.R. and Welch, W.J. (1998).
+<em>Global versus local search in constrained optimization of
+computer models.</em>
+In "New Developments and applications in experimental design", 
+IMS Lecture Notes - Monograph Series 34.  11–25.
+</p>
+<p><a href="https://bobby.gramacy.com/r_packages/tgp/">https://bobby.gramacy.com/r_packages/tgp/</a>
+</p>
+
+
+<h3>See Also</h3>
+
+  <p><code>plot.tgp</code>,  <code>tgp.trees</code>,
+<code>predict.tgp</code>, <code>sens</code>, <code>default.itemps</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+##
+## Many of the examples below illustrate the above 
+## function(s) on random data.  Thus it can be fun
+## (and informative) to run them several times.
+##
+
+# 
+# simple linear response
+#
+
+# input and predictive data
+X &lt;- seq(0,1,length=50)
+XX &lt;- seq(0,1,length=99)
+Z &lt;- 1 + 2*X + rnorm(length(X),sd=0.25)
+
+out &lt;- blm(X=X, Z=Z, XX=XX)	# try Linear Model
+plot(out)			# plot the surface
+
+#
+# 1-d Example
+# 
+
+# construct some 1-d nonstationary data
+X &lt;- seq(0,20,length=100)
+XX &lt;- seq(0,20,length=99)
+Z &lt;- (sin(pi*X/5) + 0.2*cos(4*pi*X/5)) * (X &lt;= 9.6)
+lin &lt;- X&gt;9.6; 
+Z[lin] &lt;- -1 + X[lin]/10
+Z &lt;- Z + rnorm(length(Z), sd=0.1)
+
+out &lt;- btlm(X=X, Z=Z, XX=XX) 	# try Linear CART
+plot(out) 			# plot the surface
+tgp.trees(out) 		 	# plot the MAP trees
+
+out &lt;- btgp(X=X, Z=Z, XX=XX) 	# use a treed GP
+plot(out) 			# plot the surface
+tgp.trees(out) 		 	# plot the MAP trees
+
+
+#
+# 2-d example
+# (using the isotropic correlation function)
+#
+
+# construct some 2-d nonstationary data
+exp2d.data &lt;- exp2d.rand()
+X &lt;- exp2d.data$X; Z &lt;- exp2d.data$Z
+XX &lt;- exp2d.data$XX
+
+# try a GP
+out &lt;- bgp(X=X, Z=Z, XX=XX, corr="exp") 	
+plot(out) 			# plot the surface
+
+# try a treed GP LLM
+out &lt;- btgpllm(X=X, Z=Z, XX=XX, corr="exp") 
+plot(out) 			# plot the surface
+tgp.trees(out) 		 	# plot the MAP trees
+
+#
+# Motorcycle Accident Data
+#
+
+# get the data
+require(MASS)
+
+# try a GP 
+out &lt;- bgp(X=mcycle[,1], Z=mcycle[,2])
+plot(out)			# plot the surface
+
+# try a treed GP LLM
+# best to use the "b0" beta linear prior to capture common
+# common linear process throughout all regions (using the
+# ellipses "...") 
+out &lt;- btgpllm(X=mcycle[,1], Z=mcycle[,2], bprior="b0")
+plot(out)			# plot the surface
+tgp.trees(out)		 	# plot the MAP trees
+
+</code></pre>
+
+
+</div>

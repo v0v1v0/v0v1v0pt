@@ -1,0 +1,265 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TVECM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Threshold Vector Error Correction model (VECM)</h2>
+
+<h3>Description</h3>
+
+<p>Estimate a Threshold Vector Error Correction model (VECM)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TVECM(
+  data,
+  lag = 1,
+  nthresh = 1,
+  trim = 0.05,
+  ngridBeta = 50,
+  ngridTh = 50,
+  plot = TRUE,
+  th1 = list(exact = NULL, int = c("from", "to"), around = "val"),
+  th2 = list(exact = NULL, int = c("from", "to"), around = "val"),
+  beta = list(exact = NULL, int = c("from", "to"), around = c("val", "by")),
+  restr = c("none", "equal", "signOp"),
+  common = c("All", "only_ECT"),
+  include = c("const", "trend", "none", "both"),
+  dummyToBothRegimes = TRUE,
+  beta0 = 0,
+  methodMapply = FALSE,
+  trace = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>time series</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>Number of lags to include in each regime</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nthresh</code></td>
+<td>
+<p>number of threshold (see details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trim</code></td>
+<td>
+<p>trimming parameter indicating the minimal percentage of
+observations in each regime</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngridBeta</code></td>
+<td>
+<p>number of elements to search for the cointegrating value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ngridTh</code></td>
+<td>
+<p>number of elements to search for the threshold value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>Whether the grid with the SSR of each threshold should be plotted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>th1</code></td>
+<td>
+<p>different possibilities to pre-specify an exact value, an interval
+or a central point for the search of the threshold (or first threshold if
+nthresh=2)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>th2</code></td>
+<td>
+<p>different possibilities to pre-specify an exact value or a central
+point for the search of the second threshold (used only if nthresh=2)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta</code></td>
+<td>
+<p>different possibilities to pre-specify an exact value, an
+interval or a central point for the search of the cointegrating value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restr</code></td>
+<td>
+<p>Currently not available</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>common</code></td>
+<td>
+<p>Whether the regime-specific dynamics are only for the ECT or
+for the ECT and the lags</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include</code></td>
+<td>
+<p>Type of deterministic regressors to include</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dummyToBothRegimes</code></td>
+<td>
+<p>Whether the dummy in the one threshold model is
+applied to each regime or not.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>beta0</code></td>
+<td>
+<p>Additional regressors to include in the cointegrating relation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>methodMapply</code></td>
+<td>
+<p>only for programming. Is to make the choice between a for
+loop or <code>mapply</code> implementation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>should additional infos be printed? (logical)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For fixed threshold and cointegrating vector, the model is linear, so
+estimation of the regression parameters can be done directly by CLS
+(Conditional Least Squares). The search of the threshold and cointegrating
+parameters values which minimize the residual sum of squares (SSR) is made on
+a grid of potential values. For specification of the grids, see below.
+</p>
+<p>The function can estimate one as well as two thresholds:
+</p>
+ <dl>
+<dt>nthresh=1:</dt>
+<dd>
+<p> estimation of one threshold model (two regimes)
+upon a grid of <var>ngridTh</var> values (default to ALL) possible thresholds and
+delays values. </p>
+</dd>
+<dt>nthresh=2:</dt>
+<dd>
+<p>estimation of two thresholds model (three regimes).
+Conditional on the threshold found in model where nthresh=1, the second
+threshold is searched. When both are found, a second grid search is made with
+30 values around each threshold.</p>
+</dd> </dl>
+<p>The model can be either with a threshold effect on all variables ("All") or
+only on the error correction term (ECT) (argument "only ECT"). In the second
+case, the value for the middle threshold is taken a null, as in Balke and
+Fomby (1997).
+</p>
+<p>The grid for the threshold parameters can be set in different ways, through
+the argument <var>th1</var>, <var>th2</var> and <var>beta</var>:
+</p>
+ 
+<dl>
+<dt>exact:</dt>
+<dd>
+<p>Pre-specified value (for beta: cointegrating vector will be c(1,<code>-beta</code>))</p>
+</dd> 
+<dt>int:</dt>
+<dd>
+<p>Specify an interval (of length <var>ngridTh</var>) in which to search.</p>
+</dd>
+<dt>around:</dt>
+<dd>
+<p>Specify to take <var>ngridTh</var> points around the value given. </p>
+</dd>
+</dl>
+<p>The default is to do an interval search. Interval bounds for the threshold
+interval are simply the <var>trim</var> and 1-<var>trim</var> percents of the sorted
+error correction term.  For the cointegrating parameter, bounds of the
+interval are obtained from the (OLS) confidence interval of the linear
+cointegration case.  It is often found however that this interval is too
+tight. It is hence recommended to inspect the plot of the grid search.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Fitted model data
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthieu Stigler
+</p>
+
+
+<h3>References</h3>
+
+<p>Hansen, B. and Seo, B. (2002), Testing for two-regime threshold
+cointegration in vector error-correction models, Journal of Econometrics,
+110, pages 293 - 318
+</p>
+<p>Seo, M. H. (2009) Estimation of non linear error-correction models, Working
+paper
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>VECM</code> for the linear VECM, <code>TVAR</code> for the
+threshold VAR, <code>TVECM.SeoTest</code> to test for TVECM,
+<code>TVECM.sim</code> to simulate/bootstrap a TVECM.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+data(zeroyld)
+
+##Estimate a TVECM (we use here minimal grid, it should be usually much bigger!)
+
+tvec &lt;- TVECM(zeroyld, nthresh=2,lag=1, ngridBeta=20, ngridTh=30, plot=TRUE,trim=0.05, common="All")
+
+print(tvec)
+summary(tvec)
+
+#Obtain diverse infos:
+AIC(tvec)
+BIC(tvec)
+
+res.tvec&lt;-residuals(tvec)
+
+#export the equations as Latex:
+toLatex(tvec)
+
+</code></pre>
+
+
+</div>

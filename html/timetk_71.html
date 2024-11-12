@@ -1,0 +1,301 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>slidify</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a rolling (sliding) version of any function</h2>
+
+<h3>Description</h3>
+
+<p><code>slidify</code> returns a rolling (sliding) version of the input function, with a
+rolling (sliding) <code>.period</code> specified by the user.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">slidify(
+  .f,
+  .period = 1,
+  .align = c("center", "left", "right"),
+  .partial = FALSE,
+  .unlist = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A function, formula, or vector (not necessarily atomic).
+</p>
+<p>If a <strong>function</strong>, it is used as is.
+</p>
+<p>If a <strong>formula</strong>, e.g. <code>~ .x + 2</code>, it is converted to a function. There
+are three ways to refer to the arguments:
+</p>
+
+<ul>
+<li>
+<p> For a single argument function, use <code>.</code>
+</p>
+</li>
+<li>
+<p> For a two argument function, use <code>.x</code> and <code>.y</code>
+</p>
+</li>
+<li>
+<p> For more arguments, use <code>..1</code>, <code>..2</code>, <code>..3</code> etc
+</p>
+</li>
+</ul>
+<p>This syntax allows you to create very compact anonymous
+functions. Note that formula functions conceptually take dots
+(that's why you can use <code>..1</code> etc). They silently ignore
+additional arguments that are not used in the formula expression.
+</p>
+<p>If <strong>character vector</strong>, <strong>numeric vector</strong>, or <strong>list</strong>, it is
+converted to an extractor function. Character vectors index by
+name and numeric vectors index by position; use a list to index
+by position and name at different levels. If a component is not
+present, the value of <code>.default</code> will be returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.period</code></td>
+<td>
+<p>The period size to roll over</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.align</code></td>
+<td>
+<p>One of "center", "left" or "right".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.partial</code></td>
+<td>
+<p>Should the moving window be allowed to return partial (incomplete) windows
+instead of <code>NA</code> values. Set to <code>FALSE</code> by default, but can be switched to <code>TRUE</code> to remove <code>NA</code>'s.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.unlist</code></td>
+<td>
+<p>If the function returns a single value each time it is called,
+use <code>.unlist = TRUE</code>. If the function returns more than one value, or a more
+complicated object (like a linear model), use <code>.unlist = FALSE</code> to create
+a list-column of the rolling results.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>slidify()</code> function is almost identical to <code>tibbletime::rollify()</code>
+with 3 improvements:
+</p>
+
+<ol>
+<li>
+<p> Alignment ("center", "left", "right")
+</p>
+</li>
+<li>
+<p> Partial windows are allowed
+</p>
+</li>
+<li>
+<p> Uses <code>slider</code> under the hood, which improves speed and reliability by implementing
+code at C++ level
+</p>
+</li>
+</ol>
+<p><strong>Make any function a Sliding (Rolling) Function</strong>
+</p>
+<p><code>slidify()</code> turns a function into a sliding version
+of itself for use inside of a call to <code>dplyr::mutate()</code>, however it works
+equally as well when called from <code>purrr::map()</code>.
+</p>
+<p>Because of it's intended use with <code>dplyr::mutate()</code>, <code>slidify</code>
+creates a function that always returns output with the same length of the
+input
+</p>
+<p><strong>Alignment</strong>
+</p>
+<p>Rolling / Sliding functions generate <code>.period - 1</code> fewer values than the incoming vector.
+Thus, the vector needs to be aligned. Alignment of the vector follows 3 types:
+</p>
+
+<ul>
+<li> <p><strong>center (default):</strong> <code>NA</code> or <code>.partial</code> values are divided and added to the beginning and
+end of the series to "Center" the moving average. This is common in Time Series applications (e.g. denoising).
+</p>
+</li>
+<li> <p><strong>left:</strong> <code>NA</code> or <code>.partial</code> values are added to the end to shift the series to the Left.
+</p>
+</li>
+<li> <p><strong>right:</strong> <code>NA</code> or <code>.partial</code> values are added to the beginning to shift the series to the Right. This is common in
+Financial Applications (e.g moving average cross-overs).
+</p>
+</li>
+</ul>
+<p><strong>Allowing Partial Windows</strong>
+</p>
+<p>A key improvement over <code>tibbletime::slidify()</code> is that <code>timetk::slidify()</code> implements
+<code>.partial</code> rolling windows. Just set <code>.partial = TRUE</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>function</code> with the rolling/sliding conversion applied.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li>
+<p> The <a href="https://business-science.github.io/tibbletime/index.html">Tibbletime R Package</a>
+by Davis Vaughan, which includes the original <code>rollify()</code>
+Function
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Transformation Functions:
+</p>
+
+<ul><li> <p><code>slidify_vec()</code> - A simple vectorized function for applying summary functions
+to rolling windows.
+</p>
+</li></ul>
+<p>Augmentation Functions (Add Rolling Multiple Columns):
+</p>
+
+<ul><li> <p><code>tk_augment_slidify()</code> - For easily adding multiple rolling windows to you data
+</p>
+</li></ul>
+<p>Slider R Package:
+</p>
+
+<ul><li> <p><code>slider::pslide()</code> - The workhorse function that powers <code>timetk::slidify()</code>
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+FB &lt;- FANG %&gt;% dplyr::filter(symbol == "FB")
+
+
+# --- ROLLING MEAN (SINGLE ARG EXAMPLE) ---
+
+# Turn the normal mean function into a rolling mean with a 5 row .period
+mean_roll_5 &lt;- slidify(mean, .period = 5, .align = "right")
+
+FB %&gt;%
+    mutate(rolling_mean_5 = mean_roll_5(adjusted))
+
+# Use `partial = TRUE` to allow partial windows (those with less than the full .period)
+mean_roll_5_partial &lt;- slidify(mean, .period = 5, .align = "right", .partial = TRUE)
+
+FB %&gt;%
+    mutate(rolling_mean_5 = mean_roll_5_partial(adjusted))
+
+# There's nothing stopping you from combining multiple rolling functions with
+# different .period sizes in the same mutate call
+
+mean_roll_10 &lt;- slidify(mean, .period = 10, .align = "right")
+
+FB %&gt;%
+    select(symbol, date, adjusted) %&gt;%
+    mutate(
+        rolling_mean_5  = mean_roll_5(adjusted),
+        rolling_mean_10 = mean_roll_10(adjusted)
+    )
+
+# For summary operations like rolling means, we can accomplish large-scale
+# multi-rolls with tk_augment_slidify()
+
+FB %&gt;%
+    select(symbol, date, adjusted) %&gt;%
+    tk_augment_slidify(
+        adjusted, .period = 5:10, .f = mean, .align = "right",
+        .names = stringr::str_c("MA_", 5:10)
+    )
+
+# --- GROUPS AND ROLLING ----
+
+# One of the most powerful things about this is that it works with
+# groups since `mutate` is being used
+
+mean_roll_3 &lt;- slidify(mean, .period = 3, .align = "right")
+
+FANG %&gt;%
+    group_by(symbol) %&gt;%
+    mutate(mean_roll = mean_roll_3(adjusted)) %&gt;%
+    slice(1:5)
+
+
+# --- ROLLING CORRELATION (MULTIPLE ARG EXAMPLE) ---
+
+# With 2 args, use the purrr syntax of ~ and .x, .y
+# Rolling correlation example
+cor_roll &lt;- slidify(~cor(.x, .y), .period = 5, .align = "right")
+
+FB %&gt;%
+    mutate(running_cor = cor_roll(adjusted, open))
+
+# With &gt;2 args, create an anonymous function with &gt;2 args or use
+# the purrr convention of ..1, ..2, ..3 to refer to the arguments
+avg_of_avgs &lt;- slidify(
+    function(x, y, z) (mean(x) + mean(y) + mean(z)) / 3,
+    .period = 10,
+    .align = "right"
+)
+
+# Or
+avg_of_avgs &lt;- slidify(
+    ~(mean(..1) + mean(..2) + mean(..3)) / 3,
+    .period = 10,
+    .align  = "right"
+)
+
+FB %&gt;%
+    mutate(avg_of_avgs = avg_of_avgs(open, high, low))
+
+# Optional arguments MUST be passed at the creation of the rolling function
+# Only data arguments that are "rolled over" are allowed when calling the
+# rolling version of the function
+FB$adjusted[1] &lt;- NA
+
+roll_mean_na_rm &lt;- slidify(~mean(.x, na.rm = TRUE), .period = 5, .align = "right")
+
+FB %&gt;%
+    mutate(roll_mean = roll_mean_na_rm(adjusted))
+
+
+# --- ROLLING REGRESSIONS ----
+
+# Rolling regressions are easy to implement using `.unlist = FALSE`
+lm_roll &lt;- slidify(~lm(.x ~ .y), .period = 90, .unlist = FALSE, .align = "right")
+
+FB %&gt;%
+    tidyr::drop_na() %&gt;%
+    mutate(numeric_date = as.numeric(date)) %&gt;%
+    mutate(rolling_lm = lm_roll(adjusted, numeric_date)) %&gt;%
+    filter(!is.na(rolling_lm))
+
+
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_madgrad</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>MADGRAD optimizer</h2>
+
+<h3>Description</h3>
+
+<p>A Momentumized, Adaptive, Dual Averaged Gradient Method for Stochastic
+Optimization (MADGRAD) is a general purpose optimizer that
+can be used in place of SGD or Adam may converge faster and generalize
+better. Currently GPU-only. Typically, the same learning rate schedule
+that is used for SGD or Adam may be used. The overall learning rate is
+not comparable to either method and should be determined by a
+hyper-parameter sweep.
+</p>
+<p>MADGRAD requires less weight decay than other methods, often as little as
+zero. Momentum values used for SGD or Adam's beta1 should work here also.
+</p>
+<p>On sparse problems both weight_decay and momentum should be set to 0.
+(not yet supported in the R implementation).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_madgrad(params, lr = 0.01, momentum = 0.9, weight_decay = 0, eps = 1e-06)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>List of parameters to optimize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>Learning rate (default: 1e-2).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>momentum</code></td>
+<td>
+<p>Momentum value in  the range [0,1) (default: 0.9).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decay</code></td>
+<td>
+<p>Weight decay, i.e. a L2 penalty (default: 0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Term added to the denominator outside of
+the root operation to improve numerical stability
+(default: 1e-6).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A torch optimizer object implementing the <code>step</code> method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Daniel Falbel, <a href="mailto:dfalbel@gmail.com">dfalbel@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Aaron Defazio, Samy Jelassi,
+"Adaptivity without Compromise: A Momentumized, Adaptive, Dual
+Averaged Gradient Method for Stochastic Optimization".
+https://arxiv.org/abs/2101.11075
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch::torch_is_installed()) {
+# function to demonstrate optimization
+beale &lt;- function(x, y) {
+    log((1.5 - x + x * y)^2 + (2.25 - x - x * y^2)^2 + (2.625 - x + x * y^3)^2)
+ }
+# define optimizer
+optim &lt;- torchopt::optim_madgrad
+# define hyperparams
+opt_hparams &lt;- list(lr = 0.01)
+
+# starting point
+x0 &lt;- 3
+y0 &lt;- 3
+# create tensor
+x &lt;- torch::torch_tensor(x0, requires_grad = TRUE)
+y &lt;- torch::torch_tensor(y0, requires_grad = TRUE)
+# instantiate optimizer
+optim &lt;- do.call(optim, c(list(params = list(x, y)), opt_hparams))
+# run optimizer
+steps &lt;- 400
+x_steps &lt;- numeric(steps)
+y_steps &lt;- numeric(steps)
+for (i in seq_len(steps)) {
+    x_steps[i] &lt;- as.numeric(x)
+    y_steps[i] &lt;- as.numeric(y)
+    optim$zero_grad()
+    z &lt;- beale(x, y)
+    z$backward()
+    optim$step()
+}
+print(paste0("starting value = ", beale(x0, y0)))
+print(paste0("final value = ", beale(x_steps[steps], y_steps[steps])))
+}
+</code></pre>
+
+
+</div>

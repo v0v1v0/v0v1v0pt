@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>poly5_logs_plot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Visualize the simulation of log cutting along the stem using a 5th degree polynomial that describes the tree taper.</h2>
+
+<h3>Description</h3>
+
+<p>Plot the shape of the tree and visualize the extracted logs based on the tree measurements, assortments data.frame, and the 5th degree polynomial function that describes the tree's taper.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">poly5_logs_plot(
+  dbh,
+  h,
+  coef,
+  assortments,
+  stump_height,
+  downgrade,
+  broken,
+  defect_height,
+  lang
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dbh</code></td>
+<td>
+<p>tree diameter at breast height, in centimeters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>total tree height, in meters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>numerical vector containing six coefficients of the 5th degree polynomial function that describes the tree's taper.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assortments</code></td>
+<td>
+<p>a data.frame with five columns and n rows, where n is the number of different wood assortments to be obtained from the tree stem. The first column must contain the names of the assortments, the second, numerical, contains the minimum diameters at the small end of the logs, in centimeters. The third column, numerical, contains the minimum lengths of the logs, in meters. The fourth column, numerical, contains the maximum lengths of the logs, in meters. The fifth column, numerical, contains the values in centimeters referring to the loss of wood due to cutting logs. The algorithm prioritizes the extraction of assortments along the stem in the order presented in the data.frame, starting from the first line, to the last.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stump_height</code></td>
+<td>
+<p>tree cutting height, in meters. Default is 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>downgrade</code></td>
+<td>
+<p>if TRUE, the algorithm,from the defect_height onwards, simulates log extraction only for the last assortment in the assortments data.frame. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>broken</code></td>
+<td>
+<p>if TRUE, the algorithm will simulate the extraction of logs only up to the defect_height. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>defect_height</code></td>
+<td>
+<p>the height, in meters, from which the logs will be downgraded (if downgrade is TRUE) or log extraction simulation will be stopped (if broken is TRUE). Default is h * 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lang</code></td>
+<td>
+<p>language in which plot labels will be displayed. Current options are 'en' and 'pt-BR'. Default is 'en'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>check the <code>poly5_logs</code> function help for more details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a ggplot object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(minpack.lm)
+library(timbeR)
+
+tree_scaling &lt;- tree_scaling %&gt;%
+mutate(did = di/dbh,
+       hih = hi/h)
+
+poli5 &lt;- lm(did~hih+I(hih^2)+I(hih^3)+I(hih^4)+I(hih^5),tree_scaling)
+
+coef_poli &lt;- coef(poli5)
+
+dbh &lt;- 25
+h &lt;- 20
+
+assortments &lt;- data.frame(
+  NAME = c('15-25','4-15'),
+  SED = c(15,4),
+  MINLENGTH = c(2.65,2),
+  MAXLENGTH = c(2.65,4.2),
+  LOSS = c(5,5)
+)
+
+poly5_logs_plot(dbh, h, coef_poli, assortments)
+
+</code></pre>
+
+
+</div>

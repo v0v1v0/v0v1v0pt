@@ -1,0 +1,358 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_config_set</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set configuration settings.</h2>
+
+<h3>Description</h3>
+
+<p><code>tar_config_set()</code> writes special custom settings
+for the current project to an optional YAML configuration file.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_config_set(
+  inherits = NULL,
+  as_job = NULL,
+  garbage_collection = NULL,
+  label = NULL,
+  label_width = NULL,
+  level_separation = NULL,
+  reporter_make = NULL,
+  reporter_outdated = NULL,
+  script = NULL,
+  seconds_meta_append = NULL,
+  seconds_meta_upload = NULL,
+  seconds_reporter = NULL,
+  seconds_interval = NULL,
+  store = NULL,
+  shortcut = NULL,
+  use_crew = NULL,
+  workers = NULL,
+  config = Sys.getenv("TAR_CONFIG", "_targets.yaml"),
+  project = Sys.getenv("TAR_PROJECT", "main")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>inherits</code></td>
+<td>
+<p>Character of length 1, name of the project from which
+the current project should inherit configuration settings.
+The current project is the <code>project</code> argument, which
+defaults to <code>Sys.getenv("TAR_PROJECT", "main")</code>.
+If the <code>inherits</code> argument <code>NULL</code>, the <code>inherits</code> setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>as_job</code></td>
+<td>
+<p>Logical of length 1, <code>as_job</code> argument of <code>tar_make()</code>.
+<code>TRUE</code> to run as an RStudio IDE / Posit Workbench job,
+<code>FALSE</code> to run as a <code>callr</code> process in the main R session
+(depending on the <code>callr_function</code> argument).
+If <code>as_job_</code> is <code>TRUE</code>, then the <code>rstudioapi</code> package must be installed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical of length 1, <code>garbage_collection</code>
+argument of <code>tar_make()</code> (if <code>crew</code> is enabled),
+<code>tar_make_clustermq()</code>, and <code>tar_make_future()</code>.
+Whether to run garbage collection on the main process
+before sending a target
+to a worker. For <code>tar_make()</code>, this argument is
+ignored if <code>tar_option_get("controller")</code> is <code>NULL</code>.
+Independent from the <code>garbage_collection</code> argument of <code>tar_target()</code>,
+which controls garbage collection on the worker.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>Argument of <code>tar_glimpse()</code> and <code>tar_visnetwork()</code>
+to control node labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_width</code></td>
+<td>
+<p>Argument of <code>tar_glimpse()</code> and <code>tar_visnetwork()</code>
+to control the maximum width (number of characters wide)
+of the node labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level_separation</code></td>
+<td>
+<p>Argument of <code>tar_visnetwork()</code> and <code>tar_glimpse()</code>
+to control the space between hierarchical levels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reporter_make</code></td>
+<td>
+<p>Character of length 1, <code>reporter</code> argument to
+<code>tar_make()</code> and related functions that run the pipeline.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reporter_outdated</code></td>
+<td>
+<p>Character of length 1, <code>reporter</code> argument to
+<code>tar_outdated()</code> and related functions that do not run the pipeline.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the target script file
+that defines the pipeline (<code style="white-space: pre;">⁠_targets.R⁠</code> by default).
+This path should be either
+an absolute path or a path relative to the project root where you will
+call <code>tar_make()</code> and other functions. When <code>tar_make()</code> and friends
+run the script from the current working directory.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_meta_append</code></td>
+<td>
+<p>Argument of <code>tar_make()</code>, <code>tar_make_clustermq()</code>,
+and <code>tar_make_future()</code>.
+Positive numeric of length 1 with the minimum
+number of seconds between saves to the local metadata and progress files
+in the data store.
+Higher values generally make the pipeline run faster, but unsaved
+work (in the event of a crash) is not up to date.
+When the pipeline ends,
+all the metadata and progress data is saved immediately,
+regardless of <code>seconds_meta_append</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_meta_upload</code></td>
+<td>
+<p>Argument of <code>tar_make()</code>, <code>tar_make_clustermq()</code>,
+and <code>tar_make_future()</code>.
+Positive numeric of length 1 with the minimum
+number of seconds between uploads of the metadata and progress data
+to the cloud
+(see <a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>).
+Higher values generally make the pipeline run faster, but unsaved
+work (in the event of a crash) may not be backed up to the cloud.
+When the pipeline ends,
+all the metadata and progress data is uploaded immediately,
+regardless of <code>seconds_meta_upload</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_reporter</code></td>
+<td>
+<p>Argument of <code>tar_make()</code>, <code>tar_make_clustermq()</code>,
+and <code>tar_make_future()</code>. Positive numeric of length 1 with the minimum
+number of seconds between times when the reporter prints progress
+messages to the R console.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seconds_interval</code></td>
+<td>
+<p>Deprecated on 2023-08-24 (version 1.2.2.9001).
+Use <code>seconds_meta_append</code>, <code>seconds_meta_upload</code>,
+and <code>seconds_reporter</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the data store of the pipeline.
+If <code>NULL</code>, the <code>store</code> setting is left unchanged in the
+YAML configuration file (default: <code style="white-space: pre;">⁠_targets.yaml⁠</code>).
+Usually, the data store lives at <code style="white-space: pre;">⁠_targets⁠</code>.
+Set <code>store</code> to a custom directory
+to specify a path other than <code style="white-space: pre;">⁠_targets/⁠</code>. The path need not exist
+before the pipeline begins, and it need not end with "_targets",
+but it must be writeable.
+For optimal performance, choose a storage location
+with fast read/write access.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shortcut</code></td>
+<td>
+<p>logical of length 1, default <code>shortcut</code> argument
+to <code>tar_make()</code> and related functions.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_crew</code></td>
+<td>
+<p>Logical of length 1, whether to use <code>crew</code> in <code>tar_make()</code>
+if the <code>controller</code> option is set in <code>tar_option_set()</code> in the target
+script (<code style="white-space: pre;">⁠_targets.R⁠</code>). See <a href="https://books.ropensci.org/targets/crew.html">https://books.ropensci.org/targets/crew.html</a>
+for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>workers</code></td>
+<td>
+<p>Positive numeric of length 1, <code>workers</code> argument of
+<code>tar_make_clustermq()</code> and related functions that run the pipeline
+with parallel computing among targets.
+If the argument <code>NULL</code>, the setting is not modified.
+Use <code>tar_config_unset()</code> to delete a setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>config</code></td>
+<td>
+<p>Character of length 1, file path of the YAML
+configuration file with <code>targets</code> project settings.
+The <code>config</code> argument specifies which YAML configuration
+file that <code>tar_config_get()</code> reads from or <code>tar_config_set()</code>
+writes to in a single function call.
+It does not globally change which configuration file is used
+in subsequent function calls. The default file path of the YAML
+file is always <code style="white-space: pre;">⁠_targets.yaml⁠</code> unless you set another
+default path using the <code>TAR_CONFIG</code> environment variable,
+e.g. <code>Sys.setenv(TAR_CONFIG = "custom.yaml")</code>. This also has the
+effect of temporarily modifying the default arguments to other functions
+such as <code>tar_make()</code> because the default arguments
+to those functions are controlled by <code>tar_config_get()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>project</code></td>
+<td>
+<p>Character of length 1, name of the current
+<code>targets</code> project. Thanks to the <code>config</code> R package,
+<code>targets</code> YAML configuration files can store multiple
+sets of configuration settings, with each set corresponding
+to its own project. The <code>project</code> argument allows you to
+set or get a configuration setting for a specific project
+for a given call to <code>tar_config_set()</code> or <code>tar_config_get()</code>.
+The default project is always called <code>"main"</code>
+unless you set another
+default project using the <code>TAR_PROJECT</code> environment variable,
+e.g. <code>Sys.setenv(tar_project = "custom")</code>. This also has the
+effect of temporarily modifying the default arguments to other functions
+such as <code>tar_make()</code> because the default arguments
+to those functions are controlled by <code>tar_config_get()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>NULL</code> (invisibly)
+</p>
+
+
+<h3>Configuration</h3>
+
+<p>For several key functions like <code>tar_make()</code>, the
+default values of arguments are controlled though
+<code>tar_config_get()</code>. <code>tar_config_get()</code> retrieves data
+from an optional YAML configuration file.
+You can control the settings in the YAML
+file programmatically with <code>tar_config_set()</code>.
+The default file path of this YAML file is <code style="white-space: pre;">⁠_targets.yaml⁠</code>, and you can
+set another path globally using the <code>TAR_CONFIG</code>
+environment variable. The YAML file can store configuration
+settings for multiple projects, and you can globally
+set the default project with the <code>TAR_PROJECT</code> environment
+variable.
+The structure of the YAML file
+follows rules similar to the <code>config</code> R package, e.g.
+projects can inherit settings from one another using the <code>inherits</code> field.
+Exceptions include:
+</p>
+
+<ol>
+<li>
+<p> There is no requirement to have a configuration named <code>"default"</code>.
+</p>
+</li>
+<li>
+<p> Other projects do not inherit from the default project' automatically.
+</p>
+</li>
+<li>
+<p> Not all fields need values because <code>targets</code> already has defaults.
+</p>
+</li>
+</ol>
+<p><code>targets</code> does not actually invoke
+the <code>config</code> package. The implementation in <code>targets</code>
+was written from scratch without viewing or copying any
+part of the source code of <code>config</code>.
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other configuration: 
+<code>tar_config_get()</code>,
+<code>tar_config_projects()</code>,
+<code>tar_config_unset()</code>,
+<code>tar_config_yaml()</code>,
+<code>tar_envvars()</code>,
+<code>tar_option_get()</code>,
+<code>tar_option_reset()</code>,
+<code>tar_option_set()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script(list(tar_target(x, 1 + 1)))
+tar_config_get("store") # NULL (data store defaults to "_targets/")
+store_path &lt;- tempfile()
+tar_config_set(store = store_path)
+tar_config_get("store") # Shows a temp file.
+tar_make() # Writes to the custom data store identified in _targets.yaml.
+tar_read(x) # tar_read() knows about _targets.yaml too.
+file.exists("_targets") # FALSE
+file.exists(store_path) # TRUE
+})
+}
+</code></pre>
+
+
+</div>

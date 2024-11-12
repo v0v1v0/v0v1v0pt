@@ -1,0 +1,250 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>anomalize</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Automatic group-wise Anomaly Detection</h2>
+
+<h3>Description</h3>
+
+<p><code>anomalize()</code> is used to detect anomalies in time series data,
+either for a single time series or for multiple time series grouped by a specific column.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">anomalize(
+  .data,
+  .date_var,
+  .value,
+  .frequency = "auto",
+  .trend = "auto",
+  .method = "stl",
+  .iqr_alpha = 0.05,
+  .clean_alpha = 0.75,
+  .max_anomalies = 0.2,
+  .message = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tibble</code> or <code>data.frame</code> with a time-based column</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.date_var</code></td>
+<td>
+<p>A column containing either date or date-time values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.value</code></td>
+<td>
+<p>A column containing numeric values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.frequency</code></td>
+<td>
+<p>Controls the seasonal adjustment (removal of seasonality).
+Input can be either "auto", a time-based definition (e.g. "2 weeks"),
+or a numeric number of observations per frequency (e.g. 10).
+Refer to <code>tk_get_frequency()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.trend</code></td>
+<td>
+<p>Controls the trend component.
+For STL, trend controls the sensitivity of the LOESS smoother, which is used to remove the remainder.
+Refer to <code>tk_get_trend()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.method</code></td>
+<td>
+<p>The outlier detection method. Default: "stl". Currently
+"stl" is the only method. "twitter" is planned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.iqr_alpha</code></td>
+<td>
+<p>Controls the width of the "normal" range. Lower values are more conservative
+while higher values are less prone to incorrectly classifying "normal" observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.clean_alpha</code></td>
+<td>
+<p>Controls the threshold for cleaning
+the outliers. The default is 0.75, which means that the anomalies will be
+cleaned using the 0.75 * lower or upper bound of the recomposed time series,
+depending on the direction of the anomaly.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.max_anomalies</code></td>
+<td>
+<p>The maximum percent of anomalies permitted to be identified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.message</code></td>
+<td>
+<p>A boolean. If <code>TRUE</code>, will output information related to automatic frequency
+and trend selection (if applicable).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>anomalize()</code> method for anomaly detection that implements a 2-step process to
+detect outliers in time series.
+</p>
+<p><strong>Step 1: Detrend &amp; Remove Seasonality using STL Decomposition</strong>
+</p>
+<p>The decomposition separates the "season" and "trend" components from the "observed" values
+leaving the "remainder" for anomaly detection.
+</p>
+<p>The user can control two parameters: frequency and trend.
+</p>
+
+<ol>
+<li> <p><code>.frequency</code>: Adjusts the "season" component that is removed from the "observed" values.
+</p>
+</li>
+<li> <p><code>.trend</code>: Adjusts the trend window (t.window parameter from <code>stats::stl()</code> that is used.
+</p>
+</li>
+</ol>
+<p>The user may supply both <code>.frequency</code> and <code>.trend</code> as time-based durations (e.g. "6 weeks") or
+numeric values (e.g. 180) or "auto", which predetermines the frequency and/or trend based on
+the scale of the time series using the <code>tk_time_scale_template()</code>.
+</p>
+<p><strong>Step 2: Anomaly Detection</strong>
+</p>
+<p>Once "trend" and "season" (seasonality) is removed, anomaly detection is performed on the "remainder".
+Anomalies are identified, and boundaries (recomposed_l1 and recomposed_l2) are determined.
+</p>
+<p>The Anomaly Detection Method uses an inner quartile range (IQR) of +/-25 the median.
+</p>
+<p><em>IQR Adjustment, alpha parameter</em>
+</p>
+<p>With the default <code>alpha = 0.05</code>, the limits are established by expanding
+the 25/75 baseline by an IQR Factor of 3 (3X).
+The <em>IQR Factor = 0.15 / alpha</em> (hence 3X with alpha = 0.05):
+</p>
+
+<ul>
+<li>
+<p> To increase the IQR Factor controlling the limits, decrease the alpha,
+which makes it more difficult to be an outlier.
+</p>
+</li>
+<li>
+<p> Increase alpha to make it easier to be an outlier.
+</p>
+</li>
+<li>
+<p> The IQR outlier detection method is used in <code>forecast::tsoutliers()</code>.
+</p>
+</li>
+<li>
+<p> A similar outlier detection method is used by Twitter's <code>AnomalyDetection</code> package.
+</p>
+</li>
+<li>
+<p> Both Twitter and Forecast tsoutliers methods have been implemented in Business Science's <code>anomalize</code>
+package.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A <code>tibble</code> or <code>data.frame</code> with the following columns:
+</p>
+
+<ul>
+<li>
+<p> observed: original data
+</p>
+</li>
+<li>
+<p> seasonal: seasonal component
+</p>
+</li>
+<li>
+<p> seasadaj: seasonal adjusted
+</p>
+</li>
+<li>
+<p> trend: trend component
+</p>
+</li>
+<li>
+<p> remainder: residual component
+</p>
+</li>
+<li>
+<p> anomaly: Yes/No flag for outlier detection
+</p>
+</li>
+<li>
+<p> anomaly score: distance from centerline
+</p>
+</li>
+<li>
+<p> anomaly direction: -1, 0, 1 inidicator for direction of the anomaly
+</p>
+</li>
+<li>
+<p> recomposed_l1: lower level bound of recomposed time series
+</p>
+</li>
+<li>
+<p> recomposed_l2: upper level bound of recomposed time series
+</p>
+</li>
+<li>
+<p> observed_clean: original data with anomalies interpolated
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+
+<ol>
+<li>
+<p> CLEVELAND, R. B., CLEVELAND, W. S., MCRAE, J. E., AND TERPENNING, I.
+STL: A Seasonal-Trend Decomposition Procedure Based on Loess.
+Journal of Official Statistics, Vol. 6, No. 1 (1990), pp. 3-73.
+</p>
+</li>
+<li>
+<p> Owen S. Vallis, Jordan Hochenbaum and Arun Kejariwal (2014).
+A Novel Technique for Long-Term Anomaly Detection in the Cloud. Twitter Inc.
+</p>
+</li>
+</ol>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+walmart_sales_weekly %&gt;%
+    filter(id %in% c("1_1", "1_3")) %&gt;%
+    group_by(id) %&gt;%
+    anomalize(Date, Weekly_Sales)
+
+</code></pre>
+
+
+</div>

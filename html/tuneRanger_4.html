@@ -1,0 +1,179 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tuneRanger</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tuneRanger</h2>
+
+<h3>Description</h3>
+
+<p>Automatic tuning of random forests of the <code>ranger</code> package with one line of code.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tuneRanger(
+  task,
+  measure = NULL,
+  iters = 70,
+  iters.warmup = 30,
+  time.budget = NULL,
+  num.threads = NULL,
+  num.trees = 1000,
+  parameters = list(replace = FALSE, respect.unordered.factors = "order"),
+  tune.parameters = c("mtry", "min.node.size", "sample.fraction"),
+  save.file.path = NULL,
+  build.final.model = TRUE,
+  show.info = getOption("mlrMBO.show.info", TRUE)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>task</code></td>
+<td>
+<p>The mlr task created by <code>makeClassifTask</code>, <code>makeRegrTask</code> or <code>makeSurvTask</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>measure</code></td>
+<td>
+<p>Performance measure to evaluate/optimize. Default is brier score for classification and mse for regression. Can be changed to accuracy, AUC or logaritmic loss by setting it to <code>list(acc)</code>, <code>list(auc)</code> or <code>list(logloss)</code>. Other possible performance measures from mlr can be looked up in the <a href="https://mlr.mlr-org.com/articles/tutorial/measures.html">mlr tutorial</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iters</code></td>
+<td>
+<p>Number of iterations. Default is 70.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iters.warmup</code></td>
+<td>
+<p>Number of iterations for the warmup. Default is 30.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.budget</code></td>
+<td>
+<p>Running time budget in seconds. Note that the actual mbo run can take more time since the condition is checked after each iteration. The default NULL means: There is no time budget.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num.threads</code></td>
+<td>
+<p>Number of threads. Default is number of CPUs available.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num.trees</code></td>
+<td>
+<p>Number of trees.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>Optional list of fixed named parameters that should be passed to <code>ranger</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tune.parameters</code></td>
+<td>
+<p>Optional character vector of parameters that should be tuned. 
+Default is mtry, min.node.size and sample.fraction. Additionally replace and respect.unordered.factors can be 
+included in the tuning process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>save.file.path</code></td>
+<td>
+<p>File to which interim results are saved (e.g. "optpath.RData") in the current working directory. 
+Default is NULL, which does not save the results. If a file was specified and one iteration fails the algorithm can be 
+started again with <code>restartTuneRanger</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>build.final.model</code></td>
+<td>
+<p>[<code>logical(1)</code>]<br>
+Should the best found model be fitted on the complete dataset?
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show.info</code></td>
+<td>
+<p>Verbose mlrMBO output on console? Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Model based optimization is used as tuning strategy and the three parameters min.node.size, sample.fraction and mtry are tuned at once. Out-of-bag predictions are used for evaluation, which makes it much faster than other packages and tuning strategies that use for example 5-fold cross-validation. Classification as well as regression is supported. 
+The measure that should be optimized can be chosen from the list of measures in mlr: <a href="https://mlr.mlr-org.com/articles/tutorial/measures.html">mlr tutorial</a>
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with elements
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>recommended.pars</code></td>
+<td>
+<p>Recommended hyperparameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>results</code></td>
+<td>
+<p>A data.frame with all evaluated hyperparameters and performance and time results for each run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>The final model if <code>build.final.model</code> set to TRUE.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p><code>estimateTimeTuneRanger</code> for time estimation and <code>restartTuneRanger</code> for continuing the algorithm if there was an error.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(tuneRanger)
+library(mlr)
+
+# A mlr task has to be created in order to use the package
+data(iris)
+iris.task = makeClassifTask(data = iris, target = "Species")
+ 
+# Estimate runtime
+estimateTimeTuneRanger(iris.task)
+# Tuning
+res = tuneRanger(iris.task, measure = list(multiclass.brier), num.trees = 1000, 
+  num.threads = 2, iters = 70, save.file.path = NULL)
+  
+# Mean of best 5 % of the results
+res
+# Model with the new tuned hyperparameters
+res$model
+# Prediction
+predict(res$model, newdata = iris[1:10,])
+## End(Not run)
+</code></pre>
+
+
+</div>

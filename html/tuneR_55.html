@@ -1,0 +1,264 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>melfcc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> MFCC Calculation </h2>
+
+<h3>Description</h3>
+
+<p>Calculate Mel-frequency cepstral coefficients.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">melfcc(samples, sr = samples@samp.rate, wintime = 0.025, 
+    hoptime = 0.01, numcep = 12, lifterexp = 0.6, htklifter = FALSE,
+    sumpower = TRUE, preemph = 0.97, dither = FALSE,
+    minfreq = 0, maxfreq = sr/2, nbands = 40, bwidth = 1, 
+    dcttype = c("t2", "t1", "t3", "t4"), 
+    fbtype = c("mel", "htkmel", "fcmel", "bark"), usecmp = FALSE, 
+    modelorder = NULL, spec_out = FALSE, frames_in_rows = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>samples</code></td>
+<td>
+<p> Object of Wave-class or WaveMC-class. Only the first channel will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sr</code></td>
+<td>
+<p> Sampling rate of the signal. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wintime</code></td>
+<td>
+<p> Window length in sec. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hoptime</code></td>
+<td>
+<p> Step between successive windows in sec. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>numcep</code></td>
+<td>
+<p> Number of cepstra to return. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lifterexp</code></td>
+<td>
+<p> Exponent for liftering; 0 = none. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>htklifter</code></td>
+<td>
+<p> Use HTK sin lifter. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sumpower</code></td>
+<td>
+<p> If <code>sumpower = TRUE</code> the frequency scale transformation is based on the
+powerspectrum, if <code>sumpower = FALSE</code> it is based on its squareroot (absolute value of the spectrum) and
+squared afterwards. 
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preemph</code></td>
+<td>
+<p> Apply pre-emphasis filter [1 -preemph] (0 = none). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dither</code></td>
+<td>
+<p> Add offset to spectrum as if dither noise. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minfreq</code></td>
+<td>
+<p> Lowest band edge of mel filters (Hz). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxfreq</code></td>
+<td>
+<p> Highest band edge of mel filters (Hz). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nbands</code></td>
+<td>
+<p> Number of warped spectral bands to use. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bwidth</code></td>
+<td>
+<p> Width of spectral bands in Bark/Mel. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dcttype</code></td>
+<td>
+<p> Type of DCT used - 1 or 2 (or 3 for HTK or 4 for feacalc). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fbtype</code></td>
+<td>
+<p> Auditory frequency scale to use: <code>"mel"</code>,
+<code>"bark"</code>, <code>"htkmel"</code>, <code>"fcmel"</code>. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usecmp</code></td>
+<td>
+<p> Apply equal-loudness weighting and cube-root compression (PLP
+instead of LPC). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modelorder</code></td>
+<td>
+<p> If <code>modelorder &gt; 0</code>, fit a linear prediction (autoregressive-) model of this order and
+calculation of cepstra out of <code>lpcas</code>. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>spec_out</code></td>
+<td>
+<p> Should matrices of the power- and the auditory-spectrum be
+returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frames_in_rows</code></td>
+<td>
+<p> Return time frames in rows instead of columns (original Matlab code).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Calculation of the MFCCs imlcudes the following steps:
+</p>
+
+<ol>
+<li>
+<p>Preemphasis filtering
+</p>
+</li>
+<li>
+<p>Take the absolute value of the STFT (usage of Hamming window)
+</p>
+</li>
+<li>
+<p>Warp to auditory frequency scale (Mel/Bark)
+</p>
+</li>
+<li>
+<p>Take the DCT of the log-auditory-spectrum
+</p>
+</li>
+<li>
+<p>Return the first ‘ncep’ components
+</p>
+</li>
+</ol>
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>cepstra </code></td>
+<td>
+<p>Cepstral coefficients of the input signal (one time frame per
+row/column)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aspectrum </code></td>
+<td>
+<p>Auditory spectrum (spectrum after transformation to Mel/Bark
+scale) of the signal</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pspectrum </code></td>
+<td>
+<p>Power spectrum of the input signal.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lpcas </code></td>
+<td>
+<p>If <code>modelorder &gt; 0</code>, the linear prediction coefficients (LPC/PLP).</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>The following non-default values nearly duplicate Malcolm Slaney's mfcc (i.e. 
+</p>
+<pre>
+melfcc(d, 16000, wintime=0.016, lifterexp=0, minfreq=133.33, 
+       maxfreq=6855.6, sumpower=FALSE)
+</pre>
+<p>=~= <code>log(10) * 2 * mfcc(d, 16000)</code> in the Auditory toolbox for Matlab).
+</p>
+<p>The following non-default values nearly duplicate HTK's MFCC (i.e. 
+</p>
+<pre>
+melfcc(d, 16000, lifterexp=22, htklifter=TRUE, nbands=20, maxfreq=8000, 
+    sumpower=FALSE, fbtype="htkmel", dcttype="t3")
+</pre> 
+<p>=~= <code>2 * htkmelfcc(:,[13,[1:12]])</code>
+where HTK config has ‘PREEMCOEF = 0.97’, ‘NUMCHANS = 20’,
+‘CEPLIFTER = 22’, ‘NUMCEPS = 12’, ‘WINDOWSIZE = 250000.0’, ‘USEHAMMING = T’,
+‘TARGETKIND = MFCC_0’).
+</p>
+<p>For more detail on reproducing other programs' outputs, see
+<a href="https://www.ee.columbia.edu/~dpwe/resources/matlab/rastamat/mfccs.html">https://www.ee.columbia.edu/~dpwe/resources/matlab/rastamat/mfccs.html</a>
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p> Sebastian Krey <a href="mailto:krey@statistik.tu-dortmund.de">krey@statistik.tu-dortmund.de</a> </p>
+
+
+<h3>References</h3>
+
+<p>Daniel P. W. Ellis: <a href="https://www.ee.columbia.edu/~dpwe/resources/matlab/rastamat/">https://www.ee.columbia.edu/~dpwe/resources/matlab/rastamat/</a> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  testsound &lt;- normalize(sine(400) + sine(1000) + square(250), "16")
+  m1 &lt;- melfcc(testsound)
+
+  #Use PLP features to calculate cepstra and output the matrices like the
+  #original Matlab code (note: modelorder limits the number of cepstra)
+  m2 &lt;- melfcc(testsound, numcep=9, usecmp=TRUE, modelorder=8, 
+    spec_out=TRUE, frames_in_rows=FALSE)
+</code></pre>
+
+
+</div>

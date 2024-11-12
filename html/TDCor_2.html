@@ -1,0 +1,197 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>CalculateDPI</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate the DPI database to be used by the TDCOR main function</h2>
+
+<h3>Description</h3>
+
+<p><code>CalculateDPI</code> builds a DPI database for the TDCOR main function to prune diamond motifs
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">CalculateDPI(dataset,l_genes, l_prior, times, time_step, N, ks_int, kd_int, 
+delta_int, noise, delay)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+
+<p>Numerical matrix storing the transcriptomic data. The rows of this matrix must be named by gene codes (like AGI gene codes for Arabidopsis data).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>l_genes</code></td>
+<td>
+
+<p>A character vector containing the gene codes of the genes included in the analysis (i.e. to be used to build the network)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>l_prior</code></td>
+<td>
+
+<p>A numerical vector containing the prior information on the genes included in the network recontruction. By defining the <code>l_prior</code> vector, the user defines which genes should be regarded as positive regulators, which others as negative regulators and which can only be targets. The prior code is defined as follow: -1 for negative regulator; 0 for non-regulator (target only); 1 for positive regulator; 2 for both positive and negative regulator. The i-th element of the vector is the prior to associate to the i-th gene in <code>l_genes</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+
+<p>A numerical vector containing the successive times at which the samples were collected to generate the time-series transcriptomic dataset.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_step</code></td>
+<td>
+
+<p>A positive number corresponding to the time step (in hours) i.e. the temporal resolution at which the gene profiles are analysed. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N</code></td>
+<td>
+
+<p>An integer corresponding to the number of iterations that are carried out in order to estimate the DPI distributions. <code>N</code> should be &gt;5000.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ks_int</code></td>
+<td>
+
+<p>A numerical vector containing two positive elements in increasing order. The first (second) element is the lower (upper) boundary of the interval into which the equation parameters corresponding to the regulation strength of the targets by their regulators are randomly sampled.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kd_int</code></td>
+<td>
+
+<p>A numerical vector containing two positive elements in increasing order. The first (second) element is the lower (upper) boundary of the interval into which the equation parameters corresponding to the transcripts degradation rates
+are randomly sampled.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delta_int</code></td>
+<td>
+
+<p>A numerical vector containing two positive elements in increasing order and expressed in hours. The first (second) element is the lower (upper) boundary of the sampling interval for the equation parameters corresponding to the time needed for the transcripts of the regulator to mature, to get exported out of the nucleus, to get translated and for the regulator protein to get imported into the nucleus and to bind its target promoter.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noise</code></td>
+<td>
+
+<p>A positive number between 0 and 1 corresponding to the noisiness of the system. (0 = no noise, 1 = very strong noise).  <code>noise</code> should not be too high (for instance below 0.2).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delay</code></td>
+<td>
+
+<p>A positive number corresponding to the time shift (in hours) that is expected between the profile of a regulator and its direct target. This parameter is used to generate a reference target profile from the profile of the regulator and calculate the DPI index.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>CalculateDPI</code> models two 4-genes networks showing slightly different topologies. Each network topology is modelled using a specific system of delay differential equations. For all genes listed in <code>l_genes</code> whose corresponding prior in <code>l_prior</code> is not null (i.e. the genes that are regarded as transcriptional regulators), the two systems of differential equations are solved <code>N</code> times with <code>N</code> different sets of random parameters. The Diamond Pruning Index (DPI) is calculated for all of these <code>2N</code> networks. From these in silico data the conditional probability distribution of the DPI index given the regulator and the topology can be estimated. The probability distribution of the topology given DPI and the regulator is next calculated using Bayes' theorem and returned by the function. These shall be used when reconstructing the network to prune the "diamond" motifs. <br></p>
+<p><code>CalculateDPI</code> returns a list object which works as a database. It not only stores the conditional probability distributions but also all the necessary information for <code>TDCOR</code> to access the data, and the input parameters. The latter are read by the <code>UpdateDPI</code> function to update the database.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>CalculateDPI</code> returns a list object.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>prob_DPI_ind</code></td>
+<td>
+<p>A numerical vector whose elements are named by the vector <code>l_genes</code>; The element named gene i contains 0 if no probability distribution has been
+calculated for this gene (because its prior is 0) or a positive integer if this has been done. This positive integer then correponds to the number of the element in the list 
+<code>prob_DPI</code> that stores the spline functions of the calculated conditional probability distributions associated with this particular regulator.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prob_DPI</code></td>
+<td>
+<p>A list storing lists of 3 spline functions of probability distributions. Each of the spline functions corresponds to the probability distribution of one topology given a regulator and a DPI value. The information about which regulator was used to generate the distributions stored in the i-th element of <code>prob_DPI</code> is stored in the <code>prob_DPI_ind</code> vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prob_DPI_domain</code></td>
+<td>
+<p>A list storing vectors of two elements. The first (second) element of element i is the lowest (greatest) DPI value obtained during the simulation with the regulator i.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>input</code></td>
+<td>
+<p>A list that stores the input parameters used to generate the database.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>The computation of the TPI and DPI databases is time-consuming as it requires many systems of differential equations to be solved. It may take several hours to build a database for a hundred genes.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Julien Lavenus <a href="mailto:jl.tdcor@gmail.com">jl.tdcor@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See also <code>UpdateDPI</code>, <code>TDCor-package</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+# Load the LR transcriptomic dataset
+data(LR_dataset)
+
+# Load the vector of gene codes, gene names and prior
+data(l_genes)
+data(l_names)
+data(l_prior)
+
+# Load the vector of time points for the LR_dataset
+data(times)
+
+# Generate a small DPI database (3 genes)
+DPI_example=CalculateDPI(dataset=LR_dataset,l_genes=l_genes[4:6],l_prior=l_prior[4:6],
+times=times,time_step=1,N=5000,ks_int=c(0.5,3),kd_int=c(0.5,3),delta_int=c(0.5,3),
+noise=0.15,delay=3)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

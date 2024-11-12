@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cfa.extract.itempars</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Extracting Item Parameters from a Fitted <code>cfa</code> Object in <span class="pkg">lavaan</span>
+</h2>
+
+<h3>Description</h3>
+
+<p>This function extract item parameters from a fitted
+<code>lavaan::cfa</code> object in <span class="pkg">lavaan</span>. It
+extract item loadings, item intercepts and the mean
+and covariance matrix of latent variables in a
+confirmatory factor analysis model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cfa.extract.itempars(object)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>Fitted <code>cfa</code> object
+</p>
+</td>
+</tr></table>
+<h3>Value</h3>
+
+<p>List with following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>L</code></td>
+<td>
+<p>Matrix of item loadings</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+<p>Vector of item intercepts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>psi</code></td>
+<td>
+<p>Residual covariance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Sigma</code></td>
+<td>
+<p>Covariance matrix of latent variables</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+<p>Vector of means of latent variables</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further values</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p>See <code>IRTLikelihood.cfa</code> for extracting the
+individual likelihood from fitted confirmatory
+factor analyses.
+</p>
+<p><code>lavaan::cfa</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: CFA data.Students
+#############################################################################
+
+library(lavaan)
+library(CDM)
+
+data(data.Students, package="CDM")
+dat &lt;- data.Students
+
+dat1 &lt;- dat[, paste0( "mj", 1:4 ) ]
+
+#*** Model 1: Unidimensional model scale mj
+lavmodel &lt;- "
+   mj=~ mj1 + mj2 + mj3 + mj4
+   mj ~~ mj
+     "
+mod1 &lt;- lavaan::cfa( lavmodel, data=dat1, std.lv=TRUE )
+summary(mod1, standardized=TRUE, rsquare=TRUE )
+# extract parameters
+res1 &lt;- TAM::cfa.extract.itempars( mod1 )
+
+## Not run: 
+#*** Model 2: Scale mj - explicit modelling of item intercepts
+lavmodel &lt;- "
+   mj=~ mj1 + mj2 + mj3 + mj4
+   mj ~~ mj
+   mj1 ~ 1
+     "
+mod2 &lt;- lavaan::cfa( lavmodel, data=dat1, std.lv=TRUE )
+summary(mod2, standardized=TRUE, rsquare=TRUE )
+res2 &lt;- TAM::cfa.extract.itempars( mod2 )
+
+#*** Model 3: Tau-parallel measurements scale mj
+lavmodel &lt;- "
+   mj=~ a*mj1 + a*mj2 + a*mj3 + a*mj4
+   mj ~~ 1*mj
+   mj1 ~ b*1
+   mj2 ~ b*1
+   mj3 ~ b*1
+   mj4 ~ b*1
+     "
+mod3 &lt;- lavaan::cfa( lavmodel, data=dat1, std.lv=TRUE )
+summary(mod3, standardized=TRUE, rsquare=TRUE )
+res3 &lt;- TAM::cfa.extract.itempars( mod3 )
+
+#*** Model 4: Two-dimensional CFA with scales mj and sc
+dat2 &lt;- dat[, c(paste0("mj",1:4), paste0("sc",1:4)) ]
+# lavaan model with shortage "__" operator
+lavmodel &lt;- "
+   mj=~ mj1__mj4
+   sc=~ sc1__sc4
+   mj ~~ sc
+   mj ~~ 1*mj
+   sc ~~ 1*sc
+     "
+lavmodel &lt;- TAM::lavaanify.IRT( lavmodel, data=dat2 )$lavaan.syntax
+cat(lavmodel)
+mod4 &lt;- lavaan::cfa( lavmodel, data=dat2, std.lv=TRUE )
+summary(mod4, standardized=TRUE, rsquare=TRUE )
+res4 &lt;- TAM::cfa.extract.itempars( mod4 )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

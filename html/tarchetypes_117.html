@@ -1,0 +1,560 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_rep2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Dynamic batched computation downstream of <code>tar_rep()</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Batching is important for optimizing the efficiency
+of heavily dynamically-branched workflows:
+<a href="https://books.ropensci.org/targets/dynamic.html#batching">https://books.ropensci.org/targets/dynamic.html#batching</a>.
+<code>tar_rep2()</code> uses dynamic branching to iterate
+over the batches and reps of existing upstream targets.
+</p>
+<p><code>tar_rep2()</code> expects unevaluated language for the <code>name</code>, <code>command</code>,
+and <code>...</code> arguments
+(e.g. <code>tar_rep2(name = sim, command = simulate(), data1, data2)</code>)
+whereas <code>tar_rep2_raw()</code> expects an evaluated string for <code>name</code>,
+an evaluated expression object for <code>command</code>,
+and a character vector for <code>targets</code>
+(e.g.
+<code style="white-space: pre;">⁠tar_rep2_raw("sim", quote(simulate(x, y)), targets = c("x', "y"))⁠</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_rep2(
+  name,
+  command,
+  ...,
+  rep_workers = 1,
+  tidy_eval = targets::tar_option_get("tidy_eval"),
+  packages = targets::tar_option_get("packages"),
+  library = targets::tar_option_get("library"),
+  format = targets::tar_option_get("format"),
+  repository = targets::tar_option_get("repository"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  deployment = targets::tar_option_get("deployment"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  storage = targets::tar_option_get("storage"),
+  retrieval = targets::tar_option_get("retrieval"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+
+tar_rep2_raw(
+  name,
+  command,
+  targets,
+  rep_workers = 1,
+  tidy_eval = targets::tar_option_get("tidy_eval"),
+  packages = targets::tar_option_get("packages"),
+  library = targets::tar_option_get("library"),
+  format = targets::tar_option_get("format"),
+  repository = targets::tar_option_get("repository"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  deployment = targets::tar_option_get("deployment"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  storage = targets::tar_option_get("storage"),
+  retrieval = targets::tar_option_get("retrieval"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Name of the target.
+<code>tar_rep2()</code> expects unevaluated language for the <code>name</code>, <code>command</code>,
+and <code>...</code> arguments
+(e.g. <code>tar_rep2(name = sim, command = simulate(), data1, data2)</code>)
+whereas <code>tar_rep2_raw()</code> expects an evaluated string for <code>name</code>,
+an evaluated expression object for <code>command</code>,
+and a character vector for <code>targets</code>
+(e.g.
+<code style="white-space: pre;">⁠tar_rep2_raw("sim", quote(simulate(x, y)), targets = c("x', "y"))⁠</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>command</code></td>
+<td>
+<p>R code to run multiple times. Must return a list or
+data frame because <code>tar_rep()</code> will try to append new elements/columns
+<code>tar_batch</code> and <code>tar_rep</code> to the output to denote the batch
+and rep-within-batch IDs, respectively.
+</p>
+<p><code>tar_rep2()</code> expects unevaluated language for the <code>name</code>, <code>command</code>,
+and <code>...</code> arguments
+(e.g. <code>tar_rep2(name = sim, command = simulate(), data1, data2)</code>)
+whereas <code>tar_rep2_raw()</code> expects an evaluated string for <code>name</code>,
+an evaluated expression object for <code>command</code>,
+and a character vector for <code>targets</code>
+(e.g.
+<code style="white-space: pre;">⁠tar_rep2_raw("sim", quote(simulate(x, y)), targets = c("x', "y"))⁠</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Symbols to name one or more upstream batched targets
+created by <code>tar_rep()</code>.
+If you supply more than one such target, all those targets must have the
+same number of batches and reps per batch. And they must all return
+either data frames or lists. List targets must use <code>iteration = "list"</code>
+in <code>tar_rep()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rep_workers</code></td>
+<td>
+<p>Positive integer of length 1, number of local R
+processes to use to run reps within batches in parallel. If 1,
+then reps are run sequentially within each batch. If greater than 1,
+then reps within batch are run in parallel using a PSOCK cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tidy_eval</code></td>
+<td>
+<p>Logical, whether to enable tidy evaluation
+when interpreting <code>command</code> and <code>pattern</code>. If <code>TRUE</code>, you can use the
+"bang-bang" operator <code style="white-space: pre;">⁠!!⁠</code> to programmatically insert
+the values of global objects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>packages</code></td>
+<td>
+<p>Character vector of packages to load right before
+the target runs or the output data is reloaded for
+downstream targets. Use <code>tar_option_set()</code> to set packages
+globally for all subsequent targets you define.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>library</code></td>
+<td>
+<p>Character vector of library paths to try
+when loading <code>packages</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Optional storage format for the target's return value.
+With the exception of <code>format = "file"</code>, each target
+gets a file in <code style="white-space: pre;">⁠_targets/objects⁠</code>, and each format is a different
+way to save and load this file. See the "Storage formats" section
+for a detailed list of possible data storage formats.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>repository</code></td>
+<td>
+<p>Character of length 1, remote repository for target
+storage. Choices:
+</p>
+
+<ul>
+<li> <p><code>"local"</code>: file system of the local machine.
+</p>
+</li>
+<li> <p><code>"aws"</code>: Amazon Web Services (AWS) S3 bucket. Can be configured
+with a non-AWS S3 bucket using the <code>endpoint</code> argument of
+<code>tar_resources_aws()</code>, but versioning capabilities may be lost
+in doing so.
+See the cloud storage section of
+<a href="https://books.ropensci.org/targets/data.html">https://books.ropensci.org/targets/data.html</a>
+for details for instructions.
+</p>
+</li>
+<li> <p><code>"gcp"</code>: Google Cloud Platform storage bucket.
+See the cloud storage section of
+<a href="https://books.ropensci.org/targets/data.html">https://books.ropensci.org/targets/data.html</a>
+for details for instructions.
+</p>
+</li>
+<li>
+<p> A character string from <code>tar_repository_cas()</code> for content-addressable
+storage.
+</p>
+</li>
+</ul>
+<p>Note: if <code>repository</code> is not <code>"local"</code> and <code>format</code> is <code>"file"</code>
+then the target should create a single output file.
+That output file is uploaded to the cloud and tracked for changes
+where it exists in the cloud. The local file is deleted after
+the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iteration</code></td>
+<td>
+<p>Character of length 1, name of the iteration mode
+of the target. Choices:
+</p>
+
+<ul>
+<li> <p><code>"vector"</code>: branching happens with <code>vctrs::vec_slice()</code> and
+aggregation happens with <code>vctrs::vec_c()</code>.
+</p>
+</li>
+<li> <p><code>"list"</code>, branching happens with <code style="white-space: pre;">⁠[[]]⁠</code> and aggregation happens with
+<code>list()</code>.
+</p>
+</li>
+<li> <p><code>"group"</code>: <code>dplyr::group_by()</code>-like functionality to branch over
+subsets of a non-dynamic data frame.
+For <code>iteration = "group"</code>, the target must not by dynamic
+(the <code>pattern</code> argument of <code>tar_target()</code> must be left <code>NULL</code>).
+The target's return value must be a data
+frame with a special <code>tar_group</code> column of consecutive integers
+from 1 through the number of groups. Each integer designates a group,
+and a branch is created for each collection of rows in a group.
+See the <code>tar_group()</code> function to see how you can
+create the special <code>tar_group</code> column with <code>dplyr::group_by()</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error</code></td>
+<td>
+<p>Character of length 1, what to do if the target
+stops and throws an error. Options:
+</p>
+
+<ul>
+<li> <p><code>"stop"</code>: the whole pipeline stops and throws an error.
+</p>
+</li>
+<li> <p><code>"continue"</code>: the whole pipeline keeps going.
+</p>
+</li>
+<li> <p><code>"null"</code>: The errored target continues and returns <code>NULL</code>.
+The data hash is deliberately wrong so the target is not
+up to date for the next run of the pipeline.
+</p>
+</li>
+<li> <p><code>"abridge"</code>: any currently running targets keep running,
+but no new targets launch after that.
+</p>
+</li>
+<li> <p><code>"trim"</code>: all currently running targets stay running. A queued
+target is allowed to start if:
+</p>
+
+<ol>
+<li>
+<p> It is not downstream of the error, and
+</p>
+</li>
+<li>
+<p> It is not a sibling branch from the same <code>tar_target()</code> call
+(if the error happened in a dynamic branch).
+</p>
+</li>
+</ol>
+<p>The idea is to avoid starting any new work that the immediate error
+impacts. <code>error = "trim"</code> is just like <code>error = "abridge"</code>,
+but it allows potentially healthy regions of the dependency graph
+to begin running.
+(Visit <a href="https://books.ropensci.org/targets/debugging.html">https://books.ropensci.org/targets/debugging.html</a>
+to learn how to debug targets using saved workspaces.)
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>memory</code></td>
+<td>
+<p>Character of length 1, memory strategy.
+If <code>"persistent"</code>, the target stays in memory
+until the end of the pipeline (unless <code>storage</code> is <code>"worker"</code>,
+in which case <code>targets</code> unloads the value from memory
+right after storing it in order to avoid sending
+copious data over a network).
+If <code>"transient"</code>, the target gets unloaded
+after every new target completes.
+Either way, the target gets automatically loaded into memory
+whenever another target needs the value.
+For cloud-based dynamic files
+(e.g. <code>format = "file"</code> with <code>repository = "aws"</code>),
+this memory strategy applies to the
+temporary local copy of the file:
+<code>"persistent"</code> means it remains until the end of the pipeline
+and is then deleted,
+and <code>"transient"</code> means it gets deleted as soon as possible.
+The former conserves bandwidth,
+and the latter conserves local storage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical, whether to run <code>base::gc()</code>
+just before the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deployment</code></td>
+<td>
+<p>Character of length 1. If <code>deployment</code> is
+<code>"main"</code>, then the target will run on the central controlling R process.
+Otherwise, if <code>deployment</code> is <code>"worker"</code> and you set up the pipeline
+with distributed/parallel computing, then
+the target runs on a parallel worker. For more on distributed/parallel
+computing in <code>targets</code>, please visit
+<a href="https://books.ropensci.org/targets/crew.html">https://books.ropensci.org/targets/crew.html</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priority</code></td>
+<td>
+<p>Numeric of length 1 between 0 and 1. Controls which
+targets get deployed first when multiple competing targets are ready
+simultaneously. Targets with priorities closer to 1 get dispatched earlier
+(and polled earlier in <code>tar_make_future()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resources</code></td>
+<td>
+<p>Object returned by <code>tar_resources()</code>
+with optional settings for high-performance computing
+functionality, alternative data storage formats,
+and other optional capabilities of <code>targets</code>.
+See <code>tar_resources()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>storage</code></td>
+<td>
+<p>Character of length 1, only relevant to
+<code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+Must be one of the following values:
+</p>
+
+<ul>
+<li> <p><code>"main"</code>: the target's return value is sent back to the
+host machine and saved/uploaded locally.
+</p>
+</li>
+<li> <p><code>"worker"</code>: the worker saves/uploads the value.
+</p>
+</li>
+<li> <p><code>"none"</code>: almost never recommended. It is only for
+niche situations, e.g. the data needs to be loaded
+explicitly from another language. If you do use it,
+then the return value of the target is totally ignored
+when the target ends, but
+each downstream target still attempts to load the data file
+(except when <code>retrieval = "none"</code>).
+</p>
+<p>If you select <code>storage = "none"</code>, then
+the return value of the target's command is ignored,
+and the data is not saved automatically.
+As with dynamic files (<code>format = "file"</code>) it is the
+responsibility of the user to write to
+the data store from inside the target.
+</p>
+<p>The distinguishing feature of <code>storage = "none"</code>
+(as opposed to <code>format = "file"</code>)
+is that in the general case,
+downstream targets will automatically try to load the data
+from the data store as a dependency. As a corollary, <code>storage = "none"</code>
+is completely unnecessary if <code>format</code> is <code>"file"</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>retrieval</code></td>
+<td>
+<p>Character of length 1, only relevant to
+<code>tar_make_clustermq()</code> and <code>tar_make_future()</code>.
+Must be one of the following values:
+</p>
+
+<ul>
+<li> <p><code>"main"</code>: the target's dependencies are loaded on the host machine
+and sent to the worker before the target runs.
+</p>
+</li>
+<li> <p><code>"worker"</code>: the worker loads the targets dependencies.
+</p>
+</li>
+<li> <p><code>"none"</code>: the dependencies are not loaded at all.
+This choice is almost never recommended. It is only for
+niche situations, e.g. the data needs to be loaded
+explicitly from another language.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cue</code></td>
+<td>
+<p>An optional object from <code>tar_cue()</code> to customize the
+rules that decide whether the target is up to date.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>description</code></td>
+<td>
+<p>Character of length 1, a custom free-form human-readable
+text description of the target. Descriptions appear as target labels
+in functions like <code>tar_manifest()</code> and <code>tar_visnetwork()</code>,
+and they let you select subsets of targets for the <code>names</code> argument of
+functions like <code>tar_make()</code>. For example,
+<code>tar_manifest(names = tar_described_as(starts_with("survival model")))</code>
+lists all the targets whose descriptions start with the character
+string <code>"survival model"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>targets</code></td>
+<td>
+<p>Character vector of names of upstream batched targets
+created by <code>tar_rep()</code>.
+If you supply more than one such target, all those targets must have the
+same number of batches and reps per batch. And they must all return
+either data frames or lists. List targets must use <code>iteration = "list"</code>
+in <code>tar_rep()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A new target object to perform batched computation.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>Replicate-specific seeds</h3>
+
+<p>In ordinary pipelines, each target has its own unique deterministic
+pseudo-random number generator seed derived from its target name.
+In batched replicate, however, each batch is a target with multiple
+replicate within that batch. That is why <code>tar_rep()</code>
+and friends give each <em>replicate</em> its own unique seed.
+Each replicate-specific seed is created
+based on the dynamic parent target name,
+<code>tar_option_get("seed")</code> (for <code>targets</code> version 0.13.5.9000 and above),
+batch index, and rep-within-batch index.
+The seed is set just before the replicate runs.
+Replicate-specific seeds are invariant to batching structure.
+In other words,
+<code>tar_rep(name = x, command = rnorm(1), batches = 100, reps = 1, ...)</code>
+produces the same numerical output as
+<code>tar_rep(name = x, command = rnorm(1), batches = 10, reps = 10, ...)</code>
+(but with different batch names).
+Other target factories with this seed scheme are <code>tar_rep2()</code>,
+<code>tar_map_rep()</code>, <code>tar_map2_count()</code>, <code>tar_map2_size()</code>,
+and <code>tar_render_rep()</code>.
+For the <code style="white-space: pre;">⁠tar_map2_*()⁠</code> functions,
+it is possible to manually supply your own seeds
+through the <code>command1</code> argument and then invoke them in your
+custom code for <code>command2</code> (<code>set.seed()</code>, <code>withr::with_seed</code>,
+or <code>withr::local_seed()</code>). For <code>tar_render_rep()</code>,
+custom seeds can be supplied to the <code>params</code> argument
+and then invoked in the individual R Markdown reports.
+Likewise with <code>tar_quarto_rep()</code> and the <code>execute_params</code> argument.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other branching: 
+<code>tar_map2()</code>,
+<code>tar_map2_count()</code>,
+<code>tar_map2_size()</code>,
+<code>tar_map_rep()</code>,
+<code>tar_rep()</code>,
+<code>tar_rep_map()</code>,
+<code>tar_rep_map_raw()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+targets::tar_script({
+  library(tarchetypes)
+  list(
+    tar_rep(
+      data1,
+      data.frame(value = rnorm(1)),
+      batches = 2,
+      reps = 3
+    ),
+    tar_rep(
+      data2,
+      list(value = rnorm(1)),
+      batches = 2, reps = 3,
+      iteration = "list" # List iteration is important for batched lists.
+    ),
+    tar_rep2(
+      aggregate,
+      data.frame(value = data1$value + data2$value),
+      data1,
+      data2
+    ),
+    tar_rep2_raw(
+      "aggregate2",
+      quote(data.frame(value = data1$value + data2$value)),
+      targets = c("data1", "data2")
+    )
+  )
+})
+targets::tar_make()
+targets::tar_read(aggregate)
+})
+}
+</code></pre>
+
+
+</div>

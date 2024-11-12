@@ -1,0 +1,124 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>est_test_subject</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate subject loading of testing data</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates the subject loading of the testing data
+based on feature and temporal loading from training data,
+so that both the testing data and training data have the same dimensionality reduction.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">est_test_subject(datlist, res_tempted, mean_svd = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>datlist</code></td>
+<td>
+<p>Testing data formatted into datlist in the same fashion as the training data.
+The same transformation needs to be used for both training and testing data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>res_tempted</code></td>
+<td>
+<p>Result from <code>tempted</code> ran on the training data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_svd</code></td>
+<td>
+<p>Result from <code>svd_centralize</code> ran on the training data.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>estimated subject loading of testing data
+</p>
+
+
+<h3>References</h3>
+
+<p>Shi P, Martino C, Han R, Janssen S, Buck G, Serrano M, Owzar K, Knight R, Shenhav L, Zhang AR. (2023) <em>Time-Informed Dimensionality Reduction for Longitudinal Microbiome Studies</em>. bioRxiv. doi: 10.1101/550749. <a href="https://www.biorxiv.org/content/10.1101/550749">https://www.biorxiv.org/content/10.1101/550749</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Take a subset of the samples so the example runs faster
+
+# Here we are taking samples from the odd months
+sub_sample &lt;- rownames(meta_table)[(meta_table$day_of_life%/%12)%%2==1]
+count_table_sub &lt;- count_table[sub_sample,]
+processed_table_sub &lt;- processed_table[sub_sample,]
+meta_table_sub &lt;- meta_table[sub_sample,]
+
+# split the example data into training and testing
+
+id_test &lt;- meta_table_sub$studyid=="2"
+
+count_train &lt;- count_table_sub[!id_test,]
+meta_train &lt;- meta_table_sub[!id_test,]
+
+count_test &lt;- count_table_sub[id_test,]
+meta_test &lt;- meta_table_sub[id_test,]
+
+# run tempted on training data
+
+datlist_train &lt;- format_tempted(count_train,
+                                meta_train$day_of_life,
+                                meta_train$studyid,
+                                threshold=0.95,
+                                pseudo=0.5,
+                                transform="clr")
+
+mean_svd_train &lt;- svd_centralize(datlist_train, r=1)
+
+res_tempted_train &lt;- tempted(mean_svd_train$datlist,
+r=2, smooth=1e-5)
+
+# get the overlapping features
+
+count_test &lt;- count_test[,rownames(datlist_train[[1]])[-1]]
+
+datlist_test &lt;- format_tempted(count_test,
+                               meta_test$day_of_life,
+                               meta_test$studyid,
+                               threshold=1,
+                               pseudo=0.5,
+                               transform="clr")
+
+# estimate the subject loading of the testing subject
+
+sub_test &lt;- est_test_subject(datlist_test, res_tempted_train, mean_svd_train)
+
+# train logistic regression classifier on training subjects
+
+metauni &lt;- unique(meta_table_sub[,c("studyid", "delivery")])
+rownames(metauni) &lt;- metauni$studyid
+Atrain &lt;- as.data.frame(res_tempted_train$A_hat)
+Atrain$delivery &lt;- metauni[rownames(Atrain),"delivery"]=="Cesarean"
+glm_train &lt;- glm(delivery ~ PC1+PC2,
+                 data=Atrain, family=binomial(link="logit"))
+summary(glm_train)
+
+# predict the label of testing subject, whose true label is "Cesarean"
+
+predict(glm_train, newdata=as.data.frame(sub_test), type="response")
+
+</code></pre>
+
+
+</div>

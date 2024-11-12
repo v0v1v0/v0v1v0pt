@@ -1,0 +1,83 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>map2_cog</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Map over multiple inputs simultaneously and return a vector of cognostics data frames</h2>
+
+<h3>Description</h3>
+
+<p>Map over multiple inputs simultaneously and return a vector of cognostics data frames
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">map2_cog(.x, .y, .f, ...)
+
+pmap_cog(.l, .f, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x, .y</code></td>
+<td>
+<p>Vectors of the same length. A vector of length 1 will be recycled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A function, formula, or atomic vector (see <code>map2</code> for details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed on to .f.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.l</code></td>
+<td>
+<p>A list of lists. The length of .l determines the number of arguments that .f will be called with. List names will be used if present.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <code>map2</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(tidyr)
+library(purrr)
+library(plotly)
+library(dplyr)
+
+iris %&gt;%
+  nest(data = -Species) %&gt;%
+  mutate(
+    mod = map(data, ~ lm(Sepal.Length ~ Sepal.Width, data = .x)),
+    cogs = map2_cog(data, mod, function(data, mod) {
+      tibble(max_sl = max(data$Sepal.Length), slope = coef(mod)[2])
+    }),
+    panel = map2_plot(data, mod, function(data, mod) {
+      plot_ly(data = data, x = ~Sepal.Width, y = ~Sepal.Length,
+        type = "scatter", mode = "markers", name = "data") %&gt;%
+        add_trace(data = data, x = ~Sepal.Width, y = ~predict(mod),
+          mode = "lines", name = "lm")
+    })) %&gt;%
+  trelliscope(name = "iris")
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,82 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>coefs2poly</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Product of the Polynomials in an ARIMA Model</h2>
+
+<h3>Description</h3>
+
+<p>This function collapses the polynomials of an ARIMA model 
+into two polynomials: the product of the autoregressive polynomials 
+and the product of the moving average polynomials.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">coefs2poly(x, add = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class <code>Arima</code>, as returned by <code>arima</code>.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>add</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the polynomial of the differencing filter 
+(if present in the model) is multiplied by the stationary autoregressive 
+polynomial. Otherwise only the coefficients of the product of the 
+stationary polynomials is returned.</p>
+</td>
+</tr></table>
+<h3>Value</h3>
+
+<p>A list containing the elements:
+<code>arcoefs</code>, the coefficients of the product of the 
+autoregressive polynomials;
+<code>macoefs</code>, the coefficients of the product of the 
+moving average polynomials. 
+This list is of class <code>"ArimaPars"</code> so that it can be recognized by 
+<code>outliers.tstatistics</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># ARIMA(0,1,1)(0,1,1) model
+fit &lt;- arima(log(AirPassengers), order = c(0,1,1), 
+  seasonal = list(order = c(0,1,1)))
+coefs &lt;- coef(fit)
+
+# "coefs2poly" returns the coefficients of the product of 
+# the non-seasonal and the seasonal moving average polynomials
+a1 &lt;- convolve(c(1, coefs[1]), rev(c(1, rep(0, 11), coefs[2])), type="open")[-1]
+a2 &lt;- coefs2poly(fit)$macoefs
+a2
+all.equal(a1, a2, check.names=FALSE)
+
+# since the model does not contain an autoregressive part
+# the product of the regular and the seasonal differencing 
+# filter is returned if "add = TRUE"
+coefs2poly(fit)$arcoefs
+# an empty set is returned if "add = FALSE"
+coefs2poly(fit, add = FALSE)$arcoefs
+
+# in a model with non-seasonal part and no differencing filter 
+# no multiplication of polynomials are involved and 
+# the coefficients are the same as those returned by "coef"
+fit &lt;- arima(log(AirPassengers), order = c(1,0,1))
+coef(fit)
+coefs2poly(fit)
+</code></pre>
+
+
+</div>

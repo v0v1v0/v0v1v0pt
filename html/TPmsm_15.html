@@ -1,0 +1,131 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>setPackageSeedTP</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Set the initial package seed</h2>
+
+<h3>Description</h3>
+
+<p>The random number generator (RNG) with multiple independent streams developed by
+L'Ecuyer et al. (2002) is used for parallel computation of uniform pseudorandom numbers.
+Package <span class="pkg">TPmsm</span> makes extensive use of uniform pseudorandom numbers,
+particularly for the bootstrapping statistical techniques and for
+the generation of univariate and multivariate pseudorandom data.
+This function defines the seed for the creation of RNG streams.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">setPackageSeedTP(seed=12345)</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>A vector of one to six integers.
+Defaults to <code>rep(x=12345, times=6)</code>.
+</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>If the user defines a vector with length lower than six
+as seed, then the seed is internally defined as a vector
+of length six with the first elements equal to the user
+defined values, and the leaving elements equal to <code>12345</code>.
+If a vector with more than six elements is provided as seed,
+then only the first six elements are used.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Invisibly returns NULL.</p>
+
+
+<h3>Note</h3>
+
+<p>When package <span class="pkg">TPmsm</span> loads, an initial set of RNG streams
+is created, one stream for each thread available for parallel
+computation. The initial set of RNG streams is created from the
+package seed <code>c(12345, 12345, 12345, 12345, 12345, 12345)</code>.
+Every time this function is called, the old set of RNG streams
+is deleted, and a new set of RNG streams is created from the
+user defined package seed. After the creation of each new RNG stream,
+the internally stored package seed changes. So each RNG stream is
+created from a different package seed, and yields different sets of
+pseudorandom numbers.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Artur Araújo, Javier Roca-Pardiñas and Luís Meira-Machado</p>
+
+
+<h3>References</h3>
+
+<p>Araújo A, Meira-Machado L, Roca-Pardiñas J (2014). TPmsm: Estimation of the Transition Probabilities in
+3-State Models. <em>Journal of Statistical Software</em>, <b>62</b>(4), 1-29. <a href="https://doi.org/10.18637/jss.v062.i04">doi:10.18637/jss.v062.i04</a>
+</p>
+<p>Karl A. T., Eubank R., Milovanovic J., Reiser M., Young D. (2014). Using RngStreams for parallel random number generation in C++ and R. <em>Computational Statistics</em>, <b>29</b>(5), 1301-1320. <a href="https://doi.org/10.1007/s00180-014-0492-3">doi:10.1007/s00180-014-0492-3</a>
+</p>
+<p>L'Ecuyer, P. (1999). Good parameters and implementations for combined multiple recursive random number generators. <em>Operations Research</em>, <b>47</b>(1), 159–-164. <a href="https://doi.org/10.1287/opre.47.1.159">doi:10.1287/opre.47.1.159</a>
+</p>
+<p>L’Ecuyer P., Simard R., Chen E. J., Kelton W. D. (2002). An object-oriented random-number package with many long streams and substreams. <em>Operations Research</em>, <b>50</b>(6), 1073–-1075. <a href="https://doi.org/10.1287/opre.50.6.1073.358">doi:10.1287/opre.50.6.1073.358</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>setSeedTP</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Set the number of threads
+nth &lt;- setThreadsTP(2);
+
+# Define package seed
+seed &lt;- rep(x=1, times=6);
+
+# Set package seed
+setPackageSeedTP(seed);
+
+# Create survTP object
+data(heartTP);
+heartTP_obj &lt;- with( heartTP, survTP(time1, event1, Stime, event) );
+
+# Compute transition probabilities with confidence band
+TPmsm0 &lt;- transAJ(object=heartTP_obj, s=33, t=412, conf=TRUE,
+conf.level=0.9, method.boot="percentile");
+
+# Compute transition probabilities with confidence band
+TPmsm1 &lt;- transAJ(object=heartTP_obj, s=33, t=412, conf=TRUE,
+conf.level=0.9, method.boot="percentile");
+
+# The objects should be different
+all.equal(TPmsm0, TPmsm1);
+
+# Set package seed
+setPackageSeedTP(seed);
+
+# Compute transition probabilities with confidence band
+TPmsm2 &lt;- transAJ(object=heartTP_obj, s=33, t=412, conf=TRUE,
+conf.level=0.9, method.boot="percentile");
+
+# Both objects were computed from the same seed and should be equal
+all.equal(TPmsm0, TPmsm2);
+
+# Restore the number of threads
+setThreadsTP(nth);
+</code></pre>
+
+
+</div>

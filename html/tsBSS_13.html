@@ -1,0 +1,214 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>AMUSEladle</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Ladle Estimator to Estimate the Number of White Noise Components in SOS with AMUSE
+</h2>
+
+<h3>Description</h3>
+
+<p>The ladle estimator uses the eigenvalues and eigenvectors of an autocovariance matrix with the chosen lag to estimate the number of white noise components in second-order source separation (SOS).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">AMUSEladle(X, ...)
+
+## Default S3 method:
+AMUSEladle(X, tau = 1, l = 20, sim = c("geom", "fixed"), n.boot = 200, ncomp = 
+           ifelse(ncol(X) &gt; 10, floor(ncol(X)/log(ncol(X))), ncol(X) - 1), ...)
+## S3 method for class 'ts'
+AMUSEladle(X, ...)
+## S3 method for class 'xts'
+AMUSEladle(X, ...)
+## S3 method for class 'zoo'
+AMUSEladle(X, ...)
+
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A numeric matrix or a multivariate time series object of class <code>ts</code>, <code>xts</code> or <code>zoo</code>. Missing values are not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>The lag for the AMUSE autocovariance matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>l</code></td>
+<td>
+<p>If <code>sim = "geom"</code> (default) then <code>l</code> is the success probability of the geometric distribution from where the bootstrap block lengths for the stationary bootstrap are drawn. If <code>sim = "fixed"</code> then <code>l</code> is the fixed block length for the fixed block bootstrap.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim</code></td>
+<td>
+<p>If <code>"geom"</code> (default) then the stationary bootstrap is used. If <code>"fixed"</code> then the fixed block bootstrap is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.boot</code></td>
+<td>
+<p>The number of bootstrapping samples. See <code>tsboot</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncomp</code></td>
+<td>
+<p>The number of components among which the ladle estimator is to be searched. Must be between <code>0</code> and <code>ncol(X)-1</code>. The default follows the recommendation of Luo and Li (2016).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to or from methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>AMUSE standardizes <code>X</code> with <code class="reqn">n</code> samples and computes the eigenedcomposition of the autocovariance matrix of the standardized data for a chosen lag <code>tau</code>, yielding a transformation <code class="reqn">\bf W</code> giving the latent variables as <code class="reqn">{\bf S} = {\bf X} {\bf W}</code>. Assume, without loss of generality, that the latent components are ordered in decreasing order with respect to the squares of the corresponding eigenvalues of the autocovariance matrix. Under the assumption that we have <code class="reqn">k</code> non-white-noise components, the final <code class="reqn">p - k</code> eigenvalues equal zero, <code class="reqn">\lambda_{p-k} = \cdots = \lambda_{p} = 0</code>.
+</p>
+<p>The change point from non-zero eigenvalues to zero eigenvalues is visible in the eigenvectors of the autocovariance matrix as an increase in their boostrap variablity. Similarly, before the change point, the squared eigenvalues decrease in magnitude and afterwards they stay constant. The ladle estimate combines the scaled eigenvector bootstrap variability with the scaled eigenvalues to estimate the number of non-white-noise components. The estimate is the value of <code class="reqn">k = 0, \ldots ,</code> <code>ncomp</code> where the combined measure achieves its minimum value.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class <code>ladle</code> containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The string AMUSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>The estimated number of non-white-noise components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fn</code></td>
+<td>
+<p>The vector giving the measures of variation of the eigenvectors using the bootstrapped eigenvectors for the different number of components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>phin</code></td>
+<td>
+<p>Normalized eigenvalues of the AMUSE matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.name</code></td>
+<td>
+<p>The name of the data for which the ladle estimate was computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gn</code></td>
+<td>
+<p>The main criterion for the ladle estimate - the sum of <code>fn</code> and <code>phin</code>. <code>k</code> is the value where <code>gn</code> takes its minimum.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>The eigenvalues of the AMUSE matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>The transformation matrix to the source components. Also known as the unmixing matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>Multivariate time series with the centered source components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MU</code></td>
+<td>
+<p>The location of the data which was subtracted before calculating the source components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim</code></td>
+<td>
+<p>The used boostrapping technique, either <code>"geom"</code> or <code>"fixed"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>The used lag.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen, Joni Virta
+</p>
+
+
+<h3>References</h3>
+
+<p>Nordhausen, K. and Virta, J.(2018), <em>Ladle Estimator for Time Series Signal Dimension</em>. In 2018 IEEE Statistical Signal Processing Workshop (SSP), pp. 428–432, &lt;doi:10.1109/SSP.2018.8450695&gt;.
+</p>
+<p>Luo, W. and Li, B. (2016), <em>Combining Eigenvalues and Variation of Eigenvectors for Order Determination</em>, Biometrika, 103. 875–887. &lt;doi:10.1093/biomet/asw051&gt;
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>AMUSE</code>, <code>SOBI</code>, <code>SOBIladle</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  n &lt;- 1000
+  
+  s1 &lt;- arima.sim(n = n, list(ar = 0.6, ma = c(0, -0.4)))
+  s2 &lt;- arima.sim(n = n, list(ar = c(0.4,0.1,0.3), ma = c(0.2, 0.4)))
+  s3 &lt;- arima.sim(n = n, list(ar = c(0.7, 0.1)))
+  Snoise &lt;- matrix(rnorm(5*n), ncol = 5)
+  S &lt;- cbind(s1, s2, s3, Snoise)
+
+  A &lt;- matrix(rnorm(64), 8, 8)
+  X &lt;- S %*% t(A)
+  
+  ladle_AMUSE &lt;- AMUSEladle(X, l = 20, sim = "geom")
+
+  # The estimated number of non-white-noise components
+  summary(ladle_AMUSE)
+  
+  # The ladle plot
+  ladleplot(ladle_AMUSE)
+  # Using ggplot
+  ggladleplot(ladle_AMUSE)
+  
+  # Time series plots of the estimated components
+  plot(ladle_AMUSE)
+</code></pre>
+
+
+</div>

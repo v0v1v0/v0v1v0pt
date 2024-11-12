@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>model_wavernn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>WaveRNN</h2>
+
+<h3>Description</h3>
+
+<p>WaveRNN model based on the implementation from <a href="https://github.com/fatchord/WaveRNN">fatchord</a>.
+The original implementation was introduced in <a href="https://arxiv.org/pdf/1802.08435.pdf">"Efficient Neural Audio Synthesis"</a>.
+#' Pass the input through the WaveRNN model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">model_wavernn(
+  upsample_scales,
+  n_classes,
+  hop_length,
+  n_res_block = 10,
+  n_rnn = 512,
+  n_fc = 512,
+  kernel_size = 5,
+  n_freq = 128,
+  n_hidden = 128,
+  n_output = 128
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>upsample_scales</code></td>
+<td>
+<p>the list of upsample scales.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_classes</code></td>
+<td>
+<p>the number of output classes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hop_length</code></td>
+<td>
+<p>the number of samples between the starts of consecutive frames.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_res_block</code></td>
+<td>
+<p>the number of ResBlock in stack.  (Default: <code>10</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_rnn</code></td>
+<td>
+<p>the dimension of RNN layer.  (Default: <code>512</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_fc</code></td>
+<td>
+<p>the dimension of fully connected layer.  (Default: <code>512</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel_size</code></td>
+<td>
+<p>the number of kernel size in the first Conv1d layer.  (Default: <code>5</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_freq</code></td>
+<td>
+<p>the number of bins in a spectrogram.  (Default: <code>128</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_hidden</code></td>
+<td>
+<p>the number of hidden dimensions of resblock.  (Default: <code>128</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_output</code></td>
+<td>
+<p>the number of output dimensions of melresnet.  (Default: <code>128</code>)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>forward param:
+</p>
+<p>waveform the input waveform to the WaveRNN layer  (n_batch, 1, (n_time - kernel_size + 1) * hop_length)
+</p>
+<p>specgram the input spectrogram to the WaveRNN layer  (n_batch, 1, n_freq, n_time)
+</p>
+<p>The input channels of waveform and spectrogram have to be 1. The product of
+<code>upsample_scales</code> must equal <code>hop_length</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Tensor shape:  (n_batch, 1, (n_time - kernel_size + 1) * hop_length, n_classes)
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if(torch::torch_is_installed()) {
+wavernn &lt;- model_wavernn(upsample_scales=c(2,2,3), n_classes=5, hop_length=12)
+
+waveform &lt;- torch::torch_rand(3,1,(10 - 5 + 1)*12)
+spectrogram &lt;- torch::torch_rand(3,1,128,10)
+# waveform shape:  (n_batch, n_channel, (n_time - kernel_size + 1) * hop_length)
+output &lt;- wavernn(waveform, spectrogram)
+}
+</code></pre>
+
+
+</div>

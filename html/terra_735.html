@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rapp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Range-apply</h2>
+
+<h3>Description</h3>
+
+<p>Apply a function to a range of the layers of a SpatRaster that varies by cell. The range is specified for each cell with one or two SpatRasters (arguments <code>first</code> and <code>last</code>). For either <code>first</code> or <code>last</code> you can use a single number instead. 
+</p>
+<p>You cannot use single numbers for both <code>first</code> and <code>last</code> because in that case you could use <code>app</code> or <code>Summary-methods</code>, perhaps <code>subset</code>ting the layers of a SpatRaster.
+</p>
+<p>See <code>selectRange</code> to create a new SpatRaster by extracting one or more values starting at a cell-varying layer.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+rapp(x, first, last, fun, ..., allyrs=FALSE, fill=NA, 
+        clamp=FALSE, circular=FALSE, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>first</code></td>
+<td>
+<p>SpatRaster or positive integer between 1 and nlyr(x), indicating the first layer in the range of layers to be considered</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>last</code></td>
+<td>
+<p>SpatRaster or positive integer between 1 and nlyr(x), indicating the last layer in the range to be considered</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function to be applied</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allyrs</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, values for all layers are passed to <code>fun</code> but the values outside of the range are set to <code>fill</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>numeric. The fill value for the values outside of the range, for when <code>allyrs=TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clamp</code></td>
+<td>
+<p>logical. If <code>FALSE</code> and the specified range is outside <code>1:nlyr(x)</code> all cells are considered <code>NA</code>. Otherwise, the invalid part of the range is ignored</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>circular</code></td>
+<td>
+<p>logical. If <code>TRUE</code> the values are considered circular, such as the days of the year. In that case, if first &gt; last the layers used are c(first:nlyr(x), 1:last). Otherwise, the range would be considered invalid and <code>NA</code> would be returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>selectRange</code>, <code>app</code>, <code>Summary-methods</code>, <code>lapp</code>, <code>tapp</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(ncols=9, nrows=9)
+values(r) &lt;- 1:ncell(r)
+s &lt;- c(r, r, r, r, r, r)
+s &lt;- s * 1:6
+s[1:2] &lt;- NA
+start &lt;- end &lt;- rast(r)
+start[] &lt;- 1:3
+end[]   &lt;- 4:6
+a &lt;- rapp(s, start, end, fun="mean")
+b &lt;- rapp(s, start, 2, fun="mean")
+
+# cumsum from start to nlyr(x). return all layers
+r &lt;- rapp(s, start, nlyr(s), cumsum, allyrs=TRUE, fill=0)
+# return only the final value
+rr &lt;- rapp(s, start, nlyr(s), function(i) max(cumsum(i)))
+</code></pre>
+
+
+</div>

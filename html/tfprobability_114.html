@@ -1,0 +1,355 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_glow</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Implements the Glow Bijector from Kingma &amp; Dhariwal (2018).</h2>
+
+<h3>Description</h3>
+
+<p>Overview: <code>Glow</code> is a chain of bijectors which transforms a rank-1 tensor
+(vector) into a rank-3 tensor (e.g. an RGB image). <code>Glow</code> does this by
+chaining together an alternating series of "Blocks," "Squeezes," and "Exits"
+which are each themselves special chains of other bijectors. The intended use
+of <code>Glow</code> is as part of a <code>tfd_transformed_distribution</code>, in
+which the base distribution over the vector space is used to generate samples
+in the image space. In the paper, an Independent Normal distribution is used
+as the base distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_glow(
+  output_shape = c(32, 32, 3),
+  num_glow_blocks = 3,
+  num_steps_per_block = 32,
+  coupling_bijector_fn = NULL,
+  exit_bijector_fn = NULL,
+  grab_after_block = NULL,
+  use_actnorm = TRUE,
+  seed = NULL,
+  validate_args = FALSE,
+  name = "glow"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>output_shape</code></td>
+<td>
+<p>A list of integers, specifying the event shape of the
+output, of the bijectors forward pass (the image).  Specified as
+<code style="white-space: pre;">⁠[H, W, C]⁠</code>. Default Value: (32, 32, 3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_glow_blocks</code></td>
+<td>
+<p>An integer, specifying how many downsampling levels to
+include in the model. This must divide equally into both H and W,
+otherwise the bijector would not be invertible. Default Value: 3</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_steps_per_block</code></td>
+<td>
+<p>An integer specifying how many Affine Coupling and
+1x1 convolution layers to include at each level of the spatial
+hierarchy. Default Value: 32 (i.e. the value used in the original glow paper).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coupling_bijector_fn</code></td>
+<td>
+<p>A function which takes the argument <code>input_shape</code>
+and returns a callable neural network (e.g. a <code>keras_model_sequential()</code>). The
+network should either return a tensor with the same event shape as
+<code>input_shape</code> (this will employ additive coupling), a tensor with the
+same height and width as <code>input_shape</code> but twice the number of channels
+(this will employ affine coupling), or a bijector which takes in a
+tensor with event shape <code>input_shape</code>, and returns a tensor with shape
+<code>input_shape</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exit_bijector_fn</code></td>
+<td>
+<p>Similar to coupling_bijector_fn, exit_bijector_fn is
+a function which takes the argument <code>input_shape</code> and <code>output_chan</code>
+and returns a callable neural network. The neural network it returns
+should take a tensor of shape <code>input_shape</code> as the input, and return
+one of three options: A tensor with <code>output_chan</code> channels, a tensor
+with <code>2 * output_chan</code> channels, or a bijector. Additional details can
+be found in the documentation for ExitBijector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grab_after_block</code></td>
+<td>
+<p>A tuple of floats, specifying what fraction of the
+remaining channels to remove following each glow block. Glow will take
+the integer floor of this number multiplied by the remaining number of
+channels. The default is half at each spatial hierarchy.
+Default value: None (this will take out half of the channels after each block.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_actnorm</code></td>
+<td>
+<p>A boolean deciding whether or not to use actnorm. Data-dependent
+initialization is used to initialize this layer. Default value: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>A seed to control randomness in the 1x1 convolution initialization.
+Default value: <code>NULL</code> (i.e., non-reproducible sampling).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. Whether to validate input with asserts. If validate_args is
+FALSE, and the inputs are invalid, correct behavior is not guaranteed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A "Block" (implemented as the <code>GlowBlock</code> Bijector) performs much of the
+transformations which allow glow to produce sophisticated and complex mappings
+between the image space and the latent space and therefore achieve rich image
+generation performance. A Block is composed of <code>num_steps_per_block</code> steps,
+which are each implemented as a <code>Chain</code> containing an
+<code>ActivationNormalization</code> (ActNorm) bijector, followed by an (invertible)
+<code>OneByOneConv</code> bijector, and finally a coupling bijector. The coupling
+bijector is an instance of a <code>RealNVP</code> bijector, and uses the
+<code>coupling_bijector_fn</code> function to instantiate the coupling bijector function
+which is given to the <code>RealNVP</code>. This function returns a bijector which
+defines the coupling (e.g. <code>Shift(Scale)</code> for affine coupling or <code>Shift</code> for
+additive coupling).
+</p>
+<p>A "Squeeze" converts spatial features into channel features. It is
+implemented using the <code>Expand</code> bijector. The difference in names is
+due to the fact that the <code>forward</code> function from glow is meant to ultimately
+correspond to sampling from a <code>tfp$util$TransformedDistribution</code> object,
+which would use <code>Expand</code> (Squeeze is just Invert(Expand)). The <code>Expand</code>
+bijector takes a tensor with shape <code style="white-space: pre;">⁠[H, W, C]⁠</code> and returns a tensor with shape
+<code style="white-space: pre;">⁠[2H, 2W, C / 4]⁠</code>, such that each 2x2x1 spatial tile in the output is composed
+from a single 1x1x4 tile in the input tensor, as depicted in the figure below.
+</p>
+<p>Forward pass (Expand)
+</p>
+<div class="sourceCode"><pre>\     \       \    \    \
+\\     \ ----&gt; \  1 \  2 \
+\\\__1__\       \____\____\
+\\\__2__\        \    \    \
+\\__3__\  &lt;----  \  3 \  4 \
+\__4__\          \____\____\
+</pre></div>
+<p>Inverse pass (Squeeze)
+This is implemented using a chain of <code>Reshape</code> -&gt; <code>Transpose</code> -&gt; <code>Reshape</code>
+bijectors. Note that on an inverse pass through the bijector, each Squeeze
+will cause the width/height of the image to decrease by a factor of 2.
+Therefore, the input image must be evenly divisible by 2 at least
+<code>num_glow_blocks</code> times, since it will pass through a Squeeze step that many
+times.
+</p>
+<p>An "Exit" is simply a junction at which some of the tensor "exits" from the
+glow bijector and therefore avoids any further alteration. Each exit is
+implemented as a <code>Blockwise</code> bijector, where some channels are given to the
+rest of the glow model, and the rest are given to a bypass implemented using
+the <code>Identity</code> bijector. The fraction of channels to be removed at each exit
+is determined by the <code>grab_after_block</code> arg, indicates the fraction of
+remaining channels which join the identity bypass. The fraction is
+converted to an integer number of channels by multiplying by the remaining
+number of channels and rounding.
+Additionally, at each exit, glow couples the tensor exiting the highway to
+the tensor continuing onward. This makes small scale features in the image
+dependent on larger scale features, since the larger scale features dictate
+the mean and scale of the distribution over the smaller scale features.
+This coupling is done similarly to the Coupling bijector in each step of the
+flow (i.e. using a RealNVP bijector). However for the exit bijector, the
+coupling is instantiated using <code>exit_bijector_fn</code> rather than coupling
+bijector fn, allowing for different behaviors between standard coupling and
+exit coupling. Also note that because the exit utilizes a coupling bijector,
+there are two special cases (all channels exiting and no channels exiting).
+The full Glow bijector consists of <code>num_glow_blocks</code> Blocks each of which
+contains <code>num_steps_per_block</code> steps. Each step implements a coupling using
+<code>bijector_coupling_fn</code>. Between blocks, glow converts between spatial pixels
+and channels using the Expand Bijector, and splits channels out of the
+bijector using the Exit Bijector. The channels which have exited continue
+onward through Identity bijectors and those which have not exited are given
+to the next block. After passing through all Blocks, the tensor is reshaped
+to a rank-1 tensor with the same number of elements. This is where the
+distribution will be defined.
+A schematic diagram of Glow is shown below. The <code>forward</code> function of the
+bijector starts from the bottom and goes upward, while the <code>inverse</code> function
+starts from the top and proceeds downward.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a bijector instance.
+</p>
+
+
+<h3>#' “'</h3>
+
+<p>Glow Schematic Diagram
+Input Image     ########################   shape = [H, W, C]
+\                      /&lt;- Expand Bijector turns spatial
+\                    /    dimensions into channels.
+|  XXXXXXXXXXXXXXXXXXXX
+|  XXXXXXXXXXXXXXXXXXXX
+|  XXXXXXXXXXXXXXXXXXXX     A single step of the flow consists
+Glow Block  - |  XXXXXXXXXXXXXXXXXXXX  &lt;- of ActNorm -&gt; 1x1Conv -&gt; Coupling.
+|  XXXXXXXXXXXXXXXXXXXX     there are num_steps_per_block
+|  XXXXXXXXXXXXXXXXXXXX     steps of the flow in each block.
+|_ XXXXXXXXXXXXXXXXXXXX
+\                  / &lt;– Expand bijectors follow each glow
+\                /      block
+XXXXXXXX\\\\   &lt;– Exit Bijector removes channels
+_                    _     from additional alteration.
+|    XXXXXXXX !  |  !
+|    XXXXXXXX !  |  !
+|    XXXXXXXX !  |  !       After exiting, channels are passed
+Glow Block  - |    XXXXXXXX !  |  !  &lt;— downward using the Blockwise and
+|    XXXXXXXX !  |  !       Identify bijectors.
+|    XXXXXXXX !  |  !
+|_   XXXXXXXX !  |  !
+\              / &lt;—- Expand Bijector
+\            /
+XXX\\    | !  &lt;—- Exit Bijector
+_
+|      XXX ! |   | !
+|      XXX ! |   | !
+|      XXX ! |   | !
+low Block  - |      XXX ! |   | !
+|      XXX ! |   | !
+|      XXX ! |   | !
+|_     XXX ! |   | !
+XX\ ! |   | ! &lt;—– (Optional) Exit Bijector
+|    |   |
+v    v   v
+Output Distribution    ##########          shape = [H * W * C]
+</p>
+<div class="sourceCode"><pre>    Legend
+</pre></div>
+
+
+<h3>| XX  = Step of flow      |
+| X\  = Exit bijector     |
+| \/  = Expand bijector   |
+| !|! = Identity bijector |
+|                         |
+| up  = Forward pass      |
+| dn  = Inverse pass      |
+|_________________________|</h3>
+
+<div class="sourceCode"><pre>
+[H, W, C]: R:H,%20W,%20C
+[2H, 2W, C / 4]: R:2H,%202W,%20C%20/%204
+[H, W, C]: R:H,%20W,%20C
+[H * W * C]: R:H%20*%20W%20*%20C
+</pre></div>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="https://arxiv.org/abs/1807.03039">Diederik P Kingma, Prafulla Dhariwal, Glow: Generative Flow with Invertible 1x1 Convolutions. In <em>Neural Information Processing Systems</em>, 2018.</a>
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1605.08803">Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio. Density Estimation using Real NVP. In <em>International Conference on Learning Representations</em>, 2017.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>For usage examples see <code>tfb_forward()</code>, <code>tfb_inverse()</code>, <code>tfb_inverse_log_det_jacobian()</code>.
+</p>
+<p>Other bijectors: 
+<code>tfb_absolute_value()</code>,
+<code>tfb_affine_linear_operator()</code>,
+<code>tfb_affine_scalar()</code>,
+<code>tfb_affine()</code>,
+<code>tfb_ascending()</code>,
+<code>tfb_batch_normalization()</code>,
+<code>tfb_blockwise()</code>,
+<code>tfb_chain()</code>,
+<code>tfb_cholesky_outer_product()</code>,
+<code>tfb_cholesky_to_inv_cholesky()</code>,
+<code>tfb_correlation_cholesky()</code>,
+<code>tfb_cumsum()</code>,
+<code>tfb_discrete_cosine_transform()</code>,
+<code>tfb_expm1()</code>,
+<code>tfb_exp()</code>,
+<code>tfb_ffjord()</code>,
+<code>tfb_fill_scale_tri_l()</code>,
+<code>tfb_fill_triangular()</code>,
+<code>tfb_gompertz_cdf()</code>,
+<code>tfb_gumbel_cdf()</code>,
+<code>tfb_gumbel()</code>,
+<code>tfb_identity()</code>,
+<code>tfb_inline()</code>,
+<code>tfb_invert()</code>,
+<code>tfb_iterated_sigmoid_centered()</code>,
+<code>tfb_kumaraswamy_cdf()</code>,
+<code>tfb_kumaraswamy()</code>,
+<code>tfb_lambert_w_tail()</code>,
+<code>tfb_masked_autoregressive_default_template()</code>,
+<code>tfb_masked_autoregressive_flow()</code>,
+<code>tfb_masked_dense()</code>,
+<code>tfb_matrix_inverse_tri_l()</code>,
+<code>tfb_matvec_lu()</code>,
+<code>tfb_normal_cdf()</code>,
+<code>tfb_ordered()</code>,
+<code>tfb_pad()</code>,
+<code>tfb_permute()</code>,
+<code>tfb_power_transform()</code>,
+<code>tfb_rational_quadratic_spline()</code>,
+<code>tfb_rayleigh_cdf()</code>,
+<code>tfb_real_nvp_default_template()</code>,
+<code>tfb_real_nvp()</code>,
+<code>tfb_reciprocal()</code>,
+<code>tfb_reshape()</code>,
+<code>tfb_scale_matvec_diag()</code>,
+<code>tfb_scale_matvec_linear_operator()</code>,
+<code>tfb_scale_matvec_lu()</code>,
+<code>tfb_scale_matvec_tri_l()</code>,
+<code>tfb_scale_tri_l()</code>,
+<code>tfb_scale()</code>,
+<code>tfb_shifted_gompertz_cdf()</code>,
+<code>tfb_shift()</code>,
+<code>tfb_sigmoid()</code>,
+<code>tfb_sinh_arcsinh()</code>,
+<code>tfb_sinh()</code>,
+<code>tfb_softmax_centered()</code>,
+<code>tfb_softplus()</code>,
+<code>tfb_softsign()</code>,
+<code>tfb_split()</code>,
+<code>tfb_square()</code>,
+<code>tfb_tanh()</code>,
+<code>tfb_transform_diagonal()</code>,
+<code>tfb_transpose()</code>,
+<code>tfb_weibull_cdf()</code>,
+<code>tfb_weibull()</code>
+</p>
+
+
+</div>

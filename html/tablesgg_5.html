@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>addRefmark</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Add a Reference Mark to Entries in a Table </h2>
+
+<h3>Description</h3>
+
+<p>Add a reference mark (a symbol placed before or after entry text to
+indicate cross-references; e.g. for footnotes) to entries in a table.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">addRefmark(x, mark, before=character(0), after=character(0), 
+    parts=NULL, raise, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>textTable</code> or <code>pltdTable</code> object.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mark</code></td>
+<td>
+<p>Character string containing the reference mark.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>before, after</code></td>
+<td>
+<p>Character strings containing regular expressions (see <code>?regex</code>) that
+will be matched against the _text_ of table entries (using <code>grepl</code>).
+One or both of <code>before</code> and <code>after</code> may be specified.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parts</code></td>
+<td>
+<p>Optional character vector listing table parts.  If specified, only entries
+in those parts will be matched against <code>before</code> and <code>after</code>.
+The default is to use all table parts.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>raise</code></td>
+<td>
+<p>Logical scalar.  If TRUE, the reference mark will be displayed as a
+superscript, using <code>plotmath</code>.  The default is TRUE except for
+asterisk marks, since that character is already raised relative to other
+characters.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>grepl</code> when matching <code>before</code>
+and <code>after</code> to entry text.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Reference marks are placed at the beginning or end of an entry's text.  If
+<code>raise</code> is TRUE they will be displayed as superscripts.  This is
+implemented by converting the text to make use of R's <code>plotmath</code>
+facility to create the superscript.  A limitation of <code>plotmath</code> is
+that it ignores newline characters within text.  Therefore raised
+reference marks will not work with multi-line entries, and a warning will
+be issued.
+</p>
+<p>In addition to using numbers, letters, or asterisk as reference marks,
+traditional symbols can be specified by their unicode values: dagger
+("\u2020"), double dagger ("\u2021"), paragraph symbol ("\u00B6"),
+section symbol ("\u00A7"), and double vertical bars ("\u2016").
+However, unicode symbols may not be available for all OS's or graphics
+devices.
+</p>
+<p>With this function the user identifies the entries to be marked by
+searching the entry text itself, via regular expressions <code>before</code>
+and/or <code>after</code>.  For plotted tables (<code>pltdTable</code> objects), an
+alternative way to add reference marks is to use one of the <code>props&lt;-</code>
+functions to assign an <code>element_refmark</code> to it.  They allow selection
+of entries using other descriptors.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object like <code>x</code>.  The text of table cells/entries selected by
+<code>before</code> and <code>after</code> will be modified to include the reference
+mark, and if <code>raise</code> is TRUE, those cells/entries will be flagged to
+indicate that they should be treated as <code>plotmath</code> expressions.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>element_refmark</code>, <code>props&lt;-</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Add reference marks to a 'textTable':
+ttbl &lt;- textTable(iris2_tab, foot="sd = standard deviation")
+ttbl &lt;- addRefmark(ttbl, mark="a", before="sd =", after="sd$")
+plot(ttbl)
+
+# Add reference marks to a 'pltdTable':
+plt &lt;- plot(textTable(iris2_tab, foot="sd = standard deviation"))
+plt &lt;- addRefmark(plt, mark="*", before="sd =", after="sd$")
+plt
+
+# To add a reference mark to just the *first* appearance of "sd", use 
+# 'propsa&lt;-' instead:
+plt &lt;- plot(textTable(iris2_tab, foot="sd = standard deviation"))
+plt &lt;- addRefmark(plt, mark="a", before="sd =")
+propsa(plt, arows=arow(plt, hpath=c("setosa", "sd")), 
+       acols=acol(plt, "rowhead")[2]) &lt;- element_refmark("a", side="after")
+plt
+  </code></pre>
+
+
+</div>

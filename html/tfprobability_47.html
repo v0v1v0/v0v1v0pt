@@ -1,0 +1,153 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmc_sample_halton_sequence</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Returns a sample from the <code>dim</code> dimensional Halton sequence.</h2>
+
+<h3>Description</h3>
+
+<p>Warning: The sequence elements take values only between 0 and 1. Care must be
+taken to appropriately transform the domain of a function if it differs from
+the unit cube before evaluating integrals using Halton samples. It is also
+important to remember that quasi-random numbers without randomization are not
+a replacement for pseudo-random numbers in every context. Quasi random numbers
+are completely deterministic and typically have significant negative
+autocorrelation unless randomization is used.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmc_sample_halton_sequence(
+  dim,
+  num_results = NULL,
+  sequence_indices = NULL,
+  dtype = tf$float32,
+  randomized = TRUE,
+  seed = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>Positive <code>integer</code> representing each sample's <code>event_size.</code> Must
+not be greater than 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_results</code></td>
+<td>
+<p>(Optional) Positive scalar <code>Tensor</code> of dtype int32. The number
+of samples to generate. Either this parameter or sequence_indices must
+be specified but not both. If this parameter is None, then the behaviour
+is determined by the <code>sequence_indices</code>. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sequence_indices</code></td>
+<td>
+<p>(Optional) <code>Tensor</code> of dtype int32 and rank 1. The
+elements of the sequence to compute specified by their position in the
+sequence. The entries index into the Halton sequence starting with 0 and
+hence, must be whole numbers. For example, sequence_indices=<code style="white-space: pre;">⁠[0, 5, 6]⁠</code> will
+produce the first, sixth and seventh elements of the sequence. If this
+parameter is None, then the <code>num_results</code> parameter must be specified
+which gives the number of desired samples starting from the first sample.
+Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtype</code></td>
+<td>
+<p>(Optional) The dtype of the sample. One of: <code>float16</code>, <code>float32</code> or
+<code>float64</code>. Default value: <code>tf$float32</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>randomized</code></td>
+<td>
+<p>(Optional) bool indicating whether to produce a randomized
+Halton sequence. If TRUE, applies the randomization described in
+Owen (2017). Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>(Optional) integer to seed the random number generator. Only
+used if <code>randomized</code> is TRUE. If not supplied and <code>randomized</code> is TRUE,
+no seed is set. Default value: <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>(Optional) string describing ops managed by this function. If
+not supplied the name of this function is used. Default value: "sample_halton_sequence".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Computes the members of the low discrepancy Halton sequence in dimension
+<code>dim</code>. The <code>dim</code>-dimensional sequence takes values in the unit hypercube in
+<code>dim</code> dimensions. Currently, only dimensions up to 1000 are supported. The
+prime base for the k-th axes is the k-th prime starting from 2. For example,
+if <code>dim</code> = 3, then the bases will be <code style="white-space: pre;">⁠[2, 3, 5]⁠</code> respectively and the first
+element of the non-randomized sequence will be: <code style="white-space: pre;">⁠[0.5, 0.333, 0.2]⁠</code>. For a more
+complete description of the Halton sequences see
+<a href="https://en.wikipedia.org/wiki/Halton_sequence">here</a>. For low discrepancy
+sequences and their applications see
+<a href="https://en.wikipedia.org/wiki/Low-discrepancy_sequence">here</a>.
+</p>
+<p>If <code>randomized</code> is true, this function produces a scrambled version of the
+Halton sequence introduced by Owen (2017). For the advantages of
+randomization of low discrepancy sequences see
+<a href="https://en.wikipedia.org/wiki/Quasi-Monte_Carlo_method#Randomization_of_quasi-Monte_Carlo">here</a>.
+</p>
+<p>The number of samples produced is controlled by the <code>num_results</code> and
+<code>sequence_indices</code> parameters. The user must supply either <code>num_results</code> or
+<code>sequence_indices</code> but not both.
+The former is the number of samples to produce starting from the first
+element. If <code>sequence_indices</code> is given instead, the specified elements of
+the sequence are generated. For example, sequence_indices=tf$range(10) is
+equivalent to specifying n=10.
+</p>
+
+
+<h3>Value</h3>
+
+<p>halton_elements Elements of the Halton sequence. <code>Tensor</code> of supplied dtype
+and <code>shape</code> <code style="white-space: pre;">⁠[num_results, dim]⁠</code> if <code>num_results</code> was specified or shape
+<code style="white-space: pre;">⁠[s, dim]⁠</code> where s is the size of <code>sequence_indices</code> if <code>sequence_indices</code>
+were specified.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul><li> <p><a href="https://arxiv.org/abs/1706.02808">Art B. Owen. A randomized Halton algorithm in R. <em>arXiv preprint arXiv:1706.02808</em>, 2017.</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>For an example how to use see <code>mcmc_sample_chain()</code>.
+</p>
+<p>Other mcmc_functions: 
+<code>mcmc_effective_sample_size()</code>,
+<code>mcmc_potential_scale_reduction()</code>,
+<code>mcmc_sample_annealed_importance_chain()</code>,
+<code>mcmc_sample_chain()</code>
+</p>
+
+
+</div>

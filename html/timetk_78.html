@@ -1,0 +1,279 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>step_fourier</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fourier Features for Modeling Seasonality</h2>
+
+<h3>Description</h3>
+
+<p><code>step_fourier</code> creates a a <em>specification</em> of a recipe
+step that will convert a Date or Date-time column into a Fourier
+series
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">step_fourier(
+  recipe,
+  ...,
+  period,
+  K,
+  role = "predictor",
+  trained = FALSE,
+  columns = NULL,
+  scale_factor = NULL,
+  skip = FALSE,
+  id = rand_id("fourier")
+)
+
+## S3 method for class 'step_fourier'
+tidy(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>recipe</code></td>
+<td>
+<p>A recipe object. The step will be added to the
+sequence of operations for this recipe.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>A single column with class <code>Date</code> or
+<code>POSIXct</code>. See <code>recipes::selections()</code> for more details.
+For the <code>tidy</code> method, these are not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>The numeric period for the oscillation frequency.
+See details for examples of <code>period</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>The number of orders to include for each sine/cosine
+fourier series. More orders increase the number of fourier terms and
+therefore the variance of the fitted
+model at the expense of bias. See details for examples of <code>K</code> specification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>role</code></td>
+<td>
+<p>For model terms created by this step, what analysis
+role should they be assigned?. By default, the function assumes
+that the new variable columns created by the original variables
+will be used as predictors in a model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trained</code></td>
+<td>
+<p>A logical to indicate if the quantities for
+preprocessing have been estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>columns</code></td>
+<td>
+<p>A character string of variables that will be
+used as inputs. This field is a placeholder and will be
+populated once <code>recipes::prep()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale_factor</code></td>
+<td>
+<p>A factor for scaling the numeric index extracted
+from the date or date-time feature. This is a placeholder and will be populated
+once <code>recipes::prep()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip</code></td>
+<td>
+<p>A logical. Should the step be skipped when the recipe is
+baked by bake.recipe()? While all operations are baked when prep.recipe()
+is run, some operations may not be able to be conducted on new data
+(e.g. processing the outcome variable(s)). Care should be taken when
+using skip = TRUE as it may affect the computations for subsequent operations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>A character string that is unique to this step to identify it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>step_fourier</code> object.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Date Variable</strong>
+</p>
+<p>Unlike other steps, <code>step_fourier</code> does <em>not</em>
+remove the original date variables. <code>recipes::step_rm()</code> can be
+used for this purpose.
+</p>
+<p><strong>Period Specification</strong>
+</p>
+<p>The <code>period</code> argument is used to generate the distance between peaks
+in the fourier sequence. The key is to line up the peaks with unique
+seasonalities in the data.
+</p>
+<p>For Daily Data, typical period specifications are:
+</p>
+
+<ul>
+<li>
+<p> Yearly frequency is 365
+</p>
+</li>
+<li>
+<p> Quarterly frequency is 365 / 4 = 91.25
+</p>
+</li>
+<li>
+<p> Monthly frequency is 365 / 12 = 30.42
+</p>
+</li>
+</ul>
+<p><strong>K Specification</strong>
+</p>
+<p>The <code>K</code> argument specifies the maximum number of orders of Fourier terms.
+Examples:
+</p>
+
+<ul>
+<li>
+<p> Specifying <code>period = 365</code> and <code>K = 1</code> will return a <code>cos365_K1</code> and <code>sin365_K1</code> fourier series
+</p>
+</li>
+<li>
+<p> Specifying <code>period = 365</code> and <code>K = 2</code> will return a <code>cos365_K1</code>, <code>cos365_K2</code>, <code>sin365_K1</code> and <code>sin365_K2</code>
+sequence, which tends to increase the models ability to fit vs the <code>K = 1</code> specification
+(at the expense of possibly overfitting).
+</p>
+</li>
+</ul>
+<p><strong>Multiple values of <code>period</code> and <code>K</code></strong>
+</p>
+<p>It's possible to specify multiple values of <code>period</code> in a single
+step such as <code style="white-space: pre;">⁠step_fourier(period = c(91.25, 365), K = 2⁠</code>.
+This returns 8 Fouriers series:
+</p>
+
+<ul>
+<li> <p><code>cos91.25_K1</code>, <code>sin91.25_K1</code>, <code>cos91.25_K2</code>, <code>sin91.25_K2</code>
+</p>
+</li>
+<li> <p><code>cos365_K1</code>, <code>sin365_K1</code>, <code>cos365_K2</code>, <code>sin365_K2</code>
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>For <code>step_fourier</code>, an updated version of recipe with
+the new step added to the sequence of existing steps (if any).
+For the <code>tidy</code> method, a tibble with columns <code>terms</code>
+(the selectors or variables selected), <code>value</code> (the feature
+names).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Time Series Analysis:
+</p>
+
+<ul>
+<li>
+<p> Engineered Features: <code>step_timeseries_signature()</code>, <code>step_holiday_signature()</code>, <code>step_fourier()</code>
+</p>
+</li>
+<li>
+<p> Diffs &amp; Lags <code>step_diff()</code>, <code>recipes::step_lag()</code>
+</p>
+</li>
+<li>
+<p> Smoothing: <code>step_slidify()</code>, <code>step_smooth()</code>
+</p>
+</li>
+<li>
+<p> Variance Reduction: <code>step_box_cox()</code>
+</p>
+</li>
+<li>
+<p> Imputation: <code>step_ts_impute()</code>, <code>step_ts_clean()</code>
+</p>
+</li>
+<li>
+<p> Padding: <code>step_ts_pad()</code>
+</p>
+</li>
+</ul>
+<p>Main Recipe Functions:
+</p>
+
+<ul>
+<li> <p><code>recipes::recipe()</code>
+</p>
+</li>
+<li> <p><code>recipes::prep()</code>
+</p>
+</li>
+<li> <p><code>recipes::bake()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(dplyr)
+
+FB_tbl &lt;- FANG %&gt;%
+    filter(symbol == "FB") %&gt;%
+    select(symbol, date, adjusted)
+
+# Create a recipe object with a timeseries signature step
+# - 252 Trade days per year
+# - period = c(252/4, 252): Adds quarterly and yearly fourier series
+# - K = 2: Adds 1st and 2nd fourier orders
+
+rec_obj &lt;- recipe(adjusted ~ ., data = FB_tbl) %&gt;%
+    step_fourier(date, period = c(252/4, 252), K = 2)
+
+# View the recipe object
+rec_obj
+
+# Prepare the recipe object
+prep(rec_obj)
+
+# Bake the recipe object - Adds the Fourier Series
+bake(prep(rec_obj), FB_tbl)
+
+# Tidy shows which features have been added during the 1st step
+#  in this case, step 1 is the step_timeseries_signature step
+tidy(prep(rec_obj))
+tidy(prep(rec_obj), number = 1)
+
+</code></pre>
+
+
+</div>

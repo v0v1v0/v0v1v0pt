@@ -1,0 +1,319 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>oneStepPredict</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate one-step-ahead (OSA) residuals for a latent variable model.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate one-step-ahead (OSA) residuals for a latent variable
+model. (<em>Beta version; may change without notice</em>)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">oneStepPredict(
+  obj,
+  observation.name = NULL,
+  data.term.indicator = NULL,
+  method = c("oneStepGaussianOffMode", "fullGaussian", "oneStepGeneric",
+    "oneStepGaussian", "cdf"),
+  subset = NULL,
+  conditional = NULL,
+  discrete = NULL,
+  discreteSupport = NULL,
+  range = c(-Inf, Inf),
+  seed = 123,
+  parallel = FALSE,
+  trace = TRUE,
+  reverse = (method == "oneStepGaussianOffMode"),
+  splineApprox = TRUE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>Output from <code>MakeADFun</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation.name</code></td>
+<td>
+<p>Character naming the observation in the template.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.term.indicator</code></td>
+<td>
+<p>Character naming an indicator data variable in the template (not required by all methods - see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Method to calculate OSA (see details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>Index vector of observations that will be added one by one during OSA. By default <code>1:length(observations)</code> (with <code>conditional</code> subtracted).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conditional</code></td>
+<td>
+<p>Index vector of observations that are fixed during OSA. By default the empty set.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discrete</code></td>
+<td>
+<p>Logical; Are observations discrete? (assumed FALSE by default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>discreteSupport</code></td>
+<td>
+<p>Possible outcomes of discrete part of the distribution (<code>method="oneStepGeneric"</code> and <code>method="cdf"</code> only).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>range</code></td>
+<td>
+<p>Possible range of continuous part of the distribution (<code>method="oneStepGeneric"</code> only).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Randomization seed (discrete case only). If <code>NULL</code> the RNG seed is untouched by this routine (recommended for simulation studies).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>Run in parallel using the <code>parallel</code> package?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>Logical; Trace progress? More options available for <code>method="oneStepGeneric"</code> - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reverse</code></td>
+<td>
+<p>Do calculations in opposite order to improve stability? (currently enabled by default for <code>oneStepGaussianOffMode</code> method only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>splineApprox</code></td>
+<td>
+<p>Represent one-step conditional distribution by a spline to reduce number of density evaluations? (<code>method="oneStepGeneric"</code> only).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Control parameters for OSA method</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given a TMB latent variable model this function calculates OSA
+standardized residuals that can be used for goodness-of-fit
+assessment. The approach is based on a factorization of the joint
+distribution of the <em>observations</em> <code class="reqn">X_1,...,X_n</code> into
+successive conditional distributions.
+Denote by
+</p>
+<p style="text-align: center;"><code class="reqn">F_n(x_n) = P(X_n \leq x_n | X_1 = x_1,...,X_{n-1}=x_{n-1} )</code>
+</p>
+
+<p>the one-step-ahead CDF, and by
+</p>
+<p style="text-align: center;"><code class="reqn">p_n(x_n) = P(X_n = x_n | X_1 = x_1,...,X_{n-1}=x_{n-1} )</code>
+</p>
+
+<p>the corresponding point probabilities (zero for continuous distributions).
+In case of continuous observations the sequence
+</p>
+<p style="text-align: center;"><code class="reqn">\Phi^{-1}(F_1(X_1))\:,...,\:\Phi^{-1}(F_n(X_n))</code>
+</p>
+
+<p>will be iid standard normal. These are referred to as the OSA residuals.
+In case of discrete observations draw (unit) uniform variables
+<code class="reqn">U_1,...,U_n</code> and construct the randomized OSA residuals
+</p>
+<p style="text-align: center;"><code class="reqn">\Phi^{-1}(F_1(X_1)-U_1 p_1(X_1))\:,...,\:\Phi^{-1}(F_n(X_n)-U_n p_n(X_n))</code>
+</p>
+
+<p>These are also iid standard normal.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>data.frame</code> with OSA <em>standardized</em> residuals
+in column <code>residual</code>. In addition, depending on the method, the output
+includes selected characteristics of the predictive distribution (current row) given past observations (past rows), notably the <em>conditional</em>
+</p>
+
+<dl>
+<dt>mean</dt>
+<dd>
+<p>Expectation of the current observation</p>
+</dd>
+<dt>sd</dt>
+<dd>
+<p>Standard deviation of the current observation</p>
+</dd>
+<dt>Fx</dt>
+<dd>
+<p>CDF at current observation</p>
+</dd>
+<dt>px</dt>
+<dd>
+<p>Density at current observation</p>
+</dd>
+<dt>nll</dt>
+<dd>
+<p>Negative log density at current observation</p>
+</dd>
+<dt>nlcdf.lower</dt>
+<dd>
+<p>Negative log of the lower CDF at current observation</p>
+</dd>
+<dt>nlcdf.upper</dt>
+<dd>
+<p>Negative log of the upper CDF at current observation</p>
+</dd>
+</dl>
+<p><em>given past observations</em>.
+If column <code>randomize</code> is present, it indicates that randomization has been applied for the row.
+</p>
+
+
+<h3>Choosing the method</h3>
+
+<p>The user must specify the method used to calculate the residuals - see detailed list of method descriptions below.
+We note that all the methods are based on approximations. While the default 'oneStepGaussianoffMode' often represents a good compromise between accuracy and speed, it cannot be assumed to work well for all model classes.
+As a rule of thumb, if in doubt whether a method is accurate enough, you should always compare with the 'oneStepGeneric' which is considered the most accurate of the available methods.
+</p>
+
+<dl>
+<dt>method="fullGaussian"</dt>
+<dd>
+<p>This method assumes that the joint distribution of data <em>and</em>
+random effects is Gaussian (or well approximated by a
+Gaussian). It does not require any changes to the user
+template. However, if used in conjunction with <code>subset</code>
+and/or <code>conditional</code> a <code>data.term.indicator</code> is required
+- see the next method.
+</p>
+</dd>
+<dt>method="oneStepGeneric"</dt>
+<dd>
+<p>This method calculates the one-step conditional probability
+density as a ratio of Laplace approximations. The approximation is
+integrated (and re-normalized for improved accuracy) using 1D
+numerical quadrature to obtain the one-step CDF evaluated at each
+data point. The method works in the continuous case as well as the
+discrete case (<code>discrete=TRUE</code>).
+</p>
+<p>It requires a specification of a <code>data.term.indicator</code>
+explained in the following. Suppose the template for the
+observations given the random effects (<code class="reqn">u</code>) looks like
+</p>
+<pre>
+    DATA_VECTOR(x);
+    ...
+    nll -= dnorm(x(i), u(i), sd(i), true);
+    ...
+</pre>
+<p>Then this template can be augmented with a
+<code>data.term.indicator = "keep"</code> by changing the template to
+</p>
+<pre>
+    DATA_VECTOR(x);
+    DATA_VECTOR_INDICATOR(keep, x);
+    ...
+    nll -= keep(i) * dnorm(x(i), u(i), sd(i), true);
+    ...
+</pre>
+<p>The new data vector (<code>keep</code>) need not be passed from <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span>. It
+automatically becomes a copy of <code>x</code> filled with ones.
+</p>
+<p>Some extra parameters are essential for the method.
+Pay special attention to the integration domain which must be set either via <code>range</code> (continuous case) or <code>discreteSupport</code> (discrete case). Both of these can be set simultanously to specify a mixed continuous/discrete distribution. For example, a non-negative distribution with a point mass at zero (e.g. the Tweedie distribution) should have <code>range=c(0,Inf)</code> and <code>discreteSupport=0</code>.
+Several parameters control accuracy and appropriate settings are case specific. By default, a spline is fitted to the one-step density before integration (<code>splineApprox=TRUE</code>) to reduce the number of density evaluations. However, this setting may have negative impact on accuracy. The spline approximation can then either be disabled or improved by noting that <code>...</code> arguments are passed to tmbprofile: Pass e.g. <code>ystep=20, ytol=0.1</code>.
+Finally, it may be useful to look at the one step predictive distributions on either log scale (<code>trace=2</code>) or natural scale (<code>trace=3</code>) to determine which alternative methods might be appropriate.
+</p>
+</dd>
+<dt>method="oneStepGaussian"</dt>
+<dd>
+<p>This is a special case of the generic method where the one step
+conditional distribution is approximated by a Gaussian (and can
+therefore be handled more efficiently).
+</p>
+</dd>
+<dt>method="oneStepGaussianOffMode"</dt>
+<dd>
+<p>This is an approximation of the "oneStepGaussian" method that
+avoids locating the mode of the one-step conditional density.
+</p>
+</dd>
+<dt>method="cdf"</dt>
+<dd>
+<p>The generic method can be slow due to the many function
+evaluations used during the 1D integration (or summation in the
+discrete case). The present method can speed up this process but
+requires more changes to the user template. The above template
+must be expanded with information about how to calculate the
+negative log of the lower and upper CDF:
+</p>
+<pre>
+    DATA_VECTOR(x);
+    DATA_VECTOR_INDICATOR(keep, x);
+    ...
+    nll -= keep(i) * dnorm(x(i), u(i), sd(i), true);
+    nll -= keep.cdf_lower(i) * log( pnorm(x(i), u(i), sd(i)) );
+    nll -= keep.cdf_upper(i) * log( 1.0 - pnorm(x(i), u(i), sd(i)) );
+    ...
+</pre>
+<p>The specialized members <code>keep.cdf_lower</code> and
+<code>keep.cdf_upper</code> automatically become copies of <code>x</code>
+filled with zeros.
+</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">######################## Gaussian case
+runExample("simple")
+osa.simple &lt;- oneStepPredict(obj, observation.name = "x", method="fullGaussian")
+qqnorm(osa.simple$residual); abline(0,1)
+
+## Not run: 
+######################## Poisson case (First 100 observations)
+runExample("ar1xar1")
+osa.ar1xar1 &lt;- oneStepPredict(obj, "N", "keep", method="cdf", discrete=TRUE, subset=1:100)
+qqnorm(osa.ar1xar1$residual); abline(0,1)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

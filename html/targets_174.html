@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_progress_summary</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarize target progress.</h2>
+
+<h3>Description</h3>
+
+<p>Summarize the progress of a run of the pipeline.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_progress_summary(
+  fields = c("skipped", "dispatched", "completed", "errored", "canceled", "since"),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>fields</code></td>
+<td>
+<p>Optional character vector of names of progress data
+columns to read. Set to <code>NULL</code> to read all fields.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data frame with one row and the following
+optional columns that can be selected with <code>fields</code>.
+(<code>time</code> is omitted by default.)
+</p>
+
+<ul>
+<li> <p><code>dispatched</code>: number of targets that were sent off to run and
+did not (yet) finish. These targets may not actually be running,
+depending on the status and workload of parallel workers.
+</p>
+</li>
+<li> <p><code>completed</code>: number of targets that completed without
+error or cancellation.
+</p>
+</li>
+<li> <p><code>errored</code>: number of targets that threw an error.
+</p>
+</li>
+<li> <p><code>canceled</code>: number of canceled targets (see <code>tar_cancel()</code>).
+</p>
+</li>
+<li> <p><code>since</code>: how long ago progress last changed (<code>Sys.time() - time</code>).
+</p>
+</li>
+<li> <p><code>time</code>: the time when the progress last changed
+(modification timestamp of the <code style="white-space: pre;">⁠_targets/meta/progress⁠</code> file).
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Other progress: 
+<code>tar_canceled()</code>,
+<code>tar_completed()</code>,
+<code>tar_dispatched()</code>,
+<code>tar_errored()</code>,
+<code>tar_poll()</code>,
+<code>tar_progress()</code>,
+<code>tar_progress_branches()</code>,
+<code>tar_skipped()</code>,
+<code>tar_watch()</code>,
+<code>tar_watch_server()</code>,
+<code>tar_watch_ui()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(x, seq_len(2)),
+    tar_target(y, x, pattern = map(x)),
+    tar_target(z, stopifnot(y &lt; 1.5), pattern = map(y), error = "continue")
+  )
+}, ask = FALSE)
+try(tar_make())
+tar_progress_summary()
+})
+}
+</code></pre>
+
+
+</div>

@@ -1,0 +1,244 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>EstDynamics</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate TE dynamics using mismatch data</h2>
+
+<h3>Description</h3>
+
+<p>Given the number of mismatches and element lengths for an LTR retrotransposon family, estimate the age distribution, insertion rate, and deletion rates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">EstDynamics(mismatch, len, r = 0.013, perturb = 2, rateRange = NULL,
+  plotFit = FALSE, plotSensitivity = FALSE, pause = plotFit &amp;&amp;
+  plotSensitivity, main = sprintf("n = %d", n))
+
+EstDynamics2(mismatch, len, r = 0.013, nTrial = 10L, perturb = 2,
+  rateRange = NULL, plotFit = FALSE, plotSensitivity = FALSE,
+  pause = plotFit &amp;&amp; plotSensitivity, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>mismatch</code></td>
+<td>
+<p>A vector containing the number of mismatches.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>len</code></td>
+<td>
+<p>A vector containing the length of each element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>Mutation rate (substitutions/(million year * site)) used in the calculation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>perturb</code></td>
+<td>
+<p>A scalar multiple to perturb the estimated death rate from the null hypothesis estimate. Used to generate the sensitivity analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rateRange</code></td>
+<td>
+<p>A vector of death rates, an alternative to <code>perturb</code> for specifying the death rates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plotFit</code></td>
+<td>
+<p>Whether to plot the distribution fits.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plotSensitivity</code></td>
+<td>
+<p>Whether to plot the sensitivity analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pause</code></td>
+<td>
+<p>Whether to pause after each plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main</code></td>
+<td>
+<p>The title for the plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTrial</code></td>
+<td>
+<p>The number of starting points for searching for the MLE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Pass to EstDynamics</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>EstDynamics</code> estimates the TE dynamics through fitting a negative binomial fit to the mismatch data, while <code>EstDynamics2</code> uses a mixture model. For detailed implementation see References.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>EstDynamics</code> returns a <code>TEfit</code> object, containing the following fields, where the unit for time is million years ago (Mya):
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>pvalue</code></td>
+<td>
+<p>The p-value for testing H_0: The insertion rate is uniform over time.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ageDist</code></td>
+<td>
+<p>A list containing the estimated age distributions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insRt</code></td>
+<td>
+<p>A list containing the estimated insertion rates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>agePeakLoc</code></td>
+<td>
+<p>The maximum point (in age) of the age distribution. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insPeakLoc</code></td>
+<td>
+<p>The maximum point (in time) of the insertion rate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimates</code></td>
+<td>
+<p>The parameter estimates from fitting the distributions; see References</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sensitivity</code></td>
+<td>
+<p>A list containing the results for the sensitivity analysis, with fields <code>time</code>: time points; <code>delRateRange</code>: A vector for the range of deletion rates; <code>insRange</code>: A matrix whose columns contain the insertion rates under different scenarios.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>The sample size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meanLen</code></td>
+<td>
+<p>The mean of element length.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meanDiv</code></td>
+<td>
+<p>The mean of divergence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>KDE</code></td>
+<td>
+<p>A list containing the kernel density estimate for the mismatch data. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logLik</code></td>
+<td>
+<p>The log-likelihoods of the parametric fits.</p>
+</td>
+</tr>
+</table>
+<p>This function returns a <code>TEfit2</code> object, containing all the above fields for <code>TEfit</code> and the following:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>estimates2</code></td>
+<td>
+<p>The parameter estimates from fitting the mixture distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ageDist2</code></td>
+<td>
+<p>The estimated age distribution from fitting the mixture distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insRt2</code></td>
+<td>
+<p>The estimated insertion rate from fitting the mixture distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>agePeakLoc2</code></td>
+<td>
+<p>Maximum point(s) for the age distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insPeakLoc2</code></td>
+<td>
+<p>Maximum point(s) for the insertion rate.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p><cite>Dai, X., Wang, H., Dvorak, J., Bennetzen, J., Mueller, H.-G. (2018). "Birth and Death of LTR Retrotransposons in Aegilops tauschii". Genetics</cite>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Analyze Gypsy family 24 (Nusif)
+data(AetLTR)
+dat &lt;- subset(AetLTR, GroupID == 24 &amp; !is.na(Chr))
+set.seed(1)
+res1 &lt;- EstDynamics(dat$Mismatch, dat$UngapedLen, plotFit=TRUE, plotSensitivity=FALSE, pause=FALSE)
+
+# p-value for testing a uniform insertion rate
+res1$pvalue
+
+
+# Use a mixture distribution to improve fit
+res2 &lt;- EstDynamics2(dat$Mismatch, dat$UngapedLen, plotFit=TRUE)
+
+# A larger number of trials is recommended to achieve the global MLE
+## Not run: 
+res3 &lt;- EstDynamics2(dat$Mismatch, dat$UngapedLen, plotFit=TRUE, nTrial=1000L)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

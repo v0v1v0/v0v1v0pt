@@ -1,0 +1,230 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>smallBigBoot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarizes raw output from TITAN's bootstrap procedure</h2>
+
+<h3>Description</h3>
+
+<p>A function to take output from TITAN's bootstrap procedure and process it for
+summary output.  The default is to perform this processing entirely within
+active memory, but in the event of overflowing system capacity, an optional
+program writes temporary files to a scratch directory to circumvent memory
+limits.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">small.boot(
+  ivz.bt.list,
+  bSeq,
+  sppmax,
+  obs1,
+  obs2,
+  nBoot,
+  numClass,
+  numUnit,
+  ncpus,
+  pur.cut,
+  rel.cut,
+  minSplt
+)
+
+big.boot(
+  ivz.bt.list,
+  bSeq,
+  sppmax,
+  obs1,
+  obs2,
+  nBoot,
+  numClass,
+  numUnit,
+  ncpus,
+  pur.cut,
+  rel.cut,
+  minSplt
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ivz.bt.list</code></td>
+<td>
+<p>A list of output from each bootstrap replicate passed from
+<code>boot.titan()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bSeq</code></td>
+<td>
+<p>An index of the sequence of bootstrap replicates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sppmax</code></td>
+<td>
+<p>A taxon-specific summary output table for TITAN.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs1</code></td>
+<td>
+<p>A binary vector indicating membership in the decreasing group of
+taxa.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs2</code></td>
+<td>
+<p>A binary vector indicating membership in the increasing group of
+taxa.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nBoot</code></td>
+<td>
+<p>An argument specifying the number of bootstrap replicates.  The
+default is to use the value specified in the original TITAN function call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>numClass</code></td>
+<td>
+<p>An argument specifying the number of candidate partitions
+along the environmental gradient.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>numUnit</code></td>
+<td>
+<p>An argument specifying the number of values along the
+environmental gradient.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncpus</code></td>
+<td>
+<p>An argument specifying the number of processing cores used by
+the TITAN function call.  If ncpus&gt;1 then parallel processing is indicated.
+The default is to use the value specified in the original TITAN function
+call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pur.cut</code></td>
+<td>
+<p>An argument specifying the cutoff value for determining
+purity.  The default is to use the value specified in the original TITAN
+function call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rel.cut</code></td>
+<td>
+<p>An argument specifying the cutoff value for determining
+reliability.  The default is to use the value specified in the original
+TITAN function call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minSplt</code></td>
+<td>
+<p>An argument specifying minimum split size of partitioning
+along the environmental gradient.  The default is to use the value
+specified in the original TITAN function call.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Use of 'small.boot' versus 'big.boot' is controlled by the argument 'memory'
+in the original TITAN function call and passed to the wrapper function
+'titan'.  The two progams have identical functionality, but they accomplish
+those functions differently to deal with memory limitations.
+</p>
+<p>For sequential processing of the bootsrtap, the index 'bSeq' is simply a
+sequence from 1:nBoot that is printed to the screen. For parallel processing,
+'bSeq' is a list of length equal to 'ncpus', where each item is a segment of
+the sequence allocated to each processing core.  Thus, depending on whether
+'ncpus'&gt;1, the value of 'bSeq' is used differently to extract values from the
+bootstrap output list.
+</p>
+<p>The first part of each function consists of defining output matrices, the
+second involves extraction of output from the bootstrap list, the third part
+involves calculating purity, reliability, the median z score, and quantiles
+of the bootstrapped change points for each taxon.  These values are used to
+complete the 'sppmax' output table and to identify the taxa that meet purity
+and reliability criteria.  The final portion of each function finds the
+maximum sum(z-), sum(z+), f.sum(z-), and f.sum(z+) for each bootstrap
+replicate for later estimation of confidence intervals.  The final portion of
+the summary involves calculating the filtered and unfiltered sum(z) scores
+for each bootstrap replicate from the matrix of z scores and response
+directions passed from the function boot.titan() within ivz.bt.list
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of six items: </p>
+
+<dl>
+<dt>sppSub1</dt>
+<dd>
+<p>A vector of taxon index numbers for pure and reliable
+decreasers</p>
+</dd>
+<dt>sppSub2</dt>
+<dd>
+<p>A vector of taxon index numbers for pure and reliable
+increasers</p>
+</dd>
+<dt>sppmax</dt>
+<dd>
+<p>The completed taxon-specific summary output table for TITAN</p>
+</dd>
+<dt>maxSumz</dt>
+<dd>
+<p>A 2-column matrix of environmental values at sum(z-) and
+sum(z+) maxima across all bootstrap replicates</p>
+</dd>
+<dt>maxFsumz</dt>
+<dd>
+<p>A 2-column matrix of environmental values at filtered
+sum(z-) and sum(z+) maxima across all bootstrap replicates</p>
+</dd>
+<dt>metricArray</dt>
+<dd>
+<p>An array of group membership, env change points, z
+scores, and p values for passing to 'plot.IVecdf'</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>M. Baker and R. King
+</p>
+
+
+<h3>References</h3>
+
+<p>Baker, ME and RS King.  2010. A new method for detecting and
+interpreting biodiversity and ecological community thresholds. Methods in
+Ecology and Evolution 1(1): 25:37.
+</p>
+<p>Baker ME and RS King. 2013. Of TITAN and straw men: an appeal for
+greater understanding of community data. Freshwater Science 32(2):489-506.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>boot.titan()</code>, <code>tboot()</code>, <code>titan()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,208 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_prop_diff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper functions to calculate proportion difference</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">prop_diff_wald(rsp, grp, conf_level = 0.95, correct = FALSE)
+
+prop_diff_ha(rsp, grp, conf_level)
+
+prop_diff_nc(rsp, grp, conf_level, correct = FALSE)
+
+prop_diff_cmh(rsp, grp, strata, conf_level = 0.95)
+
+prop_diff_strat_nc(
+  rsp,
+  grp,
+  strata,
+  weights_method = c("cmh", "wilson_h"),
+  conf_level = 0.95,
+  correct = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>rsp</code></td>
+<td>
+<p>(<code>logical</code>)<br> vector indicating whether each subject is a responder or not.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grp</code></td>
+<td>
+<p>(<code>factor</code>)<br> vector assigning observations to one out of two groups
+(e.g. reference and treatment group).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>proportion</code>)<br> confidence level of the interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>correct</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether to include the continuity correction. For further
+information, see <code>stats::prop.test()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>(<code>factor</code>)<br> variable with one level per stratum and same length as <code>rsp</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights_method</code></td>
+<td>
+<p>(<code>string</code>)<br> weights method. Can be either <code>"cmh"</code> or <code>"heuristic"</code>
+and directs the way weights are estimated.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A named <code>list</code> of elements <code>diff</code> (proportion difference) and <code>diff_ci</code>
+(proportion difference confidence interval).
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>prop_diff_wald()</code>: The Wald interval follows the usual textbook
+definition for a single proportion confidence interval using the normal
+approximation. It is possible to include a continuity correction for Wald's
+interval.
+</p>
+</li>
+<li> <p><code>prop_diff_ha()</code>: Anderson-Hauck confidence interval.
+</p>
+</li>
+<li> <p><code>prop_diff_nc()</code>: Newcombe confidence interval. It is based on
+the Wilson score confidence interval for a single binomial proportion.
+</p>
+</li>
+<li> <p><code>prop_diff_cmh()</code>: Calculates the weighted difference. This is defined as the difference in
+response rates between the experimental treatment group and the control treatment group, adjusted
+for stratification factors by applying Cochran-Mantel-Haenszel (CMH) weights. For the CMH chi-squared
+test, use <code>stats::mantelhaen.test()</code>.
+</p>
+</li>
+<li> <p><code>prop_diff_strat_nc()</code>: Calculates the stratified Newcombe confidence interval and difference in response
+rates between the experimental treatment group and the control treatment group, adjusted for stratification
+factors. This implementation follows closely the one proposed by Yan and Su (2010).
+Weights can be estimated from the heuristic proposed in <code>prop_strat_wilson()</code> or from CMH-derived weights
+(see <code>prop_diff_cmh()</code>).
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Yan X, Su XG (2010).
+“Stratified Wilson and Newcombe Confidence Intervals for Multiple Binomial Proportions.”
+<em>Stat. Biopharm. Res.</em>, <b>2</b>(3), 329–335.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>prop_diff()</code> for implementation of these helper functions.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Wald confidence interval
+set.seed(2)
+rsp &lt;- sample(c(TRUE, FALSE), replace = TRUE, size = 20)
+grp &lt;- factor(c(rep("A", 10), rep("B", 10)))
+
+prop_diff_wald(rsp = rsp, grp = grp, conf_level = 0.95, correct = FALSE)
+
+# Anderson-Hauck confidence interval
+## "Mid" case: 3/4 respond in group A, 1/2 respond in group B.
+rsp &lt;- c(TRUE, FALSE, FALSE, TRUE, TRUE, TRUE)
+grp &lt;- factor(c("A", "B", "A", "B", "A", "A"), levels = c("B", "A"))
+
+prop_diff_ha(rsp = rsp, grp = grp, conf_level = 0.90)
+
+## Edge case: Same proportion of response in A and B.
+rsp &lt;- c(TRUE, FALSE, TRUE, FALSE)
+grp &lt;- factor(c("A", "A", "B", "B"), levels = c("A", "B"))
+
+prop_diff_ha(rsp = rsp, grp = grp, conf_level = 0.6)
+
+# Newcombe confidence interval
+
+set.seed(1)
+rsp &lt;- c(
+  sample(c(TRUE, FALSE), size = 40, prob = c(3 / 4, 1 / 4), replace = TRUE),
+  sample(c(TRUE, FALSE), size = 40, prob = c(1 / 2, 1 / 2), replace = TRUE)
+)
+grp &lt;- factor(rep(c("A", "B"), each = 40), levels = c("B", "A"))
+table(rsp, grp)
+
+prop_diff_nc(rsp = rsp, grp = grp, conf_level = 0.9)
+
+# Cochran-Mantel-Haenszel confidence interval
+
+set.seed(2)
+rsp &lt;- sample(c(TRUE, FALSE), 100, TRUE)
+grp &lt;- sample(c("Placebo", "Treatment"), 100, TRUE)
+grp &lt;- factor(grp, levels = c("Placebo", "Treatment"))
+strata_data &lt;- data.frame(
+  "f1" = sample(c("a", "b"), 100, TRUE),
+  "f2" = sample(c("x", "y", "z"), 100, TRUE),
+  stringsAsFactors = TRUE
+)
+
+prop_diff_cmh(
+  rsp = rsp, grp = grp, strata = interaction(strata_data),
+  conf_level = 0.90
+)
+
+# Stratified Newcombe confidence interval
+
+set.seed(2)
+data_set &lt;- data.frame(
+  "rsp" = sample(c(TRUE, FALSE), 100, TRUE),
+  "f1" = sample(c("a", "b"), 100, TRUE),
+  "f2" = sample(c("x", "y", "z"), 100, TRUE),
+  "grp" = sample(c("Placebo", "Treatment"), 100, TRUE),
+  stringsAsFactors = TRUE
+)
+
+prop_diff_strat_nc(
+  rsp = data_set$rsp, grp = data_set$grp, strata = interaction(data_set[2:3]),
+  weights_method = "cmh",
+  conf_level = 0.90
+)
+
+prop_diff_strat_nc(
+  rsp = data_set$rsp, grp = data_set$grp, strata = interaction(data_set[2:3]),
+  weights_method = "wilson_h",
+  conf_level = 0.90
+)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,92 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lag_column</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Lag a Column Based on Date and Time Range</h2>
+
+<h3>Description</h3>
+
+<p>This function generates a lagged version of a given column based on a date variable, with the
+ability to specify a range of lags. It also allows for the optional removal of <code>NA</code> values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lag_column(column, date, lag, max_lag = lag, drop_na = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>column</code></td>
+<td>
+<p>A numeric vector or column to be lagged.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>date</code></td>
+<td>
+<p>A vector representing dates corresponding to the <code>column</code>. This should be in a
+date or datetime format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>An integer specifying the minimum lag (in days, hours, etc.) to apply to <code>column</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_lag</code></td>
+<td>
+<p>An integer specifying the maximum lag (in days, hours, etc.) to apply to <code>column</code>.
+Defaults to <code>lag</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_na</code></td>
+<td>
+<p>A logical value indicating whether to drop <code>NA</code> values from the resulting lagged
+column. Defaults to <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A vector of the same length as <code>column</code>, containing the lagged values.
+If no matching dates are found within the lag window, <code>NA</code> is returned for that position.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Basic example with a vector
+dates &lt;- as.Date("2023-01-01") + 0:9
+values &lt;- rnorm(10)
+lagged_values &lt;- lag_column(values, dates, lag = 1, max_lag = 3)
+
+# Example using a tibble and dplyr::group_by
+data &lt;- tibble::tibble(
+  permno = rep(1:2, each = 10),
+  date = rep(seq.Date(as.Date('2023-01-01'), by = "month", length.out = 10), 2),
+  size = runif(20, 100, 200),
+  bm = runif(20, 0.5, 1.5)
+)
+
+data |&gt;
+  dplyr::group_by(permno) |&gt;
+  dplyr::mutate(
+    across(c(size, bm),
+           \(x) lag_column(x, date, months(3), months(6), drop_na = TRUE))
+  ) |&gt;
+dplyr::ungroup()
+
+</code></pre>
+
+
+</div>

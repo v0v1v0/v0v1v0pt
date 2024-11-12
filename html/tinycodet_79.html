@@ -1,0 +1,203 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>strcut_loc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cut Strings</h2>
+
+<h3>Description</h3>
+
+<p>The <code>strcut_loc()</code> function
+cuts every string in a character vector around a location range <code>loc</code>,
+such that every string is cut into the following parts:
+</p>
+
+<ul>
+<li>
+<p> the sub-string <b>before</b> <code>loc</code>;
+</p>
+</li>
+<li>
+<p> the sub-string at <code>loc</code> itself;
+</p>
+</li>
+<li>
+<p> the sub-string <b>after</b> <code>loc</code>.
+</p>
+</li>
+</ul>
+<p>The location range <code>loc</code> would usually be matrix with 2 columns,
+giving the start and end points of some pattern match. <br><br>
+The <code>strcut_brk()</code> function
+(a wrapper around stri_split_boundaries<code>(..., tokens_only = FALSE)</code>)
+cuts every string into individual text breaks
+(like character, word, line, or sentence boundaries). <br><br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">strcut_loc(str, loc)
+
+strcut_brk(str, type = "character", tolist = FALSE, n = -1L, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>str</code></td>
+<td>
+<p>a string or character vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loc</code></td>
+<td>
+<p>Either one of the following:
+</p>
+
+<ul>
+<li>
+<p> the result from the stri_locate_ith function.
+</p>
+</li>
+<li>
+<p> a matrix of 2 integer columns, with <code>nrow(loc)==length(str)</code>,
+giving the location range of the middle part.
+</p>
+</li>
+<li>
+<p> a vector of length 2, giving the location range of the middle part.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>either one of the following:
+</p>
+
+<ul>
+<li>
+<p> a single string giving the break iterator type
+(i.e. <code>"character"</code>, <code>"line_break"</code>, <code>"sentence"</code>, <code>"word"</code>,
+or a custom set of ICU break iteration rules).
+</p>
+</li>
+<li>
+<p> a list with break iteration options,
+like a list produced by stri_opts_brkiter.
+</p>
+</li>
+</ul>
+<p><a href="https://stringi.gagolewski.com/rapi/about_search_boundaries.html"><img src="../help/figures/aboutsearch-boundaries-blue.svg" alt="[BOUNDARIES]"></a> <br></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolist</code></td>
+<td>
+<p>logical, indicating if <code>strcut_brk</code> should return a list (<code>TRUE</code>),
+or a matrix (<code>FALSE</code>, default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>see stri_split_boundaries.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to be passed to stri_split_boundaries.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>strcut_</code> functions provide a short and concise way to cut strings into pieces,
+without removing the delimiters,
+which is an operation that lies at the core of virtually all boundaries-operations in 'stringi'. <br><br>
+The main difference between the <code>strcut_</code> - functions
+and stri_split /  strsplit,
+is that the latter generally removes the delimiter patterns in a string when cutting,
+while the <code>strcut_</code>-functions do not attempt to remove parts of the string by default,
+they only attempt to cut the strings into separate pieces.
+Moreover, the <code>strcut_</code> - functions return a matrix by default. <br><br></p>
+
+
+<h3>Value</h3>
+
+<p>For <code>strcut_loc()</code>: <br>
+A character matrix with <code>length(str)</code> rows and 3 columns,
+where for every row <code>i</code> it holds the following:
+</p>
+
+<ul>
+<li>
+<p> the first column contains the sub-string <b>before</b> <code>loc[i,]</code>,
+or <code>NA</code> if <code>loc[i,]</code> contains <code>NA</code>;
+</p>
+</li>
+<li>
+<p> the second column contains the sub_string at <code>loc[i,]</code>,
+or the uncut string if <code>loc[i,]</code> contains <code>NA</code>;
+</p>
+</li>
+<li>
+<p> the third and last column contains the sub-string <b>after</b> <code>loc[i,]</code>,
+or <code>NA</code> if <code>loc[i,]</code> contains <code>NA</code>. <br><br></p>
+</li>
+</ul>
+<p>For <code>strcut_brk(..., tolist = FALSE)</code>: <br>
+A character matrix with <code>length(str)</code> rows and
+a number of columns equal to the maximum number of pieces <code>str</code> was cut in. <br>
+Empty places are filled with <code>NA</code>. <br><br>
+For <code>strcut_brk(..., tolist = TRUE)</code>: <br>
+A list with <code>length(str)</code> elements,
+where each element is a character vector containing the cut string. <br><br></p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_strings
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+x &lt;- rep(paste0(1:10, collapse = ""), 10)
+print(x)
+loc &lt;- stri_locate_ith(x, 1:10, fixed = as.character(1:10))
+strcut_loc(x, loc)
+strcut_loc(x, c(5, 5))
+strcut_loc(x, c(NA, NA))
+strcut_loc(x, c(5, NA))
+strcut_loc(x, c(NA, 5))
+
+test &lt;- "The\u00a0above-mentioned    features are very useful. " %s+%
+  "Spam, spam, eggs, bacon, and spam. 123 456 789"
+strcut_brk(test, "line")
+strcut_brk(test, "word")
+strcut_brk(test, "sentence")
+strcut_brk(test)
+strcut_brk(test, n = 1)
+strcut_brk(test, "line", tolist = TRUE)
+strcut_brk(test, "word", tolist = TRUE)
+strcut_brk(test, "sentence", tolist = TRUE)
+
+brk &lt;- stringi::stri_opts_brkiter(
+  type = "line"
+)
+strcut_brk(test, brk)
+
+</code></pre>
+
+
+</div>

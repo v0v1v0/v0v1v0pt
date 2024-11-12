@@ -1,0 +1,228 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TreeMineR</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Unconditional Bernoulli Tree-Based Scan Statistics for R</h2>
+
+<h3>Description</h3>
+
+<p>Unconditional Bernoulli Tree-Based Scan Statistics for R
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TreeMineR(
+  data,
+  tree,
+  p = NULL,
+  n_exposed = NULL,
+  n_unexposed = NULL,
+  dictionary = NULL,
+  delimiter = "/",
+  n_monte_carlo_sim = 9999,
+  random_seed = FALSE,
+  return_test_dist = FALSE,
+  future_control = list(strategy = "sequential")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The dataset used for the computation. The dataset needs to include the
+following columns:
+</p>
+
+<dl>
+<dt><code>id</code></dt>
+<dd>
+<p>An integer that is unique to every individual.</p>
+</dd>
+<dt><code>leaf</code></dt>
+<dd>
+<p>A string identifying the unique diagnoses or leafs for each individual.</p>
+</dd>
+<dt><code>exposed</code></dt>
+<dd>
+<p>A 0/1 indicator of the individual's exposure status.</p>
+</dd>
+</dl>
+<p>See below for the first and last rows included in the example dataset.
+</p>
+<div class="sourceCode"><pre>   id leaf exposed
+    1 K251       0
+    2 Q702       0
+    3  G96       0
+    3 S949       0
+    4 S951       0
+ ---
+  999 V539       1
+  999 V625       1
+  999 G823       1
+ 1000  L42       1
+ 1000 T524       1
+</pre></div>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A dataset with one variable <code>pathString</code> defining the tree structure
+that you would like to use. This dataset can, e.g., be created using
+<code>create_tree</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>The proportion of exposed individuals in the dataset. Will be calculated
+based on <code>n_exposed</code>, and <code>n_unexposed</code> if both are supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_exposed</code></td>
+<td>
+<p>Number of exposed individuals (Optional).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_unexposed</code></td>
+<td>
+<p>Number of unexposed individuals (Optional).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dictionary</code></td>
+<td>
+<p>A <code>data.frame</code> that includes one <code>node</code> column and a <code>title</code> column,
+which are used for labeling the cuts in the output of <code>TreeMineR</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>delimiter</code></td>
+<td>
+<p>A character defining the delimiter of different tree levels within your
+<code>pathString</code>. The default is <code>/</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_monte_carlo_sim</code></td>
+<td>
+<p>The number of Monte-Carlo simulations to be used for calculating P-values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>random_seed</code></td>
+<td>
+<p>Random seed used for the Monte-Carlo simulations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_test_dist</code></td>
+<td>
+<p>If <code>true</code>, a data.frame of the maximum log-likelihood
+ratios in each Monte Carlo simulation will be returned. This distribution
+of the maximum log-likelihood ratios is used for estimating the P-value
+reported in the result table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>future_control</code></td>
+<td>
+<p>A list of arguments passed <code>future::plan</code>. This is useful if one would like
+to parallelise the Monte-Carlo simulations to decrease the computation
+time. The default is a sequential run of the Monte-Carlo simulations.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> with the following columns:
+</p>
+
+<dl>
+<dt><code>cut</code></dt>
+<dd>
+<p>The name of the cut G.</p>
+</dd>
+<dt><code>n1</code></dt>
+<dd>
+<p>The number of exposed events belonging to cut G.</p>
+</dd>
+<dt><code>n1</code></dt>
+<dd>
+<p>The number of inexposed events belonging to cut G.</p>
+</dd>
+<dt><code>risk1</code></dt>
+<dd>
+<p>The absolute risk of getting an event belonging to cut G
+among the exposed.</p>
+</dd>
+<dt><code>risk0</code></dt>
+<dd>
+<p>The absolute risk of getting an event belonging to cut G
+among the unexposed.</p>
+</dd>
+<dt><code>RR</code></dt>
+<dd>
+<p>The risk ratio of the absolute risk among the exposed over
+the absolute risk among the unexposed</p>
+</dd>
+<dt><code>llr</code></dt>
+<dd>
+<p>The log-likelihood ratio comparing the observed and
+expected number of exposed events belonging to cut G.</p>
+</dd>
+<dt><code>p</code></dt>
+<dd>
+<p>The P-value that cut G is a cluster of events.</p>
+</dd>
+</dl>
+<p>If <code>return_test_dist</code>  is <code>true</code> the function returns a list of two
+data.frame.
+</p>
+
+<dl>
+<dt><code>result_table</code></dt>
+<dd>
+<p>A data.frame including the results as described
+above.</p>
+</dd>
+<dt><code>test_dist</code></dt>
+<dd>
+<p>A data.frame with two columns: <code>iteration</code> the number
+of the Monte Carlo iteration. Note that iteration
+is the calculation based on the original data and
+is, hence, not included in this data.fame. <code>max_llr</code>:
+the highest observed log-likelihood ratio for each
+Monte Carlo simulation</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Kulldorff et al. (2003)
+A tree-based scan statistic for database disease surveillance.
+Biometrics 56(2): 323-331. DOI: 10.1111/1541-0420.00039.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">TreeMineR(data = diagnoses,
+          tree  = icd_10_se,
+          p = 1/11,
+          n_monte_carlo_sim = 99,
+          random_seed = 1234) |&gt;
+  head()
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Method functions</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Functions for managing processing methods</h2>
+
+<h3>Description</h3>
+
+<p>These functions are used to manage which methods are used to process data.
+They include methods for assigning, clearing, and loading the assigned 
+methods. Also, <code>tcplMthdList</code> lists the available methods.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcplMthdAssign(lvl, id, mthd_id, ordr = NULL, type)
+
+tcplMthdClear(lvl, id, mthd_id = NULL, type)
+
+tcplMthdList(lvl, type = "mc")
+
+tcplMthdLoad(lvl, id = NULL, type = "mc")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lvl</code></td>
+<td>
+<p>Integer of length 1, the method level</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Integer, the assay component or assay endpoint id(s)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mthd_id</code></td>
+<td>
+<p>Integer, the method id(s)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ordr</code></td>
+<td>
+<p>Integer, the order in which to execute the analysis methods,
+must be the same length as mthd_id, does not apply to levels 5 or 6</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character of length 1, the data type, "sc" or "mc"</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tcplMthdLoad</code> loads the assigned methods for the given level and 
+ID(s). Similarly, <code>tcplMthdList</code> displays the available methods for 
+the given level. These two functions do not make any changes to the 
+database.
+</p>
+<p>Unlike the <code>-Load</code> and <code>-List</code> functions, the <code>-Assign</code> and 
+<code>-Clear</code> functions alter the database and trigger a delete cascade. 
+<code>tcplMthdAssign</code> assigns methods to the given ID(s), and 
+<code>tcplMthdClear</code> removes methods. In addition to the method ID 
+('mthd_id'), assigning methods at some levels require an order ('ordr'). 
+The 'ordr' parameter is necessary to allow progression of methods at level
+one for single-concentration processing, and levels two and three for 
+multiple-concentration processing. More information about method assignments 
+and the delete cascade are available in the package vignette.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+## tcplListMthd allows the user to display the available methods for 
+## a given level and data type
+head(tcplMthdList(lvl = 2, type = "mc"))
+
+## tcplLoadMthd shows which methods are assigned for the given ID, level,
+## and data type. Here we will show how to register, load, and clear methods
+## using an acid not in the example database. Note: There is no check for
+## whether an ID exists before assigning/clearing methods. 
+tcplMthdLoad(lvl = 2, id = 55, type = "mc")
+
+## ACID 55 does not have any methods. Assign methods from the list above. 
+tcplMthdAssign(lvl = 2, 
+               id = 55, 
+               mthd_id = c(3, 4, 2), 
+               ordr = 1:3, 
+               type = "mc")
+## Method assignment can be done for multiple assays, too. 
+tcplMthdAssign(lvl = 2, 
+               id = 53:54, 
+               mthd_id = c(3, 4, 2), 
+               ordr = 1:3, 
+               type = "mc")
+               
+## Cleanup example method assigments
+tcplMthdClear(lvl = 2, id = 53:55, type = "mc")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

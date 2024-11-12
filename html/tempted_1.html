@@ -1,0 +1,137 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aggregate_feature</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Aggregate features using feature loadings</h2>
+
+<h3>Description</h3>
+
+<p>This function aggregate the features into "meta features" by
+calculating a weighted summation of the features using feature loading of each component as weights.
+It can also aggregate features by using the combination of multiple components by ranking the features
+by a linear combination of feature loadings from multiple components.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">aggregate_feature(
+  res_tempted,
+  mean_svd = NULL,
+  datlist,
+  pct = 1,
+  contrast = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>res_tempted</code></td>
+<td>
+<p>Output of <code>tempted</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean_svd</code></td>
+<td>
+<p>Output of <code>svd_centralize</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datlist</code></td>
+<td>
+<p>Output of <code>format_tempted</code>, the original temporal tensor that will be aggregated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pct</code></td>
+<td>
+<p>The percent of features to aggregate,
+features ranked by absolute value of the feature loading of each component.
+Default is 1, which means 100% of features are aggregated.
+Setting <code>pct=0.01</code> means top 1% of features is aggregated,
+where features are ranked in absolute value of feature loading of each component.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>contrast</code></td>
+<td>
+<p>A matrix choosing how components are combined,
+each column is a contrast of length r and used to calculate the linear combination of
+the feature loadings of r components.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of results.
+</p>
+
+<dl>
+<dt>metafeature_aggregate</dt>
+<dd>
+<p>The meta feature obtained by aggregating the observed temporal tensor. It is a data.frame with four columns: "value" for the meta feature values, "subID" for the subject ID, "timepoint" for the time points, and "PC" indicating which component was used to construct the meta feature.</p>
+</dd>
+<dt>metafeature_aggregate_est</dt>
+<dd>
+<p>The meta feature obtained by aggregating the denoised temporal tensor. It has the same structure as <code>metafeature_aggregate</code>.</p>
+</dd>
+<dt>contrast</dt>
+<dd>
+<p>The contrast used to linearly combine the components from input.</p>
+</dd>
+<dt>toppct</dt>
+<dd>
+<p>A matrix of TRUE/FALSE indicating which features are aggregated in each component and contrast.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Shi P, Martino C, Han R, Janssen S, Buck G, Serrano M, Owzar K, Knight R, Shenhav L, Zhang AR. (2023) <em>Time-Informed Dimensionality Reduction for Longitudinal Microbiome Studies</em>. bioRxiv. doi: 10.1101/550749. <a href="https://www.biorxiv.org/content/10.1101/550749">https://www.biorxiv.org/content/10.1101/550749</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Take a subset of the samples so the example runs faster
+
+# Here we are taking samples from the odd months
+sub_sample &lt;- rownames(meta_table)[(meta_table$day_of_life%/%12)%%2==1]
+count_table_sub &lt;- count_table[sub_sample,]
+processed_table_sub &lt;- processed_table[sub_sample,]
+meta_table_sub &lt;- meta_table[sub_sample,]
+
+datlist &lt;- format_tempted(count_table_sub,
+                          meta_table_sub$day_of_life,
+                          meta_table_sub$studyid,
+                          pseudo=0.5,
+                          transform="clr")
+
+mean_svd &lt;- svd_centralize(datlist, r=1)
+
+res_tempted &lt;- tempted(mean_svd$datlist, r=2, smooth=1e-5)
+
+contrast &lt;- matrix(c(1/2,1), 2, 1)
+
+res_aggregate &lt;- aggregate_feature(res_tempted,
+                                   mean_svd,
+                                   datlist,
+                                   pct=1,
+                                   contrast=contrast)
+
+# plot the aggregated features
+
+
+group &lt;- unique(meta_table[, c("studyid", "delivery")])
+
+plot_metafeature(res_aggregate$metafeature_aggregate, group, bws=30)
+
+</code></pre>
+
+
+</div>

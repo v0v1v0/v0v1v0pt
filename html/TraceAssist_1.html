@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ADMM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ADMM algorithm for weighted classification</h2>
+
+<h3>Description</h3>
+
+<p>Implement an ADMM algorithm to optimize the weigthed classificiation loss.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ADMM(X,ybar,Weight,Covariate=NULL,r,srow,scol,lambda=0,rho.ini=1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>A list of matrix-valued predictors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ybar</code></td>
+<td>
+<p>A vector of  shifted response variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Weight</code></td>
+<td>
+<p>Classification weight.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Covariate</code></td>
+<td>
+<p>Additional covariates including intercept. <code>Covariate = NULL</code> indicates no covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>r</code></td>
+<td>
+<p>The rank of coefficient matrix to be fitted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>srow</code></td>
+<td>
+<p>The number of zero rows in coefficient matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scol</code></td>
+<td>
+<p>The number of zero columns in coefficient matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>Lagrangian multiplier. Default is zero.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho.ini</code></td>
+<td>
+<p>Initial step size. Default is 1.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The returned object is a list of components.
+</p>
+<p><code>intercept</code> - The estimated intercept of the classifier.
+</p>
+<p><code>P_row</code> - The left-singular vectors of the coefficient matrix.
+</p>
+<p><code>P_col</code> - The right-singular vectors of the coefficient matrix.
+</p>
+<p><code>obj</code> - Trajectory of weighted classification loss values over iterations.
+</p>
+<p><code>iter</code> - The number of iterations.
+</p>
+<p><code>fitted</code> - A vector of fitted reponse from estimated classifier.
+</p>
+<p><code>B</code> - The estimated coefficient matrix of the classifier.
+</p>
+
+
+<h3>References</h3>
+
+<p>Lee, C., Li, L., Zhang, H., and Wang, M. (2021). Nonparametric Trace Regression via Sign Series Representation. <em>arXiv preprint arXiv:2105.01783</em>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#### Generate matrix predictors  ##########
+X = list()
+for(i in 1:10){
+ X[[i]] = matrix(runif(4,-1,1),nrow = 2,ncol = 2)
+}
+
+#### Generate coefficient matrix #########
+B = runif(2,-1,1)%*%t(runif(2,-1,1))
+
+#### Generate response variables #########
+y = NULL
+for(i in 1:10){
+ y = c(y,sign(sum(X[[i]]*B)+rnorm(1,sd = 0.1)))
+}
+
+#### classification with equal weights #########
+res = ADMM(X,y,rep(1,10),r = 1,srow = 0,scol = 0)
+
+### Misclassification rate on training data ######
+mean(sign(res$fitted)-y)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,229 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqMD</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Multidomain sequences</h2>
+
+<h3>Description</h3>
+
+<p>Build multidomain (MD) sequences of combined individual domain states (expanded alphabet), derive multidomain indel and substitution costs from domain costs by means of an additive trick (CAT), and compute OM pairwise distances using CAT costs.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqMD(channels,
+  method=NULL,
+  norm="none",
+  indel="auto",
+  sm=NULL,
+  with.missing=NULL,
+  full.matrix=TRUE,
+  link="sum",
+  cval=2,
+  miss.cost=2,
+  cweight=NULL,
+  what="MDseq",
+  ch.sep="+",
+  fill.with.miss=TRUE
+  )
+
+seqdistmc(channels, what="diss", ch.sep="@@@@TraMineRSep@@@@", ...)
+
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>channels</code></td>
+<td>
+<p>A list of domain state sequence <code>stslist</code> objects defined
+with the <code>seqdef</code> function, each state sequence object corresponding
+to a domain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>String. Default: <code>NULL</code>. Dissimilarity measure between sequences.
+When <code>what="diss"</code>, must be one of <code>"OM"</code> (Optimal Matching),
+<code>"HAM"</code> (Hamming distance), or <code>"DHD"</code> (Dynamic Hamming distance). Otherwise, ignored. Can also be <code>"LCS"</code> (Longest common subsequence), but see details. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm</code></td>
+<td>
+
+<p>String.
+Default: <code>"none"</code>.
+The normalization method to use. See <code>seqdist</code>. Ignored if <code>what</code> is not <code>"diss"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indel</code></td>
+<td>
+<p>Double, vector of doubles, or list with an insertion/deletion cost or a vector of state dependent indel costs for each domain. Can also be <code>"auto"</code> (default), in which case the indel cost of each domain is automatically set in accordance with the <code>sm</code> value of the domain. See <code>indel</code> argument of <code>seqdist</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sm</code></td>
+<td>
+<p>A list with a substitution-cost matrix for each domain
+or a list of method names for generating the domain substitution costs
+(see <code>seqcost</code>). Ignored when <code>method="LCS"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical, vector of logical, or <code>NULL</code> (default). See <code>seqdist</code> and <code>seqcost</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>full.matrix</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> (default), the full distance matrix between MD sequences is returned.
+If <code>FALSE</code>, an object of class <code>dist</code> is returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link</code></td>
+<td>
+<p>Character string. One of <code>"sum"</code> or <code>"mean"</code>. Method to compute the "link"
+between domains. Default is to sum substitution and indel costs.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cval</code></td>
+<td>
+<p>Double. Domain substitution cost for <code>"CONSTANT"</code> matrix, see <code>seqcost</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miss.cost</code></td>
+<td>
+<p>Double. Cost to substitute missing values at domain level, see <code>seqcost</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cweight</code></td>
+<td>
+<p>A vector of domain weights. Default is 1 (same weight for each domain).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>what</code></td>
+<td>
+<p>Character string. What output should be returned? One of <code>"MDseq", "cost", "diss"</code>. The deprecated value <code>what="sm"</code> is treated as <code>what="cost"</code>. <code>MDseq</code> returns the multidomain sequences expressed in terms of the expanded alphabet, <code>"cost"</code> the CAT costs, and "diss" the CAT-based multidomain distances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ch.sep</code></td>
+<td>
+<p>Character string. Separator used for building state names of the expanded alphabet.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill.with.miss</code></td>
+<td>
+<p>Logical. Should shorter domain sequences be filled with missings to match sequence lengths across domains? Applies only to domains that already have missings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>seqMD</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>seqMD</code> function builds MD sequences by combining the domain states. When <code>what="cost"</code>, it derives multidomain indel and substitution costs from the indel and substitution costs of each domain by means of the cost additive trick (CAT) (<cite>Ritschard et al., 2023</cite>, <cite>Pollock, 2007</cite>). When <code>what="diss"</code>, it computes multidomain distances using the CAT multidomain costs. The available metrics (see <code>method</code> argument) are optimal matching (<code>"OM"</code>), Hamming distance (<code>"HAM"</code>), and Dynamic Hamming Distance (<code>"DHD"</code>). If <code>method="LCS"</code>, distances are obtained with OM using CAT costs derived from domain indel and sm costs of respectively 1 and 2 (i.e. inputted <code>indel</code> and <code>sm</code> are ignored).  For other edit distances, extract the combined state sequence object (by setting <code>what="MDseq"</code>) and the CAT-multidomain substitution and indel costs (by setting <code>what="cost"</code>). Then use these outcomes as input in a call to <code>seqdist</code>.  See <code>seqdist</code> for more information about available distance measures.
+</p>
+<p>Normalization may be useful when dealing with sequences that are not all of the same length. For details on the applied normalization, see <code>seqdist</code>.
+</p>
+<p>Sequences lengths are supposed to match across domains. If <code>fill.with.miss</code> is <code>TRUE</code> and the i-th sequence is shorter in one domain than the longest i-th sequence, it will, when constructing the i-th MD sequence, be filled with missing values to adapt its length to that of the longest sequence. However, this applies only for domain that already have missings, i.e., domains with a corresponding <code>with.missing</code> value set as <code>TRUE</code>. </p>
+
+
+<h3>Value</h3>
+
+<p>When <code>what="MDseq"</code>, the MD sequences of combined states as a <code>stslist</code> sequence object.<br>
+When <code>what="cost"</code>, the matrix of CAT-substitution costs with three attributes: <code>indel</code> the CAT-indel cost(s), <code>alphabet</code> the alphabet of the combined state sequences, and <code>cweight</code> the channel weights used.<br>
+When <code>what="diss"</code>, a matrix of pairwise distances between MD sequences.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilbert Ritschard and Matthias Studer</p>
+
+
+<h3>References</h3>
+
+<p>Ritschard, G., T.F. Liao, and E. Struffolino (2023). Strategies for
+multidomain sequence analysis in social research.
+<em>Sociological Methodology</em>, 53(2), 288-322. <a href="https://doi.org/10.1177/00811750231163833">doi:10.1177/00811750231163833</a>.
+</p>
+<p>Pollock, G. (2007) Holistic trajectories: a study of combined employment, housing and family careers by using multiple-sequence analysis. <em>Journal of the Royal Statistical Society: Series A</em> <b>170</b>, Part 1, 167–183.
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>seqcost</code>, <code>seqdef</code>, <code>seqdist</code>, <code>seqplotMD</code>. </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(biofam)
+
+## Building one channel per type of event left home, married, and child
+cases &lt;- 200
+bf &lt;- as.matrix(biofam[1:cases, 10:25])
+left &lt;- bf==1 | bf==3 | bf==5 | bf==6
+married &lt;- bf == 2 | bf== 3 | bf==6
+children &lt;-  bf==4 | bf==5 | bf==6
+
+## Building sequence objects
+left.seq &lt;- seqdef(left)
+marr.seq &lt;- seqdef(married)
+child.seq &lt;- seqdef(children)
+channels &lt;- list(LeftHome=left.seq, Marr=marr.seq, Child=child.seq)
+
+## CAT multidomain distances based on channel specific cost methods
+MDdist &lt;- seqMD(channels, method="OM",
+    sm =list("INDELSLOG", "INDELSLOG", "TRATE"), what="diss")
+
+## Providing channel specific substitution costs
+smatrix &lt;- list()
+smatrix[[1]] &lt;- seqsubm(left.seq, method="TRATE")
+smatrix[[2]] &lt;- seqsubm(marr.seq, method="CONSTANT")
+smatrix[[3]] &lt;- seqsubm(child.seq, method="CONSTANT")
+
+## Retrieving the MD sequences
+MDseq &lt;- seqMD(channels)
+alphabet(MDseq)
+
+## Retrieving the CAT multidomain substitution costs
+## Using double weight for domain "child"
+CATcost &lt;- seqMD(channels,
+    sm=smatrix, cweight=c(1,1,2), what="cost")
+
+## OMspell distances between MD sequences
+MDdist2 &lt;- seqdist(MDseq, method="OMspell",
+    sm = CATcost, indel=attr(CATcost,"indel"))
+
+</code></pre>
+
+
+</div>

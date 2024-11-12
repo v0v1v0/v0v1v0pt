@@ -1,0 +1,158 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Aareg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Aalen Additive Hazards Model
+</h2>
+
+<h3>Description</h3>
+
+<p>Aalen model with fully parameterised hazard function
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Aareg(formula, data, subset, weights, offset, cluster, na.action = na.omit, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>an object of class <code>"formula"</code>: a symbolic description 
+of the model structure to be
+fitted.  The details of model specification are given under
+<code>tram</code> and in the package vignette.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an optional data frame, list or environment (or object
+coercible by <code>as.data.frame</code> to a data frame) containing the
+variables in the model.  If not found in <code>data</code>, the
+variables are taken from <code>environment(formula)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>an optional vector specifying a subset of observations to be
+used in the fitting process.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>an optional vector of weights to be used in the fitting
+process.  Should be <code>NULL</code> or a numeric vector. If present,
+the weighted log-likelihood is maximised.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+<p>this can be used to specify an _a priori_ known component to
+be included in the linear predictor during fitting.  This
+should be <code>NULL</code> or a numeric vector of length equal to the
+number of cases.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cluster</code></td>
+<td>
+<p>optional factor with a cluster ID employed for computing
+clustered covariances.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.action</code></td>
+<td>
+<p>a function which indicates what should happen when the data
+contain <code>NA</code>s.  The default is set to <code>na.omit</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to <code>tram</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function allows simultaneous
+estimation of the cumulative hazard parameterised by a Bernstein polynomial. 
+The model is typically fitted with time-varying coefficients, all types of random
+censoring and trunction are allowed.
+</p>
+<p>The responses is bounded (<code>bounds = c(0, Inf)</code>) when specified as a
+<code>Surv</code> object. Otherwise, <code>bounds</code> can be specified via
+<code>...</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>Aareg</code>, with corresponding <code>coef</code>,
+<code>vcov</code>, <code>logLik</code>, <code>estfun</code>, <code>summary</code>, 
+<code>print</code>, <code>plot</code> and <code>predict</code> methods.
+</p>
+
+
+<h3>References</h3>
+
+<p>Torsten Hothorn, Lisa Moest, Peter Buehlmann (2018), Most Likely
+Transformations, <em>Scandinavian Journal of Statistics</em>, <b>45</b>(1),
+110–134, <a href="https://doi.org/10.1111/sjos.12291">doi:10.1111/sjos.12291</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  data("GBSG2", package = "TH.data")
+  library("survival")
+  GBSG2$time &lt;- as.numeric(GBSG2$time)
+  GBSG2$y &lt;- with(GBSG2, Surv(time, cens))
+
+  ### Cox proportional hazards model
+  m1 &lt;- Coxph(y ~ horTh, data = GBSG2, support = c(1, 1500))
+  logLik(m1)
+
+  ### Aalen additive hazards model with time-varying effects
+  m2 &lt;- Aareg(y | horTh ~ 1, data = GBSG2, support = c(1, 1500))
+  logLik(m2)
+
+  ### compare the hazard functions
+  nd &lt;- data.frame(horTh = unique(GBSG2$horTh))
+  col &lt;- 1:2
+  lty &lt;- 1:2
+  plot(as.mlt(m1), newdata = nd, type = "hazard", 
+       col = col, lty = lty[1], xlab = "time")
+  plot(as.mlt(m2), newdata = nd, type = "hazard", 
+       col = col, lty = 2, add = TRUE)
+  legend("topright", col = rep(col, each = 2), 
+         lty = rep(1:2), bty = "n",
+         legend = paste(rep(paste("horTh:", 
+                                  levels(nd$horTh)), each = 2),
+                        rep(c("Cox", "Aalen"), 2)))
+
+</code></pre>
+
+
+</div>

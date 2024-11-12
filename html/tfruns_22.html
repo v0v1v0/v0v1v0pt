@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tuning_run</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tune hyperparameters using training flags</h2>
+
+<h3>Description</h3>
+
+<p>Run all combinations of the specifed training flags. The number of
+combinations can be reduced by specifying the <code>sample</code> parameter, which
+will result in a random sample of the flag combinations being run.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tuning_run(
+  file = "train.R",
+  context = "local",
+  config = Sys.getenv("R_CONFIG_ACTIVE", unset = "default"),
+  flags = NULL,
+  sample = NULL,
+  properties = NULL,
+  runs_dir = getOption("tfruns.runs_dir", "runs"),
+  artifacts_dir = getwd(),
+  echo = TRUE,
+  confirm = interactive(),
+  envir = parent.frame(),
+  encoding = getOption("encoding")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>Path to training script (defaults to "train.R")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>context</code></td>
+<td>
+<p>Run context (defaults to "local")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>config</code></td>
+<td>
+<p>The configuration to use. Defaults to the active configuration
+for the current environment (as specified by the <code>R_CONFIG_ACTIVE</code>
+environment variable), or <code>default</code> when unset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flags</code></td>
+<td>
+<p>Either a named list with flag values (multiple values can be
+provided for each flag) or a data frame that contains pre-generated
+combinations of flags (e.g. via <code>base::expand.grid()</code>). The latter can
+be useful for subsetting combinations. See 'Examples'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sample</code></td>
+<td>
+<p>Sampling rate for flag combinations (defaults to
+running all combinations).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>properties</code></td>
+<td>
+<p>Named character vector with run properties. Properties are
+additional metadata about the run which will be subsequently available via
+<code>ls_runs()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>runs_dir</code></td>
+<td>
+<p>Directory containing runs. Defaults to "runs" beneath the
+current working directory (or to the value of the <code>tfruns.runs_dir</code> R
+option if specified).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>artifacts_dir</code></td>
+<td>
+<p>Directory to capture created and modified files within.
+Pass <code>NULL</code> to not capture any artifcats.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>echo</code></td>
+<td>
+<p>Print expressions within training script</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>confirm</code></td>
+<td>
+<p>Confirm before executing tuning run.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>The environment in which the script should be evaluated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>encoding</code></td>
+<td>
+<p>The encoding of the training script; see <code>file()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Data frame with summary of all training runs performed
+during tuning.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(tfruns)
+
+# using a list as input to the flags argument
+runs &lt;- tuning_run(
+  system.file("examples/mnist_mlp/mnist_mlp.R", package = "tfruns"),
+  flags = list(
+    dropout1 = c(0.2, 0.3, 0.4),
+    dropout2 = c(0.2, 0.3, 0.4)
+  )
+)
+runs[order(runs$eval_acc, decreasing = TRUE), ]
+
+# using a data frame as input to the flags argument
+# resulting in the same combinations above, but remove those
+# where the combined dropout rate exceeds 1
+grid &lt;- expand.grid(
+  dropout1 = c(0.2, 0.3, 0.4),
+  dropout2 = c(0.2, 0.3, 0.4)
+)
+grid$combined_droput &lt;- grid$dropout1 + grid$dropout2
+grid &lt;- grid[grid$combined_droput &lt;= 1, ]
+runs &lt;- tuning_run(
+  system.file("examples/mnist_mlp/mnist_mlp.R", package = "tfruns"),
+  flags = grid[, c("dropout1", "dropout2")]
+)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

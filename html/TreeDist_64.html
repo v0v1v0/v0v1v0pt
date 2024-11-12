@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>NormalizeInfo</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Normalize tree distances</h2>
+
+<h3>Description</h3>
+
+<p><code>NormalizeInfo()</code> is an internal function used to normalize information
+against a reference, such as the total information present in a pair of
+trees.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">NormalizeInfo(
+  unnormalized,
+  tree1,
+  tree2,
+  InfoInTree,
+  infoInBoth = NULL,
+  how = TRUE,
+  Combine = "+",
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>unnormalized</code></td>
+<td>
+<p>Numeric value, vector or matrix to be normalized.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree1, tree2</code></td>
+<td>
+<p>Trees from which <code>unnormalized</code> was calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>InfoInTree</code></td>
+<td>
+<p>Function to calculate the information content of each tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>infoInBoth</code></td>
+<td>
+<p>Optional numeric specifying information content of both
+trees independently. If unspecified (<code>NULL</code>), this will be calculated using
+the method specified by <code>how</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>how</code></td>
+<td>
+<p>Method for normalization, perhaps specified using the <code>normalize</code>
+argument to a tree distance function.  See details for options.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters to <code>InfoInTree()</code> or <code>how()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The unnormalized value(s) are normalized by dividing by a denominator
+calculated based on the <code>how</code> parameter.  Valid options include:
+</p>
+
+<dl>
+<dt><code>FALSE</code></dt>
+<dd>
+<p>No normalization is performed; the unnormalized values
+are returned.</p>
+</dd>
+<dt><code>TRUE</code></dt>
+<dd>
+<p>Unless <code>infoInBoth</code> is specified, the information in
+each tree is computed using <code>InfoInTree()</code>, and the two values combined
+using <code>Combine()</code>.</p>
+</dd>
+<dt>A numeric value, vector or matrix</dt>
+<dd>
+<p><code>how</code> is used as the denominator;
+the returned value is <code>unnormalized / how</code>.</p>
+</dd>
+<dt>A function</dt>
+<dd>
+<p>Unless <code>infoInBoth</code> is specified, the information in
+each tree is computed using <code>InfoInTree()</code>, and the two values combined
+using <code>how</code>.  <code>NormalizeInfo(how = Func)</code> is thus equivalent to
+<code>NormalizeInfo(how = TRUE, Combine = Func)</code>.</p>
+</dd>
+</dl>
+<h3>Value</h3>
+
+<p><code>NormalizeInfo()</code> returns an object corresponding to the normalized
+values of <code>unnormalized</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><a href="https://orcid.org/0000-0001-5660-1727">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("TreeTools", quietly = TRUE)
+pair1 &lt;- c(BalancedTree(9), StarTree(9))
+pair2 &lt;- c(BalancedTree(9), PectinateTree(9))
+
+# We'll let the number of nodes define the total information in a tree
+Nnode(pair1)
+Nnode(pair2)
+
+# Let's normalize a unit distance
+rawDist &lt;- cbind(c(1, 1), c(1, 1))
+
+# With `Combine = "+"`, the maximum distance is the sum of
+# the information in each tree
+denominator &lt;- outer(Nnode(pair1), Nnode(pair2), "+")
+
+NormalizeInfo(rawDist, pair1, pair2, InfoInTree = ape::Nnode, Combine = "+")
+rawDist / denominator
+
+
+# A denominator can be specified manually using `how`:
+NormalizeInfo(rawDist, pair1, pair2, InfoInTree = ape::Nnode, how = 16)
+rawDist / 16
+
+
+# `how` also allows the denominator to be computed from trees:
+outer(Nnode(pair1), Nnode(pair2), pmin)
+NormalizeInfo(rawDist, pair1, pair2, InfoInTree = ape::Nnode, how = pmin)
+rawDist / outer(Nnode(pair1), Nnode(pair2), pmin)
+
+</code></pre>
+
+
+</div>

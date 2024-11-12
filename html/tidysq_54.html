@@ -1,0 +1,264 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sq-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>sq: class for keeping biological sequences tidy</h2>
+
+<h3>Description</h3>
+
+<p>An object of class <strong>sq</strong> represents a list of biological sequences. It
+is the main internal format of the <span class="pkg">tidysq</span> package and most functions
+operate on it. The storage method is memory-optimized so that objects
+require as little memory as possible (details below).
+</p>
+
+
+<h3>Construction/reading/import of sq objects</h3>
+
+<p>There are multiple ways of obtaining <code>sq</code> objects:
+</p>
+
+<ul>
+<li>
+<p> constructing from a <code>character</code> vector with
+<code>sq</code> method,
+</p>
+</li>
+<li>
+<p> constructing from another object with <code>as.sq</code> method,
+</p>
+</li>
+<li>
+<p> reading from the FASTA file with <code>read_fasta</code>,
+</p>
+</li>
+<li>
+<p> importing from a format of other package like <span class="pkg">ape</span> or
+<span class="pkg">Biostrings</span> with <code>import_sq</code>.
+</p>
+</li>
+</ul>
+<p><strong>Important note:</strong> A manual assignment of a class <code>sq</code> to an
+object is <strong>strongly discouraged</strong> - due to the usage of low-level
+functions for bit packing such assignment may lead to calling one of those
+functions during operating on object or even printing it which can cause
+a crash of R session and, in consequence, loss of data.
+</p>
+
+
+<h3>Export/writing of sq objects</h3>
+
+<p>There are multiple ways of saving <code>sq</code> objects or converting them into
+other formats:
+</p>
+
+<ul>
+<li>
+<p> converting into a character vector with
+<code>as.character</code> method,
+</p>
+</li>
+<li>
+<p> converting into a character matrix with
+<code>as.matrix</code> method,
+</p>
+</li>
+<li>
+<p> saving as FASTA file with <code>write_fasta</code>,
+</p>
+</li>
+<li>
+<p> exporting into a format of other package like <code>ape</code> or
+<code>Biostrings</code> with <code>export_sq</code>.
+</p>
+</li>
+</ul>
+<h3>Ambiguous letters</h3>
+
+<p>This package is meant to handle amino acid, DNA and RNA sequences. IUPAC
+standard for one letter codes includes ambiguous bases that are used to
+describe more than one basic standard base. For example, "<code>B</code>" in the
+context of DNA code means "any of C, G or T". As there are operations that
+make sense only for unambiguous bases (like <code>translate</code>), this
+package has separate types for sequences with "basic" and "extended"
+alphabet.
+</p>
+
+
+<h3>Types of sq</h3>
+
+<p>There is need to differentiate <code>sq</code> objects that keep different types
+of sequences (DNA, RNA, amino acid), as they use different alphabets.
+Furthermore, there are special types for handling non-standard sequence
+formats.
+</p>
+<p>Each <strong>sq</strong> object has exactly one of <strong>types</strong>:
+</p>
+
+<ul>
+<li> <p><strong>ami_bsc</strong> - (<em>amino acids</em>) represents a list of sequences
+of amino acids (peptides or proteins),
+</p>
+</li>
+<li> <p><strong>ami_ext</strong> - same as above, but with possible usage of
+ambiguous letters,
+</p>
+</li>
+<li> <p><strong>dna_bsc</strong> - (<em>DNA</em>) represents a list of DNA sequences,
+</p>
+</li>
+<li> <p><strong>dna_ext</strong> - same as above, but with possible usage of
+ambiguous letters,
+</p>
+</li>
+<li> <p><strong>rna_bsc</strong> - (<em>RNA</em>) represents a list of RNA sequences
+(together with DNA above often collectively called "nucleotide sequences"),
+</p>
+</li>
+<li> <p><strong>rna_ext</strong> - same as above, but with possible usage of
+ambiguous letters,
+</p>
+</li>
+<li> <p><strong>unt</strong> - (<em>untyped</em>) represents a list of sequences that do
+not have specified type. They are mainly result of reading sequences from
+a file that contains some letters that are not in standard nucleotide or
+amino acid alphabets and user has not specified them explicitly. They should
+be converted to other <strong>sq</strong> classes (using functions like
+<code>substitute_letters</code> or <code>typify</code>),
+</p>
+</li>
+<li> <p><strong>atp</strong> - (<em>atypical</em>) represents sequences that have an
+alphabet different from standard alphabets - similarly to <strong>unt</strong>, but
+user has been explicitly informed about it. They are result of constructing
+sequences or reading from file with provided custom alphabet (for details
+see <code>read_fasta</code> and <code>sq</code> function). They are also
+result of using function <code>substitute_letters</code> - users can use
+it to for example simplify an alphabet and replace several letters by one.
+</p>
+</li>
+</ul>
+<p>For clarity, <strong>ami_bsc</strong> and <strong>ami_ext</strong> types are often referred
+to collectively as <strong>ami</strong> when there is no need to explicitly specify
+every possible type. The same applies to <strong>dna</strong> and <strong>rna</strong>.
+</p>
+<p><code>sq</code> object type is printed when using overloaded method
+<code>print</code>. It can be also checked and obtained as
+a value (that may be passed as argument to function) by using
+<code>sq_type</code>.
+</p>
+
+
+<h3>Alphabet</h3>
+
+<p>See <code>alphabet</code>.
+</p>
+<p>The user can obtain an alphabet of the <code>sq</code> object using the
+<code>alphabet</code> function. The user can check which letters are
+invalid (i.e. not represented in standard amino acid or nucleotide
+alphabet) in each sequence of given <code>sq</code> object by using
+<code>find_invalid_letters</code>. To substitute one letter with another
+use <code>substitute_letters</code>.
+</p>
+
+
+<h3>Missing/Not Available values</h3>
+
+<p>There is a possibility of introducing <code>NA</code> values into
+sequences. <code>NA</code> value does not represents gap (which are represented by
+"<code>-</code>") or wildcard elements ("<code>N</code>" in the case of nucleotides and
+"<code>X</code>" in the case of amino acids), but is used as a representation of
+an empty position or invalid letters (not represented in nucleotide or amino
+acid alphabet).
+</p>
+<p><code>NA</code> does not belong to any alphabet. It is printed as "<code>!</code>" and,
+thus, it is highly unrecommended to use "<code>!</code>" as special letter in
+<strong>atp</strong> sequences (but print character can be changed in options, see
+<code>tidysq-options</code>).
+</p>
+<p><code>NA</code> might be introduced by:
+</p>
+
+<ul>
+<li>
+<p> reading fasta file with non-standard letters with
+<code>read_fasta</code> with <code>safe_mode</code> argument set to <code>TRUE</code>,
+</p>
+</li>
+<li>
+<p> replacing a letter with <code>NA</code> value with
+<code>substitute_letters</code>,
+</p>
+</li>
+<li>
+<p> subsetting sequences beyond their lengths with <code>bite</code>.
+</p>
+</li>
+</ul>
+<p>The user can convert sequences that contain <code>NA</code> values into
+<code>NULL</code> sequences with <code>remove_na</code>.
+</p>
+
+
+<h3>NULL (empty) sequences</h3>
+
+<p><code>NULL</code> sequence is a sequence of length 0.
+</p>
+<p><code>NULL</code> sequences might be introduced by:
+</p>
+
+<ul>
+<li>
+<p> constructing <code>sq</code> object from character string of length zero,
+</p>
+</li>
+<li>
+<p> using the <code>remove_ambiguous</code> function,
+</p>
+</li>
+<li>
+<p> using the <code>remove_na</code> function,
+</p>
+</li>
+<li>
+<p> subsetting <code>sq</code> object with <code>bite</code> function (and
+negative indices that span at least <code>-1:-length(sequence)</code>.
+</p>
+</li>
+</ul>
+<h3>Storage format</h3>
+
+<p><code>sq</code> object is, in fact, <strong>list of raw vectors</strong>. The fact that it
+is list implies that the user can concatenate <code>sq</code> objects using
+<code>c</code> method and subset them using
+<code>extract operator</code>. Alphabet is kept as an
+attribute of the object.
+</p>
+<p>Raw vectors are the most efficient way of storage - each letter of a
+sequence is assigned an integer (its index in alphabet of <code>sq</code> object).
+Those integers in binary format fit in less than 8 bits, but normally are
+stored on 16 bits. However, thanks to bit packing it is possible to remove
+unused bits and store numbers more tightly. This means that all operations
+must either be implemented with this packing in mind or accept a little time
+overhead induced by unpacking and repacking sequences. However, this cost
+is relatively low in comparison to amount of saved memory.
+</p>
+<p>For example - <strong>dna_bsc</strong> alphabet consists of 5 values: ACGT-. They
+are assigned numbers 0 to 4 respectively. Those numbers in binary format
+take form: <code>000</code>, <code>001</code>, <code>010</code>, <code>011</code>, <code>100</code>. Each
+of these letters can be coded with just 3 bits instead of 8 which is
+demanded by <code>char</code> - this allows us to save more than 60% of memory
+spent on storage of basic nucleotide sequences.
+</p>
+
+
+<h3>tibble compatibility</h3>
+
+<p><code>sq</code> objects are compatible with <code>tibble</code> class -
+that means one can have an <code>sq</code> object as a column of a <code>tibble</code>.
+There are overloaded print methods, so that it is printed in pretty format.
+</p>
+
+
+</div>

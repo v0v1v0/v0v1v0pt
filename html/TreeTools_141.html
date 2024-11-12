@@ -1,0 +1,126 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>LabelSplits</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Label splits</h2>
+
+<h3>Description</h3>
+
+<p>Labels the edges associated with each split on a plotted tree.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">LabelSplits(tree, labels = NULL, unit = "", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A tree of class <code>phylo</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>Named vector listing annotations for each split. Names
+should correspond to the node associated with each split; see
+<code>as.Splits()</code> for details.
+If <code>NULL</code>, each splits will be labelled with its associated node.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unit</code></td>
+<td>
+<p>Character specifying units of <code>labels</code>, if desired. Include a
+leading space if necessary.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters to <code>ape::edgelabels()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>As the two root edges of a rooted tree denote the same split, only the
+rightmost (plotted at the bottom, by default) edge will be labelled.
+If the position of the root is significant, add a tip at the root using
+<code>AddTip()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>LabelSplits()</code> returns <code>invisible()</code>, after plotting <code>labels</code> on
+each relevant edge of a plot (which should already have been produced using
+<code>plot(tree)</code>).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Calculate split support: <code>SplitFrequency()</code>
+</p>
+<p>Colour labels according to value: <code>SupportColour()</code>
+</p>
+<p>Other Splits operations: 
+<code>NSplits()</code>,
+<code>NTip()</code>,
+<code>PolarizeSplits()</code>,
+<code>SplitFrequency()</code>,
+<code>Splits</code>,
+<code>SplitsInBinaryTree()</code>,
+<code>TipLabels()</code>,
+<code>TipsInSplits()</code>,
+<code>match.Splits</code>,
+<code>xor()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tree &lt;- BalancedTree(LETTERS[1:5])
+splits &lt;- as.Splits(tree)
+plot(tree)
+LabelSplits(tree, as.character(splits), frame = "none", pos = 3L)
+LabelSplits(tree, TipsInSplits(splits), unit = " tips", frame = "none",
+            pos = 1L)
+
+# An example forest of 100 trees, some identical
+forest &lt;- as.phylo(c(1, rep(10, 79), rep(100, 15), rep(1000, 5)), nTip = 9)
+
+# Generate an 80% consensus tree
+cons &lt;- ape::consensus(forest, p = 0.8)
+plot(cons)
+
+# Calculate split frequencies
+splitFreqs &lt;- SplitFrequency(cons, forest)
+
+# Optionally, colour edges by corresponding frequency.
+# Note that not all edges are associated with a unique split
+# (and two root edges may be associated with one split - not handled here)
+edgeSupport &lt;- rep(1, nrow(cons$edge)) # Initialize trivial splits to 1
+childNode &lt;- cons$edge[, 2]
+edgeSupport[match(names(splitFreqs), childNode)] &lt;- splitFreqs / 100
+
+plot(cons, edge.col = SupportColour(edgeSupport), edge.width = 3)
+
+# Annotate nodes by frequency 
+LabelSplits(cons, splitFreqs, unit = "%",
+            col = SupportColor(splitFreqs / 100),
+            frame = "none", pos = 3L)
+
+</code></pre>
+
+
+</div>

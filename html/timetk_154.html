@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_zooreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Coerce time series objects and tibbles with date/date-time columns to ts.</h2>
+
+<h3>Description</h3>
+
+<p>Coerce time series objects and tibbles with date/date-time columns to ts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_zooreg(
+  data,
+  select = NULL,
+  date_var = NULL,
+  start = 1,
+  end = numeric(),
+  frequency = 1,
+  deltat = 1,
+  ts.eps = getOption("ts.eps"),
+  order.by = NULL,
+  silent = FALSE
+)
+
+tk_zooreg_(
+  data,
+  select = NULL,
+  date_var = NULL,
+  start = 1,
+  end = numeric(),
+  frequency = 1,
+  deltat = 1,
+  ts.eps = getOption("ts.eps"),
+  order.by = NULL,
+  silent = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A time-based tibble or time-series object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p><strong>Applicable to tibbles and data frames only</strong>.
+The column or set of columns to be coerced to <code>zooreg</code> class.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>date_var</code></td>
+<td>
+<p><strong>Applicable to tibbles and data frames only</strong>.
+Column name to be used to <code>order.by</code>.
+<code>NULL</code> by default. If <code>NULL</code>, function will find the date or date-time column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>the time of the first observation.  Either a single number or
+a vector of two integers, which specify a natural time unit
+and a (1-based) number of samples into the time unit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end</code></td>
+<td>
+<p>the time of the last observation, specified in the same way
+as <code>start</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frequency</code></td>
+<td>
+<p>the number of observations per unit of time.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deltat</code></td>
+<td>
+<p>the fraction of the sampling period between successive
+observations; e.g., 1/12 for monthly data.  Only one of
+<code>frequency</code> or <code>deltat</code> should be provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ts.eps</code></td>
+<td>
+<p>time series comparison tolerance.  Frequencies are considered
+equal if their absolute difference is less than <code>ts.eps</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order.by</code></td>
+<td>
+<p>a vector by which the observations in <code>x</code>
+are ordered. If this is specified the arguments <code>start</code> and
+<code>end</code> are ignored and <code>zoo(data, order.by, frequency)</code> is
+called. See <code>zoo</code> for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Used to toggle printing of messages and warnings.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tk_zooreg()</code> is a wrapper for <code>zoo::zooreg()</code> that is designed
+to coerce <code>tibble</code> objects that have a "time-base" (meaning the values vary with time)
+to <code>zooreg</code> class objects. There are two main advantages:
+</p>
+
+<ol>
+<li>
+<p> Non-numeric columns get removed instead causing coercion issues.
+</p>
+</li>
+<li>
+<p> If an index is present, the returned <code>zooreg</code> object retains an index retrievable using <code>tk_index()</code>.
+</p>
+</li>
+</ol>
+<p>The <code>select</code> argument is used to select subsets
+of columns from the incoming data.frame.
+The <code>date_var</code> can be used to specify the column with the date index.
+If <code>date_var = NULL</code>, the date / date-time column is interpreted.
+Optionally, the <code>order.by</code> argument from the underlying <code>xts::xts()</code> function can be used.
+The user must pass a vector of dates or date-times if <code>order.by</code> is used.
+Only columns containing numeric data are coerced.
+<em>At a minimum, a <code>frequency</code> and a <code>start</code> should be specified.</em>
+</p>
+<p>For non-data.frame object classes (e.g. <code>xts</code>, <code>zoo</code>, <code>timeSeries</code>, etc) the objects are coerced
+using <code>zoo::zooreg()</code>.
+</p>
+<p><code>tk_zooreg_</code> is a nonstandard evaluation method.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a <code>zooreg</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tk_tbl()</code>, <code>tk_xts()</code>, <code>tk_zoo()</code>, <code>tk_ts()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">### tibble to zooreg: Comparison between tk_zooreg() and zoo::zooreg()
+data_tbl &lt;- tibble::tibble(
+    date = seq.Date(as.Date("2016-01-01"), by = 1, length.out = 5),
+    x    = rep("chr values", 5),
+    y    = cumsum(1:5),
+    z    = cumsum(11:15) * rnorm(1))
+
+# zoo::zooreg: Values coerced to character; Result does not retain index
+data_zooreg &lt;- zoo::zooreg(data_tbl[,-1], start = 2016, freq = 365)
+data_zooreg                # Numeric values coerced to character
+rownames(data_zooreg)      # NULL, no dates retained
+
+# tk_zooreg: Only numeric columns get coerced; Result retains index as rownames
+data_tk_zooreg &lt;- tk_zooreg(data_tbl, start = 2016, freq = 365)
+data_tk_zooreg             # No inadvertent coercion to character class
+
+# timetk index
+tk_index(data_tk_zooreg, timetk_idx = FALSE)   # Regularized index returned
+tk_index(data_tk_zooreg, timetk_idx = TRUE)    # Original date index returned
+
+### Using select and date_var
+tk_zooreg(data_tbl, select = y, date_var = date, start = 2016, freq = 365)
+
+
+### NSE: Enables programming
+select   &lt;- "y"
+date_var &lt;- "date"
+tk_zooreg_(data_tbl, select = select, date_var = date_var, start = 2016, freq = 365)
+
+</code></pre>
+
+
+</div>

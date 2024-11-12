@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Splitter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Splits large data files by date and time. 
+</h2>
+
+<h3>Description</h3>
+
+<p>This function takes the large data files inherently produced by accelerometer and magnetometer biologgers and splits
+them into smaller files so that the <code>TrackReconstruction</code> functions can handle them or it splits the data between trips
+or GPS locations or however is needed.  The splitting is done via matching Time and Date as character strings.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Splitter(TagFile,Begin,End,RmL,Hz)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>TagFile</code></td>
+<td>
+
+<p>Matrix or data frame of magnetometer and accelerometer and other data collected by biologgers with column headings specified in Details.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Begin</code></td>
+<td>
+
+<p>A vector of DateTime such as 2009-08-12 05:45:35.0625 indicating the time that the new files should begin.  Format must be the same as the
+Date and Time data in the <code>TagFile</code>, though the <code>TagFile</code> Date and Time need not be in the same column.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>End</code></td>
+<td>
+
+<p>A vector of DateTime such as 2009-08-12 05:45:35.0625 indicating the time that the new files should end.  Format must be the same as the
+Date and Time data in the <code>TagFile</code>, though the <code>TagFile</code> Date and Time need not be in the same column.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>RmL</code></td>
+<td>
+
+<p>Running mean length in seconds, required to calculate the amount of time beyond the <code>Begin</code> and <code>End</code> times that is required for the <code>DeadReckoning</code>
+function and is trimmed off by the <code>DeadReckoning</code> function.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Hz</code></td>
+<td>
+
+<p>Frequency of Accelerometer data collection in Hz, required to calculate the amount of time beyond the Begin and End times that is required for the <code>DeadReckoning</code>
+function and is trimmed off by the <code>DeadReckoning</code> function.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>TagFile</code> must have columns named DateTime or separated as Date and Time.  <code>Begin</code> and <code>End</code> must be in the same format as the DateTime 
+column in <code>TagFile</code> or have the same format as the Date and Time columns when they are pasted together by <code>Splitter</code>.  For example, if
+DateTime is 2009-08-21 14:08:06.0625, then <code>Begin</code> and <code>End</code> cannot be Jul/21/2009 14:08:06.0625.  See <code>strptime</code> for formatting
+date and time data.  If <code>TagFile</code> has a Date column of 2009-08-21 and a Time column of 14:08:06.0625, <code>Splitter</code> will paste them
+together for you to look like 2009-08-21 14:08:06.0625.  You must have enough time on the beginning and end of the <code>TagFile</code>
+equivalent to <code>RmL</code>*Hz/2 before the first DateTime in the <code>Begin</code> vector and after the last DateTime in the <code>End</code> vector.  
+If your Hz is greater than 1 and you do not have data on fractions of a second, then each time stamp will have copies equal to your 
+sampling Hz.  In such a case, the program matches with the first instance of the DateTime and warnings will be given, this may be important
+when calculating <code>RmL</code>*Hz/2 tails.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Creates a list of data frames in the format of the <code>TagFile</code>, but with a single DateTime column if the <code>TagFiles</code> had separate Date and Time
+columns.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Brian Battaile
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#data set with 6 associated GPS fixes in the "gpsdata" data set
+data(rawdata)
+data(gpsdata02)
+Begin=gpsdata02$DateTime[2:6]
+End=gpsdata02$DateTime[3:7]
+splits&lt;-Splitter(rawdata,Begin,End,RmL=2,Hz=16)
+## Not run: 
+#The following is code to write your many new files
+setwd() #first fill in the path to the folder where you want the data to be written to
+for(i in 1:length(splits))
+{
+	num&lt;-i
+	num=ifelse(num&lt;10 &amp; length(Begin)&gt;10,paste("0",num,sep=""),num)
+		num=ifelse(num&lt;100 &amp; length(Begin)&gt;100,paste("0",num,sep=""),num)
+		num=ifelse(num&lt;1000 &amp; length(Begin)&gt;1000,paste("0",num,sep=""),num)
+		num=ifelse(num&lt;10000 &amp; length(Begin)&gt;10000,paste("0",num,sep=""),num)
+	#Create a name for the file
+	Nombre&lt;-paste("Animal01Trip03GPS_Section",num,".txt",sep="")
+	write.table(splits[[i]],Nombre,sep="\t",row.names=FALSE,quote=FALSE)
+	}
+
+## End(Not run)
+</code></pre>
+
+
+</div>

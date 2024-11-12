@@ -1,0 +1,224 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tsibble-package</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>tsibble: tidy temporal data frames and tools</h2>
+
+<h3>Description</h3>
+
+<p><img src="../help/figures/logo.png" style="text-align: right;" alt="logo.png">
+The <strong>tsibble</strong> package provides a data class of <code>tbl_ts</code> to represent tidy
+temporal data. A tsibble consists of a time index, key, and other measured
+variables in a data-centric format, which is built on top of the tibble.
+</p>
+
+
+<h3>Index</h3>
+
+<p>An extensive range of indices are supported by tsibble:
+</p>
+
+<ul>
+<li>
+<p> native time classes in R (such as <code>Date</code>, <code>POSIXct</code>, and <code>difftime</code>)
+</p>
+</li>
+<li>
+<p> tsibble's new additions (such as yearweek, yearmonth, and yearquarter).
+</p>
+</li>
+<li>
+<p> other commonly-used classes: <code>ordered</code>, <code>hms::hms</code>, <code>lubridate::period</code>,
+and <code>nanotime::nanotime</code>.
+</p>
+</li>
+</ul>
+<p>For a <code>tbl_ts</code> of regular interval, a choice of index representation has to
+be made. For example, a monthly data should correspond to time index created
+by yearmonth, instead of <code>Date</code> or <code>POSIXct</code>. Because months in a year
+ensures the regularity, 12 months every year. However, if using <code>Date</code>, a
+month containing days ranges from 28 to 31 days, which results in irregular
+time space. This is also applicable to year-week and year-quarter.
+</p>
+<p>Tsibble supports arbitrary index classes, as long as they can be ordered from
+past to future. To support a custom class, you need to define <code>index_valid()</code>
+for the class and calculate the interval through <code>interval_pull()</code>.
+</p>
+
+
+<h3>Key</h3>
+
+<p>Key variable(s) together with the index uniquely identifies each record:
+</p>
+
+<ul>
+<li>
+<p> Empty: an implicit variable. <code>NULL</code> resulting in a univariate time series.
+</p>
+</li>
+<li>
+<p> A single variable: For example, <code>data(pedestrian)</code> uses <code>Sensor</code> as the key.
+</p>
+</li>
+<li>
+<p> Multiple variables: For example, Declare <code>key = c(Region, State, Purpose)</code>
+for <code>data(tourism)</code>.
+Key can be created in conjunction with tidy selectors like <code>starts_with()</code>.
+</p>
+</li>
+</ul>
+<h3>Interval</h3>
+
+<p>The interval function returns the interval associated with the tsibble.
+</p>
+
+<ul>
+<li>
+<p> Regular: the value and its time unit including "nanosecond", "microsecond",
+"millisecond", "second", "minute", "hour", "day", "week", "month", "quarter",
+"year". An unrecognisable time interval is labelled as "unit".
+</p>
+</li>
+<li>
+<p> Irregular: <code>as_tsibble(regular = FALSE)</code> gives the irregular tsibble. It is
+marked with <code>!</code>.
+</p>
+</li>
+<li>
+<p> Unknown: Not determined (<code style="white-space: pre;">⁠?⁠</code>), if it's an empty tsibble, or one entry for
+each key variable.
+</p>
+</li>
+</ul>
+<p>An interval is obtained based on the corresponding index representation:
+</p>
+
+<ul>
+<li>
+<p> integerish numerics between 1582 and 2499: "year" (<code>Y</code>). Note the year of
+1582 saw the beginning of the Gregorian Calendar switch.
+</p>
+</li>
+<li> <p><code>yearquarter</code>: "quarter" (<code>Q</code>)
+</p>
+</li>
+<li> <p><code>yearmonth</code>: "month" (<code>M</code>)
+</p>
+</li>
+<li> <p><code>yearweek</code>: "week" (<code>W</code>)
+</p>
+</li>
+<li> <p><code>Date</code>: "day" (<code>D</code>)
+</p>
+</li>
+<li> <p><code>difftime</code>: "week" (<code>W</code>), "day" (D), "hour" (<code>h</code>), "minute" (<code>m</code>), "second" (<code>s</code>)
+</p>
+</li>
+<li> <p><code>POSIXt</code>/<code>hms</code>: "hour" (<code>h</code>), "minute" (<code>m</code>), "second" (<code>s</code>), "millisecond" (<code>us</code>),
+"microsecond" (<code>ms</code>)
+</p>
+</li>
+<li> <p><code>period</code>: "year" (<code>Y</code>), "month" (<code>M</code>), "day" (<code>D</code>), "hour" (<code>h</code>),
+"minute" (<code>m</code>), "second" (<code>s</code>), "millisecond" (<code>us</code>), "microsecond" (<code>ms</code>)
+</p>
+</li>
+<li> <p><code>nanotime</code>: "nanosecond" (<code>ns</code>)
+</p>
+</li>
+<li>
+<p> other numerics &amp;<code>ordered</code> (ordered factor): "unit"
+When the interval cannot be obtained due to the mismatched index format, an
+error is issued.
+</p>
+</li>
+</ul>
+<p>The interval is invariant to subsetting, such as <code>filter()</code>, <code>slice()</code>, and <code style="white-space: pre;">⁠[.tbl_ts⁠</code>.
+However, if the result is an empty tsibble, the interval is always unknown.
+When joining a tsibble with other data sources and aggregating to different
+time scales, the interval gets re-calculated.
+</p>
+
+
+<h3>Time zone</h3>
+
+<p>Time zone corresponding to index will be displayed if index is <code>POSIXct</code>.
+<code style="white-space: pre;">⁠?⁠</code> means that the obtained time zone is a zero-length character "".
+</p>
+
+
+<h3>Print options</h3>
+
+<p>The tsibble package fully utilises the <code>print</code> method from the tibble. Please
+refer to tibble::tibble-package to change display options.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p><strong>Maintainer</strong>: Earo Wang <a href="mailto:earo.wang@gmail.com">earo.wang@gmail.com</a> (<a href="https://orcid.org/0000-0001-6448-5260">ORCID</a>)
+</p>
+<p>Authors:
+</p>
+
+<ul>
+<li>
+<p> Di Cook (<a href="https://orcid.org/0000-0002-3813-7155">ORCID</a>) [thesis advisor]
+</p>
+</li>
+<li>
+<p> Rob Hyndman (<a href="https://orcid.org/0000-0002-2140-5352">ORCID</a>) [thesis advisor]
+</p>
+</li>
+<li>
+<p> Mitchell O'Hara-Wild (<a href="https://orcid.org/0000-0001-6729-7695">ORCID</a>)
+</p>
+</li>
+</ul>
+<p>Other contributors:
+</p>
+
+<ul>
+<li>
+<p> Tyler Smith [contributor]
+</p>
+</li>
+<li>
+<p> Wil Davis <a href="mailto:william.davis@worthingtonindustries.com">william.davis@worthingtonindustries.com</a> [contributor]
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>Useful links:
+</p>
+
+<ul>
+<li> <p><a href="https://tsibble.tidyverts.org">https://tsibble.tidyverts.org</a>
+</p>
+</li>
+<li>
+<p> Report bugs at <a href="https://github.com/tidyverts/tsibble/issues">https://github.com/tidyverts/tsibble/issues</a>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># create a tsibble w/o a key ----
+tsibble(
+  date = as.Date("2017-01-01") + 0:9,
+  value = rnorm(10)
+)
+
+# create a tsibble with one key ----
+tsibble(
+  qtr = rep(yearquarter("2010-01") + 0:9, 3),
+  group = rep(c("x", "y", "z"), each = 10),
+  value = rnorm(30),
+  key = group
+)
+</code></pre>
+
+
+</div>

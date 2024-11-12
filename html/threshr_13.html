@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>stability</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generalized Pareto parameter estimate stability</h2>
+
+<h3>Description</h3>
+
+<p>Uses maximum likelihood estimation to fit a Generalized Pareto (GP)
+model to threshold excesses over a range of thresholds.
+The threshold excesses are treated as independent and identically
+distributed (i.i.d.) observations.
+The resulting estimates and confidence intervals can be plotted,
+using <code>plot.stability</code>,
+to produce a crude graphical diagnostic for threshold choice.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">stability(
+  data,
+  u_vec,
+  prof = FALSE,
+  conf = 95,
+  mult = 1:2,
+  plot_prof = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A numeric vector of observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u_vec</code></td>
+<td>
+<p>A numeric vector of thresholds to be applied to the data.
+Any duplicated values will be removed.  These could be set at sample
+quantiles of <code>data</code> using <code>quantile</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prof</code></td>
+<td>
+<p>A logical scalar.  Whether to calculate confidence intervals
+for the GP shape parameter <code class="reqn">\xi</code> based on the profile-likelihood
+for <code class="reqn">\xi</code> or using the MLE plus or minus a multiple of the estimated
+standard error (SE) of the MLE.  The intervals produced by the former
+may be better but they take longer to calculate.
+Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf</code></td>
+<td>
+<p>A numeric scalar in (0, 100).  Confidence level for the
+confidence intervals.  Default: 95%.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mult</code></td>
+<td>
+<p>A numeric vector of length 2.  The range of values over
+which the profile log-likelihood for <code class="reqn">\xi</code> is calculated is
+(MLE - <code>mult[1]</code> c SE, MLE + <code>mult[2]</code> c SE),
+where MLE and SE are the MLE and estimated standard error of <code class="reqn">\xi</code>
+and c is the constant for which this interval gives
+an approximate 100<code>conf</code>% level confidence interval for <code class="reqn">\xi</code>
+when <code>mult = c(1, 1)</code>.  The default, <code>mult = c(1, 2)</code>, works
+well in most cases.  If the routine fails because the range of <code class="reqn">\xi</code>
+is not sufficiently wide then the relevant components of <code>mult</code>
+should be increased.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_prof</code></td>
+<td>
+<p>A logical scalar.  Only relevant if <code>prof = TRUE</code>.
+If <code>plot_prof = TRUE</code> then the profile log-likelihood is plotted
+for each threshold.  If <code>FALSE</code> then nothing is plotted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further (optional) arguments to be passed to the
+<code>optim</code> function for the optimizations on which
+the profile-likelihood for <code class="reqn">xi</code> is based.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each threshold in <code>u_vec</code> a GP model is fitted by maximum
+likelihood estimation to the threshold excesses, i.e. the amounts
+by which the data exceed that threshold.  The MLEs of the GP shape
+parameter <code class="reqn">\xi</code> and approximate <code>conf</code>% confidence intervals
+for <code class="reqn">\xi</code> are stored for plotting (by <code>plot.stability</code>)
+to produce a simple graphical diagnostic to inform threshold selection.
+This plot is used to choose a threshold above which the underlying GP
+shape parameter may be approximately constant. See Chapter 4 of
+Coles (2001).  See also the vignette "Introducing threshr".
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object (list) of class <code>"stability"</code> with components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>ests</code></td>
+<td>
+<p>MLEs of the GP shape parameter <code class="reqn">\xi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ses</code></td>
+<td>
+<p>Estimated SEs of the MLEs of <code class="reqn">\xi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>Lower limit of 100<code>conf</code>% confidence intervals
+for <code class="reqn">\xi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper</code></td>
+<td>
+<p>Upper limit of 100<code>conf</code>% confidence intervals
+for <code class="reqn">\xi</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nexc</code></td>
+<td>
+<p>The number of threshold excesses.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u_vec</code></td>
+<td>
+<p>The thresholds supplied by the user.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u_ps</code></td>
+<td>
+<p>The approximate sample quantiles to which the thresholds
+in <code>u_vec</code> correspond.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>The input <code>data</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf</code></td>
+<td>
+<p>The input <code>conf</code>.</p>
+</td>
+</tr>
+</table>
+<p>Each of these components is a numeric vector of length
+<code>length(u_vec)</code>.
+</p>
+
+
+<h3>References</h3>
+
+<p>Coles, S. G. (2001) <em>An Introduction to Statistical
+Modeling of Extreme Values</em>, Springer-Verlag, London.
+<a href="https://doi.org/10.1007/978-1-4471-3675-0_3">doi:10.1007/978-1-4471-3675-0_3</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ithresh</code> for threshold selection in the i.i.d. case
+based on leave-one-out cross-validation.
+</p>
+<p><code>plot.stability</code> for the S3 <code>plot</code> method for
+objects of class <code>stability</code>.
+</p>
+<p><code>quantile</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Set a vector of thresholds
+u_vec_gom &lt;- quantile(gom, probs = seq(0, 0.9, by = 0.05))
+
+# Symmetric confidence intervals
+gom_stab &lt;- stability(data = gom, u_vec = u_vec_gom)
+plot(gom_stab)
+
+# Profile-likelihood-based confidence intervals
+gom_stab &lt;- stability(data = gom, u_vec = u_vec_gom, prof = TRUE)
+plot(gom_stab)
+</code></pre>
+
+
+</div>

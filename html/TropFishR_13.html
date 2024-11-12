@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>growth_length_age</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation of growth parameter using length-at-age data</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates growth parameters from
+length-at-age data. It
+allows to perform different methods: Gulland and Holt, Ford Walford plot,
+Chapman's method, Bertalanffy plot, or non linear least squares method (LSM).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">growth_length_age(
+  param,
+  method,
+  Linf_est = NA,
+  Linf_init = 10,
+  K_init = 0.1,
+  t0_init = 0,
+  CI = FALSE,
+  ci.level = 0.95,
+  age_plot = NULL,
+  do.sim = FALSE,
+  nsim = 10000
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>param</code></td>
+<td>
+<p>a list consisting of following parameters:
+</p>
+
+<ul>
+<li> <p><strong>age</strong>: age measurements,
+</p>
+</li>
+<li> <p><strong>length</strong>: corresponding lengths in cm.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>indicating which of following methods should be applied:
+<code>"GullandHolt"</code>,
+<code>"FordWalford"</code>, <code>"Chapman"</code>, <code>"BertalanffyPlot"</code>,
+or <code>"LSM"</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Linf_est</code></td>
+<td>
+<p>BertalanffyPlot requires an estimate for Linf to derive K and t0
+(for more information see Details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Linf_init</code></td>
+<td>
+<p>initital parameter of Linf for non-linear sqaures fitting (default 10)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K_init</code></td>
+<td>
+<p>initital parameter of K for non-linear sqaures fitting (default 0.1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t0_init</code></td>
+<td>
+<p>initital parameter of t0 for non-linear sqaures fitting (default 0)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CI</code></td>
+<td>
+<p>logical; Should confidence intervals be calculated? This option only
+works for the LSM method. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ci.level</code></td>
+<td>
+<p>required confidence level (for LSM method only)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>age_plot</code></td>
+<td>
+<p>sequence with ages used for plotting (LSM method only). By default
+age_plot = seq(min(param$age),max(param$age),0.1)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>do.sim</code></td>
+<td>
+<p>logical. Should Monte Carlo simulation be applied? Default = FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>the number of Monte Carlo simulations to be performed,
+minimum is 10000 (default).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Gulland and Holt plot assumes
+infinitestimal delta t (only reasonable approximation of growth parameters if delta t
+is small). Ford Walford plot and Chapman assume constant time intervals between ages
+(delta t). The Bertalanffy plot is a robust method, however it requires an estimate of Linf. As
+long as this estimate is reasonable the resulting estimate of K is reasonable. For
+a first estimate of Linf the Powell Wetherall method powell_wetherall can
+be used. Otherwise, the largest fish or the average of the ten largest fish can be
+used for a small or large sample, respectively. All lengths have to be smaller than
+Linf as otherwise the logarithm is not defined. Oldest fish (if larger than Linf) have
+to be omitted. Non-linear least squares fitting is the preferred method to estimate
+growth parameters according to Sparre and Venema (1998). If <code>CI = TRUE</code> the
+confidence interval of parameters is calculated and plotted. For plotting the
+confidence interval the <code>predictNLS</code> from the propagate package
+is applied.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the input parameters and following parameters:
+</p>
+
+<ul>
+<li> <p><strong>x</strong>: independent variable used for regression analysis,
+</p>
+</li>
+<li> <p><strong>y</strong>: dependent variable used for regression analysis,
+</p>
+</li>
+<li> <p><strong>mod</strong>: (non) linear model,
+</p>
+</li>
+<li> <p><strong>Linf</strong>: infinite length for investigated species in cm [cm],
+</p>
+</li>
+<li> <p><strong>K</strong>: growth coefficent for investigated species per year [1/year],
+</p>
+</li>
+<li> <p><strong>t0</strong>: theoretical time zero, at which individuals of this species hatch
+(only for Bertalanffy plot and LSM method).
+</p>
+</li>
+<li> <p><strong>estimates</strong>: dataframe with growth parameters and confidence intervals
+(only if LSM method was applied).
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Sparre, P., Venema, S.C., 1998. Introduction to tropical fish stock assessment.
+Part 1. Manual. <em>FAO Fisheries Technical Paper</em>, (306.1, Rev. 2). 407 p.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># synthetical length at age data
+dat &lt;- list(age = rep(1:7,each = 5),
+   length = c(rnorm(5,25.7,0.9),rnorm(5,36,1.2),rnorm(5,42.9,1.5),rnorm(5,47.5,2),
+   rnorm(5,50.7,0.4),rnorm(5,52.8,0.5),rnorm(5,54.2,0.7)))
+growth_length_age(dat, method = "GullandHolt")
+
+# Bertalaffy plot
+growth_length_age(dat, method = "BertalanffyPlot", Linf_est = 50)
+
+# non linear least squares method
+
+output &lt;- growth_length_age(param = dat, method = "LSM",
+     Linf_init = 30, CI = TRUE, age_plot=NULL)
+summary(output$mod)
+
+
+</code></pre>
+
+
+</div>

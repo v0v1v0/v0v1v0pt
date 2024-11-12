@@ -1,0 +1,72 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>path_dist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute distance matrix from bases.</h2>
+
+<h3>Description</h3>
+
+<p>Compute distance matrix from bases.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">path_dist(history)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>history</code></td>
+<td>
+<p>history of the plots</p>
+</td>
+</tr></table>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># This code is to be used as an example but you should increase
+# the max from 2 to 50, say, to check tour coverage.
+flea_std &lt;- apply(flea[,1:6], 2, function(x) (x-mean(x))/sd(x))
+grand &lt;- interpolate(save_history(flea_std, max = 2), 0.2)
+# The grand tour  -----------------------------
+# Look at the tour path in a tour, how well does it cover a sphere
+# Using MDS to summarise the high-d space of projections
+# Last basis is a duplicate, needs removing
+d &lt;- path_dist(grand[,,-dim(grand)[[3]]])
+ord &lt;- as.data.frame(MASS::isoMDS(d)$points)
+require(ggplot2)
+ggplot(data = ord, aes(x=V1, y=V2)) +
+  geom_path() +
+  coord_equal() +
+  labs(x = NULL, y = NULL)
+
+# Compare five guided tours  -----------------------------
+holes1d &lt;- guided_tour(holes(), 1)
+tour_reps &lt;- replicate(5, save_history(flea_std, holes1d, max = 2),
+  simplify = FALSE
+)
+tour_reps2 &lt;- lapply(tour_reps, interpolate, 0.2)
+
+bases &lt;- unlist(lapply(tour_reps2, as.list), recursive = FALSE)
+class(bases) &lt;- "history_list"
+index_values &lt;- paths_index(tour_reps2, holes())
+index_values$step &lt;- index_values$step.1
+d &lt;- path_dist(bases)
+ord &lt;- as.data.frame(cmdscale(d, 2))
+
+info &lt;- cbind(ord, index_values)
+ggplot(data = info, aes(x = step, y = value, group = try)) +
+  geom_line()
+##ggplot(data = info, aes(x = V1, y = V2, group = try)) +
+##  geom_path() +
+##  geom_point(aes(size = value)) +
+##  coord_equal()
+##last_plot() + facet_wrap(~try)
+</code></pre>
+
+
+</div>

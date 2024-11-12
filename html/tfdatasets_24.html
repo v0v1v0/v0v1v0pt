@@ -1,0 +1,119 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset_interleave</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Maps map_func across this dataset, and interleaves the results</h2>
+
+<h3>Description</h3>
+
+<p>Maps map_func across this dataset, and interleaves the results
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset_interleave(dataset, map_func, cycle_length, block_length = 1)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>map_func</code></td>
+<td>
+<p>A function mapping a nested structure of tensors (having
+shapes and types defined by <code>output_shapes()</code> and <code>output_types()</code> to a
+dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cycle_length</code></td>
+<td>
+<p>The number of elements from this dataset that will be
+processed concurrently.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>block_length</code></td>
+<td>
+<p>The number of consecutive elements to produce from each
+input element before cycling to another input element.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>cycle_length</code> and <code>block_length</code> arguments control the order in which
+elements are produced. <code>cycle_length</code> controls the number of input elements
+that are processed concurrently. In general, this transformation will apply
+<code>map_func</code> to <code>cycle_length</code> input elements, open iterators on the returned
+dataset objects, and cycle through them producing <code>block_length</code> consecutive
+elements from each iterator, and consuming the next input element each time
+it reaches the end of an iterator.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other dataset methods: 
+<code>dataset_batch()</code>,
+<code>dataset_cache()</code>,
+<code>dataset_collect()</code>,
+<code>dataset_concatenate()</code>,
+<code>dataset_decode_delim()</code>,
+<code>dataset_filter()</code>,
+<code>dataset_map()</code>,
+<code>dataset_map_and_batch()</code>,
+<code>dataset_padded_batch()</code>,
+<code>dataset_prefetch()</code>,
+<code>dataset_prefetch_to_device()</code>,
+<code>dataset_reduce()</code>,
+<code>dataset_repeat()</code>,
+<code>dataset_shuffle()</code>,
+<code>dataset_shuffle_and_repeat()</code>,
+<code>dataset_skip()</code>,
+<code>dataset_take()</code>,
+<code>dataset_take_while()</code>,
+<code>dataset_window()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+dataset &lt;- tensor_slices_dataset(c(1,2,3,4,5)) %&gt;%
+ dataset_interleave(cycle_length = 2, block_length = 4, function(x) {
+   tensors_dataset(x) %&gt;%
+     dataset_repeat(6)
+ })
+
+# resulting dataset (newlines indicate "block" boundaries):
+c(1, 1, 1, 1,
+  2, 2, 2, 2,
+  1, 1,
+  2, 2,
+  3, 3, 3, 3,
+  4, 4, 4, 4,
+  3, 3,
+  4, 4,
+  5, 5, 5, 5,
+  5, 5,
+)
+
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

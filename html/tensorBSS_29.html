@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tPCAladle</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Ladle Estimate for tPCA
+</h2>
+
+<h3>Description</h3>
+
+<p>For r-dimensional tensors, the Ladle estimate for tPCA assumes that for a given mode <code class="reqn">m</code>, the last <code class="reqn">p_m - k_m</code> modewise eigenvalues are equal. Combining information from the eigenvalues and eigenvectors of the m-mode covariance matrix the ladle estimator yields estimates for <code class="reqn">k_1,...,k_r</code>.</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tPCAladle(x, n.boot = 200, ncomp = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>array of an order at least two with the last dimension corresponding to the sampling units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.boot</code></td>
+<td>
+<p>number of bootstrapping samples to be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncomp</code></td>
+<td>
+<p>vector giving the number of components among which the ladle estimator is to be searched for each mode. The default follows the recommendation of Luo and Li 2016.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The model here assumes that the eigenvalues of the m-mode covariance matrix are of the form <code class="reqn">\lambda_{1,m} \geq ... \geq \lambda_{k_m,m} &gt; \lambda_{k_m+1,m} =  ... = \lambda_{p_m,m}</code>
+and the goal is to estimate the value of <code class="reqn">k_m</code> for all modes. The ladle estimate for this purpose combines the values of the 
+scaled eigenvalues and the variation of the eigenvectors based on bootstrapping. The idea there is that for distinct eigenvales the variation of the eigenvectors
+is small and for equal eigenvalues the corresponding eigenvectors have large variation.
+</p>
+<p>This measure is then computed assuming <code class="reqn">k_m</code>=0,..., <code>ncomp[m]</code> and the ladle estimate for <code class="reqn">k_m</code> is the value where the measure takes its minimum. 
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of class 'tladle' containing:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>U</code></td>
+<td>
+<p>list containing the modewise rotation matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D</code></td>
+<td>
+<p>list containing the modewise eigenvalues.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S</code></td>
+<td>
+<p>array of the same size as <code>x</code> containing the principal components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ResMode</code></td>
+<td>
+<p>a list with the modewise results which are lists containing:
+</p>
+
+<dl>
+<dt>mode</dt>
+<dd>
+<p>label for the mode.</p>
+</dd>
+<dt>k</dt>
+<dd>
+<p>the estimated value of k.</p>
+</dd>
+<dt>fn</dt>
+<dd>
+<p>vector giving the measures of variation of the eigenvectors using the bootstrapped eigenvectors for the different number of components.</p>
+</dd>
+<dt>phin</dt>
+<dd>
+<p>normalized eigenvalues.</p>
+</dd>
+<dt>lambda</dt>
+<dd>
+<p>the unnormalized eigenvalues used to compute phin.</p>
+</dd>
+<dt>gn</dt>
+<dd>
+<p>the main criterion for the ladle estimate - the sum of fn and phin. k is the value where gn takes its minimum.</p>
+</dd>
+<dt>comp</dt>
+<dd>
+<p>vector from 0 to the number of dimensions to be evaluated.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xmu</code></td>
+<td>
+<p>the data location</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data.name</code></td>
+<td>
+<p>string with the name of the input data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>string <code>tPCA</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Koesner, C, Nordhausen, K. and Virta, J. (2019), Estimating the signal tensor dimension using tensorial PCA. Manuscript.</cite>
+</p>
+<p><cite>Luo, W. and Li, B. (2016), Combining Eigenvalues and Variation of Eigenvectors for Order Determination, Biometrika, 103, 875–887. &lt;doi:10.1093/biomet/asw051&gt;</cite>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tPCA</code>, <code>ggtladleplot</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(ICtest)
+n &lt;- 200
+sig &lt;- 0.6
+
+Z &lt;- rbind(sqrt(0.7)*rt(n,df=5)*sqrt(3/5),
+           sqrt(0.3)*runif(n,-sqrt(3),sqrt(3)),
+           sqrt(0.3)*(rchisq(n,df=3)-3)/sqrt(6),
+           sqrt(0.9)*(rexp(n)-1),
+           sqrt(0.1)*rlogis(n,0,sqrt(3)/pi),
+           sqrt(0.5)*(rbeta(n,2,2)-0.5)*sqrt(20)
+)
+
+dim(Z) &lt;- c(3, 2, n)
+
+U1 &lt;- rorth(12)[,1:3]
+U2 &lt;- rorth(8)[,1:2]
+U &lt;- list(U1=U1, U2=U2)
+Y &lt;- tensorTransform2(Z,U,1:2)
+EPS &lt;- array(rnorm(12*8*n, mean=0, sd=sig), dim=c(12,8,n))
+X &lt;- Y + EPS
+
+
+TEST &lt;- tPCAladle(X)
+TEST
+ggtladleplot(TEST)
+</code></pre>
+
+
+</div>

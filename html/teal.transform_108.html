@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>resolve_delayed</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Resolve delayed inputs by evaluating the code within the provided datasets</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">resolve_delayed(x, datasets, keys)
+
+## S3 method for class 'FilteredData'
+resolve_delayed(
+  x,
+  datasets,
+  keys = sapply(datasets$datanames(), datasets$get_keys, simplify = FALSE)
+)
+
+## S3 method for class 'list'
+resolve_delayed(x, datasets, keys = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>(<code>delayed_data</code>, <code>list</code>) to resolve.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>(<code>FilteredData</code> or named <code>list</code>) to use as a reference to resolve <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keys</code></td>
+<td>
+<p>(named <code>list</code>) with primary keys for each dataset from <code>datasets</code>. <code>names(keys)</code>
+should match <code>names(datasets)</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Resolved object.
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul>
+<li> <p><code>resolve_delayed(FilteredData)</code>: Default values for <code>keys</code> parameters is extracted from <code>datasets</code>.
+</p>
+</li>
+<li> <p><code>resolve_delayed(list)</code>: Generic method when <code>datasets</code> argument is a named list.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+ADSL &lt;- teal.transform::rADSL
+isolate({
+  data_list &lt;- list(ADSL = reactive(ADSL))
+
+  # value_choices example
+  v1 &lt;- value_choices("ADSL", "SEX", "SEX")
+  v1
+  resolve_delayed(v1, data_list)
+
+  # variable_choices example
+  v2 &lt;- variable_choices("ADSL", c("BMRKR1", "BMRKR2"))
+  v2
+  resolve_delayed(v2, data_list)
+
+  # data_extract_spec example
+  adsl_filter &lt;- filter_spec(
+    vars = variable_choices("ADSL", "SEX"),
+    sep = "-",
+    choices = value_choices("ADSL", "SEX", "SEX"),
+    selected = "F",
+    multiple = FALSE,
+    label = "Choose endpoint and Censor"
+  )
+
+  adsl_select &lt;- select_spec(
+    label = "Select variable:",
+    choices = variable_choices("ADSL", c("BMRKR1", "BMRKR2")),
+    selected = "BMRKR1",
+    multiple = FALSE,
+    fixed = FALSE
+  )
+
+  adsl_de &lt;- data_extract_spec(
+    dataname = "ADSL",
+    select = adsl_select,
+    filter = adsl_filter
+  )
+
+  resolve_delayed(adsl_filter, datasets = data_list)
+  resolve_delayed(adsl_select, datasets = data_list)
+  resolve_delayed(adsl_de, datasets = data_list)
+
+  # nested list (arm_ref_comp)
+  arm_ref_comp &lt;- list(
+    ARMCD = list(
+      ref = variable_choices("ADSL"),
+      comp = variable_choices("ADSL")
+    )
+  )
+
+  resolve_delayed(arm_ref_comp, datasets = data_list)
+})
+</code></pre>
+
+
+</div>

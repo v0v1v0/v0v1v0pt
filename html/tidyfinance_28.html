@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimate_fama_macbeth</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate Fama-MacBeth Regressions</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates Fama-MacBeth regressions by first running cross-sectional regressions
+for each time period and then aggregating the results over time to obtain average risk premia
+and corresponding t-statistics.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_fama_macbeth(
+  data,
+  model,
+  vcov = "newey-west",
+  vcov_options = NULL,
+  data_options = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame containing the data for the regression. It must include a column
+representing the time periods (defaults to <code>date</code>) and the variables specified in the <code>model</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>A formula representing the regression model to be estimated in each cross-section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vcov</code></td>
+<td>
+<p>A character string indicating the type of standard errors to compute. Options are
+<code>"iid"</code> for independent and identically distributed errors or <code>"newey-west"</code> for Newey-West
+standard errors. Default is <code>"newey-west"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vcov_options</code></td>
+<td>
+<p>A list of additional arguments to be passed to the
+<code>NeweyWest()</code> function when <code>vcov = "newey-west"</code>. These can include options
+such as <code>lag</code>, which specifies the number of lags to use in the Newey-West
+covariance matrix estimation, and <code>prewhite</code>, which indicates whether to
+apply a prewhitening transformation. Default is an empty list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_options</code></td>
+<td>
+<p>A named list of data_options with characters, indicating the column
+names required to run this function. The required column names identify dates. Defaults to
+<code>date = date</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data frame with the estimated risk premiums, the number of observations, standard
+errors, and t-statistics for each factor in the model.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(1234)
+
+data &lt;- tibble::tibble(
+  date = rep(seq.Date(from = as.Date("2020-01-01"),
+                      to = as.Date("2020-12-01"), by = "month"), each = 50),
+  permno = rep(1:50, times = 12),
+  ret_excess = rnorm(600, 0, 0.1),
+  beta = rnorm(600, 1, 0.2),
+  bm = rnorm(600, 0.5, 0.1),
+  log_mktcap = rnorm(600, 10, 1)
+)
+
+estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap")
+estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap", vcov = "iid")
+estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap",
+                      vcov = "newey-west", vcov_options = list(lag = 6, prewhite = FALSE))
+
+# Use different column name for date
+data |&gt;
+  dplyr::rename(month = date) |&gt;
+  estimate_fama_macbeth(
+    "ret_excess ~ beta + bm + log_mktcap",
+    data_options = data_options(date = "month")
+ )
+
+</code></pre>
+
+
+</div>

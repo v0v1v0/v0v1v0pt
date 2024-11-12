@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sequencing</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Working with index sequences</h2>
+
+<h3>Description</h3>
+
+<p>In typical tensor notation the indices are not identified by names but
+by positions. The operators allow to identify names and positions
+transparently during calculation. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## Methods for class tensor
+# x $ y
+# x ^ y
+# x | y
+renamefirst.tensor(x,y)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A tensor </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+
+<p>Typically a character vector specifying a sequence of names for the
+tensor. The names can be specified in various ways:<br>
+The following specifications are equal and specify a sequence of the
+names i,j and k:<br><code>x$ijk</code>, <code>x$i.j.k</code>, <code>i.j.k.</code>, <code>x"$ijk"</code>,
+<code>x^"i.j.k"</code>, <code>x^c("i","j","k")</code>,<code>x^c("i.j","k")</code>,
+<code>x^c("$i.j","k")</code>,<code>x^c("$ij","k")</code>,
+<code>x^c("$","ijk")</code><br>
+In general names are separated by dots.
+All notations with <code>\$</code> either as operator or as the first
+character of the first string allow to omit the dots assuming that
+all names are single character. If any dot is present all dots must
+be given. The difference of <code>\$</code> and <code>\^</code> is that the
+first accepts a name and the second an character valued expression.
+<br>
+Multi letter indices like "alpha","beta","gamma"
+can only be given in the dot-free version of the notation
+making the following
+specifications equal:
+<code>x$alpha.beta.gamma</code>, <code>alpha.beta.gamma.</code>,
+<code>x^"$alpha.beta.gamma"</code>,
+<code>x^"alpha.beta.gamma"</code>, <code>x^c("alpha","beta","gamma")</code>,
+<code>x^c("alpha.beta","gamma")</code>,
+<code>x^c("$alpha.beta","k")</code>,
+<code>x^c("$","alpha.beta.gammak")</code><br>
+The specification for <code>|</code> is equal to that for <code>^</code>.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions are used to mimic the mathematical notation in tensor
+analysis.
+Formulae of the form (with Einstein convention):
+</p>
+<p style="text-align: center;"><code class="reqn">E_{ijk}= A_{ihl}C_{hj}C_{lk}</code>
+</p>
+
+<p>with defined tensors <code class="reqn">A_{ijk}</code> and <code class="reqn">C_{ij}</code> can
+be given the
+simple
+form <br><code> E &lt;- A$ihl %e% C$hj %e% C$lk |"$ijk"</code><br>
+or alternatively for multi letter names:<br><code> E &lt;- A$i.h.l %e% C$h.j %e% C$l.k |"i.j.k"</code><br>
+or more flexible in computation with arguments I,J,K:<br><code> E &lt;- A^c(I,"h.l") %e% C^c("h",J) %e% C^c("l",K) | c(I,J,K)</code><br>
+The <code>$</code> or <code>^</code> binds to the tensors with high precedence
+and renames the first elements. The <code>|</code> binds with very low
+precedence and reorders the tensor according to the
+assumed index sequence of the result afterwards.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tensor of the same shape as x but with reordered dimensions (for
+<code>|</code>) or renamed dimensions (for the others) 
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>K. Gerald van den Boogaart</p>
+
+
+<h3>See Also</h3>
+
+<p><code>reorder.tensor</code>, <code>names&lt;-.tensor</code>, <code>[[.tensor</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">A &lt;- to.tensor(1:20,c(i=5,j=2,k=2))
+C &lt;- to.tensor(1:4,c(i=2,j=2))
+E &lt;- A$ihl %e% C$hj %e% C$lk |"$ijk"
+E
+# Same as:
+E2 &lt;- reorder.tensor(A[[j=~h,k=~l]] %e% C[[i=~h]] %e% C[[i=~l,j=~k]],c("i","j","k"))
+E-E2
+E &lt;- A$i.h.l %e% C$h.j %e% C$l.k |"i.j.k"
+E
+E-E2
+E &lt;- A^"i.h.l" %e% C^"h.j" %e% C^"l.k" |"i.j.k"
+E
+E-E2
+</code></pre>
+
+
+</div>

@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>position_diverge</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Easy Diverging Bar Charts</h2>
+
+<h3>Description</h3>
+
+<p>This is a modification of <code>ggplot2::position_stack()</code> for creating diverging
+bar charts. In order to use this function, you <em>must</em> set a fill aesthetic
+(and that aesthetic should probably be a factor). This function will
+automatically break your chart into negative and positive values and display
+them in the same order as your fill levels.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">position_diverge(vjust = 1, break_after = NULL, fill = FALSE, reverse = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vjust</code></td>
+<td>
+<p>Vertical adjustment for geoms that have a position (like text or points), not a dimension (like bars or areas). Set to 0 to align with the bottom, 0.5 for the middle, and 1 (the default) for the top.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>break_after</code></td>
+<td>
+<p>Either an integer index or character value that represents the last positive level. The default, <code>NULL</code>, will split the levels halfway (with fewer positive levels if the total number of levels is odd).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fill</code></td>
+<td>
+<p>If <code>TRUE</code> will automatically scale bars to 100% as with <code>position_fill()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reverse</code></td>
+<td>
+<p>If <code>TRUE</code>, will reverse the default stacking order.</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(ggplot2)
+
+# Example data
+test_df &lt;- tibble::tribble(
+  ~q,  ~response,  ~prop,
+  'a', 'Yes',      0.25,
+  'a', 'Mostly',   0.25,
+  'a', 'Somewhat', 0.25,
+  'a', 'Not Yet',  0.25,
+  'b', 'Yes',      0.4,
+  'b', 'Mostly',   0.3,
+  'b', 'Somewhat', 0.2,
+  'b', 'Not Yet',  0.1
+  ) |&gt;
+  dplyr::mutate(
+    response = forcats::fct_inorder(response),
+    q = forcats::fct_inorder(q)
+  )
+
+# Default diverging with text
+# In interactive use, this can also be run with `position = "diverge"`
+
+test_df |&gt;
+  ggplot(aes(prop, q, fill = response)) +
+  geom_col(position = position_diverge()) +
+  geom_text(aes(label = scales::percent(prop,)),
+            position = position_diverge(vjust = 0.5)) +
+  geom_vline(xintercept = 0) +
+  tntp_style(family = "sans") +
+  # Reverse legend to match horizontal bar order
+  guides(fill = guide_legend(reverse = TRUE)) +
+  # Adjust axis labels to be positive on both sides
+  scale_x_continuous(labels = ~scales::percent(abs(.)))
+
+# Custom breaks with the break_after parameter
+test_df |&gt;
+  ggplot(aes(q, prop, fill = response)) +
+  geom_col(position = position_diverge(break_after = 'Yes')) +
+  geom_hline(yintercept = 0) +
+  tntp_style(family = "sans") +
+  # Adjust axis labels to be positive on both sides
+  scale_y_continuous(labels = ~scales::percent(abs(.)))
+
+</code></pre>
+
+
+</div>

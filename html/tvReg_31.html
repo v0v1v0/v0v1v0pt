@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>forecast</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Forecast Methods for Objects in tvReg.</h2>
+
+<h3>Description</h3>
+
+<p><code>forecast</code> calculates the forecast for objects with class attribute <code>tvlm</code>, <code>tvar</code>, 
+<code>tvvar</code>, <code>tvirf</code>, <code>tvsure</code> and <code>tvplm</code>. If the 
+smoothing variable (z) in the model is non-NULL and it is a random 
+variable then use function <code>predict</code> with parameter <code>newz</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">forecast(object, ...)
+
+## S3 method for class 'tvlm'
+forecast(object, newdata, n.ahead = 1, winsize = 0, ...)
+
+## S3 method for class 'tvar'
+forecast(object, n.ahead = 1, newz = NULL, newexogen = NULL, winsize = 0, ...)
+
+## S3 method for class 'tvvar'
+forecast(object, n.ahead = 1, newz = NULL, newexogen = NULL, winsize = 0, ...)
+
+## S3 method for class 'tvsure'
+forecast(object, newdata, n.ahead = 1, winsize = 0, ...)
+
+## S3 method for class 'tvplm'
+forecast(object, newdata, n.ahead = 1, winsize = 0, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object used to select a method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed to specific methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>A matrix or data.frame with the values of the regressors to use
+for forecasting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ahead</code></td>
+<td>
+<p>A scalar with the forecast horizon, value 1 by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>winsize</code></td>
+<td>
+<p>A scalar. If 0 then an 'increase window' forecasting is performed.
+Otherwise a 'rolling window' forecasting is performed with window size given by 
+'winsize'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newz</code></td>
+<td>
+<p>A vector with the new values of the smoothing variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newexogen</code></td>
+<td>
+<p>A matrix or vector with the new values of the exogenous variables.
+Only for predictions of *tvar* and *tvvar* objects.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class matrix or vector with the same dimensions than  the dependent 
+variable of <code>object</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>predict</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("RV")
+RV2 &lt;- head(RV, 2001)
+TVHAR &lt;- tvLM (RV ~ RV_lag + RV_week + RV_month, data = RV2, bw = 20)
+newdata &lt;- cbind(RV$RV_lag[2002:2004], RV$RV_week[2002:2004],
+              RV$RV_month[2002:2004])
+forecast(TVHAR, newdata, n.ahead = 3)
+
+
+data("RV")
+exogen = RV[1:2001, c("RV_week", "RV_month")]
+TVHAR2 &lt;- tvAR(RV$RV_lag[1:2001], p = 1, exogen = exogen, bw = 20)
+newexogen &lt;- RV[2002:2004, c("RV_week", "RV_month")]
+forecast(TVHAR2, n.ahead = 3, newexogen = newexogen)
+
+data(usmacro, package = "bvarsv")
+tvVAR.fit &lt;- tvVAR(usmacro, p = 6, type = "const", bw = c(1.8, 20, 20))
+forecast(tvVAR.fit, n.ahead = 10)
+
+data("Kmenta", package = "systemfit")
+eqDemand &lt;- consump ~ price + income
+eqSupply &lt;- consump ~ price + farmPrice 
+system &lt;- list(demand = eqDemand, supply = eqSupply)
+tvOLS.fit &lt;- tvSURE(system, data = Kmenta, est = "ll", bw = c(1.5, 1.5))
+newdata &lt;- data.frame(price = c(90, 100, 103), farmPrice = c(70, 95, 103), 
+income = c(82, 94, 115))
+forecast(tvOLS.fit, newdata = newdata, n.ahead = 3)
+data(OECD)
+tvpols &lt;- tvPLM(lhe~lgdp+pop65+pop14+public, index = c("country", "year"), 
+data = OECD, method = "pooling", bw =  8.9)
+newdata &lt;- OECD[c(7, 9), 4:7]
+forecast(tvpols, newdata = newdata, n.ahead = 2)
+</code></pre>
+
+
+</div>

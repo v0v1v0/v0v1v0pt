@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>teamcolors</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Color palettes for professional sports teams</h2>
+
+<h3>Description</h3>
+
+<p>Color palettes for professional sports teams
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">teamcolors
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>A data frame with one row for each professional team and five variables:
+</p>
+
+<dl>
+<dt>name</dt>
+<dd>
+<p>the name of the team as they are presented in the teamcolors dataset</p>
+</dd>
+<dt>league</dt>
+<dd>
+<p>the league in which the team plays</p>
+</dd>
+<dt>primary</dt>
+<dd>
+<p>the team's primary color</p>
+</dd>
+<dt>secondary</dt>
+<dd>
+<p>the team's secondary color</p>
+</dd>
+<dt>tertiary</dt>
+<dd>
+<p>the team's tertiary color</p>
+</dd>
+<dt>quaternary</dt>
+<dd>
+<p>the team's quaternary color</p>
+</dd>
+<dt>division</dt>
+<dd>
+<p>the team's division</p>
+</dd>
+<dt>location</dt>
+<dd>
+<p>the team's location, not standardized</p>
+</dd>
+<dt>mascot</dt>
+<dd>
+<p>the team's mascot</p>
+</dd>
+<dt>sportslogos_name</dt>
+<dd>
+<p>the name of the team as they are presented on the sportslogos website</p>
+</dd>
+<dt>logo</dt>
+<dd>
+<p>URL to the team's logo, hosted by <a href="http://www.sportslogos.net">http://www.sportslogos.net</a></p>
+</dd>
+</dl>
+<h3>Details</h3>
+
+<p>The colors given are HTML hexidecimal values. See <code>colors</code>
+for more information.
+</p>
+
+
+<h3>Source</h3>
+
+<p><a href="http://jim-nielsen.com/teamcolors/">http://jim-nielsen.com/teamcolors/</a>, <a href="http://www.sportslogos.net">http://www.sportslogos.net</a>, <a href="https://teamcolorcodes.com/">https://teamcolorcodes.com/</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(teamcolors)
+
+if (require(Lahman) &amp; require(dplyr)) {
+  pythag &lt;- Teams %&gt;%
+    filter(yearID == 2014) %&gt;%
+    select(name, W, L, R, RA) %&gt;%
+    mutate(wpct = W / (W+L), exp_wpct = 1 / (1 + (RA/R)^2)) %&gt;%
+    # St. Louis Cardinals do not match
+    left_join(teamcolors, by = "name")
+  with(pythag, plot(exp_wpct, wpct, bg = primary, col = secondary, pch = 21, cex = 3))
+
+
+# Using ggplot2
+if (require(ggplot2)) {
+  ggplot(pythag, aes(x = wpct, y = exp_wpct, color = name, fill = name)) + 
+    geom_abline(slope = 1, intercept = 0, linetype = 3) + 
+    geom_point(shape = 21, size = 3) + 
+    scale_fill_manual(values = pythag$primary, guide = FALSE) + 
+    scale_color_manual(values = pythag$secondary, guide = FALSE) + 
+    geom_text(aes(label = substr(name, 1, 3))) + 
+    scale_x_continuous("Winning Percentage", limits = c(0.3, 0.7)) + 
+    scale_y_continuous("Expected Winning Percentage", limits = c(0.3, 0.7)) + 
+    coord_equal()
+  }
+}
+
+</code></pre>
+
+
+</div>

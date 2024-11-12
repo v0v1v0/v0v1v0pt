@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot_placebos</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>plot_placebos</h2>
+
+<h3>Description</h3>
+
+<p>Plot the difference between the observed and sythetic control unit for the
+treated and the placebo units. The difference captures the causal quantity
+(i.e. the magnitude of the difference between the observed and counterfactual
+case). Plotting the actual treated observation against the placebos captures
+the likelihood (or rarity) of the observed differenced trend.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plot_placebos(data, time_window = NULL, prune = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>nested data of type <code>tbl_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_window</code></td>
+<td>
+<p>time window of the tbl_df plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prune</code></td>
+<td>
+<p>boolean flag; if TRUE, then all placebo cases with a pre-period
+RMSPE exceeding two times the treated unit pre-period RMSPE are pruned;
+Default is TRUE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function provides a pruning rule where all placebo cases with a
+pre-period root mean squared predictive error (RMSPE) exceeding two times the
+treated unit pre-period RMSPE are pruned. This helps overcome scale issues
+when a particular placebo case has poor fit in the pre-period.
+</p>
+<p>See documentation on <code>?synthetic_control</code> on how to generate placebo cases.
+When initializing a synth pipeline, set the <code>generate_placebos</code> argument to
+<code>TRUE</code>. The processing pipeline remains the same.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>ggplot</code> object of the difference between the observed and synthetic
+trends for the treated and placebo units.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+
+# Smoking example data
+data(smoking)
+
+smoking_out &lt;-
+smoking %&gt;%
+
+# initial the synthetic control object
+synthetic_control(outcome = cigsale,
+                  unit = state,
+                  time = year,
+                  i_unit = "California",
+                  i_time = 1988,
+                  generate_placebos=TRUE) %&gt;%
+
+# Generate the aggregate predictors used to generate the weights
+  generate_predictor(time_window=1980:1988,
+                     lnincome = mean(lnincome, na.rm = TRUE),
+                     retprice = mean(retprice, na.rm = TRUE),
+                     age15to24 = mean(age15to24, na.rm = TRUE)) %&gt;%
+
+  generate_predictor(time_window=1984:1988,
+                     beer = mean(beer, na.rm = TRUE)) %&gt;%
+
+  generate_predictor(time_window=1975,
+                     cigsale_1975 = cigsale) %&gt;%
+
+  generate_predictor(time_window=1980,
+                     cigsale_1980 = cigsale) %&gt;%
+
+  generate_predictor(time_window=1988,
+                     cigsale_1988 = cigsale) %&gt;%
+
+
+  # Generate the fitted weights for the synthetic control
+  generate_weights(optimization_window =1970:1988,
+                   Margin.ipop=.02,Sigf.ipop=7,Bound.ipop=6) %&gt;%
+
+  # Generate the synthetic control
+  generate_control()
+
+# Plot the observed and synthetic trend
+smoking_out %&gt;% plot_placebos(time_window = 1970:2000)
+
+
+
+</code></pre>
+
+
+</div>

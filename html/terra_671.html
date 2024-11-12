@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>patches</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Detect patches (clumps) of cells</h2>
+
+<h3>Description</h3>
+
+<p>Detect patches (clumps). Patches are groups of cells that are surrounded by cells that are <code>NA</code>. Set <code>zeroAsNA</code> to <code>TRUE</code> to also identify patches separated by cells with values of zero. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+patches(x, directions=4, zeroAsNA=FALSE, allowGaps=TRUE, filename="", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>directions</code></td>
+<td>
+<p>integer indicating which cells are considered adjacent. Should be 8 (Queen's case) or 4 (Rook's case)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zeroAsNA</code></td>
+<td>
+<p>logical. If <code>TRUE</code> treat cells that are zero as if they were <code>NA</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allowGaps</code></td>
+<td>
+<p>logical. If <code>TRUE</code> there may be gaps in the patch IDs (e.g. you may have patch IDs 1, 2, 3 and 5, but not 4). If it is FALSE, these numbers will be recoded from 1 to the number of patches (4 in this example)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster. Cell values are patch numbers
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>focal</code>, <code>boundaries</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(nrows=18, ncols=36, xmin=0)
+r[1:2, 5:8] &lt;- 1
+r[5:8, 2:6] &lt;- 1
+r[7:12, 22:36] &lt;- 1
+r[15:16, 18:29] &lt;- 1
+p &lt;- patches(r)
+
+# zero as background instead of NA
+r &lt;- rast(nrows=10, ncols=10, xmin=0, vals=0)
+r[3, 3] &lt;- 10
+r[4, 4] &lt;- 10
+r[5, 5:8] &lt;- 12
+r[6, 6:9] &lt;- 12
+
+# treat zeros as NA
+
+p4 &lt;- patches(r, zeroAsNA=TRUE)
+p8 &lt;- patches(r, 8, zeroAsNA=TRUE)
+
+### patches for different values
+# remove zeros manually
+rr &lt;- classify(r, cbind(0, NA))
+
+# make layers for each value
+s &lt;- segregate(rr, keep=TRUE, other=NA)
+p &lt;- patches(s)
+
+
+### patch ID values are not guaranteed to be consecutive
+r &lt;- rast(nrows=5, ncols=10, xmin=0)
+set.seed(0)
+values(r)&lt;- round(runif(ncell(r))*0.7)
+rp &lt;- patches(r, directions=8, zeroAsNA=TRUE) 
+plot(rp, type="classes"); text(rp)
+
+## unless you set allowGaps=FALSE
+rp &lt;- patches(r, directions=8, zeroAsNA=TRUE, allowGaps=FALSE) 
+plot(rp, type="classes"); text(rp)
+
+### use zonal to remove small patches 
+f &lt;- system.file("ex/elev.tif", package="terra")
+r &lt;- rast(f)
+x &lt;- classify(r, cbind(-Inf, 400, NA))
+y &lt;- patches(x)
+# remove patches smaller than 100 ha
+rz &lt;- zonal(cellSize(y, unit="ha"), y, sum, as.raster=TRUE)
+s &lt;- ifel(rz &lt; 250, NA, y)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>kozak_logs_plot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Visualize the simulation of log cutting along the stem using a Kozak (2004) variable-form taper equation.</h2>
+
+<h3>Description</h3>
+
+<p>Plot the shape of the tree and visualize the extracted logs based on the tree measurements, assortments data.frame, and the Kozak (2004) variable-form taper equation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">kozak_logs_plot(
+  dbh,
+  h,
+  coef,
+  p,
+  assortments,
+  stump_height,
+  downgrade,
+  broken,
+  defect_height,
+  lang
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dbh</code></td>
+<td>
+<p>tree diameter at breast height, in centimeters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>total tree height, in meters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>numerical vector containing seven coefficients of the Kozak variable-form taper equation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>numerical value representing the first inflection point calculated in the segmented model of Max and Burkhart (1976).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>assortments</code></td>
+<td>
+<p>a data.frame with five columns and n rows, where n is the number of different wood assortments to be obtained from the tree stem. The first column must contain the names of the assortments, the second, numerical, contains the minimum diameters at the small end of the logs, in centimeters. The third column, numerical, contains the minimum lengths of the logs, in meters. The fourth column, numerical, contains the maximum lengths of the logs, in meters. The fifth column, numerical, contains the values in centimeters referring to the loss of wood due to cutting logs. The algorithm prioritizes the extraction of assortments along the stem in the order presented in the data.frame, starting from the first line, to the last.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stump_height</code></td>
+<td>
+<p>tree cutting height, in meters. Default is 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>downgrade</code></td>
+<td>
+<p>if TRUE, the algorithm,from the defect_height onwards, simulates log extraction only for the last assortment in the assortments data.frame. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>broken</code></td>
+<td>
+<p>if TRUE, the algorithm will simulate the extraction of logs only up to the defect_height. Default is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>defect_height</code></td>
+<td>
+<p>the height, in meters, from which the logs will be downgraded (if downgrade is TRUE) or log extraction simulation will be stopped (if broken is TRUE). Default is h * 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lang</code></td>
+<td>
+<p>language in which plot labels will be displayed. Current options are 'en' and 'pt-BR'. Default is 'en'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>check the <code>kozak_logs</code> function help for more details.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a ggplot object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(minpack.lm)
+library(timbeR)
+
+tree_scaling &lt;- tree_scaling %&gt;%
+mutate(did = di/dbh,
+       hih = hi/h)
+
+kozak &lt;- nlsLM(di ~ taper_kozak(dbh, h, hih, b0, b1, b2, b3, b4, b5, b6, b7, b8, p),
+               start=list(b0=1.00,b1=.97,b2=.03,b3=.49,b4=-
+                            0.87,b5=0.50,b6=3.88,b7=0.03,b8=-0.19, p = .1),
+               data = tree_scaling,
+               control = nls.lm.control(maxiter = 1000, maxfev = 2000)
+)
+
+coef_kozak &lt;- coef(kozak)[-10]
+p_kozak &lt;- coef(kozak)[10]
+
+h &lt;- 20
+dbh &lt;- 25
+
+assortments &lt;- data.frame(
+  NAME = c('15-25','4-15'),
+  SED = c(15,4),
+  MINLENGTH = c(2.65,2),
+  MAXLENGTH = c(2.65,4.2),
+  LOSS = c(5,5)
+)
+
+kozak_logs(dbh, h, coef_kozak, p_kozak, assortments)
+
+</code></pre>
+
+
+</div>

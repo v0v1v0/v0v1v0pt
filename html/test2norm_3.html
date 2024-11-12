@@ -1,0 +1,180 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>score2adjust</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Convert neuropsychological test scores to demographically adjusted norms.</h2>
+
+<h3>Description</h3>
+
+<p>Convert neuropsychological test scores to demographically adjusted norms.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">score2adjust(
+  data = NULL,
+  test.score = NULL,
+  group.id = NULL,
+  control.id = NULL,
+  all.controls = FALSE,
+  demographics = NULL,
+  mfp.alpha = 1,
+  rnd.a = TRUE,
+  mean.a = 50,
+  sd.a = 10
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data frame containing the variables needed for the norming
+process. The current version of the function does not accomodate missing
+data. For best results, exclude cases with missing test scores or missing
+demographics before applying this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test.score</code></td>
+<td>
+<p>a character string specifying the name of the test to be
+normed, usually the output of the <code>raw2scaled()</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group.id</code></td>
+<td>
+<p>a character string specifying the name of the variable
+containing group identification (i.e. control vs exposed/test/risk). Ignored,
+if all.controls = TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control.id</code></td>
+<td>
+<p>a character string specifying the label of the control
+group within group.id variable. Ignored, if all.controls = TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>all.controls</code></td>
+<td>
+<p>a logical indicating whether all observations should be
+treated as controls. Overwrites group.id and control.id.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>demographics</code></td>
+<td>
+<p>a single or multiple character strings (concatenated by
+<code>c()</code> function) specifying the names of demographic predictors to be
+included into normative formulas. Demographic variables should be numeric or
+binary (0/1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mfp.alpha</code></td>
+<td>
+<p>a numeric value between 0 and 1 that sets significance level
+for inclusion of demographic predictors into normative formula. Passed to the
+<code>mfp2()</code> function (its <code>select</code> argument). Default value is 1 for
+inclusion of all predictors regardless of their significance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rnd.a</code></td>
+<td>
+<p>a logical indicating whether the adjusted scores (T-scores)
+should be rounded. Default is TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean.a</code></td>
+<td>
+<p>numeric value for the mean of adjusted score (T-score)
+distribution. Default is 50.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sd.a</code></td>
+<td>
+<p>numeric value for the standard deviation of adjusted score
+(T-score) distribution. Default is 10.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>score2adjust()</code> function can be used by neuropsychologists, who
+wish to construct normative formulas for cognitive tests that adjust for
+expected effects of demographic characteristics (e.g., age), using methods
+described in Heaton et al. (2003 &amp; 2009). The adjusted scores are sometimes
+referred to as T-scores in the literature. The norming procedure makes use of
+the <code>mfp2()</code> function from the <code>mfp2</code> package to explore nonlinear
+associations between cognition and demographic variables. Detailed
+description of the procedure are found in Umlauf et al. (2024). (Previous
+versions of the function depended on <code>mfp</code> package.)
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list consisting of 3 objects. The first two are vectors containing the
+non-adjusted test scores and the calculated demographically adjusted scores.
+The last item in the output list is also a list called <code>MFP.formulas</code>.
+It contains the information for calculation of adjusted scores, including
+variable transformations (if any), multiple fractional polynomial (MFP) model
+coefficients, the standard deviation of residuals resulting from the MFP
+modeling, and a matrix with number of rows equal to the number of predictors
+and 2 columns containing powers (in numeric form) selected for variable
+transformations.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Anya Umlauf
+</p>
+
+
+<h3>References</h3>
+
+<p>Umlauf A et al. (2024) Automated procedure for demographic adjustments on
+cognitive test scores. &lt;doi:10.1080/23279095.2023.2288231&gt;
+</p>
+<p>Heaton RK, Taylor MJ, &amp; Manly J (2003) Demographic effects and use of
+demographically corrected norms with the WAIS-III and WMS-III. In: Tulsky D
+et al. (Eds.) <em>Clinical Interpretation of the WAIS-III and WMS-III</em>.
+San Diego, CA: Academic Press, 183-210.
+</p>
+<p>Heaton RK, Ryan L, &amp; Grant I (2009) Demographic influences and use of
+demographically corrected norms in neuropsychological assessment. In Grant I
+&amp; Adams KM (Eds.) <em>Neuropsychological Assessment of Neuropsychiatric
+and Neuromedical Disorders</em>. New York, NY: Oxford University Press, 127-155.
+</p>
+<p>Benner A (2005) mfp: Multivariable fractional polynomials.
+<em>R News</em> 5(2): 20–23.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(PsychTestData)
+PsychTestData$scaledscore &lt;- raw2scaled(data=PsychTestData, test="rawscore",
+                                        test.min=0, test.max=36,
+                                        test.better="High", group.id="group",
+                                        control.id="control")[[2]]
+score2adjust(data = PsychTestData, test.score = "scaledscore",
+             group.id = "group", control.id = "control",
+             demographics = c("age", "male"))
+</code></pre>
+
+
+</div>

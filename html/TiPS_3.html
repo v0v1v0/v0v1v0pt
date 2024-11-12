@@ -1,0 +1,168 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>simulate_tree</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Simulates a phylogeny using a beackward-in-time process using sampling dates and a trajectory</h2>
+
+<h3>Description</h3>
+
+<p>Simulates a phylogeny using a beackward-in-time process using sampling dates and a trajectory
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">simulate_tree(
+  simuResults,
+  dates,
+  deme,
+  sampled,
+  root,
+  isFullTrajectory = FALSE,
+  nTrials = 1,
+  addInfos = FALSE,
+  resampling = FALSE,
+  verbose = FALSE,
+  seed = 0,
+  outFile = "",
+  format = "newick"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>simuResults</code></td>
+<td>
+<p>Object of class <code>simutraj</code> resulting from running a simulator of trajectories built using the <code>build_simulator</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dates</code></td>
+<td>
+<p>Contains the sampling dates. Can be a vector (for example using <code>seq</code> function), can be a named list or a file with header.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deme</code></td>
+<td>
+<p>A vector with the compartments that contribute to the simulation of phylogeny.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sampled</code></td>
+<td>
+<p>A named vector with the proportions of sampling for each compartment. This is used in case there are multiple deme compartments where the sampling dates will be randomly associated to a compartment to sample. Sum of <code>sampled</code> must be 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>root</code></td>
+<td>
+<p>Name of the compartment from which the phylogeny is rooted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>isFullTrajectory</code></td>
+<td>
+<p>Boolean to define if death events generate or not leaves. By default, <code>isFullTrajectory=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nTrials</code></td>
+<td>
+<p>Integer indicating the number of unsuccessful simulation trials allowed before giving up.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>addInfos</code></td>
+<td>
+<p>Boolean to define if each internal node' name will be the reaction. By default, <code>addInfos=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resampling</code></td>
+<td>
+<p>Boolean to allow a sampled individual to transmit the pathogen once again. By default, <code>resampling=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Boolean to allow printing time execution of simulation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Seed to initialize the random generator, for better reproducibility. By default, <code>seed=0</code> and the seed value is randomly generated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outFile</code></td>
+<td>
+<p>Output file name to write tree. By default, tree is not written in output file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Output tree format if output file is given. Values are either <code>format = "newick"</code> ou <code>format = "nexus"</code>. By default, <code>format = "newick"</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class <code>ape::phylo</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gonche Danesh
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# A multi-type birth-death model with birth rate beta,
+# death rate gamma, mutation rates m1 and m2
+# and I1 and I2 the number of infected individuals of each type.
+# With parameter beta varying over 2 time intervals.
+reactions &lt;- c("0 [beta1 * I1] -&gt; I1","I1 [gamma1 * I1] -&gt; 0",
+"I1 [mu1 * I1] -&gt; I2","0 [beta2 * I2] -&gt; I2",
+"I2 [gamma2 * I2] -&gt; 0","I2 [mu2 * I2] -&gt; I1")
+
+BD_simu &lt;- build_simulator(reactions)
+initialStates &lt;- c(I1 = 0, I2 = 1)
+times &lt;- c(1975, 1998, 2018)
+theta &lt;- list(gamma1 = c(0.2, 0.09), gamma2 = 0.1, mu1 = 0.025,
+mu2 = 0.021, beta1 = c(0.26,0.37), beta2 = 0.414)
+BDres &lt;- BD_simu(paramValues = theta,
+                  initialStates = initialStates,
+                  times = times,
+                  tau = 0.08,
+                  method = "approximate",
+								 seed = 994543)
+# Let's generate 100 sampling dates from 2015 and 2018
+dates_bd &lt;- seq(from=2015, to=2018, length.out=100)
+BD_tree &lt;- simulate_tree(simuResults = BDres,
+                         dates = dates,
+                         deme = c("I"),
+                         sampled = c(I=1),
+                         root = "I",
+                         isFullTrajectory = FALSE,
+                         seed = 973360)
+BD_tree$seed
+# Plot the simulated phylogeny using the \code{ape::plot.phylo} function.
+ape::plot.phylo(BD_tree)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

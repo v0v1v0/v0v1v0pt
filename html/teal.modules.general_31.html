@@ -1,0 +1,329 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_a_regression</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Scatterplot and regression analysis</h2>
+
+<h3>Description</h3>
+
+<p>Module for visualizing regression analysis, including scatterplots and
+various regression diagnostics plots.
+It allows users to explore the relationship between a set of regressors and a response variable,
+visualize residuals, and identify outliers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_a_regression(
+  label = "Regression Analysis",
+  regressor,
+  response,
+  plot_height = c(600, 200, 2000),
+  plot_width = NULL,
+  alpha = c(1, 0, 1),
+  size = c(2, 1, 8),
+  ggtheme = c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void"),
+  ggplot2_args = teal.widgets::ggplot2_args(),
+  pre_output = NULL,
+  post_output = NULL,
+  default_plot_type = 1,
+  default_outlier_label = "USUBJID",
+  label_segment_threshold = c(0.5, 0, 10)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regressor</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Regressor variables from an incoming dataset with filtering and selecting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response</code></td>
+<td>
+<p>(<code>data_extract_spec</code> or <code>list</code> of multiple <code>data_extract_spec</code>)
+Response variables from an incoming dataset with filtering and selecting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot height as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> intended for use with a slider UI element.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional, specifies the plot width as a three-element vector of
+<code>value</code>, <code>min</code>, and <code>max</code> for a slider encoding the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>(<code>integer(1)</code> or <code>integer(3)</code>) optional, specifies point opacity.
+</p>
+
+<ul>
+<li>
+<p> When the length of <code>alpha</code> is one: the plot points will have a fixed opacity.
+</p>
+</li>
+<li>
+<p> When the length of <code>alpha</code> is three: the plot points opacity are dynamically adjusted based on
+vector of <code>value</code>, <code>min</code>, and <code>max</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>size</code></td>
+<td>
+<p>(<code>integer(1)</code> or <code>integer(3)</code>) optional, specifies point size.
+</p>
+
+<ul>
+<li>
+<p> When the length of <code>size</code> is one: the plot point sizes will have a fixed size.
+</p>
+</li>
+<li>
+<p> When the length of <code>size</code> is three: the plot points size are dynamically adjusted based on
+vector of <code>value</code>, <code>min</code>, and <code>max</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggtheme</code></td>
+<td>
+<p>(<code>character</code>) optional, <code>ggplot2</code> theme to be used by default. Defaults to <code>"gray"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional, object created by <code>teal.widgets::ggplot2_args()</code>
+with settings for all the plots or named list of <code>ggplot2_args</code> objects for plot-specific settings.
+The argument is merged with options variable <code>teal.ggplot2_args</code> and default module setup.
+</p>
+<p>List names should match the following: <code style="white-space: pre;">⁠c("default", "Response vs Regressor", "Residuals vs Fitted", "Scale-Location", "Cook's distance", "Residuals vs Leverage"", "Cook's dist vs Leverage")⁠</code>.
+</p>
+<p>For more details see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed before the module's output,
+providing context or a title.
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed after the module's output,
+adding context or further instructions. Elements like <code>shiny::helpText()</code> are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_plot_type</code></td>
+<td>
+<p>(<code>numeric</code>) optional, defaults to "Response vs Regressor".
+</p>
+
+<ol>
+<li>
+<p> Response vs Regressor
+</p>
+</li>
+<li>
+<p> Residuals vs Fitted
+</p>
+</li>
+<li>
+<p> Normal Q-Q
+</p>
+</li>
+<li>
+<p> Scale-Location
+</p>
+</li>
+<li>
+<p> Cook's distance
+</p>
+</li>
+<li>
+<p> Residuals vs Leverage
+</p>
+</li>
+<li>
+<p> Cook's dist vs Leverage
+</p>
+</li>
+</ol>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_outlier_label</code></td>
+<td>
+<p>(<code>character</code>) optional, default column selected to label outliers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_segment_threshold</code></td>
+<td>
+<p>(<code>numeric(1)</code> or <code>numeric(3)</code>)
+Minimum distance between label and point on the plot that triggers the creation of
+a line segment between the two.
+This may happen when the label cannot be placed next to the point as it overlaps another
+label or point.
+The value is used as the <code>min.segment.length</code> parameter to the <code>ggrepel::geom_text_repel()</code> function.
+</p>
+<p>It can take the following forms:
+</p>
+
+<ul>
+<li> <p><code>numeric(1)</code>: Fixed value used for the minimum distance and the slider is not presented in the UI.
+</p>
+</li>
+<li> <p><code>numeric(3)</code>: A slider is presented in the UI (under "Plot settings") to adjust the minimum distance dynamically.
+</p>
+<p>It takes the form of <code>c(value, min, max)</code> and it is passed to the <code>value_min_max</code>
+argument in <code>teal.widgets::optionalSliderInputValMinMax</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Note</h3>
+
+<p>For more examples, please see the vignette "Using regression plots" via
+<code>vignette("using-regression-plots", package = "teal.modules.general")</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># general data example
+library(teal.widgets)
+
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  CO2 &lt;- CO2
+})
+datanames(data) &lt;- c("CO2")
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_a_regression(
+      label = "Regression",
+      response = data_extract_spec(
+        dataname = "CO2",
+        select = select_spec(
+          label = "Select variable:",
+          choices = "uptake",
+          selected = "uptake",
+          multiple = FALSE,
+          fixed = TRUE
+        )
+      ),
+      regressor = data_extract_spec(
+        dataname = "CO2",
+        select = select_spec(
+          label = "Select variables:",
+          choices = variable_choices(data[["CO2"]], c("conc", "Treatment")),
+          selected = "conc",
+          multiple = TRUE,
+          fixed = FALSE
+        )
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Regression Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+library(teal.widgets)
+
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  ADSL &lt;- rADSL
+})
+datanames(data) &lt;- "ADSL"
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_a_regression(
+      label = "Regression",
+      response = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          label = "Select variable:",
+          choices = "BMRKR1",
+          selected = "BMRKR1",
+          multiple = FALSE,
+          fixed = TRUE
+        )
+      ),
+      regressor = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          label = "Select variables:",
+          choices = variable_choices(data[["ADSL"]], c("AGE", "SEX", "RACE")),
+          selected = "AGE",
+          multiple = TRUE,
+          fixed = FALSE
+        )
+      ),
+      ggplot2_args = ggplot2_args(
+        labs = list(subtitle = "Plot generated by Regression Module")
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

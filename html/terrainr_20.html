@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>make_manifest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Transform rasters and write manifest file for import into Unity</h2>
+
+<h3>Description</h3>
+
+<p>These functions crop input raster files into smaller square tiles and then
+converts them into either .png or .raw files which are ready to be imported
+into the Unity game engine. make_manifest also writes a "manifest" file and
+importer script which may be used to automatically import the tiles into
+Unity.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">make_manifest(
+  heightmap,
+  overlay = NULL,
+  output_prefix = "import",
+  manifest_path = "terrainr.manifest",
+  importer_path = "import_terrain.cs"
+)
+
+transform_elevation(heightmap, side_length = 4097, output_prefix = "import")
+
+transform_overlay(overlay, side_length = 4097, output_prefix = "import")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>heightmap</code></td>
+<td>
+<p>File path to the heightmap to transform.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overlay</code></td>
+<td>
+<p>File path to the image overlay to transform. Optional for
+make_manifest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output_prefix</code></td>
+<td>
+<p>The file path to prefix output tiles with.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>manifest_path</code></td>
+<td>
+<p>File path to write the manifest file to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>importer_path</code></td>
+<td>
+<p>File name to write the importer script to. Set to NULL
+to not copy the importer script. Will overwrite any file at the same path.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>side_length</code></td>
+<td>
+<p>Side length, in pixels, of each output tile. If the raster
+has dimensions not evenly divisible by <code>side_length</code>, tiles will be generated
+with overhanging pieces set to 0 units of elevation or RGB 0 (pure black).
+Side lengths not equal to 2^x + 1 (for x &lt;= 12) will cause a warning, as
+tiles must be this size for import into Unity.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>manifest_path</code>, invisibly.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+if (!isTRUE(as.logical(Sys.getenv("CI")))) {
+  simulated_data &lt;- data.frame(
+    id = seq(1, 100, 1),
+    lat = runif(100, 44.04905, 44.17609),
+    lng = runif(100, -74.01188, -73.83493)
+  )
+  simulated_data &lt;- sf::st_as_sf(simulated_data, coords = c("lng", "lat"))
+  output_files &lt;- get_tiles(simulated_data)
+  temptiff &lt;- tempfile(fileext = ".tif")
+  merge_rasters(output_files["elevation"][[1]], temptiff)
+  make_manifest(temptiff, output_prefix = tempfile(), importer_path = NULL)
+}
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

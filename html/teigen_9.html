@@ -1,0 +1,368 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>teigen</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+teigen: Function for Model-Based Clustering and Classification with the Multivariate t Distribution
+</h2>
+
+<h3>Description</h3>
+
+<p>Fits multivariate t-distribution mixture models (with eigen-decomposed covariance structure) to the given data within a clustering paradigm (default) or classification paradigm (by giving either training index or percentage of data taken to be known). Can be run in parallel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">teigen(x, Gs = 1:9, models = "all", init = "kmeans", scale = TRUE, dfstart = 50, 
+	known = NULL, training = NULL, gauss = FALSE, dfupdate = "approx", 
+	eps = c(0.001, 0.1), verbose = TRUE, maxit = c(Inf,Inf), 
+	convstyle = "aitkens", parallel.cores = FALSE, 
+	ememargs = list(25, 5, "UUUU", "hard"))</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+
+<p>A numeric matrix, data frame, or vector (for univariate data) .
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Gs</code></td>
+<td>
+
+
+<p>A number or vector indicating the number of groups to fit. Default is 1-9.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>models</code></td>
+<td>
+
+
+<p>A character vector giving the models to fit. See details for a comprehensive list of choices.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+
+
+<p>A list of initializing classification of the form that <code>init[[G]]</code> contains the initializing vector for all G considered (see example below). Alternatively, the user can use a character string indicating initialization method. Currently the user can choose from <code>"kmeans"</code> (default), ‘hard’ random - <code>"hard"</code>, ‘soft’ random - <code>"soft"</code>,  <code>``emem''</code> (see <code>ememargs</code> below for description), and <code>"uniform"</code> (classification only).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+
+
+<p>Logical indicating whether or not the function should scale the data. Default is <code>TRUE</code> and is the prescribed method — tEIGEN models are not scale invariant.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfstart</code></td>
+<td>
+
+
+<p>The initialized value for the degrees of freedom. The default is 50.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>training</code></td>
+<td>
+
+
+<p>Optional indexing vector for the observations whose classification is taken to be known. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>known</code></td>
+<td>
+
+
+<p>A vector of known classifications that can be numeric or character - optional for clustering, necessary for classification. Must be the same length as the number of rows in the data set. If using in a true classification sense, give samples with unknown classification the value <code>NA</code> within <code>known</code> (see training example below).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gauss</code></td>
+<td>
+
+<p>Logical indicating if the algorithm should use the gaussian distribution. If <code>models="mclust"</code> or <code>"gaussian"</code> then <code>gauss=TRUE</code> is forced.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfupdate</code></td>
+<td>
+
+
+<p>Character string or logical indicating how the degrees of freedom should be estimated. The default is <code>"approx"</code> indicating a closed form approximation be used. Alternatively, <code>"numeric"</code> can be specified which makes use of <code>uniroot</code>. If <code>FALSE</code>, the value from <code>dfstart</code> is used and the degrees of freedom are not updated. If <code>TRUE</code>, <code>"numeric"</code> will be used for back-compatibility.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+
+
+<p>Vector (of size 2) giving tolerance values for the convergence criterion. First value is the tolerance level for iterated M-steps. Second value is tolerance for the EM algorithm: convergence is based on Aitken's acceleration, see cited papers for more information.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+
+
+<p>Logical indicating whether the running output should be displayed. This option is not available in parallel. What is displayed depends on the width of the R window. With a width of 80 or larger: time run, estimated time remaining, percent complete are all displayed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+
+
+<p>Vector (of size 2) giving maximum iteration number for the iterated M-steps and EM algorithm, respectively. A warning is displayed if either of these maximums are met, default for both is Inf (aka, no limit).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>convstyle</code></td>
+<td>
+
+
+<p>Character string specifying the method of determining convergence. Default is "aitkens" which uses a criteria based on Aitken's acceleration, but "lop" (lack of progress) may be used instead.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel.cores</code></td>
+<td>
+
+
+<p>Logical indicating whether to run teigen in parallel or not. If <code>TRUE</code>, then the function determines the number of cores available and uses all of them. Alternatively, a positive integer may be provided indicating the number of cores the user wishes to use for running in parallel. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ememargs</code></td>
+<td>
+
+<p>A list of the controls for the emEM initialization with named elements: 
+<code>numstart</code> - numeric, number of starts (default 25)
+<code>iter</code> - numeric, number of EM iterations (default 5)
+<code>model</code> - character string, model name to be used (default “UUUU” from C,U,I nomenclature...see details below) 
+<code>init</code> - character string, initialization method for emEM (default <code>hard</code>, or <code>soft</code>, or <code>kmeans</code>).
+The emEM initialiazation will run multiple, randomized initialization attempts for a limited number of iterations, and then continue the model-fitting process.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<p>Model specification (via the <code>models</code> argument) follows either the nomenclature discussed in Andrews and McNicholas (2012), or via the nomenclature popularized in other packages. In both cases, the nomenclature refers to the decomposition and constraints on the covariance matrix: </p>
+<p style="text-align: center;"><code class="reqn">\Sigma_g = \lambda_g D_g A_g D_g'</code>
+</p>
+
+<p>The nomenclature from Andrews and McNicholas (2012) gives four letters, each letter referring to (in order) <code class="reqn">\lambda</code>, D, A, and the degrees of freedom. Possible letters are <code>"U"</code> for unconstrained, <code>"C"</code> for constrained (across groups), and <code>"I"</code> for when the parameter is replaced by the appropriately sized identity matrix (where applicable). As an example, the string <code>"UICC"</code> would refer to the model where <code class="reqn">\Sigma_g = \lambda_g A</code> with degrees of freedom held equal across groups.
+</p>
+<p>The alternative nomenclature describes (in order) the volume (<code class="reqn">\lambda</code>), shape (A), orientation (D), and degrees of freedom in terms of <code>"V"</code>ariable, <code>"E"</code>qual, or the <code>"I"</code>dentity matrix. The example model discussed in the previous paragraph would then be called by <code>"VEIE"</code>.
+</p>
+<p>Possible univariate models are <code>c("univUU", "univUC", "univCU", "univCC")</code> where the first capital letter describes <code>"U"</code>nconstrained or <code>"C"</code>onstrained variance and the second capital letter refers to the degrees of freedom. Once again, <code>"V"</code>ariable or <code>"E"</code>qual can replace U and C, but this time the orders match between the nomenclatures.
+</p>
+<p>As many models as desired can be selected and ran via the vector supplied to <code>models</code>. More commonly, subsets can be called by the following character strings: 
+<code>"all"</code> runs all 28 tEIGEN models (default),
+<code>"dfunconstrained"</code> runs the 14 unconstrained degrees of freedom models, 
+<code>"dfconstrained"</code> runs the 14 constrained degrees of freedom models,  
+<code>"mclust"</code> runs the 10 MCLUST models using the multivariate Gaussian distribution rather than the multivariate t,
+<code>"gaussian"</code> is similar but includes four further mixture models than MCLUST,
+<code>"univariate"</code> runs the univariate models - will automatically be called if one of the previous shortcuts is used on univariate data. 
+</p>
+<p>Note that adding <code>"alt"</code> to the beginning of those previously mentioned characters strings will run the same models, but return results with the V-E-I nomenclature.
+</p>
+<p>Also note that for G=1, several models are equivalent (for example, UUUU and CCCC). Thus, for G=1 only one model from each set of equivalent models will be run.
+</p>
+
+
+<h3>Value</h3>
+
+
+
+
+
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Data used for clustering/classification.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>index</code></td>
+<td>
+<p>Indexing vector giving observations taken to be known (only available when classification is performed). </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classification</code></td>
+<td>
+<p>Vector of group classifications as determined by the BIC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bic</code></td>
+<td>
+<p>BIC of the best fitted model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modelname</code></td>
+<td>
+<p>Name of the best model according to the BIC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allbic</code></td>
+<td>
+<p>Matrix of BIC values according to model and G. A value of -Inf is returned when the model did not converge. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bestmodel</code></td>
+<td>
+<p>Character string giving best model (BIC) details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>G</code></td>
+<td>
+<p>Value corresponding to the number of components chosen by the BIC. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tab</code></td>
+<td>
+<p>Classification table for BIC-selected model (only available when <code>known</code> is given). When classification is used the “known” observations are left out of the table. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fuzzy</code></td>
+<td>
+<p>The fuzzy clustering matrix for the model selected by the BIC. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logl</code></td>
+<td>
+<p>The log-likelihood corresponding to the model with the best BIC. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter</code></td>
+<td>
+<p>The number of iterations until convergence for the model selected by the BIC.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>List containing the fitted parameters: <code>mean</code> - matrix of means where the rows correspond to the component and the columns are the variables; <code>sigma</code> - array of covariance matrices (multivariate) or variances (univariate); <code>lambda</code> - vector of scale parameters, or constants of proportionality; <code>d</code> - eigenvectors, or orientation matrices; <code>a</code> - diagonal matrix proportional to eigenvalues, or shape matrices; <code>df</code> - vector containing the degrees of freedom for each component; <code>weights</code> - matrix of the expected value of the characteristic weights; <code>pig</code> - a vector giving the mixing proportions. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iclresults</code></td>
+<td>
+<p>List containing all the previous outputs, except <code>x</code> and <code>index</code>, pertaining to the model chosen by the best ICL (all under the same name except <code>allicl</code> and <code>icl</code> are the equivalent of <code>allbic</code> and <code>bic</code>, respectively).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p>List containing a few of the original user inputs, for use by other dedicated functions of the <code>teigen</code> class.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+
+<p>Jeffrey L. Andrews, Jaymeson R. Wickins, Nicholas M. Boers, Paul D. McNicholas
+</p>
+
+
+<h3>References</h3>
+
+<p>Andrews JL and McNicholas PD. “Model-based clustering, classification, and discriminant analysis with the multivariate <em>t</em>-distribution: The <em>t</em>EIGEN family” <em>Statistics and Computing</em> 22(5), 1021–1029. 
+</p>
+<p>Andrews JL, McNicholas PD, and Subedi S (2011) “Model-based classification via mixtures of multivariate t-distributions” <em>Computational Statistics and Data Analysis</em> 55, 520–529.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>See package manual <code>tEIGEN</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###Note that only one model is run for each example
+###in order to reduce computation time
+
+#Clustering old faithful data with hard random start
+tfaith &lt;- teigen(faithful, models="UUUU", Gs=1:3, init="hard")
+plot(tfaith, what = "uncertainty")
+summary(tfaith)
+
+#Clustering old faithful with hierarchical starting values
+initial_list &lt;- list()
+clustree &lt;- hclust(dist(faithful))
+for(i in 1:3){
+	initial_list[[i]] &lt;- cutree(clustree,i)
+}
+tfaith &lt;- teigen(faithful, models="CUCU", Gs=1:3, init=initial_list)
+print(tfaith)
+
+#Classification with the iris data set
+#Introducing NAs is not required; this is to illustrate a `true' classification scenario
+irisknown &lt;- iris[,5]
+irisknown[134:150] &lt;- NA
+triris &lt;- teigen(iris[,-5], models="CUUU", init="uniform", known=irisknown)
+
+##Parallel examples:
+###Note: parallel.cores set to 2 in order to comply
+###with CRAN submission policies (set to higher
+###number or TRUE to automatically use all available cores)
+
+#Clustering old faithful data with tEIGEN
+tfaith &lt;- teigen(faithful, models="UUUU",
+parallel.cores=2, Gs=1:3, init="hard")
+plot(tfaith, what = "contour")
+
+#Classification with the iris data set 
+irisknown &lt;- iris[,5]
+irisknown[sample(1:nrow(iris),50)] &lt;- NA
+tiris &lt;- teigen(iris[,-5], parallel.cores=2, models="CUUU",
+init="uniform", known=irisknown)
+tiris$tab
+</code></pre>
+
+
+</div>

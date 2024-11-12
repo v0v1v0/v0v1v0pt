@@ -1,0 +1,122 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trackParticles</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Track particles</h2>
+
+<h3>Description</h3>
+
+<p><code>trackParticles</code> reconstructs trajectories by linking particles.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trackParticles(
+  particles,
+  L = 50,
+  R = 2,
+  weight = c(1, 1, 1),
+  costconstant = FALSE,
+  logsizes = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>particles</code></td>
+<td>
+<p>Object of class 'particles',
+obtained using <code>identifyParticles</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>L</code></td>
+<td>
+<p>Numeric. Maximum cost for linking a particle to another particle.
+When the cost is larger,
+particles will be not be linked (resulting in the begin or end of a segment).
+Default set at <code>50</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>Integer. Link to how many subsequent frames? Default set
+at <code>2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight</code></td>
+<td>
+<p>Vector containing 3 weights to calculate costs. Depending
+on the study system, users may want to value certain elements over others.
+For instance, when individuals can vary in size over frames
+(which happens when objects move away or towards a camera)
+the "size" weight may be decreased. Weights are ordered as follows;
+first number gives the weight for differences in x and y coordinates;
+second number
+gives the weight for particle size differences; third number gives the
+difference between the predicted location and the observed location. The
+latter is calculated using the location of the identified particle in the
+previous frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>costconstant</code></td>
+<td>
+<p>Logical. Default is <code>FALSE</code>. This increases the maximum
+cost L proportional to the number of images in between two frames (when R &gt; 1).
+Set to <code>TRUE</code> keeps maximum cost L constant for all 1:R frames.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>logsizes</code></td>
+<td>
+<p>Logical. Default is <code>FALSE</code>. Set to <code>TRUE</code> to take the
+natural logarithm of body sizes, when calculating the cost of linking two particles.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of class 'TrDm' and 'records'. Use 'summary' and 'plot'.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Marjolein Bruijning, Caspar A. Hallmann &amp; Marco D. Visser
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+dir.create("images")
+## Create image sequence
+traj &lt;- simulTrajec(path="images",
+                    nframes=30,nIndividuals=20,domain="square",
+                    h=0.01,rho=0.9,
+                    sizes=runif(20,0.004,0.006))
+## Load images
+dir &lt;- "images"
+allFullImages &lt;- loadImages (dirPictures=dir,nImages=1:30)
+stillBack &lt;- createBackground(allFullImages,method="mean")
+allImages &lt;- subtractBackground(stillBack)
+partIden &lt;- identifyParticles(allImages,threshold=-0.1,
+                                   pixelRange=c(3,400))
+records &lt;- trackParticles(particles,L=40,R=2)
+summary(records)
+plot(records,type="trajectories")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

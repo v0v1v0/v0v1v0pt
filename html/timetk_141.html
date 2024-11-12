@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_tbl</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Coerce time-series objects to tibble.</h2>
+
+<h3>Description</h3>
+
+<p>Coerce time-series objects to tibble.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_tbl(
+  data,
+  preserve_index = TRUE,
+  rename_index = "index",
+  timetk_idx = FALSE,
+  silent = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A time-series object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>preserve_index</code></td>
+<td>
+<p>Attempts to preserve a time series index. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rename_index</code></td>
+<td>
+<p>Enables the index column to be renamed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timetk_idx</code></td>
+<td>
+<p>Used to return a date / datetime index for
+regularized objects that contain a timetk "index" attribute.
+Refer to <code>tk_index()</code> for more information on returning index information
+from regularized timeseries objects (i.e. <code>ts</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Used to toggle printing of messages and warnings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters passed to the <code>tibble::as_tibble()</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tk_tbl</code> is designed
+to coerce time series objects (e.g. <code>xts</code>, <code>zoo</code>, <code>ts</code>, <code>timeSeries</code>, etc)
+to <code>tibble</code> objects. The main advantage is that the function keeps the
+date / date-time information from the underlying time-series object.
+</p>
+<p>When <code>preserve_index = TRUE</code> is specified, a new column,
+<code>index</code>, is created during object coercion, and the function attempts to preserve
+the date or date-time information. The date / date-time column name
+can be changed using the <code>rename_index</code> argument.
+</p>
+<p>The <code>timetk_idx</code> argument is applicable when coercing <code>ts</code> objects that were
+created using <code>tk_ts()</code> from an object that had a time base
+(e.g. <code>tbl</code>, <code>xts</code>, <code>zoo</code>).
+Setting <code>timetk_idx = TRUE</code> enables returning the timetk "index" attribute if present,
+which is the original (non-regularized) time-based index.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a <code>tibble</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tk_xts()</code>, <code>tk_zoo()</code>, <code>tk_zooreg()</code>, <code>tk_ts()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+data_tbl &lt;- tibble(
+    date = seq.Date(from = as.Date("2010-01-01"), by = 1, length.out = 5),
+    x    = seq(100, 120, by = 5)
+)
+
+
+### ts to tibble: Comparison between as.data.frame() and tk_tbl()
+data_ts &lt;- tk_ts(data_tbl, start = c(2010,1), freq = 365)
+
+# No index
+as.data.frame(data_ts)
+
+# Defualt index returned is regularized numeric index
+tk_tbl(data_ts)
+
+# Original date index returned (Only possible if original data has time-based index)
+tk_tbl(data_ts, timetk_idx = TRUE)
+
+
+### xts to tibble: Comparison between as.data.frame() and tk_tbl()
+data_xts &lt;- tk_xts(data_tbl)
+
+# Dates are character class stored in row names
+as.data.frame(data_xts)
+
+# Dates are appropriate date class and within the data frame
+tk_tbl(data_xts)
+
+
+### zooreg to tibble: Comparison between as.data.frame() and tk_tbl()
+data_zooreg &lt;- tk_zooreg(1:8, start = zoo::yearqtr(2000), frequency = 4)
+
+# Dates are character class stored in row names
+as.data.frame(data_zooreg)
+
+# Dates are appropriate zoo yearqtr class within the data frame
+tk_tbl(data_zooreg)
+
+
+### zoo to tibble: Comparison between as.data.frame() and tk_tbl()
+data_zoo &lt;- zoo::zoo(1:12, zoo::yearmon(2016 + seq(0, 11)/12))
+
+# Dates are character class stored in row names
+as.data.frame(data_zoo)
+
+# Dates are appropriate zoo yearmon class within the data frame
+tk_tbl(data_zoo)
+
+
+
+</code></pre>
+
+
+</div>

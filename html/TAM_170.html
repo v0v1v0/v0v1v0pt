@@ -1,0 +1,386 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tam.np</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Unidimensional Non- and Semiparametric Item Response Model
+</h2>
+
+<h3>Description</h3>
+
+<p>Conducts non- and semiparametric estimation of a unidimensional item response model
+for a single group allowing polytomous item responses (Rossi, Wang &amp; Ramsay, 2002).
+</p>
+<p>For dichotomous data, the function also allows group lasso penalty
+(<code>penalty_type="lasso"</code>; Breheny &amp; Huang, 2015; Yang &amp; Zhou, 2015) and a ridge penalty
+(<code>penalty_type="ridge"</code>; Rossi et al., 2002)
+which is applied to the nonlinear part of the basis expansion. This approach
+automatically detects deviations from a 2PL or a 1PL model (see Examples 2 and 3).
+See Details for model specification.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tam.np( dat, probs_init=NULL, pweights=NULL, lambda=NULL, control=list(),
+    model="2PL", n_basis=0, basis_type="hermite", penalty_type="lasso",
+    pars_init=NULL, orthonormalize=TRUE)
+
+## S3 method for class 'tam.np'
+summary(object, file=NULL, ...)
+
+## S3 method for class 'tam.np'
+IRT.cv(object, kfold=10, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dat</code></td>
+<td>
+
+<p>Matrix of integer item responses (starting from zero)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs_init</code></td>
+<td>
+<p>Array containing initial probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pweights</code></td>
+<td>
+
+<p>Optional vector of person weights
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>Numeric or vector of regularization parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+
+<p>List of control arguments, see <code>tam.mml</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>Specified target model. Can be <code>"2PL"</code> or <code>"1PL"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_basis</code></td>
+<td>
+<p>Number of basis functions</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basis_type</code></td>
+<td>
+<p>Type of basis function: <code>"bspline"</code> for B-splines
+or <code>"hermite"</code> for Gauss-Hermite polynomials
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalty_type</code></td>
+<td>
+<p>Lasso type penalty (<code>"lasso"</code>) or ridge
+penalty (<code>"ridge"</code>)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars_init</code></td>
+<td>
+<p>Optional matrix of initial item parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>orthonormalize</code></td>
+<td>
+<p>Logical indicating whether basis functions should
+be orthonormalized</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class <code>tam.np</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>Optional file name for summary output</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kfold</code></td>
+<td>
+<p>Number of folds in <code class="reqn">k</code>-fold cross-validation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The basis expansion approach is applied for the logit transformation of item
+response functions for dichotomous data. In more detail, it this assumed that
+</p>
+<p style="text-align: center;"><code class="reqn">P(X_i=1|\theta)=\psi( H_0(\theta) + H_1(\theta)</code>
+</p>
+
+<p>where <code class="reqn">H_0</code> is the target function type and <code class="reqn">H_1</code> is the semiparametric
+part which parameterizes model deviations. For the 2PL model (<code>model="2PL"</code>)
+it is <code class="reqn">H_0(\theta)=d_i + a_i \theta </code> and for the 1PL model
+(<code>model="1PL"</code>) we set <code class="reqn">H_1(\theta)=d_i + 1 \cdot \theta </code>.
+The model discrepancy is specified as a basis expansion approach
+</p>
+<p style="text-align: center;"><code class="reqn">H_1 ( \theta )=\sum_{h=1}^p \beta_{ih} f_h( \theta)</code>
+</p>
+<p> where <code class="reqn">f_h</code> are
+basis functions (possibly orthonormalized) and <code class="reqn">\beta_{ih}</code> are
+item parameters which should be estimated. Penalty functions are posed on the
+<code class="reqn">\beta_{ih}</code> coefficients. For the group lasso penalty, we specify the
+penalty <code class="reqn">J_{i,L1}=N \lambda \sqrt{p} \sqrt{ \sum_{h=1}^p \beta_{ih}^2 }</code> while for
+the ridge penalty it is <code class="reqn">J_{i,L2}=N \lambda \sum_{h=1}^p \beta_{ih}^2 </code>
+(<code class="reqn">N</code> denoting the sample size).
+</p>
+
+
+<h3>Value</h3>
+
+<p>List containing several entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>rprobs</code></td>
+<td>
+<p>Item response probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Used nodes for approximation of <code class="reqn">\theta</code> distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ik</code></td>
+<td>
+<p>Expected counts</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>like</code></td>
+<td>
+<p>Individual likelihood</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hwt</code></td>
+<td>
+<p>Individual posterior</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>item</code></td>
+<td>
+<p>Summary item parameter table</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>Estimated parameters</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>regularized</code></td>
+<td>
+<p>Logical indicating which items are regularized</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ic</code></td>
+<td>
+<p>List containing </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further values</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Breheny, P., &amp; Huang, J. (2015). Group descent algorithms for nonconvex penalized linear
+and logistic regression models with grouped predictors.
+<em>Statistics and Computing, 25</em>(2), 173-187.
+<a href="https://doi.org/10.1007/s11222-013-9424-2">doi:10.1007/s11222-013-9424-2</a>
+</p>
+<p>Rossi, N., Wang, X., &amp; Ramsay, J. O. (2002). Nonparametric item response function
+estimates with the EM algorithm.
+<em>Journal of Educational and Behavioral Statistics, 27</em>(3), 291-317.
+<a href="https://doi.org/10.3102/10769986027003291">doi:10.3102/10769986027003291</a>
+</p>
+<p>Yang, Y., &amp; Zou, H. (2015). A fast unified algorithm for solving group-lasso penalized
+learning problems. <em>Statistics and Computing, 25</em>(6), 1129-1141.
+<a href="https://doi.org/10.1007/s11222-014-9498-5">doi:10.1007/s11222-014-9498-5</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Nonparametric item response models can also be estimated with the
+<code>mirt::itemGAM</code> function in the <b>mirt</b> package and the
+<code>KernSmoothIRT::ksIRT</code> in the <b>KernSmoothIRT</b> package.
+</p>
+<p>See <code>tam.mml</code> and <code>tam.mml.2pl</code> for parametric item response
+models.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+#############################################################################
+# EXAMPLE 1: Nonparametric estimation polytomous data
+#############################################################################
+
+data(data.cqc02, package="TAM")
+dat &lt;- data.cqc02
+
+#** nonparametric estimation
+mod &lt;- TAM::tam.np(dat)
+
+#** extractor functions for objects of class 'tam.np'
+lmod &lt;- IRT.likelihood(mod)
+pmod &lt;- IRT.posterior(mod)
+rmod &lt;- IRT.irfprob(mod)
+emod &lt;- IRT.expectedCounts(mod)
+
+#############################################################################
+# EXAMPLE 2: Semiparametric estimation and detection of item misfit
+#############################################################################
+
+#- simulate data with two misfitting items
+set.seed(998)
+I &lt;- 10
+N &lt;- 1000
+a &lt;- stats::rnorm(I, mean=1, sd=.3)
+b &lt;- stats::rnorm(I, mean=0, sd=1)
+dat &lt;- matrix(NA, nrow=N, ncol=I)
+colnames(dat) &lt;- paste0("I",1:I)
+theta &lt;- stats::rnorm(N)
+for (ii in 1:I){
+    dat[,ii] &lt;- 1*(stats::runif(N) &lt; stats::plogis( a[ii]*(theta-b[ii] ) ))
+}
+
+#* first misfitting item with lower and upper asymptote
+ii &lt;- 1
+l &lt;- .3
+u &lt;- 1
+b[ii] &lt;- 1.5
+dat[,ii] &lt;- 1*(stats::runif(N) &lt; l + (u-l)*stats::plogis( a[ii]*(theta-b[ii] ) ))
+
+#* second misfitting item with non-monotonic item response function
+ii &lt;- 3
+dat[,ii] &lt;- (stats::runif(N) &lt; stats::plogis( theta-b[ii]+.6*theta^2))
+
+#- 2PL model
+mod0 &lt;- TAM::tam.mml.2pl(dat)
+
+#- lasso penalty with lambda of .05
+mod1 &lt;- TAM::tam.np(dat, n_basis=4, lambda=.05)
+
+#- lambda value of .03 using starting value of previous model
+mod2 &lt;- TAM::tam.np(dat, n_basis=4, lambda=.03, pars_init=mod1$pars)
+cmod2 &lt;- TAM::IRT.cv(mod2)  # cross-validated deviance
+
+#- lambda=.015
+mod3 &lt;- TAM::tam.np(dat, n_basis=4, lambda=.015, pars_init=mod2$pars)
+cmod3 &lt;- TAM::IRT.cv(mod3)
+
+#- lambda=.007
+mod4 &lt;- TAM::tam.np(dat, n_basis=4, lambda=.007, pars_init=mod3$pars)
+
+#- lambda=.001
+mod5 &lt;- TAM::tam.np(dat, n_basis=4, lambda=.001, pars_init=mod4$pars)
+
+#- final estimation using solution of mod3
+eps &lt;- .0001
+lambda_final &lt;- eps+(1-eps)*mod3$regularized   # lambda parameter for final estimate
+mod3b &lt;- TAM::tam.np(dat, n_basis=4, lambda=lambda_final, pars_init=mod3$pars)
+summary(mod1)
+summary(mod2)
+summary(mod3)
+summary(mod3b)
+summary(mod4)
+
+# compare models with respect to information criteria
+IRT.compareModels(mod0, mod1, mod2, mod3, mod3b, mod4, mod5)
+
+#-- compute item fit statistics RISE
+# regularized solution
+TAM::IRT.RISE(mod_p=mod1, mod_np=mod3)
+# regularized solution, final estimation
+TAM::IRT.RISE(mod_p=mod1, mod_np=mod3b, use_probs=TRUE)
+TAM::IRT.RISE(mod_p=mod1, mod_np=mod3b, use_probs=FALSE)
+# use TAM::IRT.RISE() function for computing the RMSD statistic
+TAM::IRT.RISE(mod_p=mod1, mod_np=mod1, use_probs=FALSE)
+
+#############################################################################
+# EXAMPLE 3: Mixed 1PL/2PL model
+#############################################################################
+
+#* simulate data with 2 2PL items and 8 1PL items
+set.seed(9877)
+N &lt;- 2000
+I &lt;- 10
+b &lt;- seq(-1,1,len=I)
+a &lt;- rep(1,I)
+a[c(3,8)] &lt;- c(.5, 2)
+theta &lt;- stats::rnorm(N, sd=1)
+dat &lt;- sirt::sim.raschtype(theta, b=b, fixed.a=a)
+
+#- 1PL model
+mod1 &lt;- TAM::tam.mml(dat)
+#- 2PL model
+mod2 &lt;- TAM::tam.mml.2pl(dat)
+#- 2PL model with penalty on slopes
+mod3 &lt;- TAM::tam.np(dat, lambda=.04, model="1PL", n_basis=0)
+summary(mod3)
+#- final mixed 1PL/2PL model
+lambda &lt;- 1*mod3$regularized
+mod4 &lt;- TAM::tam.np(dat, lambda=lambda, model="1PL", n_basis=0)
+summary(mod4)
+
+IRT.compareModels(mod1, mod2, mod3, mod4)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

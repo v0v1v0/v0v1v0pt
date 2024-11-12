@@ -1,0 +1,203 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>h_response_biomarkers_subgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Helper functions for tabulating biomarker effects on binary response by subgroup</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Helper functions which are documented here separately to not confuse the user
+when reading about the user-facing functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">h_rsp_to_logistic_variables(variables, biomarker)
+
+h_logistic_mult_cont_df(variables, data, control = control_logistic())
+
+h_tab_rsp_one_biomarker(df, vars, na_str = default_na_str(), .indent_mods = 0L)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>(named <code>list</code> of <code>string</code>)<br> list of additional analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>biomarker</code></td>
+<td>
+<p>(<code>string</code>)<br> the name of the biomarker variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> the dataset containing the variables to summarize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(named <code>list</code>)<br> controls for the response definition and the
+confidence level produced by <code>control_logistic()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> results for a single biomarker, as part of what is
+returned by <code>extract_rsp_biomarkers()</code> (it needs a couple of columns which are
+added by that high-level function relative to what is returned by <code>h_logistic_mult_cont_df()</code>,
+see the example).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> the names of statistics to be reported among:
+</p>
+
+<ul>
+<li> <p><code>n_tot</code>: Total number of patients per group.
+</p>
+</li>
+<li> <p><code>n_rsp</code>: Total number of responses per group.
+</p>
+</li>
+<li> <p><code>prop</code>: Total response proportion per group.
+</p>
+</li>
+<li> <p><code>or</code>: Odds ratio.
+</p>
+</li>
+<li> <p><code>ci</code>: Confidence interval of odds ratio.
+</p>
+</li>
+<li> <p><code>pval</code>: p-value of the effect.
+Note, the statistics <code>n_tot</code>, <code>or</code> and <code>ci</code> are required.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>h_rsp_to_logistic_variables()</code> returns a named <code>list</code> of elements <code>response</code>, <code>arm</code>, <code>covariates</code>, and <code>strata</code>.
+</p>
+</li></ul>
+<ul><li> <p><code>h_logistic_mult_cont_df()</code> returns a <code>data.frame</code> containing estimates and statistics for the selected biomarkers.
+</p>
+</li></ul>
+<ul><li> <p><code>h_tab_rsp_one_biomarker()</code> returns an <code>rtables</code> table object with the given statistics arranged in columns.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>h_rsp_to_logistic_variables()</code>: helps with converting the "response" function variable list
+to the "logistic regression" variable list. The reason is that currently there is an
+inconsistency between the variable names accepted by <code>extract_rsp_subgroups()</code> and <code>fit_logistic()</code>.
+</p>
+</li>
+<li> <p><code>h_logistic_mult_cont_df()</code>: prepares estimates for number of responses, patients and
+overall response rate, as well as odds ratio estimates, confidence intervals and p-values, for multiple
+biomarkers in a given single data set.
+<code>variables</code> corresponds to names of variables found in <code>data</code>, passed as a named list and requires elements
+<code>rsp</code> and <code>biomarkers</code> (vector of continuous biomarker variables) and optionally <code>covariates</code>
+and <code>strata</code>.
+</p>
+</li>
+<li> <p><code>h_tab_rsp_one_biomarker()</code>: Prepares a single sub-table given a <code>df_sub</code> containing
+the results for a single biomarker.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(forcats)
+
+adrs &lt;- tern_ex_adrs
+adrs_labels &lt;- formatters::var_labels(adrs)
+
+adrs_f &lt;- adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  mutate(rsp = AVALC == "CR")
+formatters::var_labels(adrs_f) &lt;- c(adrs_labels, "Response")
+
+# This is how the variable list is converted internally.
+h_rsp_to_logistic_variables(
+  variables = list(
+    rsp = "RSP",
+    covariates = c("A", "B"),
+    strata = "D"
+  ),
+  biomarker = "AGE"
+)
+
+# For a single population, estimate separately the effects
+# of two biomarkers.
+df &lt;- h_logistic_mult_cont_df(
+  variables = list(
+    rsp = "rsp",
+    biomarkers = c("BMRKR1", "AGE"),
+    covariates = "SEX"
+  ),
+  data = adrs_f
+)
+df
+
+# If the data set is empty, still the corresponding rows with missings are returned.
+h_coxreg_mult_cont_df(
+  variables = list(
+    rsp = "rsp",
+    biomarkers = c("BMRKR1", "AGE"),
+    covariates = "SEX",
+    strata = "STRATA1"
+  ),
+  data = adrs_f[NULL, ]
+)
+
+# Starting from above `df`, zoom in on one biomarker and add required columns.
+df1 &lt;- df[1, ]
+df1$subgroup &lt;- "All patients"
+df1$row_type &lt;- "content"
+df1$var &lt;- "ALL"
+df1$var_label &lt;- "All patients"
+
+h_tab_rsp_one_biomarker(
+  df1,
+  vars = c("n_tot", "n_rsp", "prop", "or", "ci", "pval")
+)
+
+</code></pre>
+
+
+</div>

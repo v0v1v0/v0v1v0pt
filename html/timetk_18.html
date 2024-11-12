@@ -1,0 +1,207 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>diff_vec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Differencing Transformation</h2>
+
+<h3>Description</h3>
+
+<p><code>diff_vec()</code> applies a Differencing Transformation.
+<code>diff_inv_vec()</code> inverts the differencing transformation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">diff_vec(
+  x,
+  lag = 1,
+  difference = 1,
+  log = FALSE,
+  initial_values = NULL,
+  silent = FALSE
+)
+
+diff_inv_vec(x, lag = 1, difference = 1, log = FALSE, initial_values = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector to be differenced or inverted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lag</code></td>
+<td>
+<p>Which lag (how far back) to be included in the differencing calculation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>difference</code></td>
+<td>
+<p>The number of differences to perform.
+</p>
+
+<ul>
+<li>
+<p> 1 Difference is equivalent to measuring period change.
+</p>
+</li>
+<li>
+<p> 2 Differences is equivalent to measuring period acceleration.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>If log differences should be calculated.
+<em>Note that difference inversion of a log-difference is approximate.</em></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_values</code></td>
+<td>
+<p>Only used in the <code>diff_vec_inv()</code> operation.
+A numeric vector of the initial values, which are used to invert differences.
+This vector is the original values that are the length of the <code>NA</code> missing differences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Whether or not to report the initial values used to invert the difference
+as a message.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Benefits:</strong>
+</p>
+<p>This function is <code>NA</code> padded by default so it works well with <code>dplyr::mutate()</code> operations.
+</p>
+<p><strong>Difference Calculation</strong>
+</p>
+<p>Single differencing, <code>diff_vec(x_t)</code> is equivalent to: <code>x_t - x_t1</code>,
+where the subscript _t1 indicates the first lag.
+<em>This transformation can be interpereted as change.</em>
+</p>
+<p><strong>Double Differencing Calculation</strong>
+</p>
+<p>Double differencing, <code>diff_vec(x_t, difference = 2)</code> is equivalent to:
+<code style="white-space: pre;">⁠(x_t - x_t1) - (x_t - x_t1)_t1⁠</code>, where the subscript _t1 indicates the first lag.
+<em>This transformation can be interpereted as acceleration.</em>
+</p>
+<p><strong>Log Difference Calculation</strong>
+</p>
+<p>Log differencing, <code>diff_vec(x_t, log = TRUE)</code> is equivalent to:
+<code>log(x_t) - log(x_t1) = log(x_t / x_t1)</code>, where x_t is the series and x_t1 is the first lag.
+</p>
+<p>The 1st difference <code>diff_vec(difference = 1, log = TRUE)</code> has an interesting property
+where <code>diff_vec(difference = 1, log = TRUE) %&gt;% exp()</code> is approximately <em>1 + rate of change.</em>
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric vector
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Advanced Differencing and Modeling:
+</p>
+
+<ul>
+<li> <p><code>step_diff()</code> - Recipe for <code>tidymodels</code> workflow
+</p>
+</li>
+<li> <p><code>tk_augment_differences()</code> - Adds many differences to a <code>data.frame</code> (<code>tibble</code>)
+</p>
+</li>
+</ul>
+<p>Additional Vector Functions:
+</p>
+
+<ul>
+<li>
+<p> Box Cox Transformation: <code>box_cox_vec()</code>
+</p>
+</li>
+<li>
+<p> Lag Transformation: <code>lag_vec()</code>
+</p>
+</li>
+<li>
+<p> Differencing Transformation: <code>diff_vec()</code>
+</p>
+</li>
+<li>
+<p> Rolling Window Transformation: <code>slidify_vec()</code>
+</p>
+</li>
+<li>
+<p> Loess Smoothing Transformation: <code>smooth_vec()</code>
+</p>
+</li>
+<li>
+<p> Fourier Series: <code>fourier_vec()</code>
+</p>
+</li>
+<li>
+<p> Missing Value Imputation for Time Series: <code>ts_impute_vec()</code>, <code>ts_clean_vec()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# --- USAGE ----
+
+diff_vec(1:10, lag = 2, difference = 2) %&gt;%
+    diff_inv_vec(lag = 2, difference = 2, initial_values = 1:4)
+
+# --- VECTOR ----
+
+# Get Change
+1:10 %&gt;% diff_vec()
+
+# Get Acceleration
+1:10 %&gt;% diff_vec(difference = 2)
+
+# Get approximate rate of change
+1:10 %&gt;% diff_vec(log = TRUE) %&gt;% exp() - 1
+
+
+# --- MUTATE ----
+
+m4_daily %&gt;%
+    group_by(id) %&gt;%
+    mutate(difference = diff_vec(value, lag = 1)) %&gt;%
+    mutate(
+        difference_inv = diff_inv_vec(
+            difference,
+            lag = 1,
+            # Add initial value to calculate the inverse difference
+            initial_values = value[1]
+        )
+    )
+
+
+
+</code></pre>
+
+
+</div>

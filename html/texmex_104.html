@@ -1,0 +1,97 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>migpdCoefs</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Change values of parameters in a migpd object</h2>
+
+<h3>Description</h3>
+
+<p>Change the values of parameters in a <code>migpd</code> object. You might want to
+do this after modelling marginal distributions as functions of covariates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">migpdCoefs(object, which, coefs)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object of class <code>migpd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>Which models in the <code>migpd</code> object you want to change.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coefs</code></td>
+<td>
+<p>The coefficients that you want to change to. If <code>which</code>
+has length 1, <code>coefs</code> can be a vector of parameters.  Otherwise, it
+should be a list of vectors, and the list should have the same length as
+<code>which</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>migpd</code> object. See the help for <code>migpd</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Harry Southworth
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>migpd</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(MASS)
+liver &lt;- liver
+liver$ndose &lt;- as.numeric(liver$dose)
+d &lt;- data.frame(alt = resid(rlm(log(ALT.M) ~ log(ALT.B) + ndose, data=liver)),
+                ast = resid(rlm(log(AST.M) ~ log(AST.B) + ndose, data=liver)),
+                alp = resid(rlm(log(ALP.M) ~ log(ALP.B) + ndose, data=liver)),
+                tbl = resid(rlm(log(TBL.M) ~ log(TBL.B) + ndose, data=liver)))
+
+Dgpds &lt;- migpd(d[liver$dose == "D", 1:4], mqu=.7)
+
+d$ndose &lt;- liver$ndose
+galt &lt;- evm("alt", data=d, qu=.7, xi = ~ ndose)
+gast &lt;- evm("ast", data=d, qu=.7, xi = ~ ndose)
+galp &lt;- evm("alp", data=d, qu=.7, xi = ~ ndose)
+
+altco &lt;- predict(galt,type="lp",newdata=data.frame(ndose=4))$obj$link[1:2]
+astco &lt;- predict(gast,type="lp",newdata=data.frame(ndose=4))$obj$link[1:2]
+alpco &lt;- predict(galp,type="lp",newdata=data.frame(ndose=4))$obj$link[1:2]
+
+Dgpd &lt;- migpdCoefs(Dgpds, which=c("alt", "ast", "alp"),
+                   coefs=list(altco, astco, alpco))
+
+summary(Dgpd)
+summary(Dgpds)
+
+
+</code></pre>
+
+
+</div>

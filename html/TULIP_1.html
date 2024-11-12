@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>adjten</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adjust tensor for covariates.
+</h2>
+
+<h3>Description</h3>
+
+<p>Adjusts tensor with respect to covariates to achieve a more accurate performance. Tensor depends on the covariates through a linear regression model. The function returns the coefficients of covariates in regression and adjusted tensor list for further classifier modeling. It estimates coefficients based on training data, and then adjusts training tensor. When testing data is provided, the function will automatically adjust testing data by learned coefficients as well.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">adjten(x, z, y, testx = NULL, testz = NULL, is.centered = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Input tensor or matrix list of length <code class="reqn">N</code>, where <code class="reqn">N</code> is the number of observations. Each element of the list is a tensor or matrix. The order of tensor can be any integer not less than 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>z</code></td>
+<td>
+<p>Input covariate matrix of dimension <code class="reqn">N \times q</code>, where <code class="reqn">q&lt;N</code>. Each row of <code>z</code> is an observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Class label vector of dimention <code class="reqn">N\times 1</code>. For <code>K</code> class problems, <code>y</code> takes values in <code class="reqn">\{1,\cdots,\code{K}\}</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testx</code></td>
+<td>
+<p>Input testing tensor or matrix list. Each element of the list is a test case. When <code>testx</code> is not provided, the function will only adjust training data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testz</code></td>
+<td>
+<p>Input testing covariate matrix with each row being an observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is.centered</code></td>
+<td>
+<p>Indicates whether the input tensor and covariates have already been centered by their within class mean or not. If <code>is.centered</code> is FALSE, the function <code>adjten</code> will center data by class. If <code>is.centered</code> is TRUE, the function will skip the centering step.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The model CATCH assumes the linear relationship bewteen covariates and tensor as
+</p>
+<p style="text-align: center;"><code class="reqn">\mathbf{X}=\boldsymbol{\mu}_k+\boldsymbol{\alpha}\overline{\times}_{M+1}\mathbf{Z}+\mathbf{E},</code>
+</p>
+<p> where <code class="reqn">\boldsymbol{\alpha}</code> is the matrix of estimated coefficient of covariates.
+The function removes the effects of covariates on response variable through tensor and obtain <code class="reqn">\mathbf{X}-\boldsymbol{\alpha}\overline{\times}_{M+1}\mathbf{Z}</code> as adjusted tensor to fit tensor discriminant analysis model.
+</p>
+<p>In estimating <code class="reqn">\boldsymbol{\alpha}</code>, which is the <code>alpha</code> in the package, <code>adjten</code> first centers both tensor and covariates within their individual classes, then performs tensor response regression which regresses <code class="reqn">{\mathbf{X}}</code> on <code class="reqn">{\mathbf{Z}}</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>The estimated coefficients of covariates to plug in classifier. <code>gamma</code> is the <code class="reqn">\boldsymbol{\gamma}_k</code> defined function <code>catch</code> of dimension <code class="reqn">q\times (K-1)</code>, where <code>q</code> is the size of covariates and <code>K</code> is the number of classes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xres</code></td>
+<td>
+<p>Adjusted training tensor list <code class="reqn">\mathbf{X}-\boldsymbol{\alpha}\overline{\times}_{M+1}\mathbf{Z}</code> after adjusting for covariates. The effect of the covariate is removed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>testxres</code></td>
+<td>
+<p>Adjusted testing tensor list <code class="reqn">\mathbf{X}-\boldsymbol{\alpha}\overline{\times}_{M+1}\mathbf{Z}</code> after adjusting for covariates. The effect of the covariate is removed.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Yuqing Pan, Qing Mai, Xin Zhang
+</p>
+
+
+<h3>References</h3>
+
+<p>Pan, Y., Mai, Q., and Zhang, X. (2018), "Covariate-Adjusted Tensor Classification in High-Dimensions." Journal of the American Statistical Association, <em>accepted</em>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>catch</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 20
+p &lt;- 4
+k &lt;- 2
+nvars &lt;- p*p*p
+x &lt;- array(list(),n)
+vec_x &lt;- matrix(rnorm(n*nvars),nrow=n,ncol=nvars)
+vec_x[1:10,] &lt;- vec_x[1:10,]+2
+z &lt;- matrix(rnorm(n*2),nrow=n,ncol=2)
+z[1:10,] &lt;- z[1:10,]+0.5
+y &lt;- c(rep(1,10),rep(2,10))
+for (i in 1:n){
+  x[[i]] &lt;- array(vec_x[i,],dim=c(p,p,p))
+}
+obj &lt;- adjten(x, z, y)
+</code></pre>
+
+
+</div>

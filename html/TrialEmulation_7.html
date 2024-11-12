@@ -1,0 +1,313 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data_preparation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Prepare data for the sequence of emulated target trials</h2>
+
+<h3>Description</h3>
+
+<p>This function  expands observational data in the person-time format (i.e., the  ‘long’ format) to emulate a sequence
+of target trials and also estimates the inverse probability of treatment and censoring weights as required.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data_preparation(
+  data,
+  id = "id",
+  period = "period",
+  treatment = "treatment",
+  outcome = "outcome",
+  eligible = "eligible",
+  model_var = NULL,
+  outcome_cov = ~1,
+  estimand_type = c("ITT", "PP", "As-Treated"),
+  switch_n_cov = ~1,
+  switch_d_cov = ~1,
+  first_period = NA,
+  last_period = NA,
+  use_censor_weights = FALSE,
+  cense = NA,
+  pool_cense = c("none", "both", "numerator"),
+  cense_d_cov = ~1,
+  cense_n_cov = ~1,
+  eligible_wts_0 = NA,
+  eligible_wts_1 = NA,
+  where_var = NULL,
+  data_dir,
+  save_weight_models = FALSE,
+  glm_function = "glm",
+  chunk_size = 500,
+  separate_files = FALSE,
+  quiet = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>data.frame</code> containing all the required variables in the person-time format, i.e., the  ‘long’ format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Name of the variable for identifiers of the individuals.  Default is ‘id’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>Name of the variable for the visit/period.   Default is ‘period’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment</code></td>
+<td>
+<p>Name of the variable  for the treatment indicator at that visit/period. Default is ‘treatment’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outcome</code></td>
+<td>
+<p>Name of the variable for the indicator of the outcome event at that visit/period.  Default is
+‘outcome’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eligible</code></td>
+<td>
+<p>Name of the variable for the indicator of eligibility for the target trial at that visit/period.
+Default is ‘eligible’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model_var</code></td>
+<td>
+<p>Treatment variables to be included in the marginal structural model for the emulated trials.
+<code>model_var = "assigned_treatment"</code> will create a variable <code>assigned_treatment</code> that is the assigned treatment at
+the trial baseline, typically used for ITT and per-protocol analyses. <code>model_var = "dose"</code> will create a variable
+<code>dose</code> that is the cumulative number of  treatments received since the trial baseline, typically used in as-treated
+analyses.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outcome_cov</code></td>
+<td>
+<p>A RHS formula with baseline covariates to be adjusted for in the marginal structural model for the
+emulated trials. Note that if a time-varying covariate is specified in <code>outcome_cov</code>, only its value at each of the
+trial baselines will be included in the expanded data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimand_type</code></td>
+<td>
+<p>Specify the estimand for the causal analyses in the sequence of emulated trials. <code>estimand_type = "ITT"</code> will perform intention-to-treat analyses, where treatment switching after trial baselines are ignored.
+<code>estimand_type = "PP"</code> will perform per-protocol analyses, where individuals' follow-ups are artificially censored
+and inverse probability of treatment weighting is applied. <code>estimand_type = "As-Treated"</code> will fit a standard
+marginal structural model for all possible treatment sequences, where individuals' follow-ups are not artificially
+censored  but treatment switching after trial baselines are accounted for by applying inverse probability of
+treatment weighting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>switch_n_cov</code></td>
+<td>
+<p>A RHS formula to specify the logistic models for estimating the numerator terms of the inverse
+probability of treatment weights. A derived variable named <code>time_on_regime</code> containing the duration of time that
+the individual has been on the current treatment/non-treatment is available for use in these models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>switch_d_cov</code></td>
+<td>
+<p>A RHS formula to specify the logistic models for estimating the denominator terms of the inverse
+probability of treatment weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>first_period</code></td>
+<td>
+<p>First time period to be set as trial baseline  to start expanding the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>last_period</code></td>
+<td>
+<p>Last time period to be set as trial baseline  to start expanding the data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_censor_weights</code></td>
+<td>
+<p>Require the inverse probability of censoring weights. If <code>use_censor_weights = TRUE</code>, then
+the variable name of the censoring indicator needs to be provided in the argument <code>cense</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cense</code></td>
+<td>
+<p>Variable name for the censoring indicator. Required if <code>use_censor_weights = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pool_cense</code></td>
+<td>
+<p>Fit pooled or separate censoring models for those treated and those untreated at the immediately
+previous visit. Pooling can be specified for the models for the numerator and denominator terms of the inverse
+probability of censoring weights. One of <code>"none"</code>, <code>"numerator"</code>, or <code>"both"</code> (default is <code>"none"</code> except when
+<code>estimand_type = "ITT"</code> then default is <code>"numerator"</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cense_d_cov</code></td>
+<td>
+<p>A RHS formula to specify the logistic models for estimating the denominator terms of the inverse
+probability of censoring weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cense_n_cov</code></td>
+<td>
+<p>A RHS formula to specify the logistic models for estimating the numerator terms of the inverse
+probability of censoring weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eligible_wts_0</code></td>
+<td>
+<p>See definition for <code>eligible_wts_1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eligible_wts_1</code></td>
+<td>
+<p>Exclude some observations when fitting the models for the inverse probability of treatment
+weights. For example, if it is assumed that an individual will stay on treatment for at least 2 visits, the first 2
+visits  after treatment initiation by definition have a probability of staying on the treatment of 1.0 and should
+thus be excluded from the weight models for those who are on treatment at the immediately previous visit. Users can
+define a variable that indicates that these 2 observations are ineligible for the weight model for those who are on
+treatment at the immediately previous visit and add the variable name in the argument <code>eligible_wts_1</code>. Similar
+definitions are applied to <code>eligible_wts_0</code> for excluding observations when fitting the models for the inverse
+probability of treatment weights for those who are not on treatment at the immediately previous visit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>where_var</code></td>
+<td>
+<p>Specify the variable names that will be used to define subgroup conditions when fitting the marginal
+structural model for a subgroup of individuals. Need to specify jointly with the argument <code>where_case</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data_dir</code></td>
+<td>
+<p>Directory to save model objects when <code>save_weight_models=TRUE</code> and expanded data as separate CSV
+files names as <code>trial_i.csv</code>s if <code>separate_files = TRUE</code>. If the specified directory does not exist it will be
+created. If the directory already contains trial files, an error will occur, other files may be overwritten.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>save_weight_models</code></td>
+<td>
+<p>Save model objects for estimating the weights in <code>data_dir</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>glm_function</code></td>
+<td>
+<p>Specify which glm function to use for the marginal structural model from the <code>stats</code> or <code>parglm</code>
+packages. The default function is the <code>glm</code> function in the <code>stats</code> package. Users can also specify <code>glm_function = "parglm"</code> such that the <code>parglm</code> function in the <code>parglm</code> package can be used for fitting generalized linear models
+in parallel. The default control setting for  <code>parglm</code> is <code>nthreads = 4</code> and <code>method = "FAST"</code>, where four cores
+and Fisher information are used for faster computation. Users can change the default control setting by passing the
+arguments <code>nthreads</code> and <code>method</code> in the <code>parglm.control</code> function of the <code>parglm</code> package, or alternatively, by
+passing a <code>control</code> argument with a list produced by <code>parglm.control(nthreads = , method = )</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chunk_size</code></td>
+<td>
+<p>Number of individuals whose data to  be processed in one chunk when <code>separate_files = TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>separate_files</code></td>
+<td>
+<p>Save expanded data in separate CSV files for each trial.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quiet</code></td>
+<td>
+<p>Suppress the printing of progress messages and summaries of the fitted models.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>glm_function</code>. This may be used to specify initial values of parameters or
+arguments to <code>control</code>. See stats::glm, parglm::parglm and <code>parglm::parglm.control()</code> for more information.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The arguments <code>chunk_size</code> and <code>separate_files</code> allow for processing of large datasets that would not fit in
+memory once expanded. When <code>separate_files = TRUE</code>, the input data are processed in chunks of individuals and saved
+into separate files for each emulated trial. These separate files can be sampled by case-control sampling to create
+a reduced dataset for the modelling.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>TE_data_prep</code>, which can either be sampled from (case_control_sampling_trials) or
+directly used in a model (trial_msm). It contains the elements
+</p>
+
+<dl>
+<dt>data</dt>
+<dd>
+<p>the expanded dataset for all emulated trials. If <code>separate_files = FALSE</code>, it is  a <code>data.table</code>; if
+<code>separate_files = TRUE</code>, it is a character vector with the file path of the expanded data as CSV files.</p>
+</dd>
+<dt>min_period</dt>
+<dd>
+<p>index for the first trial in the expanded data</p>
+</dd>
+<dt>max_period</dt>
+<dd>
+<p>index for the last trial in the expanded data</p>
+</dd>
+<dt>N</dt>
+<dd>
+<p>the total number of observations in the expanded data</p>
+</dd>
+<dt>data_template</dt>
+<dd>
+<p>a zero-row <code>data.frame</code>  with the columns and attributes of the expanded data</p>
+</dd>
+<dt>switch_models</dt>
+<dd>
+<p>a list of summaries of the models fitted for inverse probability of treatment weights,
+if <code>estimand_type</code> is <code>"PP"</code> or <code>"As-Treated"</code></p>
+</dd>
+<dt>censor_models</dt>
+<dd>
+<p>a list of summaries of the models fitted for inverse probability of censoring weights,
+if <code>use_censor_weights=TRUE</code></p>
+</dd>
+<dt>args</dt>
+<dd>
+<p>a list contain the parameters used to prepare the data and fit the weight models</p>
+</dd>
+</dl>
+</div>

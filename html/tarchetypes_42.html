@@ -1,0 +1,360 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_files_input</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Dynamic branching over input files or URLs</h2>
+
+<h3>Description</h3>
+
+<p>Dynamic branching over input files or URLs.
+</p>
+<p><code>tar_files_input()</code> expects a unevaluated symbol for the <code>name</code> argument,
+whereas
+<code>tar_files_input_raw()</code> expects a character string for <code>name</code>.
+See the examples
+for a demo.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_files_input(
+  name,
+  files,
+  batches = length(files),
+  format = c("file", "file_fast", "url", "aws_file"),
+  repository = targets::tar_option_get("repository"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+
+tar_files_input_raw(
+  name,
+  files,
+  batches = length(files),
+  format = c("file", "file_fast", "url", "aws_file"),
+  repository = targets::tar_option_get("repository"),
+  iteration = targets::tar_option_get("iteration"),
+  error = targets::tar_option_get("error"),
+  memory = targets::tar_option_get("memory"),
+  garbage_collection = targets::tar_option_get("garbage_collection"),
+  priority = targets::tar_option_get("priority"),
+  resources = targets::tar_option_get("resources"),
+  cue = targets::tar_option_get("cue"),
+  description = targets::tar_option_get("description")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Name of the target.
+<code>tar_files_input()</code> expects a unevaluated symbol for the <code>name</code> argument,
+whereas
+<code>tar_files_input_raw()</code> expects a character string for <code>name</code>.
+See the examples
+for a demo.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>files</code></td>
+<td>
+<p>Nonempty character vector of known existing input files
+to track for changes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batches</code></td>
+<td>
+<p>Positive integer of length 1, number of batches
+to partition the files. The default is one file per batch
+(maximum number of batches) which is simplest to handle but
+could cause a lot of overhead and consume a lot of computing resources.
+Consider reducing the number of batches below the number of files
+for heavy workloads.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>format</code></td>
+<td>
+<p>Character, either <code>"file"</code>, <code>"file_fast"</code>, or <code>"url"</code>.
+See the <code>format</code> argument of <code>targets::tar_target()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>repository</code></td>
+<td>
+<p>Character of length 1, remote repository for target
+storage. Choices:
+</p>
+
+<ul>
+<li> <p><code>"local"</code>: file system of the local machine.
+</p>
+</li>
+<li> <p><code>"aws"</code>: Amazon Web Services (AWS) S3 bucket. Can be configured
+with a non-AWS S3 bucket using the <code>endpoint</code> argument of
+<code>tar_resources_aws()</code>, but versioning capabilities may be lost
+in doing so.
+See the cloud storage section of
+<a href="https://books.ropensci.org/targets/data.html">https://books.ropensci.org/targets/data.html</a>
+for details for instructions.
+</p>
+</li>
+<li> <p><code>"gcp"</code>: Google Cloud Platform storage bucket.
+See the cloud storage section of
+<a href="https://books.ropensci.org/targets/data.html">https://books.ropensci.org/targets/data.html</a>
+for details for instructions.
+</p>
+</li>
+<li>
+<p> A character string from <code>tar_repository_cas()</code> for content-addressable
+storage.
+</p>
+</li>
+</ul>
+<p>Note: if <code>repository</code> is not <code>"local"</code> and <code>format</code> is <code>"file"</code>
+then the target should create a single output file.
+That output file is uploaded to the cloud and tracked for changes
+where it exists in the cloud. The local file is deleted after
+the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iteration</code></td>
+<td>
+<p>Character, iteration method. Must be a method
+supported by the <code>iteration</code> argument of <code>targets::tar_target()</code>.
+The iteration method for the upstream target is always <code>"list"</code>
+in order to support batching.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error</code></td>
+<td>
+<p>Character of length 1, what to do if the target
+stops and throws an error. Options:
+</p>
+
+<ul>
+<li> <p><code>"stop"</code>: the whole pipeline stops and throws an error.
+</p>
+</li>
+<li> <p><code>"continue"</code>: the whole pipeline keeps going.
+</p>
+</li>
+<li> <p><code>"null"</code>: The errored target continues and returns <code>NULL</code>.
+The data hash is deliberately wrong so the target is not
+up to date for the next run of the pipeline.
+</p>
+</li>
+<li> <p><code>"abridge"</code>: any currently running targets keep running,
+but no new targets launch after that.
+</p>
+</li>
+<li> <p><code>"trim"</code>: all currently running targets stay running. A queued
+target is allowed to start if:
+</p>
+
+<ol>
+<li>
+<p> It is not downstream of the error, and
+</p>
+</li>
+<li>
+<p> It is not a sibling branch from the same <code>tar_target()</code> call
+(if the error happened in a dynamic branch).
+</p>
+</li>
+</ol>
+<p>The idea is to avoid starting any new work that the immediate error
+impacts. <code>error = "trim"</code> is just like <code>error = "abridge"</code>,
+but it allows potentially healthy regions of the dependency graph
+to begin running.
+(Visit <a href="https://books.ropensci.org/targets/debugging.html">https://books.ropensci.org/targets/debugging.html</a>
+to learn how to debug targets using saved workspaces.)
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>memory</code></td>
+<td>
+<p>Character of length 1, memory strategy.
+If <code>"persistent"</code>, the target stays in memory
+until the end of the pipeline (unless <code>storage</code> is <code>"worker"</code>,
+in which case <code>targets</code> unloads the value from memory
+right after storing it in order to avoid sending
+copious data over a network).
+If <code>"transient"</code>, the target gets unloaded
+after every new target completes.
+Either way, the target gets automatically loaded into memory
+whenever another target needs the value.
+For cloud-based dynamic files
+(e.g. <code>format = "file"</code> with <code>repository = "aws"</code>),
+this memory strategy applies to the
+temporary local copy of the file:
+<code>"persistent"</code> means it remains until the end of the pipeline
+and is then deleted,
+and <code>"transient"</code> means it gets deleted as soon as possible.
+The former conserves bandwidth,
+and the latter conserves local storage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>garbage_collection</code></td>
+<td>
+<p>Logical, whether to run <code>base::gc()</code>
+just before the target runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priority</code></td>
+<td>
+<p>Numeric of length 1 between 0 and 1. Controls which
+targets get deployed first when multiple competing targets are ready
+simultaneously. Targets with priorities closer to 1 get dispatched earlier
+(and polled earlier in <code>tar_make_future()</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resources</code></td>
+<td>
+<p>Object returned by <code>tar_resources()</code>
+with optional settings for high-performance computing
+functionality, alternative data storage formats,
+and other optional capabilities of <code>targets</code>.
+See <code>tar_resources()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cue</code></td>
+<td>
+<p>An optional object from <code>tar_cue()</code>
+to customize the rules that decide whether the target is up to date.
+Only applies to the downstream target. The upstream target always runs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>description</code></td>
+<td>
+<p>Character of length 1, a custom free-form human-readable
+text description of the target. Descriptions appear as target labels
+in functions like <code>tar_manifest()</code> and <code>tar_visnetwork()</code>,
+and they let you select subsets of targets for the <code>names</code> argument of
+functions like <code>tar_make()</code>. For example,
+<code>tar_manifest(names = tar_described_as(starts_with("survival model")))</code>
+lists all the targets whose descriptions start with the character
+string <code>"survival model"</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_files_input()</code> is like <code>tar_files()</code>
+but more convenient when the files in question already
+exist and are known in advance. Whereas <code>tar_files()</code>
+always appears outdated (e.g. with <code>tar_outdated()</code>)
+because it always needs to check which files it needs to
+branch over, <code>tar_files_input()</code> will appear up to date
+if the files have not changed since last <code>tar_make()</code>.
+In addition, <code>tar_files_input()</code> automatically groups
+input files into batches to reduce overhead and
+increase the efficiency of parallel processing.
+</p>
+<p><code>tar_files_input()</code> creates a pair of targets, one upstream
+and one downstream. The upstream target does some work
+and returns some file paths, and the downstream
+target is a pattern that applies <code>format = "file"</code>,
+<code>format = "file_fast"</code>, or <code>format = "url"</code>.
+This is the correct way to dynamically
+iterate over file/url targets. It makes sure any downstream patterns
+only rerun some of their branches if the files/urls change.
+For more information, visit
+<a href="https://github.com/ropensci/targets/issues/136">https://github.com/ropensci/targets/issues/136</a> and
+<a href="https://github.com/ropensci/drake/issues/1302">https://github.com/ropensci/drake/issues/1302</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of two targets, one upstream and one downstream.
+The upstream one does some work and returns some file paths,
+and the downstream target is a pattern that applies <code>format = "file"</code>
+or <code>format = "url"</code>.
+See the "Target objects" section for background.
+</p>
+
+
+<h3>Target objects</h3>
+
+<p>Most <code>tarchetypes</code> functions are target factories,
+which means they return target objects
+or lists of target objects.
+Target objects represent skippable steps of the analysis pipeline
+as described at <a href="https://books.ropensci.org/targets/">https://books.ropensci.org/targets/</a>.
+Please read the walkthrough at
+<a href="https://books.ropensci.org/targets/walkthrough.html">https://books.ropensci.org/targets/walkthrough.html</a>
+to understand the role of target objects in analysis pipelines.
+</p>
+<p>For developers,
+<a href="https://wlandau.github.io/targetopia/contributing.html#target-factories">https://wlandau.github.io/targetopia/contributing.html#target-factories</a>
+explains target factories (functions like this one which generate targets)
+and the design specification at
+<a href="https://books.ropensci.org/targets-design/">https://books.ropensci.org/targets-design/</a>
+details the structure and composition of target objects.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other Dynamic branching over files: 
+<code>tar_files()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_LONG_EXAMPLES"), "true")) {
+targets::tar_dir({ # tar_dir() runs code from a temporary directory.
+targets::tar_script({
+  library(tarchetypes)
+  # Do not use temp files in real projects
+  # or else your targets will always rerun.
+  paths &lt;- unlist(replicate(4, tempfile()))
+  file.create(paths)
+  list(
+    tar_files_input(
+      name = x,
+      files = paths,
+      batches = 2
+    ),
+    tar_files_input_raw(
+      name = "y",
+      files = paths,
+      batches = 2
+    )
+  )
+})
+targets::tar_make()
+targets::tar_read(x)
+targets::tar_read(x, branches = 1)
+})
+}
+</code></pre>
+
+
+</div>

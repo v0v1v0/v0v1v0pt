@@ -1,0 +1,167 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dataset_bucket_by_sequence_length</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A transformation that buckets elements in a <code>Dataset</code> by length</h2>
+
+<h3>Description</h3>
+
+<p>A transformation that buckets elements in a <code>Dataset</code> by length
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dataset_bucket_by_sequence_length(
+  dataset,
+  element_length_func,
+  bucket_boundaries,
+  bucket_batch_sizes,
+  padded_shapes = NULL,
+  padding_values = NULL,
+  pad_to_bucket_boundary = FALSE,
+  no_padding = FALSE,
+  drop_remainder = FALSE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A <code>tf_dataset</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>element_length_func</code></td>
+<td>
+<p>function from element in <code>Dataset</code> to <code>tf$int32</code>,
+determines the length of the element, which will determine the bucket it
+goes into.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bucket_boundaries</code></td>
+<td>
+<p>integers, upper length boundaries of the buckets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bucket_batch_sizes</code></td>
+<td>
+<p>integers, batch size per bucket. Length should be
+<code>length(bucket_boundaries) + 1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padded_shapes</code></td>
+<td>
+<p>Nested structure of <code>tf.TensorShape</code> (returned by <code>tensorflow::shape()</code>)
+to pass to <code>tf.data.Dataset.padded_batch</code>. If not provided, will use
+<code>dataset.output_shapes</code>, which will result in variable length dimensions
+being padded out to the maximum length in each batch.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding_values</code></td>
+<td>
+<p>Values to pad with, passed to
+<code>tf.data.Dataset.padded_batch</code>. Defaults to padding with 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pad_to_bucket_boundary</code></td>
+<td>
+<p>bool, if <code>FALSE</code>, will pad dimensions with unknown
+size to maximum length in batch. If <code>TRUE</code>, will pad dimensions with
+unknown size to bucket boundary minus 1 (i.e., the maximum length in
+each bucket), and caller must ensure that the source <code>Dataset</code> does not
+contain any elements with length longer than <code>max(bucket_boundaries)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>no_padding</code></td>
+<td>
+<p>boolean, indicates whether to pad the batch features (features
+need to be either of type <code>tf.sparse.SparseTensor</code> or of same shape).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_remainder</code></td>
+<td>
+<p>(Optional.) A logical scalar, representing
+whether the last batch should be dropped in the case it has fewer than
+<code>batch_size</code> elements; the default behavior is not to drop the smaller
+batch.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>(Optional.) A name for the tf.data operation.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Elements of the <code>Dataset</code> are grouped together by length and then are padded
+and batched.
+</p>
+<p>This is useful for sequence tasks in which the elements have variable
+length. Grouping together elements that have similar lengths reduces the
+total fraction of padding in a batch which increases training step
+efficiency.
+</p>
+<p>Below is an example to bucketize the input data to the 3 buckets
+"[0, 3), [3, 5), [5, Inf)" based on sequence length, with batch size 2.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul><li> <p><a href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset#bucket_by_sequence_length">https://www.tensorflow.org/api_docs/python/tf/data/Dataset#bucket_by_sequence_length</a>
+</p>
+</li></ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+dataset &lt;- list(c(0),
+                c(1, 2, 3, 4),
+                c(5, 6, 7),
+                c(7, 8, 9, 10, 11),
+                c(13, 14, 15, 16, 17, 18, 19, 20),
+                c(21, 22)) %&gt;%
+  lapply(as.array) %&gt;% lapply(as_tensor, "int32") %&gt;%
+  lapply(tensors_dataset) %&gt;%
+  Reduce(dataset_concatenate, .)
+
+dataset %&gt;%
+  dataset_bucket_by_sequence_length(
+    element_length_func = function(elem) tf$shape(elem)[1],
+    bucket_boundaries = c(3, 5),
+    bucket_batch_sizes = c(2, 2, 2)
+  ) %&gt;%
+  as_array_iterator() %&gt;%
+  iterate(print)
+#      [,1] [,2] [,3] [,4]
+# [1,]    1    2    3    4
+# [2,]    5    6    7    0
+#      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+# [1,]    7    8    9   10   11    0    0    0
+# [2,]   13   14   15   16   17   18   19   20
+#      [,1] [,2]
+# [1,]    0    0
+# [2,]   21   22
+
+## End(Not run)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,215 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_make_holiday_sequence</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Make daily Holiday and Weekend date sequences</h2>
+
+<h3>Description</h3>
+
+<p>Make daily Holiday and Weekend date sequences
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_make_holiday_sequence(
+  start_date,
+  end_date,
+  calendar = c("NYSE", "LONDON", "NERC", "TSX", "ZURICH"),
+  skip_values = NULL,
+  insert_values = NULL
+)
+
+tk_make_weekend_sequence(start_date, end_date)
+
+tk_make_weekday_sequence(
+  start_date,
+  end_date,
+  remove_weekends = TRUE,
+  remove_holidays = FALSE,
+  calendar = c("NYSE", "LONDON", "NERC", "TSX", "ZURICH"),
+  skip_values = NULL,
+  insert_values = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>start_date</code></td>
+<td>
+<p>Used to define the starting date for date sequence generation.
+Provide in "YYYY-MM-DD" format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>end_date</code></td>
+<td>
+<p>Used to define the ending date for date sequence generation.
+Provide in "YYYY-MM-DD" format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calendar</code></td>
+<td>
+<p>The calendar to be used in Date Sequence calculations for Holidays
+from the <code>timeDate</code> package.
+Acceptable values are: <code>"NYSE"</code>, <code>"LONDON"</code>, <code>"NERC"</code>, <code>"TSX"</code>, <code>"ZURICH"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_values</code></td>
+<td>
+<p>A daily date sequence to skip</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insert_values</code></td>
+<td>
+<p>A daily date sequence to insert</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove_weekends</code></td>
+<td>
+<p>A logical value indicating whether or not to
+remove weekends (Saturday and Sunday) from the date sequence</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>remove_holidays</code></td>
+<td>
+<p>A logical value indicating whether or not to
+remove common holidays from the date sequence</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Start and End Date Specification</strong>
+</p>
+
+<ul>
+<li>
+<p> Accept shorthand notation (i.e. <code>tk_make_timeseries()</code> specifications apply)
+</p>
+</li>
+<li>
+<p> Only available in Daily Periods.
+</p>
+</li>
+</ul>
+<p><strong>Holiday Sequences</strong>
+</p>
+<p><code>tk_make_holiday_sequence()</code> is a wrapper for various holiday calendars from the <code>timeDate</code> package,
+making it easy to generate holiday sequences for common business calendars:
+</p>
+
+<ul>
+<li>
+<p> New York Stock Exchange: <code>calendar = "NYSE"</code>
+</p>
+</li>
+<li>
+<p> Londo Stock Exchange: <code>"LONDON"</code>
+</p>
+</li>
+<li>
+<p> North American Reliability Council: <code>"NERC"</code>
+</p>
+</li>
+<li>
+<p> Toronto Stock Exchange: <code>"TSX"</code>
+</p>
+</li>
+<li>
+<p> Zurich Stock Exchange: <code>"ZURICH"</code>
+</p>
+</li>
+</ul>
+<p><strong>Weekend and Weekday Sequences</strong>
+</p>
+<p>These simply populate
+</p>
+
+
+<h3>Value</h3>
+
+<p>A vector containing future dates
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li>
+<p> Intelligent date or date-time sequence creation: <code>tk_make_timeseries()</code>
+</p>
+</li>
+<li>
+<p> Holidays and weekends: <code>tk_make_holiday_sequence()</code>, <code>tk_make_weekend_sequence()</code>, <code>tk_make_weekday_sequence()</code>
+</p>
+</li>
+<li>
+<p> Make future index from existing: <code>tk_make_future_timeseries()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+# Set max.print to 50
+options_old &lt;- options()$max.print
+options(max.print = 50)
+
+
+# ---- HOLIDAYS &amp; WEEKENDS ----
+
+# Business Holiday Sequence
+tk_make_holiday_sequence("2017-01-01", "2017-12-31", calendar = "NYSE")
+
+tk_make_holiday_sequence("2017", calendar = "NYSE") # Same thing as above (just shorter)
+
+# Weekday Sequence
+tk_make_weekday_sequence("2017", "2018", remove_holidays = TRUE)
+
+# Weekday Sequence + Removing Business Holidays
+tk_make_weekday_sequence("2017", "2018", remove_holidays = TRUE)
+
+
+# ---- COMBINE HOLIDAYS WITH MAKE FUTURE TIMESERIES FROM EXISTING ----
+# - A common machine learning application is creating a future time series data set
+#   from an existing
+
+# Create index of days that FB stock will be traded in 2017 based on 2016 + holidays
+FB_tbl &lt;- FANG %&gt;% dplyr::filter(symbol == "FB")
+
+holidays &lt;- tk_make_holiday_sequence(
+    start_date = "2016",
+    end_date   = "2017",
+    calendar   = "NYSE")
+
+weekends &lt;- tk_make_weekend_sequence(
+    start_date = "2016",
+    end_date   = "2017")
+
+# Remove holidays and weekends with skip_values
+# We could also remove weekends with inspect_weekdays = TRUE
+FB_tbl %&gt;%
+    tk_index() %&gt;%
+    tk_make_future_timeseries(length_out       = 366,
+                              skip_values      = c(holidays, weekends))
+
+
+options(max.print = options_old)
+
+</code></pre>
+
+
+</div>

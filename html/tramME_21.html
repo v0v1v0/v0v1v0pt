@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>model.matrix.tramME</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Model matrices for <code>tramME</code> models</h2>
+
+<h3>Description</h3>
+
+<p>Model matrix for fixed effects, random effects, and baseline transformations
+(with interacting terms if present).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tramME'
+model.matrix(
+  object,
+  data = model.frame(object),
+  type = c("Y", "X", "Zt"),
+  drop_unused_groups = FALSE,
+  keep_sign = TRUE,
+  simplify = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>A <code>tramME</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>data.frame</code> containing the variable values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>"X": Fixed effects model matrix. "Zt": Random effects model matrix
+(transposed). "Y": Model matrices for the baseline transfromations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop_unused_groups</code></td>
+<td>
+<p>Logical; remove unused levels of the random effects.
+(see <code>drop.unused.levels</code> argument of <code>mkReTrms</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_sign</code></td>
+<td>
+<p>Logical; the terms will have the same sign as in the
+<code>tramME</code> model if <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>simplify</code></td>
+<td>
+<p>Logical; Remove empty <code>Y</code> matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Optional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Creates model matrices for fixed effects (<code>type = "X"</code>) and random
+effects (<code>type = "Zt"</code>) and baseline transfromation (<code>type = "Y"</code>),
+by evaluating the respective basis functions given a new dataset.
+</p>
+<p>The response values may be exact, censored (left, right, interval) and
+truncated (left, right, interval), and the function returns several,
+potentially empty, model matrices:
+</p>
+
+<ul>
+<li>
+<p> Ye: Exact observations.
+</p>
+</li>
+<li>
+<p> Yeprime: The model matrix corresponding to the first derivative
+of the baseline transformation, evaluated at exact observations.
+</p>
+</li>
+<li>
+<p> Yl: Left-censored observations.
+</p>
+</li>
+<li>
+<p> Yr: Rigt-censored observations.
+</p>
+</li>
+<li>
+<p> Yil and Yir: Interval-censored observations evaluated at the
+left and right bounds of the interval.
+</p>
+</li>
+<li>
+<p> Ytl: Left-truncated observations.
+</p>
+</li>
+<li>
+<p> Ytr: Rigt-truncated observations.
+</p>
+</li>
+<li>
+<p> Ytil and Ytir: Interval-truncated observations evaluated at the
+left and right bounds of the interval.
+</p>
+</li>
+</ul>
+<p>for the baseline transfromations (unless <code>simplify = TRUE</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>List of requested model matrices.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The model matrix of the random effects is a sparse matrix and it is transposed
+to be directly used with <code>Matrix::crossprod</code> which is faster than transposing
+and multiplying ("Zt" instead of "Z").
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("survival")
+rats$litter &lt;- factor(rats$litter)
+m &lt;- CoxphME(Surv(time, status) ~ rx + (1 | litter), data = rats,
+             log_first = TRUE, nofit = TRUE)
+mm &lt;- model.matrix(m)
+nd &lt;- model.frame(m)[rep(1, 100), ]
+nd[[1]] &lt;- seq(1, 120, length.out = 100)
+mm2 &lt;- model.matrix(m, data = nd, simplify = TRUE)
+mm3 &lt;- model.matrix(m, data = nd, simplify = TRUE, drop_unused_groups = TRUE)
+## compare mm2$Zt &amp; mm3$Zt
+</code></pre>
+
+
+</div>

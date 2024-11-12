@@ -1,0 +1,221 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TxpResult-plot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot TxpResult objects</h2>
+
+<h3>Description</h3>
+
+<p>Plot TxpResult objects
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'TxpResult,missing'
+plot(
+  x,
+  package = c("grid", "ggplot2"),
+  fills = NULL,
+  showScore = TRUE,
+  gp = NULL,
+  vp = NULL,
+  name = NULL,
+  newpage = TRUE,
+  ...,
+  ncol = NULL,
+  bgColor = "grey80",
+  borderColor = "white",
+  sliceBorderColor = "white",
+  sliceValueColor = NULL,
+  sliceLineColor = NULL,
+  showMissing = TRUE,
+  showCenter = TRUE
+)
+
+## S4 method for signature 'TxpResult,numeric'
+plot(
+  x,
+  y,
+  labels = NULL,
+  newpage = TRUE,
+  margins = c(4, 0, 1, 1),
+  name = NULL,
+  gp = NULL,
+  vp = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>TxpResult object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>package</code></td>
+<td>
+<p>Character scalar, choice of "grid" or "ggplot2" for plotting
+ToxPi profiles</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fills</code></td>
+<td>
+<p>Vector of colors to fill slices. Set to NULL to use default</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>showScore</code></td>
+<td>
+<p>Logical scalar, overall score printed below the name when
+<code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gp, vp, name</code></td>
+<td>
+<p>Passed to grid::frameGrob when creating the plotting
+area</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newpage</code></td>
+<td>
+<p>Logical scalar, grid::grid.newpage called prior to plotting
+when <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Passed to pieGridGrob when plotting ToxPi and to pointsGrob
+when plotting ranks</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncol</code></td>
+<td>
+<p>Number of columns for ggplot2 ToxPi profiles</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bgColor, borderColor, sliceBorderColor, sliceValueColor, sliceLineColor</code></td>
+<td>
+<p>Various color options when creating ggplot2 ToxPi profiles. Set to NULL
+for no color</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>showMissing</code></td>
+<td>
+<p>Boolean for coloring data missingness in ggplot2
+ToxPi profiles</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>showCenter</code></td>
+<td>
+<p>Boolean for showing inner circle in ggplot2 ToxPi
+profiles. When set to False overrides showMissing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>Rank vector, i.e. <code>txpRanks(x)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>Integer vector, indices of <code>x</code> to label in the rank plot</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>margins</code></td>
+<td>
+<p>Passed to grid::plotViewport; only affects the scatterplot
+region margins</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is strongly recommended to use a specific device (e.g., grDevices::png,
+grDevices::pdf) when creating rank plots.
+Using a GUI device will likely lead to inaccurate labeling, and any changes
+to the device size WILL lead to inaccurate labeling.
+</p>
+<p>The plotting is built on the grid::grid-package, and can be adjusted or
+edited as such.
+</p>
+<p>If the labels are running of the device, the top or bottom margins can be
+increased with the <code>margins</code> parameter.
+</p>
+<p>ToxPi profiles can also be plotted using the ggplot2 package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>No return value when using grid; called for side effect (i.e.
+drawing in current graphics device). Will return ggplot2 object otherwise.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>plot(x = TxpResult, y = missing)</code>: Plot ToxPi diagrams
+</p>
+</li>
+<li> <p><code>plot(x = TxpResult, y = numeric)</code>: Plot ToxPi ranks
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Load example dataset &amp; model; see ?TxpModel for building model objects
+data(txp_example_input, package = "toxpiR")
+data(txp_example_model, package = "toxpiR")
+
+## Calculate scores for single model; returns TxpResult object
+res &lt;- txpCalculateScores(model = txp_example_model, 
+                          input = txp_example_input, 
+                          id.var = "name")
+
+library(grid)
+plot(res)
+plot(res[order(txpRanks(res))[1:4]])
+
+library(ggplot2)
+plot(res, package = "gg")
+plot(res[order(txpRanks(res))], package = "gg", ncol = 5) +
+  theme(legend.position = "bottom")
+
+plot(res, txpRanks(res))
+plot(res, txpRanks(res), pch = 16, size = unit(0.75, "char"))
+
+## Will likely make inaccurate labels within a GUI, e.g. RStudio
+## use png, pdf, etc. to get accurate labels
+## Not run: 
+tmpPdf &lt;- tempfile()
+pdf(tmpPdf)
+plot(res, txpRanks(res), labels = c(10, 4, 2), pch = 16)
+dev.off()
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

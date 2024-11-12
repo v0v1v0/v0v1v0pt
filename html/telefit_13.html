@@ -1,0 +1,256 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>extractStData</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Basic extraction of SpatialGridDataFrame data for teleconnection analysis</h2>
+
+<h3>Description</h3>
+
+<p>Basic extraction of SpatialGridDataFrame data for teleconnection analysis
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">extractStData(
+  X,
+  Y,
+  Z,
+  t = NULL,
+  D.s,
+  D.r,
+  mask.s = NULL,
+  mask.r = NULL,
+  aggfact.s = NULL,
+  aggfact.r = NULL,
+  intercept = T,
+  type.s = "response",
+  type.r = "response",
+  type.s.y = "response",
+  X.lab = NULL,
+  Y.lab = NULL,
+  Z.lab = NULL,
+  aspect = F,
+  aspect.categories = 4,
+  slope = F,
+  colnames.X = NULL,
+  formula = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>SpatialGridDataFrame with local covariates.  If X is a list, each
+SpatialGridDataFrame will be included as one covariate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>SpatialGridDataFrame with response data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z</code></td>
+<td>
+<p>SpatialGridDataFrame with remote covariates. If Z is a list, this 
+function assumes each element of the list contains observations for the same
+covariate, but from different spatial regions.  If Z is a list, D.r and 
+mask.r must
+also be lists so that this function can know which regions to extract from
+each SpatialGridDataFrame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>Timepoint from which to extract data from X, Y, and Z.  If NULL,
+then all timepoints will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D.s</code></td>
+<td>
+<p>c(xmin, xmax, ymin, ymax) region from which to extract data from 
+X and Y, or a SpatialPolygonsXXX object containing boundaries of regions to
+extract areal data from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>D.r</code></td>
+<td>
+<p>c(xmin, xmax, ymin, ymax) region from which to extract data from Z</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask.s</code></td>
+<td>
+<p>SpatialGridDataFrame to be used as a mask when extracting data
+from X and Y.  Locations in mask.s with NA values will be ignored when 
+extracting data from X and Y.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mask.r</code></td>
+<td>
+<p>SpatialGridDataFrame to be used as a mask when extracting data
+from Z.  Locations in mask.s with NA values will be ignored when 
+extracting data from Z.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggfact.s</code></td>
+<td>
+<p>If provided, will spatially average Y and X data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggfact.r</code></td>
+<td>
+<p>If provided, will spatially average Z data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>intercept</code></td>
+<td>
+<p>If TRUE, an intercept will be added to the design matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type.s</code></td>
+<td>
+<p>'response' 'anomaly' or 'std.anomaly' or a vector of these
+options depending on whether
+data extracted from X should be the observed data, anomalies, or
+standardized anomalies (where the climatology is computed from the 
+observations as the pointwise temporal average)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type.r</code></td>
+<td>
+<p>'response' 'anomaly' or 'std.anomaly' or a vector of these
+options depending on whether
+data extracted from Z should be the observed data, anomalies, or
+standardized anomalies (where the climatology is computed from the 
+observations as the pointwise temporal average)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type.s.y</code></td>
+<td>
+<p>'response' 'anomaly' or 'std.anomaly' depending on whether
+data extracted from Y should be the observed data, anomalies, or
+standardized anomalies (where the climatology is computed from the 
+observations as the pointwise temporal average)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X.lab</code></td>
+<td>
+<p>name for X data (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y.lab</code></td>
+<td>
+<p>name for Y data (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Z.lab</code></td>
+<td>
+<p>name for Z data (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aspect</code></td>
+<td>
+<p>TRUE or vector of logicals (one for each X object)
+to return the aspect of the surface at each location 
+instead of the value of the surface itself</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aspect.categories</code></td>
+<td>
+<p>if aspect==TRUE, this specifies the number of 
+discrete categories to divide aspect numbers (0-360) into.  NULL if the
+original scale (0-360) should be kept. By design, the aspect categories
+will be centered on north in the first category.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>slope</code></td>
+<td>
+<p>TRUE or vector of logicals (one for each X object)
+to return the slope of the surface at each location 
+instead of the value of the surface itself</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colnames.X</code></td>
+<td>
+<p>names of columns of X</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>formula object to specify how to create the design matrix</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># the extractRegion and extractStData methods create data matrices from 
+# SpatialGridDataFrame objects
+
+library(sp)
+
+data("coprecip")
+attach(coprecip)
+
+
+#
+# build SpatialGridDataFrame objects containing some of the coprecip data
+#
+
+gt = GridTopology(cellcentre.offset = apply(coords.s, 2, min),
+                  cellsize = c(.5, .5), 
+                  cells.dim = c(20, 12))
+
+# Note: This is an example only; this grid will not match coprecip$coords.r
+gt.Z = GridTopology(cellcentre.offset = apply(coords.r, 2, min),
+                    cellsize = c(1.4, 1.4),
+                    cells.dim = c(101, 52))
+
+Xd = data.frame(`1981` = X[,2,1], `1982` = X[,2,2])
+colnames(Xd) = gsub('X','', colnames(Xd))
+sgdf.x = SpatialGridDataFrame(gt, Xd)
+
+
+Yd = data.frame(`1981` = Y[,1], `1982` = Y[,2])
+colnames(Yd) = gsub('X','', colnames(Yd))
+sgdf.y = SpatialGridDataFrame(gt, Yd)
+
+
+Zd = data.frame(`1981` = Z[,1], `1982` = Z[,2])
+colnames(Zd) = gsub('X','', colnames(Zd))
+sgdf.z = SpatialGridDataFrame(gt.Z, Zd)
+
+# only extract a region of the coordinates
+coprecip2 = extractStData(sgdf.x, sgdf.y, sgdf.z, 
+                    D.s = c(-105, -103, 37, 41),
+                    D.r = c(-160, -100, -15, 0))
+</code></pre>
+
+
+</div>

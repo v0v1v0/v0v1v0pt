@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>parameters</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Converting TL-moments to distribution parameters</h2>
+
+<h3>Description</h3>
+
+<p>Converts TL-moments (or PWMs) to distribution parameters. By now, conversions for gev, gumbel, gpd, and ln3
+are available. Important trimming options are calculated through known formulas (see references for
+some of them), other options are calculated through a numerical optimization.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">parameters(x, distr, ...)
+
+## S3 method for class 'PWMs'
+parameters(x, distr, ...)
+
+## S3 method for class 'TLMoments'
+parameters(x, distr, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>object returned by TLMoments (or PWMs, in which case TLMoments with no trimming is used).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+<p>character object defining the distribution. Supported types are
+"gev", "gum", "gpd", and "ln3".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>numeric vector, matrix, list, or data.frame of parameter estimates with
+class <code>parameters</code>. The object contains the following attributes: </p>
+
+<ul>
+<li> <p><code>distribution</code>: a character indicating the used distribution
+</p>
+</li>
+<li> <p><code>source</code>: a list with background information (used function, data, n, formula, trimmings; mainly for internal purposes)
+</p>
+</li>
+</ul>
+<p>The attributes are hidden in the print-function for a clearer presentation.
+</p>
+
+
+<h3>Methods (by class)</h3>
+
+
+<ul>
+<li> <p><code>PWMs</code>: parameters for PWMs-object
+</p>
+</li>
+<li> <p><code>TLMoments</code>: parameters for TLMoments-object
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Elamir, E. A. H. (2010). Optimal choices for trimming in trimmed L-moment method. Applied Mathematical Sciences, 4(58), 2881-2890.
+</p>
+<p>Fischer, S., Fried, R., &amp; Schumann, A. (2015). Examination for robustness of parametric estimators for flood statistics in the context of extraordinary extreme events. Hydrology and Earth System Sciences Discussions, 12, 8553-8576.
+</p>
+<p>Hosking, J. R. (1990). L-moments: analysis and estimation of distributions using linear combinations of order statistics. Journal of the Royal Statistical Society. Series B (Methodological), 105-124.
+</p>
+<p>Hosking, J. R. M. (2007). Some theory and practical uses of trimmed L-moments. Journal of Statistical Planning and Inference, 137(9), 3024-3039.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>PWMs</code>, <code>TLMoments</code>, <code>quantiles</code>, <code>summary.parameters</code>, <code>as.parameters</code>. Built-in distributions: <code>pgev</code>, <code>pgum</code>, <code>pgpd</code>, <code>pln3</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">xmat &lt;- matrix(rgev(100, shape = .2), nc = 4)
+xvec &lt;- xmat[, 3]
+xlist &lt;- lapply(1L:ncol(xmat), function(i) xmat[, i])
+xdat &lt;- data.frame(
+ station = rep(letters[1:2], each = 50),
+ season = rep(c("S", "W"), 50),
+ hq = as.vector(xmat)
+)
+
+# TLMoments-objects or PWMs-objects can be used. However, in case of PWMs
+# simply the TLMoments(., leftrim = 0, rightrim = 0)-variant is used.
+
+parameters(PWMs(xvec), "gev")
+tlm &lt;- TLMoments(xvec, leftrim = 0, rightrim = 0)
+parameters(tlm, "gev")
+
+tlm &lt;- TLMoments(xmat, leftrim = 1, rightrim = 1)
+parameters(tlm, "gum")
+
+tlm &lt;- TLMoments(xlist)
+parameters(tlm, "gpd")
+
+tlm &lt;- TLMoments(xdat, hq ~ station, leftrim = 0, rightrim = 2)
+parameters(tlm, "gev")
+
+tlm &lt;- TLMoments(xdat, hq ~ station + season, leftrim = 0, rightrim = 2)
+parameters(tlm, "gev")
+
+
+# If no explicit formula is implemented, it is tried to calculate
+# parameters numerically. The attribute source$param.computation.method
+# indicates if this is the case.
+
+tlm &lt;- TLMoments(rgum(200, loc = 5, scale = 2), leftrim = 1, rightrim = 4)
+parameters(tlm, "gum")
+
+tlm &lt;- TLMoments(rgev(200, loc = 10, scale = 5, shape = .4), leftrim = 2, rightrim = 2)
+parameters(tlm, "gev")
+
+tlm &lt;- TLMoments(rln3(200, loc = 3, scale = 1.5, shape = 2), leftrim = 0, rightrim = 1)
+parameters(tlm, "ln3")
+
+# Numerical calculation is A LOT slower:
+## Not run: 
+system.time(replicate(500,
+  parameters(TLMoments(rgum(100, loc = 5, scale = 2), 1, 1), "gum")
+))[3]
+system.time(replicate(500,
+  parameters(TLMoments(rgum(100, loc = 5, scale = 2), 1, 2), "gum")
+))[3]
+
+## End(Not run)
+
+# Using magrittr
+library(magrittr)
+
+TLMoments(rgpd(500, loc = 10, scale = 3, shape = .3), rightrim = 0) %&gt;%
+ parameters("gpd")
+
+TLMoments(rgpd(500, loc = 10, scale = 3, shape = .3), rightrim = 0) %&gt;%
+ parameters("gpd", u = 10)
+
+TLMoments(rgpd(500, loc = 10, scale = 3, shape = .3), rightrim = 1) %&gt;%
+ parameters("gpd")
+
+TLMoments(rgpd(500, loc = 10, scale = 3, shape = .3), rightrim = 2) %&gt;%
+ parameters("gpd")
+
+</code></pre>
+
+
+</div>

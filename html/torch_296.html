@@ -1,0 +1,112 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_max_unpool2d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computes a partial inverse of <code>MaxPool2d</code>.</h2>
+
+<h3>Description</h3>
+
+<p><code>MaxPool2d</code> is not fully invertible, since the non-maximal values are lost.
+<code>MaxUnpool2d</code> takes in as input the output of <code>MaxPool2d</code>
+including the indices of the maximal values and computes a partial inverse
+in which all non-maximal values are set to zero.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_max_unpool2d(kernel_size, stride = NULL, padding = 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>kernel_size</code></td>
+<td>
+<p>(int or tuple): Size of the max pooling window.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stride</code></td>
+<td>
+<p>(int or tuple): Stride of the max pooling window.
+It is set to <code>kernel_size</code> by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>padding</code></td>
+<td>
+<p>(int or tuple): Padding that was added to the input</p>
+</td>
+</tr>
+</table>
+<h3>Inputs</h3>
+
+
+<ul>
+<li> <p><code>input</code>: the input Tensor to invert
+</p>
+</li>
+<li> <p><code>indices</code>: the indices given out by <code>nn_max_pool2d()</code>
+</p>
+</li>
+<li> <p><code>output_size</code> (optional): the targeted output size
+</p>
+</li>
+</ul>
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, C, H_{in}, W_{in})</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, C, H_{out}, W_{out})</code>, where
+</p>
+<p style="text-align: center;"><code class="reqn">
+  H_{out} = (H_{in} - 1) \times \mbox{stride[0]} - 2 \times \mbox{padding[0]} + \mbox{kernel\_size[0]}
+</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">
+  W_{out} = (W_{in} - 1) \times \mbox{stride[1]} - 2 \times \mbox{padding[1]} + \mbox{kernel\_size[1]}
+</code>
+</p>
+
+<p>or as given by <code>output_size</code> in the call operator
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p><code>MaxPool2d</code> can map several input sizes to the same output
+sizes. Hence, the inversion process can get ambiguous.
+To accommodate this, you can provide the needed output size
+as an additional argument <code>output_size</code> in the forward call.
+See the Inputs and Example below.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+pool &lt;- nn_max_pool2d(2, stride = 2, return_indices = TRUE)
+unpool &lt;- nn_max_unpool2d(2, stride = 2)
+input &lt;- torch_randn(1, 1, 4, 4)
+out &lt;- pool(input)
+unpool(out[[1]], out[[2]])
+
+# specify a different output size than input size
+unpool(out[[1]], out[[2]], output_size = c(1, 1, 5, 5))
+}
+</code></pre>
+
+
+</div>

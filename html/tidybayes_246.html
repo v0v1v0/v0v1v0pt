@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summarise_draws.grouped_df</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summaries of draws in <code>grouped_df</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>An implementation of <code>posterior::summarise_draws()</code> for grouped data frames
+(<code>dplyr::grouped_df</code> objects) such as returned by <code>dplyr::group_by()</code> and
+the various grouped-data-aware functions in tidybayes, such as <code>spread_draws()</code>,
+<code>gather_draws()</code>, <code>add_epred_draws()</code>, and <code>add_predicted_draws()</code>.
+This function provides a quick way to get a variety of summary statistics
+and diagnostics on draws.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'grouped_df'
+summarise_draws(.x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>A grouped data frame (<code>dplyr::grouped_df</code> object) such as returned by
+<code>dplyr::group_by()</code> where the data frame in each group (ignoring grouping columns)
+has the structure of a <code>posterior::draws_df()</code> object: <code>".chain"</code>, <code>".iteration"</code>, and
+<code>".draw"</code> columns, with the remaining (non-grouping) columns being draws
+from variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Name-value pairs of summary or diagnostic
+functions. The provided names will be used as the names of the columns in
+the result <em>unless</em> the function returns a named vector, in which case the
+latter names are used. The functions can be specified in any format
+supported by as_function(). See <strong>Examples</strong>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>While <code>posterior::summarise_draws()</code> can operate on tidy data frames of
+draws in the <code>posterior::draws_df()</code> format, that format does not support
+grouping columns. This provides an implementation of <code>summarise_draws()</code>
+that does support grouped data tables, essentially applying
+<code>posterior::summarise_draws()</code> to every sub-table of <code>.x</code> implied by the
+groups defined on the data frame.
+</p>
+<p>See <code>posterior::summarise_draws()</code> for
+more details on the summary statistics and diagnostics you can use with this
+function. If you just want point summaries and intervals (not diagnostics),
+particularly for plotting, see <code>point_interval()</code>, which returns long-format
+data tables more suitable for that purpose (especially if you want to plot
+multiple uncertainty levels).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data frame (actually, a tibble) with all grouping
+columns from <code>.x</code>, a <code>"variable"</code> column containing variable names from <code>.x</code>,
+and the remaining columns containing summary statistics and diagnostics.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthew Kay
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>posterior::summarise_draws()</code>, <code>point_interval()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(posterior)
+library(dplyr)
+
+d = posterior::example_draws()
+
+# The default posterior::summarise_draws() summarises all variables without
+# splitting out indices:
+summarise_draws(d)
+
+# The grouped_df implementation of summarise_draws() in tidybayes can handle
+# output from spread_draws(), which is a grouped data table with the indices
+# (here, `i`) left as columns:
+d %&gt;%
+  spread_draws(theta[i]) %&gt;%
+  summarise_draws()
+
+# Summary functions can also be provided, as in posterior::summarise_draws():
+d %&gt;%
+  spread_draws(theta[i]) %&gt;%
+  summarise_draws(median, mad, rhat, ess_tail)
+
+</code></pre>
+
+
+</div>

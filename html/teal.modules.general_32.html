@@ -1,0 +1,165 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_data_table</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>teal</code> module: Data table viewer</h2>
+
+<h3>Description</h3>
+
+<p>Module provides a dynamic and interactive way to view <code>data.frame</code>s in a <code>teal</code> application.
+It uses the <code>DT</code> package to display data tables in a paginated, searchable, and sortable format,
+which helps to enhance data exploration and analysis.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_data_table(
+  label = "Data Table",
+  variables_selected = list(),
+  datasets_selected = character(0),
+  dt_args = list(),
+  dt_options = list(searching = FALSE, pageLength = 30, lengthMenu = c(5, 15, 30, 100),
+    scrollX = TRUE),
+  server_rendering = FALSE,
+  pre_output = NULL,
+  post_output = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character(1)</code>) Label shown in the navigation item for the module or module group.
+For <code>modules()</code> defaults to <code>"root"</code>. See <code>Details</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables_selected</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠named list⁠</code>) Character vectors of the variables (i.e. columns)
+which should be initially shown for each dataset.
+Names of list elements should correspond to the names of the datasets available in the app.
+If no entry is specified for a dataset, the first six variables from that
+dataset will initially be shown.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datasets_selected</code></td>
+<td>
+<p>(<code>character</code>) A vector of datasets which should be
+shown and in what order. Names in the vector have to correspond with datasets names.
+If vector of <code>length == 0</code> (default) then all datasets are shown.
+Note: Only datasets of the <code>data.frame</code> class are compatible.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dt_args</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠named list⁠</code>) Additional arguments to be passed to <code>DT::datatable()</code>
+(must not include <code>data</code> or <code>options</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dt_options</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠named list⁠</code>) The <code>options</code> argument to <code>DT::datatable</code>. By default
+<code>list(searching = FALSE, pageLength = 30, lengthMenu = c(5, 15, 30, 100), scrollX = TRUE)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>server_rendering</code></td>
+<td>
+<p>(<code>logical</code>) should the data table be rendered server side
+(see <code>server</code> argument of <code>DT::renderDataTable()</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed before the module's output,
+providing context or a title.
+with text placed before the output to put the output into context. For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional, text or UI element to be displayed after the module's output,
+adding context or further instructions. Elements like <code>shiny::helpText()</code> are useful.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>DT</code> package has an option <code>DT.TOJSON_ARGS</code> to show <code>Inf</code> and <code>NA</code> in data tables.
+Configure the <code>DT.TOJSON_ARGS</code> option via
+<code>options(DT.TOJSON_ARGS = list(na = "string"))</code> before running the module.
+Note though that sorting of numeric columns with <code>NA</code>/<code>Inf</code> will be lexicographic not numerical.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Object of class <code>teal_module</code> to be used in <code>teal</code> applications.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># general data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  iris &lt;- iris
+})
+datanames(data) &lt;- c("iris")
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_data_table(
+      variables_selected = list(
+        iris = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+      ),
+      dt_args = list(caption = "ADSL Table Caption")
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+# CDISC data example
+data &lt;- teal_data()
+data &lt;- within(data, {
+  require(nestcolor)
+  ADSL &lt;- rADSL
+})
+datanames(data) &lt;- "ADSL"
+join_keys(data) &lt;- default_cdisc_join_keys[datanames(data)]
+
+app &lt;- init(
+  data = data,
+  modules = modules(
+    tm_data_table(
+      variables_selected = list(ADSL = c("STUDYID", "USUBJID", "SUBJID", "SITEID", "AGE", "SEX")),
+      dt_args = list(caption = "ADSL Table Caption")
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

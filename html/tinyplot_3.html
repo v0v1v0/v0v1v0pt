@@ -1,0 +1,136 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_saved_par</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Retrieve the saved graphical parameters</h2>
+
+<h3>Description</h3>
+
+<p>Convenience function for retrieving the graphical parameters
+(i.e., the full list of <code>tag = value</code> pairs held in
+<code>par</code>) from either immediately before or
+immediately after the most recent tinyplot call.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_saved_par(when = c("before", "after"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>when</code></td>
+<td>
+<p>character. From when should the saved parameters be retrieved?
+Either "before" (the default) or "after" the preceding <code>tinyplot</code> call.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>A potential side-effect of tinyplot is that it can change a user's
+<code>par</code> settings. For example, it may adjust the inner
+and outer plot margins to make space for an automatic legend; see
+draw_legend. While it is possible to immediately restore the original
+<code>par</code> settings upon exit via the
+<code>tinyplot(..., restore.par = TRUE)</code> argument, this is not the default
+behaviour. The reason being that we need to preserve the adjusted parameter
+settings in case users want to add further graphical annotations to their
+plot (e.g., <code>abline</code>, <code>text</code>,
+etc.) Nevertheless, it may still prove desirable to recall and reset these
+original graphical parameters after the fact (e.g., once all these extra
+annotations have been added). That is the purpose of this get_saved_par
+function.
+</p>
+<p>Of course, users may prefer to manually capture and reset graphical
+parameters, as per the standard method described in the
+<code>par</code> documentation. For example:
+</p>
+<div class="sourceCode"><pre>op = par(no.readonly = TRUE)  # save current par settings 
+# &lt;do lots of (tiny)plotting&gt;
+par(op)                       # reset original pars
+</pre></div>
+<p>This standard manual approach may be safer than get_saved_par because it
+offers more precise control. Specifically, the value of get_saved_par
+itself will be reset after ever new tinyplot call; i.e. it may inherit an
+already-changed set of parameters. Users should bear these trade-offs in
+mind when deciding which approach to use. As a general rule,
+get_saved_par offers the convenience of resetting the original
+<code>par</code> settings even if a user forgot to save them
+beforehand. But one should avoid invoking it after a series of consecutive
+tinyplot calls.
+</p>
+<p>Finally, note that users can always call <code>dev.off</code>
+to reset all <code>par</code> settings to their defaults.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of <code>par</code> settings.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#
+# Contrived example where we draw a grouped scatterplot with a legend and
+# manually add corresponding best fit lines for each group...
+#
+
+# First draw the grouped scatterplot
+tinyplot(Sepal.Length ~ Petal.Length | Species, iris)
+
+# Preserving adjusted par settings is good for adding elements to our plot
+for (s in levels(iris$Species)) {
+  abline(
+    lm(Sepal.Length ~ Petal.Length, iris, subset = Species==s),
+    col = which(levels(iris$Species)==s)
+  )
+}
+
+# Get saved par from before the preceding tinyplot call (but don't use yet)
+sp = get_saved_par("before")
+
+# Note the changed margins will affect regular plots too, which is probably
+# not desirable
+plot(1:10)
+
+# Reset the original parameters (could use `par(sp)` here)
+tpar(sp)
+# Redraw our simple plot with our corrected right margin
+plot(1:10)
+
+#
+# Quick example going the other way, "correcting" for par.restore = TRUE...
+#
+
+tinyplot(Sepal.Length ~ Petal.Length | Species, iris, restore.par = TRUE)
+# Our added best lines will be wrong b/c of misaligned par
+for (s in levels(iris$Species)) {
+  abline(
+    lm(Sepal.Length ~ Petal.Length, iris, subset = Species==s),
+    col = which(levels(iris$Species)==s), lty = 2
+  )
+}
+# grab the par settings from the _end_ of the preceding tinyplot call to fix
+tpar(get_saved_par("after"))
+# now the best lines are correct
+for (s in levels(iris$Species)) {
+  abline(
+    lm(Sepal.Length ~ Petal.Length, iris, subset = Species==s),
+    col = which(levels(iris$Species)==s)
+  )
+}
+
+# reset again to original saved par settings before exit
+tpar(sp)
+
+</code></pre>
+
+
+</div>

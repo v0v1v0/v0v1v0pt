@@ -1,0 +1,166 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter_state_api</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Managing <code>FilteredData</code> states</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>Set, get and remove filter states of <code>FilteredData</code> object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">set_filter_state(datasets, filter)
+
+get_filter_state(datasets)
+
+remove_filter_state(datasets, filter)
+
+clear_filter_states(datasets, force = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>(<code>FilteredData</code>)
+object to store filter state and filtered datasets, shared across modules
+</p>
+<p>see <code>FilteredData</code> for details</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter</code></td>
+<td>
+<p>(<code>teal_slices</code>)
+specify filters in place on app start-up</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>force</code></td>
+<td>
+<p>(<code>logical(1)</code>)
+flag specifying whether to include anchored filter states.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul>
+<li> <p><code style="white-space: pre;">⁠set_*⁠</code>, <code style="white-space: pre;">⁠remove_*⁠</code> and <code>clear_filter_state</code> return <code>NULL</code> invisibly
+</p>
+</li>
+<li> <p><code>get_filter_state</code> returns a named <code>teal_slices</code> object
+containing a <code>teal_slice</code> for every existing <code>FilterState</code>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>teal_slice</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">datasets &lt;- init_filtered_data(list(iris = iris, mtcars = mtcars))
+fs &lt;- teal_slices(
+  teal_slice(dataname = "iris", varname = "Species", selected = c("setosa", "versicolor")),
+  teal_slice(dataname = "iris", varname = "Sepal.Length", selected = c(5.1, 6.4)),
+  teal_slice(dataname = "mtcars", varname = "gear", selected = c(4, 5)),
+  teal_slice(dataname = "mtcars", varname = "carb", selected = c(4, 10))
+)
+
+# set initial filter state
+set_filter_state(datasets, filter = fs)
+
+# get filter state
+get_filter_state(datasets)
+
+# modify filter state
+set_filter_state(
+  datasets,
+  teal_slices(
+    teal_slice(dataname = "iris", varname = "Species", selected = "setosa", keep_na = TRUE)
+  )
+)
+
+# remove specific filters
+remove_filter_state(
+  datasets,
+  teal_slices(
+    teal_slice(dataname = "iris", varname = "Species"),
+    teal_slice(dataname = "mtcars", varname = "gear"),
+    teal_slice(dataname = "mtcars", varname = "carb")
+  )
+)
+
+# remove all states
+clear_filter_states(datasets)
+
+
+if (requireNamespace("MultiAssayExperiment", quietly = TRUE)) {
+  # Requires MultiAssayExperiment from Bioconductor
+  data(miniACC, package = "MultiAssayExperiment")
+
+  datasets &lt;- init_filtered_data(list(mae = miniACC))
+  fs &lt;- teal_slices(
+    teal_slice(
+      dataname = "mae", varname = "years_to_birth", selected = c(30, 50),
+      keep_na = TRUE, keep_inf = FALSE
+    ),
+    teal_slice(
+      dataname = "mae", varname = "vital_status", selected = "1",
+      keep_na = FALSE
+    ),
+    teal_slice(
+      dataname = "mae", varname = "gender", selected = "female",
+      keep_na = TRUE
+    ),
+    teal_slice(
+      dataname = "mae", varname = "ARRAY_TYPE", selected = "",
+      keep_na = TRUE, experiment = "RPPAArray", arg = "subset"
+    )
+  )
+
+  # set initial filter state
+  set_filter_state(datasets, filter = fs)
+
+  # get filter state
+  get_filter_state(datasets)
+
+  # modify filter state
+  set_filter_state(
+    datasets,
+    teal_slices(
+      teal_slice(dataname = "mae", varname = "years_to_birth", selected = c(40, 60))
+    )
+  )
+
+  # remove specific filters
+  remove_filter_state(
+    datasets,
+    teal_slices(
+      teal_slice(dataname = "mae", varname = "years_to_birth"),
+      teal_slice(dataname = "mae", varname = "vital_status")
+    )
+  )
+
+  # remove all states
+  clear_filter_states(datasets)
+}
+
+</code></pre>
+
+
+</div>

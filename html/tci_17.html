@@ -1,0 +1,117 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>inf_tci</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Target-controlled infusion</h2>
+
+<h3>Description</h3>
+
+<p>Apply a TCI algorithm to a set of targets and a 'pkmod' or 'poppkmod' object to calculate infusion
+rates.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">inf_tci(
+  pkmod,
+  target_vals,
+  target_tms,
+  type = c("plasma", "effect"),
+  dtm = NULL,
+  custom_alg = NULL,
+  inittm = 0,
+  ignore_pd = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>pkmod</code></td>
+<td>
+<p>'pkmod' object created by 'pkmod()' or a 'poppkmod' object created by 'poppkmod()'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target_vals</code></td>
+<td>
+<p>A vector of numeric values indicating PK or PD targets for TCI algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target_tms</code></td>
+<td>
+<p>A vector of numeric values indicating times at which the TCI algorithm should
+begin targeting each value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Type of TCI algorithm to be used. Options are plasma- or effect-site
+targeting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>TCI update frequency. Defaults to 1/6, corresponding to 10-second
+intervals if model parameters are in terms of minutes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>custom_alg</code></td>
+<td>
+<p>Custom TCI algorithm to be used instead of default plasma-
+or effect-site targeting algorithms. The algorithm should be a function that
+takes minimum arguments 'Ct', 'pkmod', and 'dtm' and returns a single infusion
+rate. See 'tci_plasma' or 'tci_effect' for examples and vignette on custom
+models/algorithms for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inittm</code></td>
+<td>
+<p>Initial time to start TCI algorithm. Cannot be greater than
+the minimum value of 'target_tms'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_pd</code></td>
+<td>
+<p>Logical. Should the PD component of the pkmod object (if present)
+be ignored. By default, predict.tciinf will assume that 'value' refers to PD
+targets if a PD model is specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to TCI algorithm</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># 3-compartment model with effect-site
+my_mod &lt;- pkmod(pars_pk = c(v1 = 8.995, v2 = 17.297, v3 = 120.963, cl = 1.382,
+q2 = 0.919, q3 = 0.609, ke0 = 1.289))
+# plasma targeting
+inf_tci(my_mod, target_vals = c(2,3,4,4), target_tms = c(0,2,3,10), "plasma")
+# effect-site targeting
+inf_tci(my_mod, target_vals = c(2,3,4,4), target_tms = c(0,2,3,10), "effect")
+# poppkmod object
+data &lt;- data.frame(ID = 1:5, AGE = seq(20,60,by=10), TBW = seq(60,80,by=5),
+HGT = seq(150,190,by=10), MALE = c(TRUE,TRUE,FALSE,FALSE,FALSE))
+elvd_mod &lt;- poppkmod(data, drug = "ppf", model = "eleveld")
+inf_tci(elvd_mod, target_vals = c(2,3,4,4), target_tms = c(0,2,3,10), "effect")
+</code></pre>
+
+
+</div>

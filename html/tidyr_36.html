@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>hoist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Hoist values out of list-columns</h2>
+
+<h3>Description</h3>
+
+<p><code>hoist()</code> allows you to selectively pull components of a list-column
+into their own top-level columns, using the same syntax as <code>purrr::pluck()</code>.
+</p>
+<p>Learn more in <code>vignette("rectangle")</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">hoist(
+  .data,
+  .col,
+  ...,
+  .remove = TRUE,
+  .simplify = TRUE,
+  .ptype = NULL,
+  .transform = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.col</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; List-column to extract
+components from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>dynamic-dots</code>&gt; Components of <code>.col</code> to turn
+into columns in the form <code>col_name = "pluck_specification"</code>. You can pluck
+by name with a character vector, by position with an integer vector, or
+with a combination of the two with a list. See <code>purrr::pluck()</code> for
+details.
+</p>
+<p>The column names must be unique in a call to <code>hoist()</code>, although existing
+columns with the same name will be overwritten. When plucking with a
+single string you can choose to omit the name, i.e. <code>hoist(df, col, "x")</code>
+is short-hand for <code>hoist(df, col, x = "x")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.remove</code></td>
+<td>
+<p>If <code>TRUE</code>, the default, will remove extracted components
+from <code>.col</code>. This ensures that each value lives only in one place. If all
+components are removed from <code>.col</code>, then <code>.col</code> will be removed from the
+result entirely.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.simplify</code></td>
+<td>
+<p>If <code>TRUE</code>, will attempt to simplify lists of
+length-1 vectors to an atomic vector. Can also be a named list containing
+<code>TRUE</code> or <code>FALSE</code> declaring whether or not to attempt to simplify a
+particular column. If a named list is provided, the default for any
+unspecified columns is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.ptype</code></td>
+<td>
+<p>Optionally, a named list of prototypes declaring the
+desired output type of each component. Alternatively, a single empty
+prototype can be supplied, which will be applied to all components. Use
+this argument if you want to check that each element has the type you
+expect when simplifying.
+</p>
+<p>If a <code>ptype</code> has been specified, but <code>simplify = FALSE</code> or simplification
+isn't possible, then a list-of column will be returned
+and each element will have type <code>ptype</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.transform</code></td>
+<td>
+<p>Optionally, a named list of transformation
+functions applied to each component. Alternatively, a single function can
+be supplied, which will be applied to all components. Use this argument if
+you want to transform or parse individual elements as they are extracted.
+</p>
+<p>When both <code>ptype</code> and <code>transform</code> are supplied, the <code>transform</code> is applied
+before the <code>ptype</code>.</p>
+</td>
+</tr>
+</table>
+<h3>See Also</h3>
+
+<p>Other rectangling: 
+<code>unnest_longer()</code>,
+<code>unnest_wider()</code>,
+<code>unnest()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">df &lt;- tibble(
+  character = c("Toothless", "Dory"),
+  metadata = list(
+    list(
+      species = "dragon",
+      color = "black",
+      films = c(
+        "How to Train Your Dragon",
+        "How to Train Your Dragon 2",
+        "How to Train Your Dragon: The Hidden World"
+      )
+    ),
+    list(
+      species = "blue tang",
+      color = "blue",
+      films = c("Finding Nemo", "Finding Dory")
+    )
+  )
+)
+df
+
+# Extract only specified components
+df %&gt;% hoist(metadata,
+  "species",
+  first_film = list("films", 1L),
+  third_film = list("films", 3L)
+)
+</code></pre>
+
+
+</div>

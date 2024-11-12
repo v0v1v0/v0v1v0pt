@@ -1,0 +1,171 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>independence_test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Independence test for two groups of persistence diagrams.</h2>
+
+<h3>Description</h3>
+
+<p>Carries out inference to determine if two groups of persistence diagrams are independent or not
+based on kernel calculations (see 
+(<a href="https://proceedings.neurips.cc/paper/2007/file/d5cfead94f5350c12c322b5b664544c1-Paper.pdf">https://proceedings.neurips.cc/paper/2007/file/d5cfead94f5350c12c322b5b664544c1-Paper.pdf</a>) for details).
+A small p-value in a certain dimension suggests that the groups are not independent in that dimension.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">independence_test(
+  g1,
+  g2,
+  dims = c(0, 1),
+  sigma = 1,
+  rho = NULL,
+  t = 1,
+  num_workers = parallelly::availableCores(omit = 1),
+  verbose = FALSE,
+  Ks = NULL,
+  Ls = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>g1</code></td>
+<td>
+<p>the first group of persistence diagrams, where each diagram was either the output from a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g2</code></td>
+<td>
+<p>the second group of persistence diagrams, where each diagram was either the output from a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dims</code></td>
+<td>
+<p>a non-negative integer vector of the homological dimensions in which the test is to be carried out, default c(0,1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>a positive number representing the bandwidth for the Fisher information metric, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rho</code></td>
+<td>
+<p>an optional positive number representing the heuristic for Fisher information metric approximation, see <code>diagram_distance</code>. Default NULL. If supplied, calculation of Gram matrices is sequential.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>a positive number representing the scale for the persistence Fisher kernel, default 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>a boolean flag for if the time duration of the function call should be printed, default FALSE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ks</code></td>
+<td>
+<p>an optional list of precomputed Gram matrices for the first group of diagrams, with one element for each dimension. If not NULL and 'Ls' is not NULL then 'g1' and 'g2' do not need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ls</code></td>
+<td>
+<p>an optional list of precomputed Gram matrices for the second group of diagrams, with one element for each dimension. If not NULL and 'Ks' is not NULL then 'g1' and 'g2' do not need to be supplied.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The test is carried out with a parametric null distribution, making it much faster than non-parametric
+approaches. If all of the diagrams in either g1 or g2 are the same in some dimension, then some p-values may be NaN.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list with the following elements:
+</p>
+
+<dl>
+<dt>dimensions</dt>
+<dd>
+<p>the input 'dims' argument.</p>
+</dd>
+<dt>test_statisics</dt>
+<dd>
+<p>a numeric vector of the test statistic value in each dimension.</p>
+</dd>
+<dt>p_values</dt>
+<dd>
+<p>a numeric vector of the p-values in each dimension.</p>
+</dd>
+<dt>run_time</dt>
+<dd>
+<p>the run time of the function call, containing time units.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gretton A et al. (2007). "A Kernel Statistical Test of Independence." <a href="https://proceedings.neurips.cc/paper/2007/file/d5cfead94f5350c12c322b5b664544c1-Paper.pdf">https://proceedings.neurips.cc/paper/2007/file/d5cfead94f5350c12c322b5b664544c1-Paper.pdf</a>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>permutation_test</code> for an inferential group difference test for groups of persistence diagrams.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two independent groups of diagrams of length 6, which
+  # is the minimum length
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,10),],
+                                     dim = 0,threshold = 2)
+  g1 &lt;- list(D1,D2,D2,D2,D2,D2)
+  g2 &lt;- list(D2,D1,D1,D1,D1,D1)
+
+  # do independence test with sigma = t = 1 in dimension 0, using
+  # precomputed Gram matrices
+  K = gram_matrix(diagrams = g1,dim = 0,t = 1,sigma = 1,num_workers = 2)
+  L = gram_matrix(diagrams = g2,dim = 0,t = 1,sigma = 1,num_workers = 2)
+  indep_test &lt;- independence_test(Ks = list(K),Ls = list(L),dims = c(0))
+  
+}
+</code></pre>
+
+
+</div>

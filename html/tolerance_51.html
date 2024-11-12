@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>paretotol.int</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Pareto (or Power Distribution) Tolerance Intervals</h2>
+
+<h3>Description</h3>
+
+<p>Provides 1-sided or 2-sided tolerance intervals for data distributed according to either a Pareto distribution or 
+a power distribution (i.e., the inverse Pareto distribution).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">paretotol.int(x, alpha = 0.05, P = 0.99, side = 1,
+              method = c("GPU", "DUN"), power.dist = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A vector of data which is distributed according to either a Pareto distribution or a power distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The level chosen such that <code>1-alpha</code> is the confidence level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>The proportion of the population to be covered by this tolerance interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>side</code></td>
+<td>
+<p>Whether a 1-sided or 2-sided tolerance interval is required (determined by <code>side = 1</code> or <code>side = 2</code>,
+respectively).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The method for how the upper tolerance bound is approximated when transforming to utilize the relationship with the 2-parameter
+exponential distribution.  <code>"GPU"</code> is the Guenther-Patil-Upppuluri method. <code>"DUN"</code> is the Dunsmore method, which was empirically shown to be an improvement
+for samples greater than or equal to 8.  More information on these methods can be found in the "References".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>power.dist</code></td>
+<td>
+<p>If <code>TRUE</code>, then the data is considered to be from a power distribution, in which
+case the output gives tolerance intervals for the power distribution.  The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p> Recall that if the random variable <code class="reqn">X</code> is distributed 
+according to a Pareto distribution, then the random variable <code class="reqn">Y 
+= ln(X)</code> is distributed according to a 2-parameter exponential 
+distribution. Moreover, if the random variable <code class="reqn">W</code> is 
+distributed according to a power distribution, then the random 
+variable <code class="reqn">X = 1/W</code> is distributed according to a Pareto 
+distribution, which in turn means that the random variable <code class="reqn">Y = 
+ln(1/W)</code> is distributed according to a 2-parameter exponential 
+distribution.</p>
+
+
+<h3>Value</h3>
+
+<p><code>paretotol.int</code> returns a data frame with items:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The specified significance level.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>The proportion of the population covered by this tolerance interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>1-sided.lower</code></td>
+<td>
+<p>The 1-sided lower tolerance bound.  This is given only if <code>side = 1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>1-sided.upper</code></td>
+<td>
+<p>The 1-sided upper tolerance bound.  This is given only if <code>side = 1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>2-sided.lower</code></td>
+<td>
+<p>The 2-sided lower tolerance bound.  This is given only if <code>side = 2</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>2-sided.upper</code></td>
+<td>
+<p>The 2-sided upper tolerance bound.  This is given only if <code>side = 2</code>.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Dunsmore, I. R. (1978), Some Approximations for Tolerance Factors for the Two Parameter Exponential Distribution,
+<em>Technometrics</em>, <b>20</b>, 317–318.
+</p>
+<p>Engelhardt, M. and Bain, L. J. (1978), Tolerance Limits and Confidence Limits on Reliability for the Two-Parameter
+Exponential Distribution, <em>Technometrics</em>, <b>20</b>, 37–39.
+</p>
+<p>Guenther, W. C., Patil, S. A., and Uppuluri, V. R. R. (1976), One-Sided <code class="reqn">\beta</code>-Content Tolerance Factors
+for the Two Parameter Exponential Distribution, <em>Technometrics</em>, <b>18</b>, 333–340.  
+</p>
+<p>Krishnamoorthy, K., Mathew, T., and Mukherjee, S. (2008), Normal-Based Methods for a Gamma Distribution:
+Prediction and Tolerance Intervals and Stress-Strength Reliability, <em>Technometrics</em>, <b>50</b>, 69–78.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TwoParExponential</code>, <code>exp2tol.int</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> 
+## 95%/99% 2-sided Pareto tolerance intervals 
+## for a sample of size 500. 
+
+set.seed(100)
+x &lt;- exp(r2exp(500, rate = 0.15, shift = 2))
+out &lt;- paretotol.int(x = x, alpha = 0.05, P = 0.99, side = 2,
+                     method = "DUN", power.dist = FALSE)
+out
+
+plottol(out, x, plot.type = "both", side = "two", 
+        x.lab = "Pareto Data")
+</code></pre>
+
+
+</div>

@@ -1,0 +1,84 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>lightgbm.unify</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Unify LightGBM model</h2>
+
+<h3>Description</h3>
+
+<p>Convert your LightGBM model into a standardized representation.
+The returned representation is easy to be interpreted by the user and ready to be used as an argument in <code>treeshap()</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">lightgbm.unify(lgb_model, data, recalculate = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lgb_model</code></td>
+<td>
+<p>A lightgbm model - object of class <code>lgb.Booster</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Reference dataset. A <code>data.frame</code> or <code>matrix</code> with the same columns as in the training set of the model. Usually dataset used to train model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>recalculate</code></td>
+<td>
+<p>logical indicating if covers should be recalculated according to the dataset given in data. Keep it <code>FALSE</code> if training data are used.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a unified model representation - a <code>model_unified.object</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gbm.unify</code> for <code>GBM models</code>
+</p>
+<p><code>xgboost.unify</code> for <code>XGBoost models</code>
+</p>
+<p><code>ranger.unify</code> for <code>ranger models</code>
+</p>
+<p><code>randomForest.unify</code> for <code>randomForest models</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(lightgbm)
+param_lgbm &lt;- list(objective = "regression", max_depth = 2,
+                   force_row_wise = TRUE, num_iterations = 20)
+data_fifa &lt;- fifa20$data[!colnames(fifa20$data) %in%
+             c('work_rate', 'value_eur', 'gk_diving', 'gk_handling',
+             'gk_kicking', 'gk_reflexes', 'gk_speed', 'gk_positioning')]
+data &lt;- na.omit(cbind(data_fifa, fifa20$target))
+sparse_data &lt;- as.matrix(data[,-ncol(data)])
+x &lt;- lightgbm::lgb.Dataset(sparse_data, label = as.matrix(data[,ncol(data)]))
+lgb_data &lt;- lightgbm::lgb.Dataset.construct(x)
+lgb_model &lt;- lightgbm::lightgbm(data = lgb_data, params = param_lgbm,
+                                verbose = -1, num_threads = 0)
+unified_model &lt;- lightgbm.unify(lgb_model, sparse_data)
+shaps &lt;- treeshap(unified_model, data[1:2, ])
+plot_contribution(shaps, obs = 1)
+
+</code></pre>
+
+
+</div>

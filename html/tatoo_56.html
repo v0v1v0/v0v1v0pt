@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mash_table</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Mash Tables</h2>
+
+<h3>Description</h3>
+
+<p><code>mash_tables()</code> makes it easy to put together multidimensional
+tables from <code>data.frames</code> with the same number of rows and columns. You
+can mash tables together with either alternating rows or columns.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mash_table(
+  ...,
+  mash_method = "row",
+  id_vars = NULL,
+  insert_blank_row = FALSE,
+  sep_height = 24,
+  meta = NULL,
+  rem_ext = NULL
+)
+
+mash_table_list(
+  tables,
+  mash_method = "row",
+  id_vars = NULL,
+  insert_blank_row = FALSE,
+  sep_height = 24,
+  meta = NULL,
+  rem_ext = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p><code>mash_table()</code> only: <code>data.frames</code> with the same row and column
+count. Elements of <code>(...)</code> can be named, but the name must differ from
+the argument names of this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mash_method</code></td>
+<td>
+<p>either <code>"row"</code> or <code>"col"</code>. Should the tables be mashed
+together with alternating rows or with alternating columns?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id_vars</code></td>
+<td>
+<p>Only if mashing columns: one ore more colnames of the tables
+to be mashed. If supplied, columns of both input tables are combined with
+<code>merge()</code>, otherwise <code>cbind()</code> is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insert_blank_row</code></td>
+<td>
+<p>Only if mashing rows: logical. Whether to insert
+blank rows between mash-groups. <em>Warning: this converts all columns to
+character.</em> Use with care.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep_height</code></td>
+<td>
+<p>Only has an effect when exporting to <code>xlsx</code>. if
+<code>insert_blank_row == TRUE</code>, height of the inserted row, else height of the
+top row of each mash-group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meta</code></td>
+<td>
+<p>A  TT_meta object. if supplied, output will also be a
+Tagged_table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rem_ext</code></td>
+<td>
+<p><code>character</code>. For <code>mash_table</code> to work, the column names of all
+elements of <code>dat</code> must be identical. Sometimes you will have the situation
+that column names are identical except for a suffix, such as <code>length</code> and
+<code>lenght.sd</code>. The <code>rem_ext</code> option can be used to remove such suffixes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tables</code></td>
+<td>
+<p><code>mash_table_list()</code> only: a <code>list</code> of <code>data.frames</code> as
+described for <code>(...)</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>Mashed_table</code>: a <code>list</code> of <code>data.table</code>s with additional
+<code>mash_method</code>, <code>insert_blank_row</code> and <code>sep_height</code> attributes, that
+influence how the table looks when it is printed or exported.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Attribute setters: mash_method&lt;-
+</p>
+<p>Other Tatoo tables: 
+<code>comp_table()</code>,
+<code>stack_table()</code>,
+<code>tag_table()</code>,
+<code>tatoo_table()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+df_mean &lt;- data.frame(
+  Species = c("setosa", "versicolor", "virginica"),
+  length = c(5.01, 5.94, 6.59),
+  width = c(3.43, 2.77, 2.97)
+)
+
+df_sd &lt;- data.frame(
+  Species = c("setosa", "versicolor", "virginica"),
+  length = c(0.35, 0.52, 0.64),
+  width = c(0.38, 0.31, 0.32)
+)
+
+
+# Mash by row
+
+mash_table(df_mean, df_sd)
+
+#       Species length width
+# 1:     setosa   5.01  3.43
+# 2:     setosa   0.35  0.38
+# 3: versicolor   5.94  2.77
+# 4: versicolor   0.52  0.31
+# 5:  virginica   6.59  2.97
+# 6:  virginica   0.64  0.32
+
+
+# Mash by column
+
+mash_table(
+  df_mean, df_sd,
+  mash_method = 'col',
+  id_vars = 'Species'
+)
+
+#       Species    Species length length width width
+# 1:     setosa     setosa   5.01   0.35  3.43  0.38
+# 2: versicolor versicolor   5.94   0.52  2.77  0.31
+# 3:  virginica  virginica   6.59   0.64  2.97  0.32
+
+
+# Use the id_vars argument to prevent undesired dpulicated columns,
+# and name the input data.frames to get multi-col headings.
+
+mash_table(
+  mean = df_mean, sd = df_sd,
+  mash_method = 'col',
+  id_vars = 'Species'
+)
+
+#    ..........     ..length...     ...width...
+# 1    Species     mean     sd     mean     sd
+# 2     setosa     5.01   0.35     3.43   0.38
+# 3 versicolor     5.94   0.52     2.77   0.31
+# 4  virginica     6.59   0.64     2.97   0.32
+
+</code></pre>
+
+
+</div>

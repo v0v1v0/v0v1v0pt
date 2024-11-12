@@ -1,0 +1,191 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_gru</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Applies a multi-layer gated recurrent unit (GRU) RNN to an input sequence.</h2>
+
+<h3>Description</h3>
+
+<p>For each element in the input sequence, each layer computes the following
+function:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_gru(
+  input_size,
+  hidden_size,
+  num_layers = 1,
+  bias = TRUE,
+  batch_first = FALSE,
+  dropout = 0,
+  bidirectional = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_size</code></td>
+<td>
+<p>The number of expected features in the input <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hidden_size</code></td>
+<td>
+<p>The number of features in the hidden state <code>h</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_layers</code></td>
+<td>
+<p>Number of recurrent layers. E.g., setting <code>num_layers=2</code>
+would mean stacking two GRUs together to form a <code style="white-space: pre;">⁠stacked GRU⁠</code>,
+with the second GRU taking in outputs of the first GRU and
+computing the final results. Default: 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bias</code></td>
+<td>
+<p>If <code>FALSE</code>, then the layer does not use bias weights <code>b_ih</code> and <code>b_hh</code>.
+Default: <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_first</code></td>
+<td>
+<p>If <code>TRUE</code>, then the input and output tensors are provided
+as (batch, seq, feature). Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dropout</code></td>
+<td>
+<p>If non-zero, introduces a <code>Dropout</code> layer on the outputs of each
+GRU layer except the last layer, with dropout probability equal to
+<code>dropout</code>. Default: 0</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bidirectional</code></td>
+<td>
+<p>If <code>TRUE</code>, becomes a bidirectional GRU. Default: <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>currently unused.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn">
+\begin{array}{ll}
+r_t = \sigma(W_{ir} x_t + b_{ir} + W_{hr} h_{(t-1)} + b_{hr}) \\
+z_t = \sigma(W_{iz} x_t + b_{iz} + W_{hz} h_{(t-1)} + b_{hz}) \\
+n_t = \tanh(W_{in} x_t + b_{in} + r_t (W_{hn} h_{(t-1)}+ b_{hn})) \\
+h_t = (1 - z_t) n_t + z_t h_{(t-1)}
+\end{array}
+</code>
+</p>
+
+<p>where <code class="reqn">h_t</code> is the hidden state at time <code>t</code>, <code class="reqn">x_t</code> is the input
+at time <code>t</code>, <code class="reqn">h_{(t-1)}</code> is the hidden state of the previous layer
+at time <code>t-1</code> or the initial hidden state at time <code>0</code>, and <code class="reqn">r_t</code>,
+<code class="reqn">z_t</code>, <code class="reqn">n_t</code> are the reset, update, and new gates, respectively.
+<code class="reqn">\sigma</code> is the sigmoid function.
+</p>
+
+
+<h3>Inputs</h3>
+
+<p>Inputs: input, h_0
+</p>
+
+<ul>
+<li> <p><strong>input</strong> of shape <code style="white-space: pre;">⁠(seq_len, batch, input_size)⁠</code>: tensor containing the features
+of the input sequence. The input can also be a packed variable length
+sequence. See <code>nn_utils_rnn_pack_padded_sequence()</code>
+for details.
+</p>
+</li>
+<li> <p><strong>h_0</strong> of shape <code style="white-space: pre;">⁠(num_layers * num_directions, batch, hidden_size)⁠</code>: tensor
+containing the initial hidden state for each element in the batch.
+Defaults to zero if not provided.
+</p>
+</li>
+</ul>
+<h3>Outputs</h3>
+
+<p>Outputs: output, h_n
+</p>
+
+<ul>
+<li> <p><strong>output</strong> of shape <code style="white-space: pre;">⁠(seq_len, batch, num_directions * hidden_size)⁠</code>: tensor
+containing the output features h_t from the last layer of the GRU,
+for each t. If a <code>PackedSequence</code> has been
+given as the input, the output will also be a packed sequence.
+For the unpacked case, the directions can be separated
+using <code>output$view(c(seq_len, batch, num_directions, hidden_size))</code>,
+with forward and backward being direction <code>0</code> and <code>1</code> respectively.
+Similarly, the directions can be separated in the packed case.
+</p>
+</li>
+<li> <p><strong>h_n</strong> of shape <code style="white-space: pre;">⁠(num_layers * num_directions, batch, hidden_size)⁠</code>: tensor
+containing the hidden state for <code>t = seq_len</code>
+Like <em>output</em>, the layers can be separated using
+<code>h_n$view(num_layers, num_directions, batch, hidden_size)</code>.
+</p>
+</li>
+</ul>
+<h3>Attributes</h3>
+
+
+<ul>
+<li> <p><code>weight_ih_l[k]</code> : the learnable input-hidden weights of the <code class="reqn">\mbox{k}^{th}</code> layer
+(W_ir|W_iz|W_in), of shape <code style="white-space: pre;">⁠(3*hidden_size x input_size)⁠</code>
+</p>
+</li>
+<li> <p><code>weight_hh_l[k]</code> : the learnable hidden-hidden weights of the <code class="reqn">\mbox{k}^{th}</code> layer
+(W_hr|W_hz|W_hn), of shape <code style="white-space: pre;">⁠(3*hidden_size x hidden_size)⁠</code>
+</p>
+</li>
+<li> <p><code>bias_ih_l[k]</code> : the learnable input-hidden bias of the <code class="reqn">\mbox{k}^{th}</code> layer
+(b_ir|b_iz|b_in), of shape <code>(3*hidden_size)</code>
+</p>
+</li>
+<li> <p><code>bias_hh_l[k]</code> : the learnable hidden-hidden bias of the <code class="reqn">\mbox{k}^{th}</code> layer
+(b_hr|b_hz|b_hn), of shape <code>(3*hidden_size)</code>
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>All the weights and biases are initialized from <code class="reqn">\mathcal{U}(-\sqrt{k}, \sqrt{k})</code>
+where <code class="reqn">k = \frac{1}{\mbox{hidden\_size}}</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+rnn &lt;- nn_gru(10, 20, 2)
+input &lt;- torch_randn(5, 3, 10)
+h0 &lt;- torch_randn(2, 3, 20)
+output &lt;- rnn(input, h0)
+}
+</code></pre>
+
+
+</div>

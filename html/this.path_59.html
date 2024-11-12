@@ -1,0 +1,544 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>set.sys.path</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Implement 'this.path()' For Arbitrary 'source()'-Like Functions</h2>
+
+<h3>Description</h3>
+
+<p><code>sys.path()</code> is implemented to work with these functions and
+packages: </p>
+<ul>
+<li>
+<p><code>source()</code> </p>
+</li>
+<li>
+<p><code>sys.source()</code> </p>
+</li>
+<li>
+<p><a href="https://support.posit.co/hc/en-us/articles/205612627-Debugging-with-the-RStudio-IDE"><code>debugSource</code></a><code>()</code> in ‘<a href="https://posit.co/products/open-source/rstudio/">RStudio</a>’ </p>
+</li>
+<li>
+<p><code>compiler::loadcmp()</code> </p>
+</li>
+<li>
+<p><code>utils::Sweave()</code> </p>
+</li>
+<li>
+<p><code>box::use()</code> </p>
+</li>
+<li>
+<p><code>knitr::knit()</code> </p>
+</li>
+<li>
+<p><code>plumber::plumb()</code> </p>
+</li>
+<li>
+<p><code>shiny::runApp()</code> </p>
+</li>
+<li>
+<p><a href="https://CRAN.R-project.org/package=targets"><span class="pkg">package:targets</span></a> </p>
+</li>
+<li>
+<p><code>testthat::source_file()</code></p>
+</li>
+</ul>
+<p><code>set.sys.path()</code> can be used to implement <code>sys.path()</code> for any
+other <code>source()</code>-like functions.
+</p>
+<p><code>set.env.path()</code> and <code>set.src.path()</code> can be used alongside
+<code>set.sys.path()</code> to implement <code>env.path()</code> and
+<code>src.path()</code>, thereby fully implementing
+<code>this.path()</code>. Note that <code>set.env.path()</code> only makes sense
+if the code is being modularized, see <strong>Examples</strong>.
+</p>
+<p><code>unset.sys.path()</code> will undo a call to <code>set.sys.path()</code>. You will
+need to use this if you wish to call <code>set.sys.path()</code> multiple times
+within a function.
+</p>
+<p><code>set.sys.path.function()</code> is a special variant of <code>set.sys.path()</code>
+to be called within <code>callr::r()</code> on a function with an appropriate
+<code>srcref</code>.
+</p>
+<p><code>with_sys.path()</code> is a convenient way to evaluate code within the
+context of a file. Whereas <code>set.sys.path()</code> can only be used within a
+function, <code>with_sys.path()</code> can only be used outside a function.
+</p>
+<p>See <code>?sys.path(local = TRUE)</code> which returns the path of the
+executing script, confining the search to the local environment in which
+<code>set.sys.path()</code> was called.
+</p>
+<p><code>wrap.source()</code> should not be used, save for one specific use-case. See
+details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">set.sys.path(file,
+    path.only = FALSE,
+    character.only = path.only,
+    file.only = path.only,
+    conv2utf8 = FALSE,
+    allow.blank.string = FALSE,
+    allow.clipboard = !file.only,
+    allow.stdin = !file.only,
+    allow.url = !file.only,
+    allow.file.uri = !path.only,
+    allow.unz = !path.only,
+    allow.pipe = !file.only,
+    allow.terminal = !file.only,
+    allow.textConnection = !file.only,
+    allow.rawConnection = !file.only,
+    allow.sockconn = !file.only,
+    allow.servsockconn = !file.only,
+    allow.customConnection = !file.only,
+    ignore.all = FALSE,
+    ignore.blank.string = ignore.all,
+    ignore.clipboard = ignore.all,
+    ignore.stdin = ignore.all,
+    ignore.url = ignore.all,
+    ignore.file.uri = ignore.all,
+    Function = NULL, ofile)
+
+set.env.path(envir, matchThisEnv = getOption("topLevelEnvironment"))
+
+set.src.path(srcfile)
+
+unset.sys.path()
+
+set.sys.path.function(fun)
+
+with_sys.path(file, expr, ...)
+
+wrap.source(expr,
+    path.only = FALSE,
+    character.only = path.only,
+    file.only = path.only,
+    conv2utf8 = FALSE,
+    allow.blank.string = FALSE,
+    allow.clipboard = !file.only,
+    allow.stdin = !file.only,
+    allow.url = !file.only,
+    allow.file.uri = !path.only,
+    allow.unz = !path.only,
+    allow.pipe = !file.only,
+    allow.terminal = !file.only,
+    allow.textConnection = !file.only,
+    allow.rawConnection = !file.only,
+    allow.sockconn = !file.only,
+    allow.servsockconn = !file.only,
+    allow.customConnection = !file.only,
+    ignore.all = FALSE,
+    ignore.blank.string = ignore.all,
+    ignore.clipboard = ignore.all,
+    ignore.stdin = ignore.all,
+    ignore.url = ignore.all,
+    ignore.file.uri = ignore.all)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>for <code>with_sys.path()</code>, an expression to evaluate within the
+context of a file.
+</p>
+<p>for <code>wrap.source()</code>, an (unevaluated) call to a <code>source()</code>-like
+function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>a
+<code>connection</code> or a
+character string giving the pathname of the file or URL to read from.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>path.only</code></td>
+<td>
+<p>must <code>file</code> be an existing path? This implies
+<code>character.only</code> and <code>file.only</code> are <code>TRUE</code> and implies
+<code>allow.file.uri</code> and <code>allow.unz</code> are <code>FALSE</code>, though these
+can be manually changed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>character.only</code></td>
+<td>
+<p>must <code>file</code> be a character string?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>file.only</code></td>
+<td>
+<p>must <code>file</code> refer to an existing file?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conv2utf8</code></td>
+<td>
+<p>if <code>file</code> is a character string, should it be converted
+to UTF-8?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.blank.string</code></td>
+<td>
+<p>may <code>file</code> be a blank string, i.e.
+<code>""</code>?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.clipboard</code></td>
+<td>
+<p>may <code>file</code> be <code>"clipboard"</code> or a clipboard
+connection?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.stdin</code></td>
+<td>
+<p>may <code>file</code> be <code>"stdin"</code>? Note that
+<code>"stdin"</code> refers to the C-level ‘standard input’ of the
+process, differing from <code>stdin()</code> which
+refers to the R-level ‘standard input’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.url</code></td>
+<td>
+<p>may <code>file</code> be a URL pathname or a connection of class
+<code>"url-libcurl"</code> / / <code>"url-wininet"</code>?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.file.uri</code></td>
+<td>
+<p>may <code>file</code> be a ‘<span class="samp">⁠file://⁠</span>’ URL?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.unz, allow.pipe, allow.terminal, allow.textConnection,
+allow.rawConnection, allow.sockconn, allow.servsockconn</code></td>
+<td>
+<p>may
+<code>file</code> be a connection of class
+<code>"unz"</code>
+/ / <code>"pipe"</code> / / <code>"terminal"</code> / / <code>"textConnection"</code> / /
+<code>"rawConnection"</code> / / <code>"sockconn"</code> / / <code>"servsockconn"</code>?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow.customConnection</code></td>
+<td>
+<p>may <code>file</code> be a custom connection?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore.all, ignore.blank.string, ignore.clipboard, ignore.stdin,
+ignore.url, ignore.file.uri</code></td>
+<td>
+<p>ignore the special meaning of these types
+of strings, treating it as a path instead?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Function</code></td>
+<td>
+<p>character vector of length <code>1</code> or
+<code>2</code>; the name of the function and package in which
+<code>set.sys.path()</code> is called.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ofile</code></td>
+<td>
+<p>a
+<code>connection</code> or a
+character string specifying the original file argument. This overwrites the
+value returned by <code>sys.path(original = TRUE)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir, matchThisEnv</code></td>
+<td>
+<p>arguments passed to
+<code>topenv()</code> to determine the top level
+environment in which to assign an associated path.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>srcfile</code></td>
+<td>
+<p>source file in which to assign a pathname.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>function with a <code>srcref</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to <code>set.sys.path()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>set.sys.path()</code> should be added to the body of your <code>source()</code>-like
+function before reading / / evaluating the expressions.
+</p>
+<p><code>wrap.source()</code>, unlike <code>set.sys.path()</code>, does not accept an
+argument <code>file</code>. Instead, an attempt is made to extract the file from
+<code>expr</code>, after which <code>expr</code> is evaluated. It is assumed that the
+file is the first argument of the function, as is the case with most
+<code>source()</code>-like functions. The function of the call is evaluated, its
+<code>formals()</code> are retrieved,
+and then the arguments of <code>expr</code> are searched for a name matching the
+name of the first formal argument. If a match cannot be found by name, the
+first unnamed argument is taken instead. If no such argument exists, the file
+is assumed missing.
+</p>
+<p><code>wrap.source()</code> does non-standard evaluation and does some guess work to
+determine the file. As such, it is less desirable than <code>set.sys.path()</code>
+when the option is available. I can think of exactly one scenario in which
+<code>wrap.source()</code> might be preferable: suppose there is a
+<code>source()</code>-like function <code>sourcelike()</code> in a foreign package (a
+package for which you do not have write permission). Suppose that you write
+your own function in which the formals are <code>(...)</code> to wrap
+<code>sourcelike()</code>: </p>
+<pre>wrapper &lt;- function (...)
+{
+    ## possibly more args to wrap.source()
+    wrap.source(sourcelike(...))
+}</pre>
+<p>This is the only scenario in which <code>wrap.source()</code> is preferable, since
+extracting the file from the <code>...</code> list would be a pain. Then again,
+you could simply change the formals of <code>wrapper()</code> from <code>(...)</code>
+to <code>(file, ...)</code>. If this does not describe your exact scenario, use
+<code>set.sys.path()</code> instead.
+</p>
+
+
+<h3>Value</h3>
+
+<p>for <code>set.sys.path()</code>, if <code>file</code> is a path, then the normalized
+path with the same attributes, otherwise <code>file</code> itself. The return value
+of <code>set.sys.path()</code> should be assigned to a variable before use,
+something like: </p>
+<pre>{
+    file &lt;- set.sys.path(file, ...)
+    sourcelike(file)
+}</pre>
+<p>for <code>wrap.source()</code>, the result of evaluating <code>expr</code>.
+</p>
+
+
+<h3>Using 'ofile'</h3>
+
+<p><code>ofile</code> can be used when the <code>file</code> argument supplied to
+<code>set.sys.path()</code> is not the same as the <code>file</code> argument supplied to
+the <code>source()</code>-like function:
+</p>
+<pre>sourcelike &lt;- function (file)
+{
+    ofile &lt;- file
+    if (!is.character(ofile) || length(ofile) != 1)
+        stop(gettextf("'%s' must be a character string", "file"))
+    ## if the file exists, do nothing
+    if (file.exists(file)) {
+    }
+    ## look for the file in the home directory
+    ## if it exists, do nothing
+    else if (file.exists(file &lt;- this.path::path.join("~", ofile))) {
+    }
+    ## you could add other directories to look in,
+    ## but this is good enough for an example
+    else stop(gettextf("'%s' is not an existing file", ofile))
+    file &lt;- this.path::set.sys.path(file, ofile = ofile)
+    exprs &lt;- parse(n = -1, file = file)
+    for (i in seq_along(exprs)) eval(exprs[i], envir)
+    invisible()
+}</pre>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">FILE.R &lt;- tempfile(fileext = ".R")
+this.path:::.writeCode({
+    this.path::sys.path(verbose = TRUE)
+    try(this.path::env.path(verbose = TRUE))
+    this.path::src.path(verbose = TRUE)
+    this.path::this.path(verbose = TRUE)
+}, FILE.R)
+
+
+## here we have a source-like function, suppose this
+## function is in a package for which you have write permission
+sourcelike &lt;- function (file, envir = parent.frame())
+{
+    ofile &lt;- file
+    file &lt;- set.sys.path(file, Function = "sourcelike")
+    lines &lt;- readLines(file, warn = FALSE)
+    filename &lt;- sys.path(local = TRUE, for.msg = TRUE)
+    isFile &lt;- !is.na(filename)
+    if (isFile) {
+        timestamp &lt;- file.mtime(filename)[1]
+        ## in case 'ofile' is a URL pathname / / 'unz' connection
+        if (is.na(timestamp))
+            timestamp &lt;- Sys.time()
+    }
+    else {
+        filename &lt;- if (is.character(ofile)) ofile else "&lt;connection&gt;"
+        timestamp &lt;- Sys.time()
+    }
+    srcfile &lt;- srcfilecopy(filename, lines, timestamp, isFile)
+    set.src.path(srcfile)
+    exprs &lt;- parse(text = lines, srcfile = srcfile, keep.source = FALSE)
+    invisible(source.exprs(exprs, evaluated = TRUE, envir = envir))
+}
+
+
+sourcelike(FILE.R)
+sourcelike(conn &lt;- file(FILE.R)); close(conn)
+
+
+## here we have another source-like function, suppose this function
+## is in a foreign package for which you do not have write permission
+sourcelike2 &lt;- function (pathname, envir = globalenv())
+{
+    if (!(is.character(pathname) &amp;&amp; file.exists(pathname)))
+        stop(gettextf("'%s' is not an existing file",
+             pathname, domain = "R-base"))
+    envir &lt;- as.environment(envir)
+    lines &lt;- readLines(pathname, warn = FALSE)
+    srcfile &lt;- srcfilecopy(pathname, lines, isFile = TRUE)
+    exprs &lt;- parse(text = lines, srcfile = srcfile, keep.source = FALSE)
+    invisible(source.exprs(exprs, evaluated = TRUE, envir = envir))
+}
+
+
+## the above function is similar to sys.source(), and it
+## expects a character string referring to an existing file
+##
+## with the following, you should be able
+## to use 'sys.path()' within 'FILE.R':
+wrap.source(sourcelike2(FILE.R), path.only = TRUE)
+
+
+# ## with R &gt;= 4.1.0, use the forward pipe operator '|&gt;' to
+# ## make calls to 'wrap.source' more intuitive:
+# sourcelike2(FILE.R) |&gt; wrap.source(path.only = TRUE)
+
+
+## 'wrap.source' can recognize arguments by name, so they
+## do not need to appear in the same order as the formals
+wrap.source(sourcelike2(envir = new.env(), pathname = FILE.R),
+    path.only = TRUE)
+
+
+## it it much easier to define a new function to do this
+sourcelike3 &lt;- function (...)
+wrap.source(sourcelike2(...), path.only = TRUE)
+
+
+## the same as before
+sourcelike3(FILE.R)
+
+
+## however, this is preferable:
+sourcelike4 &lt;- function (pathname, ...)
+{
+    ## pathname is now normalized
+    pathname &lt;- set.sys.path(pathname, path.only = TRUE)
+    sourcelike2(pathname = pathname, ...)
+}
+sourcelike4(FILE.R)
+
+
+## perhaps you wish to run several scripts in the same function
+fun &lt;- function (paths, ...)
+{
+    for (pathname in paths) {
+        pathname &lt;- set.sys.path(pathname, path.only = TRUE)
+        sourcelike2(pathname = pathname, ...)
+        unset.sys.path(pathname)
+    }
+}
+
+
+## here we have a source-like function which modularizes its code
+sourcelike5 &lt;- function (file)
+{
+    ofile &lt;- file
+    file &lt;- set.sys.path(file, Function = "sourcelike5")
+    lines &lt;- readLines(file, warn = FALSE)
+    filename &lt;- sys.path(local = TRUE, for.msg = TRUE)
+    isFile &lt;- !is.na(filename)
+    if (isFile) {
+        timestamp &lt;- file.mtime(filename)[1]
+        ## in case 'ofile' is a URL pathname / / 'unz' connection
+        if (is.na(timestamp))
+            timestamp &lt;- Sys.time()
+    }
+    else {
+        filename &lt;- if (is.character(ofile)) ofile else "&lt;connection&gt;"
+        timestamp &lt;- Sys.time()
+    }
+    srcfile &lt;- srcfilecopy(filename, lines, timestamp, isFile)
+    set.src.path(srcfile)
+    envir &lt;- new.env(hash = TRUE, parent = .BaseNamespaceEnv)
+    envir$.packageName &lt;- filename
+    oopt &lt;- options(topLevelEnvironment = envir)
+    on.exit(options(oopt))
+    set.env.path(envir)
+    exprs &lt;- parse(text = lines, srcfile = srcfile, keep.source = FALSE)
+    source.exprs(exprs, evaluated = TRUE, envir = envir)
+    envir
+}
+
+
+sourcelike5(FILE.R)
+
+
+## the code can be made much simpler in some cases
+sourcelike6 &lt;- function (file)
+{
+    ## we expect a character string refering to a file
+    ofile &lt;- file
+    filename &lt;- set.sys.path(file, path.only = TRUE, ignore.all = TRUE,
+        Function = "sourcelike6")
+    lines &lt;- readLines(filename, warn = FALSE)
+    timestamp &lt;- file.mtime(filename)[1]
+    srcfile &lt;- srcfilecopy(filename, lines, timestamp, isFile = TRUE)
+    set.src.path(srcfile)
+    envir &lt;- new.env(hash = TRUE, parent = .BaseNamespaceEnv)
+    envir$.packageName &lt;- filename
+    oopt &lt;- options(topLevelEnvironment = envir)
+    on.exit(options(oopt))
+    set.env.path(envir)
+    exprs &lt;- parse(text = lines, srcfile = srcfile, keep.source = FALSE)
+    source.exprs(exprs, evaluated = TRUE, envir = envir)
+    envir
+}
+
+
+sourcelike6(FILE.R)
+
+
+unlink(FILE.R)
+</code></pre>
+
+
+</div>

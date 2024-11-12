@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tenAR.est</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimation for Autoregressive Model of Tensor-Valued Time Series</h2>
+
+<h3>Description</h3>
+
+<p>Estimation function for tensor autoregressive models. Methods include
+projection (PROJ), Least Squares (LSE), maximum likelihood estimation (MLE)
+and vector autoregressive model (VAR), as determined by the value of <code>method</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tenAR.est(xx,R=1,P=1,method="LSE",init.A=NULL,init.sig=NULL,niter=150,tol=1e-6)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>xx</code></td>
+<td>
+<p><code class="reqn">T \times d_1 \times \cdots \times d_K</code> tensor-valued time series, <code class="reqn">T</code> is the length of the series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>R</code></td>
+<td>
+<p>Kronecker rank for each lag, a vector for <code class="reqn">P&gt;1</code>, a positive integer, it assumes same number of terms in each lag.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>Autoregressive order, a positive integer.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>character string, specifying the type of the estimation method to be used. </p>
+
+<dl>
+<dt><code>"PROJ",</code></dt>
+<dd>
+<p>Projection method.</p>
+</dd>
+<dt><code>"LSE",</code></dt>
+<dd>
+<p>Least squares.</p>
+</dd>
+<dt><code>"MLE",</code></dt>
+<dd>
+<p>MLE under a separable cov(vec(<code class="reqn">E_t</code>)).</p>
+</dd>
+<dt><code>"VAR",</code></dt>
+<dd>
+<p>VAR(<code class="reqn">P</code>) model for the <code class="reqn">\mathrm{vec}(E_t)</code>.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.A</code></td>
+<td>
+<p>initial values of coefficient matrices <code class="reqn">A_k^{(ir)}</code> in estimation algorithms, which is a multi-layer list such that
+the first layer for the lag <code class="reqn">1 \le i \le P</code>, the second the term <code class="reqn">1 \le r \le R</code>, and the third the mode <code class="reqn">1 \le k \le K</code>.
+See "Details". By default, we use PROJ estimators as initial values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.sig</code></td>
+<td>
+<p>only if <code>method=MLE</code>, a list of initial values of <code class="reqn">\Sigma_1,\ldots,\Sigma_K</code>. The default are identity matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>niter</code></td>
+<td>
+<p>maximum number of iterations if error stays above <code>tol</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>error tolerance in terms of the Frobenius norm.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Tensor autoregressive model (of autoregressive order one) has the form:
+</p>
+<p style="text-align: center;"><code class="reqn">X_t = \sum_{r=1}^R X_{t-1} \times_{1}  A_1^{(r)} \times_{2}  \cdots \times_{K} A_K^{(r)} + E_t,</code>
+</p>
+
+<p>where <code class="reqn">A_k^{(r)}</code> are <code class="reqn">d_k \times d_k</code> coefficient matrices, <code class="reqn">k=1,\cdots,K</code>, and <code class="reqn">E_t</code> is a tensor white noise. <code class="reqn">R</code> is the Kronecker rank.
+The model of autoregressive order <code class="reqn">P</code> takes the form
+</p>
+<p style="text-align: center;"><code class="reqn">X_t = \sum_{i=1}^{P} \sum_{r=1}^{R_i} X_{t-i} \times_{1} A_{1}^{(ir)} \times_{2}  \cdots \times_{K} A_{K}^{(ir)} + E_t.</code>
+</p>
+
+<p>For the "MLE" method, we also assume,
+</p>
+<p style="text-align: center;"><code class="reqn">\mathrm{Cov}(\mathrm{vec}(E_t))= \Sigma_K \otimes \Sigma_{K-1} \otimes \cdots \otimes \Sigma_1,</code>
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>return a list containing the following:</p>
+
+<dl>
+<dt><code>A</code></dt>
+<dd>
+<p>a list of estimated coefficient matrices <code class="reqn">A_k^{(ir)}</code>. It is a multi-layer list,
+the first layer for the lag <code class="reqn">1 \le i \le P</code>, the second the term <code class="reqn">1 \le r \le R</code>, and the third the mode <code class="reqn">1 \le k \le K</code>. See "Details".</p>
+</dd>
+<dt><code>SIGMA</code></dt>
+<dd>
+<p>only if <code>method=MLE</code>, a list of estimated <code class="reqn">\Sigma_1,\ldots,\Sigma_K</code>.</p>
+</dd>
+<dt><code>res</code></dt>
+<dd>
+<p>residuals</p>
+</dd>
+<dt><code>Sig</code></dt>
+<dd>
+<p>sample covariance matrix of the residuals vec(<code class="reqn">\hat E_t</code>).</p>
+</dd>
+<dt><code>cov</code></dt>
+<dd>
+<p>grand covariance matrix of all estimated entries of <code class="reqn">A_k^{(ir)}</code></p>
+</dd>
+<dt><code>sd</code></dt>
+<dd>
+<p>standard errors of the coefficient matrices <code class="reqn">A_k^{(ir)}</code>, returned as a list aligned with <code>A</code>.</p>
+</dd>
+<dt><code>niter</code></dt>
+<dd>
+<p>number of iterations.</p>
+</dd>
+<dt><code>BIC</code></dt>
+<dd>
+<p>value of extended Bayesian information criterion.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Rong Chen, Han Xiao, and Dan Yang. "Autoregressive models for matrix-valued time series". Journal of Econometrics, 2020.
+</p>
+<p>Zebang Li, Han Xiao. "Multi-linear tensor autoregressive models". arxiv preprint arxiv:2110.00928 (2021).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(333)
+
+# case 1: tensor-valued time series
+
+dim &lt;- c(2,2,2)
+xx &lt;- tenAR.sim(t=100, dim, R=2, P=1, rho=0.5, cov='iid')
+est &lt;- tenAR.est(xx, R=2, P=1, method="LSE") # two-term tenAR(1) model
+A &lt;- est$A # A is a multi-layer list
+
+length(A) == 1 # TRUE, since the order P = 1
+length(A[[1]]) == 2 # TRUE, since the number of terms R = 2
+length(A[[1]][[1]]) == 3 # TRUE, since the mode K = 3
+
+# est &lt;- tenAR.est(xx, R=c(1,2), P=2, method="LSE") # tenAR(2) model with R1=1, R2=2
+
+# case 2: matrix-valued time series
+
+dim &lt;- c(2,2)
+xx &lt;- tenAR.sim(t=100, dim, R=2, P=1, rho=0.5, cov='iid')
+est &lt;- tenAR.est(xx, R=2, P=1, method="LSE") # two-term MAR(1) model 
+A &lt;- est$A # A is a multi-layer list
+
+length(A) == 1 # TRUE, since the order P = 1
+length(A[[1]]) == 2 # TRUE, since the number of terms R = 2
+length(A[[1]][[1]]) == 2 # TRUE, since the mode K = 2
+</code></pre>
+
+
+</div>

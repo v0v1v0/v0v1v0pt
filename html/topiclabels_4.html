@@ -1,0 +1,209 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>label_topics</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Automatically label topics using language models based on top terms</h2>
+
+<h3>Description</h3>
+
+<p>Performs an automated labeling process of topics from topic models using
+language models. For this, the top terms and (optionally) a short context
+description are used.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">label_topics(
+  terms,
+  model = "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  params = list(),
+  token = NA_character_,
+  context = "",
+  sep_terms = "; ",
+  max_length_label = 5L,
+  prompt_type = c("json", "plain", "json-roles"),
+  max_wait = 0L,
+  progress = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>terms</code></td>
+<td>
+<p>[<code>list (k) of character</code>]<br>
+List (each list entry represents one topic) of <code>character</code> vectors
+containing the top terms representing the topics that are to be labeled.
+If a single <code>character</code> vector is passed, this is interpreted as
+the top terms of a single topic. If a <code>character</code> matrix is passed,
+each column is interpreted as the top terms of a topic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Optional.<br>
+The language model to use for labeling the topics.
+The model must be accessible via the Huggingface API. Default is
+<code>mistralai/Mixtral-8x7B-Instruct-v0.1</code>. Other promising models are
+<code>HuggingFaceH4/zephyr-7b-beta</code> or <code>tiiuae/falcon-7b-instruct</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>[<code>named list</code>]<br>
+Optional.<br>
+Model parameters to pass. Default parameters for common models are
+given in the details section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>token</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Optional.<br>
+If you want to address the Huggingface API with a Huggingface token, enter
+it here. The main advantage of this is a higher rate limit.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>context</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Optional.<br>
+Explanatory context for the topics to be labeled. Using a (very) brief
+explanation of the thematic context may greatly improve the usefulness of
+automatically generated topic labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep_terms</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+How should the top terms of a single topic be separated in the generated
+prompts? Default is separation via semicolon and space.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_length_label</code></td>
+<td>
+<p>[<code>integer(1)</code>]<br>
+What is the maximum number of words a label should consist of? Default is five words.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prompt_type</code></td>
+<td>
+<p>[<code>character(1)</code>]<br>
+Which prompt type should be applied. We implemented various prompt types that
+differ mainly in how the response of the language model is requested. Examples
+are given in the details section. Default is the request of a json output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_wait</code></td>
+<td>
+<p>[<code>integer(1)</code>]<br>
+In the case that the rate limit on Huggingface is reached: How long
+(in minutes) should the system wait until it asks the user whether
+to continue (in other words: to wait). The default is zero minutes, i.e the
+user is asked every time the rate limit is reached.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+<p>[<code>logical(1)</code>]<br>
+Should a nice progress bar be shown? Turning it off, could lead to
+significantly faster calculation. Default ist <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function builds helpful prompts based on the top terms and sends these
+prompts to language models on Huggingface. The output is in turn
+post-processed so that the labels for each topic are extracted automatically.
+If the automatically extracted labels show any errors, they can alternatively
+be extracted using custom functions or manually from the original output of
+the model using the <code>model_output</code> entry of the lm_topic_labels object.
+</p>
+<p>Implemented default parameters for the models <code>HuggingFaceH4/zephyr-7b-beta</code>,
+<code>tiiuae/falcon-7b-instruct</code>, and <code>mistralai/Mixtral-8x7B-Instruct-v0.1</code> are:
+</p>
+
+<dl>
+<dt><code>max_new_tokens</code></dt>
+<dd>
+<p>300</p>
+</dd>
+<dt><code>return_full_text</code></dt>
+<dd>
+<p><code>FALSE</code></p>
+</dd>
+</dl>
+<p>Implemented prompt types are:
+</p>
+
+<dl>
+<dt><code>json</code></dt>
+<dd>
+<p>the language model is asked to respond in JSON format
+with a single field called 'label', specifying the best label for the topic</p>
+</dd>
+<dt><code>plain</code></dt>
+<dd>
+<p>the language model is asked to return an answer that
+should only consist of the best label for the topic</p>
+</dd>
+<dt><code>json-roles</code></dt>
+<dd>
+<p>the language model is asked to respond in JSON format
+with a single field called 'label', specifying the best label for the topic;
+in addition, the model is queried using identifiers for &lt;|user|&gt; input and
+the beginning of the &lt;|assistant|&gt; output</p>
+</dd>
+</dl>
+<h3>Value</h3>
+
+<p>[<code>named list</code>] <code>lm_topic_labels</code> object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+token = "" # please insert your hf token here
+topwords_matrix = matrix(c("zidane", "figo", "kroos",
+                           "gas", "power", "wind"), ncol = 2)
+label_topics(topwords_matrix, token = token)
+label_topics(list(c("zidane", "figo", "kroos"),
+                  c("gas", "power", "wind")),
+             token = token)
+label_topics(list(c("zidane", "figo", "ronaldo"),
+                  c("gas", "power", "wind")),
+             token = token)
+
+label_topics(list("wind", "greta", "hambach"),
+             token = token)
+label_topics(list("wind", "fire", "air"),
+             token = token)
+label_topics(list("wind", "feuer", "luft"),
+             token = token)
+label_topics(list("wind", "feuer", "luft"),
+             context = "Elements of the Earth",
+             token = token)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

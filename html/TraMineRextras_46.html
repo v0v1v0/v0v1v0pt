@@ -1,0 +1,121 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqsurv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Generate a survfit object for state survival times.</h2>
+
+<h3>Description</h3>
+
+<p>The function considers the spells in the different states in sequences and fits survival curves for each state. Alternatively, for a selected state, it fits the survival curves for each level of a stratifying group variable.
+</p>
+<p>Survival curves are fitted with the <code>survfit</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqsurv(seqdata, groups = NULL, per.state = FALSE, state = NULL,
+    with.missing = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>A sequence <code>stslist</code> object as defined by the <code>seqdef</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groups</code></td>
+<td>
+<p>A stratifying group variable of length equal to the number of sequences.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>per.state</code></td>
+<td>
+<p>Logical. Should the survival probabilites be computed for the state specified as <code>state</code> argument? If set as <code>TRUE</code>, the <code>state</code> argument must also be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state</code></td>
+<td>
+<p>Single state value or a vector. The short name of the state for which to compute survival probabilities. If a vector of state names, survival probabilities are computed for the subset defined by those states. If <code>NULL</code>, survival probabilities are computed for all cases.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should the missing state be accounted for? (Not yet implemented!)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function considers the spells in the different states of a state sequence object (of class <code>stslist</code>).
+</p>
+<p>When <code>per.state = FALSE</code>, it fits survival curves for each state in the alphabet.
+Currently, <code>per.state = FALSE</code> cannot be used with a non-<code>NULL</code> <code>groups</code> argument.
+However, <code>seqsplot</code> handles this case.
+
+</p>
+<p>When <code>per.state = TRUE</code>, the survival curve is fitted only for the state provided as <code>state</code> argument. This is done for each level of the <code>groups</code> variable.
+</p>
+<p>Survival curves are fitted with the <code>survfit</code> function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <em>stslist.surv</em>. There is a <code>plot</code> method for such
+objects.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthias Studer, Gilbert Ritschard, Pierre-Alexandre Fonta</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.stslist.surv</code> for basic plots of <em>stslist.surv</em> objects
+and <code>seqsplot</code> for more elaborated plots.
+
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Defining a sequence object with the data in columns 10 to 25
+## (family status from age 15 to 30) in the biofam data set
+data(biofam)
+biofam.lab &lt;- c("Parent", "Left", "Married", "Left+Marr",
+                "Child", "Left+Child", "Left+Marr+Child", "Divorced")
+biofam.short &lt;- c("P","L","M","LM","C","LC","LMC","D")
+
+sple &lt;- 500:700  ## want a sample with all elements of the alphabet
+##seqstatl(biofam[sple,10:25])
+biofam &lt;- biofam[sple,]
+
+## creating the state sequence object
+biofam.seq &lt;- seqdef(biofam[,10:25], alphabet=0:7, states=biofam.short, labels=biofam.lab)
+
+## Spell survival curves
+(biofam.surv &lt;- seqsurv(biofam.seq))
+
+## Cohort distinguishing between those born before or after World War II
+biofam$wwii &lt;- biofam$birthyr &lt;= 1945
+
+## Separate survival curves in a given state (here LMC "Left+Marr+Child") according to wwii
+(biofam.surv &lt;- seqsurv(biofam.seq, groups=biofam$wwii, per.state=TRUE, state="LMC"))
+plot(biofam.surv)
+</code></pre>
+
+
+</div>

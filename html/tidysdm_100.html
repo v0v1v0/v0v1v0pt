@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sample_pseudoabs_time</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sample pseudo-absence points for SDM analysis for points with a time point.</h2>
+
+<h3>Description</h3>
+
+<p>This function samples pseudo-absence points from a raster given a set of presences.
+The locations returned as the center points of the sampled cells, which can
+not overlap with the presences (in contrast to background points, see
+sample_background_time). The following methods are implemented:
+</p>
+
+<ul>
+<li>
+<p> 'random': pseudo-absences randomly sampled from the region covered by the
+raster (i.e. not NAs).
+</p>
+</li>
+<li>
+<p> 'dist_min': pseudo-absences randomly sampled from the region excluding a buffer
+of 'dist_min' from presences (distances in 'm' for lonlat rasters, and in map
+units for projected rasters).
+</p>
+</li>
+<li>
+<p> 'dist_max': pseudo-absences randomly sampled from the unioned buffers
+of 'dist_max' from presences (distances in 'm' for lonlat rasters, and in map
+units for projected rasters). Using the union of buffers means that areas that
+are in multiple buffers are not oversampled. This is also referred to as "thickening".
+</p>
+</li>
+<li>
+<p> 'dist_disc': pseudo-absences randomly sampled from the unioned discs around presences
+with the two values of 'dist_disc' defining the minimum and maximum distance from
+presences.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">sample_pseudoabs_time(
+  data,
+  raster,
+  n_per_presence,
+  coords = NULL,
+  time_col = "time",
+  lubridate_fun = c,
+  method = "random",
+  class_label = "pseudoabs",
+  return_pres = TRUE,
+  time_buffer = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>An <code>sf::sf</code> data frame, or a data frame with coordinate variables.
+These can be defined in <code>coords</code>, unless they have standard names
+(see details below).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>raster</code></td>
+<td>
+<p>the terra::SpatRaster or terra::SpatRasterDataset from which cells will be sampled.
+If a terra::SpatRasterDataset, the first dataset will be used to define which cells are valid,
+and which are NAs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_per_presence</code></td>
+<td>
+<p>number of pseudoabsence points to sample for
+each presence</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coords</code></td>
+<td>
+<p>a vector of length two giving the names of the "x" and "y"
+coordinates, as found in <code>data</code>. If left to NULL, the function will
+try to guess the columns based on standard names <code>c("x", "y")</code>, <code>c("X","Y")</code>,
+<code>c("longitude", "latitude")</code>, or <code>c("lon", "lat")</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_col</code></td>
+<td>
+<p>The name of the column with time; if time is not a lubridate object,
+use <code>lubridate_fun</code> to provide a function that can be used to convert appropriately</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lubridate_fun</code></td>
+<td>
+<p>function to convert the time column into a lubridate object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>sampling method. One of 'random', 'dist_min', 'dist_max', or
+'dist_disc'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>class_label</code></td>
+<td>
+<p>the label given to the sampled points. Defaults to <code>pseudoabs</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_pres</code></td>
+<td>
+<p>return presences together with pseudoabsences
+in a single tibble</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_buffer</code></td>
+<td>
+<p>the buffer on the time axis around presences that defines their effect when
+sampling pseudoabsences. If set to zero, presences have an effect only on the time step to which
+they are assigned in <code>raster</code>; if a positive value, it defines the number of days before
+and after the date provided in the <code>time</code> column for which the presence should be considered
+(e.g. 20 days means that a presence is considered in all time steps equivalent to plus and minus
+twenty days from its date).</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object of class tibble::tibble. If presences are returned, the
+presence level is set as the reference (to match the expectations in the
+<code>yardstick</code> package that considers the first level to be the event)
+</p>
+
+
+</div>

@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nest_dt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nest and unnest</h2>
+
+<h3>Description</h3>
+
+<p>Create or melt list columns in data.frame.
+</p>
+<p>Analogous function for <code>nest</code> and <code>unnest</code> in <span class="pkg">tidyr</span>.
+<code>unnest_dt</code> will automatically remove other list-columns except for the
+target list-columns (which would be unnested later). Also, <code>squeeze_dt</code> is
+designed to merge multiple columns into list column.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nest_dt(.data, ..., mcols = NULL, .name = "ndt")
+
+unnest_dt(.data, ...)
+
+squeeze_dt(.data, ..., .name = "ndt")
+
+chop_dt(.data, ...)
+
+unchop_dt(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>data.table, nested or unnested</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>The variables for nest group(for <code>nest_dt</code>),
+columns to be nested(for <code>squeeze_dt</code> and <code>chop_dt</code>),
+or column(s) to be unnested(for <code>unnest_dt</code>).
+Could recieve anything that <code>select_dt</code> could receive.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mcols</code></td>
+<td>
+<p>Name-variable pairs in the list, form like</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name</code></td>
+<td>
+<p>Character. The nested column name. Defaults to "ndt".
+<code>list(petal="^Pe",sepal="^Se")</code>, see example.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In the <code>nest_dt</code>, the data would be nested to a column named 'ndt',
+which is short for nested data.table.
+</p>
+<p>The <code>squeeze_dt</code> would not remove the originial columns.
+</p>
+<p>The <code>unchop_dt</code> is the reverse operation of <code>chop_dt</code>.
+</p>
+<p>These functions are experiencing the experimental stage, especially
+the <code>unnest_dt</code>. If they don't work on some circumtances, try <span class="pkg">tidyr</span>
+package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data.table, nested or unnested
+</p>
+
+
+<h3>References</h3>
+
+<p>https://www.r-bloggers.com/much-faster-unnesting-with-data-table/
+</p>
+<p>https://stackoverflow.com/questions/25430986/create-nested-data-tables-by-collapsing-rows-into-new-data-tables
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>nest</code>, <code>chop</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# examples for nest_dt
+# nest by which columns?
+ mtcars %&gt;% nest_dt(cyl)
+ mtcars %&gt;% nest_dt("cyl")
+ mtcars %&gt;% nest_dt(cyl,vs)
+ mtcars %&gt;% nest_dt(vs:am)
+ mtcars %&gt;% nest_dt("cyl|vs")
+ mtcars %&gt;% nest_dt(c("cyl","vs"))
+
+ # change the nested column name
+ mtcars %&gt;% nest_dt(cyl,.name = "data")
+
+# nest two columns directly
+iris %&gt;% nest_dt(mcols = list(petal="^Pe",sepal="^Se"))
+
+# nest more flexibly
+iris %&gt;% nest_dt(mcols = list(ndt1 = 1:3,
+  ndt2 = "Pe",
+  ndt3 = Sepal.Length:Sepal.Width))
+
+# examples for unnest_dt
+# unnest which column?
+ mtcars %&gt;% nest_dt("cyl|vs") %&gt;%
+   unnest_dt(ndt)
+ mtcars %&gt;% nest_dt("cyl|vs") %&gt;%
+   unnest_dt("ndt")
+
+df &lt;- data.table(
+  a = list(c("a", "b"), "c"),
+  b = list(c(TRUE,TRUE),FALSE),
+  c = list(3,c(1,2)),
+  d = c(11, 22)
+)
+
+df
+df %&gt;% unnest_dt(a)
+df %&gt;% unnest_dt(2)
+df %&gt;% unnest_dt("c")
+df %&gt;% unnest_dt(cols = names(df)[3])
+
+# You can unnest multiple columns simultaneously
+df %&gt;% unnest_dt(1:3)
+df %&gt;% unnest_dt(a,b,c)
+df %&gt;% unnest_dt("a|b|c")
+
+# examples for squeeze_dt
+# nest which columns?
+iris %&gt;% squeeze_dt(1:2)
+iris %&gt;% squeeze_dt("Se")
+iris %&gt;% squeeze_dt(Sepal.Length:Petal.Width)
+iris %&gt;% squeeze_dt(1:2,.name = "data")
+
+# examples for chop_dt
+df &lt;- data.table(x = c(1, 1, 1, 2, 2, 3), y = 1:6, z = 6:1)
+df %&gt;% chop_dt(y,z)
+df %&gt;% chop_dt(y,z) %&gt;% unchop_dt(y,z)
+</code></pre>
+
+
+</div>

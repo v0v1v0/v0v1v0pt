@@ -1,0 +1,281 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfb_ffjord</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Implements a continuous normalizing flow X-&gt;Y defined via an ODE.</h2>
+
+<h3>Description</h3>
+
+<p>This bijector implements a continuous dynamics transformation
+parameterized by a differential equation, where initial and terminal
+conditions correspond to domain (X) and image (Y) i.e.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfb_ffjord(
+  state_time_derivative_fn,
+  ode_solve_fn = NULL,
+  trace_augmentation_fn = tfp$bijectors$ffjord$trace_jacobian_hutchinson,
+  initial_time = 0,
+  final_time = 1,
+  validate_args = FALSE,
+  dtype = tf$float32,
+  name = "ffjord"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>state_time_derivative_fn</code></td>
+<td>
+<p><code>function</code> taking arguments <code>time</code>
+(a scalar representing time) and <code>state</code> (a Tensor representing the
+state at given <code>time</code>) returning the time derivative of the <code>state</code> at
+given <code>time</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ode_solve_fn</code></td>
+<td>
+<p><code>function</code> taking arguments <code>ode_fn</code> (same as
+<code>state_time_derivative_fn</code> above), <code>initial_time</code> (a scalar representing
+the initial time of integration), <code>initial_state</code> (a Tensor of floating
+dtype represents the initial state) and <code>solution_times</code> (1D Tensor of
+floating dtype representing time at which to obtain the solution)
+returning a Tensor of shape <code style="white-space: pre;">⁠[time_axis, initial_state$shape]⁠</code>. Will take
+<code style="white-space: pre;">⁠[final_time]⁠</code> as the <code>solution_times</code> argument and
+<code>state_time_derivative_fn</code> as <code>ode_fn</code> argument.
+If <code>NULL</code> a DormandPrince solver from <code>tfp$math$ode</code> is used.
+Default value: NULL</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace_augmentation_fn</code></td>
+<td>
+<p><code>function</code> taking arguments <code>ode_fn</code> (
+<code>function</code> same as <code>state_time_derivative_fn</code> above),
+<code>state_shape</code> (TensorShape of a the state), <code>dtype</code> (same as dtype of
+the state) and returning a <code>function</code> taking arguments <code>time</code>
+(a scalar representing the time at which the function is evaluted),
+<code>state</code> (a Tensor representing the state at given <code>time</code>) that computes
+a tuple (<code>ode_fn(time, state)</code>, <code>jacobian_trace_estimation</code>).
+<code>jacobian_trace_estimation</code> should represent trace of the jacobian of
+<code>ode_fn</code> with respect to <code>state</code>. <code>state_time_derivative_fn</code> will be
+passed as <code>ode_fn</code> argument.
+Default value: tfp$bijectors$ffjord$trace_jacobian_hutchinson</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_time</code></td>
+<td>
+<p>Scalar float representing time to which the <code>x</code> value of the
+bijector corresponds to. Passed as <code>initial_time</code> to <code>ode_solve_fn</code>.
+For default solver can be <code>float</code> or floating scalar <code>Tensor</code>.
+Default value: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final_time</code></td>
+<td>
+<p>Scalar float representing time to which the <code>y</code> value of the
+bijector corresponds to. Passed as <code>solution_times</code> to <code>ode_solve_fn</code>.
+For default solver can be <code>float</code> or floating scalar <code>Tensor</code>.
+Default value: 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. Whether to validate input with asserts. If validate_args is
+FALSE, and the inputs are invalid, correct behavior is not guaranteed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtype</code></td>
+<td>
+<p><code>tf$DType</code> to prefer when converting args to <code>Tensor</code>s. Else, we
+fall back to a common dtype inferred from the args, finally falling
+back to float32.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<div class="sourceCode"><pre>d/dt[state(t)] = state_time_derivative_fn(t, state(t))
+state(initial_time) = X
+state(final_time) = Y
+</pre></div>
+<p>For this transformation the value of <code>log_det_jacobian</code> follows another
+differential equation, reducing it to computation of the trace of the jacobian
+along the trajectory
+</p>
+<div class="sourceCode"><pre>state_time_derivative = state_time_derivative_fn(t, state(t))
+d/dt[log_det_jac(t)] = Tr(jacobian(state_time_derivative, state(t)))
+</pre></div>
+<p>FFJORD constructor takes two functions <code>ode_solve_fn</code> and
+<code>trace_augmentation_fn</code> arguments that customize integration of the
+differential equation and trace estimation.
+</p>
+<p>Differential equation integration is performed by a call to <code>ode_solve_fn</code>.
+</p>
+<p>Custom <code>ode_solve_fn</code> must accept the following arguments:
+</p>
+
+<ul>
+<li>
+<p> ode_fn(time, state): Differential equation to be solved.
+</p>
+</li>
+<li>
+<p> initial_time: Scalar float or floating Tensor representing the initial time.
+</p>
+</li>
+<li>
+<p> initial_state: Floating Tensor representing the initial state.
+</p>
+</li>
+<li>
+<p> solution_times: 1D floating Tensor of solution times.
+</p>
+</li>
+</ul>
+<p>And return a Tensor of shape <code style="white-space: pre;">⁠[solution_times$shape, initial_state$shape]⁠</code>
+representing state values evaluated at <code>solution_times</code>. In addition
+<code>ode_solve_fn</code> must support nested structures. For more details see the
+interface of <code>tfp$math$ode$Solver$solve()</code>.
+</p>
+<p>Trace estimation is computed simultaneously with <code>state_time_derivative</code>
+using <code>augmented_state_time_derivative_fn</code> that is generated by
+<code>trace_augmentation_fn</code>. <code>trace_augmentation_fn</code> takes
+<code>state_time_derivative_fn</code>, <code>state.shape</code> and <code>state.dtype</code> arguments and
+returns a <code>augmented_state_time_derivative_fn</code> callable that computes both
+<code>state_time_derivative</code> and unreduced <code>trace_estimation</code>.
+</p>
+<p>Custom <code>ode_solve_fn</code> and <code>trace_augmentation_fn</code> examples:
+</p>
+<div class="sourceCode"><pre># custom_solver_fn: `function(f, t_initial, t_solutions, y_initial, ...)`
+# ... : Additional arguments to pass to custom_solver_fn.
+ode_solve_fn &lt;- function(ode_fn, initial_time, initial_state, solution_times) {
+  custom_solver_fn(ode_fn, initial_time, solution_times, initial_state, ...)
+}
+ffjord &lt;- tfb_ffjord(state_time_derivative_fn, ode_solve_fn = ode_solve_fn)
+</pre></div>
+<div class="sourceCode"><pre># state_time_derivative_fn: `function(time, state)`
+# trace_jac_fn: `function(time, state)` unreduced jacobian trace function
+trace_augmentation_fn &lt;- function(ode_fn, state_shape, state_dtype) {
+  augmented_ode_fn &lt;- function(time, state) {
+    list(ode_fn(time, state), trace_jac_fn(time, state))
+  }
+augmented_ode_fn
+}
+ffjord &lt;- tfb_ffjord(state_time_derivative_fn, trace_augmentation_fn = trace_augmentation_fn)
+</pre></div>
+<p>For more details on FFJORD and continous normalizing flows see Chen et al. (2018), Grathwol et al. (2018).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a bijector instance.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li>
+<p> Chen, T. Q., Rubanova, Y., Bettencourt, J., &amp; Duvenaud, D. K. (2018). Neural ordinary differential equations. In Advances in neural information processing systems (pp. 6571-6583)
+</p>
+</li>
+<li> <p><a href="https://arxiv.org/abs/1810.01367">Grathwohl, W., Chen, R. T., Betterncourt, J., Sutskever, I., &amp; Duvenaud, D. (2018). Ffjord: Free-form continuous dynamics for scalable reversible generative models. arXiv preprint arXiv:1810.01367.</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>For usage examples see <code>tfb_forward()</code>, <code>tfb_inverse()</code>, <code>tfb_inverse_log_det_jacobian()</code>.
+</p>
+<p>Other bijectors: 
+<code>tfb_absolute_value()</code>,
+<code>tfb_affine_linear_operator()</code>,
+<code>tfb_affine_scalar()</code>,
+<code>tfb_affine()</code>,
+<code>tfb_ascending()</code>,
+<code>tfb_batch_normalization()</code>,
+<code>tfb_blockwise()</code>,
+<code>tfb_chain()</code>,
+<code>tfb_cholesky_outer_product()</code>,
+<code>tfb_cholesky_to_inv_cholesky()</code>,
+<code>tfb_correlation_cholesky()</code>,
+<code>tfb_cumsum()</code>,
+<code>tfb_discrete_cosine_transform()</code>,
+<code>tfb_expm1()</code>,
+<code>tfb_exp()</code>,
+<code>tfb_fill_scale_tri_l()</code>,
+<code>tfb_fill_triangular()</code>,
+<code>tfb_glow()</code>,
+<code>tfb_gompertz_cdf()</code>,
+<code>tfb_gumbel_cdf()</code>,
+<code>tfb_gumbel()</code>,
+<code>tfb_identity()</code>,
+<code>tfb_inline()</code>,
+<code>tfb_invert()</code>,
+<code>tfb_iterated_sigmoid_centered()</code>,
+<code>tfb_kumaraswamy_cdf()</code>,
+<code>tfb_kumaraswamy()</code>,
+<code>tfb_lambert_w_tail()</code>,
+<code>tfb_masked_autoregressive_default_template()</code>,
+<code>tfb_masked_autoregressive_flow()</code>,
+<code>tfb_masked_dense()</code>,
+<code>tfb_matrix_inverse_tri_l()</code>,
+<code>tfb_matvec_lu()</code>,
+<code>tfb_normal_cdf()</code>,
+<code>tfb_ordered()</code>,
+<code>tfb_pad()</code>,
+<code>tfb_permute()</code>,
+<code>tfb_power_transform()</code>,
+<code>tfb_rational_quadratic_spline()</code>,
+<code>tfb_rayleigh_cdf()</code>,
+<code>tfb_real_nvp_default_template()</code>,
+<code>tfb_real_nvp()</code>,
+<code>tfb_reciprocal()</code>,
+<code>tfb_reshape()</code>,
+<code>tfb_scale_matvec_diag()</code>,
+<code>tfb_scale_matvec_linear_operator()</code>,
+<code>tfb_scale_matvec_lu()</code>,
+<code>tfb_scale_matvec_tri_l()</code>,
+<code>tfb_scale_tri_l()</code>,
+<code>tfb_scale()</code>,
+<code>tfb_shifted_gompertz_cdf()</code>,
+<code>tfb_shift()</code>,
+<code>tfb_sigmoid()</code>,
+<code>tfb_sinh_arcsinh()</code>,
+<code>tfb_sinh()</code>,
+<code>tfb_softmax_centered()</code>,
+<code>tfb_softplus()</code>,
+<code>tfb_softsign()</code>,
+<code>tfb_split()</code>,
+<code>tfb_square()</code>,
+<code>tfb_tanh()</code>,
+<code>tfb_transform_diagonal()</code>,
+<code>tfb_transpose()</code>,
+<code>tfb_weibull_cdf()</code>,
+<code>tfb_weibull()</code>
+</p>
+
+
+</div>

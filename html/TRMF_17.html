@@ -1,0 +1,103 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TRMF_columns</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Add a column regularization model to TRMF object
+</h2>
+
+<h3>Description</h3>
+
+<p>Adds a regularization model to TRMF object created by <code>create_TRMF()</code> to constrain the fitting process of the coefficient matrix. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TRMF_columns(obj,
+    reg_type = c("l2", "nnls", "constrain", "interval", "none"), lambda = 0.0001,mu0=NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>TRMF object created by <code>create_TRMF()</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg_type</code></td>
+<td>
+<p>regularization type to apply when fitting TRMF model. <code>l2</code> regularizes using an L2 function (see details), <code>nnls</code>
+forces coefficients to be non-negative. <code>constrain</code> constrains coefficients to be non-negative and to sum to 1. <code>interval</code> constrains coefficients
+to the interval [0-1]
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>L2 regularization parameter used for all regularization types. Can be a single value, a vector, or a matrix. If not a scalar, the dimension must match the number of rows of <code>Fm</code>. In a Bayesian framework, this is the inverse prior covariance for matrix coefficients. Note this value is not squared in the code.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu0</code></td>
+<td>
+<p>The prior value for matrix coefficient. Can be a single value or vector. If not a scalar, the dimension must match the number of rows of <code>Fm</code>. If NULL it is set to zero. If external regressors are used these are included in Fm, so if lambda and mu0 are not scalars, they need to be arranged as: [column_xreg_parameters,global_xreg_parameters,Fm_parameters].</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function doesn't do any computations, it just sets up regularization parameters for the coefficient matrix. This function should only be called once on a TRMF object. If called twice, it will overwrite previous model with a warning. In addition to the possible constraints, a possible L2 regularization term is added to the fit. The regularization term for each column <code>i</code> is <code class="reqn">(Fm_i - \mu_0)^TP(Fm_i - \mu_0)</code> where <code class="reqn">P = \lambda I</code> or <code class="reqn">P = diag(\lambda)</code> or <code class="reqn">P = \lambda</code> depending on the size of provided lambda. A nonzero value for <code>lambda</code> is recommended to ensure stability of fit.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an updated object of class TRMF.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Chad Hammerquist
+</p>
+
+
+<h3>References</h3>
+
+<p>Yu, Hsiang-Fu, Nikhil Rao, and Inderjit S. Dhillon. "High-dimensional time series prediction with missing values." arXiv preprint arXiv:1509.08333 (2015).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>train.TRMF</code>, <code>create_TRMF</code>, <code>TRMF_trend</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# create test data
+xm = poly(x = (-10:10)/10,degree=4)
+fm = matrix(abs(rnorm(40)),4,10)
+Am = xm%*%fm+rnorm(210,0,.2)
+
+# create model
+obj = create_TRMF(Am)
+obj = TRMF_columns(obj,reg_type ="nnls")
+out = train(obj)
+plot(out)
+
+
+</code></pre>
+
+
+</div>

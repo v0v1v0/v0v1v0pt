@@ -1,0 +1,201 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bootstrap_persistence_thresholds</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate persistence threshold(s) for topological features in a data set using bootstrapping.</h2>
+
+<h3>Description</h3>
+
+<p>Bootstrapping is used to find a conservative estimate of a 1-'alpha' percent "confidence interval" around
+each point in the persistence diagram of the data set, and points whose intervals do not
+touch the diagonal (birth == death) would be considered "significant" or "real".
+One threshold is computed for each dimension in the diagram.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bootstrap_persistence_thresholds(
+  X,
+  FUN_diag = "calculate_homology",
+  FUN_boot = "calculate_homology",
+  maxdim = 0,
+  thresh,
+  distance_mat = FALSE,
+  ripser = NULL,
+  ignore_infinite_cluster = TRUE,
+  calculate_representatives = FALSE,
+  num_samples = 30,
+  alpha = 0.05,
+  return_subsetted = FALSE,
+  return_pvals = FALSE,
+  return_diag = TRUE,
+  num_workers = parallelly::availableCores(omit = 1),
+  p_less_than_alpha = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>the input dataset, must either be a matrix or data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN_diag</code></td>
+<td>
+<p>a string representing the persistent homology function to use for calculating the full persistence diagram, either
+'calculate_homology' (the default), 'PyH' or 'ripsDiag'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUN_boot</code></td>
+<td>
+<p>a string representing the persistent homology function to use for calculating the bootstrapped persistence diagrams, either
+'calculate_homology' (the default), 'PyH' or 'ripsDiag'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxdim</code></td>
+<td>
+<p>the integer maximum homological dimension for persistent homology, default 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>thresh</code></td>
+<td>
+<p>the positive numeric maximum radius of the Vietoris-Rips filtration.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance_mat</code></td>
+<td>
+<p>a boolean representing if 'X' is a distance matrix (TRUE) or not (FALSE, default).
+dimensions together (TRUE, the default) or if one threshold should be calculated for each dimension separately (FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ripser</code></td>
+<td>
+<p>the imported ripser module when 'FUN_diag' or 'FUN_boot' is 'PyH'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ignore_infinite_cluster</code></td>
+<td>
+<p>a boolean indicating whether or not to ignore the infinitely lived cluster when 'FUN_diag' or 'FUN_boot' is 'PyH'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calculate_representatives</code></td>
+<td>
+<p>a boolean representing whether to calculate representative (co)cycles, default FALSE. Note that representatives cant be
+calculated when using the 'calculate_homology' function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_samples</code></td>
+<td>
+<p>the positive integer number of bootstrap samples, default 30.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>the type-1 error threshold, default 0.05.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_subsetted</code></td>
+<td>
+<p>a boolean representing whether or not to return the subsetted persistence diagram (with or without representatives), default FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_pvals</code></td>
+<td>
+<p>a boolean representing whether or not to return p-values for features in the subsetted diagram, default FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_diag</code></td>
+<td>
+<p>a boolean representing whether or not to return the calculated persistence diagram, default TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the integer number of cores used for parallelizing (over bootstrap samples), default one less the maximum amount of cores on the machine.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p_less_than_alpha</code></td>
+<td>
+<p>a boolean representing whether or not subset further and return only feature whose p-values are strictly less than 'alpha', default 'FALSE'. Note that this is not part of the original bootstrap procedure.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The thresholds are then determined by calculating the 1-‘alpha’' percentile of the bottleneck
+distance values between the real persistence diagram and other diagrams obtained
+by bootstrap resampling the data. Since 'ripsDiag' is the slowest homology engine but is the
+only engine which calculates representative cycles (as opposed to co-cycles with 'PyH'), two
+homology engines are input to this function - one to calculate the actual persistence diagram, 'FUN_diag'
+(possibly with representative (co)cycles) and one to calculate the bootstrap diagrams, 'FUN_boot' (this should be
+a faster engine, like 'calculate_homology' or 'PyH').
+p-values can be calculated for any feature which survives the thresholding if both 'return_subsetted' and 'return_pvals' are 'TRUE', 
+however these values may be larger than the original 'alpha' value in some cases. Note that this is not part of the original bootstrap procedure.
+If stricter thresholding is desired,
+or the p-values must be less than 'alpha', set 'p_less_than_alpha' to 'TRUE'. The minimum
+possible p-value is always 1/('num_samples' + 1).
+Note that since <code>calculate_homology</code> 
+can ignore the longest-lived cluster, fewer "real" clusters may be found. To avoid this possibility
+try setting ‘FUN_diag' equal to ’ripsDiag'. Please note that due to the TDA package no longer being available on CRAN,
+if ‘FUN_diag' or 'FUN_boot' are ’ripsDiag' then 'bootstrap_persistence_thresholds' will look for the ripsDiag function in the global environment, 
+so the TDA package should be attached with 'library("TDA")' prior to use.
+</p>
+
+
+<h3>Value</h3>
+
+<p>either a numeric vector of threshold values, with one for each dimension 0..'maxdim' (in that order), or a list containing those thresholds and elements (if desired)
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Chazal F et al (2017). "Robust Topological Inference: Distance to a Measure and Kernel Distance." <a href="https://www.jmlr.org/papers/volume18/15-484/15-484.pdf">https://www.jmlr.org/papers/volume18/15-484/15-484.pdf</a>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create a persistence diagram from a sample of the unit circle
+  df &lt;- TDAstats::circle2d[sample(1:100,size = 50),]
+
+  # calculate persistence thresholds for alpha = 0.05 
+  # and return the calculated diagram as well as the subsetted diagram
+  bootstrapped_diagram &lt;- bootstrap_persistence_thresholds(X = df,
+  maxdim = 1,thresh = 2,num_workers = 2)
+}
+</code></pre>
+
+
+</div>

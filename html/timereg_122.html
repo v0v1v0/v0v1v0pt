@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>restricted.residual.mean</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimates restricted residual mean for Cox or Aalen model</h2>
+
+<h3>Description</h3>
+
+<p>The restricted means are the </p>
+<p style="text-align: center;"><code class="reqn"> \int_0^\tau S(t) dt </code>
+</p>
+<p> the standard
+errors are computed using the i.i.d. decompositions from the cox.aalen (that
+must be called with the argument "max.timpoint.sim=NULL") or aalen function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">restricted.residual.mean(out, x = 0, tau = 10, iid = 0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>out</code></td>
+<td>
+<p>an "cox.aalen" with a Cox model or an "aalen" model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>matrix with covariates for Cox model or additive hazards model
+(aalen).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>restricted residual mean.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iid</code></td>
+<td>
+<p>if iid=1 then uses iid decomposition for estimation of standard
+errors.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>must have computed iid decomposition of survival models for standard errors
+to be computed. Note that competing risks models can be fitted but then the
+interpretation is not clear.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns an object. With the following arguments:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>mean</code></td>
+<td>
+<p>restricted mean for different covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.mean</code></td>
+<td>
+<p>variance matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>se</code></td>
+<td>
+<p>standard errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>S0tau</code></td>
+<td>
+<p>estimated survival functions on time-range [0,tau].</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timetau</code></td>
+<td>
+<p>vector of time arguments for S0tau.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>D. M. Zucker, Restricted mean life with covariates: Modification
+and extension of a useful survival analysis method, J. Amer. Statist. Assoc.
+vol. 93 pp. 702-709, 1998.
+</p>
+<p>Martinussen and Scheike, Dynamic Regression Models for Survival Data,
+Springer (2006).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+### this example runs slowly and is therefore donttest
+data(sTRACE)
+sTRACE$cage &lt;- scale(sTRACE$age)
+# Fits Cox model  and aalen model 
+out&lt;-cox.aalen(Surv(time,status&gt;=1)~prop(sex)+prop(diabetes)+prop(chf)+
+	       prop(vf),data=sTRACE,max.timepoint.sim=NULL,resample.iid=1)
+outa&lt;-aalen(Surv(time,status&gt;=1)~sex+diabetes+chf+vf,
+data=sTRACE,resample.iid=1)
+
+coxrm &lt;- restricted.residual.mean(out,tau=7,
+   x=rbind(c(0,0,0,0),c(0,0,1,0),c(0,0,1,1),c(0,0,0,1)),iid=1)
+plot(coxrm)
+summary(coxrm)
+
+### aalen model not optimal here 
+aalenrm &lt;- restricted.residual.mean(outa,tau=7,
+   x=rbind(c(1,0,0,0,0),c(1,0,0,1,0),c(1,0,0,1,1),c(1,0,0,0,1)),iid=1)
+with(aalenrm,matlines(timetau,S0tau,type="s",ylim=c(0,1)))
+legend("bottomleft",c("baseline","+chf","+chf+vf","+vf"),col=1:4,lty=1)
+summary(aalenrm)
+
+mm &lt;-cbind(coxrm$mean,coxrm$se,aalenrm$mean,aalenrm$se)
+colnames(mm)&lt;-c("cox-res-mean","se","aalen-res-mean","se")
+rownames(mm)&lt;-c("baseline","+chf","+chf+vf","+vf")
+mm
+
+
+</code></pre>
+
+
+</div>

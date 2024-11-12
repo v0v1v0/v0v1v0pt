@@ -1,0 +1,132 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.TVAR</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Predict method for objects of class ‘<code>VAR</code>’, ‘<code>VECM</code>’ or ‘<code>TVAR</code>’</h2>
+
+<h3>Description</h3>
+
+<p>Forecasting the <strong>level</strong> of a series estimated by  ‘<code>VAR</code>’ / ‘<code>VECM</code>’ or ‘<code>TVAR</code>’
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'TVAR'
+predict(object, newdata, n.ahead = 5, newdataTrendStart, ...)
+
+## S3 method for class 'VAR'
+predict(object, newdata, n.ahead = 5, newdataTrendStart, exoPred = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object of class  ‘<code>VAR</code>’, ‘<code>VECM</code>’ or ‘<code>TVAR</code>’</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdata</code></td>
+<td>
+<p>Optional. A new data frame to predict from. 
+This should contain lags of the level of the original series. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ahead</code></td>
+<td>
+<p>An integer specifying the number of forecast steps.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>newdataTrendStart</code></td>
+<td>
+<p>If ‘<code>newdata</code>’ is provided by the user, 
+and the estimated model includes a trend, 
+this argument specifies where the trend should start</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to the unexported ‘<code>VAR.gen</code>’ or ‘<code>TVAR.gen</code>’ function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exoPred</code></td>
+<td>
+<p>vector/matrix of predictions for the exogeneous variable(s) (with ‘<code>n.ahead</code>’ rows).
+Only for ‘<code>VAR</code>’/‘<code>VECM</code>’, not for ‘<code>TVAR</code>’.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The forecasts are obtained recursively, and are for the levels of the series.  
+</p>
+<p>When providing newdata, newdata has to be ordered chronologically, 
+so that the first row/element is the earliest value. 
+</p>
+<p>For VECM, the forecasts are obtained by transforming the VECM to a VAR (using function <code>VARrep</code>). 
+Note that a VECM(lag=p) corresponds to a VAR(lag=p+1), so that if the user provides newdata 
+for a VECM(lag=p), newdata should actually contain p+1 rows.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A matrix of predicted values.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthieu Stigler
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>lineVar</code> and <code>VECM</code>. <code>VARrep</code>
+</p>
+<p>A more sophisticated predict function, allowing to do sub-sample rolling
+predictions: <code>predict_rolling</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(barry)
+barry_in &lt;- head(barry, -5)
+barry_out &lt;- tail(barry, 5)
+
+mod_vecm &lt;- VECM(barry_in, lag=2)
+mod_var &lt;- lineVar(barry_in, lag=3)
+mod_tvar &lt;- TVAR(barry_in, lag=3, nthresh=1, thDelay=1)
+
+pred_vecm &lt;- predict(mod_vecm)
+pred_var  &lt;- predict(mod_var) 
+pred_tvar &lt;- predict(mod_tvar)
+
+ 
+## compare forecasts on a plot
+n &lt;- 30
+plot(1:n, tail(barry[,1], n), type="l", xlim=c(0,n))
+lines((n-5+1):n, pred_var[,1], lty=2, col=2)
+lines((n-5+1):n, pred_vecm[,1], lty=2, col=3)
+lines((n-5+1):n, pred_tvar[,1], lty=2, col=4) 
+legend("bottomright", lty=c(1,2,2,2), col=1:4, legend=c("true", "var", "vecm", "tvar"))
+
+## example for newdata:
+all.equal(predict(mod_vecm), predict(mod_vecm, newdata=barry[c(317, 318, 319),]))
+</code></pre>
+
+
+</div>

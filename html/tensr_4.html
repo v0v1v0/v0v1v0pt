@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>array_bic_aic</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate the AIC and BIC.</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the AIC and BIC for Kronecker structured covariance models,
+assuming the array normal distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">array_bic_aic(sig_squared, p, mode_ident = NULL, mode_diag = NULL,
+  mode_unstructured = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sig_squared</code></td>
+<td>
+<p>A numeric. The MLE of sigma^2 in the array normal model
+(the 'variance' form of the total variation parameter).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>A vector of integers. The dimension of the data array (including
+replication modes).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_ident</code></td>
+<td>
+<p>A vector of integers. The modes assumed to have identity
+covariances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_diag</code></td>
+<td>
+<p>A vector of integers. The modes assumed to have diagional
+covariances.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_unstructured</code></td>
+<td>
+<p>A vector of integers. The modes of assumed to have
+unstructured covariances.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The AIC and BIC depend only on the data through the MLE of the total
+variation parameter. Given this, the dimension of the array, and a
+specification of which modes are the identity and which are unstructured,
+this function will calculate the AIC and BIC.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>AIC</code> A numeric. The AIC of the model.
+</p>
+<p><code>BIC</code> A numeric. The BIC of the model.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>holq</code> for obtaining <code>sig_squared</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate random array data with first mode having unstructured covariance
+#  second having diagonal covariance structure and third mode having identity
+#  covariance structure.
+set.seed(857)
+p &lt;- c(4, 4, 4)
+Z &lt;- array(stats::rnorm(prod(p)), dim = p)
+Y &lt;- atrans(Z, list(tensr:::rwish(diag(p[1])), diag(1:p[2]), diag(p[3])))
+
+# Use holq() to fit various models.
+false_fit1 &lt;- holq(Y, mode_rep = 1:3) ## identity for all modes
+false_fit2 &lt;- holq(Y, mode_rep = 2:3) ## unstructured first mode
+true_fit &lt;- holq(Y, mode_rep = 3, mode_diag = 2) ## correct model
+
+# Get AIC and BIC values.
+false_aic1 &lt;- array_bic_aic(false_fit1$sig ^ 2, p, mode_ident = 1:length(p))
+false_aic2 &lt;- array_bic_aic(false_fit2$sig ^ 2, p, mode_ident = 2:length(p),
+                            mode_unstructured = 1)
+true_aic &lt;- array_bic_aic(true_fit$sig ^ 2, p, mode_ident = 2:length(p), mode_diag = 1)
+
+# Plot the results.
+plot(c(false_aic1$AIC, false_aic2$AIC, true_aic$AIC), type = "l",
+     xaxt = "n", xlab = "Model", ylab = "AIC", main = "AIC")
+axis(side = 1, at = 1:3, labels = c("Wrong Model 1", "Wrong Model 2", "Right Model"))
+
+plot(c(false_aic1$BIC, false_aic2$BIC, true_aic$BIC), type = "l", xaxt = "n",
+     xlab = "Model", ylab = "BIC", main = "BIC")
+axis(side = 1, at = 1:3, labels = c("Wrong Model 1", "Wrong Model 2", "Right Model"))
+</code></pre>
+
+
+</div>

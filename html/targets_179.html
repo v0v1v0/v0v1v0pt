@@ -1,0 +1,178 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_read</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Read a target's value from storage.</h2>
+
+<h3>Description</h3>
+
+<p>Read a target's return value from its file in
+<code style="white-space: pre;">⁠_targets/objects/⁠</code>. For file targets (i.e. <code>format = "file"</code>)
+the paths are returned.
+</p>
+<p><code>tar_read()</code> expects an
+unevaluated symbol for the <code>name</code> argument, whereas <code>tar_read_raw()</code>
+expects a character string.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_read(
+  name,
+  branches = NULL,
+  meta = tar_meta(store = store),
+  store = targets::tar_config_get("store")
+)
+
+tar_read_raw(
+  name,
+  branches = NULL,
+  meta = tar_meta(store = store),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Name of the target to read.
+<code>tar_read()</code> expects an
+unevaluated symbol for the <code>name</code> argument, whereas <code>tar_read_raw()</code>
+expects a character string.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>branches</code></td>
+<td>
+<p>Integer of indices of the branches to load
+if the target is a pattern.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>meta</code></td>
+<td>
+<p>Data frame of metadata from <code>tar_meta()</code>.
+<code>tar_read()</code> with the default arguments can be inefficient for large
+pipelines because all the metadata is stored in a single file.
+However, if you call <code>tar_meta()</code> beforehand and supply it to the <code>meta</code>
+argument, then successive calls to <code>tar_read()</code> may run much faster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>The target's return value from its file in
+<code style="white-space: pre;">⁠_targets/objects/⁠</code>, or the paths to the custom files and directories
+if <code>format = "file"</code> was set.
+</p>
+
+
+<h3>Cloud target data versioning</h3>
+
+<p>Some buckets in Amazon S3 or Google Cloud Storage are "versioned",
+which means they track historical versions of each data object.
+If you use <code>targets</code> with cloud storage
+(<a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>)
+and versioning is turned on, then <code>targets</code> will record each
+version of each target in its metadata.
+</p>
+<p>Functions like <code>tar_read()</code>
+and <code>tar_load()</code> load the version recorded in the local metadata,
+which may not be the same as the "current" version of the
+object in the bucket. Likewise, functions <code>tar_delete()</code>
+and <code>tar_destroy()</code> only remove
+the version ID of each target as recorded in the local
+metadata.
+</p>
+<p>If you want to interact with the <em>latest</em> version of an object
+instead of the version ID recorded in the local metadata,
+then you will need to delete the object from the metadata.
+</p>
+
+<ol>
+<li>
+<p> Make sure your local copy of the metadata is current and
+up to date. You may need to run <code>tar_meta_download()</code> or
+<code>tar_meta_sync()</code> first.
+</p>
+</li>
+<li>
+<p> Run <code>tar_unversion()</code> to remove the recorded version IDs of
+your targets in the local metadata.
+</p>
+</li>
+<li>
+<p> With the version IDs gone from the local metadata,
+functions like <code>tar_read()</code> and <code>tar_destroy()</code> will use the
+<em>latest</em> version of each target data object.
+</p>
+</li>
+<li>
+<p> Optional: to back up the local metadata file with the version IDs
+deleted, use <code>tar_meta_upload()</code>.
+</p>
+</li>
+</ol>
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other storage: 
+<code>tar_format()</code>,
+<code>tar_load()</code>,
+<code>tar_load_everything()</code>,
+<code>tar_objects()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(tar_target(x, 1 + 1))
+})
+tar_make()
+tar_read(x)
+tar_read_raw("x")
+})
+}
+</code></pre>
+
+
+</div>

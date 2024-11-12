@@ -1,0 +1,342 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ELEFAN_SA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ELEFAN_SA</h2>
+
+<h3>Description</h3>
+
+<p>Electronic LEngth Frequency ANalysis with simulated annealing
+for estimating growth parameters.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ELEFAN_SA(
+  lfq,
+  seasonalised = FALSE,
+  init_par = list(Linf = 50, K = 0.5, t_anchor = 0.5, C = 0, ts = 0),
+  low_par = NULL,
+  up_par = NULL,
+  SA_time = 60 * 1,
+  maxit = NULL,
+  nb.stop.improvement = NULL,
+  SA_temp = 1e+05,
+  verbose = TRUE,
+  MA = 5,
+  addl.sqrt = FALSE,
+  agemax = NULL,
+  flagging.out = TRUE,
+  plot = FALSE,
+  plot.score = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lfq</code></td>
+<td>
+<p>a list consisting of following parameters:
+</p>
+
+<ul>
+<li> <p><strong>midLengths</strong> midpoints of the length classes,
+</p>
+</li>
+<li> <p><strong>dates</strong> dates of sampling times (class Date),
+</p>
+</li>
+<li> <p><strong>catch</strong> matrix with catches/counts per length class (row)
+and sampling date (column);
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seasonalised</code></td>
+<td>
+<p>logical; indicating if the seasonalised von Bertalanffy
+growth function should be applied (default: FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init_par</code></td>
+<td>
+<p>a list providing the Initial values for the components to be
+optimized. When set to NULL the following default values are used:
+</p>
+
+<ul>
+<li> <p><strong>Linf</strong> length infinity in cm (default is the maximum
+length class in the data),
+</p>
+</li>
+<li> <p><strong>K</strong> curving coefficient (default: 0.5),
+</p>
+</li>
+<li> <p><strong>t_anchor</strong> time point anchoring growth curves in year-length
+coordinate system, corrsponds to peak spawning month (range: 0 to 1, default: 0.5),
+</p>
+</li>
+<li> <p><strong>C</strong> amplitude of growth oscillation (range: 0 to 1, default: 0),
+</p>
+</li>
+<li> <p><strong>ts</strong> summer point (ts = WP - 0.5) (range: 0 to 1, default: 0);
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>low_par</code></td>
+<td>
+<p>a list providing the lower bounds for components. When set to
+NULL the following default values are used:
+</p>
+
+<ul>
+<li> <p><strong>Linf</strong> length infinity in cm (default is calculated from maximum
+length class in the data),
+</p>
+</li>
+<li> <p><strong>K</strong> curving coefficient (default: 0.01),
+</p>
+</li>
+<li> <p><strong>t_anchor</strong> time point anchoring growth curves in year-length
+coordinate system, corrsponds to peak spawning month (range: 0 to 1, default: 0),
+</p>
+</li>
+<li> <p><strong>C</strong> amplitude of growth oscillation (range: 0 to 1, default: 0),
+</p>
+</li>
+<li> <p><strong>ts</strong> summer point (ts = WP - 0.5) (range: 0 to 1, default: 0);
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>up_par</code></td>
+<td>
+<p>a list providing the upper bounds for components. When set to
+NULL the following default values are used:
+</p>
+
+<ul>
+<li> <p><strong>Linf</strong> length infinity in cm (default is calculated from maximum
+length class in the data),
+</p>
+</li>
+<li> <p><strong>K</strong> curving coefficient (default: 0.01),
+</p>
+</li>
+<li> <p><strong>t_anchor</strong> time point anchoring growth curves in year-length
+coordinate system, corrsponds to peak spawning month (range: 0 to 1, default: 0),
+</p>
+</li>
+<li> <p><strong>C</strong> amplitude of growth oscillation (range: 0 to 1, default: 0),
+</p>
+</li>
+<li> <p><strong>ts</strong> summer point (ts = WP - 0.5) (range: 0 to 1, default: 0);
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SA_time</code></td>
+<td>
+<p>numeric; Maximum running time in seconds (default : 60 * 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>Integer. Maximum number of iterations of the
+algorithm. Default is NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nb.stop.improvement</code></td>
+<td>
+<p>Integer. The program will stop when
+there is no any improvement in 'nb.stop.improvement'
+steps. Default is NULL</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>SA_temp</code></td>
+<td>
+<p>numeric; Initial value for temperature (default : 1e5).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical; TRUE means that messages from the algorithm
+are shown (default : TRUE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MA</code></td>
+<td>
+<p>number indicating over how many length classes the moving average
+should be performed (defalut: 5, for
+more information see lfqRestructure).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>addl.sqrt</code></td>
+<td>
+<p>Passed to lfqRestructure. Applied an additional
+square-root transformation of positive values according to Brey et al. (1988).
+(default: FALSE, for more information see lfqRestructure).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>agemax</code></td>
+<td>
+<p>maximum age of species; default NULL, then estimated from Linf</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flagging.out</code></td>
+<td>
+<p>logical; passed to lfqFitCurves. Default is TRUE</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>logical; Plot restructured counts with fitted lines using
+<code>plot.lfq</code> and <code>lfqFitCurves</code> (default : FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot.score</code></td>
+<td>
+<p>logical; Plot simulated annealing score progression.
+(Default: plot.score=TRUE)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A more detailed description of the simulated annealing (SA) can be found in
+Xiang et al. (2013). The score value <code>cost_value</code> is not comparable with
+the score value of the other ELEFAN functions (<code>ELEFAN</code> or
+<code>ELEFAN_GA</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the input parameters and following list objects:
+</p>
+
+<ul>
+<li> <p><strong>rcounts</strong>: restructured frequencies,
+</p>
+</li>
+<li> <p><strong>peaks_mat</strong>: matrix with positive peaks with distinct values,
+</p>
+</li>
+<li> <p><strong>ASP</strong>: available sum of peaks, sum of posititve peaks which
+could be potential be hit by
+growth curves,
+</p>
+</li>
+<li> <p><strong>ncohort</strong>: maximum age of species,
+</p>
+</li>
+<li> <p><strong>agemax</strong>: maximum age of species,
+</p>
+</li>
+<li> <p><strong>par</strong>: a list with the parameters of the von Bertalanffy growth
+function:
+</p>
+
+<ul>
+<li> <p><strong>Linf</strong>: length infinity in cm,
+</p>
+</li>
+<li> <p><strong>K</strong>: curving coefficient;
+</p>
+</li>
+<li> <p><strong>t_anchor</strong>: time point anchoring growth curves in year-length
+coordinate system, corrsponds to peak spawning month,
+</p>
+</li>
+<li> <p><strong>C</strong>: amplitude of growth oscillation
+(if <code>seasonalised</code> = TRUE),
+</p>
+</li>
+<li> <p><strong>ts</strong>: summer point of oscillation (ts = WP - 0.5)
+(if <code>seasonalised</code> = TRUE),
+</p>
+</li>
+<li> <p><strong>phiL</strong>: growth performance index defined as
+phiL = log10(K) + 2 * log10(Linf);
+</p>
+</li>
+</ul>
+</li>
+<li> <p><strong>Rn_max</strong>:  highest score value (absolute value of cost function,
+comparable with ELEFAN and ELEFAN_GA).
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Brey, T., Soriano, M., and Pauly, D. 1988. Electronic length frequency analysis: a revised and
+expanded
+user's guide to ELEFAN 0, 1 and 2.
+</p>
+<p>Pauly, D. and N. David, 1981. ELEFAN I, a BASIC program for the objective extraction of
+growth parameters from length-frequency data. <em>Meeresforschung</em>, 28(4):205-211
+</p>
+<p>Xiang, Y., Gubian, S., Suomela, B., &amp; Hoeng, J. (2013). Generalized simulated
+annealing for global optimization: the GenSA Package. R Journal, 5(1), 13-28.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## synthetic lfq data example
+data(synLFQ4)
+plot(synLFQ4, Fname="catch")
+
+# ELEFAN_SA (takes approximately 2 minutes)
+output &lt;- ELEFAN_SA(synLFQ4, SA_time = 60*2, seasonalised = TRUE, MA = 11,
+  init_par = list(Linf = 75, K = 0.5, t_anchor = 0.5, C = 0.5, ts = 0.5),
+  low_par = list(Linf = 70, K = 0.3, t_anchor = 0, C = 0, ts = 0),
+  up_par = list(Linf = 90, K = 0.7, t_anchor = 1, C = 1, ts = 1))
+output$par
+output$Rn_max
+
+# view fit
+plot(output)
+
+# or
+plot(output, draw = FALSE)
+lfqFitCurves(output, col=1, par=output$par, draw=TRUE)$ESP
+
+# compare to original parameters
+tmp &lt;- lfqFitCurves(output, col=4, lty=1,
+   par=list(Linf=80, K=0.5, t_anchor=0.25, C=0.75, ts=0.5), draw=TRUE)
+tmp$fESP
+output$Rn_max
+
+
+</code></pre>
+
+
+</div>

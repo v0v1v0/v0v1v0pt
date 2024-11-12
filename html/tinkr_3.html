@@ -1,0 +1,88 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>find_between</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find between a pattern</h2>
+
+<h3>Description</h3>
+
+<p>Helper function to find all nodes between a standard pattern. This is useful
+if you want to find unnested pandoc tags.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">find_between(
+  body,
+  ns,
+  pattern = "md:paragraph[md:text[starts-with(text(), ':::')]]",
+  include = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>body</code></td>
+<td>
+<p>and XML document</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ns</code></td>
+<td>
+<p>the namespace of the document</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pattern</code></td>
+<td>
+<p>an XPath expression that defines characteristics of nodes
+between which you want to extract everything.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include</code></td>
+<td>
+<p>if <code>TRUE</code>, the tags matching <code>pattern</code> will be included in
+the output, defaults to <code>FALSE</code>, which only gives you the nodes in between
+<code>pattern</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a nodeset
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">md &lt;- glue::glue("
+ h1
+ ====
+
+ ::: section
+
+ h2
+ ----
+
+ section *text* with [a link](https://ropensci.org/)
+ 
+ :::
+")
+x &lt;- xml2::read_xml(commonmark::markdown_xml(md))
+ns &lt;- xml2::xml_ns_rename(xml2::xml_ns(x), d1 = "md")
+res &lt;- find_between(x, ns)
+res
+xml2::xml_text(res)
+xml2::xml_find_all(res, ".//descendant-or-self::md:*", ns = ns)
+</code></pre>
+
+
+</div>

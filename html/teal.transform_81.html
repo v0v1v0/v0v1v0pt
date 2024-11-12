@@ -1,0 +1,182 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>merge_datasets</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Merge the datasets on the keys</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>Combines/merges multiple datasets with specified keys attribute.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">merge_datasets(
+  selector_list,
+  datasets,
+  join_keys,
+  merge_function = "dplyr::full_join",
+  anl_name = "ANL"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>selector_list</code></td>
+<td>
+<p>(<code>reactive</code>)
+output from <code>data_extract_multiple_srv()</code> or a reactive named list of
+outputs from <code>data_extract_srv()</code>.
+When using a reactive named list, the names must be identical to the shiny
+ids of the respective
+<code>data_extract_ui()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>(named <code>list</code> of <code>reactive</code> or non-<code>reactive</code> <code>data.frame</code>)
+object containing data as a list of <code>data.frame</code>.
+When passing a list of non-reactive <code>data.frame</code> objects, they are
+converted to reactive <code>data.frame</code> objects internally.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>join_keys</code></td>
+<td>
+<p>(<code>join_keys</code>)
+of variables used as join keys for each of the datasets in <code>datasets</code>.
+This will be used to extract the <code>keys</code> of every dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>merge_function</code></td>
+<td>
+<p>(<code>character(1)</code> or <code>reactive</code>)
+A character string of a function that accepts the arguments
+<code>x</code>, <code>y</code> and <code>by</code> to perform the merging of datasets.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>anl_name</code></td>
+<td>
+<p>(<code>character(1)</code>)
+Name of the analysis dataset.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Internally this function uses calls to allow reproducibility.
+</p>
+<p>This function is often used inside a <code>teal</code> module server function with the
+<code>selectors</code> being the output of <code>data_extract_srv</code> or <code>data_extract_multiple_srv</code>.
+</p>
+<div class="sourceCode"><pre># inside teal module server function
+
+response &lt;- data_extract_srv(
+  id = "reponse",
+  data_extract_spec = response_spec,
+  datasets = datasets
+)
+regressor &lt;- data_extract_srv(
+  id = "regressor",
+  data_extract_spec = regressor_spec,
+  datasets = datasets
+)
+merged_data &lt;- merge_datasets(list(regressor(), response()))
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p><code>merged_dataset</code> list containing:
+</p>
+
+<ul>
+<li> <p><code>expr</code> (<code>list</code> of <code>call</code>) code needed to replicate merged dataset;
+</p>
+</li>
+<li> <p><code>columns_source</code> (<code>list</code>) of column names selected for particular selector;
+Each list element contains named character vector where:
+</p>
+
+<ul>
+<li>
+<p> Values are the names of the columns in the <code>ANL</code>. In case if the same column name is selected in more than one
+selector it gets prefixed by the id of the selector. For example if two <code>data_extract</code> have id <code>x</code>, <code>y</code>, then
+their duplicated selected variable (for example <code>AGE</code>) is prefixed to be <code>x.AGE</code> and <code>y.AGE</code>;
+</p>
+</li>
+<li>
+<p> Names of the vector denote names of the variables in the input dataset;
+</p>
+</li>
+<li> <p><code>attr(,"dataname")</code> to indicate which dataset variable is merged from;
+</p>
+</li>
+<li> <p><code>attr(, "always selected")</code> to denote the names of the variables which need to be always selected;
+</p>
+</li>
+</ul>
+</li>
+<li> <p><code>keys</code> (<code>list</code>) the keys of the merged dataset;
+</p>
+</li>
+<li> <p><code>filter_info</code> (<code>list</code>) The information given by the user. This information
+defines the filters that are applied on the data. Additionally it defines
+the variables that are selected from the data sets.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+library(teal.data)
+
+X &lt;- data.frame(A = c(1, 1:3), B = 2:5, D = 1:4, E = letters[1:4], G = letters[6:9])
+Y &lt;- data.frame(A = c(1, 1, 2), B = 2:4, C = c(4, 4:5), E = letters[4:6], G = letters[1:3])
+join_keys &lt;- join_keys(join_key("X", "Y", c("A", "B")))
+
+selector_list &lt;- list(
+  list(
+    dataname = "X",
+    filters = NULL,
+    select = "E",
+    keys = c("A", "B"),
+    reshape = FALSE,
+    internal_id = "x"
+  ),
+  list(
+    dataname = "Y",
+    filters = NULL,
+    select = "G",
+    keys = c("A", "C"),
+    reshape = FALSE,
+    internal_id = "y"
+  )
+)
+
+data_list &lt;- list(X = reactive(X), Y = reactive(Y))
+
+merged_datasets &lt;- isolate(
+  merge_datasets(
+    selector_list = selector_list,
+    datasets = data_list,
+    join_keys = join_keys
+  )
+)
+
+paste(merged_datasets$expr)
+</code></pre>
+
+
+</div>

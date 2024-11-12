@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>score_occurrences</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Occurrence table sorting</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>Functions to score occurrence table subtables and rows which can be used in the
+sorting of occurrence tables.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">score_occurrences(table_row)
+
+score_occurrences_cols(...)
+
+score_occurrences_subtable(...)
+
+score_occurrences_cont_cols(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>table_row</code></td>
+<td>
+<p>(<code>TableRow</code>)<br> an analysis row in a occurrence table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments for row or column access, see <code>rtables_access</code>: either <code>col_names</code> (<code>character</code>) including
+the names of the columns which should be used, or alternatively <code>col_indices</code> (<code>integer</code>) giving the indices
+directly instead.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>score_occurrences()</code> returns the sum of counts across all columns of a table row.
+</p>
+</li></ul>
+<ul><li> <p><code>score_occurrences_cols()</code> returns a function that sums counts across all specified columns
+of a table row.
+</p>
+</li></ul>
+<ul><li> <p><code>score_occurrences_subtable()</code> returns a function that sums counts in each subtable
+across all specified columns.
+</p>
+</li></ul>
+<ul><li> <p><code>score_occurrences_cont_cols()</code> returns a function that sums counts in the first content row in
+specified columns.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>score_occurrences()</code>: Scoring function which sums the counts across all
+columns. It will fail if anything else but counts are used.
+</p>
+</li>
+<li> <p><code>score_occurrences_cols()</code>: Scoring functions can be produced by this constructor to only include
+specific columns in the scoring. See <code>h_row_counts()</code> for further information.
+</p>
+</li>
+<li> <p><code>score_occurrences_subtable()</code>: Scoring functions produced by this constructor can be used on
+subtables: They sum up all specified column counts in the subtable. This is useful when
+there is no available content row summing up these counts.
+</p>
+</li>
+<li> <p><code>score_occurrences_cont_cols()</code>: Produces a score function for sorting table by summing the first content row in
+specified columns. Note that this is extending <code>rtables::cont_n_onecol()</code> and <code>rtables::cont_n_allcols()</code>.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>h_row_first_values()</code>
+</p>
+<p><code>h_row_counts()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">lyt &lt;- basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  add_colcounts() %&gt;%
+  analyze_num_patients(
+    vars = "USUBJID",
+    .stats = c("unique"),
+    .labels = c("Total number of patients with at least one event")
+  ) %&gt;%
+  split_rows_by("AEBODSYS", child_labels = "visible", nested = FALSE) %&gt;%
+  summarize_num_patients(
+    var = "USUBJID",
+    .stats = c("unique", "nonunique"),
+    .labels = c(
+      "Total number of patients with at least one event",
+      "Total number of events"
+    )
+  ) %&gt;%
+  count_occurrences(vars = "AEDECOD")
+
+tbl &lt;- build_table(lyt, tern_ex_adae, alt_counts_df = tern_ex_adsl) %&gt;%
+  prune_table()
+
+tbl_sorted &lt;- tbl %&gt;%
+  sort_at_path(path = c("AEBODSYS", "*", "AEDECOD"), scorefun = score_occurrences)
+
+tbl_sorted
+
+score_cols_a_and_b &lt;- score_occurrences_cols(col_names = c("A: Drug X", "B: Placebo"))
+
+# Note that this here just sorts the AEDECOD inside the AEBODSYS. The AEBODSYS are not sorted.
+# That would require a second pass of `sort_at_path`.
+tbl_sorted &lt;- tbl %&gt;%
+  sort_at_path(path = c("AEBODSYS", "*", "AEDECOD"), scorefun = score_cols_a_and_b)
+
+tbl_sorted
+
+score_subtable_all &lt;- score_occurrences_subtable(col_names = names(tbl))
+
+# Note that this code just sorts the AEBODSYS, not the AEDECOD within AEBODSYS. That
+# would require a second pass of `sort_at_path`.
+tbl_sorted &lt;- tbl %&gt;%
+  sort_at_path(path = c("AEBODSYS"), scorefun = score_subtable_all, decreasing = FALSE)
+
+tbl_sorted
+
+</code></pre>
+
+
+</div>

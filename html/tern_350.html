@@ -1,0 +1,142 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summarize_colvars</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarize variables in columns</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>summarize_colvars()</code> uses the statistics function <code>s_summary()</code> to analyze variables that are
+arranged in columns. The variables to analyze should be specified in the table layout via column splits (see
+<code>rtables::split_cols_by()</code> and <code>rtables::split_cols_by_multivar()</code>) prior to using <code>summarize_colvars()</code>.
+</p>
+<p>The function is a minimal wrapper for <code>rtables::analyze_colvars()</code>, a function typically used to apply different
+analysis methods in rows for each column variable. To use the analysis methods as column labels, please refer to
+the <code>analyze_vars_in_cols()</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">summarize_colvars(
+  lyt,
+  ...,
+  na_str = default_na_str(),
+  .stats = c("n", "mean_sd", "median", "range", "count_fraction"),
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>s_summary()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>vector</code> of <code>integer</code>)<br> indent modifiers for the labels. Each element of the vector
+should be a name-value pair with name corresponding to a statistic specified in <code>.stats</code> and value the indentation
+for that statistic's row label.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A layout object suitable for passing to further layouting functions, or to <code>rtables::build_table()</code>.
+Adding this function to an <code>rtable</code> layout will summarize the given variables, arrange the output
+in columns, and add it to the table layout.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>rtables::split_cols_by_multivar()</code> and <code>analyze_colvars_functions</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">dta_test &lt;- data.frame(
+  USUBJID = rep(1:6, each = 3),
+  PARAMCD = rep("lab", 6 * 3),
+  AVISIT = rep(paste0("V", 1:3), 6),
+  ARM = rep(LETTERS[1:3], rep(6, 3)),
+  AVAL = c(9:1, rep(NA, 9)),
+  CHG = c(1:9, rep(NA, 9))
+)
+
+## Default output within a `rtables` pipeline.
+basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  split_rows_by("AVISIT") %&gt;%
+  split_cols_by_multivar(vars = c("AVAL", "CHG")) %&gt;%
+  summarize_colvars() %&gt;%
+  build_table(dta_test)
+
+## Selection of statistics, formats and labels also work.
+basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  split_rows_by("AVISIT") %&gt;%
+  split_cols_by_multivar(vars = c("AVAL", "CHG")) %&gt;%
+  summarize_colvars(
+    .stats = c("n", "mean_sd"),
+    .formats = c("mean_sd" = "xx.x, xx.x"),
+    .labels = c(n = "n", mean_sd = "Mean, SD")
+  ) %&gt;%
+  build_table(dta_test)
+
+## Use arguments interpreted by `s_summary`.
+basic_table() %&gt;%
+  split_cols_by("ARM") %&gt;%
+  split_rows_by("AVISIT") %&gt;%
+  split_cols_by_multivar(vars = c("AVAL", "CHG")) %&gt;%
+  summarize_colvars(na.rm = FALSE) %&gt;%
+  build_table(dta_test)
+
+</code></pre>
+
+
+</div>

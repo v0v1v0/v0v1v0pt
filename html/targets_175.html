@@ -1,0 +1,248 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tar_prune</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Remove targets that are no longer part of the pipeline.</h2>
+
+<h3>Description</h3>
+
+<p>Remove target values from <code style="white-space: pre;">⁠_targets/objects/⁠</code> and the cloud
+and remove target metadata from <code style="white-space: pre;">⁠_targets/meta/meta⁠</code>
+for targets that are no longer part of the pipeline.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tar_prune(
+  cloud = TRUE,
+  batch_size = 1000L,
+  verbose = TRUE,
+  callr_function = callr::r,
+  callr_arguments = targets::tar_callr_args_default(callr_function),
+  envir = parent.frame(),
+  script = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store")
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>cloud</code></td>
+<td>
+<p>Logical of length 1, whether to delete objects
+from the cloud if applicable (e.g. AWS, GCP). If <code>FALSE</code>,
+files are not deleted from the cloud.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>batch_size</code></td>
+<td>
+<p>Positive integer between 1 and 1000,
+number of target objects to delete
+from the cloud with each HTTP API request.
+Currently only supported for AWS.
+Cannot be more than 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical of length 1, whether to print console messages
+to show progress when deleting each batch of targets from each
+cloud bucket. Batched deletion with verbosity is currently only supported
+for AWS.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_function</code></td>
+<td>
+<p>A function from <code>callr</code> to start a fresh clean R
+process to do the work. Set to <code>NULL</code> to run in the current session
+instead of an external process (but restart your R session just before
+you do in order to clear debris out of the global environment).
+<code>callr_function</code> needs to be <code>NULL</code> for interactive debugging,
+e.g. <code>tar_option_set(debug = "your_target")</code>.
+However, <code>callr_function</code> should not be <code>NULL</code> for serious
+reproducible work.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>callr_arguments</code></td>
+<td>
+<p>A list of arguments to <code>callr_function</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>envir</code></td>
+<td>
+<p>An environment, where to run the target R script
+(default: <code style="white-space: pre;">⁠_targets.R⁠</code>) if <code>callr_function</code> is <code>NULL</code>.
+Ignored if <code>callr_function</code> is anything other than <code>NULL</code>.
+<code>callr_function</code> should only be <code>NULL</code> for debugging and
+testing purposes, not for serious runs of a pipeline, etc.
+</p>
+<p>The <code>envir</code> argument of <code>tar_make()</code> and related
+functions always overrides
+the current value of <code>tar_option_get("envir")</code> in the current R session
+just before running the target script file,
+so whenever you need to set an alternative <code>envir</code>, you should always set
+it with <code>tar_option_set()</code> from within the target script file.
+In other words, if you call <code>tar_option_set(envir = envir1)</code> in an
+interactive session and then
+<code>tar_make(envir = envir2, callr_function = NULL)</code>,
+then <code>envir2</code> will be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>script</code></td>
+<td>
+<p>Character of length 1, path to the
+target script file. Defaults to <code>tar_config_get("script")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets.R⁠</code>. When you set
+this argument, the value of <code>tar_config_get("script")</code>
+is temporarily changed for the current function call.
+See <code>tar_script()</code>,
+<code>tar_config_get()</code>, and <code>tar_config_set()</code> for details
+about the target script file and how to set it
+persistently for a project.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>store</code></td>
+<td>
+<p>Character of length 1, path to the
+<code>targets</code> data store. Defaults to <code>tar_config_get("store")</code>,
+which in turn defaults to <code style="white-space: pre;">⁠_targets/⁠</code>.
+When you set this argument, the value of <code>tar_config_get("store")</code>
+is temporarily changed for the current function call.
+See <code>tar_config_get()</code> and <code>tar_config_set()</code> for details
+about how to set the data store path persistently
+for a project.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tar_prune()</code> is useful if you recently worked through
+multiple changes to your project and are now trying to
+discard irrelevant data while keeping the results that still matter.
+Global objects and local files with <code>format = "file"</code> outside the
+data store are unaffected. Also removes <code style="white-space: pre;">⁠_targets/scratch/⁠</code>,
+which is only needed while <code>tar_make()</code>, <code>tar_make_clustermq()</code>,
+or <code>tar_make_future()</code> is running. To list the targets that will be
+pruned without actually removing anything, use <code>tar_prune_list()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code> except if <code>callr_function</code> is <code>callr::r_bg</code>, in which case
+a handle to the <code>callr</code> background process is returned. Either way,
+the value is invisibly returned.
+</p>
+
+
+<h3>Storage access</h3>
+
+<p>Several functions like <code>tar_make()</code>, <code>tar_read()</code>, <code>tar_load()</code>,
+<code>tar_meta()</code>, and <code>tar_progress()</code> read or modify
+the local data store of the pipeline.
+The local data store is in flux while a pipeline is running,
+and depending on how distributed computing or cloud computing is set up,
+not all targets can even reach it. So please do not call these
+functions from inside a target as part of a running
+pipeline. The only exception is literate programming
+target factories in the <code>tarchetypes</code> package such as <code>tar_render()</code>
+and <code>tar_quarto()</code>.
+</p>
+
+
+<h3>Cloud target data versioning</h3>
+
+<p>Some buckets in Amazon S3 or Google Cloud Storage are "versioned",
+which means they track historical versions of each data object.
+If you use <code>targets</code> with cloud storage
+(<a href="https://books.ropensci.org/targets/cloud-storage.html">https://books.ropensci.org/targets/cloud-storage.html</a>)
+and versioning is turned on, then <code>targets</code> will record each
+version of each target in its metadata.
+</p>
+<p>Functions like <code>tar_read()</code>
+and <code>tar_load()</code> load the version recorded in the local metadata,
+which may not be the same as the "current" version of the
+object in the bucket. Likewise, functions <code>tar_delete()</code>
+and <code>tar_destroy()</code> only remove
+the version ID of each target as recorded in the local
+metadata.
+</p>
+<p>If you want to interact with the <em>latest</em> version of an object
+instead of the version ID recorded in the local metadata,
+then you will need to delete the object from the metadata.
+</p>
+
+<ol>
+<li>
+<p> Make sure your local copy of the metadata is current and
+up to date. You may need to run <code>tar_meta_download()</code> or
+<code>tar_meta_sync()</code> first.
+</p>
+</li>
+<li>
+<p> Run <code>tar_unversion()</code> to remove the recorded version IDs of
+your targets in the local metadata.
+</p>
+</li>
+<li>
+<p> With the version IDs gone from the local metadata,
+functions like <code>tar_read()</code> and <code>tar_destroy()</code> will use the
+<em>latest</em> version of each target data object.
+</p>
+</li>
+<li>
+<p> Optional: to back up the local metadata file with the version IDs
+deleted, use <code>tar_meta_upload()</code>.
+</p>
+</li>
+</ol>
+<h3>See Also</h3>
+
+<p>tar_prune_inspect
+</p>
+<p>Other clean: 
+<code>tar_delete()</code>,
+<code>tar_destroy()</code>,
+<code>tar_invalidate()</code>,
+<code>tar_prune_list()</code>,
+<code>tar_unversion()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (identical(Sys.getenv("TAR_EXAMPLES"), "true")) { # for CRAN
+tar_dir({ # tar_dir() runs code from a temp dir for CRAN.
+tar_script({
+  library(targets)
+  library(tarchetypes)
+  list(
+    tar_target(y1, 1 + 1),
+    tar_target(y2, 1 + 1),
+    tar_target(z, y1 + y2)
+  )
+}, ask = FALSE)
+tar_make()
+# Remove some targets from the pipeline.
+tar_script(list(tar_target(y1, 1 + 1)), ask = FALSE)
+# Keep only the remaining targets in the data store.
+tar_prune()
+})
+}
+</code></pre>
+
+
+</div>

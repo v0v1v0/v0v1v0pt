@@ -1,0 +1,93 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot.txshift_msm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot working MSM for causal effects of an intervention grid</h2>
+
+<h3>Description</h3>
+
+<p>Plot working MSM for causal effects of an intervention grid
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'txshift_msm'
+plot(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>Object of class <code>txshift_msm</code> as produced by a call to
+<code>msm_vimshift</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>plot</code> as necessary.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Creates a visualization of the intervention-specific counterfactual
+means as well as the working marginal structural model summarizing the
+trend across posited values of the intervention.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (require("sl3")) {
+  set.seed(3287)
+  n_obs &lt;- 1000
+  W &lt;- as.numeric(replicate(1, rbinom(n_obs, 1, 0.5)))
+  A &lt;- as.numeric(rnorm(n_obs, mean = 2 * W, sd = 1))
+  Y &lt;- rbinom(n_obs, 1, plogis(2 * A - W))
+  msm &lt;- msm_vimshift(
+    W = W, A = A, Y = Y, estimator = "tmle",
+    g_exp_fit_args = list(
+      fit_type = "sl",
+      sl_learners_density = Lrnr_density_hse$new(Lrnr_glm$new())
+    ),
+    Q_fit_args = list(
+      fit_type = "glm",
+      glm_formula = "Y ~ ."
+    ),
+    delta_grid = seq(-1, 1, 0.25)
+  )
+  plot(msm)
+
+  # fit a linear spline with knot at 0
+  set.seed(8293)
+  n_obs &lt;- 1000
+  W &lt;- as.numeric(replicate(1, rbinom(n_obs, 1, 0.5)))
+  A &lt;- as.numeric(rnorm(n_obs, mean = 2 * W, sd = 1))
+  Y &lt;- rbinom(n_obs, 1, plogis(0.1 * A * (A &gt;= 0) - 3 * A * (A &lt; 0) - W))
+  msm &lt;- msm_vimshift(
+    W = W, A = A, Y = Y, estimator = "tmle",
+    g_exp_fit_args = list(
+      fit_type = "sl",
+      sl_learners_density = Lrnr_density_hse$new(Lrnr_glm$new())
+    ),
+    Q_fit_args = list(
+      fit_type = "glm",
+      glm_formula = "Y ~ ."
+    ),
+    delta_grid = seq(-1, 1, 0.25),
+    msm_form = list(type = "piecewise", knot = 0)
+  )
+  plot(msm)
+}
+</code></pre>
+
+
+</div>

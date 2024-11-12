@@ -1,0 +1,183 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>compile</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compile a C++ template to DLL suitable for MakeADFun.</h2>
+
+<h3>Description</h3>
+
+<p>Compile a C++ template into a shared object file. OpenMP flag is set if the template is detected to be parallel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">compile(
+  file,
+  flags = "",
+  safebounds = TRUE,
+  safeunload = TRUE,
+  openmp = isParallelTemplate(file[1]),
+  libtmb = TRUE,
+  libinit = TRUE,
+  tracesweep = FALSE,
+  framework = getOption("tmb.ad.framework"),
+  supernodal = FALSE,
+  longint = FALSE,
+  eigen.disable.warnings = TRUE,
+  max.order = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>file</code></td>
+<td>
+<p>C++ file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flags</code></td>
+<td>
+<p>Character with compile flags.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>safebounds</code></td>
+<td>
+<p>Turn on preprocessor flag for bound checking?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>safeunload</code></td>
+<td>
+<p>Turn on preprocessor flag for safe DLL unloading?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>openmp</code></td>
+<td>
+<p>Turn on openmp flag? Auto detected for parallel templates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>libtmb</code></td>
+<td>
+<p>Use precompiled TMB library if available (to speed up compilation)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>libinit</code></td>
+<td>
+<p>Turn on preprocessor flag to register native routines?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tracesweep</code></td>
+<td>
+<p>Turn on preprocessor flag to trace AD sweeps? (Silently disables <code>libtmb</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>framework</code></td>
+<td>
+<p>Which AD framework to use ('TMBad' or 'CppAD')</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>supernodal</code></td>
+<td>
+<p>Turn on preprocessor flag to use supernodal sparse Cholesky/Inverse from system wide suitesparse library</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>longint</code></td>
+<td>
+<p>Turn on preprocessor flag to use long integers for Eigen's SparseMatrix StorageIndex</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eigen.disable.warnings</code></td>
+<td>
+<p>Turn on preprocessor flag to disable nuisance warnings. Note that this is not allowed for code to be compiled on CRAN.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.order</code></td>
+<td>
+<p>Maximum derivative order of compiler generated atomic special functions - see details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Passed as Makeconf variables.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>TMB relies on R's built in functionality to create shared libraries independent of the platform.
+A template is compiled by <code>compile("template.cpp")</code>, which will call R's makefile with appropriate
+preprocessor flags.
+Compiler and compiler flags can be stored in a configuration file. In order of precedence either via
+the file pointed at by R_MAKEVARS_USER or the file ~/.R/Makevars if it exists.
+Additional configuration variables can be set with the <code>flags</code> and <code>...</code> arguments, which will override any
+previous selections.
+</p>
+
+
+<h3>Using a custom SuiteSparse installation</h3>
+
+<p>Sparse matrix calculations play an important role in TMB. By default TMB uses a small subset of <code>SuiteSparse</code> available through the R package <code>Matrix</code>. This is sufficient for most use cases, however for some very large models the following extra features are worth considering:
+</p>
+
+<ul>
+<li>
+<p> Some large models benefit from an extended set of graph reordering algorithms (especially METIS) not part of <code>Matrix</code>. It is common that these orderings can provide quite big speedups.
+</p>
+</li>
+<li>
+<p> Some large models need sparse matrices with number of nonzeros exceeding the current 32 bit limitation of <code>Matrix</code>. Normally such cases will result in the cholmod error 'problem too large'. <code>SuiteSparse</code> includes 64 bit integer routines to address this problem.
+</p>
+</li>
+</ul>
+<p>Experimental support for linking to a <em>custom</em> <code>SuiteSparse</code> installation is available through two arguments to the <code>compile</code> function. The first argument <code>supernodal=TRUE</code> tells TMB to use the supernodal Cholesky factorization from the system wide <code>SuiteSparse</code> on the C++ side. This will affect the speed of the Laplace approximation when run internally (using arguments <code>intern</code> or <code>integrate</code> to <code>MakeADFun</code>).
+</p>
+<p>The second argument <code>longint=TRUE</code> tells TMB to use 64 bit integers for sparse matrices on the C++ side. This works in combination with <code>supernodal=TRUE</code> from Eigen version 3.4.
+</p>
+<p>On Windows a <code>SuiteSparse</code> installation can be obtained using the <code>Rtools</code> package manager. Start 'Rtools Bash' terminal and run:
+</p>
+<pre>
+  pacman -Sy
+  pacman -S mingw-w64-{i686,x86_64}-suitesparse
+</pre>
+<p>On Linux one should look for the package <code>libsuitesparse-dev</code>.
+</p>
+
+
+<h3>Selecting the AD framework</h3>
+
+<p>TMB supports two different AD libraries 'CppAD' and 'TMBad' selected via the argument <code>framework</code> which works as a switch to set one of two C++ preprocessor flags: 'CPPAD_FRAMEWORK' or 'TMBAD_FRAMEWORK'. The default value of <code>framework</code> can be set from R by <code>options("tmb.ad.framework")</code> or alternatively from the shell via the environment variable 'TMB_AD_FRAMEWORK'. Packages linking to TMB should set one of the two C++ preprocessor flags in Makevars.
+</p>
+
+
+<h3>Order of compiler generated atomic functions</h3>
+
+<p>The argument <code>max.order</code> controls the maximum derivative order of special functions (e.g. <code>pbeta</code>) generated by the compiler. By default the value is set to 3 which is sufficient to obtain the Laplace approximation (order 2) and its derivatives (order 3). However, sometimes a higher value may be needed. For example <code>framework='TMBad'</code> allows one to calculate the Hessian of the Laplace approximation, but that requires 4th order derivatives of special functions in use. A too small value will cause the runtime error 'increase TMB_MAX_ORDER'. Note that compilation time and binary size increases with <code>max.order</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>precompile</code>
+</p>
+
+
+</div>

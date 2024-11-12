@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>cog</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Cast Column as a Cognostic</h2>
+
+<h3>Description</h3>
+
+<p>Cast a column of a cognostics data frame as a cognostic object
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">cog(
+  val = NULL,
+  desc = "",
+  group = "common",
+  type = NULL,
+  default_label = FALSE,
+  default_active = TRUE,
+  filterable = TRUE,
+  sortable = TRUE,
+  log = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>val</code></td>
+<td>
+<p>a scalar value (numeric, character, date, etc.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>desc</code></td>
+<td>
+<p>a description for this cognostic value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group</code></td>
+<td>
+<p>optional categorization of the cognostic for organizational purposes in the viewer (currently not implemented in the viewer)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>the desired type of cognostic you would like to compute (see details)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_label</code></td>
+<td>
+<p>should this cognostic be used as a panel label in the viewer by default?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_active</code></td>
+<td>
+<p>should this cognostic be active (available for sort / filter / sample) by default?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filterable</code></td>
+<td>
+<p>should this cognostic be filterable?  Default is <code>TRUE</code>.  It can be useful to set this to <code>FALSE</code> if the cognostic is categorical with many unique values and is only desired to be used as a panel label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sortable</code></td>
+<td>
+<p>should this cognostic be sortable?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>log</code></td>
+<td>
+<p>when being used in the viewer for visual univariate and bivariate filters, should the log be computed?  Useful when the distribution of the cognostic is very long-tailed or has large outliers.  Can either be a logical or a positive integer indicating the base.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Different types of cognostics can be specified through the <code>type</code> argument that will affect how the user is able to interact with those cognostics in the viewer.  This can usually be ignored because it will be inferred from the implicit data type of <code>val</code>.  But there are special types of cognostics, such as geographic coordinates and relations (not implemented) that can be specified as well.  Current possibilities for <code>type</code> are "key", "integer", "numeric", "factor", "date", "time", "href".
+</p>
+
+
+<h3>Value</h3>
+
+<p>object of class "cog"
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(tidyr)
+library(purrr)
+library(ggplot2)
+library(plotly)
+
+mpg_cog &lt;- mpg %&gt;%
+  nest(data = !one_of(c("manufacturer", "class"))) %&gt;%
+  mutate(
+    cogs = map_cog(data, ~ tibble(
+      mean_city_mpg = cog(mean(.$cty), desc = "Mean city mpg"),
+      mean_hwy_mpg = cog(mean(.$hwy), desc = "Mean highway mpg"),
+      most_common_drv = cog(tail(names(table(.$drv)), 1), desc = "Most common drive type")
+    )),
+    panel = map_plot(data, function(x) {
+      plot_ly(data = x, x = ~cty, y = ~hwy,
+        type = "scatter", mode = "markers") %&gt;%
+        layout(
+          xaxis = list(range = c(9, 47)),
+          yaxis = list(range = c(7, 37)))
+    })
+  )
+
+trelliscope(mpg_cog, name = "city_vs_highway_mpg", nrow = 1, ncol = 2)
+</code></pre>
+
+
+</div>

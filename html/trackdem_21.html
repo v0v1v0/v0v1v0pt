@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>update.particles</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Update identified particles.</h2>
+
+<h3>Description</h3>
+
+<p>Apply trained artificial neural network to particleStat object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'particles'
+update(object, neuralnet, pca = TRUE, colorimages = NULL, sbg = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class 'nnTrackdemObject'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>neuralnet</code></td>
+<td>
+<p>Trained neural net obtained from <code>testNN</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pca</code></td>
+<td>
+<p>Logical. By default <code>TRUE</code>, indicating that a principal
+component analysis is performed on the predictors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>colorimages</code></td>
+<td>
+<p>An array with the original full color images, in order
+to plot on the original images, obtained by <code>loadImages</code>.
+By default the original color images are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sbg</code></td>
+<td>
+<p>Images subtracted from background, as obtained by
+<code>subtractBackground</code>. By default, the original subtracted images
+are used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Data frame class 'particles', containing updated
+particle statistics (excluding
+particles that have been filtered out by the neural net).
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Marjolein Bruijning, Caspar A. Hallmann &amp; Marco D. Visser
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+dir.create("images")
+## Create image sequence
+traj &lt;- simulTrajec(path="images",
+                    nframes=30,nIndividuals=20,domain='square',
+                    h=0.01,rho=0.9,movingNoise=TRUE,
+                    parsMoving = list(density=20, duration=10, size=1,
+                                      speed = 10, colRange = c(0,1)),
+                    sizes=runif(20,0.004,0.006))
+## Load images
+dir &lt;- "images"
+allFullImages &lt;- loadImages (dirPictures=dir,nImages=1:30)
+stillBack &lt;- createBackground(allFullImages,method="mean")
+allImages &lt;- subtractBackground(stillBack)
+partIden &lt;- identifyParticles(allImages,threshold=-0.1,
+                                   pixelRange=c(3,400))
+nframes &lt;- 3
+frames &lt;- order(tapply(partIden$patchID,partIden$frame,length),
+                decreasing=TRUE)[1:nframes]
+mId &lt;- manuallySelect(particles=partIden,frame=frames)
+finalNN &lt;- testNN(dat=mId,repetitions=10,maxH=4,prop=c(6,2,2))
+partIdenNN &lt;- update(particles=partIden,neuralnet=finalNN)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

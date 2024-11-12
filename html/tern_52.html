@@ -1,0 +1,334 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>incidence_rate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Incidence rate estimation</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The analyze function <code>estimate_incidence_rate()</code> creates a layout element to estimate an event rate adjusted for
+person-years at risk, otherwise known as incidence rate. The primary analysis variable specified via <code>vars</code> is
+the person-years at risk. In addition to this variable, the <code>n_events</code> variable for number of events observed (where
+a value of 1 means an event was observed and 0 means that no event was observed) must also be specified.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_incidence_rate(
+  lyt,
+  vars,
+  n_events,
+  id_var = "USUBJID",
+  control = control_incidence_rate(),
+  na_str = default_na_str(),
+  nested = TRUE,
+  summarize = FALSE,
+  label_fmt = "%s - %.labels",
+  ...,
+  show_labels = "hidden",
+  table_names = vars,
+  .stats = c("person_years", "n_events", "rate", "rate_ci"),
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
+s_incidence_rate(
+  df,
+  .var,
+  n_events,
+  is_event = lifecycle::deprecated(),
+  id_var = "USUBJID",
+  control = control_incidence_rate()
+)
+
+a_incidence_rate(
+  df,
+  labelstr = "",
+  .var,
+  .df_row,
+  n_events,
+  id_var = "USUBJID",
+  control = control_incidence_rate(),
+  .stats = NULL,
+  .formats = c(person_years = "xx.x", n_events = "xx", rate = "xx.xx", rate_ci =
+    "(xx.xx, xx.xx)", n_unique = "xx", n_rate = "xx (xx.x)"),
+  .labels = NULL,
+  .indent_mods = NULL,
+  na_str = default_na_str(),
+  label_fmt = "%s - %.labels"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lyt</code></td>
+<td>
+<p>(<code>PreDataTableLayouts</code>)<br> layout that analyses will be added to.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> variable names for the primary analysis variable to be iterated over.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_events</code></td>
+<td>
+<p>(<code>string</code>)<br> name of integer variable indicating whether an event has been observed (1) or not (0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id_var</code></td>
+<td>
+<p>(<code>string</code>)<br> name of variable used as patient identifier if <code>"n_unique"</code> is included in <code>.stats</code>.
+Defaults to <code>"USUBJID"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(<code>list</code>)<br> parameters for estimation details, specified by using
+the helper function <code>control_incidence_rate()</code>. Possible parameter options are:
+</p>
+
+<ul>
+<li> <p><code>conf_level</code> (<code>proportion</code>)<br> confidence level for the estimated incidence rate.
+</p>
+</li>
+<li> <p><code>conf_type</code> (<code>string</code>)<br><code>normal</code> (default), <code>normal_log</code>, <code>exact</code>, or <code>byar</code>
+for confidence interval type.
+</p>
+</li>
+<li> <p><code>input_time_unit</code> (<code>string</code>)<br><code>day</code>, <code>week</code>, <code>month</code>, or <code>year</code> (default)
+indicating time unit for data input.
+</p>
+</li>
+<li> <p><code>num_pt_year</code> (<code>numeric</code>)<br> time unit for desired output (in person-years).
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nested</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether this layout instruction should be applied within the existing layout structure _if
+possible (<code>TRUE</code>, the default) or as a new top-level element (<code>FALSE</code>). Ignored if it would nest a split.
+underneath analyses, which is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summarize</code></td>
+<td>
+<p>(<code>flag</code>)<br> whether the function should act as an analyze function (<code>summarize = FALSE</code>), or a
+summarize function (<code>summarize = TRUE</code>). Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_fmt</code></td>
+<td>
+<p>(<code>string</code>)<br> how labels should be formatted after a row split occurs if <code>summarize = TRUE</code>. The
+string should use <code>"%s"</code> to represent row split levels, and <code>"%.labels"</code> to represent labels supplied to the
+<code>.labels</code> argument. Defaults to <code>"%s - %.labels"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for the lower level functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_labels</code></td>
+<td>
+<p>(<code>string</code>)<br> label visibility: one of "default", "visible" and "hidden".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>table_names</code></td>
+<td>
+<p>(<code>character</code>)<br> this can be customized in the case that the same <code>vars</code> are analyzed multiple
+times, to avoid warnings from <code>rtables</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.stats</code></td>
+<td>
+<p>(<code>character</code>)<br> statistics to select for the table. Run <code>get_stats("estimate_incidence_rate")</code>
+to see available statistics for this function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.formats</code></td>
+<td>
+<p>(named <code>character</code> or <code>list</code>)<br> formats for the statistics. See Details in <code>analyze_vars</code> for more
+information on the <code>"auto"</code> setting.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.labels</code></td>
+<td>
+<p>(named <code>character</code>)<br> labels for the statistics (without indent).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data set containing all analysis variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.var</code></td>
+<td>
+<p>(<code>string</code>)<br> single variable name that is passed by <code>rtables</code> when requested
+by a statistics function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_event</code></td>
+<td>
+<p>(<code>flag</code>)<br><code>TRUE</code> if event, <code>FALSE</code> if time to event is censored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labelstr</code></td>
+<td>
+<p>(<code>string</code>)<br> label of the level of the parent split currently being summarized
+(must be present as second argument in Content Row Functions). See <code>rtables::summarize_row_groups()</code>
+for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.df_row</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> data frame across all of the columns for the given row split.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<ul><li> <p><code>estimate_incidence_rate()</code> returns a layout object suitable for passing to further layouting functions,
+or to <code>rtables::build_table()</code>. Adding this function to an <code>rtable</code> layout will add formatted rows containing
+the statistics from <code>s_incidence_rate()</code> to the table layout.
+</p>
+</li></ul>
+<ul><li> <p><code>s_incidence_rate()</code> returns the following statistics:
+</p>
+
+<ul>
+<li> <p><code>person_years</code>: Total person-years at risk.
+</p>
+</li>
+<li> <p><code>n_events</code>: Total number of events observed.
+</p>
+</li>
+<li> <p><code>rate</code>: Estimated incidence rate.
+</p>
+</li>
+<li> <p><code>rate_ci</code>: Confidence interval for the incidence rate.
+</p>
+</li>
+<li> <p><code>n_unique</code>: Total number of patients with at least one event observed.
+</p>
+</li>
+<li> <p><code>n_rate</code>: Total number of events observed &amp; estimated incidence rate.
+</p>
+</li>
+</ul>
+</li></ul>
+<ul><li> <p><code>a_incidence_rate()</code> returns the corresponding list with formatted <code>rtables::CellValue()</code>.
+</p>
+</li></ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>estimate_incidence_rate()</code>: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for <code>rtables::analyze()</code>.
+</p>
+</li>
+<li> <p><code>s_incidence_rate()</code>: Statistics function which estimates the incidence rate and the
+associated confidence interval.
+</p>
+</li>
+<li> <p><code>a_incidence_rate()</code>: Formatted analysis function which is used as <code>afun</code> in <code>estimate_incidence_rate()</code>.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>control_incidence_rate()</code> and helper functions h_incidence_rate.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">df &lt;- data.frame(
+  USUBJID = as.character(seq(6)),
+  CNSR = c(0, 1, 1, 0, 0, 0),
+  AVAL = c(10.1, 20.4, 15.3, 20.8, 18.7, 23.4),
+  ARM = factor(c("A", "A", "A", "B", "B", "B")),
+  STRATA1 = factor(c("X", "Y", "Y", "X", "X", "Y"))
+)
+df$n_events &lt;- 1 - df$CNSR
+
+basic_table(show_colcounts = TRUE) %&gt;%
+  split_cols_by("ARM") %&gt;%
+  estimate_incidence_rate(
+    vars = "AVAL",
+    n_events = "n_events",
+    control = control_incidence_rate(
+      input_time_unit = "month",
+      num_pt_year = 100
+    )
+  ) %&gt;%
+  build_table(df)
+
+# summarize = TRUE
+basic_table(show_colcounts = TRUE) %&gt;%
+  split_cols_by("ARM") %&gt;%
+  split_rows_by("STRATA1", child_labels = "visible") %&gt;%
+  estimate_incidence_rate(
+    vars = "AVAL",
+    n_events = "n_events",
+    .stats = c("n_unique", "n_rate"),
+    summarize = TRUE,
+    label_fmt = "%.labels"
+  ) %&gt;%
+  build_table(df)
+
+a_incidence_rate(
+  df,
+  .var = "AVAL",
+  .df_row = df,
+  n_events = "n_events"
+)
+
+</code></pre>
+
+
+</div>

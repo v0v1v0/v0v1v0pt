@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rotation_test</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Carry out a rotation randomization test.</h2>
+
+<h3>Description</h3>
+
+<p>Carry out a rotation test (as applied in Miller et al. 2004 and detailed in DeRuiter and Solow 2008). This test is a
+variation on standard randomization or permutation tests that is appropriate for time-series of non-independent events
+(for example, time series of behavioral events that tend to occur in clusters).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">rotation_test(
+  event_times,
+  exp_period,
+  full_period = range(event_times, na.rm = TRUE),
+  n_rot = 10000,
+  ts_fun = length,
+  skip_sort = FALSE,
+  conf_level = 0.95,
+  return_rot_stats = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>event_times</code></td>
+<td>
+<p>A vector of the times of events. Times can be given in any format. If <code>event_times</code> should not be sorted prior to analysis (for example, if times are given in hours of the day and the times in the dataset span several days), be sure to specify <code>skip_sort=TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exp_period</code></td>
+<td>
+<p>A two-column vector, matrix, or data frame specifying the start and end times of the "experimental" period for the test. If a matrix or data frame is provided, one column should be start time(s) and the other end time(s). 
+Note that all data that falls into any experimental period will be concatenated and passed to <code>ts_fun</code>. If finer control is desired, consider writing your own test using the underlying function <code>rotate_data</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>full_period</code></td>
+<td>
+<p>A length two vector giving the start and end times of the full period during which events in event_times might have occurred. If missing, default is range(<code>event_times</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n_rot</code></td>
+<td>
+<p>Number of rotations (randomizations) to carry out. Default is <code>n_rot=10000</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ts_fun</code></td>
+<td>
+<p>A function to compute the test statistic. Input provided to this function will be the times of events that occur during the "experimental" period.  The default function is <code>length</code> - in other words, the default test statistic is the number of events that happen during the experimental period.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>skip_sort</code></td>
+<td>
+<p>Logical. Should times be sorted in ascending order? Default is <code>skip_sort=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>Confidence level to be used for the bootstrap CI calculation, specified as a proportion. (default is <code>conf_level=0.95</code>, or 95% confidence.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_rot_stats</code></td>
+<td>
+<p>Logical. Should output include the test statistics computed for each rotation of the data? Default is <code>return_rot_stats=FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional inputs to be passed to <code>ts_fun</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This implementation of the rotation test compares a test statistic (some summary of
+an "experimental" time-period) to its expected value during non-experimental periods. Instead of resampling random subsets of observations from the original dataset,
+the rotation test samples many contiguous blocks from the original data, each the same duration as the experimental period. The summary statistic,
+computed for these "rotated" samples, provides a distribution to which the test statistic from the data can be compared.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing the following components:
+</p>
+
+<ul>
+<li> <p><strong>result</strong>, A one-row data frame with rows:
+</p>
+
+<ul>
+<li> <p><strong>statistic: </strong> Test statistic (from original data)
+</p>
+</li>
+<li> <p><strong>p_value: </strong> P-value of the test (2-sided)
+</p>
+</li>
+<li> <p><strong>n_rot: </strong> Number of rotations
+</p>
+</li>
+<li> <p><strong>CI_low: </strong> Lower bound on rotation-resampling percentile-based confidence interval
+</p>
+</li>
+<li> <p><strong>CI_up: </strong> Upper bound on rotation-resampling percentile-based confidence interval
+</p>
+</li>
+<li> <p><strong>conf_level: </strong> Confidence level, as a proportion
+</p>
+</li>
+</ul>
+</li>
+<li> <p><strong>rot_stats</strong> (If <code>return_rot_stats</code> is TRUE), a vector of <code>n_rot</code> statistics from the rotated datasets
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Miller, P. J. O., Shapiro, A. D., Tyack, P. L. and Solow, A. R. (2004). Call-type matching in vocal exchanges of free-ranging resident killer whales, Orcinus orca. Anim. Behav. 67, 1099–1107.
+</p>
+<p>DeRuiter, S. L. and Solow, A. R. (2008). A rotation test for behavioural point-process data. Anim. Behav. 76, 1103–1452.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Advanced users seeking more flexibility may want to use the underlying function <code>rotate_data</code> to carry out customized rotation resampling. <code>rotate_data</code> generates one rotated dataset from <code>event_times</code> and <code>exp_period</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rotation_test(
+  event_times =
+    2000 * runif(500),
+  exp_period = c(100, 200),
+  return_rot_stats = TRUE, ts_fun = mean
+)
+</code></pre>
+
+
+</div>

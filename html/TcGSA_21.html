@@ -1,0 +1,476 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plotSelect.GS</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plotting (several) Selected Gene Set(s) in some Subjects</h2>
+
+<h3>Description</h3>
+
+<p>This function can plot different representations of the gene expression in selected
+gene sets, among a subset of selected subjects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plotSelect.GS(
+  expr,
+  gmt,
+  Subject_ID,
+  TimePoint,
+  geneset.names.select,
+  Subject_ID.select,
+  display = "one subject per page",
+  baseline = NULL,
+  group.var = NULL,
+  Group_ID_paired = NULL,
+  ref = NULL,
+  group_of_interest = NULL,
+  FUNcluster = NULL,
+  clustering_metric = "euclidian",
+  clustering_method = "ward",
+  B = 500,
+  max_trends = 4,
+  aggreg.fun = "median",
+  na.rm.aggreg = TRUE,
+  trend.fun = "median",
+  methodOptiClust = "firstSEmax",
+  verbose = TRUE,
+  clustering = TRUE,
+  time_unit = "",
+  title = NULL,
+  y.lab = NULL,
+  desc = TRUE,
+  lab.cex = 1,
+  axis.cex = 1,
+  main.cex = 1,
+  y.lab.angle = 90,
+  x.axis.angle = 45,
+  y.lim = NULL,
+  x.lim = NULL,
+  gg.add = list(theme())
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>either a matrix or dataframe of gene expression upon which
+dynamics are to be calculated, or a list of gene sets estimation of gene
+expression.  In the case of a matrix or dataframe, its dimension are <code class="reqn">n</code>
+x <code class="reqn">p</code>, with the <code class="reqn">p</code> sample in column and the <code class="reqn">n</code> genes in row.
+In the case of a list, its length should correspond to the number of gene
+sets under scrutiny and each element should be an 3 dimension array of
+estimated gene expression, such as for the list returned in the
+<code>'Estimations'</code> element of <code>TcGSA.LR</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gmt</code></td>
+<td>
+<p>a <b>gmt</b> object containing the gene sets definition.  See
+<code>GSA.read.gmt</code> and
+definition on <a href="https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats">www.software.broadinstitute.org</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Subject_ID</code></td>
+<td>
+<p>a factor of length <code class="reqn">p</code> that is in the same order as the
+columns of <code>expr</code> (when it is a dataframe) and that contains the patient
+identifier of each sample.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TimePoint</code></td>
+<td>
+<p>a numeric vector or a factor of length <code class="reqn">p</code> that is in
+the same order as <code>TimePoint</code> and the columns of <code>expr</code> (when it is
+a dataframe), and that contains the time points at which gene expression was
+measured.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geneset.names.select</code></td>
+<td>
+<p>a character vector containing the names of the gene sets to
+be plotted, that must appear in the <code>"geneset.names"</code> element of
+<code>gmt</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Subject_ID.select</code></td>
+<td>
+<p>a character vector containing the names of the subjects to
+be plotted, that must appear in the <code>Subject_ID</code> vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>display</code></td>
+<td>
+<p>How to display the resulting graphs.  One of the following : 
+<code>"one GS per page"</code>, <code>"one subject per page"</code>, <code>"median over selected patients"</code>.  
+Default is <code>"one subject per page"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline</code></td>
+<td>
+<p>a character string which is the value of <code>TimePoint</code>
+that can be used as a baseline.  Default is <code>NULL</code>, in which case no
+time point is used as a baseline value for gene expression.  Has to be
+<code>NULL</code> when comparing two treatment groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group.var</code></td>
+<td>
+<p>in the case of several treatment groups, this is a factor of
+length <code class="reqn">p</code> that is in the same order as <code>Timepoint</code>,
+<code>Subject_ID</code> and the columns of <code>expr</code>.  It indicates to which
+treatment group each sample belongs to.  Default is <code>NULL</code>, which means
+that there is only one treatment group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Group_ID_paired</code></td>
+<td>
+<p>a character vector of length <code class="reqn">p</code> that is in the
+same order as <code>Timepoint</code>, <code>Subject_ID</code>, <code>group.var</code> and the
+columns of <code>expr</code>.  This argument must not be <code>NULL</code> in the case of
+a paired analysis, and must be <code>NULL</code> otherwise.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>the group which is used as reference in the case of several
+treatment groups.  Default is <code>NULL</code>, which means that reference is the
+first group in alphabetical order of the labels of <code>group.var</code>.  See
+Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_of_interest</code></td>
+<td>
+<p>the group of interest, for which dynamics are to be
+computed in the case of several treatment groups.  Default is <code>NULL</code>,
+which means that group of interest is the second group in alphabetical order
+of the labels of <code>group.var</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FUNcluster</code></td>
+<td>
+<p>a function which accepts as first argument a matrix
+<code>x</code> and as second argument the number of clusters desired <code>k</code>, and
+which returns a list with a component named <code>'cluster'</code> which is a
+vector of length <code>n = nrow(x)</code> of integers in 1:k, determining the clustering
+or grouping of the n observations.  Default is <code>NULL</code>, in which case a
+hierarchical clustering is performed via the function
+<code>agnes</code>, using the metric <code>clustering_metric</code>
+and the method <code>clustering_method</code>.  See <code>'FUNcluster'</code> in
+<code>clusGap</code> and Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_metric</code></td>
+<td>
+<p>character string specifying the metric to be used
+for calculating dissimilarities between observations in the hierarchical
+clustering when <code>FUNcluster</code> is <code>NULL</code>.  The currently available
+options are <code>"euclidean"</code> and <code>"manhattan"</code>.  Default is
+<code>"euclidean"</code>.  See <code>agnes</code>.  Also, a <code>"sts"</code> option 
+is available in TcGSA.  It implements the 'Short Time Series' distance 
+[Moller-Levet et al., Fuzzy Clustering of short time series and unevenly distributed 
+sampling points, <em>Advances in Intelligent Data Analysis V</em>:330-340 Springer, 2003]
+designed specifically for clustering time series.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering_method</code></td>
+<td>
+<p>character string defining the agglomerative method
+to be used in the hierarchical clustering when <code>FUNcluster</code> is
+<code>NULL</code>.  The six methods implemented are <code>"average"</code> ([unweighted
+pair-]group average method, UPGMA), <code>"single"</code> (single linkage),
+<code>"complete"</code> (complete linkage), <code>"ward"</code> (Ward's method),
+<code>"weighted"</code> (weighted average linkage).  Default is <code>"ward"</code>.  See
+<code>agnes</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>integer specifying the number of Monte Carlo ("bootstrap") samples
+used to compute the gap statistics.  Default is <code>500</code>.  See
+<code>clusGap</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_trends</code></td>
+<td>
+<p>integer specifying the maximum number of different clusters
+to be tested.  Default is <code>4</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aggreg.fun</code></td>
+<td>
+<p>a character string such as <code>"mean"</code>, <code>"median"</code>
+or the name of any other defined statistics function that returns a single
+numeric value.  It specifies the function used to aggregate the observations
+before the clustering.  Default is to <code>median</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm.aggreg</code></td>
+<td>
+<p>a logical flag indicating whether <code>NA</code> should be remove to prevent 
+propagation through <code>aggreg.fun</code>. Can be useful to set to TRUE with 
+unbalanced design as those will generate structural <code>NA</code>s in 
+<code>$Estimations</code>. Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trend.fun</code></td>
+<td>
+<p>a character string such as <code>"mean"</code>, <code>"median"</code> or
+the name of any other function that returns a single numeric value.  It
+specifies the function used to calculate the trends of the identified
+clustered.  Default is to <code>median</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>methodOptiClust</code></td>
+<td>
+<p>character string indicating how the "optimal" number
+of clusters is computed from the gap statistics and their standard
+deviations. Possible values are <code>"globalmax"</code>, <code>"firstmax"</code>,
+<code>"Tibs2001SEmax"</code>, <code>"firstSEmax"</code> and <code>"globalSEmax"</code>.
+Default is <code>"firstSEmax"</code>.  See <code>'method'</code> in
+<code>clusGap</code>, Details and <em>Tibshirani et al.,
+2001</em> in References.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>logical flag enabling verbose messages to track the computing
+status of the function.  Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering</code></td>
+<td>
+<p>logical flag.  If <code>FALSE</code>, there is no clustering
+representation; if <code>TRUE</code>, the lines are colored according to which
+cluster they belong to.  Default is <code>TRUE</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_unit</code></td>
+<td>
+<p>the time unit to be displayed (such as <code>"Y"</code>,
+<code>"M"</code>, <code>"W"</code>, <code>"D"</code>, <code>"H"</code>, etc) next to the values of
+<code>TimePoint</code> on the x-axis.  Default is <code>""</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>character specifying the title of the plot.  If <code>NULL</code>, a
+title is automatically generated, if <code>""</code>, no title appears.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y.lab</code></td>
+<td>
+<p>character specifying the annotation of the y axis.  If <code>NULL</code>, an
+annotation is automatically generated, if <code>""</code>, no annotation appears.  Default is
+<code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>desc</code></td>
+<td>
+<p>a logical flag. If <code>TRUE</code>, a line is added to the title of
+the plot with the description of the gene set plotted (from the gmt file).
+Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lab.cex</code></td>
+<td>
+<p>a numerical value giving the amount by which lab labels text
+should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>axis.cex</code></td>
+<td>
+<p>a numerical value giving the amount by which axis annotation
+text should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>main.cex</code></td>
+<td>
+<p>a numerical value giving the amount by which title text
+should be magnified relative to the default <code>1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y.lab.angle</code></td>
+<td>
+<p>a numerical value (in [0, 360]) giving the orientation by
+which y-label text should be turned (anti-clockwise).  Default is <code>90</code>.
+See <code>element_text</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x.axis.angle</code></td>
+<td>
+<p>a numerical value (in [0, 360]) giving the orientation by
+which x-axis annotation text should be turned (anti-clockwise).  Default is
+<code>45</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y.lim</code></td>
+<td>
+<p>a numeric vector of length 2 giving the range of the y-axis.
+See <code>plot.default</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x.lim</code></td>
+<td>
+<p>if numeric, will create a continuous scale, if factor or
+character, will create a discrete scale.  Observations not in this range will
+be dropped.  See <code>xlim</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gg.add</code></td>
+<td>
+<p>A list of instructions to add to the <code>ggplot2</code> instructions.  See <code>+.gg</code>.
+Default is <code>list(theme())</code>, which adds nothing to the plot.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If <code>expr</code> is a matrix or a dataframe, then the "original" data are
+plotted.  On the other hand, if <code>expr</code> is a list returned in the
+<code>'Estimations'</code> element of <code>TcGSA.LR</code>, then it is those
+"estimations" made by the <code>TcGSA.LR</code> function that are plotted.
+</p>
+<p>If <code>indiv</code> is 'genes', then each line of the plot is the median of a
+gene expression over the patients. On the other hand, if <code>indiv</code> is
+'patients', then each line of the plot is the median of a patient genes
+expression in this gene set.
+</p>
+<p>This function uses the Gap statistics to determine the optimal number of
+clusters in the plotted gene set.  See
+<code>clusGap</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A dataframe the 2 following variables: </p>
+
+<ul>
+<li> <p><code>ProbeID</code> which contains the IDs of the probes of the plotted gene set.
+</p>
+</li>
+<li> <p><code>Cluster</code> which to which cluster the probe belongs to.
+</p>
+</li>
+</ul>
+<p> If <code>clustering</code> is <code>FALSE</code>, then <code>Cluster</code> is <code>NA</code> for all the probes.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Boris P. Hejblum
+</p>
+
+
+<h3>References</h3>
+
+<p>Tibshirani, R., Walther, G. and Hastie, T., 2001, Estimating the
+number of data clusters via the Gap statistic, <em>Journal of the Royal
+Statistical Society, Series B (Statistical Methodology)</em>, <b>63</b>, 2:
+411–423.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ggplot</code>, <code>clusGap</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(interactive()){
+data(data_simu_TcGSA)
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=TRUE)
+}
+
+if(interactive()){
+plotSelect.GS(expr=expr_1grp, TimePoint=design$TimePoint, 
+       Subject_ID=design$Patient_ID, gmt=gmt_sim,
+       geneset.names.select=c("Gene set 4", "Gene set 5"),
+       Subject_ID.select=c("P1", "P2"),
+       display="one GS per page", 
+       time_unit="H",
+       lab.cex=0.7
+)
+}
+
+if(interactive()){
+plotSelect.GS(expr=tcgsa_sim_1grp$Estimations, TimePoint=design$TimePoint, 
+       Subject_ID=design$Patient_ID, gmt=gmt_sim,
+       geneset.names.select=c("Gene set 4", "Gene set 5"),
+       Subject_ID.select=c("P1", "P2"),
+       display="one subject per page", 
+       time_unit="H",
+       lab.cex=0.7
+)
+}
+
+
+if(interactive()){
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE)
+                          
+plotSelect.GS(expr=tcgsa_sim_1grp$Estimations, TimePoint=design$TimePoint, 
+       Subject_ID=design$Patient_ID, gmt=gmt_sim,
+       geneset.names.select=c("Gene set 4", "Gene set 5"),
+       Subject_ID.select=c("P1", "P2"),
+       display="one subject per page", 
+       time_unit="H",
+       lab.cex=0.7
+)
+}
+
+</code></pre>
+
+
+</div>

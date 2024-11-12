@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>morph</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a temporary alternative representation of the graph to compute on</h2>
+
+<h3>Description</h3>
+
+<p>The <code>morph</code>/<code>unmorph</code> verbs are used to create temporary representations of
+the graph, such as e.g. its search tree or a subgraph. A morphed graph will
+accept any of the standard <code>dplyr</code> verbs, and changes to the data is
+automatically propagated to the original graph when unmorphing. Tidygraph
+comes with a range of morphers, but is it also possible to supply your own.
+See Details for the requirement for custom morphers. The <code>crystallise</code> verb
+is used to extract the temporary graph representation into a tibble
+containing one separate graph per row and a <code>name</code> and <code>graph</code> column holding
+the name of each graph and the graph itself respectively. <code>convert()</code> is a
+shorthand for performing both <code>morph</code> and <code>crystallise</code> along with extracting
+a single <code>tbl_graph</code> (defaults to the first). For morphs were you know they
+only create a single graph, and you want to keep it, this is an easy way.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">morph(.data, .f, ...)
+
+unmorph(.data)
+
+crystallise(.data)
+
+crystallize(.data)
+
+convert(.data, .f, ..., .select = 1, .clean = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tbl_graph</code> or a <code>morphed_tbl_graph</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A morphing function. See morphers for a list of provided one.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed on to the morpher</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.select</code></td>
+<td>
+<p>The graph to return during <code>convert()</code>. Either an index or the
+name as created during <code>crystallise()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.clean</code></td>
+<td>
+<p>Should references to the node and edge indexes in the original
+graph be removed when using <code>convert</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>It is only possible to change and add to node and edge data from a
+morphed state. Any filtering/removal of nodes and edges will not result in
+removal from the main graph. However, nodes and edges not present in the
+morphed state will be unaffected in the main graph when unmorphing (if new
+columns were added during the morhped state they will be filled with <code>NA</code>).
+</p>
+<p>Morphing an already morhped graph will unmorph prior to applying the new
+morph.
+</p>
+<p>During a morphed state, the mapping back to the original graph is stored in
+<code>.tidygraph_node_index</code> and <code>.tidygraph_edge_index</code> columns. These are
+accesible but protected, meaning that any changes to them with e.g. mutate
+will be ignored. Furthermore, if the morph results in the merging of nodes
+and/or edges the original data is stored in a <code>.data</code> column. This is
+protected as well.
+</p>
+<p>When supplying your own morphers the morphing function should accept a
+<code>tbl_graph</code> as its first input. The provided graph will already have nodes
+and edges mapped with a <code>.tidygraph_node_index</code> and <code>.tidygraph_edge_index</code>
+column. The return value must be a <code>tbl_graph</code> or a list of <code>tbl_graph</code>s and
+these must contain either a <code>.tidygraph_node_index</code> column or a
+<code>.tidygraph_edge_index</code> column (or both). Note that it is possible for the
+morph to have the edges mapped back to the original nodes and vice versa
+(e.g. as with to_linegraph). In that case the edge data in the morphed
+graph(s) will contain a <code>.tidygraph_node_index</code> column and/or the node data a
+<code>.tidygraph_edge_index</code> column. If the morphing results in the collapse of
+multiple columns or edges the index columns should be converted to list
+columns mapping the new node/edge back to all the nodes/edges it represents.
+Furthermore the original node/edge data should be collapsed to a list of
+tibbles, with the row order matching the order in the index column element.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>morphed_tbl_graph</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">create_notable('meredith') %&gt;%
+  mutate(group = group_infomap()) %&gt;%
+  morph(to_contracted, group) %&gt;%
+  mutate(group_centrality = centrality_pagerank()) %&gt;%
+  unmorph()
+</code></pre>
+
+
+</div>

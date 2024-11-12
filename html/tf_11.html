@@ -1,0 +1,189 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Constructors for vectors of "raw" functional data</h2>
+
+<h3>Description</h3>
+
+<p>Various constructor methods for <code>tfd</code>-objects.
+</p>
+<p><code>tfd.matrix</code> accepts a numeric matrix with one function per
+<em>row</em> (!). If <code>arg</code> is not provided, it tries to guess <code>arg</code> from the
+column names and falls back on <code>1:ncol(data)</code> if that fails.
+</p>
+<p><code>tfd.data.frame</code> uses the first 3 columns of <code>data</code> for
+function information by default: (<code>id</code>, <code>arg</code>, <code>value</code>)
+</p>
+<p><code>tfd.list</code> accepts a list of vectors of identical lengths
+containing evaluations or a list of 2-column matrices/data.frames with
+<code>arg</code> in the first and evaluations in the second column
+</p>
+<p><code>tfd.default</code> returns class prototype when argument to tfd() is
+NULL or not a recognised class
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd(data, ...)
+
+## S3 method for class 'matrix'
+tfd(data, arg = NULL, domain = NULL, evaluator = tf_approx_linear, ...)
+
+## S3 method for class 'numeric'
+tfd(data, arg = NULL, domain = NULL, evaluator = tf_approx_linear, ...)
+
+## S3 method for class 'data.frame'
+tfd(
+  data,
+  id = 1,
+  arg = 2,
+  value = 3,
+  domain = NULL,
+  evaluator = tf_approx_linear,
+  ...
+)
+
+## S3 method for class 'list'
+tfd(data, arg = NULL, domain = NULL, evaluator = tf_approx_linear, ...)
+
+## S3 method for class 'tf'
+tfd(data, arg = NULL, domain = NULL, evaluator = NULL, ...)
+
+## Default S3 method:
+tfd(data, arg = NULL, domain = NULL, evaluator = tf_approx_linear, ...)
+
+as.tfd(data, ...)
+
+as.tfd_irreg(data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a <code>matrix</code>, <code>data.frame</code> or <code>list</code> of suitable shape, or another
+<code>tf</code>-object. when this argument is <code>NULL</code> (i.e. when calling <code>tfd()</code>) this
+returns a prototype of class <code>tfd</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not used in <code>tfd</code>, except for <code>tfd.tf</code> – specify <code>arg</code> and
+<code>ìnterpolate = TRUE</code> to turn an irregular <code>tfd</code> into a regular one, see
+examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arg</code></td>
+<td>
+<p><code>numeric</code>, or list of <code>numeric</code>s. The evaluation grid.
+For the <code>data.frame</code>-method: the
+name/number of the column defining the evaluation grid. The <code>matrix</code> method
+will try to guess suitable <code>arg</code>-values from the column names of <code>data</code> if
+<code>arg</code> is not supplied. Other methods fall back on integer sequences
+(<code style="white-space: pre;">⁠1:&lt;length of data&gt;⁠</code>) as the default if not provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>domain</code></td>
+<td>
+<p>range of the <code>arg</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>evaluator</code></td>
+<td>
+<p>a function accepting arguments <code style="white-space: pre;">⁠x, arg, evaluations⁠</code>. See
+details for <code>tfd()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>The name or number of the column defining which data belong to
+which function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p>The name or number of the column containing the function
+evaluations.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong><code>evaluator</code></strong>: must be the (quoted or bare) name of a
+function with signature <code style="white-space: pre;">⁠function(x, arg, evaluations)⁠</code> that returns
+the functions' (approximated/interpolated) values at locations <code>x</code> based on
+the function <code>evaluations</code> available at locations <code>arg</code>.<br>
+Available <code>evaluator</code>-functions:
+</p>
+
+<ul>
+<li> <p><code>tf_approx_linear</code> for linear interpolation without extrapolation (i.e.,
+<code>zoo::na.approx()</code> with <code>na.rm = FALSE</code>)  – this is the default,
+</p>
+</li>
+<li> <p><code>tf_approx_spline</code> for cubic spline interpolation, (i.e., <code>zoo::na.spline()</code>
+with <code>na.rm = FALSE</code>),
+</p>
+</li>
+<li> <p><code>tf_approx_fill_extend</code> for linear interpolation and constant extrapolation
+(i.e., <code>zoo::na.fill()</code> with <code>fill = "extend"</code>)
+</p>
+</li>
+<li> <p><code>tf_approx_locf</code> for "last observation carried forward"  (i.e.,
+<code>zoo::na.locf()</code> with <code>na.rm = FALSE</code> and
+</p>
+</li>
+<li> <p><code>tf_approx_nocb</code> for "next observation carried backward" (i.e.,
+<code>zoo::na.locf()</code> with <code style="white-space: pre;">⁠na.rm = FALSE, fromLast = TRUE⁠</code>).
+See <code>tf:::zoo_wrapper</code> and <code>tf:::tf_approx_linear</code>, which is simply
+<code>zoo_wrapper(zoo::na.tf_approx, na.rm = FALSE)</code>, for examples of
+implementations of this.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>an <code>tfd</code>-object (or a <code>data.frame</code>/<code>matrix</code> for the conversion
+functions, obviously.)
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># turn irregular to regular tfd by evaluating on a common grid:
+
+f &lt;- c(
+  tf_rgp(1, arg = seq(0, 1, length.out = 11)),
+  tf_rgp(1, arg = seq(0, 1, length.out = 21))
+)
+tfd(f, arg = seq(0, 1, length.out = 21))
+
+set.seed(1213)
+f &lt;- tf_rgp(3, arg = seq(0, 1, length.out = 51)) |&gt; tf_sparsify(0.9)
+# does not yield regular data because linear extrapolation yields NAs
+#   outside observed range:
+tfd(f, arg = seq(0, 1, length.out = 101))
+# this "works" (but may not yield sensible values..!!) for
+#   e.g. constant extrapolation:
+tfd(f, evaluator = tf_approx_fill_extend, arg = seq(0, 1, length.out = 101))
+plot(f, col = 2)
+tfd(f,
+  arg = seq(0, 1, length.out = 151), evaluator = tf_approx_fill_extend
+) |&gt; lines()
+</code></pre>
+
+
+</div>

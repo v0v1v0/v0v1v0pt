@@ -1,0 +1,363 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tidymodl</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates a model matrix style R6 class for modelling with long tidy
+data</h2>
+
+<h3>Description</h3>
+
+<p>Creates a model matrix style R6 class for modelling with long tidy data
+</p>
+
+
+<h3>Public fields</h3>
+
+<div class="r6-fields">
+
+<dl>
+<dt><code>data</code></dt>
+<dd>
+<p>(<code>data.frame()</code>)<br>
+The original tidy long data frame</p>
+</dd>
+<dt><code>parent</code></dt>
+<dd>
+<p>(<code>data.frame()</code>)<br>
+The parent identifiers of the original data</p>
+</dd>
+<dt><code>child</code></dt>
+<dd>
+<p>(<code>data.frame()</code>)<br>
+The model matrix version of the data</p>
+</dd>
+<dt><code>key</code></dt>
+<dd>
+<p>(<code>data.frame()</code>)<br>
+A <code style="white-space: pre;">⁠key value⁠</code> table that links the parent
+and child data.frames.</p>
+</dd>
+</dl>
+</div>
+
+
+<h3>Methods</h3>
+
+
+
+<h4>Public methods</h4>
+
+
+<ul>
+<li> <p><a href="#method-tidymodl-new"><code>tidymodl$new()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-tidymodl-assemble"><code>tidymodl$assemble()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-tidymodl-print"><code>tidymodl$print()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-tidymodl-correlate"><code>tidymodl$correlate()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-tidymodl-pca"><code>tidymodl$pca()</code></a>
+</p>
+</li>
+<li> <p><a href="#method-tidymodl-clone"><code>tidymodl$clone()</code></a>
+</p>
+</li>
+</ul>
+<hr>
+<a id="method-tidymodl-new"></a>
+
+
+
+<h4>Method <code>new()</code>
+</h4>
+
+<p>Creates a new instance of this R6 class.
+</p>
+<p>Create a new tidymodl object.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$new(df, pivot_column, pivot_value)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>df</code></dt>
+<dd>
+<p>A tidy long data frame</p>
+</dd>
+<dt><code>pivot_column</code></dt>
+<dd>
+<p>The column name on which the pivot will occur</p>
+</dd>
+<dt><code>pivot_value</code></dt>
+<dd>
+<p>The column name of the values to be pivotted</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Returns</h5>
+
+<p>A new <code>tidymodl</code> object.
+</p>
+
+
+<hr>
+<a id="method-tidymodl-assemble"></a>
+
+
+
+<h4>Method <code>assemble()</code>
+</h4>
+
+<p>Adds a results matrix
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$assemble(newdata, format = "long")</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>newdata</code></dt>
+<dd>
+<p>A new data set to append. Needs to be either:
+</p>
+
+<ul>
+<li>
+<p> A vector of length equal to the number of rows in the model matrix.
+For example, the output of <code>predict()</code> of a <code>lm</code> model.
+In this case the function returns a data.frame of dimensions
+<code>c(nrow(parent), ncol(parent) + 1)</code>
+</p>
+</li>
+<li>
+<p> A data.frame/matrix of equal dimensions of the model matrix.
+For example, the output of <code>xgb_impute()</code>.
+In this case the function returns a data.frame of dimensions
+<code>c(nrow(data), ncol(data) + 1)</code>
+</p>
+</li>
+</ul>
+</dd>
+<dt><code>format</code></dt>
+<dd>
+<p>The desired format of the returned data frame, can either
+be "long" or "wide".</p>
+</dd>
+</dl>
+</div>
+
+
+
+<h5>Details</h5>
+
+<p>This returns a completed data.frame for four use cases based on user
+preference of the desired format.
+</p>
+
+<ul>
+<li> <p><strong>Format "long":</strong>
+</p>
+
+<ul>
+<li> <p><strong>Use Case 1 - "newdata" is a vector of length nrow(child):</strong>
+The function returns a combined data frame of the parent data and the
+"newdata" in a new column. Useful when the user wants to append an
+output of, for example, <code>predict</code> for a <code>lm</code> regression model.
+</p>
+</li>
+<li> <p><strong>Use Case 2 - "newdata" is a matrix of dimensions
+dim(child):</strong> The function returns a data.frame of the original data in
+long format with the "newdata" in a new column. Useful when the user
+wants to append an output of, for example, <code>xgb_impute</code> for all original
+data.
+</p>
+</li>
+</ul>
+</li>
+<li> <p><strong>Format "wide":</strong>
+</p>
+
+<ul>
+<li> <p><strong>Use Case 3 - "newdata" is a vector of length nrow(child):</strong>
+The function returns a combined data frame of the parent data and the
+"newdata" in a new column. Useful when the user wants to append an
+output of, for example, <code>predict</code> for a <code>lm</code> regression model.
+</p>
+</li>
+<li> <p><strong>Use Case 4 - "newdata" is a matrix of dimensions
+dim(child):</strong> The function returns a data.frame of the original data in
+wide format with the "newdata" as replacing the child matrix of the
+original data. Useful when the user <em>is only</em> interested in using
+the output of, for example, <code>xgb_impute</code> for all original data.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h5>Returns</h5>
+
+<p>df A Data Frame
+</p>
+
+
+<hr>
+<a id="method-tidymodl-print"></a>
+
+
+
+<h4>Method <code>print()</code>
+</h4>
+
+<p>Prints the key and the head matrix
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$print()</pre></div>
+
+
+<hr>
+<a id="method-tidymodl-correlate"></a>
+
+
+
+<h4>Method <code>correlate()</code>
+</h4>
+
+<p>Correlates and reutrns pearson values
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$correlate()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p>df A Correlation Matrix of class <code>cor_df</code> (see
+<a href="https://CRAN.R-project.org/package=corrr">corrr</a>)
+</p>
+
+
+<hr>
+<a id="method-tidymodl-pca"></a>
+
+
+
+<h4>Method <code>pca()</code>
+</h4>
+
+<p>Provides high level principal components analysis
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$pca()</pre></div>
+
+
+
+<h5>Returns</h5>
+
+<p>df A principle components of class <code>PCA</code> (see
+<a href="https://CRAN.R-project.org/package=FactoMineR">FactoMineR</a>
+</p>
+
+
+<hr>
+<a id="method-tidymodl-clone"></a>
+
+
+
+<h4>Method <code>clone()</code>
+</h4>
+
+<p>The objects of this class are cloneable with this method.
+</p>
+
+
+<h5>Usage</h5>
+
+<div class="r"><pre>tidymodl$clone(deep = FALSE)</pre></div>
+
+
+
+<h5>Arguments</h5>
+
+<div class="arguments">
+
+<dl>
+<dt><code>deep</code></dt>
+<dd>
+<p>Whether to make a deep clone.</p>
+</dd>
+</dl>
+</div>
+
+
+
+
+<h3>Note</h3>
+
+<p>Use Cases 1 and 3 return identical results.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(wb)
+mdl &lt;- tidymodl$new(wb,
+                   pivot_column = "indicator",
+                  pivot_value = "value")
+### Use mdl$child for modelling
+fit &lt;- lm(data = mdl$child, gni ~ gcu + ppt)
+
+### Can be used to add a yhat value for processed data
+
+nc &lt;- ncol(mdl$child)
+nr &lt;- nrow(mdl$child)
+dm &lt;- nc * nr
+dummy &lt;- matrix(runif(dm),
+                ncol = nc) |&gt;
+                data.frame()
+names(dummy) = names(mdl$child)
+tmp &lt;- mdl$assemble(dummy)
+
+# In built correlation function
+mdl$correlate()
+
+tmp &lt;- mdl$pca()
+plot(tmp, choix = "var")
+
+</code></pre>
+
+
+</div>

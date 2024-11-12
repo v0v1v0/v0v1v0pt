@@ -1,0 +1,104 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>arima.boot</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute the Bootstrap Estimates of an ARIMA Model</h2>
+
+<h3>Description</h3>
+
+<p>This function bootstraps time series according to the fitted ARMA(p,d,q) model supplied by the fitted object arima.fit, and estimate the same model using the
+arima function. Any bootstrap sample that has problem when fitted with the ARIMA model will be omitted from the final results and all error messages will be suppressed. You can check if there is any fitting problem by running the command geterrmessage().</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">arima.boot(arima.fit, cond.boot = FALSE, is.normal = TRUE, B = 1000, init, ntrans = 100)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>arima.fit</code></td>
+<td>
+<p>a fitted object from the arima function (seasonal components not allowed)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cond.boot</code></td>
+<td>
+<p>whether or not 
+the bootstrap is conditional on the (p+d) initial values; if
+it is set true. If false (default), the stationary bootstrap is used. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is.normal</code></td>
+<td>
+<p>if true (default), errors are normally distributed, 
+otherwise
+errors are drawn randomly and with replacement from the residuals of the fitted model.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>number of bootstrap replicates (1000, default)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+<p>initial values for the bootstrap; needed if cond.boot=True 
+default values are the initial values of the time series of the fitted 
+model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ntrans</code></td>
+<td>
+<p>number of transient values for the stationary bootstrap. 
+Default=100</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a matrix each row of which consists of the coefficient estimates of 
+a bootstrap time-series.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Kung-Sik Chan</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(hare)
+arima.hare=arima(sqrt(hare),order=c(3,0,0))
+boot.hare=arima.boot(arima.hare,B=50,init=sqrt(hare)[1:3],ntrans=100)
+apply(boot.hare,2,quantile, c(.025,.975))
+period.boot=apply(boot.hare,1,function(x){
+roots=polyroot(c(1,-x[1:3]))
+min1=1.e+9
+rootc=NA
+for (root in roots) {
+if( abs(Im(root))&lt;1e-10) next
+if (Mod(root)&lt; min1) {min1=Mod(root); rootc=root}
+}
+if(is.na(rootc)) period=NA else period=2*pi/abs(Arg(rootc))
+period
+})
+hist(period.boot)
+quantile(period.boot,c(0.025,.975))
+
+</code></pre>
+
+
+</div>

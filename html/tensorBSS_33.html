@@ -1,0 +1,153 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tTUCKER</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Tucker (2) Transformation for a Tensor
+</h2>
+
+<h3>Description</h3>
+
+<p>This is a Tucker (2) transformation of a data tensor where the sampling dimension is uncompressed. The transfromation is known also under many different names like multilinear principal components analysis or generalized low rank approximation of matrices if the tensorial data is matrixvalued.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tTUCKER(x, ranks, maxiter = 1000, eps = 1e-06)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>array with <code class="reqn">r+1</code> dimensions where the last dimension corresponds to the sampling units.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ranks</code></td>
+<td>
+<p>vector of length r giving the dimensions of the compressed core tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>maximum number of iterations for the algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>convergence tolerance.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>As initial solution <code>tPCA</code> is used and iterated using an alternating least squares (ALS) approach, known also as higher order orthogonal iteration (HOOI).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list containing the following components: 
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>S </code></td>
+<td>
+<p>array of the compressed tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>U </code></td>
+<td>
+<p>list containing the rotation matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xmu  </code></td>
+<td>
+<p>the data location.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm2xc</code></td>
+<td>
+<p>squared norm of the original data tensor after centering.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm2rxc</code></td>
+<td>
+<p>squared norm of the reconstructed (centered) data tensor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm2ratio</code></td>
+<td>
+<p>the ratio norm2rxc/norm2xc.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mEV</code></td>
+<td>
+<p>list containing the eigenvalues from the m-mode covariance matrix when all but the relevant mode have be compressed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tPCA </code></td>
+<td>
+<p>The output from <code>tPCA</code> which was used as initial value.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Klaus Nordhausen
+</p>
+
+
+<h3>References</h3>
+
+<p><cite>Lu, H., Plataniotis, K. and  Venetsanopoulos, A. (2008), MPCA: Multilinear principal component analysis of tensor objects, IEEE Transactions on Neural Networks, 19, 18-39. <a href="https://doi.org/10.1109/TNN.2007.901277">doi:10.1109/TNN.2007.901277</a></cite>
+</p>
+<p><cite>Lietzen, N., Nordhausen, K. and Virta, J. (2019), Statistical analysis of second-order tensor decompositions, manuscript.</cite> 
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tPCA</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(zip.train)
+x &lt;- zip.train
+
+rows &lt;- which(x[, 1] == 0 | x[, 1] == 1)
+x0 &lt;- x[rows, 2:257]
+y0 &lt;- x[rows, 1] + 1
+
+x0 &lt;- t(x0)
+dim(x0) &lt;- c(16, 16, 2199)
+
+tucker &lt;-  tTUCKER(x0, ranks = c(2, 2), eps=1e-03)
+pairs(t(apply(tucker$S, 3, c)), col=y0)
+
+# To approximate the original data one uses then
+x0r &lt;- tensorTransform2(tucker$S, tucker$U)
+
+
+</code></pre>
+
+
+</div>

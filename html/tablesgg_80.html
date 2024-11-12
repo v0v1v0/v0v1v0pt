@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tblBlocks</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Define Blocks of Cells that Reflect the Logical Structure of a Table </h2>
+
+<h3>Description</h3>
+
+<p>Define a collection of rectangular blocks of cells that reflect the
+logical structure of a table.  This is an internal function, not intended
+to be called by package users.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tblBlocks(x, rowgroupSize=0, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>tblEntries</code> object, or something that can be converted to one
+(e.g., a <code>textTable</code> object).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rowgroupSize</code></td>
+<td>
+<p>Numeric scalar.  If greater than 0, blocks will be created by grouping
+consecutive rows of the table body into sets of this size.  See DETAILS.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to <code>tblEntries</code> when <code>x</code> is not
+already a <code>tblEntries</code> object (e.g., <code>rowheadInside</code>).
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>A block is simply a rectangular set of contiguous table cells.  Any number
+of blocks may be defined for a given table, and blocks may overlap.  A
+block may be empty (<code>nr</code> and/or <code>nc</code> equal to 0, and
+corresponding <code>arow*</code> and <code>acol*</code> values set to NA.)
+</p>
+<p>This function defines a standard set of blocks based on the logical
+structure of a table (but independent of the _content_ of table cells).
+The following blocks are defined:
+</p>
+<p>"table" : The whole table (all cells). "title", "subtitle", "colhead",
+"rowhead", "rowheadLabels", "body", "foot" : The standard table parts.
+(If there are interior row header entries, <code>rowhead</code> and <code>body</code>
+are omitted because the interleaving of headers and body means neither are
+valid blocks.) "titles" : The union of the <code>title</code> and
+<code>subtitle</code> parts. "stub" : If we exclude the title/subtitle and foot
+annotations, a table has four quadrants: the body at the lower right, the
+row headers at the lower left, the column headers at the upper right, and
+a stub at the upper left.  That is, the stub consists of the cells above
+the row headers and to the left of the column headers.  (If there are row
+header labels–block <code>rowheadLabels</code>–they will be in the bottom row
+of the stub.) "colhead_and_stub", "rowhead_and_stub" : The unions of
+<code>stub</code> with <code>colhead</code> and <code>rowhead</code>, respectively.
+"colhead_and_body", "rowhead_and_body" : The unions of <code>body</code> with
+<code>colhead</code> and <code>rowhead</code>, respectively.
+</p>
+<p>Each of these blocks is unique and so their <code>id</code> and <code>type</code> are
+the same string.  <code>subtype</code>, <code>headlayer</code>, and
+<code>level_in_layer</code> are set to NA for them.
+</p>
+<p>Blocks representing the hierarchical structure of headers
+</p>
+<p>Additional blocks, with types "rowblock" and "colblock", are defined to
+represent the hierarchical structure of row and column headers.  To
+describe these blocks, some terminology is needed.  For concreteness, the
+description is in terms of column headers; analogous comments apply to row
+headers.
+</p>
+<p>When a table is displayed, each _row_ of column headers (corresponding to
+a row of the <code>colhead</code> matrix in a <code>textTable</code> object), defines
+one _layer_ of the header.  Layers are numbered from innermost (closest to
+the table body) to outermost.  Structurally, layers form a hierarchy:
+header values at a lower numbered (inner) layer are nested within values
+at higher numbered (outer) layers.  This hierarchy implies a
+tree-structured partitioning of table columns according to values of the
+header variables.  A set of contiguous columns that share the same header
+value for a layer, and for all layers above it in the hierarchy, belong to
+a single _level_ of that layer.  Levels are numbered from 1 to the number
+of levels in a layer.
+</p>
+<p>Then for each combination of layer number <code>i</code> and level number
+<code>j</code> in a header, three blocks are defined.  A block with subtype "A"
+consists of just the cells in header layer <code>i</code> whose value
+corresponds to level number <code>j</code>.  It will thus come from a single row
+in the column headers of the table.  And since all the cells in the block
+have the same value, those cells will typically be merged into a single
+entry when displaying the table.
+</p>
+<p>A block with subtype "B" is bigger: it consists of the cells in the
+subtype "A" block, plus the header cells with _smaller_ layer numbers in
+the same columns.  So it extends from layer <code>i</code> down through the rest
+of the header rows.  And finally a block with subtype "C" is bigger yet:
+it consists of the cells in the subtype "B" block plus the cells in the
+table body in the same columns.  That is, it spans the same set of columns
+as the subtype "A" and "B" blocks but adds rows down through the table
+body.  Block ID's have the form <code>colblock/&lt;subtype&gt;/i/j</code>.
+</p>
+<p>Sets of blocks for the row headers are defined analogously.  Each _column_
+in the row headers of a displayed table (corresponding to a column in the
+<code>rowhead</code> matrix of a <code>textTable</code> object) represents one layer.
+The layer closest to the table body is numbered 1 and layer number
+increases toward the left edge of the table.  A subtype "A" block consists
+of the cells in layer number <code>i</code> whose value corresponds to level
+number <code>j</code> in that layer.  It will thus come from a single column in
+the row headers of the table.  A subtype "B" block consists of the cells
+in the "A" block, plus the header cells with _smaller_ layer numbers in
+the same rows.  A subtype "C" block further adds the cells in the table
+body in the same rows.  That is, it spans the same set of rows as "A" and
+"B" blocks but adds columns across through the table body.  Block ID's
+have the form <code>rowblock/&lt;subtype&gt;/i/j</code>.
+</p>
+<p>Blocks when <code>rowheadInside</code> is TRUE
+</p>
+<p>Moving the outermost layer of row header entries into the interior of the
+table, where they separate and label groups of rows, changes the shape of
+table parts.  Specifically, since row headers and body are interleaved,
+neither forms a valid rectangular block.  However their union is a valid
+block, with ID and type <code>rowhead_and_body</code>.
+</p>
+<p>When a row header layer is moved inside, its layer number is set to 0.
+(Conceptually, since it is interleaved with the table body, it is interior
+even to header layer 1.)  Blocks <code>rowblock/&lt;subtype&gt;/i/j</code>, where
+<code>i</code> indicates layer number, are different when i=0 than for other
+layers.  Subtype "A", <code>rowblock/A/0/j</code>, has one row and spans all
+table columns.  It contains the label for the <code>j</code>-th level.  Subtype
+"B", <code>rowblock/B/0/j</code>, contains all row header entries (if any)
+nested within level <code>j</code>.  Subtype "C", <code>rowblock/C/0/j</code>,
+combines <code>rowblock/B/0/j</code> with all the body rows associated with
+level <code>j</code>.  Thus <code>rowblock/C/0/j</code> spans all table columns.
+Unlike when <code>i</code> is not equal to 0, neither <code>rowblock/B/0/j</code> nor
+<code>rowblock/C/0/j</code> contain <code>rowblock/A/0/j</code>.
+</p>
+<p>Blocks representing groups of rows
+</p>
+<p>When a table has many rows within a given level of the row header
+hierarchy, the table may be easier to read if rows are grouped into
+smaller sets of fixed size (groups of 5, for example), with some extra
+space inserted between groups.  To facilitate this, this function creates
+blocks representing such groups when <code>rowgroupSize</code> is positive.  The
+block type is "rowblock" and subtype is "G".
+</p>
+<p>Grouping respects the row header hierarchy: the innermost header layer
+that has runs of repeated values is identified (layer <code>i</code> say), and
+grouping is done separately within each of its levels.  The block
+representing a row group spans all columns of the table body as well as
+row header layers out to layer <code>i-1</code>.  Block ID's have the form
+<code>rowblock/G/i/j/k</code>, where <code>j</code> is the level number (within layer
+<code>i</code>) that contains the group, and <code>k</code> is the group number within
+that level.  Thus <code>i</code>, <code>j</code>, and <code>k</code> are the values of
+<code>headlayer</code>, <code>level_in_layer</code>, and <code>group_in_level</code> for the
+block.
+</p>
+<p>However if the table has no row headers, or none of the row header layers
+have runs of repeated values, table rows are simply grouped into sets of
+size <code>rowgroupSize</code>.  <code>headlayer</code> and <code>level_in_layer</code> will
+be NA for the group blocks, and block ID's will have the form
+<code>rowblock/G///k</code>, where <code>k</code> is the group number (and value of
+<code>group_in_level</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An S3 object of class <code>tblBlocks</code>.  This is a data frame with one row
+per block.  It contains information about the nature and position of each
+block.  Column descriptions are in the documentation for the
+<code>elements</code> function.  Also see DETAILS for more information about
+columns <code>id</code>, <code>type</code>, and <code>subtype</code>.
+</p>
+<p>Row names for the data frame are set equal to <code>id</code>.
+<code>rowgroupSize</code> and <code>rowheadInside</code> (the latter taken from
+<code>x</code>, after converting it to a <code>tblEntries</code> object if necessary)
+will be included as attributes.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tblEntries</code>, <code>tblParts</code>, <code>elements</code>;
+<code>as.tblBlocks</code> converts a data frame to a <code>tblBlocks</code>
+object.
+</p>
+
+
+</div>

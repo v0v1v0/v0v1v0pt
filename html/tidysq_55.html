@@ -1,0 +1,125 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sqconcatenate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Concatenate sq objects</h2>
+
+<h3>Description</h3>
+
+<p>Merges multiple <code>sq</code> and possibly
+<code>character</code> objects into one larger <code>sq</code> object.
+</p>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>[<code>sq</code> || <code>character</code>]<br>
+Multiple objects. For exact behavior, check Details section. First argument
+must be of <code>sq</code> class due to R mechanism of single dispatch. If this is
+a problem, recommended alternative is <code>vec_c</code> method from
+<code>vctrs-package</code> package.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>Whenever all passed objects are of one of standard types (that is,
+<strong>dna_bsc</strong>, <strong>dna_ext</strong>, <strong>rna_bsc</strong>, <strong>rna_ext</strong>,
+<strong>ami_bsc</strong> or <strong>ami_ext</strong>), returned object is of the same class,
+as no changes to alphabet are needed.
+</p>
+<p>It's possible to mix both basic and extended types within one call to
+<code>c()</code>, however they all must be of the same type (that is, either
+<strong>dna</strong>, <strong>rna</strong> or <strong>ami</strong>). In this case, returned object
+is of extended type.
+</p>
+<p>Mixing <strong>dna</strong>, <strong>rna</strong> and <strong>ami</strong> types is prohibited, as
+interpretation of letters differ depending on the type.
+</p>
+<p>Whenever all objects are either of <strong>atp</strong> type, returned object is also
+of this class and resulting alphabet is equal to set union of all input
+alphabets.
+</p>
+<p><strong>unt</strong> type can be mixed with any other type, resulting in <strong>unt</strong>
+object with alphabet equal to set union of all input alphabets. In this case,
+it is possible to concatenate <strong>dna</strong> and <strong>ami</strong> objects, for
+instance, by concatenating one of them first with <strong>unt</strong> object.
+However, it is strongly discouraged, as it may result in unwanted
+concatenation of DNA and amino acid sequences.
+</p>
+<p>Whenever a character vector appears, it does not influence resulting sq type.
+Each element is treated as separate sequence. If any of letters in this
+vector does not appear in resulting alphabet, it is silently replaced with
+<code>NA</code>.
+</p>
+<p>Due to R dispatch mechanism passing character vector as first will return
+class-less list. This behavior is effectively impossible and definitely
+unrecommended to fix, as fixing it would involve changing <code>c</code> primitive.
+If such possibility is necessary, <code>vec_c</code> is a better
+alternative.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>sq</code> object with length equal to sum of
+lengths of individual objects passed as parameters. Elements of
+<code>sq</code> are concatenated just as if they were normal
+lists (see <code>c</code>).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Functions from utility module:
+<code>==.sq()</code>,
+<code>get_sq_lengths()</code>,
+<code>is.sq()</code>,
+<code>sqextract</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Creating objects to work on:
+sq_dna_1 &lt;- sq(c("GGACTGCA", "CTAGTA", ""), alphabet = "dna_bsc")
+sq_dna_2 &lt;- sq(c("ATGACA", "AC-G", "-CCAT"), alphabet = "dna_bsc")
+sq_dna_3 &lt;- sq(character(), alphabet = "dna_bsc")
+sq_dna_4 &lt;- sq(c("BNACV", "GDBADHH"), alphabet = "dna_ext")
+sq_rna_1 &lt;- sq(c("UAUGCA", "UAGCCG"), alphabet = "rna_bsc")
+sq_rna_2 &lt;- sq(c("-AHVRYA", "G-U-HYR"), alphabet = "rna_ext")
+sq_rna_3 &lt;- sq("AUHUCHYRBNN--", alphabet = "rna_ext")
+sq_ami &lt;- sq("ACHNK-IFK-VYW", alphabet = "ami_bsc")
+sq_unt &lt;- sq("AF:gf;PPQ^&amp;XN")
+
+# Concatenating dna_bsc sequences:
+c(sq_dna_1, sq_dna_2, sq_dna_3)
+# Concatenating rna_ext sequences:
+c(sq_rna_2, sq_rna_3)
+# Mixing dna_bsc and dna_ext:
+c(sq_dna_1, sq_dna_4, sq_dna_2)
+
+# Mixing DNA and RNA sequences doesn't work:
+## Not run: 
+c(sq_dna_3, sq_rna_1)
+
+## End(Not run)
+
+# untsq can be mixed with DNA, RNA and amino acids:
+c(sq_ami, sq_unt)
+c(sq_unt, sq_rna_1, sq_rna_2)
+c(sq_dna_2, sq_unt, sq_dna_3)
+
+# Character vectors are also acceptable:
+c(sq_dna_2, "TGCA-GA")
+c(sq_rna_2, c("UACUGGGACUG", "AUGUBNAABNRYYRAU"), sq_rna_3)
+c(sq_unt, "&amp;#JIA$O02t30,9ec", sq_ami)
+
+</code></pre>
+
+
+</div>

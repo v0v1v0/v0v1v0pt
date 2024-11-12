@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>extract-tune</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract elements of <code>tune</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>These functions extract various elements from a tune object. If they do
+not exist yet, an error is thrown.
+</p>
+
+<ul>
+<li> <p><code>extract_preprocessor()</code> returns
+the formula, recipe, or variable
+expressions used for preprocessing.
+</p>
+</li>
+<li> <p><code>extract_spec_parsnip()</code> returns
+the parsnip model specification.
+</p>
+</li>
+<li> <p><code>extract_fit_parsnip()</code> returns the
+parsnip model fit object.
+</p>
+</li>
+<li> <p><code>extract_fit_engine()</code> returns the
+engine specific fit embedded within
+a parsnip model fit. For example, when using <code>parsnip::linear_reg()</code>
+with the <code>"lm"</code> engine, this returns the underlying <code>lm</code> object.
+</p>
+</li>
+<li> <p><code>extract_mold()</code> returns the preprocessed
+"mold" object returned
+from <code>hardhat::mold()</code>. It contains information about the preprocessing,
+including either the prepped recipe, the formula terms object, or
+variable selectors.
+</p>
+</li>
+<li> <p><code>extract_recipe()</code> returns the recipe.
+The <code>estimated</code> argument specifies
+whether the fitted or original recipe is returned.
+</p>
+</li>
+<li> <p><code>extract_workflow()</code> returns the
+workflow object if the control option
+<code>save_workflow = TRUE</code> was used. The workflow will only have been
+estimated for objects produced by <code>last_fit()</code>.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'last_fit'
+extract_workflow(x, ...)
+
+## S3 method for class 'tune_results'
+extract_workflow(x, ...)
+
+## S3 method for class 'tune_results'
+extract_spec_parsnip(x, ...)
+
+## S3 method for class 'tune_results'
+extract_recipe(x, ..., estimated = TRUE)
+
+## S3 method for class 'tune_results'
+extract_fit_parsnip(x, ...)
+
+## S3 method for class 'tune_results'
+extract_fit_engine(x, ...)
+
+## S3 method for class 'tune_results'
+extract_mold(x, ...)
+
+## S3 method for class 'tune_results'
+extract_preprocessor(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>tune_results</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Not currently used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimated</code></td>
+<td>
+<p>A logical for whether the original (unfit) recipe or the
+fitted recipe should be returned.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions supersede <code>extract_model()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The extracted value from the <code>tune</code> tune_results, <code>x</code>, as described in the
+description section.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(recipes)
+library(rsample)
+library(parsnip)
+
+set.seed(6735)
+tr_te_split &lt;- initial_split(mtcars)
+
+spline_rec &lt;- recipe(mpg ~ ., data = mtcars) %&gt;%
+  step_ns(disp)
+
+lin_mod &lt;- linear_reg() %&gt;%
+  set_engine("lm")
+
+spline_res &lt;- last_fit(lin_mod, spline_rec, split = tr_te_split)
+
+extract_preprocessor(spline_res)
+
+# The `spec` is the parsnip spec before it has been fit.
+# The `fit` is the fitted parsnip model.
+extract_spec_parsnip(spline_res)
+extract_fit_parsnip(spline_res)
+extract_fit_engine(spline_res)
+
+# The mold is returned from `hardhat::mold()`, and contains the
+# predictors, outcomes, and information about the preprocessing
+# for use on new data at `predict()` time.
+extract_mold(spline_res)
+
+# A useful shortcut is to extract the fitted recipe from the workflow
+extract_recipe(spline_res)
+
+# That is identical to
+identical(
+  extract_mold(spline_res)$blueprint$recipe,
+  extract_recipe(spline_res)
+)
+</code></pre>
+
+
+</div>

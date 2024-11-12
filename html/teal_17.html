@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>teal_data_module</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Data module for <code>teal</code> applications</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p>Create a <code>teal_data_module</code> object and evaluate code on it with history tracking.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">teal_data_module(ui, server)
+
+## S4 method for signature 'teal_data_module,character'
+eval_code(object, code)
+
+## S3 method for class 'teal_data_module'
+within(data, expr, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ui</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠function(id)⁠</code>)
+<code>shiny</code> module UI function; must only take <code>id</code> argument</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>server</code></td>
+<td>
+<p>(<code style="white-space: pre;">⁠function(id)⁠</code>)
+<code>shiny</code> module server function; must only take <code>id</code> argument;
+must return reactive expression containing <code>teal_data</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>(<code>teal_data_module</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>code</code></td>
+<td>
+<p>(<code>character</code> or <code>language</code>) code to evaluate. If <code>character</code>, comments are retained.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>(<code>teal_data_module</code>) object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>(<code>expression</code>) to evaluate. Must be inline code. See</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>See <code>Details</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>teal_data_module</code> creates a <code>shiny</code> module to supply or modify data in a <code>teal</code> application.
+The module allows for running data pre-processing code (creation <em>and</em> some modification) after the app starts.
+The body of the server function will be run in the app rather than in the global environment.
+This means it will be run every time the app starts, so use sparingly.
+</p>
+<p>Pass this module instead of a <code>teal_data</code> object in a call to <code>init()</code>.
+Note that the server function must always return a <code>teal_data</code> object wrapped in a reactive expression.
+</p>
+<p>See vignette <code>vignette("data-as-shiny-module", package = "teal")</code> for more details.
+</p>
+<p><code>eval_code</code> evaluates given code in the environment of the <code>teal_data</code> object created by the <code>teal_data_module</code>.
+The code is added to the <code style="white-space: pre;">⁠@code⁠</code> slot of the <code>teal_data</code>.
+</p>
+<p><code>within</code> is a convenience function for evaluating inline code inside the environment of a <code>teal_data_module</code>.
+It accepts only inline expressions (both simple and compound) and allows for injecting values into <code>expr</code> through
+the <code>...</code> argument: as <code>name:value</code> pairs are passed to <code>...</code>, <code>name</code> in <code>expr</code> will be replaced with <code>value.</code>
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>teal_data_module</code> returns an object of class <code>teal_data_module</code>.
+</p>
+<p><code>eval_code</code> returns a <code>teal_data_module</code> object with a delayed evaluation of <code>code</code> when the module is run.
+</p>
+<p><code>within</code> returns a <code>teal_data_module</code> object with a delayed evaluation of <code>expr</code> when the module is run.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>teal.data::teal_data</code>, <code>teal.code::qenv()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tdm &lt;- teal_data_module(
+  ui = function(id) {
+    ns &lt;- NS(id)
+    actionButton(ns("submit"), label = "Load data")
+  },
+  server = function(id) {
+    moduleServer(id, function(input, output, session) {
+      eventReactive(input$submit, {
+        data &lt;- within(
+          teal_data(),
+          {
+            dataset1 &lt;- iris
+            dataset2 &lt;- mtcars
+          }
+        )
+        datanames(data) &lt;- c("dataset1", "dataset2")
+
+        data
+      })
+    })
+  }
+)
+
+eval_code(tdm, "dataset1 &lt;- subset(dataset1, Species == 'virginica')")
+
+within(tdm, dataset1 &lt;- subset(dataset1, Species == "virginica"))
+
+# use additional parameter for expression value substitution.
+valid_species &lt;- "versicolor"
+within(tdm, dataset1 &lt;- subset(dataset1, Species %in% species), species = valid_species)
+</code></pre>
+
+
+</div>

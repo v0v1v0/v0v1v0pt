@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SSModelDynGompertzReinit-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Class for re-initialised dynamic Gompertz curve model</h2>
+
+<h3>Description</h3>
+
+<p>This class allows the implementation of the reinitialisation
+procedure described in the vignette and summarised below.
+Let <code class="reqn">t=r</code> denote the re-initialization date and <code class="reqn">r_0</code> denote the
+date at which the cumulative series is set to 0. As the growth rate of
+cumulative cases is defined as <code class="reqn">g_t\equiv \frac{y_t}{Y_{t-1}}</code>, we have:
+</p>
+<p style="text-align: center;"><code class="reqn">\ln g_t = \ln y_t - \ln Y_{t-1} \;\;\;\; t=1, \ldots, r</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\ln g_t^r = \ln y_t - \ln Y_{t-1}^r \;\;\;\; t=r+1, \ldots, T</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">Y_{t}^{r}=Y_{t-1}^{r}+y_{t}  \;\;\;\; t=r,\ldots,T</code>
+</p>
+
+<p>where <code class="reqn">Y_{t}^{r}</code> is the cumulative cases after re-initialization. We
+choose to set the cumulative cases to zero at <code class="reqn">r_0=r-1, Y_{r-1}^{r}=0</code>,
+such that the growth rate of cumulative cases is available from <code class="reqn">t=r+1</code>
+onwards.
+We reinitialise the model by specifying the prior distribution for the
+initial states appropriately. See the vignette for details.
+</p>
+
+
+<h4>Methods</h4>
+
+
+<ul>
+<li>
+<p><code>new(Y, q = NULL, reinit.date=NULL, original.results=NULL,
+use.presample.info=TRUE)</code> Create an instance of the
+<code>SSModelDynGompertzReinit</code> class.
+</p>
+
+
+<h5>Parameters</h5>
+
+
+<ul>
+<li>
+<p><code>Y</code> The cumulated variable.
+</p>
+</li>
+<li>
+<p><code>q</code> The signal-to-noise ratio (ratio of slope to irregular
+variance). Defaults to <code>'NULL'</code>, in which case no signal-to-noise
+ratio will be imposed. Instead, it will be estimated.
+</p>
+</li>
+<li>
+<p><code>reinit.date</code> The reinitialisation date <code class="reqn">r</code>. Should be
+specified as an object of class <code>"Date"</code>. Must be specified.
+</p>
+</li>
+<li>
+<p><code>original.results</code> Rather than re-estimating the model up
+to the <code>reinit.date</code>, a <code>FilterResults</code> class object can be
+specified here and the parameters for the reinitialisation will be taken
+from this object. Default is <code>NULL</code>. This parameter is optional.
+</p>
+</li>
+<li>
+<p><code>use.presample.info</code>  Logical value denoting whether or
+not to use information from before the reinitialisation date in the
+reinitialisation procedure. Default is <code>TRUE</code>. If <code>FALSE</code>, the
+model is estimated from scratch from the reinitialisation date and no
+attempt to use information from before the reinitialisation date is made.
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>get_model(y, q=NULL, sea.type = NULL, sea.period)</code> Retrieves
+the model object, which is a dynamic Gompertz curve model reinitialised at
+<code>self$reinit.date</code>.
+</p>
+
+
+<h5>Parameters</h5>
+
+
+<ul>
+<li>
+<p><code>y</code> The cumulated variable.
+</p>
+</li>
+<li>
+<p><code>q</code> The signal-to-noise ratio (ratio of slope to irregular
+variance). Defaults to <code>'NULL'</code>, in which case no signal-to-noise ratio
+will be imposed. Instead, it will be estimated.
+</p>
+</li>
+<li>
+<p><code>sea.type</code> Seasonal type. Options are <code>'trigonometric'</code> and
+<code>'none'</code>. <code>'trigonometric'</code> will yield a model with a
+trigonometric seasonal component and <code>'none'</code> will yield a model with
+no seasonal component.
+</p>
+</li>
+<li>
+<p><code>sea.period</code>  The period of seasonality. For a day-of-the-week
+effect with daily data, this would be 7. Not required if
+<code>sea.type = 'none'</code>.
+</p>
+</li>
+</ul>
+<h5>Return Value</h5>
+
+<p><code>KFS</code> model object.</p>
+
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tsgc)
+data(gauteng,package="tsgc")
+idx.est &lt;- zoo::index(gauteng) &lt;= as.Date("2021-05-20")
+
+# Specify a model
+model.reinit &lt;- SSModelDynGompertzReinit$new(Y = gauteng[idx.est], q = 0.005,
+  reinit.date = as.Date("2021-04-29"))
+# Estimate a specified model
+res.reinit &lt;- model.reinit$estimate()
+
+## Alternatively, we could feed in a prior results object rather than a
+## reinitialisation date. The results are identical to the above.
+
+# Specify initial model
+idx.orig &lt;- zoo::index(gauteng) &lt;= as.Date("2021-04-29")
+model.orig &lt;- SSModelDynamicGompertz$new(Y = gauteng[idx.orig], q = 0.005)
+res.orig &lt;- model.orig$estimate()
+# Estimate a specified model
+model.reinit2 &lt;- SSModelDynGompertzReinit$new(Y = gauteng[idx.est],
+q = 0.005, reinit.date = as.Date("2021-04-29"), original.results = res.orig)
+res.reinit2 &lt;- model.reinit2$estimate()
+
+</code></pre>
+
+
+</div>

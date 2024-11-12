@@ -1,0 +1,202 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_constrained_seasonal_state_space_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Seasonal state space model with effects constrained to sum to zero.</h2>
+
+<h3>Description</h3>
+
+<p>Seasonal state space model with effects constrained to sum to zero.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_constrained_seasonal_state_space_model(
+  num_timesteps,
+  num_seasons,
+  drift_scale,
+  initial_state_prior,
+  observation_noise_scale = 1e-04,
+  num_steps_per_season = 1,
+  initial_step = 0,
+  validate_args = FALSE,
+  allow_nan_stats = TRUE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_timesteps</code></td>
+<td>
+<p>Scalar <code>integer</code> <code>tensor</code> number of timesteps to model
+with this distribution.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_seasons</code></td>
+<td>
+<p>Scalar <code>integer</code> number of seasons.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drift_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are treated as batch
+dimensions) <code>float</code> <code>tensor</code> indicating the standard deviation of the
+change in effect between consecutive occurrences of a given season.
+This is assumed to be the same for all seasons.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>instance of <code>tfd_multivariate_normal</code>
+representing the prior distribution on latent states; must
+have event shape <code style="white-space: pre;">⁠[num_seasons]⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation_noise_scale</code></td>
+<td>
+<p>Scalar (any additional dimensions are
+treated as batch dimensions) <code>float</code> <code>tensor</code> indicating the standard
+deviation of the observation noise.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_steps_per_season</code></td>
+<td>
+<p><code>integer</code> number of steps in each
+season. This may be either a scalar (shape <code style="white-space: pre;">⁠[]⁠</code>), in which case all
+seasons have the same length, or an array of shape <code style="white-space: pre;">⁠[num_seasons]⁠</code>,
+in which seasons have different length, but remain constant around
+different cycles, or an array of shape <code style="white-space: pre;">⁠[num_cycles, num_seasons]⁠</code>,
+in which num_steps_per_season for each season also varies in different
+cycle (e.g., a 4 years cycle with leap day). Default value: 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_step</code></td>
+<td>
+<p>Optional scalar <code>integer</code> <code>tensor</code> specifying the starting
+timestep. Default value: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p><code>logical</code>. Whether to validate input
+with asserts. If <code>validate_args</code> is <code>FALSE</code>, and the inputs are
+invalid, correct behavior is not guaranteed. Default value: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p><code>logical</code>. If <code>FALSE</code>, raise an
+exception if a statistic (e.g. mean/mode/etc...) is undefined for any
+batch member. If <code>TRUE</code>, batch members with valid parameters leading to
+undefined statistics will return NaN for this statistic. Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to ops created by this class.
+Default value: "SeasonalStateSpaceModel".</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>an instance of <code>LinearGaussianStateSpaceModel</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>sts_seasonal_state_space_model()</code>.
+</p>
+<p>Mathematical details
+</p>
+<p>The constrained model implements a reparameterization of the
+naive <code>SeasonalStateSpaceModel</code>. Instead of directly representing the
+seasonal effects in the latent space, the latent space of the constrained
+model represents the difference between each effect and the mean effect.
+The following discussion assumes familiarity with the mathematical details
+of <code>SeasonalStateSpaceModel</code>.
+</p>
+<p><em>Reparameterization and constraints</em>: let the seasonal effects at a given
+timestep be <code style="white-space: pre;">⁠E = [e_1, ..., e_N]⁠</code>. The difference between each effect <code>e_i</code>
+and the mean effect is <code>z_i = e_i - sum_i(e_i)/N</code>. By itself, this
+transformation is not invertible because recovering the absolute effects
+requires that we know the mean as well. To fix this, we'll define
+<code>z_N = sum_i(e_i)/N</code> as the mean effect. It's easy to see that this is
+invertible: given the mean effect and the differences of the first <code>N - 1</code>
+effects from the mean, it's easy to solve for all <code>N</code> effects. Formally,
+we've defined the invertible linear reparameterization <code style="white-space: pre;">⁠Z = R E⁠</code>, where
+</p>
+<div class="sourceCode"><pre>R = [1 - 1/N, -1/N,    ..., -1/N
+     -1/N,    1 - 1/N, ..., -1/N,
+     ...
+     1/N,     1/N,     ...,  1/N]
+</pre></div>
+<p>represents the change of basis from 'effect coordinates' E to
+'residual coordinates' Z. The <code>Z</code>s form the latent space of the
+<code>ConstrainedSeasonalStateSpaceModel</code>.
+To constrain the mean effect <code>z_N</code> to zero, we fix the prior to zero,
+<code>p(z_N) ~ N(0., 0)</code>, and after the transition at each timestep we project
+<code>z_N</code> back to zero. Note that this projection is linear: to set the Nth
+dimension to zero, we simply multiply by the identity matrix with a missing
+element in the bottom right, i.e., <code style="white-space: pre;">⁠Z_constrained = P Z⁠</code>,
+where <code style="white-space: pre;">⁠P = eye(N) - scatter((N-1, N-1), 1)⁠</code>.
+</p>
+<p><em>Model</em>: concretely, suppose a naive seasonal effect model has initial state
+prior <code>N(m, S)</code>, transition matrix <code>F</code> and noise covariance
+<code>Q</code>, and observation matrix <code>H</code>. Then the corresponding constrained seasonal
+effect model has initial state prior <code style="white-space: pre;">⁠N(P R m, P R S R' P')⁠</code>,
+transition matrix <code style="white-space: pre;">⁠P R F R^-1⁠</code> and noise covariance <code style="white-space: pre;">⁠F R Q R' F'⁠</code>, and
+observation matrix <code style="white-space: pre;">⁠H R^-1⁠</code>, where the change-of-basis matrix <code>R</code> and
+constraint projection matrix <code>P</code> are as defined above. This follows
+directly from applying the reparameterization <code style="white-space: pre;">⁠Z = R E⁠</code>, and then enforcing
+the zero-sum constraint on the prior and transition noise covariances.
+In practice, because the sum of effects <code>z_N</code> is constrained to be zero, it
+will never contribute a term to any linear operation on the latent space,
+so we can drop that dimension from the model entirely.
+<code>ConstrainedSeasonalStateSpaceModel</code> does this, so that it implements the
+<code>N - 1</code> dimension latent space <code style="white-space: pre;">⁠z_1, ..., z_[N-1]⁠</code>.
+Note that since we constrained the mean effect to be zero, the latent
+<code>z_i</code>'s now recover their interpretation as the <em>actual</em> effects,
+<code>z_i = e_i</code> for <code style="white-space: pre;">⁠i = ⁠</code>1, ..., N - 1<code style="white-space: pre;">⁠, even though they were originally defined as residuals. The ⁠</code>N<code style="white-space: pre;">⁠th effect is represented only implicitly, as the nonzero mean of the first ⁠</code>N - 1<code style="white-space: pre;">⁠effects. Although the computational represention is not symmetric across all⁠</code>N<code style="white-space: pre;">⁠effects, we derived the⁠</code>ConstrainedSeasonalStateSpaceModel<code style="white-space: pre;">⁠by starting with a symmetric representation and imposing only a symmetric constraint (the zero-sum constraint), so the probability model remains symmetric over all⁠</code>N'
+seasonal effects.
+</p>
+<p>Other sts: 
+<code>sts_additive_state_space_model()</code>,
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,169 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>plot_vr_graph</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Plot a VR graph using the igraph package.</h2>
+
+<h3>Description</h3>
+
+<p>This function will throw an error if the igraph package is not installed.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">plot_vr_graph(
+  graphs,
+  eps,
+  cols = NULL,
+  layout = NULL,
+  title = NULL,
+  component_of = NULL,
+  plot_isolated_vertices = FALSE,
+  return_layout = FALSE,
+  vertex_labels = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>graphs</code></td>
+<td>
+<p>the output of a 'vr_graphs' function call.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>the numeric radius of the graph in 'graphs' to plot.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cols</code></td>
+<td>
+<p>an optional character vector of vertex colors, default 'NULL'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>layout</code></td>
+<td>
+<p>an optional 2D matrix of vertex coordinates, default 'NULL'. If row names are supplied they can be used to subset a graph by those vertex names.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>title</code></td>
+<td>
+<p>an optional str title for the plot, default 'NULL'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>component_of</code></td>
+<td>
+<p>a vertex name (integer or character), only the component of the graph containing that vertex will be plotted (useful for identifying representative (co)cycles in graphs). Default 'NULL' (plot the whole graph).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_isolated_vertices</code></td>
+<td>
+<p>a boolean representing whether or not to plot isolated vertices, default 'FALSE'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_layout</code></td>
+<td>
+<p>a boolean representing whether or not to return the plotting layout (x-y coordinates of each vertex) and the vertex labels, default 'FALSE'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vertex_labels</code></td>
+<td>
+<p>a boolean representing whether or not to plot vertex labels, default 'TRUE'.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>if 'return_layout' is 'TRUE' then a list with elements "layout" (the numeric matrix of vertex x-y coordinates) and "vertices" (character vertex labels), otherwise the function does not return anything.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>vr_graphs</code> for computing VR graphs.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats") &amp; require("igraph"))
+{
+  # simulate data from the unit circle and calculate 
+  # its diagram
+  df &lt;- TDAstats::circle2d[sample(1:100,25),]
+  diag &lt;- TDAstats::calculate_homology(df,
+                                       dim = 1,
+                                       threshold = 2)
+  
+  # get minimum death radius of any data cluster
+  min_death_H0 &lt;- 
+  min(diag[which(diag[,1] == 0),3L])
+  
+  # get birth and death radius of the loop
+  loop_birth &lt;- as.numeric(diag[nrow(diag),2L])
+  loop_death &lt;- as.numeric(diag[nrow(diag),3L])
+
+  # compute VR graphs at radii half of 
+  # min_death_H0 and the mean of loop_birth and 
+  # loop_death, returning clusters
+  graphs &lt;- vr_graphs(X = df,eps = 
+  c(0.5*min_death_H0,(loop_birth + loop_death)/2))
+  
+  # plot graph of smaller (first) radius
+  plot_vr_graph(graphs = graphs,eps = 0.5*min_death_H0,
+                  plot_isolated_vertices = TRUE)
+  
+  # plot graph of larger (second) radius
+  plot_vr_graph(graphs = graphs,eps = (loop_birth + loop_death)/2)
+  
+  # repeat but with rownames for df, each vertex
+  # will be plotted with its rownames
+  rownames(df) &lt;- paste0("V",1:25)
+  graphs &lt;- vr_graphs(X = df,eps = 
+  c(0.5*min_death_H0,(loop_birth + loop_death)/2))
+  plot_vr_graph(graphs = graphs,eps = 0.5*min_death_H0,
+                  plot_isolated_vertices = TRUE)
+  
+  # plot without vertex labels
+  plot_vr_graph(graphs = graphs,eps = (loop_birth + loop_death)/2,
+                  vertex_labels = FALSE)
+                 
+  # plot only the graph component containing vertex "1"
+  plot_vr_graph(graphs = graphs,eps = 0.5*min_death_H0,
+                  component_of = "V1",plot_isolated_vertices = TRUE)
+ 
+  # save the layout of the graph for adding features to 
+  # the same graph layout, like color
+  layout &lt;- plot_vr_graph(graphs = graphs,eps = (loop_birth + loop_death)/2,
+                            return_layout = TRUE,vertex_labels = TRUE)
+  cols &lt;- rep("blue",25)
+  cols[1:5] &lt;- "red"
+  plot_vr_graph(graphs = graphs,eps = (loop_birth + loop_death)/2,cols = cols,
+                  layout = layout)
+  
+}
+</code></pre>
+
+
+</div>

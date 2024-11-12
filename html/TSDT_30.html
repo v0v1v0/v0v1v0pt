@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>parse_party</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>parse_party</h2>
+
+<h3>Description</h3>
+
+<p>Parse output from ctree() and mob() functions in party package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">parse_party(tree, data = NULL, include_subgroups = FALSE, digits = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>An object of class BinaryTree or mob resulting from a call to the
+ctree() or mob() function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame containing covariates used to create tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include_subgroups</code></td>
+<td>
+<p>A logical value indicating whether or not to include
+a string representation of the subgroups in the results. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>digits</code></td>
+<td>
+<p>Number of digits for rounding.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Collects text output from party::ctree() or party::mob(), parses the
+splits, and populates a data.frame with the relevant data.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data.frame containing a parsed tree.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>ctree, mob
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">requireNamespace( "party", quietly = TRUE )
+requireNamespace( "modeltools", quietly = TRUE )
+## From party::ctree() examples:
+set.seed(290875)
+## regression
+airq &lt;- subset(airquality, !is.na(Ozone))
+airct &lt;- party::ctree(Ozone ~ ., data = airq, 
+               controls = party::ctree_control(maxsurrogate = 3))
+
+## Parse the results into a new data.frame
+ex1 &lt;- parse_party( airct )
+ex1
+
+## From party::mob() examples:
+data("BostonHousing", package = "mlbench")
+## and transform variables appropriately (for a linear regression)
+BostonHousing$lstat &lt;- log(BostonHousing$lstat)
+BostonHousing$rm &lt;- BostonHousing$rm^2
+## as well as partitioning variables (for fluctuation testing)
+BostonHousing$chas &lt;- factor( BostonHousing$chas, levels = 0:1, 
+                              labels = c("no", "yes") )
+BostonHousing$rad &lt;- factor(BostonHousing$rad, ordered = TRUE)
+
+## partition the linear regression model medv ~ lstat + rm
+## with respect to all remaining variables:
+fmBH &lt;- party::mob( medv ~ lstat + rm | zn + indus + chas + nox + age + 
+             dis + rad + tax + crim + b + ptratio,
+             control = party::mob_control(minsplit = 40), data = BostonHousing, 
+             model = modeltools::linearModel )
+
+## Parse the results into a new data.frame
+ex2 &lt;- parse_party( fmBH )
+ex2
+</code></pre>
+
+
+</div>

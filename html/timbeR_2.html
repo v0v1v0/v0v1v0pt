@@ -1,0 +1,89 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bi_di</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate the diameter at a given height based on a fitted Bi (2000) taper equation.</h2>
+
+<h3>Description</h3>
+
+<p>Estimates the diameter at a given height of a tree from the diameter at breast height, total height and the coefficients of the Bi taper function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bi_di(dbh, h, hi, coef)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>dbh</code></td>
+<td>
+<p>tree diameter at breast height, in centimeters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>total tree height, in meters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hi</code></td>
+<td>
+<p>height at which the diameter will be calculated, in meters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>numerical vector containing seven coefficients of the Bi taper function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>the Bi (2000) variable-form taper function is represented mathematically by the following expression
+</p>
+<p>di ~ dbh * (log(sin((pi/2) * (hi/h)))/(log(sin((pi/2) * (1.3/h)))))^(b0 + b1 * sin((pi/2) * (hi/h)) + b2 * cos((3 * pi/2) * (hi/h)) + b3 * (sin((pi/2) * (hi/h))/(hi/h)) + b4 * dbh + b5 * (hi/h) * dbh^0.5 + b6 * (hi/h) * h^0.5)
+</p>
+
+
+<h3>Value</h3>
+
+<p>a numeric value indicating the diameter at the given height.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(dplyr)
+library(minpack.lm)
+library(timbeR)
+
+tree_scaling &lt;- tree_scaling %&gt;%
+mutate(did = di/dbh,
+       hih = hi/h)
+
+bi &lt;-  nlsLM(di ~ taper_bi(dbh, h, hih, b0, b1, b2, b3, b4, b5, b6),
+data=tree_scaling,
+start=list(b0=1.8,b1=-0.2,b2=-0.04,b3=-0.9,b4=-0.0006,b5=0.07,b6=-.14))
+
+coef_bi &lt;- coef(bi)
+
+dbh &lt;- 25
+h &lt;- 20
+hi &lt;- 15
+
+bi_di(dbh, h, hi, coef_bi)
+
+</code></pre>
+
+
+</div>

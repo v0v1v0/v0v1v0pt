@@ -1,0 +1,157 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>duplicate_rows</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find duplicate rows</h2>
+
+<h3>Description</h3>
+
+<p>Find duplicate rows
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">duplicate_rows(
+  data,
+  ...,
+  .keep_all = FALSE,
+  .both_ways = FALSE,
+  .add_count = FALSE,
+  .drop_empty = FALSE,
+  sort = FALSE,
+  .by = NULL,
+  .cols = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Variables used to find duplicate rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.keep_all</code></td>
+<td>
+<p>If <code>TRUE</code> then all columns of data frame are kept,
+default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.both_ways</code></td>
+<td>
+<p>If <code>TRUE</code> then duplicates and non-duplicate first instances
+are retained. The default is <code>FALSE</code> which returns only duplicate rows. <br>
+Setting this to <code>TRUE</code> can be particularly useful when examining
+the differences between duplicate rows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.add_count</code></td>
+<td>
+<p>If <code>TRUE</code> then a count column is added to denote the
+number of duplicates (including first non-duplicate instance).
+The naming convention of this column follows <code>dplyr::add_count()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.drop_empty</code></td>
+<td>
+<p>If <code>TRUE</code> then empty rows with all <code>NA</code> values are removed.
+The default is <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sort</code></td>
+<td>
+<p>Should result be sorted?
+If <code>FALSE</code> (the default), then rows are returned in the exact same order as
+they appear in the data.
+If <code>TRUE</code> then the duplicate rows are sorted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.by</code></td>
+<td>
+<p>(Optional). A selection of columns to group by for this operation.
+Columns are specified using tidy-select.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.cols</code></td>
+<td>
+<p>(Optional) alternative to <code>...</code> that accepts
+a named character vector or numeric vector.
+If speed is an expensive resource, it is recommended to use this.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function works like <code>dplyr::distinct()</code> in its handling of
+arguments and data-masking but returns duplicate rows.
+In certain situations in can be much faster than <code>data %&gt;% group_by() %&gt;% filter(n() &gt; 1)</code>
+when there are many groups.
+<code>fduplicates2()</code> returns the same output but uses a different
+method which utilises joins and is written almost entirely using dplyr.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> of duplicate rows.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>fcount group_collapse fdistinct
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(timeplyr)
+library(ggplot2)
+
+# Duplicates across all columns
+diamonds %&gt;%
+  duplicate_rows()
+# Alternatively with row ids
+diamonds %&gt;%
+  filter(frowid(.) &gt; 1)
+# Diamonds with the same dimensions
+diamonds %&gt;%
+  duplicate_rows(x, y, z)
+# Can use tidyverse select notation
+diamonds %&gt;%
+  duplicate_rows(across(where(is.factor)), .keep_all = FALSE)
+# Similar to janitor::get_dupes()
+diamonds %&gt;%
+  duplicate_rows(.add_count = TRUE)
+# Keep the first instance of each duplicate row
+diamonds %&gt;%
+  duplicate_rows(.both_ways = TRUE)
+# Same as the below
+diamonds %&gt;%
+  fadd_count(across(everything())) %&gt;%
+  filter(n &gt; 1)
+
+</code></pre>
+
+
+</div>

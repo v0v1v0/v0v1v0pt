@@ -1,0 +1,282 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>smith_waterman</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Align text using Smith-Waterman</h2>
+
+<h3>Description</h3>
+
+<p>Align text using the Smith-Waterman algorithm. 
+The Smith–Waterman algorithm performs local sequence alignment. 
+It finds similar regions between two strings.<br>
+Similar regions are a sequence of either characters or words which are found by matching the characters or words of 2 sequences of strings.<br> 
+If the word/letter is the same in each text, the alignment score is increased with the match score, while if they are not the same the local alignment score drops by the gap score.
+If one of the 2 texts contains extra words/letters, the score drops by the mismatch score.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">smith_waterman(
+  a,
+  b,
+  type = c("characters", "words"),
+  match = 2L,
+  mismatch = -1L,
+  gap = -1L,
+  lower = TRUE,
+  similarity = function(x, y) ifelse(x == y, 2L, -1L),
+  tokenizer,
+  collapse,
+  edit_mark = "#",
+  implementation = c("R", "Rcpp"),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>a character string of length one</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>a character string of length one</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>either 'characters' or 'words' indicating to align based on a sequence of characters or a sequence of words. Defaults to 'characters'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>match</code></td>
+<td>
+<p>integer value of a score to assign a match (a letter/word from a and b which are the same during alignment). This value should be bigger than zero. Defaults to 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mismatch</code></td>
+<td>
+<p>integer value of a score to assign a mismatch (leave out 1 word / 1 letter from 1 of the 2 input strings during alignment). This value should be smaller or equal to zero.  Defaults to -1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gap</code></td>
+<td>
+<p>integer value of a score to assign a gap (drop 1 word / letter from each of the 2 input strings during alignment). This value should be smaller or equal to zero.   Defaults to -1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>logical indicating to lowercase text before doing the alignment. Defaults to TRUE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>similarity</code></td>
+<td>
+<p>optionally, a function to compare 2 characters or words. 
+This function should have 2 arguments x and y with the 2 letters / words to compare and should return 1 number indicating
+the similarity between x and y. See the examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tokenizer</code></td>
+<td>
+<p>a function to tokenise text into either a sequence of characters or a sequence of words.
+Defaults to <code>tokenize_letters</code> if type is <code>'characters'</code> and <code>tokenize_spaces_punct</code> if type is <code>'words'</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>collapse</code></td>
+<td>
+<p>separator used to combined characters / words back together in the output. Defaults to ” for type 'characters' and a space for type 'words'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>edit_mark</code></td>
+<td>
+<p>separator to indicated a gap/mismatch between sequences. Defaults to the hashtag symbol.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>implementation</code></td>
+<td>
+<p>either 'R' or 'Rcpp' indicating to perform the alignment in Rcpp or with plain R code. Defaults to 'R'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra arguments passed on to <code>tokenizer</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The code uses similar code as the <code>textreuse::local_align</code> function and also allows to align character sequences next to aligning word sequences
+</p>
+
+
+<h3>Value</h3>
+
+<p>an object of class smith_waterman which is a list with elements
+</p>
+
+<ul>
+<li>
+<p>type: The alignment <code>type</code>
+</p>
+</li>
+<li>
+<p>edit_mark:The <code>edit_mark</code>
+</p>
+</li>
+<li>
+<p>sw: The Smith-Waterman local alignment score
+</p>
+</li>
+<li>
+<p>similarity: Score between 0 and 1, calculated as the Smith-Waterman local alignment score / (the number of letters/words in the shortest text times the match weight)
+</p>
+</li>
+<li>
+<p>weights: The list of weights provided to the function: match, mismatch and gap
+</p>
+</li>
+<li>
+<p>matches: The number of matches found during alignment
+</p>
+</li>
+<li>
+<p>mismatches: The number of mismatches found during alignment
+</p>
+</li>
+<li>
+<p>a: A list with alignment information from the text provided in <code>a</code>. The list elements documented below
+</p>
+</li>
+<li>
+<p>b: A list with alignment information from the text provided in <code>b</code>. The list elements documented below
+</p>
+</li>
+</ul>
+<p>Elements <code>a</code> and <code>b</code> are both lists which contain
+</p>
+
+<ul>
+<li>
+<p>text: The provided character string of either a or b
+</p>
+</li>
+<li>
+<p>tokens: A character vector of the tokenised texts of a or b
+</p>
+</li>
+<li>
+<p>n: The length of <code>tokens</code>
+</p>
+</li>
+<li>
+<p>similarity: The similarity to a calculated as the Smith-Waterman local alignment score / (the number of letters/words in the a or b text times the match weight)
+</p>
+</li>
+<li>
+<p>alignment: A list with the following elements
+</p>
+
+<ul>
+<li>
+<p>text: The aligned text from either a or b where gaps/mismatches are filled up with the <code>edit_mark</code> symbol
+</p>
+</li>
+<li>
+<p>tokens: The character vector of tokens which form the aligned <code>text</code>
+</p>
+</li>
+<li>
+<p>n: The length of the aligned <code>text</code>
+</p>
+</li>
+<li>
+<p>gaps: The number of gaps during alignment
+</p>
+</li>
+<li>
+<p>from: The starting position in the full tokenised <code>tokens</code> element from either a or b where the aligned text is found. See the example.
+</p>
+</li>
+<li>
+<p>to: The end position in the full tokenised <code>tokens</code> element from either a or b where the aligned text is found. See the example.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Smith-Waterman_algorithm">https://en.wikipedia.org/wiki/Smith-Waterman_algorithm</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## align sequence of letters
+smith_waterman("Joske Vermeulen", "Jiske Vermoelen")
+smith_waterman("Joske Vermeulen", "Ik zoek naar Jiske Versmoelen, waar is die te vinden")
+smith_waterman("Joske", "Jiske")
+smith_waterman("Joske", "Jiske",
+               similarity = function(x, y) ifelse(x == y | (x == "o" &amp; y == "i"), 2L, -1L))
+
+## align sequence of words
+a &lt;- "The answer is blowin' in the wind."
+b &lt;- "As the Bob Dylan song says, the answer is blowing in the wind."
+smith_waterman(a, b)
+smith_waterman(a, b, type = "characters")
+smith_waterman(a, b, type = "words")
+smith_waterman(a, b, type = "words", similarity = function(x, y) adist(x, y))
+smith_waterman(a, b, type = "words", 
+               tokenizer = function(x) unlist(strsplit(x, "[[:space:]]")))
+x &lt;- smith_waterman(a, b, type = "words")
+x$b$tokens[x$b$alignment$from:x$b$alignment$to]            
+               
+# examples on aligning text files
+a &lt;- system.file(package = "text.alignment", "extdata", "example1.txt")
+a &lt;- readLines(a)
+a &lt;- paste(a, collapse = "\n")
+b &lt;- system.file(package = "text.alignment", "extdata", "example2.txt")
+b &lt;- readLines(b)
+b &lt;- paste(b, collapse = "\n")
+smith_waterman(a, b, type = "characters")
+smith_waterman(a, b, type = "words")
+smith_waterman("Gistel Hof", b, type = "characters")
+smith_waterman("Bailiestraat", b, type = "characters")
+smith_waterman("Lange rei", b, type = "characters")
+
+# examples on extracting where elements were found
+x &lt;- smith_waterman("Lange rei", b)
+x$b$tokens[x$b$alignment$from:x$b$alignment$to]
+as.data.frame(x)
+as.data.frame(x, alignment_id = "alignment-ab")
+
+x &lt;- lapply(c("Lange rei", "Gistel Hof", NA, "Test"), FUN = function(a){
+  x &lt;- smith_waterman(a, b)
+  x &lt;- as.data.frame(x)
+  x
+})
+x &lt;- do.call(rbind, x)
+x
+</code></pre>
+
+
+</div>

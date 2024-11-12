@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>enter_object</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Enter into a specific object and discard all other JSON data</h2>
+
+<h3>Description</h3>
+
+<p>When manipulating a JSON object, <code>enter_object</code> lets you navigate to
+a specific value of the object by referencing it's name. JSON can contain
+nested objects, and you can pass in more than one character string into
+<code>enter_object</code> to navigate through multiple objects simultaneously.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">enter_object(.x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a json string or tbl_json object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>a quoted or unquoted sequence of strings designating the object
+name or sequences of names you wish to enter</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>After using <code>enter_object</code>, all further tidyjson calls happen inside the
+referenced object (all other JSON data outside the object is discarded).
+If the object doesn't exist for a given row / index, then that row will be
+discarded.
+</p>
+<p>In pipelines, <code>enter_object</code> is often preceded by <code>gather_object</code>
+and followed by <code>gather_array</code> if the value is an array, or
+<code>spread_all</code> if the value is an object.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_json</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gather_object</code> to find sub-objects that could be
+entered into, <code>gather_array</code> to gather an array in an object
+and <code>spread_all</code> or <code>spread_values</code> to spread values in an object.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Let's start with a simple example of parents and children
+json &lt;- c('{"parent": "bob",  "children": ["sally", "george"]}',
+          '{"parent": "fred", "children": ["billy"]}',
+          '{"parent": "anne"}')
+
+# We can see the names and types in each
+json %&gt;% gather_object %&gt;% json_types
+
+# Let's capture the parent first and then enter in the children object
+json %&gt;% spread_all %&gt;% enter_object(children)
+
+# Also works with quotes
+json %&gt;% spread_all %&gt;% enter_object("children")
+
+# Notice that "anne" was discarded, as she has no children
+
+# We can now use gather array to stack the array
+json %&gt;% spread_all %&gt;% enter_object(children) %&gt;%
+  gather_array("child.num")
+
+# And append_values_string to add the children names
+json %&gt;% spread_all %&gt;% enter_object(children) %&gt;%
+  gather_array("child.num") %&gt;%
+  append_values_string("child")
+
+# The path can be comma delimited to go deep into a nested object
+json &lt;- '{"name": "bob", "attributes": {"age": 32, "gender": "male"}}'
+json %&gt;% enter_object(attributes, age)
+
+# A more realistc example with companies data
+library(dplyr)
+companies %&gt;%
+  enter_object(acquisitions) %&gt;%
+  gather_array %&gt;%
+  spread_all %&gt;%
+  glimpse
+</code></pre>
+
+
+</div>

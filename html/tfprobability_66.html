@@ -1,0 +1,206 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>sts_additive_state_space_model</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A state space model representing a sum of component state space models.</h2>
+
+<h3>Description</h3>
+
+<p>A state space model (SSM) posits a set of latent (unobserved) variables that
+evolve over time with dynamics specified by a probabilistic transition model
+<code>p(z[t+1] | z[t])</code>. At each timestep, we observe a value sampled from an
+observation model conditioned on the current state, <code>p(x[t] | z[t])</code>. The
+special case where both the transition and observation models are Gaussians
+with mean specified as a linear function of the inputs, is known as a linear
+Gaussian state space model and supports tractable exact probabilistic
+calculations; see <code>tfd_linear_gaussian_state_space_model</code> for details.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">sts_additive_state_space_model(
+  component_ssms,
+  constant_offset = 0,
+  observation_noise_scale = NULL,
+  initial_state_prior = NULL,
+  initial_step = 0,
+  validate_args = FALSE,
+  allow_nan_stats = TRUE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>component_ssms</code></td>
+<td>
+<p><code>list</code> containing one or more
+<code>tfd_linear_gaussian_state_space_model</code> instances. The components
+will in general implement different time-series models, with possibly
+different <code>latent_size</code>, but they must have the same <code>dtype</code>, event
+shape (<code>num_timesteps</code> and <code>observation_size</code>), and their batch shapes
+must broadcast to a compatible batch shape.#'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constant_offset</code></td>
+<td>
+<p>scalar <code>float</code> <code>tensor</code>, or batch of scalars,
+specifying a constant value added to the sum of outputs from the
+component models. This allows the components to model the shifted series
+<code>observed_time_series - constant_offset</code>. Default value: <code>0</code>.#'</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>observation_noise_scale</code></td>
+<td>
+<p>Optional scalar <code>float</code> <code>tensor</code> indicating the
+standard deviation of the observation noise. May contain additional
+batch dimensions, which must broadcast with the batch shape of elements
+in <code>component_ssms</code>. If <code>observation_noise_scale</code> is specified for the
+<code>sts_additive_state_space_model</code>, the observation noise scales of component
+models are ignored. If <code>NULL</code>, the observation noise scale is derived
+by summing the noise variances of the component models, i.e.,
+<code style="white-space: pre;">⁠observation_noise_scale = sqrt(sum([ssm.observation_noise_scale**2 for ssm in component_ssms]))⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_state_prior</code></td>
+<td>
+<p>instance of <code>tfd_multivariate_normal</code>
+representing the prior distribution on latent states.  Must have
+event shape <code style="white-space: pre;">⁠[1]⁠</code> (as <code>tfd_linear_gaussian_state_space_model</code> requires a
+rank-1 event shape).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>initial_step</code></td>
+<td>
+<p>Optional scalar <code>integer</code> <code>tensor</code> specifying the starting
+timestep. Default value: 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p><code>logical</code>. Whether to validate input
+with asserts. If <code>validate_args</code> is <code>FALSE</code>, and the inputs are
+invalid, correct behavior is not guaranteed. Default value: <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p><code>logical</code>. If <code>FALSE</code>, raise an
+exception if a statistic (e.g. mean/mode/etc...) is undefined for any
+batch member. If <code>TRUE</code>, batch members with valid parameters leading to
+undefined statistics will return NaN for this statistic. Default value: <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to ops created by this class.
+Default value: "AdditiveStateSpaceModel".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>sts_additive_state_space_model</code> represents a sum of component state space
+models. Each of the <code>N</code> components describes a random process
+generating a distribution on observed time series <code style="white-space: pre;">⁠x1[t], x2[t], ..., xN[t]⁠</code>.
+The additive model represents the sum of these
+processes, <code>y[t] = x1[t] + x2[t] + ... + xN[t] + eps[t]</code>, where
+<code>eps[t] ~ N(0, observation_noise_scale)</code> is an observation noise term.
+</p>
+<p>Mathematical Details
+</p>
+<p>The additive model concatenates the latent states of its component models.
+The generative process runs each component's dynamics in its own subspace of
+latent space, and then observes the sum of the observation models from the
+components.
+</p>
+<p>Formally, the transition model is linear Gaussian:
+</p>
+<div class="sourceCode"><pre>p(z[t+1] | z[t]) ~ Normal(loc = transition_matrix.matmul(z[t]), cov = transition_cov)
+</pre></div>
+<p>where each <code>z[t]</code> is a latent state vector concatenating the component
+state vectors, <code style="white-space: pre;">⁠z[t] = [z1[t], z2[t], ..., zN[t]]⁠</code>, so it has size
+<code style="white-space: pre;">⁠latent_size = sum([c.latent_size for c in components])⁠</code>.
+</p>
+<p>The transition matrix is the block-diagonal composition of transition
+matrices from the component processes:
+</p>
+<div class="sourceCode"><pre>transition_matrix =
+ [[ c0.transition_matrix,  0.,                   ..., 0.                   ],
+  [ 0.,                    c1.transition_matrix, ..., 0.                   ],
+  [ ...                    ...                   ...                       ],
+  [ 0.,                    0.,                   ..., cN.transition_matrix ]]
+</pre></div>
+<p>and the noise covariance is similarly the block-diagonal composition of
+component noise covariances:
+</p>
+<div class="sourceCode"><pre>transition_cov =
+ [[ c0.transition_cov, 0.,                ..., 0.                ],
+  [ 0.,                c1.transition_cov, ..., 0.                ],
+  [ ...                ...                     ...               ],
+  [ 0.,                0.,                ..., cN.transition_cov ]]
+</pre></div>
+<p>The observation model is also linear Gaussian,
+</p>
+<div class="sourceCode"><pre>p(y[t] | z[t]) ~ Normal(loc = observation_matrix.matmul(z[t]), stddev = observation_noise_scale)
+</pre></div>
+<p>This implementation assumes scalar observations, so <code>observation_matrix</code> has shape <code style="white-space: pre;">⁠[1, latent_size]⁠</code>.
+The additive observation matrix simply concatenates the observation matrices from each component:
+</p>
+<div class="sourceCode"><pre>observation_matrix = concat([c0.obs_matrix, c1.obs_matrix, ..., cN.obs_matrix], axis=-1)
+</pre></div>
+<p>The effect is that each component observation matrix acts on the dimensions
+of latent state corresponding to that component, and the overall expected
+observation is the sum of the expected observations from each component.
+</p>
+<p>If <code>observation_noise_scale</code> is not explicitly specified, it is also computed
+by summing the noise variances of the component processes:
+</p>
+<div class="sourceCode"><pre>observation_noise_scale = sqrt(sum([c.observation_noise_scale**2 for c in components]))
+</pre></div>
+
+
+<h3>Value</h3>
+
+<p>an instance of <code>LinearGaussianStateSpaceModel</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other sts: 
+<code>sts_autoregressive_state_space_model()</code>,
+<code>sts_autoregressive()</code>,
+<code>sts_constrained_seasonal_state_space_model()</code>,
+<code>sts_dynamic_linear_regression_state_space_model()</code>,
+<code>sts_dynamic_linear_regression()</code>,
+<code>sts_linear_regression()</code>,
+<code>sts_local_level_state_space_model()</code>,
+<code>sts_local_level()</code>,
+<code>sts_local_linear_trend_state_space_model()</code>,
+<code>sts_local_linear_trend()</code>,
+<code>sts_seasonal_state_space_model()</code>,
+<code>sts_seasonal()</code>,
+<code>sts_semi_local_linear_trend_state_space_model()</code>,
+<code>sts_semi_local_linear_trend()</code>,
+<code>sts_smooth_seasonal_state_space_model()</code>,
+<code>sts_smooth_seasonal()</code>,
+<code>sts_sparse_linear_regression()</code>,
+<code>sts_sum()</code>
+</p>
+
+
+</div>

@@ -1,0 +1,623 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tcor</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute time varying correlation coefficients</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>tcor()</code> implements (together with its helper function
+<code>calc_rho()</code>) the nonparametric estimation of the time varying correlation
+coefficient proposed by Choi &amp; Shin (2021). The general idea is to compute a
+(Pearson) correlation coefficient (<code class="reqn">r(x,y) = \frac{\hat{xy} - \hat{x}\times\hat{y}}{
+\sqrt{\hat{x^2}-\hat{x}^2} \times \sqrt{\hat{y^2}-\hat{y}^2}}</code>), but instead of
+using the means required for such a computation, each component (i.e.,
+<code class="reqn">x</code>, <code class="reqn">y</code>, <code class="reqn">x^2</code>, <code class="reqn">y^2</code>, <code class="reqn">x \times y</code>) is smoothed and the
+smoothed terms are considered in place the original means. The intensity of
+the smoothing depends on a unique parameter: the bandwidth (<code>h</code>). If <code>h = Inf</code>, the method produces the original (i.e., time-invariant) correlation
+value. The smaller the parameter <code>h</code>, the more variation in time is being
+captured. The parameter <code>h</code> can be provided by the user; otherwise it is
+automatically estimated by the internal helper functions <code>select_h()</code> and
+<code>calc_RMSE()</code> (see <strong>Details</strong>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tcor(
+  x,
+  y,
+  t = seq_along(x),
+  h = NULL,
+  cor.method = c("pearson", "spearman"),
+  kernel = c("epanechnikov", "box", "normal"),
+  CI = FALSE,
+  CI.level = 0.95,
+  param_smoother = list(),
+  keep.missing = FALSE,
+  verbose = FALSE
+)
+
+calc_rho(
+  x,
+  y,
+  t = seq_along(x),
+  t.for.pred = t,
+  h,
+  cor.method = c("pearson", "spearman"),
+  kernel = c("epanechnikov", "box", "normal"),
+  param_smoother = list()
+)
+
+calc_RMSE(
+  h,
+  x,
+  y,
+  t = seq_along(x),
+  cor.method = c("pearson", "spearman"),
+  kernel = c("epanechnikov", "box", "normal"),
+  param_smoother = list(),
+  verbose = FALSE
+)
+
+select_h(
+  x,
+  y,
+  t = seq_along(x),
+  cor.method = c("pearson", "spearman"),
+  kernel = c("epanechnikov", "box", "normal"),
+  param_smoother = list(),
+  verbose = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>a numeric vector of to be correlated with <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>a (numeric or Date) vector of time points. If missing, observations
+are considered to correspond to sequential time steps (i.e., 1, 2 ...).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+<p>a scalar indicating the bandwidth used by the smoothing function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cor.method</code></td>
+<td>
+<p>a character string indicating which correlation coefficient
+is to be computed ("pearson", the default; or "spearman").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kernel</code></td>
+<td>
+<p>a character string indicating which kernel to use: "epanechnikov"
+(the default), "box", or "normal" (abbreviations also work).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CI</code></td>
+<td>
+<p>a logical specifying if a confidence interval should be computed or not (default = <code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CI.level</code></td>
+<td>
+<p>a scalar defining the level for <code>CI</code> (default = 0.95 for 95% CI).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>param_smoother</code></td>
+<td>
+<p>a list of additional parameters to provide to the
+internal smoothing function (see <strong>Details</strong>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep.missing</code></td>
+<td>
+<p>a logical specifying if time points associated with missing
+information should be kept in the output (default = <code>FALSE</code> to facilitate plotting).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>a logical specifying if information should be displayed to
+monitor the progress of the cross validation (default = <code>FALSE</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t.for.pred</code></td>
+<td>
+<p>a (numeric or Date) vector of time points at which to
+evaluate the smoothed fit. If missing, <code>t</code> is used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ul>
+<li> <p><strong>Smoothing</strong>: the smoothing of each component is performed by kernel
+regression. The default is to use the Epanechnikov kernel following Choi &amp;
+Shin (2021), but other kernels have also been implemented and can thus
+alternatively be used (see <code>kern_smooth()</code> for details). The normal kernel
+seems to sometimes lead to very small bandwidth being selected, but the
+default kernel can lead to numerical issues (see next point). We thus
+recommend always comparing the results from different kernel methods.
+</p>
+</li>
+<li> <p><strong>Numerical issues</strong>: some numerical issues can happen because the smoothing
+is performed independently on each component of the correlation coefficient.
+As a consequence, some relationship between components may become violated
+for some time points. For instance, if the square of the smoothed <code class="reqn">x</code> term
+gets larger than the smoothed <code class="reqn">x^2</code> term, the variance of <code class="reqn">x</code> would become
+negative. In such cases, coefficient values returned are <code>NA</code>.
+</p>
+</li>
+<li> <p><strong>Bandwidth selection</strong>: when the value used to define the bandwidth (<code>h</code>)
+in <code>tcor()</code> is set to <code>NULL</code> (the default), the internal function <code>select_h()</code>
+is used to to select the optimal value for <code>h</code>. It is first estimated by
+leave-one-out cross validation (using internally <code>calc_RMSE()</code>). If the cross
+validation error (RMSE) is minimal for the maximal value of <code>h</code> considered
+(<code class="reqn">8\sqrt{N}</code>), rather than taking this as the optimal <code>h</code> value, the
+bandwidth becomes estimated using the so-called elbow criterion. This latter
+method identifies the value <code>h</code> after which the cross validation error
+decreasing very little. The procedure is detailed in section 2.1 in Choi &amp;
+Shin (2021).
+</p>
+</li>
+<li> <p><strong>Parallel computation</strong>: if <code>h</code> is not provided, an automatic bandwidth
+selection occurs (see above). For large datasets, this step can be
+computationally demanding. The current implementation thus relies on
+<code>parallel::mclapply()</code> and is thus only effective for Linux and MacOS.
+Relying on parallel processing also implies that you call <code>options("mc.cores" = XX)</code> beforehand, replacing <code>XX</code> by the relevant number of CPU cores you
+want to use (see <strong>Examples</strong>). For debugging, do use <code>options("mc.cores" = 1)</code>, otherwise you may not be able to see the error messages generated in
+child nodes.
+</p>
+</li>
+<li> <p><strong>Confidence interval</strong>: if <code>CI</code> is set to <code>TRUE</code>, a confidence interval is
+calculated as described in Choi &amp; Shin (2021). This is also necessary for using
+<code>test_equality()</code> to test differences between correlations at two time points.
+The computation of the confidence intervals involves multiple internal
+functions (see <code>CI</code> for details).
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p><strong>—Output for <code>tcor()</code>—</strong>
+</p>
+<p>A 2 x <code class="reqn">t</code> dataframe containing:
+</p>
+
+<ul>
+<li>
+<p> the time points (<code>t</code>).
+</p>
+</li>
+<li>
+<p> the estimates of the correlation value (<code>r</code>).
+</p>
+</li>
+</ul>
+<p>Or, if <code>CI = TRUE</code>, a 5 x <code class="reqn">t</code> dataframe containing:
+</p>
+
+<ul>
+<li>
+<p> the time points (<code>t</code>).
+</p>
+</li>
+<li>
+<p> the estimates of the correlation value (<code>r</code>).
+</p>
+</li>
+<li>
+<p> the Standard Error (<code>SE</code>).
+</p>
+</li>
+<li>
+<p> the lower boundary of the confidence intervals (<code>lwr</code>).
+</p>
+</li>
+<li>
+<p> the upper boundary of the confidence intervals (<code>upr</code>).
+</p>
+</li>
+</ul>
+<p>Some metadata are also attached to the dataframe (as attributes):
+</p>
+
+<ul>
+<li>
+<p> the call to the function (<code>call</code>).
+</p>
+</li>
+<li>
+<p> the argument <code>CI</code>.
+</p>
+</li>
+<li>
+<p> the bandwidth parameter (<code>h</code>).
+</p>
+</li>
+<li>
+<p> the method used to select <code>h</code> (<code>h_selection</code>).
+</p>
+</li>
+<li>
+<p> the minimal root mean square error when <code>h</code> is selected (<code>RMSE</code>).
+</p>
+</li>
+<li>
+<p> the computing time (in seconds) spent to select the bandwidth parameter (<code>h_selection_duration</code>) if <code>h</code> automatically selected.
+</p>
+</li>
+</ul>
+<p><strong>—Output for <code>calc_rho()</code>—</strong>
+</p>
+<p>A 14 x <code class="reqn">t</code> dataframe with:
+</p>
+
+<ul>
+<li>
+<p> the six raw components of correlation (<code>x</code>, <code>y</code>, <code>x2</code>, <code>y2</code>, <code>xy</code>).
+</p>
+</li>
+<li>
+<p> the time points (<code>t</code>).
+</p>
+</li>
+<li>
+<p> the six raw components of correlation after smoothing (<code>x_smoothed</code>, <code>y_smoothed</code>, <code>x2_smoothed</code>, <code>y2_smoothed</code>, <code>xy_smoothed</code>).
+</p>
+</li>
+<li>
+<p> the standard deviation around <code class="reqn">x</code> and <code class="reqn">y</code> (<code>sd_x_smoothed</code>, <code>sd_y_smoothed</code>).
+</p>
+</li>
+<li>
+<p> the smoothed correlation coefficient (<code>rho_smoothed</code>).
+</p>
+</li>
+</ul>
+<p><strong>—Output for <code>calc_RMSE()</code>—</strong>
+</p>
+<p>A scalar of class numeric corresponding to the RMSE.
+</p>
+<p><strong>—Output for <code>select_h()</code>—</strong>
+</p>
+<p>A list with the following components:
+</p>
+
+<ul>
+<li>
+<p> the selected bandwidth parameter (<code>h</code>).
+</p>
+</li>
+<li>
+<p> the method used to select <code>h</code> (<code>h_selection</code>).
+</p>
+</li>
+<li>
+<p> the minimal root mean square error when <code>h</code> is selected (<code>RMSE</code>).
+</p>
+</li>
+<li>
+<p> the computing time (in seconds) spent to select the bandwidth parameter (<code>time</code>).
+</p>
+</li>
+</ul>
+<h3>Functions</h3>
+
+
+<ul>
+<li> <p><code>tcor()</code>: <strong>the user-level function to be used</strong>.
+</p>
+</li>
+<li> <p><code>calc_rho()</code>: computes the correlation for a given bandwidth.
+</p>
+<p>The function calls the kernel smoothing procedure on each component required
+to compute the time-varying correlation.
+</p>
+</li>
+<li> <p><code>calc_RMSE()</code>: Internal function computing the root mean square error (RMSE) for a given bandwidth.
+</p>
+<p>The function removes each time point one by one and predicts the correlation
+at the missing time point based on the other time points. It then computes
+and returns the RMSE between this predicted correlation and the one predicted
+using the full dataset. See also <em>Bandwidth selection</em> and <em>Parallel
+computation</em> in <strong>Details</strong>.
+</p>
+</li>
+<li> <p><code>select_h()</code>: Internal function selecting the optimal bandwidth parameter <code>h</code>.
+</p>
+<p>The function selects and returns the optimal bandwidth parameter <code>h</code> using an
+optimizer (<code>stats::optimize()</code>) which searches the <code>h</code> value associated with
+the smallest RMSE returned by <code>calc_RMSE()</code>. See also <em>Bandwidth selection</em>
+in <strong>Details</strong>.
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Choi, JE., Shin, D.W. Nonparametric estimation of time varying correlation coefficient.
+J. Korean Stat. Soc. 50, 333–353 (2021). <a href="https://doi.org/10.1007/s42952-020-00073-6">doi:10.1007/s42952-020-00073-6</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>test_equality</code>, <code>kern_smooth</code>, <code>CI</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#####################################################
+## Examples for the user-level function to be used ##
+#####################################################
+
+## Effect of the bandwidth
+
+res_h50   &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 50))
+res_h100  &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 100))
+res_h200  &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 200))
+plot(res_h50, type = "l", ylab = "Cor", xlab = "Time", las = 1, col = "grey")
+points(res_h100, type = "l", col = "blue")
+points(res_h200, type = "l", col = "red")
+legend("bottom", horiz = TRUE, fill = c("grey", "blue", "red"),
+       legend = c("50", "100", "200"), bty = "n", title = "Bandwidth (h)")
+
+
+## Effect of the correlation method
+
+res_pearson  &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 150))
+res_spearman &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 150,
+                                      cor.method = "spearman"))
+plot(res_pearson, type = "l", ylab = "Cor", xlab = "Time", las = 1)
+points(res_spearman, type = "l", col = "blue")
+legend("bottom", horiz = TRUE, fill = c("black", "blue"),
+       legend = c("pearson", "spearman"), bty = "n", title = "cor.method")
+
+
+## Infinite bandwidth should match fixed correlation coefficients
+## nb: `h = Inf` is not supported by default kernel (`kernel = 'epanechnikov'`)
+
+res_pearson_hInf  &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = Inf,
+                                           kernel = "normal"))
+res_spearman_hInf &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = Inf,
+                                           kernel = "normal", cor.method = "spearman"))
+r &lt;- cor(stockprice$SP500, stockprice$FTSE100, use = "pairwise.complete.obs")
+rho &lt;- cor(stockprice$SP500, stockprice$FTSE100, method = "spearman", use = "pairwise.complete.obs")
+round(unique(res_pearson_hInf$r) - r, digits = 3) ## 0 indicates near equality
+round(unique(res_spearman_hInf$r) - rho, digits = 3) ## 0 indicates near equality
+
+
+## Computing and plotting the confidence interval
+
+res_withCI &lt;- with(stockprice, tcor(x = SP500, y = FTSE100, t = DateID, h = 200, CI = TRUE))
+with(res_withCI, {
+     plot(r ~ t, type = "l", ylab = "Cor", xlab = "Time", las = 1, ylim = c(0, 1))
+     points(lwr ~ t, type = "l", lty = 2)
+     points(upr ~ t, type = "l", lty = 2)})
+
+
+## Same using tidyverse packages (dplyr and ggplot2 must be installed)
+## see https://github.com/courtiol/timevarcorr for more examples of this kind
+
+if (require("dplyr", warn.conflicts = FALSE)) {
+
+  stockprice |&gt;
+    reframe(tcor(x = SP500, y = FTSE100, t = DateID,
+                 h = 200, CI = TRUE)) -&gt; res_tidy
+  res_tidy
+}
+
+if (require("ggplot2")) {
+
+  ggplot(res_tidy) +
+     aes(x = t, y = r, ymin = lwr, ymax = upr) +
+     geom_ribbon(fill = "grey") +
+     geom_line() +
+     labs(title = "SP500 vs FTSE100", x = "Time", y = "Correlation") +
+     theme_classic()
+
+}
+
+
+## Automatic selection of the bandwidth using parallel processing and comparison
+## of the 3 alternative kernels on the first 500 time points of the dataset
+# nb: takes a few seconds to run, so not run by default
+
+run &lt;- in_pkgdown() || FALSE ## change to TRUE to run the example
+if (run) {
+
+options("mc.cores" = 2L) ## CPU cores to be used for parallel processing
+
+res_hauto_epanech &lt;- with(stockprice[1:500, ],
+         tcor(x = SP500, y = FTSE100, t = DateID, kernel = "epanechnikov")
+         )
+
+res_hauto_box &lt;- with(stockprice[1:500, ],
+          tcor(x = SP500, y = FTSE100, t = DateID, kernel = "box")
+          )
+
+res_hauto_norm &lt;- with(stockprice[1:500, ],
+          tcor(x = SP500, y = FTSE100, t = DateID, kernel = "norm")
+          )
+
+plot(res_hauto_epanech, type = "l", col = "red",
+     ylab = "Cor", xlab = "Time", las = 1, ylim = c(0, 1))
+points(res_hauto_box, type = "l", col = "grey")
+points(res_hauto_norm, type = "l", col = "orange")
+legend("top", horiz = TRUE, fill = c("red", "grey", "orange"),
+       legend = c("epanechnikov", "box", "normal"), bty = "n",
+       title = "Kernel")
+
+}
+
+
+## Comparison of the 3 alternative kernels under same bandwidth
+## nb: it requires to have run the previous example
+
+if (run) {
+
+res_epanech &lt;- with(stockprice[1:500, ],
+          tcor(x = SP500, y = FTSE100, t = DateID,
+          kernel = "epanechnikov", h = attr(res_hauto_epanech, "h"))
+          )
+
+res_box &lt;- with(stockprice[1:500, ],
+           tcor(x = SP500, y = FTSE100, t = DateID,
+           kernel = "box", h = attr(res_hauto_epanech, "h"))
+           )
+
+res_norm &lt;- with(stockprice[1:500, ],
+          tcor(x = SP500, y = FTSE100, t = DateID,
+          kernel = "norm", h = attr(res_hauto_epanech, "h"))
+          )
+
+plot(res_epanech, type = "l", col = "red", ylab = "Cor", xlab = "Time",
+     las = 1, ylim = c(0, 1))
+points(res_box, type = "l", col = "grey")
+points(res_norm, type = "l", col = "orange")
+legend("top", horiz = TRUE, fill = c("red", "grey", "orange"),
+       legend = c("epanechnikov", "box", "normal"), bty = "n",
+       title = "Kernel")
+
+}
+
+## Automatic selection of the bandwidth using parallel processing with CI
+# nb: takes a few seconds to run, so not run by default
+
+run &lt;- in_pkgdown() || FALSE ## change to TRUE to run the example
+if (run) {
+
+res_hauto_epanechCI &lt;- with(stockprice[1:500, ],
+          tcor(x = SP500, y = FTSE100, t = DateID, CI = TRUE)
+          )
+
+plot(res_hauto_epanechCI[, c("t", "r")], type = "l", col = "red",
+     ylab = "Cor", xlab = "Time", las = 1, ylim = c(0, 1))
+points(res_hauto_epanechCI[, c("t", "lwr")], type = "l", col = "red", lty = 2)
+points(res_hauto_epanechCI[, c("t", "upr")], type = "l", col = "red", lty = 2)
+
+}
+
+
+## Not all kernels work well in all situations
+## Here the default kernell estimation leads to issues for last time points
+## nb1: EuStockMarkets is a time-series object provided with R
+## nb2: takes a few minutes to run, so not run by default
+
+run &lt;- in_pkgdown() || FALSE ## change to TRUE to run the example
+if (run) {
+
+EuStock_epanech &lt;- tcor(EuStockMarkets[1:500, "DAX"], EuStockMarkets[1:500, "SMI"])
+EuStock_norm &lt;- tcor(EuStockMarkets[1:500, "DAX"], EuStockMarkets[1:500, "SMI"], kernel = "normal")
+
+plot(EuStock_epanech, type = "l", col = "red", las = 1, ylim = c(-1, 1))
+points(EuStock_norm, type = "l", col = "orange", lty = 2)
+legend("bottom", horiz = TRUE, fill = c("red", "orange"),
+       legend = c("epanechnikov", "normal"), bty = "n",
+       title = "Kernel")
+}
+
+
+
+
+##################################################################
+## Examples for the internal function computing the correlation ##
+##################################################################
+
+## Computing the correlation and its component for the first six time points
+
+with(head(stockprice), calc_rho(x = SP500, y = FTSE100, t = DateID, h = 20))
+
+
+## Predicting the correlation and its component at a specific time point
+
+with(head(stockprice), calc_rho(x = SP500, y = FTSE100, t = DateID, h = 20,
+     t.for.pred = DateID[1]))
+
+
+## The function can handle non consecutive time points
+
+set.seed(1)
+calc_rho(x = rnorm(10), y = rnorm(10), t = c(1:5, 26:30), h = 3, kernel = "box")
+
+
+## The function can handle non-ordered time series
+
+with(head(stockprice)[c(1, 3, 6, 2, 4, 5), ], calc_rho(x = SP500, y = FTSE100, t = DateID, h = 20))
+
+
+## Note: the function does not handle missing data (by design)
+
+# calc_rho(x = c(NA, rnorm(9)), y = rnorm(10), t = c(1:2, 23:30), h = 2) ## should err (if ran)
+
+
+
+###########################################################
+## Examples for the internal function computing the RMSE ##
+###########################################################
+
+## Compute the RMSE on the correlation estimate
+# nb: takes a few seconds to run, so not run by default
+
+run &lt;- in_pkgdown() || FALSE ## change to TRUE to run the example
+if (run) {
+
+small_clean_dataset &lt;- head(na.omit(stockprice), n = 200)
+with(small_clean_dataset, calc_RMSE(x = SP500, y = FTSE100, t = DateID, h = 10))
+
+}
+
+
+
+
+################################################################
+## Examples for the internal function selecting the bandwidth ##
+################################################################
+
+## Automatic selection of the bandwidth using parallel processing
+# nb: takes a few seconds to run, so not run by default
+
+run &lt;- in_pkgdown() || FALSE ## change to TRUE to run the example
+if (run) {
+
+small_clean_dataset &lt;- head(na.omit(stockprice), n = 200)
+with(small_clean_dataset, select_h(x = SP500, y = FTSE100, t = DateID))
+
+}
+
+</code></pre>
+
+
+</div>

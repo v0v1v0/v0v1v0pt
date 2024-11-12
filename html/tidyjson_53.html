@@ -1,0 +1,131 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>json_schema</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create a schema for a JSON document or collection</h2>
+
+<h3>Description</h3>
+
+<p>Returns a JSON document that captures the 'schema' of the collection of
+document(s) passed in, as a JSON string. The schema collapses complex
+JSON into a simple form using the following rules:
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">json_schema(.x, type = c("string", "value"))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a json string or <code>tbl_json</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>whether to capture scalar nodes using the string that defines
+their type (e.g., "logical") or as a representative value
+(e.g., "true")</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ul>
+<li>
+<p> string  -&gt; "string",        e.g., "a sentence" -&gt; "string"
+</p>
+</li>
+<li>
+<p> number  -&gt; "number",        e.g., 32000.1 -&gt; "number"
+</p>
+</li>
+<li>
+<p> true    -&gt; "logical",       e.g., true -&gt; "logical"
+</p>
+</li>
+<li>
+<p> false   -&gt; "logical",       e.g., false -&gt; "logical"
+</p>
+</li>
+<li>
+<p> null    -&gt; "null",          e.g., null -&gt; "null"
+</p>
+</li>
+<li>
+<p> array   -&gt; [&lt;type&gt;]         e.g., [1, 2] -&gt; ["number"]
+</p>
+</li>
+<li>
+<p> object  -&gt; "name": &lt;type&gt; e.g., "age": 32 -&gt; "age": "number"
+</p>
+</li>
+</ul>
+<p>For more complex JSON objects, ties are broken by taking the most
+complex example (using <code>json_complexity</code>), and then by type
+(using <code>json_types</code>).
+</p>
+<p>This means that if a name has varying schema across documents, the
+most complex schema will be chosen as being representative. Similarly,
+if the elements of an array vary in schema, the most complex element is
+chosen, and if arrays vary in schema across documents, the most
+complex is chosen.
+</p>
+<p>Note that <code>json_schema</code> can be slow for large JSON document collections,
+you may want to sample your JSON collection first.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a character string JSON document that represents the schema of
+the collection
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>json_structure</code> to recursively structure all
+documents into a single data frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# A simple string
+'"string"' %&gt;% json_schema %&gt;% writeLines
+
+# A simple object
+'{"name": "value"}' %&gt;% json_schema %&gt;% writeLines
+
+# A more complex JSON array
+json &lt;- '[{"a": 1}, [1, 2], "a", 1, true, null]'
+
+# Using type = 'string' (default)
+json %&gt;% json_schema %&gt;% writeLines
+
+# Using type = 'value' to show a representative value
+json %&gt;% json_schema(type = "value") %&gt;% writeLines
+
+# Schema of the first 5 github issues
+## Not run: 
+  library(dplyr)
+  issues %&gt;% gather_array %&gt;% slice(1:10) %&gt;%
+    json_schema(type = "value") %&gt;% writeLines
+
+## End(Not run)
+</code></pre>
+
+
+</div>

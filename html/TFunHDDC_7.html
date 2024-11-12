@@ -1,0 +1,160 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict.tfunHDDC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+predict.tfunHDDC: Predicting Function for t-funHDDC Objects
+</h2>
+
+<h3>Description</h3>
+
+<p>Provides the matrix of classification probabilities and the classification vector for inputted observations assuming the model provided by the <code>tfunHDDC</code> object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tfunHDDC'
+predict(object, data=NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+
+<p>An object of class <code>tfunHDDC</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+
+<p>Data frame (univariate funtional data) or a list (multivariate functional data) of new observations on the same variables used in the fitting of the <code>tfunHDDC</code> object.  If <code>NULL</code>, then the observations used in the fitting of the <code>tfunHDDC</code> object are inputted.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>Arguments to be passed to other functions.
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>Matrix of classification probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>class</code></td>
+<td>
+<p>Vector of maximum a posteriori classifications</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Cristina Anton, Iain Smith
+</p>
+
+
+<h3>References</h3>
+
+<p>-Andrews JL, McNicholas PD (2012) Model-based clustering, classication,
+and discriminant analysis via mixtures of multivariate t-distributions:
+The teigen family. Stat Comput 22:10211029. &lt;doi.org/10.1007/
+s11222-011-9272-x&gt;
+</p>
+<p>-Andrews JL, Wickins JR, Boers NM, et al (2018) An R package for modelbased
+clustering and classication via the multivariate t distribution. Journal
+of Statistical Software 83(7):1-32
+</p>
+<p>- Cristina Anton, Iain Smith Model-based clustering of functional data via mixtures of <code class="reqn">t</code> distributions. Advances in Data Analysis and Classification (to appear).
+
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tfunHDDC</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+set.seed(1027)
+#simulataed univariate data
+
+data = genModelFD(ncurves=300, nsplines=35, alpha=c(0.9,0.9,0.9),
+                  eta=c(10, 7, 17))
+
+plot(data$fd, col = data$groupd)
+
+clm = data$groupd
+
+model1=c("AkjBkQkDk", "AkjBQkDk", "AkBkQkDk", "ABkQkDk", "AkBQkDk", "ABQkDk")
+
+####################classification example with predictions
+
+training=c(1:50,101:150, 201:250)
+
+test=c(51:100,151:200, 251:300)
+
+known1=clm[training]
+
+t4&lt;-tfunHDDC(data$fd[training],K=3,threshold=0.2,init="kmeans",nb.rep=1,
+             dfconstr="no", dfupdate="numeric", model=model1[1],known=known1, 
+             itermax = 10)
+
+if (!is.null(t4$class)) {
+	table(clm[training], t4$class)
+
+	p1&lt;-predict.tfunHDDC(t4,data$fd[test] )
+
+	if (!is.null(p1$class)) table(clm[test], p1$class)
+}
+
+###########################NOX data
+
+data1=fitNOxBenchmark(15)
+
+plotNOx(data1)
+
+###example for prediction
+
+training=c(1:50)
+
+test=c(51:115)
+
+known1=data1$groupd[training]
+
+t1&lt;-tfunHDDC(data1$fd[training],K=2,threshold=0.6,init="kmeans",nb.rep=10,
+             dfconstr="no", model=c("AkjBkQkDk", "AkjBQkDk", "AkBkQkDk", 
+             "ABkQkDk", "AkBQkDk", "ABQkDk"),known=known1) 
+
+if (!is.null(t1$class)) {
+	table(data1$groupd[training], t1$class)
+
+	p1&lt;-predict.tfunHDDC(t1,data1$fd[test] )
+
+	if (!is.null(p1$class)) table(data1$groupd[test], p1$class)
+}
+
+</code></pre>
+
+
+</div>

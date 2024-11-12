@@ -1,0 +1,214 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data_extract_multiple_srv</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Creates a named list of <code>data_extract_srv</code> output</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="../help/figures/lifecycle-experimental.svg" alt="[Experimental]"></a>
+</p>
+<p><code>data_extract_multiple_srv</code> loops over the list of <code>data_extract</code> given and
+runs <code>data_extract_srv</code> for each one returning a list of reactive objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data_extract_multiple_srv(data_extract, datasets, ...)
+
+## S3 method for class 'reactive'
+data_extract_multiple_srv(data_extract, datasets, ...)
+
+## S3 method for class 'FilteredData'
+data_extract_multiple_srv(data_extract, datasets, ...)
+
+## S3 method for class 'list'
+data_extract_multiple_srv(
+  data_extract,
+  datasets,
+  join_keys = NULL,
+  select_validation_rule = NULL,
+  filter_validation_rule = NULL,
+  dataset_validation_rule = if (is.null(select_validation_rule) &amp;&amp;
+    is.null(filter_validation_rule)) {
+     NULL
+ } else {
+    
+    shinyvalidate::sv_required("Please select a dataset")
+ },
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data_extract</code></td>
+<td>
+<p>(named <code>list</code> of <code>data_extract_spec</code> objects) the list <code>data_extract_spec</code> objects.
+The names of the elements in the list need to correspond to the <code>ids</code> passed to <code>data_extract_ui</code>.
+</p>
+<p>See example for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>datasets</code></td>
+<td>
+<p>(<code>FilteredData</code> or <code>list</code> of <code>reactive</code> or non-<code>reactive</code> <code>data.frame</code>)
+object containing data either in the form of <code>FilteredData</code> or as a list of <code>data.frame</code>.
+When passing a list of non-reactive <code>data.frame</code> objects, they are converted to reactive <code>data.frame</code>s internally.
+When passing a list of reactive or non-reactive <code>data.frame</code> objects, the argument <code>join_keys</code> is required also.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>An additional argument <code>join_keys</code> is required when <code>datasets</code> is a list of <code>data.frame</code>.
+It shall contain the keys per dataset in <code>datasets</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>join_keys</code></td>
+<td>
+<p>(<code>join_keys</code> or <code>NULL</code>) of join keys per dataset in <code>datasets</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select_validation_rule</code></td>
+<td>
+<p>(<code>NULL</code> or <code>function</code> or <code style="white-space: pre;">⁠named list⁠</code> of <code>function</code>)
+Should there be any <code>shinyvalidate</code> input validation of the select parts of the <code>data_extract_ui</code>.
+If all <code>data_extract</code> require the same validation function then this can be used directly
+(i.e. <code>select_validation_rule = shinyvalidate::sv_required()</code>).
+</p>
+<p>For more fine-grained control use a list:
+</p>
+<p><code>select_validation_rule = list(extract_1 = sv_required(), extract2 = ~ if (length(.) &gt; 2) "Error")</code>
+</p>
+<p>If <code>NULL</code> then no validation will be added.
+</p>
+<p>See example for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter_validation_rule</code></td>
+<td>
+<p>(<code>NULL</code> or <code>function</code> or <code style="white-space: pre;">⁠named list⁠</code> of <code>function</code>) Same as
+<code>select_validation_rule</code> but for the filter (values) part of the <code>data_extract_ui</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataset_validation_rule</code></td>
+<td>
+<p>(<code>NULL</code> or <code>function</code> or <code style="white-space: pre;">⁠named list⁠</code> of <code>function</code>) Same as
+<code>select_validation_rule</code> but for the choose dataset part of the <code>data_extract_ui</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>reactive named <code>list</code> containing outputs from <code>data_extract_srv()</code>.
+Output list names are the same as <code>data_extract</code> input argument.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+library(shinyvalidate)
+library(shinyjs)
+library(teal.widgets)
+
+iris_select &lt;- data_extract_spec(
+  dataname = "iris",
+  select = select_spec(
+    label = "Select variable:",
+    choices = variable_choices(iris, colnames(iris)),
+    selected = "Sepal.Length",
+    multiple = TRUE,
+    fixed = FALSE
+  )
+)
+
+iris_filter &lt;- data_extract_spec(
+  dataname = "iris",
+  filter = filter_spec(
+    vars = "Species",
+    choices = c("setosa", "versicolor", "virginica"),
+    selected = "setosa",
+    multiple = TRUE
+  )
+)
+
+data_list &lt;- list(iris = reactive(iris))
+
+ui &lt;- fluidPage(
+  useShinyjs(),
+  standard_layout(
+    output = verbatimTextOutput("out1"),
+    encoding = tagList(
+      data_extract_ui(
+        id = "x_var",
+        label = "Please select an X column",
+        data_extract_spec = iris_select
+      ),
+      data_extract_ui(
+        id = "species_var",
+        label = "Please select 2 Species",
+        data_extract_spec = iris_filter
+      )
+    )
+  )
+)
+
+server &lt;- function(input, output, session) {
+  exactly_2_validation &lt;- function(msg) {
+    ~ if (length(.) != 2) msg
+  }
+
+
+  selector_list &lt;- data_extract_multiple_srv(
+    list(x_var = iris_select, species_var = iris_filter),
+    datasets = data_list,
+    select_validation_rule = list(
+      x_var = sv_required("Please select an X column")
+    ),
+    filter_validation_rule = list(
+      species_var = compose_rules(
+        sv_required("Exactly 2 Species must be chosen"),
+        exactly_2_validation("Exactly 2 Species must be chosen")
+      )
+    )
+  )
+  iv_r &lt;- reactive({
+    iv &lt;- InputValidator$new()
+    compose_and_enable_validators(
+      iv,
+      selector_list,
+      validator_names = NULL
+    )
+  })
+
+  output$out1 &lt;- renderPrint({
+    if (iv_r()$is_valid()) {
+      ans &lt;- lapply(selector_list(), function(x) {
+        cat(format_data_extract(x()), "\n\n")
+      })
+    } else {
+      "Please fix errors in your selection"
+    }
+  })
+}
+
+if (interactive()) {
+  shinyApp(ui, server)
+}
+</code></pre>
+
+
+</div>

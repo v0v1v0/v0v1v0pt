@@ -1,0 +1,159 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>relate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> 
+Spatial relationships between geometries
+</h2>
+
+<h3>Description</h3>
+
+<p><code>relate</code> returns a logical matrix indicating the presence or absence of a specific spatial relationships between the geometries in <code>x</code> and <code>y</code>. 
+</p>
+<p><code>is.related</code> returns a logical vector indicating the presence or absence of a specific spatial relationships between <code>x</code> and any of the geometries in <code>y</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatVector,SpatVector'
+relate(x, y, relation, pairs=FALSE, na.rm=TRUE)
+
+## S4 method for signature 'SpatVector,missing'
+relate(x, y, relation, pairs=FALSE, na.rm=TRUE)
+
+## S4 method for signature 'SpatVector,SpatVector'
+is.related(x, y, relation)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatVector or SpatExtent</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>missing or as for <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>relation</code></td>
+<td>
+<p>character. One of "intersects", "touches", "crosses", "overlaps", "within", "contains", "covers", "coveredby", "disjoint". Or a "DE-9IM" string such as "FF*FF****". See <a href="https://en.wikipedia.org/wiki/DE-9IM">wikipedia</a> or <a href="https://docs.geotools.org/stable/userguide/library/jts/dim9.html">geotools doc</a></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pairs</code></td>
+<td>
+<p>logical. If <code>TRUE</code> a two-column matrix is returned with the indices of the cases where the requested relation is <code>TRUE</code>. This is especially helpful when dealing with many geometries as the returned value is generally much smaller</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>logical. If <code>TRUE</code> and <code>pairs=TRUE</code>, geometries in <code>x</code> for which there is no related geometry in <code>y</code> are omitted</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>matrix (relate) or vector (is.related)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>adjacent</code>, <code>nearby</code>, <code>intersect</code>, <code>crop</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# polygons
+p1 &lt;- vect("POLYGON ((0 0, 8 0, 8 9, 0 9, 0 0))")
+p2 &lt;- vect("POLYGON ((5 6, 15 6, 15 15, 5 15, 5 6))")
+p3 &lt;- vect("POLYGON ((8 2, 9 2, 9 3, 8 3, 8 2))")
+p4 &lt;- vect("POLYGON ((2 6, 3 6, 3 8, 2 8, 2 6))")
+p5 &lt;- vect("POLYGON ((2 12, 3 12, 3 13, 2 13, 2 12))")
+p6 &lt;- vect("POLYGON ((10 4, 12 4, 12 7, 11 7, 11 6, 10 6, 10 4))")
+
+p &lt;- rbind(p1, p2, p3, p4, p5, p6)
+plot(p, col=rainbow(6, alpha=.5))
+lines(p, lwd=2)
+text(p)
+
+## relate SpatVectors
+relate(p1, p2, "intersects")
+relate(p1, p3, "touches")
+relate(p1, p5, "disjoint")
+relate(rbind(p1, p2), p4, "disjoint")
+
+## relate geometries within SpatVectors
+# which are completely separated?
+relate(p, relation="disjoint")
+
+# which touch (not overlap or within)?
+relate(p, relation="touches")
+# which overlap (not merely touch, and not within)?
+relate(p, relation="overlaps")
+# which are within (not merely overlap)?
+relate(p, relation="within")
+
+# do they touch or overlap or are within?
+relate(p, relation="intersects")
+
+all(relate(p, relation="intersects") == 
+  (relate(p, relation="overlaps") | 
+   relate(p, relation="touches") |
+   relate(p, relation="within")))
+
+#for polygons, "coveredby" is "within"
+relate(p, relation="coveredby")
+
+# polygons, lines, and points 
+
+pp &lt;- rbind(p1, p2)
+L1 &lt;- vect("LINESTRING(1 11, 4 6, 10 6)")
+L2 &lt;- vect("LINESTRING(8 14, 12 10)")
+L3 &lt;- vect("LINESTRING(1 8, 12 14)")
+lns &lt;- rbind(L1, L2, L3)
+pts &lt;- vect(cbind(c(7,10,10), c(3,5,6)))
+
+plot(pp, col=rainbow(2, alpha=.5))
+text(pp, paste0("POL", 1:2), halo=TRUE)
+lines(pp, lwd=2)
+lines(lns, col=rainbow(3), lwd=4)
+text(lns, paste0("L", 1:3), halo=TRUE)
+points(pts, cex=1.5)
+text(pts, paste0("PT", 1:3), halo=TRUE, pos=4)
+
+
+relate(lns, relation="crosses")
+relate(lns, pp, relation="crosses") 
+relate(lns, pp, relation="touches") 
+relate(lns, pp, relation="intersects") 
+
+relate(lns, pp, relation="within")
+# polygons can contain lines or points, not the other way around
+relate(lns, pp, relation="contains") 
+relate(pp, lns, relation="contains") 
+# points and lines can be covered by polygons
+relate(lns, pp, relation="coveredby")
+
+relate(pts, pp, "within")
+relate(pts, pp, "touches")
+relate(pts, lns, "touches")
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ag_if_vars</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Specify <code>tf.cond()</code> output structure when autographing <code>if</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>This function can be used to specify the output structure from <code>tf.cond()</code>
+when autographing an <code>if</code> statement. In most use cases, use of this function
+is purely optional. If not supplied, the <code>if</code> output structure is
+automatically built.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ag_if_vars(
+  ...,
+  modified = list(),
+  return = FALSE,
+  undefs = NULL,
+  control_flow = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Variables modified by the <code>tf.cond()</code> node supplied as bare
+symbols like <code>foo</code> or expressions using <code>$</code> e.g, <code>foo$bar</code>. Symbols do not
+have to exist before the autographed <code>if</code> so long as they are created in
+both branches.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modified</code></td>
+<td>
+<p>Variables names supplied as a character vector, or a list of
+character vectors if specifying nested complex structures. This is an
+escape hatch for the lazy evaluation semantics of <code>...</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return</code></td>
+<td>
+<p>logical, whether to include the return value the evaluated R
+expression in the <code>tf.cond()</code>. if <code>FALSE</code> (the default), only the objects
+assigned in scope are captured.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>undefs</code></td>
+<td>
+<p>A bare character vector or a list of character vectors.
+Supplied names are exported as undefs in the parent frame. This is used to
+give a more informative error message when attempting to access a variable
+that can't be balanced between branches.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control_flow</code></td>
+<td>
+<p>An integer, the maximum number of control-flow statements
+(<code>break</code> and/or <code>next</code>) that will be captured in a single branch as part of
+the <code>tf.cond()</code>. Do not count statements in loops that are dispatching to
+standard R control flow (e.g., don't count <code>break</code> statements in a <code>for</code>
+loop that is iterating over an R vector)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If the output structure is not explicitly supplied via
+<code>ag_if_vars()</code>, then the output structure is automatically composed: The
+true and false branches of the expression are traced into concrete
+functions, then the output signature from the two branch functions are
+balanced. Balancing is performed by either fetching a variable from an
+outer scope or by reclassifying a symbol as an undef.
+</p>
+<p>When dealing with complex composites (that is, nested structures where a
+modified tensor is part of a named list or dictionary), care is taken to
+prevent unnecessarily capturing other unmodified tensors in the structure.
+This is done by pruning unmodified tensors from the returned output
+structure, and then merging them back with the original object recursively.
+One limitation of the implementation is that lists must either be fully
+named with unique names, or not named at all, partially named lists or
+duplicated names in a list throw an error. This is due to the conversion
+that happens when going between python and R: named lists get converted to
+python dictionaries, which require that all keys are unique. Additionally,
+pruning of unmodified objects from an autographed <code>if</code> is currently only
+supported for named lists (python dictionaries). Unnamed lists or tuples
+are passed as is (e.g, no pruning and merging done), which may lead to
+unnecessarily bloat in the constructed graphs.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>NULL</code>, invisibly
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# these examples only have an effect in graph mode
+# to enter graph mode easily we'll create a few helpers
+ag &lt;- autograph
+
+# pass which symbols you expect to be modifed or created liks this:
+ag_if_vars(x)
+ag(if (y &gt; 0) {
+  x &lt;- y * y
+} else {
+  x &lt;- y
+})
+
+# if the return value from the if expression is important, pass `return = TRUE`
+ag_if_vars(return = TRUE)
+x &lt;- ag(if(y &gt; 0) y * y else y)
+
+# pass complex nested structures like this
+x &lt;- list(a = 1, b = 2)
+
+ag_if_vars(x$a)
+ag(if(y &gt; 0) {
+  x$a &lt;- y
+})
+
+# undefs are for mark branch-local variables
+ag_if_vars(y, x$a, undef = "tmp_local_var")
+ag(if(y &gt; 0) {
+  y &lt;- y * 100
+  tmp_local_var &lt;- y + 1
+  x$a &lt;- tmp_local_var
+})
+
+# supplying `undef` is not necessary, it exists purely as a way to supply a
+# guardrail for defensive programming and/or to improve code readability
+
+## modified vars can be supplied in `...` or as a named arg.
+## these paires of ag_if_vars() calls are equivalent
+ag_if_vars(y, x$a)
+ag_if_vars(modified = list("y", c("x", "a")))
+
+ag_if_vars(x, y, z)
+ag_if_vars(modified = c("x", "y", "z"))
+
+
+## control flow
+# count number of odds between 0:10
+ag({
+  x &lt;- 10
+  count &lt;- 0
+  while(x &gt; 0) {
+    ag_if_vars(control_flow = 1)
+    if(x %% 2 == 0)
+      next
+    count &lt;- count + 1
+  }
+})
+
+## End(Not run)
+</code></pre>
+
+
+</div>

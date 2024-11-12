@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>riskreg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Risk regression</h2>
+
+<h3>Description</h3>
+
+<p>Risk regression with binary exposure and nuisance model for the odds-product.
+</p>
+<p>Let <code class="reqn">A</code> be the binary exposure, <code class="reqn">V</code> the set of covariates, and
+<code class="reqn">Y</code> the binary response variable, and define
+<code class="reqn">p_a(v) = P(Y=1 \mid A=a, V=v), a\in\{0,1\}</code>.
+</p>
+<p>The <b>target parameter</b> is either the <em>relative risk</em>
+</p>
+<p style="text-align: center;"><code class="reqn">\mathrm{RR}(v) = \frac{p_1(v)}{p_0(v)}</code>
+</p>
+
+<p>or the <em>risk difference</em>
+</p>
+<p style="text-align: center;"><code class="reqn">\mathrm{RD}(v) = p_1(v)-p_0(v)</code>
+</p>
+
+<p>We assume a target parameter model given by either
+</p>
+<p style="text-align: center;"><code class="reqn">\log\{RR(v)\} = \alpha^t v</code>
+</p>
+
+<p>or
+</p>
+<p style="text-align: center;"><code class="reqn">\mathrm{arctanh}\{RD(v)\} = \alpha^t v</code>
+</p>
+
+<p>and similarly a working linear <b>nuisance model</b> for the <em>odds-product</em>
+</p>
+<p style="text-align: center;"><code class="reqn">\phi(v) = \log\left(\frac{p_{0}(v)p_{1}(v)}{(1-p_{0}(v))(1-p_{1}(v))}\right)
+= \beta^t v</code>
+</p>
+<p>.
+</p>
+<p>A <b>propensity model</b> for <code class="reqn">E(A=1|V)</code> is also fitted using a logistic regression working model
+</p>
+<p style="text-align: center;"><code class="reqn">\mathrm{logit}\{E(A=1\mid V=v)\} = \gamma^t v.</code>
+</p>
+
+<p>If both the odds-product model and the propensity model are correct the estimator is efficient.
+Further, the estimator is consistent in the union model, i.e., the estimator is
+double-robust in the sense that only one of the two models needs to be correctly specified
+to get a consistent estimate.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">riskreg(
+  formula,
+  nuisance = ~1,
+  propensity = ~1,
+  target = ~1,
+  data,
+  weights,
+  type = "rr",
+  optimal = TRUE,
+  std.err = TRUE,
+  start = NULL,
+  mle = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>formula (see details below)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nuisance</code></td>
+<td>
+<p>nuisance model (formula)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>propensity</code></td>
+<td>
+<p>propensity model (formula)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>(optional) target model (formula)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>optional weights</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>type of association measure (rd og rr)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimal</code></td>
+<td>
+<p>If TRUE optimal weights are calculated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>std.err</code></td>
+<td>
+<p>If TRUE standard errors are calculated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start</code></td>
+<td>
+<p>optional starting values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mle</code></td>
+<td>
+<p>Semi-parametric (double-robust) estimate or MLE (TRUE gives MLE)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to unconstrained optimization routine (nlminb)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The 'formula' argument should be given as
+<code>response ~ exposure | target-formula | nuisance-formula</code>
+or
+<code>response ~ exposure | target | nuisance | propensity</code>
+</p>
+<p>E.g., <code>riskreg(y ~ a | 1 | x+z | x+z, data=...)</code>
+</p>
+<p>Alternatively, the model can specifed using the target, nuisance and propensity arguments:
+<code>riskreg(y ~ a, target=~1, nuisance=~x+z, ...)</code>
+</p>
+<p>The <code>riskreg_fit</code> function can be used with matrix inputs rather than formulas.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class '<code>riskreg.targeted</code>' is returned. See <code>targeted-class</code>
+for more details about this class and its generic functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Klaus K. Holst
+</p>
+
+
+<h3>References</h3>
+
+<p>Richardson, T. S., Robins, J. M., &amp; Wang, L. (2017). On modeling and
+estimation for the relative risk and risk difference. Journal of the
+American Statistical Association, 112(519),
+1121–1130. http://dx.doi.org/10.1080/01621459.2016.1192546
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">m &lt;- lvm(a[-2] ~ x,
+         z ~ 1,
+         lp.target[1] ~ 1,
+         lp.nuisance[-1] ~ 2*x)
+distribution(m,~a) &lt;- binomial.lvm("logit")
+m &lt;- binomial.rr(m, "y","a","lp.target","lp.nuisance")
+d &lt;- sim(m,5e2,seed=1)
+
+I &lt;- model.matrix(~1, d)
+X &lt;- model.matrix(~1+x, d)
+with(d, riskreg_mle(y, a, I, X, type="rr"))
+
+with(d, riskreg_fit(y, a, nuisance=X, propensity=I, type="rr"))
+riskreg(y ~ a | 1, nuisance=~x ,  data=d, type="rr")
+
+## Model with same design matrix for nuisance and propensity model:
+with(d, riskreg_fit(y, a, nuisance=X, type="rr"))
+
+## a &lt;- riskreg(y ~ a, target=~z, nuisance=~x,  propensity=~x, data=d, type="rr")
+a &lt;- riskreg(y ~ a | z, nuisance=~x,  propensity=~x, data=d, type="rr")
+a
+predict(a, d[1:5,])
+
+riskreg(y ~ a, nuisance=~x,  data=d, type="rr", mle=TRUE)
+
+</code></pre>
+
+
+</div>

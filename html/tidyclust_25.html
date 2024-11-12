@@ -1,0 +1,123 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>extract_centroids</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract clusters from model</h2>
+
+<h3>Description</h3>
+
+<p>When applied to a fitted cluster specification, returns a tibble with cluster
+location. When such locations doesn't make sense for the model, a mean
+location is used.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">extract_centroids(object, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An fitted <code>cluster_spec</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other arguments passed to methods. Using the <code>prefix</code> allows you
+to change the prefix in the levels of the factor levels.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Some model types such as K-means as seen in <code>k_means()</code> stores the centroid
+in the object itself. leading the use of this function to act as an simple
+extract. Other model types such as Hierarchical (Agglomerative) Clustering as
+seen in <code>hier_clust()</code>, are fit in such a way that the number of clusters can
+be determined at any time after the fit. Setting the <code>num_clusters</code> or
+<code>cut_height</code> in this function will be used to determine the clustering when
+reported.
+</p>
+<p>Further more, some models like <code>hier_clust()</code>, doesn't have a notion of
+"centroids". The mean of the observation within each cluster assignment is
+returned as the centroid.
+</p>
+<p>The ordering of the clusters is such that the first observation in the
+training data set will be in cluster 1, the next observation that doesn't
+belong to cluster 1 will be in cluster 2, and so on and forth. As the
+ordering of clustering doesn't matter, this is done to avoid identical sets
+of clustering having different labels if fit multiple times.
+</p>
+
+
+<h4>Related functions</h4>
+
+<p><code>extract_centroids()</code> is a part of a trio of functions doing similar things:
+</p>
+
+<ul>
+<li> <p><code>extract_cluster_assignment()</code> returns the cluster assignments of the
+training observations
+</p>
+</li>
+<li> <p><code>extract_centroids()</code> returns the location of the centroids
+</p>
+</li>
+<li> <p><code>predict()</code> returns the cluster a new
+observation belongs to
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A <code>tibble::tibble()</code> with 1 row for each centroid and their position.
+<code>.cluster</code> denotes the cluster name for the centroid. The remaining
+variables match variables passed into model.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>extract_cluster_assignment()</code> <code>predict.cluster_fit()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(1234)
+kmeans_spec &lt;- k_means(num_clusters = 5) %&gt;%
+  set_engine("stats")
+
+kmeans_fit &lt;- fit(kmeans_spec, ~., mtcars)
+
+kmeans_fit %&gt;%
+  extract_centroids()
+
+# Some models such as `hier_clust()` fits in such a way that you can specify
+# the number of clusters after the model is fit.
+# A Hierarchical (Agglomerative) Clustering method doesn't technically have
+# clusters, so the center of the observation within each cluster is returned
+# instead.
+hclust_spec &lt;- hier_clust() %&gt;%
+  set_engine("stats")
+
+hclust_fit &lt;- fit(hclust_spec, ~., mtcars)
+
+hclust_fit %&gt;%
+  extract_centroids(num_clusters = 2)
+
+hclust_fit %&gt;%
+  extract_centroids(cut_height = 250)
+</code></pre>
+
+
+</div>

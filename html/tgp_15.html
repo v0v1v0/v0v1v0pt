@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>dopt.gp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sequential D-Optimal Design for a Stationary Gaussian Process</h2>
+
+<h3>Description</h3>
+
+<p>Create sequential D-Optimal design for a stationary Gaussian process
+model of fixed parameterization by subsampling from a list of 
+candidates
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">dopt.gp(nn, X=NULL, Xcand, iter=5000, verb=0)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nn</code></td>
+<td>
+<p> Number of new points in the design. Must
+be less than or equal to the number of candidates contained in
+<code>Xcand</code>, i.e., <code>nn &lt;= nrow(Xcand)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+ <p><code>data.frame</code>, <code>matrix</code> or vector of input locations
+which are forced into (already in) the design</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xcand</code></td>
+<td>
+ <p><code>data.frame</code>, <code>matrix</code> or vector of candidates 
+from which new design points are subsampled.  Must have the same
+dimension as <code>X</code>, i.e.,
+</p>
+<p><code>ncol(X) == ncol(Xcand)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iter</code></td>
+<td>
+<p>number of iterations of stochastic accent algorithm,
+default <code>5000</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verb</code></td>
+<td>
+<p>positive integer indicating after how many rounds of
+stochastic approximation to print each progress statement;
+default <code>verb=0</code> results in no printing</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Design is based on a stationary Gaussian process model with stationary isotropic
+exponential correlation function with parameterization fixed as a function
+of the dimension of the inputs.  The algorithm implemented is a simple stochastic
+ascent which maximizes <code>det(K)</code>– the covariance matrix constructed
+with locations <code>X</code> and a subset of <code>Xcand</code> of size <code>nn</code>.
+The selected design is <em>locally</em> optimal
+</p>
+
+
+<h3>Value</h3>
+
+<p>The output is a list which contains the inputs to, and outputs of, the C code
+used to find the optimal design.  The chosen design locations can be 
+accessed as list members <code>XX</code> or equivalently <code>Xcand[fi,]</code>.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>Input argument: <code>data.frame</code> of inputs <code>X</code>, can be <code>NULL</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nn</code></td>
+<td>
+<p>Input argument: number new points in the design</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Xcand</code></td>
+<td>
+<p>Input argument: <code>data.frame</code> of candidate locations <code>Xcand</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ncand</code></td>
+<td>
+<p>Number of rows in <code>Xcand</code>, i.e., <code>nncand = dim(Xcand)[1]</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fi</code></td>
+<td>
+<p>Vector of length <code>nn</code>  describing the selected new design locations
+as indices into <code>Xcand</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>XX</code></td>
+<td>
+<p><code>data.frame</code> of selected new design locations, i.e., 
+<code>XX = Xcand[fi,]</code></p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Inputs <code>X, Xcand</code> containing <code>NaN, NA, Inf</code> are discarded with non-fatal
+warnings.  If <code>nn &gt; dim(Xcand)[1]</code> then a non-fatal warning is displayed 
+and execution commences with <code>nn = dim(Xcand)[1]</code>
+</p>
+<p>In the current version there is no progress indicator.  You will
+have to be patient.  Creating D-optimal designs is no speedy task
+</p>
+
+
+<h3>Author(s)</h3>
+
+ 
+<p>Robert B. Gramacy, <a href="mailto:rbg@vt.edu">rbg@vt.edu</a>, and
+Matt Taddy, <a href="mailto:mataddy@amazon.com">mataddy@amazon.com</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Gramacy, R. B. (2020) <em>Surrogates: Gaussian Process Modeling, 
+Design and Optimization for the Applied Sciences</em>. Boca Raton, 
+Florida: Chapman Hall/CRC.  (See Chapter 6.)
+<a href="https://bobby.gramacy.com/surrogates/">https://bobby.gramacy.com/surrogates/</a>
+</p>
+<p>Chaloner, K. and Verdinelli, I. (1995).
+<em>Bayesian experimental design: A review.</em>
+Statist. Sci., 10, (pp. 273–304).
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>tgp.design</code>, <code>lhs</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#
+# 2-d Exponential data
+# (This example is based on random data.  
+# It might be fun to run it a few times)
+#
+
+# get the data
+exp2d.data &lt;- exp2d.rand()
+X &lt;- exp2d.data$X; Z &lt;- exp2d.data$Z
+Xcand &lt;- exp2d.data$XX
+
+# find a treed sequential D-Optimal design 
+# with 10 more points
+dgp &lt;- dopt.gp(10, X, Xcand)
+
+# plot the d-optimally chosen locations
+# Contrast with locations chosen via
+# the tgp.design function
+plot(X, pch=19, xlim=c(-2,6), ylim=c(-2,6))
+points(dgp$XX)
+</code></pre>
+
+
+</div>

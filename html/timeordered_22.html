@@ -1,0 +1,89 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>randomize_edges_helper</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Does all the work for <code>edge_randomization</code> and <code>randomized_edges</code>. An internal function.
+</h2>
+
+<h3>Description</h3>
+
+<p>NA
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">randomize_edges_helper(edges, randomize_vertices)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>edges</code></td>
+<td>
+
+<p>A data frame for an edge list
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>randomize_vertices</code></td>
+<td>
+
+<p>A binary variable
+</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Tim Gernat &lt;mail@timgernat.name&gt;
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">##---- Should be DIRECTLY executable !! ----
+##-- ==&gt;  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+
+## The function is currently defined as
+function (edges, randomize_vertices) 
+{
+    vertex_columns &lt;- c("VertexFrom", "VertexTo")
+    unique_edges &lt;- unique(edges[, vertex_columns])
+    unique_edge_count &lt;- nrow(unique_edges)
+    edge_map &lt;- cbind(unique_edges, unique_edges[sample(unique_edge_count, 
+        unique_edge_count), ])
+    new_vertex_columns &lt;- c("NewVF", "NewVT")
+    colnames(edge_map) &lt;- c(vertex_columns, new_vertex_columns)
+    if (randomize_vertices) {
+        edge_map[, new_vertex_columns] &lt;- sample(unlist(edge_map[, 
+            new_vertex_columns]), unique_edge_count * 2)
+        repeat {
+            invalid &lt;- (edge_map$NewVF == edge_map$NewVT) | (duplicated(edge_map[, 
+                new_vertex_columns]))
+            if (sum(invalid) == 0) 
+                break
+            for (i in which(invalid)) edge_map &lt;- swap(edge_map, 
+                i, sample(new_vertex_columns, 1), sample(unique_edge_count, 
+                  1), sample(new_vertex_columns, 1))
+        }
+    }
+    original_colnames &lt;- colnames(edges)
+    attribute_columns &lt;- original_colnames[!(original_colnames %in% 
+        vertex_columns)]
+    edges &lt;- merge(edges, edge_map)
+    edges &lt;- edges[, c(new_vertex_columns, attribute_columns)]
+    colnames(edges)[1:length(new_vertex_columns)] &lt;- vertex_columns
+    return(edges)
+  }
+</code></pre>
+
+
+</div>

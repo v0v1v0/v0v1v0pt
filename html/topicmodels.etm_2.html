@@ -1,0 +1,219 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ETM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Topic Modelling in Semantic Embedding Spaces</h2>
+
+<h3>Description</h3>
+
+<p>ETM is a generative topic model combining traditional topic models (LDA) with word embeddings (word2vec). <br></p>
+
+<ul>
+<li>
+<p>It models each word with a categorical distribution whose natural parameter is the inner product between
+a word embedding and an embedding of its assigned topic.
+</p>
+</li>
+<li>
+<p>The model is fitted using an amortized variational inference algorithm on top of libtorch.
+</p>
+</li>
+</ul>
+<h3>Usage</h3>
+
+<pre><code class="language-R">ETM(
+  k = 20,
+  embeddings,
+  dim = 800,
+  activation = c("relu", "tanh", "softplus", "rrelu", "leakyrelu", "elu", "selu",
+    "glu"),
+  dropout = 0.5,
+  vocab = rownames(embeddings)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>k</code></td>
+<td>
+<p>the number of topics to extract</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>embeddings</code></td>
+<td>
+<p>either a matrix with pretrained word embeddings or an integer with the dimension of the word embeddings. Defaults to 50 if not provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dim</code></td>
+<td>
+<p>dimension of the variational inference hyperparameter theta (passed on to <code>nn_linear</code>). Defaults to 800.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>activation</code></td>
+<td>
+<p>character string with the activation function of theta. Either one of 'relu', 'tanh', 'softplus', 'rrelu', 'leakyrelu', 'elu', 'selu', 'glu'. Defaults to 'relu'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dropout</code></td>
+<td>
+<p>dropout percentage on the variational distribution for theta (passed on to <code>nn_dropout</code>). Defaults to 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vocab</code></td>
+<td>
+<p>a character vector with the words from the vocabulary. Defaults to the rownames of the <code>embeddings</code> argument.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>an object of class ETM which is a torch <code>nn_module</code> containing o.a.
+</p>
+
+<ul>
+<li>
+<p>num_topics: the number of topics
+</p>
+</li>
+<li>
+<p>vocab: character vector with the terminology used in the model
+</p>
+</li>
+<li>
+<p>vocab_size: the number of words in <code>vocab</code>
+</p>
+</li>
+<li>
+<p>rho: The word embeddings
+</p>
+</li>
+<li>
+<p>alphas: The topic embeddings
+</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>fit(data, optimizer, epoch, batch_size, normalize = TRUE, clip = 0, lr_anneal_factor = 4, lr_anneal_nonmono = 10)</code></dt>
+<dd>
+<p>Fit the model on a document term matrix by splitting the data in 70/30 training/test set and updating the model weights.</p>
+</dd>
+</dl>
+<h3>Arguments</h3>
+
+
+<dl>
+<dt>data</dt>
+<dd>
+<p>bag of words document term matrix in <code>dgCMatrix</code> format</p>
+</dd>
+<dt>optimizer</dt>
+<dd>
+<p>object of class <code>torch_Optimizer</code></p>
+</dd>
+<dt>epoch</dt>
+<dd>
+<p>integer with the number of iterations to train</p>
+</dd>
+<dt>batch_size</dt>
+<dd>
+<p>integer with the size of the batch</p>
+</dd>
+<dt>normalize</dt>
+<dd>
+<p>logical indicating to normalize the bag of words data</p>
+</dd>
+<dt>clip</dt>
+<dd>
+<p>number between 0 and 1 indicating to do gradient clipping - passed on to <code>nn_utils_clip_grad_norm_</code></p>
+</dd>
+<dt>lr_anneal_factor</dt>
+<dd>
+<p>divide the learning rate by this factor when the loss on the test set is monotonic for at least <code>lr_anneal_nonmono</code> training iterations</p>
+</dd>
+<dt>lr_anneal_nonmono</dt>
+<dd>
+<p>number of iterations after which learning rate annealing is executed if the loss does not decreases</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p><a href="https://arxiv.org/pdf/1907.04907.pdf">https://arxiv.org/pdf/1907.04907.pdf</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(torch)
+library(topicmodels.etm)
+library(word2vec)
+library(udpipe)
+data(brussels_reviews_anno, package = "udpipe")
+##
+## Toy example with pretrained embeddings
+##
+
+## a. build word2vec model
+x          &lt;- subset(brussels_reviews_anno, language %in% "nl")
+x          &lt;- paste.data.frame(x, term = "lemma", group = "doc_id") 
+set.seed(4321)
+w2v        &lt;- word2vec(x = x$lemma, dim = 15, iter = 20, type = "cbow", min_count = 5)
+embeddings &lt;- as.matrix(w2v)
+
+## b. build document term matrix on nouns + adjectives, align with the embedding terms
+dtm &lt;- subset(brussels_reviews_anno, language %in% "nl" &amp; upos %in% c("NOUN", "ADJ"))
+dtm &lt;- document_term_frequencies(dtm, document = "doc_id", term = "lemma")
+dtm &lt;- document_term_matrix(dtm)
+dtm &lt;- dtm_conform(dtm, columns = rownames(embeddings))
+dtm &lt;- dtm[dtm_rowsums(dtm) &gt; 0, ]
+
+## create and fit an embedding topic model - 8 topics, theta 100-dimensional
+if (torch::torch_is_installed()) {
+
+set.seed(4321)
+torch_manual_seed(4321)
+model       &lt;- ETM(k = 8, dim = 100, embeddings = embeddings, dropout = 0.5)
+optimizer   &lt;- optim_adam(params = model$parameters, lr = 0.005, weight_decay = 0.0000012)
+overview    &lt;- model$fit(data = dtm, optimizer = optimizer, epoch = 40, batch_size = 1000)
+scores      &lt;- predict(model, dtm, type = "topics")
+
+lastbatch   &lt;- subset(overview$loss, overview$loss$batch_is_last == TRUE)
+plot(lastbatch$epoch, lastbatch$loss)
+plot(overview$loss_test)
+
+## show top words in each topic
+terminology &lt;- predict(model, type = "terms", top_n = 7)
+terminology
+
+##
+## Toy example without pretrained word embeddings
+##
+set.seed(4321)
+torch_manual_seed(4321)
+model       &lt;- ETM(k = 8, dim = 100, embeddings = 15, dropout = 0.5, vocab = colnames(dtm))
+optimizer   &lt;- optim_adam(params = model$parameters, lr = 0.005, weight_decay = 0.0000012)
+overview    &lt;- model$fit(data = dtm, optimizer = optimizer, epoch = 40, batch_size = 1000)
+terminology &lt;- predict(model, type = "terms", top_n = 7)
+terminology
+
+
+
+
+
+}
+</code></pre>
+
+
+</div>

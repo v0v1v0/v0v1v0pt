@@ -1,0 +1,263 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>VPA</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Virtual Population Analysis (VPA)</h2>
+
+<h3>Description</h3>
+
+<p>This function applies the Virtual Population Analysis (VPA) or
+Cohort analysis (CA). Methods used to estimate stock biomass and fishing
+mortality per age/length group.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">VPA(
+  param,
+  catch_columns = NA,
+  catch_unit = NA,
+  catch_corFac = NA,
+  terminalF = NA,
+  terminalE = NA,
+  analysis_type = "VPA",
+  algorithm = "new",
+  plus_group = TRUE,
+  plot = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>param</code></td>
+<td>
+<p>a list consisting of following parameters:
+</p>
+
+<ul>
+<li> <p><code>midLengths</code> or <code>age</code>: midpoints of the length class
+(length-frequency data) or ages (age composition data),
+</p>
+</li>
+<li> <p><code>Linf</code>: infinite length for investigated species in cm [cm],
+</p>
+</li>
+<li> <p><code>K</code>: growth coefficent for investigated species per year [1/year],
+</p>
+</li>
+<li> <p><code>t0</code>: theoretical time zero, at which individuals of this species hatch,
+</p>
+</li>
+<li> <p><code>M</code>: natural mortality [1/year] (numeric value or vector of identical
+length than midLengths),
+</p>
+</li>
+<li> <p><code>a</code>: length-weight relationship coefficent (W = a * L^b; for kg/cm3),
+</p>
+</li>
+<li> <p><code>b</code>: length-weight relationship coefficent (W = a * L^b),
+</p>
+</li>
+<li> <p><code>catch</code>: catch as vector for pseudo cohort analysis,
+or a matrix with catches of subsequent years to follow a real cohort.
+For age-based VPA/CA catch has to be provided in numbers, e.g. '000 individuals
+for length-based VPA/CA catch can also be provided in weight, e.g. kg (use
+argument <code>catch_unit</code>).
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>catch_columns</code></td>
+<td>
+<p>numerical; indicating the column of the catch matrix which should be
+used for the analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>catch_unit</code></td>
+<td>
+<p>optional; a character indicating if the catch is provided in weight
+("tons" or "kg") or in thousand individuals ("'000")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>catch_corFac</code></td>
+<td>
+<p>optional; correction factor for catch, in case provided
+catch does spatially or temporarily not reflect catch for fishing ground of
+a whole year.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>terminalF</code></td>
+<td>
+<p>the fishing mortality rate of the last age/length group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>terminalE</code></td>
+<td>
+<p>the exploitation rate of the last age/length group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>analysis_type</code></td>
+<td>
+<p>determines which type of assessment should be done,
+options: "VPA" for age or length-based Virtual Population Analysis, "CA" for age- or length-based
+Cohort Analysis. Default is "VPA".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>algorithm</code></td>
+<td>
+<p>an Algorithm to use to solve for fishing mortality. The default
+setting <code>"new"</code> uses <code>optimise</code>,
+while <code>"old"</code> uses the algorithm described by Sparre and Venema (1998).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plus_group</code></td>
+<td>
+<p>logical; indicating if the last length group is a plus group (default: TRUE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>logical; indicating whether a plot should be printed</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The main difference between virtual population analysis (VPA) and cohort
+analysis (CA) is the step of calculating the fishing mortality per age class or
+length group. While CA works with an approximation by assuming that all fish are
+caught during a single day, which makes the calcualtion easier, VPA assumes that
+the fish are caught continuously, which has to be solved by the trial and error
+method (Sparre and Venema, 1998).
+For the age-based VPA/CA the catch has to be provided in numbers (or '000 numbers),
+while for the length-based VPA/CA the catch can also be provided in weight (tons or kg) by
+using the argument <code>catch_unit</code>.
+The catch has to be representative for fished species, that means there should not be
+other fisheries fishing the same stock. If this is the case <code>catch_corFac</code> can
+be used as a raising factor to account for the proportion of fish caught by other
+fisheries.
+When the model should follow a real cohort instead of a pseudo cohort, <code>catch</code>
+has to be provided as matrix. The model then starts to follow the first age class
+in the first column.
+If <code>catch</code> matrix is shorter than the number of age classes, the age or length
+classes without catch information are omitted. It is recommended to only
+follow a real cohort if there is enough information for all age classes
+(test with: <code>dim(catch)[1] &lt;= dim(catch)[2]</code>).
+If <code>plus_group</code> is TRUE a different calculation for the survivors of the last length group
+is used (for more details please refer to Sparre &amp; Venema (1998)).
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the input parameters and following list objects:
+</p>
+
+<ul>
+<li> <p><strong>classes.num</strong>: numeric age classes or length groups (without plus sign),
+</p>
+</li>
+<li> <p><strong>catch.cohort</strong>: a vector with the catch values which were used for
+the analysis (exists only if catch was a matrix),
+</p>
+</li>
+<li> <p><strong>FM_calc</strong>: a vector with the ifshing mortality (M),
+</p>
+</li>
+<li> <p><strong>Z</strong>: a vector with the total mortality (Z),
+</p>
+</li>
+<li> <p><strong>survivors</strong>: a vector with the number of fish surviving to the
+next age class or length group (same unit than input catch vector),
+</p>
+</li>
+<li> <p><strong>annualMeanNr</strong>: ta vector with the mean number of fish per year
+(same unit than input catch vector),
+</p>
+</li>
+<li> <p><strong>meanBodyWeight</strong>: a vector with the mean body weight in kg,
+</p>
+</li>
+<li> <p><strong>meanBiomassTon</strong>: a vector with the mean biomass in tons,
+</p>
+</li>
+<li> <p><strong>YieldTon</strong>: a vector with the yield in tons,
+</p>
+</li>
+<li> <p><strong>natLoss</strong>: a vector with the number of fish died due
+to natural mortality,
+</p>
+</li>
+<li> <p><strong>plot_mat</strong>: matrix with rearranged survivors, nat losses
+and catches for plotting;
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+<p>Jones, R., 1984. Assessing the effects of changes in exploitation pattern using length
+composition data (with notes on VPA and cohort analysis). <em>FAO Fish.Tech.Pap.</em>,
+(256): 118p.
+</p>
+<p>Jones, R., 1990. Length-cohort analysis: the importance of choosing the correct growth
+parameters. <em>Journal du Conseil: ICES Journal of Marine Science</em>, 46(2), 133-139
+</p>
+<p>Pope, J.G., 1972. An investigation of the accuracy of virtual population analysis using
+cohort analysis. <em>Res.Bull.ICNAF</em>, (9):65-74
+</p>
+<p>Pope, J.G., 1979. A modified cohort analysis in which constant natural mortality is
+replaced by estimates of predation levels. <em>ICES C.M.</em> 1979/H:16:7p. (mimeo)
+</p>
+<p>Sparre, P., Venema, S.C., 1998. Introduction to tropical fish stock assessment.
+Part 1. Manual. <em>FAO Fisheries Technical Paper</em>, (306.1, Rev. 2). 407 p.
+</p>
+<p>References for weight-length relationship parameters (a &amp; b):
+Dorel, D., 1986. Poissons del'Atlantique nord-est relations taille-poids.
+Institut Francais de Recherche pour l'Exploitation de la Mer. Nantes, France. 165 p.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#_______________________________________________
+# Virtual Popuation Analysis with age-composition data
+data(whiting)
+output &lt;- VPA(param = whiting, catch_columns = 1, terminalE = 0.5, analysis_type = "VPA")
+plot(output)
+#_______________________________________________
+# Pope's Cohort Analysis with age-composition data
+data(whiting)
+VPA(whiting, terminalE = 0.5, catch_columns = 3, analysis_type = "CA",
+   plot= TRUE, plus_group = TRUE)
+
+#_______________________________________________
+# Virtual population analysis with length-composition data
+data(hake)
+VPA(hake, terminalE = 0.5, analysis_type = "VPA", plot = TRUE,
+    catch_unit = "'000", plus_group = TRUE)
+#_______________________________________________
+# Jones's Cohort Analysis with length-composition data
+data(hake)
+VPA(hake, terminalE = 0.5, analysis_type = "CA", plot = TRUE,
+   catch_unit = "'000", plus_group = TRUE)
+
+</code></pre>
+
+
+</div>

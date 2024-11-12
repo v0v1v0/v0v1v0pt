@@ -1,0 +1,108 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>hyper_tibble</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extract NetCDF data as an expanded table.</h2>
+
+<h3>Description</h3>
+
+<p>Extract the raw array data as an expanded data frame. This can be the entire
+variable/s or after dimension-slicing using <code>hyper_filter()</code> expressions with
+dimension values expanded appropriately for each element in the arrays (one
+row per element).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">hyper_tibble(x, ..., na.rm = TRUE, force = FALSE)
+
+## S3 method for class 'character'
+hyper_tibble(x, ..., na.rm = TRUE, force = FALSE)
+
+## S3 method for class 'tidync'
+hyper_tibble(x, ..., na.rm = TRUE, force = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>NetCDF file, connection object, or <code>tidync</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments to 'hyper_filter“</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>if <code>TRUE</code> these rows are not included in the output when all
+variables are <code>NA</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>force</code></td>
+<td>
+<p>ignore caveats about large extraction and just do it</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The size of an extraction is checked and if <em>quite large</em> there is an a user-controlled
+prompt to proceed or cancel. This can be disabled with <code>options(tidync.large.data.check = FALSE)</code>
+</p>
+
+<ul><li>
+<p> please see <code>hyper_array()</code> for more details.
+</p>
+</li></ul>
+<p>The function <code>hyper_tibble()</code> will act on an existing tidync object or a source
+string.
+</p>
+<p>By default all variables in the active grid are returned, use <code>select_var</code> to
+limit.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_df</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>hyper_array()</code> and <code>hyper_tbl_cube()</code>  which are also delay-breaking
+functions that cause data to be read
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">l3file &lt;- "S20080012008031.L3m_MO_CHL_chlor_a_9km.nc"
+f &lt;- system.file("extdata", "oceandata", l3file, package= "tidync")
+rnc &lt;- tidync(f)
+hyper_filter(rnc)
+library(dplyr)
+lapply(hyper_array(f, lat = lat &gt; 0, lon = index &gt; 3000), dim)
+
+ ht &lt;- hyper_tibble(rnc) %&gt;%
+ filter(!is.na(chlor_a))
+ht
+library(ggplot2)
+ggplot(ht %&gt;% filter(!is.na(chlor_a)),
+aes(x = lon, y = lat, fill = chlor_a)) + geom_tile()
+</code></pre>
+
+
+</div>

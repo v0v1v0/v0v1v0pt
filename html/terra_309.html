@@ -1,0 +1,135 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>expanse</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get the expanse (area) of individual polygons or for all (summed) raster cells</h2>
+
+<h3>Description</h3>
+
+<p>Compute the area covered by polygons or for all raster cells that are not <code>NA</code>. 
+</p>
+<p>This method computes areas for longitude/latitude rasters, as the size of the cells is constant in degrees, but not in square meters. But it can also be important if the coordinate reference system is planar, but not equal-area. 
+</p>
+<p>For vector data, the best way to compute area is to use the longitude/latitude CRS. This is contrary to (erroneous) popular belief that suggest that you should use a planar coordinate reference system. This is done automatically, if <code>transform=TRUE</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+expanse(x, unit="m", transform=TRUE, byValue=FALSE,
+			zones=NULL, wide=FALSE, usenames=FALSE)
+
+## S4 method for signature 'SpatVector'
+expanse(x, unit="m", transform=TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster or SpatVector</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unit</code></td>
+<td>
+<p>character. Output unit of area. One of "m", "km", or "ha"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, planar CRS are transformed to lon/lat for accuracy</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>byValue</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the area for each unique cell value is returned</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zones</code></td>
+<td>
+<p>NULL or SpatRaster with the same geometry identifying zones in <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wide</code></td>
+<td>
+<p>logical. Should the results be in "wide" rather than "long" format?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>usenames</code></td>
+<td>
+<p>logical. If <code>TRUE</code> layers are identified by their names instead of their numbers</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><b>SpatRaster</b>: <code>data.frame</code> with at least two columns ("layer" and "area") and possibly also "value" (if <code>byValue</code> is <code>TRUE</code>), and "zone" (if <code>zones</code> is <code>TRUE</code>). If <code>x</code> has no values, the total area of all cells is returned. Otherwise, the area of all cells that are not <code>NA</code> is returned. 
+</p>
+<p><b>SpatVector</b>: numeric (one value for each (multi-) polygon geometry.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>cellSize</code> for a the size of individual cells of a raster, that can be summed with <code>global</code> or with <code>zonal</code> to get the area for different zones.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+### SpatRaster 
+r &lt;- rast(nrows=18, ncols=36)
+v &lt;- 1:ncell(r)
+v[200:400] &lt;- NA
+values(r) &lt;- v
+
+# summed area in km2
+expanse(r, unit="km")
+
+# all cells 
+expanse(rast(r), unit="km")
+
+r &lt;- rast(ncols=90, nrows=45, ymin=-80, ymax=80)
+m &lt;- project(r, "+proj=merc")
+
+expanse(m, unit="km")
+expanse(m, unit="km", transform=FALSE)
+
+m2 &lt;- c(m, m)
+values(m2) &lt;- cbind(c(1,2,NA,NA), c(11:14))
+expanse(m2, unit="km", byValue=TRUE, wide=TRUE)
+
+
+v &lt;- vect(system.file("ex/lux.shp", package="terra"))
+r &lt;- rast(system.file("ex/elev.tif", package="terra"))
+r &lt;- round((r-50)/100)
+levels(r) &lt;- data.frame(id=1:5, name=c("forest", "water", "urban", "crops", "grass"))
+expanse(r, byValue=TRUE)
+
+g &lt;- rasterize(v, r, "NAME_1")
+expanse(r, byValue=TRUE, zones=g, wide=TRUE)
+
+
+### SpatVector
+v &lt;- vect(system.file("ex/lux.shp", package="terra"))
+
+a &lt;- expanse(v)
+a
+sum(a)
+</code></pre>
+
+
+</div>

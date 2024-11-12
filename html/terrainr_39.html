@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>vector_to_overlay</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Turn spatial vector data into an image overlay</h2>
+
+<h3>Description</h3>
+
+<p>This function allows users to quickly transform any vector data into an
+image overlay, which may then be imported as a texture into Unity.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">vector_to_overlay(
+  vector_data,
+  reference_raster,
+  output_file = NULL,
+  transparent = "#ffffff",
+  ...,
+  error_crs = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>vector_data</code></td>
+<td>
+<p>The spatial vector data set to be transformed into an
+overlay image. Users may provide either an <code>sf</code> object or a length 1
+character vector containing a path to a file readable by sf::read_sf.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reference_raster</code></td>
+<td>
+<p>The raster file to produce an overlay for. The output
+overlay will have the same extent and resolution as the input raster. Users
+may provide either a Raster* object or a length 1 character
+vector containing a path to a file readable by terra::rast.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output_file</code></td>
+<td>
+<p>The path to save the image overlay to. If <code>NULL</code>, saves to
+a tempfile.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transparent</code></td>
+<td>
+<p>The hex code for a color to be made transparent in the
+final image. Set to <code>FALSE</code> to not set any colors to transparent.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>...</code> in either ggplot2::geom_point (for
+point vector data), ggplot2::geom_line (for line data),
+or ggplot2::geom_polygon (for all other data types).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>error_crs</code></td>
+<td>
+<p>Logical: Should this function error if <code>data</code> has no CRS?
+If <code>TRUE</code>, function errors; if <code>FALSE</code>, function quietly assumes EPSG:4326.
+If <code>NULL</code>, the default, function assumes EPSG:4326 with a warning.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>output_file</code>, invisibly.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other data manipulation functions: 
+<code>combine_overlays()</code>,
+<code>georeference_overlay()</code>,
+<code>merge_rasters()</code>,
+<code>raster_to_raw_tiles()</code>
+</p>
+<p>Other overlay creation functions: 
+<code>combine_overlays()</code>,
+<code>georeference_overlay()</code>
+</p>
+<p>Other visualization functions: 
+<code>combine_overlays()</code>,
+<code>geom_spatial_rgb()</code>,
+<code>raster_to_raw_tiles()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+# Generate points to download raster tiles for
+set.seed(123)
+simulated_data &lt;- data.frame(
+  id = seq(1, 100, 1),
+  lat = runif(100, 44.1114, 44.1123),
+  lng = runif(100, -73.92273, -73.92147)
+)
+
+# Create an sf object from our original simulated data
+
+simulated_data_sf &lt;- sf::st_as_sf(simulated_data, coords = c("lng", "lat"))
+sf::st_crs(simulated_data_sf) &lt;- sf::st_crs(4326)
+
+# Download data!
+
+downloaded_tiles &lt;- get_tiles(simulated_data_sf, tempfile())
+
+merged_file &lt;- merge_rasters(
+  downloaded_tiles[[1]],
+  tempfile(fileext = ".tif")
+)
+
+
+# Create an overlay image
+vector_to_overlay(simulated_data_sf, merged_file[[1]], na.rm = TRUE)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

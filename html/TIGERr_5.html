@@ -1,0 +1,165 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>select_variable</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Select variables for ensemble learning architecture</h2>
+
+<h3>Description</h3>
+
+<p>This function provides an advanced option to select metabolite variables from external dataset(s). The selected variables (as a list) can be further passed to argument <code>selectVar_external</code> in function <code>run_TIGER</code> for a customised data correction.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">select_variable(
+  train_num,
+  test_num = NULL,
+  train_batchID = NULL,
+  test_batchID = NULL,
+  selectVar_corType = c("cor", "pcor"),
+  selectVar_corMethod = c("spearman", "pearson"),
+  selectVar_minNum = 5,
+  selectVar_maxNum = 10,
+  selectVar_batchWise = FALSE,
+  coerce_numeric = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>train_num</code></td>
+<td>
+<p>a numeric data.frame <strong>only</strong> including the metabolite values of training samples (can be quality control samples). Information such as injection order or well position need to be excluded. Row: sample. Column: metabolite variable. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test_num</code></td>
+<td>
+<p>an optional numeric data.frame including the metabolite values of test samples (can be subject samples). If provided, the column names of <code>test_num</code> should correspond to the column names of <code>train_num</code>. Row: sample. Column: metabolite variable. If <code>NULL</code>, the variables will be selected based on <code>train_num</code> only. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>train_batchID</code></td>
+<td>
+<p><code>NULL</code> or a vector corresponding to <code>train_num</code> to specify the batch of each sample. Ignored if <code>selectVar_batchWise = FALSE</code>. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test_batchID</code></td>
+<td>
+<p><code>NULL</code> or a vector corresponding to <code>test_num</code> to specify the batch of each sample. Ignored if <code>selectVar_batchWise = FALSE</code>. See Examples.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selectVar_corType</code></td>
+<td>
+<p>a character string indicating correlation (<code>"cor"</code>, default) or partial correlation (<code>"pcor"</code>) is to be used. Can be abbreviated. See Details. <strong>Note</strong>: computing partial correlations of a large dataset can be very time-consuming.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selectVar_corMethod</code></td>
+<td>
+<p>a character string indicating which correlation coefficient is to be computed. One of <code>"spearman"</code> (default) or <code>"pearson"</code>. Can be abbreviated. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selectVar_minNum</code></td>
+<td>
+<p>an integer specifying the minimum number of the selected variables. If <code>NULL</code>, no limited, but 1 at least. See Details. Default: 5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selectVar_maxNum</code></td>
+<td>
+<p>an integer specifying the maximum number of the selected variables. If <code>NULL</code>, no limited, but <code>ncol(train_num) - 1</code> at most. See Details. Default: 10.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selectVar_batchWise</code></td>
+<td>
+<p>(advanced) logical. Specify whether the variable selection should be performed based on each batch. Default: <code>FALSE</code>. <strong>Note</strong>: if <code>TRUE</code>, batch ID of each sample are required. The support of batch-wise variable selection is provided for data requiring special processing (for example, data with strong batch effects). But in most case, batch-wise variable selection is not necessary. Setting <code>TRUE</code> might make the algorithm less robust. See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coerce_numeric</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, values in <code>train_num</code> and  <code>test_num</code> will be coerced to numeric before the computation. The columns cannot be coerced will be removed (with warnings). See Examples. Default: <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <code>run_TIGER</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>selectVar_batchWise = FALSE</code>, the function returns a list of length one containing the selected variables computed on the whole dataset.
+</p>
+<p>If <code>selectVar_batchWise = TRUE</code>, a list containing the selected variables computed on different batches is returned. The length of the returned list equals the number of batch specified by <code>test_batchID</code> and/or <code>train_batchID</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(FF4_qc) # load demo dataset
+
+# QC as training samples; QC1, QC2 and QC3 as test samples:
+train_samples &lt;- FF4_qc[FF4_qc$sampleType == "QC",]
+test_samples  &lt;- FF4_qc[FF4_qc$sampleType != "QC",]
+
+# Only numeric data of metabolite variables are allowed:
+train_num = train_samples[-c(1:5)]
+test_num  = test_samples[-c(1:5)]
+
+# If the selection is performed on the whole dataset:
+# based on training samples only:
+selected_var_1 &lt;- select_variable(train_num = train_num,
+                                  test_num  = NULL,
+                                  selectVar_batchWise = FALSE)
+
+# also consider test samples:
+selected_var_2 &lt;- select_variable(train_num = train_num,
+                                  test_num  = test_num,
+                                  selectVar_batchWise = FALSE)
+
+# If the selection is based on different batches:
+# (In selectVar_batchWise, batch ID is required.)
+selected_var_3 &lt;- select_variable(train_num = train_num,
+                                  test_num  = NULL,
+                                  train_batchID = train_samples$plateID,
+                                  test_batchID  = NULL,
+                                  selectVar_batchWise = TRUE)
+
+# If coerce_numeric = TRUE,
+# columns cannot be coerced to numeric will be removed (with warnings):
+# (In this example, columns of injection order and well position are excluded.
+# Because we don't want to calculate the correlations between metabolites and
+# injection order/well position.)
+selected_var_4 &lt;- select_variable(train_num = train_samples[-c(4,5)],
+                                  train_batchID = train_samples$plateID,
+                                  selectVar_batchWise = TRUE,
+                                  coerce_numeric = TRUE)
+identical(selected_var_3, selected_var_4)  # identical to selected_var_3
+
+## Not run: 
+
+# will throw errors if input data have non-numeric columns
+# and coerce_numeric = FALSE:
+
+selected_var_5 &lt;- select_variable(train_num = train_samples[-c(4,5)],
+                                  coerce_numeric = FALSE)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

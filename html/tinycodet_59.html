@@ -1,0 +1,148 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>import_LL</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Miscellaneous import_ - Functions</h2>
+
+<h3>Description</h3>
+
+<p>The <code>import_LL()</code> function
+places specific functions from a package in the current environment,
+and also locks (see lockBinding) the specified functions to prevent modification. <br>
+The primary use-case for this function is for exposing functions inside a local environment. <br><br>
+The <code>import_int()</code> function
+directly returns an internal function from a package. <br>
+It is similar to the ::: operator, but with 2 key differences: <br></p>
+
+<ol>
+<li> <p><code>import_int()</code> includes the <code>lib.loc</code> argument.
+</p>
+</li>
+<li> <p><code>import_int()</code> only searches internal functions, not exported ones.
+This makes it clearer in your code that you're using an internal function,
+instead of making it ambiguous. <br><br></p>
+</li>
+</ol>
+<h3>Usage</h3>
+
+<pre><code class="language-R">import_LL(package, selection, lib.loc = .libPaths())
+
+import_int(form, lib.loc = .libPaths())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>package</code></td>
+<td>
+<p>a single string,
+giving the name of the package to take functions from. <br>
+Core R (i.e. "base", "stats", etc.) is not allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selection</code></td>
+<td>
+<p>a character vector of function names
+(both regular functions and infix operators). <br>
+Internal functions or re-exported functions are not supported.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lib.loc</code></td>
+<td>
+<p>character vector specifying library search path
+(the location of R library trees to search through). <br>
+The <code>lib.loc</code> argument would usually be <code>.libPaths()</code>. <br>
+See also loadNamespace.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>form</code></td>
+<td>
+<p>a two-sided formula, with one term on each side. <br>
+The term on the left hand side should give a single package name. <br>
+The term on the right hand side should give a single internal function. <br>
+Example: <code>package_name ~ function_name</code> <br>
+Core R (i.e. "base", "stats", etc.) is not allowed.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><b>Regarding the Locks in <code>import_LL()</code></b> <br>
+The import_as function returns a locked environment,
+just like loadNamespace,
+thus protecting the functions from accidental modification or re-assignment. <br>
+The import_inops function returns infix operators,
+and though these are not locked,
+one needs to surround infix operators by back ticks to re-assign or modify them,
+which is unlikely to happen on accident. <br>
+The <code>import_LL()</code> function, however, returns "loose" functions.
+And these functions
+(unless they are infix operators)
+do not have the protection due to a locked environment or due to the syntax. <br>
+Therefore, to ensure safety from (accidental) modification or re-assignment,
+the <code>import_LL()</code> function locks these functions (see lockBinding).
+For consistency, infix operators exposed by <code>import_LL()</code> are also locked. <br><br><b>Other Details</b> <br>
+The <code>import_LL()</code> and <code>import_int()</code> functions
+do not support importing functions from base/core R. <br><br></p>
+
+
+<h3>Value</h3>
+
+<p>For <code>import_LL()</code>: <br>
+The specified functions will be placed in the current environment,
+and locked. <br>
+To unexpose or overwrite the functions, simply remove them; i.e.: <br><code>rm(list=c("some_function1", "some_function2")</code>). <br><br>
+For <code>import_int()</code>: <br>
+The function itself is returned directly. <br>
+So one can assign the function directly to some variable, like so: <br><code>myfun &lt;- import_int(...)</code> <br>
+or use it directly without re-assignment like so: <br><code>import_int(...)(...)</code>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>tinycodet_import
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Using import_LL ====
+import_LL(
+  "stringi", "stri_sub"
+)
+# the stri_sub() function now cannot be modified, only used or removed, because it's locked:
+bindingIsLocked("stri_sub", environment()) # TRUE
+
+mypaste &lt;- function(x, y) {
+  import_LL("stringi", selection = "stri_c")
+  stri_c(x, y)
+  }
+mypaste("hello ", "world")
+
+
+
+# Using internal function ====
+# Through re-assignment:
+fun &lt;- import_int(tinycodet ~ .internal_paste, .libPaths())
+fun("hello", "world")
+
+# Or using directly:
+import_int(
+  tinycodet ~ .internal_paste, .libPaths()
+)("hello", "world")
+
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,311 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_t_binary_outcome</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>teal Module: Binary Outcome Table</h2>
+
+<h3>Description</h3>
+
+<p>This module produces a binary outcome response summary table, with the option to match the template for
+response table <code>RSPT01</code> available in the TLG Catalog <a href="https://insightsengineering.github.io/tlg-catalog/stable/tables/efficacy/rspt01.html">here</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_t_binary_outcome(
+  label,
+  dataname,
+  parentname = ifelse(test = inherits(arm_var, "data_extract_spec"), yes =
+    teal.transform::datanames_input(arm_var), no = "ADSL"),
+  arm_var,
+  arm_ref_comp = NULL,
+  paramcd,
+  strata_var,
+  aval_var = teal.transform::choices_selected(choices =
+    teal.transform::variable_choices(dataname, c("AVALC", "SEX")), selected = "AVALC",
+    fixed = FALSE),
+  conf_level = teal.transform::choices_selected(c(0.95, 0.9, 0.8), 0.95, keep_order =
+    TRUE),
+  default_responses = c("CR", "PR", "Y", "Complete Response (CR)",
+    "Partial Response (PR)", "M"),
+  rsp_table = FALSE,
+  control = list(global = list(method = ifelse(rsp_table, "clopper-pearson", "waldcc"),
+    conf_level = 0.95), unstrat = list(method_ci = ifelse(rsp_table, "wald", "waldcc"),
+    method_test = "schouten", odds = TRUE), strat = list(method_ci = "cmh", method_test =
+    "cmh")),
+  add_total = FALSE,
+  total_label = default_total_label(),
+  na_level = default_na_str(),
+  pre_output = NULL,
+  post_output = NULL,
+  basic_table_args = teal.widgets::basic_table_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>)<br> menu item label of the module in the teal app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataname</code></td>
+<td>
+<p>(<code>character</code>)<br> analysis data used in teal module.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parentname</code></td>
+<td>
+<p>(<code>character</code>)<br> parent analysis data used in teal module, usually this refers to <code>ADSL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for variable names that can be used as <code>arm_var</code>.
+It defines the grouping variable(s) in the results table.
+If there are two elements selected for <code>arm_var</code>,
+second variable will be nested under the first variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arm_ref_comp</code></td>
+<td>
+<p>(<code>list</code>) optional,<br> if specified it must be a named list with each element corresponding to
+an arm variable in <code>ADSL</code> and the element must be another list (possibly
+with delayed <code>teal.transform::variable_choices()</code> or delayed <code>teal.transform::value_choices()</code>
+with the elements named <code>ref</code> and <code>comp</code> that the defined the default
+reference and comparison arms when the arm variable is changed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramcd</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with all
+available choices and preselected option for the parameter code variable from <code>dataname</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> names of
+the variables for stratified analysis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aval_var</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the analysis variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the confidence level, each within range of (0, 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>default_responses</code></td>
+<td>
+<p>(<code>list</code> or <code>character</code>)<br> defines
+the default codes for the response variable in the module per value of <code>paramcd</code>.
+A passed vector is transmitted for all <code>paramcd</code> values. A passed <code>list</code> must be named
+and contain arrays, each name corresponding to a single value of <code>paramcd</code>. Each array
+may contain default response values or named arrays <code>rsp</code> of default selected response
+values and <code>levels</code> of default level choices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rsp_table</code></td>
+<td>
+<p>(<code>logical</code>)<br> whether the initial set-up of the module should match <code>RSPT01</code>. Defaults to <code>FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>(named <code>list</code>)<br> named list containing 3 named lists as follows:
+</p>
+
+<ul>
+<li> <p><code>global</code>: a list of settings for overall analysis with 2 named elements <code>method</code> and <code>conf_level</code>.
+</p>
+</li>
+<li> <p><code>unstrat</code>: a list of settings for unstratified analysis with 3 named elements <code>method_ci</code> and <code>method_test</code>, and
+<code>odds</code>. See <code>tern::estimate_proportion_diff()</code>, <code>tern::test_proportion_diff()</code>, and
+<code>tern::estimate_odds_ratio()</code>, respectively, for options and details on how these settings are implemented in the
+analysis.
+</p>
+</li>
+<li> <p><code>strat</code>: a list of settings for stratified analysis with elements <code>method_ci</code> and <code>method_test</code>. See
+<code>tern::estimate_proportion_diff()</code> and <code>tern::test_proportion_diff()</code>, respectively, for options and details on
+how these settings are implemented in the analysis.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add_total</code></td>
+<td>
+<p>(<code>logical</code>)<br> whether to include column with total number of patients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_label</code></td>
+<td>
+<p>(<code>string</code>)<br> string to display as total column/row label if column/row is
+enabled (see <code>add_total</code>). Defaults to <code>"All Patients"</code>. To set a new default <code>total_label</code> to
+apply in all modules, run <code>set_default_total_label("new_default")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_level</code></td>
+<td>
+<p>(<code>string</code>)<br> used to replace all <code>NA</code> or empty values
+in character or factor variables in the data. Defaults to <code>"&lt;Missing&gt;"</code>. To set a
+default <code>na_level</code> to apply in all modules, run <code>set_default_na_str("new_default")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed before the output to put the output into context.
+For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed after the output to put the output into context.
+For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basic_table_args</code></td>
+<td>
+<p>(<code>basic_table_args</code>) optional<br> object created by <code>teal.widgets::basic_table_args()</code>
+with settings for the module table. The argument is merged with option <code>teal.basic_table_args</code> and with default
+module arguments (hard coded in the module body).
+For more details, see the vignette: <code>vignette("custom-basic-table-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ul>
+<li>
+<p> The display order of response categories inherits the factor level order of the source data. Use
+<code>base::factor()</code> and its <code>levels</code> argument to manipulate the source data in order to include/exclude
+or re-categorize response categories and arrange the display order. If response categories are <code>"Missing"</code>,
+<code>"Not Evaluable (NE)"</code>, or <code>"Missing or unevaluable"</code>, 95% confidence interval will not be calculated.
+</p>
+</li>
+<li>
+<p> Reference arms are automatically combined if multiple arms selected as reference group.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a <code>teal_module</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>The <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a> where additional example
+apps implementing this module can be found.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+ADSL &lt;- tmc_ex_adsl
+ADRS &lt;- tmc_ex_adrs %&gt;%
+  mutate(
+    AVALC = d_onco_rsp_label(AVALC) %&gt;%
+      with_label("Character Result/Finding")
+  ) %&gt;%
+  filter(PARAMCD != "OVRINV" | AVISIT == "FOLLOW UP")
+
+arm_ref_comp &lt;- list(
+  ARMCD = list(ref = "ARM B", comp = c("ARM A", "ARM C")),
+  ARM = list(ref = "B: Placebo", comp = c("A: Drug X", "C: Combination"))
+)
+app &lt;- init(
+  data = cdisc_data(
+    ADSL = ADSL,
+    ADRS = ADRS,
+    code = "
+      ADSL &lt;- tmc_ex_adsl
+      ADRS &lt;- tmc_ex_adrs %&gt;%
+        mutate(
+          AVALC = d_onco_rsp_label(AVALC) %&gt;%
+            with_label(\"Character Result/Finding\")
+        ) %&gt;%
+        filter(PARAMCD != \"OVRINV\" | AVISIT == \"FOLLOW UP\")
+    "
+  ),
+  modules = modules(
+    tm_t_binary_outcome(
+      label = "Responders",
+      dataname = "ADRS",
+      paramcd = choices_selected(
+        choices = value_choices(ADRS, "PARAMCD", "PARAM"),
+        selected = "BESRSPI"
+      ),
+      arm_var = choices_selected(
+        choices = variable_choices(ADRS, c("ARM", "ARMCD", "ACTARMCD")),
+        selected = "ARM"
+      ),
+      arm_ref_comp = arm_ref_comp,
+      strata_var = choices_selected(
+        choices = variable_choices(ADRS, c("SEX", "BMRKR2", "RACE")),
+        selected = "RACE"
+      ),
+      default_responses = list(
+        BESRSPI = list(
+          rsp = c("Complete Response (CR)", "Partial Response (PR)"),
+          levels = c(
+            "Complete Response (CR)", "Partial Response (PR)",
+            "Stable Disease (SD)", "Progressive Disease (PD)"
+          )
+        ),
+        INVET = list(
+          rsp = c("Stable Disease (SD)", "Not Evaluable (NE)"),
+          levels = c(
+            "Complete Response (CR)", "Not Evaluable (NE)", "Partial Response (PR)",
+            "Progressive Disease (PD)", "Stable Disease (SD)"
+          )
+        ),
+        OVRINV = list(
+          rsp = c("Progressive Disease (PD)", "Stable Disease (SD)"),
+          levels = c("Progressive Disease (PD)", "Stable Disease (SD)", "Not Evaluable (NE)")
+        )
+      )
+    )
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

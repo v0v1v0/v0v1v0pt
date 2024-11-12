@@ -1,0 +1,310 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>simulate.network</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>STERGM wrappers for TERGM simulation</h2>
+
+<h3>Description</h3>
+
+<p>The <code>simulate.network</code> and <code>simulate.networkDynamic</code> wrappers
+are provided for backwards compatibility.  It is recommended that new
+code make use of the <code>simulate_formula.network</code> and
+<code>simulate_formula.networkDynamic</code> functions instead.  See
+<code>simulate.tergm</code> for details on these new functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'network'
+simulate(
+  object,
+  nsim = 1,
+  seed = NULL,
+  formation,
+  dissolution,
+  coef.form,
+  coef.diss,
+  constraints = ~.,
+  monitor = NULL,
+  time.slices = 1,
+  time.start = NULL,
+  time.burnin = 0,
+  time.interval = 1,
+  time.offset = 1,
+  control = control.simulate.network(),
+  output = c("networkDynamic", "stats", "changes", "final", "ergm_state"),
+  stats.form = FALSE,
+  stats.diss = FALSE,
+  verbose = FALSE,
+  ...
+)
+
+## S3 method for class 'networkDynamic'
+simulate(
+  object,
+  nsim = 1,
+  seed = NULL,
+  formation,
+  dissolution,
+  coef.form = attr(object, "coef.form"),
+  coef.diss = attr(object, "coef.diss"),
+  constraints = ~.,
+  monitor = NULL,
+  time.slices = 1,
+  time.start = NULL,
+  time.burnin = 0,
+  time.interval = 1,
+  time.offset = 1,
+  control = control.simulate.network(),
+  output = c("networkDynamic", "stats", "changes", "final", "ergm_state"),
+  stats.form = FALSE,
+  stats.diss = FALSE,
+  verbose = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>an object of type <code>network</code> or <code>networkDynamic</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>Number of replications (separate chains of networks) of the
+process to run and return. The <code>networkDynamic</code> method only
+supports <code>nsim=1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Seed value (integer) for the random number generator.  See
+<code>set.seed</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>formation, dissolution</code></td>
+<td>
+<p>One-sided <code>ergm</code>-style formulas for
+the formation and dissolution models, respectively.  The dissolution model is parameterized in terms of tie persistence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef.form</code></td>
+<td>
+<p>Parameters for the formation model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef.diss</code></td>
+<td>
+<p>Parameters for the dissolution (persistence) model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constraints</code></td>
+<td>
+<p>A formula specifying one or more constraints
+on the support of the distribution of the networks being modeled. Multiple constraints
+may be given, separated by “+” and “-” operators. See
+<code>ergmConstraint</code> for the detailed explanation of
+their semantics and also for an indexed list of the constraints visible to the <span class="pkg">ergm</span> package.
+</p>
+<p>The default is to have no constraints except those provided through
+the <code>ergmlhs</code> API.
+</p>
+<p>Together with the model terms in the formula and the reference measure, the constraints
+define the distribution of networks being modeled.
+</p>
+<p>It is also possible to specify a proposal function directly either
+by passing a string with the function's name (in which case,
+arguments to the proposal should be specified through the
+<code>MCMC.prop.args</code> argument to the relevant control function, or
+by giving it on the LHS of the hints formula to <code>MCMC.prop</code>
+argument to the control function. This will override
+the one chosen automatically.
+</p>
+<p>Note that not all possible combinations of constraints and reference
+measures are supported. However, for relatively simple constraints
+(i.e., those that simply permit or forbid specific dyads or sets of
+dyads from changing), arbitrary combinations should be possible.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>monitor</code></td>
+<td>
+<p>A one-sided formula specifying one or more terms whose
+value is to be monitored.  If <code>monitor</code> is specified as a character
+(one of <code>"formation"</code>, <code>"dissolution"</code>, and <code>"all"</code>) then
+the function <code>.extract.fd.formulae</code> is used to determine the
+corresponding formula; the user should be aware of its behavior and limitations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.slices</code></td>
+<td>
+<p>Number of time slices (or statistics) to return from each
+replication of the dynamic process. See below for return types. Defaults to
+1, which, if <code>time.burnin==0</code> and <code>time.interval==1</code> (the
+defaults), advances the process one time step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.start</code></td>
+<td>
+<p>An optional argument specifying the time point at which
+the simulation is to start. See Details for further information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.burnin</code></td>
+<td>
+<p>Number of time steps to discard before starting to
+collect network statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.interval</code></td>
+<td>
+<p>Number of time steps between successive recordings of
+network statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.offset</code></td>
+<td>
+<p>Argument specifying the offset between the point when the
+state of the network is sampled (<code>time.start</code>) and the the beginning of
+the spell that should be recorded for the newly simulated network state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>A list of control parameters for algorithm tuning,
+constructed using <code>control.simulate.network</code>.  These are mapped
+to <code>control.simulate.formula.tergm</code> controls by assigning:
+</p>
+
+<ul>
+<li> <p><code>MCMC.prop.form</code> to <code>MCMC.prop</code>,
+</p>
+</li>
+<li> <p><code>MCMC.prop.args.form</code> to <code>MCMC.prop.args</code>, and
+</p>
+</li>
+<li> <p><code>MCMC.prop.weights.form</code> to <code>MCMC.prop.weights</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>A character vector specifying output type: one of
+<code>"networkDynamic"</code> (the default), <code>"stats"</code>, <code>"changes"</code>,
+<code>"final"</code>, and <code>"ergm_state"</code>, with partial matching allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stats.form, stats.diss</code></td>
+<td>
+<p>Logical: Whether to return
+formation/dissolution model statistics. This is not the recommended method:
+use the <code>monitor</code> argument instead.  Note that if either <code>stats.form</code>
+or <code>stats.diss</code> is <code>TRUE</code>, all generative model statistics will be
+returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical or an integer to control the amount of
+progress and diagnostic information to be printed. <code>FALSE</code>/<code>0</code>
+produces minimal output, with higher values producing more
+detail. Note that very high values (5+) may significantly slow
+down processing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed to or used by methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that return values may be structured differently than in past versions.
+</p>
+<p>Remember that in <code>stergm</code>, the dissolution formula is parameterized in
+terms of tie persistence: negative coefficients imply lower rates of persistence
+and postive coefficients imply higher rates.  The dissolution effects are simply the
+negation of these coefficients.
+</p>
+<p>Because the old <code>dissolution</code> formula in <code>stergm</code> represents
+tie persistence, it maps to the new <code>Persist()</code> operator
+in the <code>tergm</code> function, NOT the <code>Diss()</code> operator
+</p>
+
+
+<h3>Value</h3>
+
+<p>Depends on the <code>output</code> argument.  See <code>simulate.tergm</code>
+for details.  Note that some formation/dissolution separated
+information is also attached to the return value for calls made through
+<code>simulate.network</code> and <code>simulate.networkDynamic</code> in
+an attempt to increase backwards compatibility.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+logit&lt;-function(p)log(p/(1-p))
+coef.form.f&lt;-function(coef.diss,density) -log(((1+exp(coef.diss))/(density/(1-density)))-1)
+
+# Construct a network with 20 nodes and 20 edges
+n&lt;-20
+target.stats&lt;-edges&lt;-20
+g0&lt;-network.initialize(n,dir=TRUE)
+g1&lt;-san(g0~edges,target.stats=target.stats,verbose=TRUE)
+
+S&lt;-10
+
+# To get an average duration of 10...
+duration&lt;-10
+coef.diss&lt;-logit(1-1/duration)
+
+# To get an average of 20 edges...
+dyads&lt;-network.dyadcount(g1)
+density&lt;-edges/dyads
+coef.form&lt;-coef.form.f(coef.diss,density)
+
+# ... coefficients.
+print(coef.form)
+print(coef.diss)
+
+# Simulate a networkDynamic
+dynsim&lt;-simulate(g1,formation=~edges,dissolution=~edges,
+                 coef.form=coef.form,coef.diss=coef.diss,
+                 time.slices=S,verbose=TRUE)
+
+# "Resume" the simulation.
+dynsim2&lt;-simulate(dynsim,formation=~edges,dissolution=~edges,time.slices=S,verbose=TRUE)
+
+</code></pre>
+
+
+</div>

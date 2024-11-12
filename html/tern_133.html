@@ -1,0 +1,149 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>estimate_coef</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Hazard ratio estimation in interactions</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates the hazard ratios between arms when an interaction variable is given with
+specific values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">estimate_coef(
+  variable,
+  given,
+  lvl_var,
+  lvl_given,
+  coef,
+  mmat,
+  vcov,
+  conf_level = 0.95
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>variable, given</code></td>
+<td>
+<p>(<code>character(2)</code>)<br> names of the two variables in the interaction. We seek the estimation of
+the levels of <code>variable</code> given the levels of <code>given</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lvl_var, lvl_given</code></td>
+<td>
+<p>(<code>character</code>)<br> corresponding levels given by <code>levels()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>(<code>numeric</code>)<br> vector of estimated coefficients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mmat</code></td>
+<td>
+<p>(named <code>numeric</code>) a vector filled with <code>0</code>s used as a template to obtain the design matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vcov</code></td>
+<td>
+<p>(<code>matrix</code>)<br> variance-covariance matrix of underlying model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>proportion</code>)<br> confidence level of estimate intervals.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given the cox regression investigating the effect of Arm (A, B, C; reference A)
+and Sex (F, M; reference Female). The model is abbreviated: y ~ Arm + Sex + Arm x Sex.
+The cox regression estimates the coefficients along with a variance-covariance matrix for:
+</p>
+
+<ul>
+<li>
+<p> b1 (arm b), b2 (arm c)
+</p>
+</li>
+<li>
+<p> b3 (sex m)
+</p>
+</li>
+<li>
+<p> b4 (arm b: sex m), b5 (arm c: sex m)
+</p>
+</li>
+</ul>
+<p>Given that I want an estimation of the Hazard Ratio for arm C/sex M, the estimation
+will be given in reference to arm A/Sex M by exp(b2 + b3 + b5)/ exp(b3) = exp(b2 + b5),
+therefore the interaction coefficient is given by b2 + b5 while the standard error is obtained
+as $1.96 * sqrt(Var b2 + Var b5 + 2 * covariance (b2,b5))$ for a confidence level of 0.95.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of matrices (one per level of variable) with rows corresponding to the combinations of
+<code>variable</code> and <code>given</code>, with columns:
+</p>
+
+<ul>
+<li> <p><code>coef_hat</code>: Estimation of the coefficient.
+</p>
+</li>
+<li> <p><code>coef_se</code>: Standard error of the estimation.
+</p>
+</li>
+<li> <p><code>hr</code>: Hazard ratio.
+</p>
+</li>
+<li> <p><code style="white-space: pre;">⁠lcl, ucl⁠</code>: Lower/upper confidence limit of the hazard ratio.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p><code>s_cox_multivariate()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(survival)
+
+ADSL &lt;- tern_ex_adsl %&gt;%
+  filter(SEX %in% c("F", "M"))
+
+adtte &lt;- tern_ex_adtte %&gt;% filter(PARAMCD == "PFS")
+adtte$ARMCD &lt;- droplevels(adtte$ARMCD)
+adtte$SEX &lt;- droplevels(adtte$SEX)
+
+mod &lt;- coxph(
+  formula = Surv(time = AVAL, event = 1 - CNSR) ~ (SEX + ARMCD)^2,
+  data = adtte
+)
+
+mmat &lt;- stats::model.matrix(mod)[1, ]
+mmat[!mmat == 0] &lt;- 0
+
+</code></pre>
+
+
+</div>

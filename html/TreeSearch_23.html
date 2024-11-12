@@ -1,0 +1,227 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>EdgeListSearch</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Search for most parsimonious trees</h2>
+
+<h3>Description</h3>
+
+<p>Run standard search algorithms (<abbr><span class="acronym">NNI</span></abbr>, <abbr><span class="acronym">SPR</span></abbr> or <abbr><span class="acronym">TBR</span></abbr>)
+to search for a more parsimonious tree.
+</p>
+<p>For detailed documentation of the "TreeSearch" package, including full
+instructions for loading phylogenetic data into R and initiating and
+configuring tree search, see the
+<a href="https://ms609.github.io/TreeSearch/">package documentation</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">EdgeListSearch(
+  edgeList,
+  dataset,
+  TreeScorer = MorphyLength,
+  EdgeSwapper = RootedTBRSwap,
+  maxIter = 100,
+  maxHits = 20,
+  bestScore = NULL,
+  stopAtScore = NULL,
+  stopAtPeak = FALSE,
+  stopAtPlateau = 0L,
+  verbosity = 1L,
+  ...
+)
+
+TreeSearch(
+  tree,
+  dataset,
+  InitializeData = PhyDat2Morphy,
+  CleanUpData = UnloadMorphy,
+  TreeScorer = MorphyLength,
+  EdgeSwapper = RootedTBRSwap,
+  maxIter = 100L,
+  maxHits = 20L,
+  stopAtPeak = FALSE,
+  stopAtPlateau = 0L,
+  verbosity = 1L,
+  ...
+)
+
+IWTreeSearch(...)
+
+EmptyPhyDat(tree)
+
+DoNothing(...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>edgeList</code></td>
+<td>
+<p>a list containing the following:
+- vector of integers corresponding to the parent of each edge in turn
+- vector of integers corresponding to the child of each edge in turn
+- (optionally) score of the tree
+- (optionally, if score provided) number of times this score has been hit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dataset</code></td>
+<td>
+<p>A phylogenetic data matrix of <span class="pkg">phangorn</span> class
+<code>phyDat</code>, whose names correspond to the labels of any accompanying tree.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TreeScorer</code></td>
+<td>
+<p>function to score a given tree.
+The function will be passed three parameters, corresponding to the
+<code>parent</code> and <code>child</code> entries of a tree's edge list, and a dataset.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>EdgeSwapper</code></td>
+<td>
+<p>a function that rearranges a parent and child vector,
+and returns a list with modified vectors; for example <code>SPRSwap()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxIter</code></td>
+<td>
+<p>Numeric specifying maximum number of iterations to perform
+before abandoning the search.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxHits</code></td>
+<td>
+<p>Numeric specifying maximum times to hit the best pscore
+before abandoning the search.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopAtPeak</code></td>
+<td>
+<p>Logical specifying whether to terminate search once a
+subsequent iteration recovers a sub-optimal score.
+Will be overridden if a passed function has an attribute <code>stopAtPeak</code> set by
+<code>attr(FunctionName, "stopAtPeak") &lt;- TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stopAtPlateau</code></td>
+<td>
+<p>Integer. If &gt; 0, tree search will terminate if the score
+has not improved after <code>stopAtPlateau</code> iterations.
+Will be overridden if a passed function has an attribute <code>stopAtPlateau</code> set
+by <code>attr(FunctionName, "stopAtPlateau") &lt;- TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbosity</code></td>
+<td>
+<p>Numeric specifying level of detail to display in console:
+larger numbers provide more verbose feedback to the user.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments to pass to <code>TreeScorer()</code>, e.g. <code style="white-space: pre;">⁠dataset = ⁠</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tree</code></td>
+<td>
+<p>A fully-resolved starting tree in <code>phylo</code> format,
+with the desired outgroup.
+Edge lengths are not supported and will be removed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>InitializeData</code></td>
+<td>
+<p>Function that sets up data object to prepare for tree search.
+The function will be passed the <code>dataset</code> parameter.
+Its return value will be passed to <code>TreeScorer()</code> and <code>CleanUpData()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>CleanUpData</code></td>
+<td>
+<p>Function to destroy data object on function exit.
+The function will be passed the value returned by <code>InitializeData()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p><code>TreeSearch()</code> returns a tree, with an attribute <code>pscore</code> conveying its
+parsimony score.
+#" Note that the parsimony score will be inherited from the tree"s
+attributes, which is only valid if it was generated using the same
+<code>data</code> that is passed here.
+</p>
+<p><code>EmptyPhyDat()</code> returns a <code>phyDat</code> object comprising a single
+null character, coded with state zero for every leaf in <code>tree</code>.
+</p>
+
+
+<h3>Functions</h3>
+
+
+<ul><li> <p><code>EdgeListSearch()</code>: Tree search from edge lists
+</p>
+</li></ul>
+<h3>Author(s)</h3>
+
+<p><a href="https://smithlabdurham.github.io/">Martin R. Smith</a>
+(<a href="mailto:martin.smith@durham.ac.uk">martin.smith@durham.ac.uk</a>)
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>Fitch</code>, calculates parsimony score;
+</p>
+</li>
+<li> <p><code>RootedNNI</code>, conducts tree rearrangements;
+</p>
+</li>
+<li> <p><code>Ratchet</code>, alternative heuristic, useful to escape local
+optima.
+</p>
+</li>
+</ul>
+<p>Other custom search functions: 
+<code>Jackknife()</code>,
+<code>MorphyBootstrap()</code>,
+<code>SuccessiveApproximations()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data("Lobo", package="TreeTools")
+njtree &lt;- TreeTools::NJTree(Lobo.phy)
+
+## Only run examples in interactive R sessions
+if (interactive()) {
+  TreeSearch(njtree, Lobo.phy, maxIter = 20, EdgeSwapper = NNISwap)
+  TreeSearch(njtree, Lobo.phy, maxIter = 20, EdgeSwapper = RootedSPRSwap)
+  TreeSearch(njtree, Lobo.phy, maxIter = 20, EdgeSwapper = TBRSwap)
+}
+</code></pre>
+
+
+</div>

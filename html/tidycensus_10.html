@@ -1,0 +1,200 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_estimates</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get data from the US Census Bureau Population Estimates Program</h2>
+
+<h3>Description</h3>
+
+<p>The <code>get_estimates()</code> function requests data from the US Census Bureau's Population Estimates Program (PEP) datasets.  The PEP datasets are defined by the US Census Bureau as follows: "The Census Bureau's Population Estimates Program (PEP) produces estimates of the population for the United States, its states, counties, cities, and towns, as well as for the Commonwealth of Puerto Rico and its municipios. Demographic components of population change (births, deaths, and migration) are produced at the national, state, and county levels of geography. Additionally, housing unit estimates are produced for the nation, states, and counties.  PEP annually utilizes current data on births, deaths, and migration to calculate population change since the most recent decennial census and produce a time series of estimates of population, demographic components of change, and housing units. The annual time series of estimates begins with the most recent decennial census data and extends to the vintage year. As each vintage of estimates includes all years since the most recent decennial census, the latest vintage of data available supersedes all previously-produced estimates for those dates."
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_estimates(
+  geography = c("us", "region", "division", "state", "county", "county subdivision",
+    "place/balance (or part)", "place", "consolidated city", "place (or part)",
+    "metropolitan statistical area/micropolitan statistical area", "cbsa",
+    "metropolitan division", "combined statistical area"),
+  product = NULL,
+  variables = NULL,
+  breakdown = NULL,
+  breakdown_labels = FALSE,
+  vintage = 2022,
+  year = vintage,
+  state = NULL,
+  county = NULL,
+  time_series = FALSE,
+  output = "tidy",
+  geometry = FALSE,
+  keep_geo_vars = FALSE,
+  shift_geo = FALSE,
+  key = NULL,
+  show_call = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>geography</code></td>
+<td>
+<p>The geography of your data. Available geographies for the most recent data vintage are listed
+<a href="https://api.census.gov/data/2019/pep/population/geography.html">here</a>. <code>"cbsa"</code> may
+be used an alias for <code>"metropolitan statistical area/micropolitan statistical area"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>product</code></td>
+<td>
+<p>The data product (optional). <code>"population"</code>, <code>"components"</code>
+<code>"housing"</code>, and <code>"characteristics"</code> are supported.
+</p>
+<p>For 2020 and later, the only supported product is <code>"characteristics"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>variables</code></td>
+<td>
+<p>A character string or vector of character strings of requested variables.  For years 2020 and later, use <code>variables = "all"</code> to request all available variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakdown</code></td>
+<td>
+<p>The population breakdown used when <code>product = "characteristics"</code>.
+Acceptable values are <code>"AGEGROUP"</code>, <code>"RACE"</code>, <code>"SEX"</code>, and
+<code>"HISP"</code>, for Hispanic/Not Hispanic.  These values can be combined in
+a vector, returning population estimates in the <code>value</code> column for all
+combinations of these breakdowns.  For years 2020 and later, <code>"AGE"</code> is also available for single-year age when using <code>geography = "state"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breakdown_labels</code></td>
+<td>
+<p>Whether or not to label breakdown elements returned when
+<code>product = "characteristics"</code>. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vintage</code></td>
+<td>
+<p>It is recommended to use the most recent vintage
+available for a given decennial series (so, year = 2019 for the 2010s, and year = 2023 for the 2020s).  Will default to 2022 until the full PEP for 2023 is released.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>year</code></td>
+<td>
+<p>The data year (defaults to the vintage requested). Use <code>time_series = TRUE</code> to access time-series estimates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>state</code></td>
+<td>
+<p>The state for which you are requesting data. State
+names, postal codes, and FIPS codes are accepted.
+Defaults to NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>county</code></td>
+<td>
+<p>The county for which you are requesting data. County names and
+FIPS codes are accepted. Must be combined with a value supplied
+to 'state'.  Defaults to NULL.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_series</code></td>
+<td>
+<p>If <code>TRUE</code>, the function will return a time series of observations back to the decennial Census
+of 2010. The returned column is either "DATE", representing a particular estimate date, or "PERIOD",
+representing a time period (e.g. births between 2016 and 2017), and contains integers representing
+those values.  Integer to date or period mapping is available at
+<a href="https://www.census.gov/data/developers/data-sets/popest-popproj/popest/popest-vars/2019.html">https://www.census.gov/data/developers/data-sets/popest-popproj/popest/popest-vars/2019.html</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>One of "tidy" (the default) in which each row represents an
+enumeration unit-variable combination, or "wide" in which each
+row represents an enumeration unit and the variables are in the
+columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geometry</code></td>
+<td>
+<p>if FALSE (the default), return a regular tibble of ACS data.
+if TRUE, uses the tigris package to return an sf tibble
+with simple feature geometry in the 'geometry' column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep_geo_vars</code></td>
+<td>
+<p>if TRUE, keeps all the variables from the Census
+shapefile obtained by tigris.  Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shift_geo</code></td>
+<td>
+<p>(deprecated) if TRUE, returns geometry with Alaska and Hawaii shifted for thematic
+mapping of the entire US.  As of May 2021, we recommend using <code>tigris::shift_geometry()</code>
+instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>key</code></td>
+<td>
+<p>Your Census API key.
+Obtain one at <a href="https://api.census.gov/data/key_signup.html">https://api.census.gov/data/key_signup.html</a>.  Can be stored
+in your .Renviron with <code>census_api_key("YOUR KEY", install = TRUE)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show_call</code></td>
+<td>
+<p>if TRUE, display call made to Census API. This can be very useful
+in debugging and determining if error messages returned are
+due to tidycensus or the Census API. Copy to the API call into
+a browser and see what is returned by the API directly. Defaults to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other keyword arguments</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>get_estimates()</code> requests data from the Population Estimates API for years 2019 and earlier; however the Population Estimates are no longer supported on the API as of 2020.  For recent years, <code>get_estimates()</code> reads a flat file from the Census website and parses it.  This means that arguments and output for 2020 and later datasets may differ slightly from datasets acquired for 2019 and earlier.
+</p>
+<p>As of April 2022, variables available for 2020 and later datasets are as follows: ESTIMATESBASE, POPESTIMATE, NPOPCHG, BIRTHS, DEATHS, NATURALCHG, INTERNATIONALMIG, DOMESTICMIG, NETMIG, RESIDUAL, GQESTIMATESBASE, GQESTIMATES, RBIRTH, RDEATH, RNATURALCHG, RINTERNATIONALMIG, RDOMESTICMIG, and RNETMIG.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tibble, or sf tibble, of population estimates data
+</p>
+
+
+<h3>See Also</h3>
+
+<p><a href="https://www.census.gov/programs-surveys/popest/about.html">https://www.census.gov/programs-surveys/popest/about.html</a>
+</p>
+
+
+</div>

@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optim_adabelief</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Adabelief optimizer</h2>
+
+<h3>Description</h3>
+
+<p>R implementation of the adabelief optimizer proposed
+by Zhuang et al (2020). We used the pytorch implementation
+developed by the authors which is available at
+https://github.com/jettify/pytorch-optimizer.
+Thanks to Nikolay Novik of his work on python optimizers.
+</p>
+<p>The original implementation is licensed using the Apache-2.0 software license.
+This implementation is also licensed using Apache-2.0 license.
+</p>
+<p>From the abstract by the paper by Zhuang et al (2021):
+We propose Adabelief to simultaneously achieve three goals:
+fast convergence as in adaptive methods, good generalization as in SGD,
+and training stability. The intuition for AdaBelief is to adapt
+the stepsize according to the "belief" in the current gradient direction.
+Viewing the exponential moving average of the noisy gradient
+as the prediction of the gradient at the next time step,
+if the observed gradient greatly deviates from the prediction,
+we distrust the current observation and take a small step;
+if the observed gradient is close to the prediction,
+we trust it and take a large step.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optim_adabelief(
+  params,
+  lr = 0.001,
+  betas = c(0.9, 0.999),
+  eps = 1e-08,
+  weight_decay = 1e-06,
+  weight_decouple = TRUE,
+  fixed_decay = FALSE,
+  rectify = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>params</code></td>
+<td>
+<p>List of parameters to optimize.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>Learning rate (default: 1e-3)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>betas</code></td>
+<td>
+<p>Coefficients for computing running averages
+of gradient and its square (default: (0.9, 0.999))</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>Term added to the denominator to improve numerical
+stability (default: 1e-16)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decay</code></td>
+<td>
+<p>Weight decay (L2 penalty) (default: 0)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weight_decouple</code></td>
+<td>
+<p>Use decoupled weight decay as is done in AdamW?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed_decay</code></td>
+<td>
+<p>This is used when weight_decouple is set as True.
+When fixed_decay == True, weight decay is
+W_new = W_old - W_old * decay.
+When fixed_decay == False, the weight decay is
+W_new = W_old - W_old * decay * learning_rate.
+In this case, weight decay decreases with learning rate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rectify</code></td>
+<td>
+<p>Perform the rectified update similar to RAdam?</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A torch optimizer object implementing the <code>step</code> method.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Gilberto Camara, <a href="mailto:gilberto.camara@inpe.br">gilberto.camara@inpe.br</a>
+</p>
+<p>Rolf Simoes, <a href="mailto:rolf.simoes@inpe.br">rolf.simoes@inpe.br</a>
+</p>
+<p>Felipe Souza, <a href="mailto:lipecaso@gmail.com">lipecaso@gmail.com</a>
+</p>
+<p>Alber Sanchez, <a href="mailto:alber.ipia@inpe.br">alber.ipia@inpe.br</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>Juntang Zhuang, Tommy Tang, Yifan Ding, Sekhar Tatikonda,
+Nicha Dvornek, Xenophon Papademetris, James S. Duncan.
+"Adabelief Optimizer: Adapting Stepsizes by the Belief in Observed Gradients",
+34th Conference on Neural Information Processing Systems (NeurIPS 2020),
+Vancouver, Canada.
+https://arxiv.org/abs/2010.07468
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch::torch_is_installed()) {
+# function to demonstrate optimization
+beale &lt;- function(x, y) {
+    log((1.5 - x + x * y)^2 + (2.25 - x - x * y^2)^2 + (2.625 - x + x * y^3)^2)
+ }
+# define optimizer
+optim &lt;- torchopt::optim_adabelief
+# define hyperparams
+opt_hparams &lt;- list(lr = 0.01)
+
+# starting point
+x0 &lt;- 3
+y0 &lt;- 3
+# create tensor
+x &lt;- torch::torch_tensor(x0, requires_grad = TRUE)
+y &lt;- torch::torch_tensor(y0, requires_grad = TRUE)
+# instantiate optimizer
+optim &lt;- do.call(optim, c(list(params = list(x, y)), opt_hparams))
+# run optimizer
+steps &lt;- 400
+x_steps &lt;- numeric(steps)
+y_steps &lt;- numeric(steps)
+for (i in seq_len(steps)) {
+    x_steps[i] &lt;- as.numeric(x)
+    y_steps[i] &lt;- as.numeric(y)
+    optim$zero_grad()
+    z &lt;- beale(x, y)
+    z$backward()
+    optim$step()
+}
+print(paste0("starting value = ", beale(x0, y0)))
+print(paste0("final value = ", beale(x_steps[steps], y_steps[steps])))
+}
+</code></pre>
+
+
+</div>

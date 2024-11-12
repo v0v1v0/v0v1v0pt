@@ -1,0 +1,195 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter_collinear</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Filter to retain only variables that have low collinearity</h2>
+
+<h3>Description</h3>
+
+<p>This method finds a subset of variables that have low collinearity. It provides
+three methods: <code>cor_caret</code>, a stepwise approach to remove variables with a pairwise correlation
+above a given cutoff, choosing the variable with the greatest mean correlation (based on the algorithm in <code>caret::findCorrelation</code>);
+<code>vif_step</code>, a stepwise approach to remove variables with an variance inflation factor
+above a given cutoff (based on the algorithm in <code>usdm::vifstep</code>), and <code>vif_cor</code>, a stepwise
+approach that, at each step, find the pair of variables with the highest correlation above the cutoff and removes the
+one with the largest vif.
+such that all have a correlation
+below a certain cutoff. There are methods for <code>terra::SpatRaster</code>,
+<code>data.frame</code> and <code>matrix</code>. For <code>terra::SpatRaster</code> and <code>data.frame</code>, only numeric variables will be
+considered.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">filter_collinear(
+  x,
+  cutoff = NULL,
+  verbose = FALSE,
+  names = TRUE,
+  to_keep = NULL,
+  method = "cor_caret",
+  cor_type = "pearson",
+  max_cells = Inf,
+  ...
+)
+
+## Default S3 method:
+filter_collinear(
+  x,
+  cutoff = NULL,
+  verbose = FALSE,
+  names = TRUE,
+  to_keep = NULL,
+  method = "cor_caret",
+  cor_type = "pearson",
+  max_cells = Inf,
+  ...
+)
+
+## S3 method for class 'SpatRaster'
+filter_collinear(
+  x,
+  cutoff = NULL,
+  verbose = FALSE,
+  names = TRUE,
+  to_keep = NULL,
+  method = "cor_caret",
+  cor_type = "pearson",
+  max_cells = Inf,
+  exhaustive = FALSE,
+  ...
+)
+
+## S3 method for class 'data.frame'
+filter_collinear(
+  x,
+  cutoff = NULL,
+  verbose = FALSE,
+  names = TRUE,
+  to_keep = NULL,
+  method = "cor_caret",
+  cor_type = "pearson",
+  max_cells = Inf,
+  ...
+)
+
+## S3 method for class 'matrix'
+filter_collinear(
+  x,
+  cutoff = NULL,
+  verbose = FALSE,
+  names = TRUE,
+  to_keep = NULL,
+  method = "cor_caret",
+  cor_type = "pearson",
+  max_cells = Inf,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>terra::SpatRaster</code> object, a data.frame (with only numeric
+variables)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cutoff</code></td>
+<td>
+<p>A numeric value used as a threshold to remove variables.
+For, "cor_caret" and "vif_cor",
+it is the pair-wise absolute correlation cutoff, which defaults to 0.7. For
+"vif_step", it is the variable inflation factor, which defaults to 10</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A boolean whether additional information should be provided
+on the screen</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>names</code></td>
+<td>
+<p>a logical; should the column names be returned <code>TRUE</code> or
+the column index <code>FALSE</code>)?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>to_keep</code></td>
+<td>
+<p>A vector of variable names that we want to force in the set
+(note that the function will return an error if the correlation among any of
+those variables is higher than the cutoff).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>character. One of "cor_caret", "vif_cor" or "vif_step".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cor_type</code></td>
+<td>
+<p>character. For methods that use correlation, which type
+of correlation: "pearson", "kendall", or "spearman". Defaults to "pearson"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_cells</code></td>
+<td>
+<p>positive integer. The maximum number of cells to be used. If this is smaller than ncell(x), a regular sample of x is used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments specific to a given object type</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>exhaustive</code></td>
+<td>
+<p>boolean. Used only for <code>terra::SpatRaster</code> when downsampling
+to <code>max_cells</code>, if we require the <code>exhaustive</code> approach in <code>terra::spatSample()</code>.
+This is only needed for rasters that are very sparse and not too large, see the help
+page of <code>terra::spatSample()</code> for details.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A vector of names of columns that are below the correlation threshold
+(when <code>names = TRUE</code>), otherwise a vector of indices. Note that the indices
+are only for numeric variables (i.e. if factors are present, the indices do
+not take them into account).
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>for <code>cor_caret</code>: Original R code by Dong Li, modified by Max Kuhn
+and Andrea Manica; for <code>vif_step</code> and <code>vif_cor</code>, original algorithm by Babak
+Naimi, rewritten by Andrea Manica for <code>tidysdm</code>
+</p>
+
+
+<h3>References</h3>
+
+<p>Naimi, B., Hamm, N.A.S., Groen, T.A., Skidmore, A.K., and
+Toxopeus, A.G. 2014. Where is positional uncertainty a problem for species
+distribution modelling?, Ecography 37 (2): 191-203.
+</p>
+
+
+</div>

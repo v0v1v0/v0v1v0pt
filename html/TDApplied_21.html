@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>predict_diagram_kkmeans</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Predict the cluster labels for new persistence diagrams using a pre-computed clustering.</h2>
+
+<h3>Description</h3>
+
+<p>Returns the nearest (highest kernel value) <code>kkmeans</code> cluster center label for new persistence diagrams.
+This allows for reusing old cluster models for new tasks, or to perform cross validation.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">predict_diagram_kkmeans(
+  new_diagrams,
+  K = NULL,
+  clustering,
+  num_workers = parallelly::availableCores(omit = 1)
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>new_diagrams</code></td>
+<td>
+<p>a list of persistence diagrams which are either the output of a persistent homology calculation like ripsDiag/<code>calculate_homology</code>/<code>PyH</code>, or <code>diagram_to_df</code>. Only one of 'new_diagrams' and 'K' need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+<p>an optional precomputed cross Gram matrix of the new diagrams and the diagrams used in 'clustering', default NULL. If not NULL then 'new_diagrams' does not need to be supplied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clustering</code></td>
+<td>
+<p>the output of a <code>diagram_kkmeans</code> function call, of class 'diagram_kkmeans'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_workers</code></td>
+<td>
+<p>the number of cores used for parallel computation, default is one less than the number of cores on the machine.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a vector of the predicted cluster labels for the new diagrams.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Shael Brown - <a href="mailto:shaelebrown@gmail.com">shaelebrown@gmail.com</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>diagram_kkmeans</code> for clustering persistence diagrams.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(require("TDAstats"))
+{
+  # create two diagrams
+  D1 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D2 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g &lt;- list(D1,D1,D2,D2)
+
+  # calculate kmeans clusters with centers = 2, and sigma = t = 2 in dimension 0
+  clust &lt;- diagram_kkmeans(diagrams = g,centers = 2,dim = 0,t = 2,sigma = 2,num_workers = 2)
+
+  # create two new diagrams
+  D3 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  D4 &lt;- TDAstats::calculate_homology(TDAstats::circle2d[sample(1:100,20),],
+                      dim = 1,threshold = 2)
+  g_new &lt;- list(D3,D4)
+
+  # predict cluster labels
+  predict_diagram_kkmeans(new_diagrams = g_new,clustering = clust,num_workers = 2)
+  
+  # predict cluster labels with precomputed Gram matrix, gives same result but
+  # much faster
+  K &lt;- gram_matrix(diagrams = g_new,other_diagrams = clust$diagrams,
+                   dim = clust$dim,t = clust$t,sigma = clust$sigma,
+                   num_workers = 2)
+  predict_diagram_kkmeans(K = K,clustering = clust)
+  
+}
+</code></pre>
+
+
+</div>

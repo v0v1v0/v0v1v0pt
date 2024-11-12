@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfd_generalized_pareto</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The Generalized Pareto distribution.</h2>
+
+<h3>Description</h3>
+
+<p>The Generalized Pareto distributions are a family of continuous distributions
+on the reals. Special cases include <code>Exponential</code> (when <code>loc = 0</code>,
+<code>concentration = 0</code>), <code>Pareto</code> (when <code>concentration &gt; 0</code>,
+<code>loc = scale / concentration</code>), and <code>Uniform</code> (when <code>concentration = -1</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfd_generalized_pareto(
+  loc,
+  scale,
+  concentration,
+  validate_args = FALSE,
+  allow_nan_stats = TRUE,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>loc</code></td>
+<td>
+<p>The location / shift of the distribution. GeneralizedPareto is a
+location-scale distribution. This parameter lower bounds the
+distribution's support. Must broadcast with <code>scale</code>, <code>concentration</code>.
+Floating point <code>Tensor</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>The scale of the distribution. GeneralizedPareto is a
+location-scale distribution, so doubling the <code>scale</code> doubles a sample
+and halves the density. Strictly positive floating point <code>Tensor</code>. Must
+broadcast with <code>loc</code>, <code>concentration</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>concentration</code></td>
+<td>
+<p>The shape parameter of the distribution. The larger the
+magnitude, the more the distribution concentrates near <code>loc</code> (for
+<code>concentration &gt;= 0</code>) or near <code>loc - (scale/concentration)</code> (for
+<code>concentration &lt; 0</code>). Floating point <code>Tensor</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>validate_args</code></td>
+<td>
+<p>Logical, default FALSE. When TRUE distribution parameters are checked
+for validity despite possibly degrading runtime performance. When FALSE invalid inputs may
+silently render incorrect outputs. Default value: FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allow_nan_stats</code></td>
+<td>
+<p>Logical, default TRUE. When TRUE, statistics (e.g., mean, mode, variance)
+use the value NaN to indicate the result is undefined. When FALSE, an exception is raised if
+one or more of the statistic's batch members are undefined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>name prefixed to Ops created by this class.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This distribution is often used to model the tails of other distributions.
+As a member of the location-scale family,
+<code>X ~ GeneralizedPareto(loc=loc, scale=scale, concentration=conc)</code> maps to
+<code>Y ~ GeneralizedPareto(loc=0, scale=1, concentration=conc)</code> via
+<code>Y = (X - loc) / scale</code>.
+</p>
+<p>For positive concentrations, the distribution is equivalent to a hierarchical
+Exponential-Gamma model with <code>X|rate ~ Exponential(rate)</code> and
+<code>rate ~ Gamma(concentration=1 / concentration, scale=scale / concentration)</code>.
+In the following, <code>samps1</code> and <code>samps2</code> are identically distributed:
+</p>
+<div class="sourceCode"><pre>genp &lt;- tfd_generalized_pareto(loc = 0, scale = scale, concentration = conc)
+samps1 &lt;- genp %&gt;% tfd_sample(1000)
+jd &lt;- tfd_joint_distribution_named(
+  list(
+    rate =  tfd_gamma(1 / genp$concentration, genp$scale / genp$concentration),
+    x = function(rate) tfd_exponential(rate)))
+samps2 &lt;- jd %&gt;% tfd_sample(1000) %&gt;% .$x
+</pre></div>
+<p>The support of the distribution is always lower bounded by <code>loc</code>. When
+<code>concentration &lt; 0</code>, the support is also upper bounded by
+<code>loc + scale / abs(concentration)</code>.
+</p>
+<p>Mathematical Details
+</p>
+<p>The probability density function (pdf) is,
+</p>
+<div class="sourceCode"><pre>pdf(x; mu, sigma, shp, x &gt; mu) =   (1 + shp * (x - mu) / sigma)**(-1 / shp - 1) / sigma
+</pre></div>
+<p>where:
+</p>
+
+<ul>
+<li> <p><code>concentration = shp</code>, any real value,
+</p>
+</li>
+<li> <p><code>scale = sigma</code>, <code>sigma &gt; 0</code>,
+</p>
+</li>
+<li> <p><code>loc = mu</code>.
+</p>
+</li>
+</ul>
+<p>The cumulative density function (cdf) is,
+</p>
+<div class="sourceCode"><pre>cdf(x; mu, sigma, shp, x &gt; mu) = 1 - (1 + shp * (x - mu) / sigma)**(-1 / shp)
+</pre></div>
+<p>Distribution parameters are automatically broadcast in all functions; see
+examples for details.
+Samples of this distribution are reparameterized (pathwise differentiable).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a distribution instance.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>For usage examples see e.g. <code>tfd_sample()</code>, <code>tfd_log_prob()</code>, <code>tfd_mean()</code>.
+</p>
+
+
+</div>

@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optimizer_swa</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Stochastic Weight Averaging</h2>
+
+<h3>Description</h3>
+
+<p>Stochastic Weight Averaging
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optimizer_swa(
+  optimizer,
+  start_averaging = 0,
+  average_period = 10,
+  name = "SWA",
+  sequential_update = TRUE,
+  clipnorm = NULL,
+  clipvalue = NULL,
+  decay = NULL,
+  lr = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>optimizer</code></td>
+<td>
+<p>The original optimizer that will be used to compute and apply the gradients.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start_averaging</code></td>
+<td>
+<p>An integer. Threshold to start averaging using SWA. Averaging only occurs
+at start_averaging iters, must be &gt;= 0. If start_averaging = m, the first snapshot will be taken
+after the mth application of gradients (where the first iteration is iteration 0).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>average_period</code></td>
+<td>
+<p>An integer. The synchronization period of SWA. The averaging occurs every
+average_period steps. Averaging period needs to be &gt;= 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>Optional name for the operations created when applying gradients. Defaults to 'SWA'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sequential_update</code></td>
+<td>
+<p>Bool. If FALSE, will compute the moving average at the same time as the
+model is updated, potentially doing benign data races. If True, will update the moving average
+after gradient updates</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clipnorm</code></td>
+<td>
+<p>is clip gradients by norm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clipvalue</code></td>
+<td>
+<p>is clip gradients by value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decay</code></td>
+<td>
+<p>is included for backward compatibility to allow time inverse decay of learning rate.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lr</code></td>
+<td>
+<p>is included for backward compatibility, recommended to use learning_rate instead.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The Stochastic Weight Averaging mechanism was proposed by Pavel Izmailov et. al
+in the paper [Averaging Weights Leads to Wider Optima and Better Generalization](https://arxiv.org/abs/1803.05407). The
+optimizer implements averaging of multiple points along the trajectory of SGD. The optimizer
+expects an inner optimizer which will be used to apply the gradients to the variables and
+itself computes a running average of the variables every k steps (which generally corresponds
+to the end of a cycle when a cyclic learning rate is employed). We also allow the specification
+of the number of steps averaging should first happen after. Let's say, we want averaging
+to happen every k steps after the first m steps. After step m we'd take a snapshot of
+the variables and then average the weights appropriately at step m + k, m + 2k and so on.
+The assign_average_vars function can be called at the end of training to obtain the
+averaged_weights from the optimizer.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Optimizer for use with 'keras::compile()'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Not run: 
+opt = tf$keras$optimizers$SGD(learning_rate)
+opt = optimizer_swa(opt, start_averaging=m, average_period=k)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

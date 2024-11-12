@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>jul</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2> Julian Date Objects </h2>
+
+<h3>Description</h3>
+
+<p>The function <code>jul</code> is used to create <code>jul</code> (julian date)
+objects, which are useful for date calculations.
+</p>
+<p><code>as.jul</code> and <code>asJul</code> coerce an object to class "jul", the
+difference being that <code>as.jul</code> calls the constructor <code>jul</code>,
+while <code>asJul</code> simply forces the class of its argument to be "jul"
+without any checking as to whether or not it makes sense to do so.
+</p>
+<p><code>is.jul</code> tests whether an object inherits from class "jul".
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">jul(x, ...)
+## S3 method for class 'Date'
+jul(x, ...)
+## S3 method for class 'IDate'
+jul(x, ...)
+## S3 method for class 'ti'
+jul(x, offset = 1, ...)
+## S3 method for class 'yearmon'
+jul(x, offset = 0, ...)
+## S3 method for class 'yearqtr'
+jul(x, offset = 0, ...)
+## Default S3 method:
+jul(x, ...)
+as.jul(x, ...)
+asJul(x)
+is.jul(x)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>object to be tested (<code>is.jul</code>) or converted into a <code>jul</code>
+object.  As described in the details below, the constructor function
+<code>jul</code> can deal with several different kinds of <code>x</code>. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>other args to be passed to the method called by the generic
+function.  <code>jul.default</code> may pass these args to <code>as.Date</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+
+<p>For <code>jul.ti</code>, a number in the range [0,1] telling where in the
+period represented by <code>x</code> to find the day.  0 returns the first
+day of the period, while the default value 1 returns the last day of
+the period.  For example, if <code>x</code> has <code>tif</code> = "wmonday" so
+that <code>x</code> represents a week ending on Monday, than any
+<code>offset</code> in the range [0, 1/7] will return the Tuesday of that
+week, while <code>offset</code> in the range (1/7, 2/7] will return the
+Wednesday of that week, <code>offset</code> in the range (6/7, 1] will
+return the Monday that ends the week, and so on.
+</p>
+<p><code>jul.yearmon</code> and <code>jul.yearqtr</code> work on <code>yearmon</code> and
+<code>yearqtr</code> objects from <span class="pkg">zoo</span>.  Note that the default
+<code>offset</code> for these functions is 0, not 1, as that is how the
+other index-to-date functions in <span class="pkg">zoo</span> work, i.e, if <code>ym</code>
+is a <code>yearmon</code> object, then <code>as.Date(ym)</code> and
+<code>as.jul(ym)</code> should give the same date.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>jul</code>'s for any pair of valid dates differ by the number of
+days between them.  <span style="font-family: Courier New, Courier; color: #666666;"><b>R</b></span>'s <code>Date</code> class defines a Date as a number
+of days elapsed since January 1, 1970, but <code>jul</code> uses the
+encoding from the <em>Numerical Recipes</em> book, which has Jan 1, 1970
+= 2440588, and the code for converting between ymd and <code>jul</code>
+representations is a straightforward port of the code from that tome.
+</p>
+<p>Adding an integer to, or subtracting an integer from a <code>jul</code>
+results in another <code>jul</code>, and one <code>jul</code> can be subtracted
+from another.  Two <code>jul</code>'s can also be compared with the
+operators (<code>==, !=, &lt;. &gt;, &lt;=, &gt;=</code>).
+</p>
+<p>The <code>jul</code> class implements methods for a number of generic
+functions, including <code>"["</code>, <code>as.Date</code>, <code>as.POSIXct</code>,
+<code>as.POSIXlt</code>, <code>c</code>, <code>format</code>, <code>max</code>,
+<code>min</code>, <code>print</code>, <code>rep</code>, <code>seq</code>, <code>ti</code>,
+<code>time</code>, <code>ymd</code>.
+</p>
+<p><code>jul</code> is a generic function with specialized methods to handle
+<code>Date</code> and <code>ti</code> objects. A recent addition is a method to
+handle <code>IDate</code> objects as defined in the <span class="pkg">data.table</span>
+package. 
+</p>
+<p>The default method (<code>jul.default</code>) deals with character <code>x</code> by
+calling <code>as.Date</code> on it.  Otherwise, it proceeds as follows:
+</p>
+<p>If <code>x</code> is numeric, <code>isYmd</code> is used to see if it could be
+yyyymmdd date, then <code>isTime</code> is called to see if <code>x</code> could
+be a decimal time (a number between 1799 and 2200). If all else fails,
+<code>as.Date(x)</code> is called to attempt to create a <code>Date</code> object
+that can then be used to construct a <code>jul</code>.  
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>is.jul</code> returns <code>TRUE</code> or <code>FALSE</code>.
+</p>
+<p><code>as.jul</code> and <code>asJul</code> return objects with class "jul".
+</p>
+<p><code>jul</code> constructs a <code>jul</code> object like <code>x</code>.
+</p>
+<p><code>jul</code> with no arguments returns the <code>jul</code> for the current day.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The return value from <code>asJul</code> is not guaranteed to be a valid
+<code>jul</code> object.  For example, <code>asJul("a")</code> will not throw an
+error, and it will return the string "a" with a class attribute "jul",
+but that's not a valid julian date. 
+</p>
+<p>The Julian calendar adopted by the Roman Republic was not
+accurate with respect to the rotational position of the Earth around
+the sun.  By 1582 it had drifted ten days off.  To fix this, Pope Gregory XIII
+decreed that the day after October 4, 1582 would be October 15, and
+that thereafter, leap years would be omitted in years divisible by 100
+but not divisible by 400.  This modification became known as the
+Gregorian calendar.  England and the colonies did not switch over
+until 1752, by which time the drift had worsened by another day, so
+that England had to skip over 11 days, rather than 10.
+</p>
+<p>The algorithms used in <code>jul2ymd</code> and <code>ymd2jul</code> cut over at
+the end of October 1582.
+</p>
+
+
+<h3>References</h3>
+
+<p>Press, W. H., Teukolsky, S. A., Vetterling, W. T., and Flannery,
+B. P. (1992).
+<em>Numerical Recipes: The Art of Scientific Computing (Second
+Edition)</em>.
+Cambridge University Press.
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>jul</code>, <code>ymd</code>, <code>ti</code>, <code>as.Date</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">dec31 &lt;- jul(20041231)
+jan30 &lt;- jul("2005-1-30")
+jan30 - dec31              ## 30
+feb28 &lt;- jan30 + 29
+jul()                      ## current date
+</code></pre>
+
+
+</div>

@@ -1,0 +1,145 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>pmvn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Quasi-Monte Carlo method for multivariate normal probabilities</h2>
+
+<h3>Description</h3>
+
+<p>Compute multivariate normal probabilities with the dense-matrix based Quasi-Monte Carlo method and the tile-low-rank-matrix based Quasi-Monte Carlo method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">pmvn(lower = -Inf, upper = Inf, mean = 0, sigma = NULL, 
+uselog2 = FALSE, algorithm = GenzBretz(), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lower</code></td>
+<td>
+<p>lower integration limits, a numeric vector of length n</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>upper</code></td>
+<td>
+<p>upper integration limits, a numeric vector of length n</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mean</code></td>
+<td>
+<p>the mean parameter, a numeric vector of length n</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>the covariance matrix of dimension n</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>uselog2</code></td>
+<td>
+<p>whether return the result as the logarithm to the base 2</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>algorithm</code></td>
+<td>
+<p>an object of class <code>GenzBretz</code> or
+<code>TLRQMC</code> defining the hyper parameters of this algorithm</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional parameters used to construct 'sigma' when it is not given:
+</p>
+
+<ul>
+<li>
+<p>geom a matrix of dimension n-by-2, specifying n spatial locations in the 2D unit square
+</p>
+</li>
+<li>
+<p>kernelType the name of the covariance kernel, a string. Currently, only the Matern covariance function, e.g., "matern", is supported. Not case-sensitive. It should be given when 'sigma' is not given
+</p>
+</li>
+<li>
+<p>para the parameter for the covariance kernel, a numeric vector. When 'type' is "matern", the length of 'para' should be 4, representing the scale, range, smoothness, and nugget parameters of the covariance function. It should be given when 'sigma' is not given
+</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>When 'algorithm' is of the class 'GenzBretz', the Quasi-Monte Carlo sampling described in Genz, A. (1992) is used.
+When 'algorithm' is of the class 'TLRQMC', the Quasi-Monte Carlo sampling with the tile-low-rank representation of the covariance matrix, described in Cao et al. (2020), is used.
+When 'sigma', is given, 'geom', 'kernelType', and 'para' are not used. Otherwise, a covariance matrix is created with the information from 'geom', 'kernelType', and 'para'.
+</p>
+
+
+<h3>Value</h3>
+
+<p>When 'uselog2' is set FALSE, the function returns the estimated probability with one attribute of the estimation error. 
+When 'uselog2' is set TRUE, the function only returns the estimated log-probability to the base 2. This is useful when the estimated probability is smaller than the machine precision.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Jian Cao, Marc Genton, David Keyes, George Turkiyyah</p>
+
+
+<h3>References</h3>
+
+<p>Genz, A. (1992), "Numerical computation of multivariate
+normal probabilities," Journal of Computational and
+Graphical Statistics, 1, 141-149.
+Cao, J., Genton, M. G., Keyes, D. E., &amp; Turkiyyah, G. M. (2022), "tlrmvnmvt: Computing High-Dimensional Multivariate Normal and Student-t Probabilities with Low-Rank Methods in R," Journal of Statistical Software, 101.4, 1-25.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">  n = 225
+  set.seed(0)
+  a = rep(-10, n)
+  b = rnorm(n, 3, 2)
+  m = 15
+  epsl = 1e-4
+  vec1 = 1 : m
+  vec2 = rep(1, m)
+  geom = cbind(kronecker(vec1, vec2), kronecker(vec2, vec1))
+  geom = geom / m
+  beta = 0.3
+  idx = zorder(geom)
+  geom = geom[idx, ]
+  a = a[idx]
+  b = b[idx]
+  distM = as.matrix(dist(geom))
+  covM = exp(-distM / beta)
+  pmvn(lower = a, upper = b, mean = 2, sigma = covM, uselog2 = FALSE, 
+       algorithm = GenzBretz(N = 521))
+  pmvn(lower = a, upper = b, mean = 2, uselog2 = TRUE, geom = geom, 
+       kernelType = "matern", para = c(1.0, 0.3, 0.5, 0.0))
+  pmvn(lower = a, upper = b, mean = 2, sigma = covM, uselog2 = FALSE, 
+       algorithm = TLRQMC(N = 521, m = m, epsl = epsl))
+  pmvn(lower = a, upper = b, mean = 2, uselog2 = TRUE, geom = geom, 
+       algorithm = TLRQMC(N = 521, m = m, epsl = epsl),
+       kernelType = "matern", para = c(1.0, 0.3, 0.5, 0.0))
+</code></pre>
+
+
+</div>

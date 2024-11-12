@@ -1,0 +1,192 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>proportion-expectations</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Expectations: proportions</h2>
+
+<h3>Description</h3>
+
+<p>These test the proportion of data in a data frame satisfying some condition.
+The generic functions, <code>expect_prop_lte()</code> and <code>expect_prop_gte()</code>, can be
+used with any arbitrary function. The <code style="white-space: pre;">⁠chk_*()⁠</code> functions, like
+<code>chk_values()</code>, are useful in this regard.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">expect_prop_lte(
+  var,
+  func,
+  prop,
+  flt = TRUE,
+  data = get_testdata(),
+  args = list(),
+  func_desc = NULL
+)
+
+expect_prop_gte(
+  var,
+  func,
+  prop,
+  flt = TRUE,
+  data = get_testdata(),
+  args = list(),
+  func_desc = NULL
+)
+
+expect_prop_nmiss(
+  var,
+  prop,
+  miss = getOption("testdat.miss"),
+  flt = TRUE,
+  data = get_testdata()
+)
+
+expect_prop_values(var, prop, ..., flt = TRUE, data = get_testdata())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>var</code></td>
+<td>
+<p>An unquoted column name to test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>func</code></td>
+<td>
+<p>A function to use for testing that takes a vector as the first
+argument and returns a logical vector of the same length showing whether an
+element passed or failed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prop</code></td>
+<td>
+<p>The proportion of the data frame expected to satisfy the
+condition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flt</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; A filter specifying
+a subset of the data frame to test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame to test. The global test data is used
+by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>args</code></td>
+<td>
+<p>A named list of arguments to pass to <code>func</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>func_desc</code></td>
+<td>
+<p>A human friendly description of <code>func</code> to use in the
+expectation failure message.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>miss</code></td>
+<td>
+<p>A vector of values to be treated as missing. The
+testdat.miss option is used by default.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Vectors of valid values.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given the use of quasi-quotation within these functions, to make a new
+functions using one of the generics such as <code>expect_prop_gte()</code> one must
+defuse the <code>var</code> argument using the embracing operator <code>{{ }}</code>. See the
+examples sections for an example.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code style="white-space: pre;">⁠expect_*()⁠</code> functions are mainly called for their side effects. The
+expectation signals its result (e.g. "success", "failure"), which is logged
+by the current test reporter. In a non-testing
+context the expectation will raise an error with class
+<code>expectation_failure</code> if it fails.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code style="white-space: pre;">⁠chk_*()⁠</code> functions such as <code>chk_values()</code>
+</p>
+<p>Other data expectations: 
+<code>conditional-expectations</code>,
+<code>datacomp-expectations</code>,
+<code>date-expectations</code>,
+<code>exclusivity-expectations</code>,
+<code>expect_depends()</code>,
+<code>generic-expectations</code>,
+<code>label-expectations</code>,
+<code>pattern-expectations</code>,
+<code>text-expectations</code>,
+<code>uniqueness-expectations</code>,
+<code>value-expectations</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">sales &lt;- data.frame(
+  sale_id = 1:5,
+  date = c("20200101", "20200101", "20200102", "20200103", "2020003"),
+  sale_price = c(10, 20, 30, 40, -1),
+  book_title = c(
+    "Phenomenology of Spirit",
+    NA,
+    "Critique of Practical Reason",
+    "Spirit of Trust",
+    "Empiricism and the Philosophy of Mind"
+  ),
+  stringsAsFactors = FALSE
+)
+
+# Create a custom expectation
+expect_prop_length &lt;- function(var, len, prop, data) {
+  expect_prop_gte(
+    var = {{var}}, # Notice the use of the embracing operator
+    func = chk_max_length,
+    prop = prop,
+    data = data,
+    args = list(len = len),
+    func_desc = "length_check"
+  )
+}
+
+# Use it to check that dates are mostly &lt;= 8 char wide
+expect_prop_length(date, 8, 0.9, sales)
+
+# Check price values mostly between 0 and 100
+try(expect_prop_values(sale_price, 0.9, 1:100, data = sales))
+
+</code></pre>
+
+
+</div>

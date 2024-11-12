@@ -1,0 +1,126 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>combine_overlays</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Combine multiple image overlays into a single file</h2>
+
+<h3>Description</h3>
+
+<p>This function combines any number of images into a single file, which may
+then be further processed as an image or transformed into an image overlay.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">combine_overlays(
+  ...,
+  output_file = tempfile(fileext = ".png"),
+  transparency = 0
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>File paths for images to be combined. Note that combining TIFF
+images requires the <code>tiff</code> package be installed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output_file</code></td>
+<td>
+<p>The path to save the resulting image to. Can
+be any format accepted by magick::image_read. Optionally, can be set to
+<code>NULL</code>, in which case this function will return the image as a <code>magick</code>
+object instead of writing to disk.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transparency</code></td>
+<td>
+<p>A value indicating how much transparency should be added
+to each image. If less than 1, interpreted as a proportion (so a value of
+0.1 results in each image becoming 10% more transparent); if between 1 and
+100, interpreted as a percentage (so a value of 10 results in each image
+becoming 10% more transparent.) A value of 0 is equivalent to no
+additional transparency.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>If <code>output_file</code> is not null, <code>output_file</code>, invisibly. If
+<code>output_file</code> is null, a <code>magick</code> image object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other data manipulation functions: 
+<code>georeference_overlay()</code>,
+<code>merge_rasters()</code>,
+<code>raster_to_raw_tiles()</code>,
+<code>vector_to_overlay()</code>
+</p>
+<p>Other overlay creation functions: 
+<code>georeference_overlay()</code>,
+<code>vector_to_overlay()</code>
+</p>
+<p>Other visualization functions: 
+<code>geom_spatial_rgb()</code>,
+<code>raster_to_raw_tiles()</code>,
+<code>vector_to_overlay()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+# Generate points and download orthoimagery
+mt_elbert_points &lt;- data.frame(
+  lat = runif(100, min = 39.11144, max = 39.12416),
+  lng = runif(100, min = -106.4534, max = -106.437)
+)
+
+mt_elbert_sf &lt;- sf::st_as_sf(mt_elbert_points, coords = c("lng", "lat"))
+sf::st_crs(mt_elbert_sf) &lt;- sf::st_crs(4326)
+
+output_files &lt;- get_tiles(
+  mt_elbert_sf,
+  output_prefix = tempfile(),
+  services = c("ortho")
+)
+
+# Merge orthoimagery into a single file
+ortho_merged &lt;- merge_rasters(
+  input_rasters = output_files[1],
+  output_raster = tempfile(fileext = ".tif")
+)
+
+# Convert our points into an overlay
+mt_elbert_overlay &lt;- vector_to_overlay(mt_elbert_sf,
+  ortho_merged[[1]],
+  size = 15,
+  color = "red",
+  na.rm = TRUE
+)
+
+# Combine the overlay with our orthoimage
+ortho_with_points &lt;- combine_overlays(
+  ortho_merged[[1]],
+  mt_elbert_overlay
+)
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

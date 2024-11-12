@@ -1,0 +1,192 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>est_tlmcov</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate the covariance matrix of TL-moments estimations</h2>
+
+<h3>Description</h3>
+
+<p>Internal function. Use est_cov. Description not done yet.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">est_tlmcov(
+  x,
+  leftrim = 0L,
+  rightrim = 0L,
+  order = 1:3,
+  distr = NULL,
+  lambda.cov = TRUE,
+  ratio.cov = TRUE,
+  ...
+)
+
+## S3 method for class 'numeric'
+est_tlmcov(
+  x,
+  leftrim = 0L,
+  rightrim = 0L,
+  order = 1:3,
+  distr = NULL,
+  lambda.cov = TRUE,
+  ratio.cov = TRUE,
+  ...
+)
+
+## S3 method for class 'matrix'
+est_tlmcov(
+  x,
+  leftrim = 0L,
+  rightrim = 0L,
+  order = 1:3,
+  distr = NULL,
+  lambda.cov = TRUE,
+  ratio.cov = TRUE,
+  reg.weights = NULL,
+  ...
+)
+
+## S3 method for class 'TLMoments'
+est_tlmcov(
+  x,
+  leftrim = attr(x, "leftrim"),
+  rightrim = attr(x, "rightrim"),
+  order = attr(x, "order"),
+  distr = NULL,
+  lambda.cov = TRUE,
+  ratio.cov = TRUE,
+  set.n = NA,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>numeric vector or matrix containing data OR an object of TLMoments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>leftrim, rightrim</code></td>
+<td>
+<p>integer indicating lower and upper trimming parameters, have to be non-negative integers.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>order</code></td>
+<td>
+<p>numeric vector giving the orders that are returned (default is first three L-moments).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distr</code></td>
+<td>
+<p>character of length 1 giving the distribution if parametric assumption should be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda.cov</code></td>
+<td>
+<p>boolean, if TRUE (default) TL-moment estimation covariance matrix is calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ratio.cov</code></td>
+<td>
+<p>boolean, if TRUE (default) TL-moment-ratio estimation covariance matrix is calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>reg.weights</code></td>
+<td>
+<p>numeric vector of weights for regionalized TLMoments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>set.n</code></td>
+<td>
+<p>hypothetical data length n if theoretical values are given.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a list of numeric matrices (if <code>lambda.cov</code> and <code>ratio.cov</code> are TRUE (default)), or a single matrix.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">### Numeric vectors
+x &lt;- rgev(500, loc = 10, scale = 5, shape = .1)
+
+est_tlmcov(x)
+est_tlmcov(x, order = 2:3)
+est_tlmcov(x, rightrim = 1, order = 4:5)
+# cov(t(replicate(10000,
+#   TLMoments(rgev(500, loc = 10, scale = 5, shape = .1))$lambdas)
+# ))
+# cov(t(replicate(10000,
+#   TLMoments(rgev(500, loc = 10, scale = 5, shape = .1))$ratios)
+# ))
+
+est_tlmcov(x, ratio.cov = FALSE)
+est_tlmcov(x, lambda.cov = FALSE)
+
+est_tlmcov(x, distr = "gev")
+
+est_tlmcov(x, leftrim = 0, rightrim = 1)
+# cov(t(replicate(10000,
+#  TLMoments(rgev(500, loc = 10, scale = 5, shape = .1), 0, 1, 3)$lambdas
+# )))
+# cov(t(replicate(10000,
+#  TLMoments(rgev(500, loc = 10, scale = 5, shape = .1), 0, 1, 3)$ratios
+# )))
+
+### Numeric matrices
+x &lt;- matrix(rgev(600), nc = 3)
+
+est_tlmcov(x)
+est_tlmcov(x, order = 3:4)
+# cov(t(replicate(10000,
+#   as.vector(TLMoments(matrix(rgev(600), nc = 3))$lambdas[3:4, ])
+# )))
+# cov(t(replicate(10000,
+#   as.vector(TLMoments(matrix(rgev(600), nc = 3))$ratios[3:4, ])
+# )))
+
+est_tlmcov(x, ratio.cov = FALSE)
+est_tlmcov(x, lambda.cov = FALSE)
+
+TLMoments:::est_tlmcov(x, order = 2:3, distr = "gev")
+# cov(t(replicate(10000,
+#   as.vector(TLMoments(matrix(rgev(600), nc = 3))$lambdas[2:3, ])
+# )))
+# cov(t(replicate(10000,
+#   as.vector(TLMoments(matrix(rgev(600), nc = 3))$ratios[2:3, ])
+# )))
+
+### TLMoments-object (theoretical calculation)
+tlm &lt;- TLMoments(as.parameters(loc = 10, scale = 5, shape = .1, distr = "gev"), 0, 1)
+est_tlmcov(tlm, distr = "gev", set.n = 100)
+est_tlmcov(tlm, distr = "gev", set.n = 100, ratio.cov = FALSE)
+est_tlmcov(tlm, distr = "gev", set.n = 100, lambda.cov = FALSE)
+
+</code></pre>
+
+
+</div>

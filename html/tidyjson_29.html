@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gather_object</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Gather a JSON object into name-value pairs</h2>
+
+<h3>Description</h3>
+
+<p><code>gather_object</code> collapses a JSON object into name-value pairs, creating
+a new column <code>'name'</code> to store the pair names, and storing the
+values in the <code>'JSON'</code> attribute for further tidyjson manipulation.
+All other columns are duplicated as necessary. This allows you to access the
+names of the object pairs just like <code>gather_array</code> lets you
+access the values of an array.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gather_object(.x, column.name = default.column.name)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.x</code></td>
+<td>
+<p>a JSON string or <code>tbl_json</code> object whose JSON attribute
+should always be an object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>column.name</code></td>
+<td>
+<p>the name to give to the column of pair names created</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>gather_object</code> is often followed by <code>enter_object</code> to enter
+into a value that is an object, by <code>append_values</code> to append all
+scalar values as a new column or <code>json_types</code> to determine the
+types of the values.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>tbl_json</code> object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>gather_array</code> to gather a JSON array,
+<code>enter_object</code> to enter into an object,
+<code>gather</code> to gather name-value pairs in a data
+frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Let's start with a very simple example
+json &lt;- '{"name": "bob", "age": 32, "gender": "male"}'
+
+# Check that this is an object
+json %&gt;% json_types
+
+# Gather object and check types
+json %&gt;% gather_object %&gt;% json_types
+
+# Sometimes data is stored in object pair names
+json &lt;- '{"2014": 32, "2015": 56, "2016": 14}'
+
+# Then we can use the column.name argument to change the column name
+json %&gt;% gather_object("year")
+
+# We can also use append_values_number to capture the values, since they are
+# all of the same type
+json %&gt;% gather_object("year") %&gt;% append_values_number("count")
+
+# This can even work with a more complex, nested example
+json &lt;- '{"2015": {"1": 10, "3": 1, "11": 5}, "2016": {"2": 3, "5": 15}}'
+json %&gt;% gather_object("year") %&gt;% gather_object("month") %&gt;%
+  append_values_number("count")
+
+# Most JSON starts out as an object (or an array of objects), and
+# gather_object can be used to inspect the top level (or 2nd level) objects
+library(dplyr)
+worldbank %&gt;% gather_object %&gt;% json_types %&gt;% count(name, type)
+</code></pre>
+
+
+</div>

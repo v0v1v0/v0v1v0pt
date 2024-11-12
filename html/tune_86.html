@@ -1,0 +1,102 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter_parameters</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Remove some tuning parameter results</h2>
+
+<h3>Description</h3>
+
+<p>For objects produced by the <code style="white-space: pre;">⁠tune_*()⁠</code> functions, there may only be a subset
+of tuning parameter combinations of interest. For large data sets, it might be
+helpful to be able to remove some results. This function trims the <code>.metrics</code>
+column of unwanted results as well as columns <code>.predictions</code> and <code>.extracts</code>
+(if they were requested).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">filter_parameters(x, ..., parameters = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An object of class <code>tune_results</code> that has multiple tuning parameters.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Expressions that return a logical value, and are defined in terms
+of the tuning parameter values. If multiple expressions are included, they
+are combined with the <code>&amp;</code> operator. Only rows for which all conditions
+evaluate to <code>TRUE</code> are kept.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parameters</code></td>
+<td>
+<p>A tibble of tuning parameter values that can be used to
+filter the predicted values before processing. This tibble should only have
+columns for tuning parameter identifiers (e.g. <code>"my_param"</code> if
+<code>tune("my_param")</code> was used). There can be multiple rows and one or more
+columns. <strong>If used, this parameter must be named.</strong></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Removing some parameter combinations might affect the results of <code>autoplot()</code>
+for the object.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A version of <code>x</code> where the lists columns only retain the parameter
+combinations in <code>parameters</code> or satisfied by the filtering logic.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(tibble)
+
+# For grid search:
+data("example_ames_knn")
+
+## -----------------------------------------------------------------------------
+# select all combinations using the 'rank' weighting scheme
+
+ames_grid_search %&gt;%
+  collect_metrics()
+
+filter_parameters(ames_grid_search, weight_func == "rank") %&gt;%
+  collect_metrics()
+
+rank_only &lt;- tibble::tibble(weight_func = "rank")
+filter_parameters(ames_grid_search, parameters = rank_only) %&gt;%
+  collect_metrics()
+
+## -----------------------------------------------------------------------------
+# Keep only the results from the numerically best combination
+
+ames_iter_search %&gt;%
+  collect_metrics()
+
+best_param &lt;- select_best(ames_iter_search, metric = "rmse")
+ames_iter_search %&gt;%
+  filter_parameters(parameters = best_param) %&gt;%
+  collect_metrics()
+</code></pre>
+
+
+</div>

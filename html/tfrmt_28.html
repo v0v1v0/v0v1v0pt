@@ -1,0 +1,170 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>frmt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Table Value Formatting</h2>
+
+<h3>Description</h3>
+
+<p>These functions provide an abstracted way to approach to define formatting of table
+contents. By defining in this way, the formats can be
+layered to be more specific and general cell styling can be done first.
+</p>
+<p><code>frmt()</code> is the base definition of a format. This defines spacing, rounding,
+and missing behaviour.
+</p>
+<p><code>frmt_combine()</code> is used when two or more rows need to be combined into a
+single cell in the table. Each of the rows needs to have a defined <code>frmt()</code>
+and need to share a label.
+</p>
+<p><code>frmt_when()</code> is used when a rows format behaviour is dependent on the value itself and is written similarly to <code>dplyr::case_when()</code>.
+The left hand side of the equation is a <code>"TRUE"</code>for the default case or the right hand side of a boolean expression <code>"&gt;50"</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">frmt(expression, missing = NULL, scientific = NULL, transform = NULL, ...)
+
+frmt_combine(expression, ..., missing = NULL)
+
+frmt_when(..., missing = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expression</code></td>
+<td>
+<p>this is the string representing the intended format. See details: expression for more a detailed description.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>missing</code></td>
+<td>
+<p>when a value is missing that is intended to be formatted, what value to place. See details: missing for more a detailed description.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scientific</code></td>
+<td>
+<p>a string representing the intended scientific notation to be appended to the expression. Ex. "e^XX" or " x10^XX".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transform</code></td>
+<td>
+<p>this is what should happen to the value prior to formatting,
+It should be a formula or function. Ex. <code>~.*100</code>if you want to convert a
+percent from a decimal prior to rounding</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>See details: <code>...</code> for a detailed description.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+
+<h4>expression</h4>
+
+
+<ul>
+<li> <p><code>frmt()</code> All numbers are represented by "x". Any additional character are
+printed as-is. If additional X's present to the left of the decimal point
+than the value, they will be represented as spaces.
+</p>
+</li>
+<li> <p><code>frmt_combine()</code> defines how the parameters will be combined as a
+<code>glue::glue()</code> statement. Parameters need to be equal to the values in the
+param column and defined in the expression as <code>"{param1} {param2}"</code>.
+</p>
+</li>
+</ul>
+<h4>missing</h4>
+
+
+<ul>
+<li> <p><code>frmt()</code> Value to enter when the value is missing. When NULL, the value
+is "".
+</p>
+</li>
+<li> <p><code>frmt_combine()</code> defines how when all values to be combined are missing.
+When NULL the value is "".
+</p>
+</li>
+</ul>
+<h4>...</h4>
+
+
+<ul>
+<li> <p><code>frmt()</code> These dots are for future extensions and must be
+empty.
+</p>
+</li>
+<li> <p><code>frmt_combine()</code> accepts named arguments defining the <code>frmt()</code> to
+be applied to which parameters before being combined.
+</p>
+</li>
+<li> <p><code>frmt_when()</code>accepts a series of equations separated by commas, similar
+to <code>dplyr::case_when()</code>. The left hand side of the equation is a <code>"TRUE"</code>for the
+default case or the right hand side of a boolean expression <code>"&gt;50"</code>. The
+right hand side of the equation is the <code>frmt()</code> to apply when the left
+side evaluates to <code>TRUE</code>.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>frmt object
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>body_plan()</code> combines the frmt_structures to be applied to the
+table body, and <code>frmt_structure()</code> defines which rows the formats will be applied
+to.
+</p>
+<p><a href="https://gsk-biostatistics.github.io/tfrmt/articles/body_plan.html">Link to related article</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+frmt("XXX %")
+
+frmt("XX.XXX")
+
+frmt("xx.xx", scientific = "x10^xx")
+
+frmt_combine(
+ "{param1} {param2}",
+ param1 = frmt("XXX %"),
+ param2 = frmt("XX.XXX")
+)
+
+frmt_when(
+  "&gt;3" ~ frmt("(X.X%)"),
+  "&lt;=3" ~ frmt("Undetectable")
+  )
+
+frmt_when(
+  "==100"~ frmt(""),
+  "==0"~ "",
+  "TRUE" ~ frmt("(XXX.X%)")
+  )
+
+</code></pre>
+
+
+</div>

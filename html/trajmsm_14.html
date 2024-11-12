@@ -1,0 +1,182 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trajmsm_pltmle</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Pooled LTMLE</h2>
+
+<h3>Description</h3>
+
+<p>Estimate parameters of LCGA-MSM using pooled LTMLE
+with influence functions to estimate standard errors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trajmsm_pltmle(
+  formula = formula,
+  identifier,
+  baseline,
+  covariates,
+  treatment,
+  outcome,
+  number_traj,
+  total_followup,
+  time,
+  time_values,
+  trajmodel,
+  ref,
+  treshold = 0.99,
+  obsdata,
+  class_var
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>Specification of the model for the outcome to be fitted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>identifier</code></td>
+<td>
+<p>Name of the column for unique identifiant.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>baseline</code></td>
+<td>
+<p>Names of the baseline covariates.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covariates</code></td>
+<td>
+<p>Names of the time-varying covariates (should be a list).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treatment</code></td>
+<td>
+<p>Name of the time-varying treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outcome</code></td>
+<td>
+<p>Name of the outcome variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>number_traj</code></td>
+<td>
+<p>An integer to choose the number of trajectory groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total_followup</code></td>
+<td>
+<p>Total length of follow-up.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time</code></td>
+<td>
+<p>Name of the time variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_values</code></td>
+<td>
+<p>Measuring times.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trajmodel</code></td>
+<td>
+<p>Trajectory model built with the observed treatment.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>The reference group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>treshold</code></td>
+<td>
+<p>For weight truncation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obsdata</code></td>
+<td>
+<p>Observed data in wide format.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>class_var</code></td>
+<td>
+<p>Name of the trajectory group variable.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Provides a matrix of estimates for LCGA-MSM, obtained using the pooled ltlmle method.
+</p>
+<table><tr style="vertical-align: top;">
+<td><code>results_msm_pooledltmle</code></td>
+<td>
+<p>Estimates of a LCGA-MSM with pooled LTMLE.</p>
+</td>
+</tr></table>
+<h3>Author(s)</h3>
+
+<p>Awa Diop, Denis Talbot
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+obsdata_long = gendata(n = 1000, format = "long", total_followup = 6, seed = 845)
+years &lt;- 2011:2016
+baseline_var &lt;- c("age","sex")
+variables &lt;- c("hyper", "bmi")
+covariates &lt;- lapply(years, function(year) {
+paste0(variables, year)})
+treatment_var &lt;- paste0("statins", 2011:2016)
+formula_treatment = as.formula(cbind(statins, 1 - statins) ~ time)
+restraj = build_traj(obsdata = obsdata_long, number_traj = 3,
+formula = formula_treatment, identifier = "id")
+datapost = restraj$data_post
+trajmsm_long &lt;- merge(obsdata_long, datapost, by = "id")
+    AggFormula &lt;- as.formula(paste("statins", "~", "time", "+", "class"))
+    AggTrajData &lt;- aggregate(AggFormula, data = trajmsm_long, FUN = mean)
+trajmsm_wide = reshape(data = trajmsm_long, direction = "wide", idvar = "id",
+v.names = c("statins","bmi","hyper"), timevar = "time", sep ="")
+formula = paste0("y ~", paste0(treatment_var,collapse = "+"), "+",
+                paste0(unlist(covariates), collapse = "+"),"+",
+                paste0(baseline_var, collapse = "+"))
+resmsm_pltmle &lt;- trajmsm_pltmle(formula = formula, identifier = "id",
+ baseline = baseline_var,
+ covariates = covariates, treatment = treatment_var,
+ outcome = "y", time = "time", time_values = years,
+ number_traj = 3, total_followup = 6,
+ trajmodel = restraj$traj_model, ref = "1", obsdata = trajmsm_wide,
+  treshold = 1,class_var = "class")
+ resmsm_pltmle
+ 
+</code></pre>
+
+
+</div>

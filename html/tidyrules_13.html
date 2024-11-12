@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>calculate.rulelist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+<code>calculate</code> metrics for a rulelist</h2>
+
+<h3>Description</h3>
+
+<p>Computes some metrics (based on <code>estimation_type</code>) in cumulative
+window function style over the rulelist (in the same order) ignoring the
+keys.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'rulelist'
+calculate(x, metrics_to_exclude = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A rulelist</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metrics_to_exclude</code></td>
+<td>
+<p>(character vector) Names of metrics to exclude</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Named list of custom metrics. See 'details'.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+
+<h4>Default Metrics</h4>
+
+<p>These metrics are calculated by default:
+</p>
+
+<ul>
+<li> <p><code>cumulative_coverage</code>: For nth rule in the rulelist, number of distinct <code>row_nbr</code>s (of <code>new_data</code>) covered by nth and all preceding rules (in order). In weighted case, we sum the weights corresponding to the distinct <code>row_nbr</code>s.
+</p>
+</li>
+<li> <p><code>cumulative_overlap</code>: Up til nth rule in the rulelist, number of distinct <code>row_nbr</code>s (of <code>new_data</code>) already covered by some preceding rule (in order). In weighted case, we sum the weights corresponding to the distinct <code>row_nbr</code>s.
+</p>
+</li>
+</ul>
+<p>For classification:
+</p>
+
+<ul><li> <p><code>cumulative_accuracy</code>: For nth rule in the rulelist, fraction of <code>row_nbr</code>s such that <code>RHS</code> matches the <code>y_name</code> column (of <code>new_data</code>) by nth and all preceding rules (in order). In weighted case, weighted accuracy is computed.
+</p>
+</li></ul>
+<p>For regression:
+</p>
+
+<ul><li> <p><code>cumulative_RMSE</code>: For nth rule in the rulelist, weighted RMSE of all predictions (<code>RHS</code>) predicted by nth rule and all preceding rules.
+</p>
+</li></ul>
+<h4>Custom metrics</h4>
+
+<p>Custom metrics to be computed should be passed a named list of function(s) in
+<code>...</code>. The custom metric function should take these arguments in same order:
+<code>rulelist</code>, <code>new_data</code>, <code>y_name</code>, <code>weight</code>. The custom metric function should
+return a numeric vector of same length as the number of rows of rulelist.
+</p>
+
+
+
+<h3>Value</h3>
+
+<p>A dataframe of metrics with a <code>rule_nbr</code> column.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>rulelist, tidy, augment,
+predict, calculate,
+prune, reorder
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library("magrittr")
+model_c5  = C50::C5.0(Attrition ~., data = modeldata::attrition, rules = TRUE)
+tidy_c5   = tidy(model_c5) %&gt;%
+            set_validation_data(modeldata::attrition, "Attrition") %&gt;%
+            set_keys(NULL)
+
+# calculate default metrics (classification)
+calculate(tidy_c5)
+
+model_rpart = rpart::rpart(MonthlyIncome ~., data = modeldata::attrition)
+tidy_rpart  =
+  tidy(model_rpart) %&gt;%
+  set_validation_data(modeldata::attrition, "MonthlyIncome") %&gt;%
+  set_keys(NULL)
+
+# calculate default metrics (regression)
+calculate(tidy_rpart)
+
+# calculate default metrics with a custom metric
+#' custom function to get cumulative MAE
+library("tidytable")
+get_cumulative_MAE = function(rulelist, new_data, y_name, weight){
+
+  priority_df =
+    rulelist %&gt;%
+    select(rule_nbr) %&gt;%
+    mutate(priority = 1:nrow(rulelist)) %&gt;%
+    select(rule_nbr, priority)
+
+  pred_df =
+    predict(rulelist, new_data) %&gt;%
+    left_join(priority_df, by = "rule_nbr") %&gt;%
+    mutate(weight = local(weight)) %&gt;%
+    select(rule_nbr, row_nbr, weight, priority)
+
+  new_data2 =
+    new_data %&gt;%
+    mutate(row_nbr = 1:n()) %&gt;%
+    select(all_of(c("row_nbr", y_name)))
+
+  rmse_till_rule = function(rn){
+
+    if (is.character(rulelist$RHS)) {
+      inter_df =
+        pred_df %&gt;%
+        tidytable::filter(priority &lt;= rn) %&gt;%
+        left_join(mutate(new_data, row_nbr = 1:n()), by = "row_nbr") %&gt;%
+        left_join(select(rulelist, rule_nbr, RHS), by = "rule_nbr") %&gt;%
+        nest(.by = c("RHS", "rule_nbr", "row_nbr", "priority", "weight")) %&gt;%
+        mutate(RHS = purrr::map2_dbl(RHS,
+                                     data,
+                                     ~ eval(parse(text = .x), envir = .y)
+                                     )
+               ) %&gt;%
+        unnest(data)
+    } else {
+
+      inter_df =
+        pred_df %&gt;%
+        tidytable::filter(priority &lt;= rn) %&gt;%
+        left_join(new_data2, by = "row_nbr") %&gt;%
+        left_join(select(rulelist, rule_nbr, RHS), by = "rule_nbr")
+    }
+
+    inter_df %&gt;%
+      summarise(rmse = MetricsWeighted::mae(RHS,
+                                             .data[[y_name]],
+                                             weight,
+                                             na.rm = TRUE
+                                             )
+                ) %&gt;%
+      `[[`("rmse")
+  }
+
+  res = purrr::map_dbl(1:nrow(rulelist), rmse_till_rule)
+  return(res)
+}
+
+calculate(tidy_rpart,
+          metrics_to_exclude = NULL,
+          list("cumulative_mae" = get_cumulative_MAE)
+          )
+
+</code></pre>
+
+
+</div>

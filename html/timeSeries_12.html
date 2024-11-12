@@ -1,0 +1,225 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>align-methods</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Align a 'timeSeries' object to equidistant time stamps</h2>
+
+<h3>Description</h3>
+
+<p>Aligns a <code>"timeSeries"</code> object to equidistant time stamps.  There
+are also functions for the common cases of changing daily to weekly
+and daily to monthly.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'timeSeries'
+align(x, by = "1d", offset = "0s",
+    method = c("before", "after", "interp", "fillNA",
+               "fmm", "periodic", "natural", "monoH.FC"),
+    include.weekends = FALSE, ...)
+
+alignDailySeries(x, method = c("before", "after", "interp", "fillNA",
+    "fmm", "periodic", "natural", "monoH.FC"),
+    include.weekends = FALSE, units = NULL, zone = "",
+    FinCenter = "", ...)
+
+daily2monthly(x, init = FALSE) 
+daily2weekly(x, startOn = "Tue", init = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+
+<p>an object of class <code>"timeSeries"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>by</code></td>
+<td>
+
+<p>a character string denoting the period.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>offset</code></td>
+<td>
+
+<p>a character string denoting the offset.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>the method to be used for the alignment. A character string, one of
+<code>"before"</code>, use the data from the row whose position is just
+before the unmatched position, or <code>"after"</code>, use the data from
+the row whose position is just after the unmatched position, or
+<code>"linear"</code>, interpolate linearly between <code>"before"</code> and
+<code>"after"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include.weekends</code></td>
+<td>
+
+<p>a logical value. Should weekend dates be included or removed from
+the series?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>units</code></td>
+<td>
+
+<p>an optional character string, which allows to overwrite the current
+column names of a <code>timeSeries</code> object. By default <code>NULL</code>
+which means that the column names are selected automatically.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zone</code></td>
+<td>
+
+<p>the time zone or financial center where the data were recorded.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>FinCenter</code></td>
+<td>
+
+<p>a character with the the location of the  financial center named
+as <code>"continent/city"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>startOn</code></td>
+<td>
+
+<p>a character string, specifying the day of week as a three letter
+abbreviation. Weekly aggregated data records are then fixed to the
+weekdays given by the argument <code>startOn</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+
+<p>a logical value, if set to <code>TRUE</code> then the time series will be
+indexed to 1 for its first value. By default <code>init</code> is set to
+<code>FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+
+<p>further arguments to be passed to the interpolating function.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>TODO: complete.
+</p>
+<p><code>alignDailySeries</code> aligns a daily 'timeSeries' to new positions,
+Effectively, it is a frontend to the <code>"timeSeries"</code> method for
+<code>align</code> with <code>by = "1d"</code>, and <code>offset = "0s"</code>.
+</p>
+<p>In addition, there are two tailored functions for common cases:
+<code>daily2monthly</code> and <code>daily2weekly</code> which aggregate
+<code>"timeSeries"</code> objects from daily to monthly or weekly levels,
+respectively.
+</p>
+<p>In the case of the function <code>daily2weekly</code> one can explicitly set
+the starting day of the week, the default value is Tuesday,
+<code>startOn = "Tue"</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>a <code>"timeSeries"</code> object,
+</p>
+<p>for <code>alignDailySeries</code>, a weekly aligned daily <code>"timeSeries"</code> object 
+from a daily time series with missing holidays.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>aggregate</code>,
+<code>apply</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Use Microsofts' OHLCV Price Series -
+   head(MSFT)
+   end(MSFT)
+
+## Use MSFT and Compute Sample Size -
+   dim(MSFT)
+
+## Align the Series -
+   MSFT.AL &lt;- align(MSFT)
+
+## Show the Size of the Aligned Series -
+   dim(MSFT.AL)
+
+
+## alignDailySeries
+
+## Cut out April Data from 2001 -
+   Close &lt;- MSFT[, "Close"]
+   tsApril01 &lt;- window(Close, start="2001-04-01", end="2001-04-30")
+   tsApril01
+
+## Align Daily Series with NA -
+   tsRet &lt;- returns(tsApril01, trim = TRUE)
+   GoodFriday(2001)
+   EasterMonday(2001)
+   alignDailySeries(tsRet, method = "fillNA", include.weekends = FALSE)
+   alignDailySeries(tsRet, method = "fillNA", include.weekends = TRUE)
+
+## Align Daily Series by Interpolated Values -
+   alignDailySeries(tsRet, method = "interp", include.weekend = FALSE)
+   alignDailySeries(tsRet, method = "interp", include.weekend = TRUE)
+
+
+## Load Microsoft Data Set -
+   x &lt;- MSFT
+
+## Aggregate daily records to end of month records -
+   X &lt;- daily2monthly(x)
+   X
+   isMonthly(X)
+   
+## Aggregate daily records to end of week records -
+   X &lt;- daily2weekly(x, startOn="Fri")
+   X
+   dayOfWeek(time(X))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,288 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqrep</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Extracting sets of representative sequences</h2>
+
+<h3>Description</h3>
+
+<p>Returns either an as small as possible set of non redundant representatives covering (having in their neighborhood) a desired percentage of all sequences, or a given number of patterns with highest coverage. Special cases are single representatives such as the medoid or the sequence pattern with densest neighborhood. See <code>plot.stslist.rep</code> for the plot method and <code>seqplot</code> for other plot options.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqrep(seqdata, criterion = "density", score = NULL, decreasing = TRUE,
+  coverage = 0.25, nrep = NULL, pradius = 0.10, dmax = NULL, diss = NULL,
+  weighted = TRUE, trep, tsim, dist.matrix, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>a state sequence object as defined by the <code>seqdef</code> function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>criterion</code></td>
+<td>
+<p>the representativeness criterion for sorting the candidate list. One of <code>"freq"</code> (sequence
+frequency), <code>"density"</code> (neighborhood density), <code>"mscore"</code> (mean state frequency), <code>"dist"</code>
+(centrality) and <code>"prob"</code> (sequence likelihood). See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>score</code></td>
+<td>
+<p>an optional vector of representativeness scores for sorting the sequences in the candidate
+list. The length of the vector must be equal to the number of sequences in the sequence object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>decreasing</code></td>
+<td>
+<p>if a score vector is provided, indicates whether the objects in the candidate list must be sorted in
+ascending or descending order of this score. Default is <code>TRUE</code>, i.e. descending. The first object in the candidate list
+is then supposed to be the most representative. </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coverage</code></td>
+<td>
+<p>coverage threshold, i.e., minimum proportion of sequences that should have a representative in their
+neighborhood (neighborhood radius is defined by <code>pradius</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nrep</code></td>
+<td>
+<p>number of representative sequences. If <code>NULL</code> (default), the size of the representative set is
+controlled by <code>coverage</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pradius</code></td>
+<td>
+<p>neighborhood
+radius as a percentage of the maximum (theoretical)
+distance <code>dmax</code>. Defaults to 0.1 (10%). Sequence <code class="reqn">y</code> is
+redundant to sequence <code class="reqn">x</code> when it is in the neighborhood of <code class="reqn">x</code>, i.e., within a distance
+<code>pradius*dmax</code> from <code class="reqn">x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dmax</code></td>
+<td>
+<p>maximum theoretical distance. The <code>dmax</code> value is used to derive the neighborhood radius as <code>pradius*dmax</code>. If <code>NULL</code>, the value of <code>dmax</code> is derived from the dissimilarity matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diss</code></td>
+<td>
+<p>matrix of pairwise dissimilarities between sequences in <code>seqdata</code>. If <code>NULL</code>, the
+matrix is computed by calling the <code>seqdist</code> function. In that case, optional arguments to be passed to
+the <code>seqdist</code> function (see <code>...</code> hereafter) should also be provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>logical: Should weights assigned to the state sequence object be accounted for? (See <code>seqdef</code>.)
+Set as <code>FALSE</code> to ignore the weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trep</code></td>
+<td>
+<p>Deprecated. Use <code>coverage</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tsim</code></td>
+<td>
+<p>Deprecated. Use <code>pradius</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dist.matrix</code></td>
+<td>
+<p>Deprecated. Use <code>diss</code> instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>optional arguments to be passed to the <code>seqdist</code> function, mainly <code>dist.method</code> specifying the
+metric for computing the distance matrix, <code>norm</code> for normalizing the distances, <code>indel</code> and <code>sm</code> for
+indel and substitution costs when Optimal Matching metric is chosen. See <code>seqdist</code> manual page for
+details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The representative set is obtained by an heuristic. Representatives are selected by successively extracting from  the sequences sorted by their representativeness score those which are not redundant with already retained representatives. The selection stops when either the desired coverage or the wanted number of representatives is reached. Sequences are sorted either by the values provided as <code>score</code> argument or by specifying one of the following as <code>criterion</code> argument: <code>"freq"</code> (<em>sequence frequency</em>), <code>"density"</code>
+(<em>neighborhood density</em>), <code>"mscore"</code> (<em>mean state frequency</em>), <code>"dist"</code>
+(<em>centrality</em>), and <code>"prob"</code> (<em>sequence likelihood</em>).
+</p>
+<p>With the <em>sequence frequency</em> criterion, the more frequent a
+sequence the more representative it is supposed to be. Therefore, sequences are sorted in decreasing frequency order.
+</p>
+<p>The <em>neighborhood density</em> is the
+number—density—of sequences in the neighborhood of the
+sequence. This requires to set the neighborhood radius
+<code>pradius</code>.  Sequences are
+sorted in decreasing density order.
+</p>
+<p>The <em>mean state frequency</em> criterion is the mean value of the transversal frequencies of the successive states.
+Let <code class="reqn">s=s_{1}s_{2}\cdots s_{\ell}</code> be a sequence of length <code class="reqn">\ell</code> and <code class="reqn">(f_{s_1},
+f_{s_2}, \ldots, f_{s_\ell})</code> the frequencies of the states at (time-)position <code class="reqn">(t_1,
+t_2,\ldots t_{\ell})</code>. The mean state frequency is the sum of the state frequencies divided by the
+sequence length
+</p>
+<p style="text-align: center;"><code class="reqn">
+MSF(s)=\frac{1}{\ell} \sum_{i=1}^{\ell} f_{s_{i}}
+</code>
+</p>
+
+
+<p>The lower and upper boundaries of <code class="reqn">MSF</code> are <code class="reqn">0</code> and <code class="reqn">1</code>. <code class="reqn">MSF</code> is equal to <code class="reqn">1</code> when all the sequences
+in the set are identical, i.e. when there is a single sequence pattern. The most representative sequence is the one with
+the highest score.
+</p>
+<p>The <em>centrality</em> criterion is the sum of distances to all other sequences. The
+smallest the sum, the most representative is the sequence.
+</p>
+<p>The <em>sequence likelihood</em> <code class="reqn">P(s)</code> is defined as the product of the probability with which each of its observed
+successive state is supposed to occur at its position.
+Let  <code class="reqn">s=s_{1}s_{2} \cdots s_{\ell}</code>  be a sequence of length <code class="reqn">\ell</code>. Then
+</p>
+<p style="text-align: center;"><code class="reqn">
+P(s)=P(s_{1},1) \cdot P(s_{2},2) \cdots P(s_{\ell},\ell)
+</code>
+</p>
+
+<p>with <code class="reqn">P(s_{t},t)</code> the probability to observe state <code class="reqn">s_t</code> at position <code class="reqn">t</code>.
+<br>
+The question is how to determinate the state probabilities <code class="reqn">P(s_{t},t)</code>. One commonly used method for
+computing them is to postulate a Markov Chain model, which can be of various order. The implemented criterion considers the
+probabilities derived from the first order Markov model, that is each <code class="reqn">P(s_{t},t)</code>, <code class="reqn">t&gt;1</code> is set to the
+transition rate <code class="reqn">p(s_t|s_{t-1})</code> estimated across sequences from the observations at positions <code class="reqn">t</code>
+and <code class="reqn">t-1</code>. For <code class="reqn">t=1</code>, we set <code class="reqn">P(s_1,1)</code> to the observed frequency of the state <code class="reqn">s_1</code> at position 1.
+</p>
+<p>The likelihood <code class="reqn">P(s)</code> being generally very small, we use
+<code class="reqn">-\log P(s)</code> as sorting criterion. The latter quantity reaches its minimum for
+<code class="reqn">P(s)</code> equal to 1, which leads to sort the sequences in
+ascending order of their score.
+</p>
+<p>Use <code>criterion="dist"</code> (centrality) and <code>nrep=1</code> to get the medoid, and <code>criterion="density"</code> and <code>nrep=1</code> to get the densest sequence pattern.
+</p>
+<p>For more details, see <cite>Gabadinho &amp; Ritschard, 2013</cite>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>stslist.rep</code>. This is actually a
+state sequence object (containing a list of state sequences) with the
+following additional attributes:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>Scores</code></td>
+<td>
+<p>a vector with the representative score of each sequence in the original set given the chosen criterion.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Distances</code></td>
+<td>
+<p>a matrix with the distance of each sequence to its nearest representative.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Rep.group</code></td>
+<td>
+<p>vector with, for each sequence, the representative that represents it.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>idx.rep</code></td>
+<td>
+<p>list with indexes of occurrences of each representative in original data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Statistics</code></td>
+<td>
+<p>a data frame with quality measures for each representative sequence: number <code class="reqn">na</code> of sequences
+attributed to the representative, number <code class="reqn">nb</code> of sequences in the representative's neighborhood, mean distance <code class="reqn">MD</code> to the
+representative and a few other indexes.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Quality</code></td>
+<td>
+<p>overall quality measure.</p>
+</td>
+</tr>
+</table>
+<p>Print, plot and summary methods are available. More elaborated plots
+are produced by the <code>seqplot</code> function using the <code>type="r"</code>
+argument, or the <code>seqrplot</code> alias. </p>
+
+
+<h3>Author(s)</h3>
+
+<p>Alexis Gabadinho and Gilbert Ritschard</p>
+
+
+<h3>References</h3>
+
+<p>Gabadinho A, Ritschard G (2013). "Searching for typical life trajectories applied to child birth histories", In R Lévy, E. Widmer (eds.), <em>Gendered Life Courses</em>, pp. 287-312. Vienna: LIT.
+</p>
+<p>Gabadinho A, Ritschard G, Studer M, Müller NS (2011). "Extracting and Rendering Representative Sequences", In A Fred, JLG Dietz, K Liu, J Filipe (eds.), <em>Knowledge Discovery, Knowledge Engineering and Knowledge Management</em>, volume 128 of <em>Communications in Computer and Information Science (CCIS)</em>, pp. 94-106. Springer-Verlag.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqplot</code>, <code>plot.stslist.rep</code>, <code>dissrep</code>, <code>disscenter</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Defining a sequence object with the data in columns 10 to 25
+## (family status from age 15 to 30) in the biofam data set
+data(biofam)
+biofam.lab &lt;- c("Parent", "Left", "Married", "Left+Marr",
+"Child", "Left+Child", "Left+Marr+Child", "Divorced")
+biofam.seq &lt;- seqdef(biofam[,10:25], labels=biofam.lab)
+
+## Computing the distance matrix
+costs &lt;- seqsubm(biofam.seq, method="TRATE")
+biofam.om &lt;- seqdist(biofam.seq, method="OM", sm=costs)
+
+## Representative set using the neighborhood density criterion
+biofam.rep &lt;- seqrep(biofam.seq, diss=biofam.om, criterion="density")
+biofam.rep
+summary(biofam.rep)
+plot(biofam.rep)
+
+## plot by groups represented by the representatives
+seqdplot(biofam.seq, group=attr(biofam.rep,"Rep.group"), border=NA)
+
+## indexes of sequences represented by 1st representative
+r1.grp &lt;- which(attr(biofam.rep,"Rep.group")==1)
+## indexes of occurrences of the first representative sequence
+attr(biofam.rep,"idx.rep")[[1]]
+</code></pre>
+
+
+</div>

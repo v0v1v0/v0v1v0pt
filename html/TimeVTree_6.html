@@ -1,0 +1,110 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>final.tree</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Finding the Final Tree After Bootstrap
+</h2>
+
+<h3>Description</h3>
+
+<p><code>final.tree</code> uses bias-corrected costs obtained from <code>bootstrap</code> function and the predetermined penalty parameter to find the optimal tree from the set of subtrees.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">final.tree(nodetree=nodetree, subtrees=subtrees, omega, alphac=2)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>nodetree</code></td>
+<td>
+
+<p>Fully grown tree from the original data. Output from <code>output.coxphout</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subtrees</code></td>
+<td>
+
+<p>Pruned subtrees from the original data. Output from <code>prune</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>omega</code></td>
+<td>
+
+<p>Bias (i.e. third index of the output) from <code>bootstrap</code>. Look at the value section of <code>bootstrap</code> for more information.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alphac</code></td>
+<td>
+
+<p>Predetermined penalty parameter
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>final.tree</code> is part of the <code>bootstrap</code> function but can be used  to try different penalty parameters without re-running <code>bootstrap</code>. 
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>subtree </code></td>
+<td>
+<p>output from <code>prune</code> with an additional column 'cost' that contains bootstrap estimate of each subtree</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>final </code></td>
+<td>
+<p>A tree with lowest cost value after applying predetermined penalty</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Xu, R. and Adak, S. (2002), Survival Analysis with Time-Varying Regression Effects Using a Tree-Based Approach. Biometrics, 58: 305-315.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+data('alcohol')
+require(survival)
+
+coxtree &lt;- coxph.tree(alcohol[,'time'], alcohol[,'event'], 
+                      x = alcohol[,'alc', drop = FALSE], D = 4)
+nodetree &lt;- output.coxphout(coxtree)
+
+subtrees &lt;- prune(nodetree)
+
+store.mult.cont &lt;- bootstrap(B=20, nodetree, subtrees, alcohol[,'time'],
+                                alcohol[,'event'], x = alcohol[,'alc', drop = FALSE], 
+                                D=4,minfail=20, alphac=2)
+                                
+Balph &lt;- 0.5 * 2 * log(nrow(alcohol))                                
+final.tree &lt;- final.tree(nodetree, subtrees, store.mult.cont[[3]], alphac= Balph)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

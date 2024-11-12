@@ -1,0 +1,450 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>res.mean</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Residual mean life (restricted)</h2>
+
+<h3>Description</h3>
+
+<p>Fits a semiparametric model for the residual life (estimator=1): </p>
+<p style="text-align: center;"><code class="reqn"> E(
+\min(Y,\tau) -t | Y&gt;=t) = h_1( g(t,x,z) ) </code>
+</p>
+<p> or cause specific years lost of
+Andersen (2012) (estimator=3) </p>
+<p style="text-align: center;"><code class="reqn"> E( \tau- \min(Y_j,\tau) | Y&gt;=0) =
+\int_0^t (1-F_j(s)) ds = h_2( g(t,x,z) ) </code>
+</p>
+<p> where <code class="reqn">Y_j = \sum_j Y
+I(\epsilon=j) + \infty * I(\epsilon=0)</code> or (estimator=2) </p>
+<p style="text-align: center;"><code class="reqn"> E( \tau-
+\min(Y_j,\tau) | Y&lt;\tau, \epsilon=j) = h_3( g(t,x,z) ) = h_2(g(t,x,z))
+F_j(\tau,x,z) </code>
+</p>
+<p> where <code class="reqn">F_j(s,x,z) = P(Y&lt;\tau, \epsilon=j | x,z )</code> for a
+known link-function <code class="reqn">h()</code> and known prediction-function <code class="reqn">g(t,x,z)</code>
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">res.mean(
+  formula,
+  data = parent.frame(),
+  cause = 1,
+  restricted = NULL,
+  times = NULL,
+  Nit = 50,
+  clusters = NULL,
+  gamma = 0,
+  n.sim = 0,
+  weighted = 0,
+  model = "additive",
+  detail = 0,
+  interval = 0.01,
+  resample.iid = 1,
+  cens.model = "KM",
+  cens.formula = NULL,
+  time.pow = NULL,
+  time.pow.test = NULL,
+  silent = 1,
+  conv = 1e-06,
+  estimator = 1,
+  cens.weights = NULL,
+  conservative = 1,
+  weights = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula object, with the response on the left of a '~'
+operator, and the terms on the right. The response must be a survival object
+as returned by the ‘Event’ function. The status indicator is not important
+here. Time-invariant regressors are specified by the wrapper const(), and
+cluster variables (for computing robust variances) by the wrapper cluster().</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>a data.frame with the variables.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cause</code></td>
+<td>
+<p>For competing risk models specificies which cause we consider.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>restricted</code></td>
+<td>
+<p>gives a possible restriction times for means.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>specifies the times at which the estimator is considered.
+Defaults to all the times where an event of interest occurs, with the first
+10 percent or max 20 jump points removed for numerical stability in
+simulations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Nit</code></td>
+<td>
+<p>number of iterations for Newton-Raphson algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>clusters</code></td>
+<td>
+<p>specifies cluster structure, for backwards compability.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>starting value for constant effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.sim</code></td>
+<td>
+<p>number of simulations in resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Not implemented. To compute a variance weighted version of
+the test-processes used for testing time-varying effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>"additive", "prop"ortional.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>detail</code></td>
+<td>
+<p>if 0 no details are printed during iterations, if 1 details
+are given.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interval</code></td>
+<td>
+<p>specifies that we only consider timepoints where the
+Kaplan-Meier of the censoring distribution is larger than this value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resample.iid</code></td>
+<td>
+<p>to return the iid decomposition, that can be used to
+construct confidence bands for predictions</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cens.model</code></td>
+<td>
+<p>specified which model to use for the ICPW, KM is
+Kaplan-Meier alternatively it may be "cox" or "aalen" model for further
+flexibility.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cens.formula</code></td>
+<td>
+<p>specifies the regression terms used for the regression
+model for chosen regression model.  When cens.model is specified, the
+default is to use the same design as specified for the competing risks
+model. "KM","cox","aalen","weights". "weights" are user specified weights
+given is cens.weight argument.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.pow</code></td>
+<td>
+<p>specifies that the power at which the time-arguments is
+transformed, for each of the arguments of the const() terms, default is 1
+for the additive model and 0 for the proportional model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.pow.test</code></td>
+<td>
+<p>specifies that the power the time-arguments is
+transformed for each of the arguments of the non-const() terms. This is
+relevant for testing if a coefficient function is consistent with the
+specified form A_l(t)=beta_l t^time.pow.test(l). Default is 1 for the
+additive model and 0 for the proportional model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>if 0 information on convergence problems due to non-invertible
+derviates of scores are printed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conv</code></td>
+<td>
+<p>gives convergence criterie in terms of sum of absolute change of
+parameters of model</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>estimator</code></td>
+<td>
+<p>specifies what that is estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cens.weights</code></td>
+<td>
+<p>censoring weights for estimating equations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conservative</code></td>
+<td>
+<p>for slightly conservative standard errors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>weights for estimating equations.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Uses the IPCW for the score equations based on </p>
+<p style="text-align: center;"><code class="reqn"> w(t)
+\Delta(\tau)/P(\Delta(\tau)=1| T,\epsilon,X,Z) ( Y(t) - h_1(t,X,Z)) </code>
+</p>
+<p> and
+where <code class="reqn">\Delta(\tau)</code> is the at-risk indicator given data and requires a
+IPCW model.
+</p>
+<p>Since timereg version 1.8.4. the response must be specified with the
+<code>Event</code> function instead of the <code>Surv</code> function and
+the arguments.
+</p>
+
+
+<h3>Value</h3>
+
+<p>returns an object of type 'comprisk'. With the following arguments:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>cum</code></td>
+<td>
+<p>cumulative timevarying regression coefficient estimates are
+computed within the estimation interval.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.cum</code></td>
+<td>
+<p>pointwise variances
+estimates.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>estimate of proportional odds parameters of
+model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>var.gamma</code></td>
+<td>
+<p>variance for gamma.  </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>score</code></td>
+<td>
+<p>sum of absolute
+value of scores.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma2</code></td>
+<td>
+<p>estimate of constant effects based on the
+non-parametric estimate. Used for testing of constant effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeq0</code></td>
+<td>
+<p>observed absolute value of supremum of cumulative
+components scaled with the variance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeq0</code></td>
+<td>
+<p>p-value for
+covariate effects based on supremum test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC</code></td>
+<td>
+<p>observed
+absolute value of supremum of difference between observed cumulative process
+and estimate under null of constant effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC</code></td>
+<td>
+<p>p-value
+based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs.testBeqC.is</code></td>
+<td>
+<p>observed integrated squared
+differences between observed cumulative and estimate under null of constant
+effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pval.testBeqC.is</code></td>
+<td>
+<p>p-value based on resampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.band</code></td>
+<td>
+<p>resampling based constant to construct 95% uniform
+confidence bands.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B.iid</code></td>
+<td>
+<p>list of iid decomposition of non-parametric
+effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma.iid</code></td>
+<td>
+<p>matrix of iid decomposition of parametric
+effects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>test.procBeqC</code></td>
+<td>
+<p>observed test process for testing of
+time-varying effects</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sim.test.procBeqC</code></td>
+<td>
+<p>50 resample processes for for
+testing of time-varying effects</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conv</code></td>
+<td>
+<p>information on convergence for
+time points used for estimation.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Thomas Scheike
+</p>
+
+
+<h3>References</h3>
+
+<p>Andersen (2013), Decomposition of number of years lost according
+to causes of death, Statistics in Medicine, 5278-5285.
+</p>
+<p>Scheike, and Cortese (2015), Regression Modelling of Cause Specific Years Lost,
+</p>
+<p>Scheike, Cortese and Holmboe (2015), Regression Modelling of Restricted
+Residual Mean with Delayed Entry,
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(bmt); 
+tau &lt;- 100 
+
+### residual restricted mean life
+out&lt;-res.mean(Event(time,cause&gt;=1)~factor(tcell)+factor(platelet),data=bmt,cause=1,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=1); 
+summary(out)
+
+out&lt;-res.mean(Event(time,cause&gt;=1)~factor(tcell)+factor(platelet),data=bmt,cause=1,
+	      times=seq(0,90,5),restricted=tau,n.sim=0,model="additive",estimator=1); 
+par(mfrow=c(1,3))
+plot(out)
+
+### restricted years lost given death
+out21&lt;-res.mean(Event(time,cause)~factor(tcell)+factor(platelet),data=bmt,cause=1,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=2); 
+summary(out21)
+out22&lt;-res.mean(Event(time,cause)~factor(tcell)+factor(platelet),data=bmt,cause=2,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=2); 
+summary(out22)
+
+
+### total restricted years lost 
+out31&lt;-res.mean(Event(time,cause)~factor(tcell)+factor(platelet),data=bmt,cause=1,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=3); 
+summary(out31)
+out32&lt;-res.mean(Event(time,cause)~factor(tcell)+factor(platelet),data=bmt,cause=2,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=3); 
+summary(out32)
+
+
+### delayed entry 
+nn &lt;- nrow(bmt)
+entrytime &lt;- rbinom(nn,1,0.5)*(bmt$time*runif(nn))
+bmt$entrytime &lt;- entrytime
+
+bmtw &lt;- prep.comp.risk(bmt,times=tau,time="time",entrytime="entrytime",cause="cause")
+
+out&lt;-res.mean(Event(time,cause&gt;=1)~factor(tcell)+factor(platelet),data=bmtw,cause=1,
+	      times=0,restricted=tau,n.sim=0,model="additive",estimator=1,
+              cens.model="weights",weights=bmtw$cw,cens.weights=1/bmtw$weights); 
+summary(out)
+
+</code></pre>
+
+
+</div>

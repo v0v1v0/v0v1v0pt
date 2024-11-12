@@ -1,0 +1,212 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mcmc_sample_chain</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Implements Markov chain Monte Carlo via repeated <code>TransitionKernel</code> steps.</h2>
+
+<h3>Description</h3>
+
+<p>This function samples from an Markov chain at <code>current_state</code> and whose
+stationary distribution is governed by the supplied <code>TransitionKernel</code>
+instance (<code>kernel</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mcmc_sample_chain(
+  kernel = NULL,
+  num_results,
+  current_state,
+  previous_kernel_results = NULL,
+  num_burnin_steps = 0,
+  num_steps_between_results = 0,
+  trace_fn = NULL,
+  return_final_kernel_results = FALSE,
+  parallel_iterations = 10,
+  seed = NULL,
+  name = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>kernel</code></td>
+<td>
+<p>An instance of <code>tfp$mcmc$TransitionKernel</code> which implements one step
+of the Markov chain.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_results</code></td>
+<td>
+<p>Integer number of Markov chain draws.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>current_state</code></td>
+<td>
+<p><code>Tensor</code> or <code>list</code> of <code>Tensor</code>s representing the
+current state(s) of the Markov chain(s).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>previous_kernel_results</code></td>
+<td>
+<p>A <code>Tensor</code> or a nested collection of <code>Tensor</code>s
+representing internal calculations made within the previous call to this
+function (or as returned by <code>bootstrap_results</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_burnin_steps</code></td>
+<td>
+<p>Integer number of chain steps to take before starting to
+collect results. Default value: 0 (i.e., no burn-in).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_steps_between_results</code></td>
+<td>
+<p>Integer number of chain steps between collecting
+a result. Only one out of every <code>num_steps_between_samples + 1</code> steps is
+included in the returned results.  The number of returned chain states is
+still equal to <code>num_results</code>.  Default value: 0 (i.e., no thinning).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace_fn</code></td>
+<td>
+<p>A function that takes in the current chain state and the previous
+kernel results and return a <code>Tensor</code> or a nested collection of <code>Tensor</code>s
+that is then traced along with the chain state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>return_final_kernel_results</code></td>
+<td>
+<p>If <code>TRUE</code>, then the final kernel results are
+returned alongside the chain state and the trace specified by the <code>trace_fn</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel_iterations</code></td>
+<td>
+<p>The number of iterations allowed to run in parallel. It
+must be a positive integer. See <code>tf$while_loop</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Optional, a seed for reproducible sampling.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>name</code></td>
+<td>
+<p>string prefixed to Ops created by this function. Default value: <code>NULL</code>,
+(i.e., "mcmc_sample_chain").</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function can sample from multiple chains, in parallel. (Whether or not
+there are multiple chains is dictated by the <code>kernel</code>.)
+</p>
+<p>The <code>current_state</code> can be represented as a single <code>Tensor</code> or a <code>list</code> of
+<code>Tensors</code> which collectively represent the current state.
+Since MCMC states are correlated, it is sometimes desirable to produce
+additional intermediate states, and then discard them, ending up with a set of
+states with decreased autocorrelation.  See Owen (2017). Such "thinning"
+is made possible by setting <code>num_steps_between_results &gt; 0</code>. The chain then
+takes <code>num_steps_between_results</code> extra steps between the steps that make it
+into the results. The extra steps are never materialized (in calls to
+<code>sess$run</code>), and thus do not increase memory requirements.
+</p>
+<p>Warning: when setting a <code>seed</code> in the <code>kernel</code>, ensure that <code>sample_chain</code>'s
+<code>parallel_iterations=1</code>, otherwise results will not be reproducible.
+In addition to returning the chain state, this function supports tracing of
+auxiliary variables used by the kernel. The traced values are selected by
+specifying <code>trace_fn</code>. By default, all kernel results are traced but in the
+future the default will be changed to no results being traced, so plan
+accordingly. See below for some examples of this feature.
+</p>
+
+
+<h3>Value</h3>
+
+<p>list of:
+</p>
+
+<ul>
+<li>
+<p> checkpointable_states_and_trace: if <code>return_final_kernel_results</code> is
+<code>TRUE</code>. The return value is an instance of <code>CheckpointableStatesAndTrace</code>.
+</p>
+</li>
+<li>
+<p> all_states: if <code>return_final_kernel_results</code> is <code>FALSE</code> and <code>trace_fn</code> is
+<code>NULL</code>. The return value is a <code>Tensor</code> or Python list of <code>Tensor</code>s
+representing the state(s) of the Markov chain(s) at each result step. Has
+same shape as input <code>current_state</code> but with a prepended
+<code>num_results</code>-size dimension.
+</p>
+</li>
+<li>
+<p> states_and_trace: if <code>return_final_kernel_results</code> is <code>FALSE</code> and
+<code>trace_fn</code> is not <code>NULL</code>. The return value is an instance of
+<code>StatesAndTrace</code>.
+</p>
+</li>
+</ul>
+<h3>References</h3>
+
+
+<ul><li> <p><a href="http://statweb.stanford.edu/~owen/reports/bestthinning.pdf">Art B. Owen. Statistically efficient thinning of a Markov chain sampler. <em>Technical Report</em>, 2017.</a>
+</p>
+</li></ul>
+<h3>See Also</h3>
+
+<p>Other mcmc_functions: 
+<code>mcmc_effective_sample_size()</code>,
+<code>mcmc_potential_scale_reduction()</code>,
+<code>mcmc_sample_annealed_importance_chain()</code>,
+<code>mcmc_sample_halton_sequence()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+  dims &lt;- 10
+  true_stddev &lt;- sqrt(seq(1, 3, length.out = dims))
+  likelihood &lt;- tfd_multivariate_normal_diag(scale_diag = true_stddev)
+
+  kernel &lt;- mcmc_hamiltonian_monte_carlo(
+    target_log_prob_fn = likelihood$log_prob,
+    step_size = 0.5,
+    num_leapfrog_steps = 2
+  )
+
+  states &lt;- kernel %&gt;% mcmc_sample_chain(
+    num_results = 1000,
+    num_burnin_steps = 500,
+    current_state = rep(0, dims),
+    trace_fn = NULL
+  )
+
+  sample_mean &lt;- tf$reduce_mean(states, axis = 0L)
+  sample_stddev &lt;- tf$sqrt(
+    tf$reduce_mean(tf$math$squared_difference(states, sample_mean), axis = 0L))
+
+</code></pre>
+
+
+</div>

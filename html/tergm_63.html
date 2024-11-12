@@ -1,0 +1,486 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>simulate.tergm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Draw from the distribution of a Temporal Exponential Family
+Random Graph Model</h2>
+
+<h3>Description</h3>
+
+<p><code>simulate</code> is used to draw from temporal
+exponential family random network models in their natural parameterizations.
+See <code>tergm</code> for more information on these models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tergm'
+simulate(
+  object,
+  nsim = 1,
+  seed = NULL,
+  coef = coefficients(object),
+  constraints = object$constraints,
+  monitor = object$targets,
+  time.slices = 1,
+  time.start = NULL,
+  time.burnin = 0,
+  time.interval = 1,
+  control = control.simulate.tergm(),
+  output = c("networkDynamic", "stats", "changes", "final", "ergm_state"),
+  nw.start = NULL,
+  stats = FALSE,
+  verbose = FALSE,
+  ...
+)
+
+## S3 method for class 'network'
+simulate_formula(
+  object,
+  nsim = 1,
+  seed = NULL,
+  coef = NULL,
+  constraints = ~.,
+  monitor = NULL,
+  time.slices = 1,
+  time.start = NULL,
+  time.burnin = 0,
+  time.interval = 1,
+  time.offset = 1,
+  control = control.simulate.formula.tergm(),
+  output = c("networkDynamic", "stats", "changes", "final", "ergm_state"),
+  stats = FALSE,
+  verbose = FALSE,
+  ...,
+  basis = ergm.getnetwork(object),
+  dynamic = FALSE
+)
+
+## S3 method for class 'networkDynamic'
+simulate_formula(
+  object,
+  nsim = 1,
+  seed = NULL,
+  coef = attr(basis, "coef"),
+  constraints = ~.,
+  monitor = NULL,
+  time.slices = 1,
+  time.start = NULL,
+  time.burnin = 0,
+  time.interval = 1,
+  time.offset = 1,
+  control = control.simulate.formula.tergm(),
+  output = c("networkDynamic", "stats", "changes", "final", "ergm_state"),
+  stats = FALSE,
+  verbose = FALSE,
+  ...,
+  basis = eval_lhs.formula(object),
+  dynamic = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>for <code>simulate.tergm</code>, an object of type <code>tergm</code> giving a model fit;
+for <code>simulate_formula.network</code> and <code>simulate_formula.networkDynamic</code>, a formula specifying
+the model
+</p>
+<p><code>simulate_formula.network</code> understands the <code>lasttoggle</code> "API".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>Number of replications (separate chains of networks) of the
+process to run and return. The <code>networkDynamic</code> method only
+supports <code>nsim=1</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>seed</code></td>
+<td>
+<p>Seed value (integer) for the random number generator.  See
+<code>set.seed</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>coef</code></td>
+<td>
+<p>Parameters for the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constraints</code></td>
+<td>
+<p>A formula specifying one or more constraints
+on the support of the distribution of the networks being modeled. Multiple constraints
+may be given, separated by “+” and “-” operators. See
+<code>ergmConstraint</code> for the detailed explanation of
+their semantics and also for an indexed list of the constraints visible to the <span class="pkg">ergm</span> package.
+</p>
+<p>The default is to have no constraints except those provided through
+the <code>ergmlhs</code> API.
+</p>
+<p>Together with the model terms in the formula and the reference measure, the constraints
+define the distribution of networks being modeled.
+</p>
+<p>It is also possible to specify a proposal function directly either
+by passing a string with the function's name (in which case,
+arguments to the proposal should be specified through the
+<code>MCMC.prop.args</code> argument to the relevant control function, or
+by giving it on the LHS of the hints formula to <code>MCMC.prop</code>
+argument to the control function. This will override
+the one chosen automatically.
+</p>
+<p>Note that not all possible combinations of constraints and reference
+measures are supported. However, for relatively simple constraints
+(i.e., those that simply permit or forbid specific dyads or sets of
+dyads from changing), arbitrary combinations should be possible.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>monitor</code></td>
+<td>
+<p>A one-sided formula specifying one or more terms whose
+value is to be monitored.  If <code>monitor</code> is specified as a character
+(one of <code>"formation"</code>, <code>"dissolution"</code>, and <code>"all"</code>) then
+the function <code>.extract.fd.formulae</code> is used to determine the
+corresponding formula; the user should be aware of its behavior and limitations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.slices</code></td>
+<td>
+<p>Number of time slices (or statistics) to return from each
+replication of the dynamic process. See below for return types. Defaults to
+1, which, if <code>time.burnin==0</code> and <code>time.interval==1</code> (the
+defaults), advances the process one time step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.start</code></td>
+<td>
+<p>An optional argument specifying the time point at which
+the simulation is to start. See Details for further information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.burnin</code></td>
+<td>
+<p>Number of time steps to discard before starting to
+collect network statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.interval</code></td>
+<td>
+<p>Number of time steps between successive recordings of
+network statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>A list of control parameters for algorithm tuning.
+Constructed using <code>control.simulate.tergm</code> or
+<code>control.simulate.formula.tergm</code>.  For backwards compatibility,
+control lists from <code>control.simulate.stergm</code> and
+<code>control.simulate.network</code> are allowed in calls to
+<code>simulate.tergm</code>; they are mapped to <code>control.simulate.tergm</code>
+by assigning:
+</p>
+
+<ul>
+<li> <p><code>MCMC.prop.form</code> to <code>MCMC.prop</code>,
+</p>
+</li>
+<li> <p><code>MCMC.prop.args.form</code> to <code>MCMC.prop.args</code>,
+</p>
+</li>
+<li> <p><code>MCMC.prop.weights.form</code> to <code>MCMC.prop.weights</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output</code></td>
+<td>
+<p>A character vector specifying output type: one of
+<code>"networkDynamic"</code> (the default), <code>"stats"</code>, <code>"changes"</code>, <code>"final"</code>, and
+<code>"ergm_state"</code>, with partial matching allowed. See Value section for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nw.start</code></td>
+<td>
+<p>A specification for the starting network to be used by
+<code>simulate.tergm</code>, optional for EGMME fits, but required for CMLE and
+CMPLE fits: </p>
+ <dl>
+<dt>a numeric index <code>i</code>
+</dt>
+<dd>
+<p>use <code>i</code>th time-point's
+network, where the first network in the series used to fit the model is
+defined to be at the first time point;</p>
+</dd>
+<dt>
+<code>"first"</code> or <code>"last"</code>
+</dt>
+<dd>
+<p>the first or last time point used in
+fitting the model; or</p>
+</dd>
+<dt><code>network</code></dt>
+<dd>
+<p>specify the network directly.</p>
+</dd>
+</dl>
+<p><code>networkDynamic</code>s
+cannot be used as starting networks for <code>simulate.tergm</code> at this time.
+(They can be used as starting networks for <code>simulate_formula.networkDynamic</code>,
+of course.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stats</code></td>
+<td>
+<p>Logical: Whether to return
+model statistics. This is not the recommended method:
+use <code>monitor</code> argument instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical or an integer to control the amount of
+progress and diagnostic information to be printed. <code>FALSE</code>/<code>0</code>
+produces minimal output, with higher values producing more
+detail. Note that very high values (5+) may significantly slow
+down processing.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed to or used by methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.offset</code></td>
+<td>
+<p>Argument specifying the offset between the point when the
+state of the network is sampled (<code>time.start</code>) and the the beginning of
+the spell that should be recorded for the newly simulated network state.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>basis</code></td>
+<td>
+<p>For the <code>network</code> and <code>networkDynamic</code> methods,
+the network to start the simulation from.  (If <code>basis</code> is missing,
+the default is the left hand side of the <code>object</code> argument.)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dynamic</code></td>
+<td>
+<p>Logical; if <code>TRUE</code>, dynamic simulation is performed in
+<code>tergm</code>; if <code>FALSE</code> (the default), ordinary <code>ergm</code>
+simulation is performed instead.  Note that when <code>dynamic=FALSE</code>,
+default argument values for <code>ergm</code>'s <code>simulate</code> methods
+are used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The dynamic process is run forward and the results are returned. For the
+method for <code>networkDynamic</code>, the simulation is resumed from the
+last generated time point of <code>basis</code> (or the left hand side of <code>object</code>
+if <code>basis</code> is missing), by default with the same model
+and parameters.
+</p>
+<p>The starting network for the <code>tergm</code> object method
+(<code>simulate.tergm</code>) is determined by the <code>nw.start</code> argument.
+</p>
+
+<ul>
+<li>
+<p>If <code>time.start</code> is specified, it is used as the initial
+time index of the simulation.
+</p>
+</li>
+<li>
+<p>If <code>time.start</code> is not specified (is <code>NULL</code>), then
+if the <code>object</code> carries a time stamp from which to start
+or resume the simulation, either in the form
+of a <code>"time"</code> network attribute (for the
+<code>network</code> method — see the
+<code>lasttoggle</code> "API") or
+in the form of an <code>net.obs.period</code> network attribute (for the
+<code>networkDynamic</code> method), this attribute will be used. (If
+specified, <code>time.start</code> will override it with a warning.)
+
+</p>
+</li>
+<li>
+<p>Othewise, the simulation starts at 0.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>Depends on the <code>output</code> argument:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>"stats"</code></td>
+<td>
+<p>If <code>stats == FALSE</code>, an <code>mcmc</code> matrix with
+monitored statistics, and if <code>stats == TRUE</code>, a
+list containing elements <code>stats</code> for statistics specified in the
+<code>monitor</code> argument, and <code>stats.gen</code> for the model statistics.
+If <code>stats == FALSE</code> and no monitored statistics are specified,
+an empty list is returned, with a warning.
+When <code>nsim&gt;1</code>, an <code>mcmc.list</code> (or list of them) of
+the statistics is returned instead.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>"networkDynamic"</code></td>
+<td>
+<p>A <code>networkDynamic</code>
+object representing the simulated process, with ties present in the
+initial network having onset <code>-Inf</code> and ties present at the end
+of the simulation having terminus <code>+Inf</code>. The method for
+<code>networkDynamic</code> returns the initial
+<code>networkDynamic</code> with simulated changes
+applied to it. The <code>net.obs.period</code> network attribute is
+updated (or added if not existing) to reflect the time period that was
+simulated. If the network does not have any <code>persistent.ids</code>
+defined for vertices, a vertex.pid will be attached in a vertex attribute
+named <code>'tergm_pid'</code> to facilitate 'bookkeeping' between the networkDynamic
+argument and the simulated network time step.
+Additionally, attributes (<code>attr</code>, not network
+attributes) are attached as follows:
+</p>
+
+<dl>
+<dt>
+<code>formula</code>, <code>monitor</code>:</dt>
+<dd>
+<p>Model
+and monitoring formulas used in the simulation, respectively.</p>
+</dd>
+<dt>
+<code>stats</code>, <code>stats.gen</code>:</dt>
+<dd>
+<p>Network statistics as above.</p>
+</dd>
+<dt>
+<code>coef</code>:</dt>
+<dd>
+<p>Coefficients used in the simulation.</p>
+</dd>
+<dt>
+<code>changes</code>:</dt>
+<dd>
+<p>A four-column matrix summarizing the changes in the
+<code>"changes"</code> output. (This may be removed in the future.)</p>
+</dd>
+</dl>
+<p>When <code>nsim&gt;1</code>, a <code>network.list</code> of these
+<code>networkDynamic</code>s is returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>"changes"</code></td>
+<td>
+<p>An integer matrix with four columns (<code>time</code>,
+<code>tail</code>, <code>head</code>, and <code>to</code>), giving the time-stamped
+changes relative to the current network. <code>to</code> is <code>1</code> if
+a tie was formed and <code>0</code> if a tie was dissolved. The
+convention for <code>time</code> is that it gives the time point during
+which the change is effective. For example, a row
+<code>c(5,2,3,1)</code> indicates that between time <code class="reqn">4</code> and <code class="reqn">5</code>,
+a tie from node <code class="reqn">2</code> to node <code class="reqn">3</code> was formed, so that it was
+absent at time point <code class="reqn">4</code> and present at time point <code class="reqn">5</code>;
+while a row <code>c(5,2,3,0)</code> indicates that in that time, that
+tie was dissolved, so that it is was present at time point <code class="reqn">4</code>
+and absent at time point <code class="reqn">5</code>.
+Additionally, the same attributes (<code>attr</code>, not network
+attributes) as with <code>output=="networkDynamic"</code> are attached.
+When <code>nsim&gt;1</code>, a list of these change matrices is returned.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>"final"</code></td>
+<td>
+<p>A <code>network</code>
+object representing the last network in the series generated.
+<code>lasttoggle</code> and <code>time</code> attributes are also included.
+Additionally, the same attributes (<code>attr</code>, not network
+attributes) as with <code>output=="networkDynamic"</code> are attached.
+When <code>nsim&gt;1</code>, a <code>network.list</code> of these
+<code>network</code>s is returned.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>"ergm_state"</code></td>
+<td>
+<p>The <code>ergm_state</code> object resulting
+from the simulation.  Attributes are attached as for other output types.</p>
+</td>
+</tr>
+</table>
+<p>Note that when using <code>simulate_formula.networkDynamic</code> with either
+<code>"final"</code> or <code>"ergm_state"</code> for <code>output</code>, the nodes
+included in these objects are those produced by <code>network.collapse</code>
+at the start time.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+data(samplk)
+
+# Fit a transition from Time 1 to Time 2
+samplk12 &lt;- tergm(list(samplk1, samplk2)~
+                  Form(~edges+mutual+transitiveties+cyclicalties)+
+                  Diss(~edges+mutual+transitiveties+cyclicalties),
+                  estimate="CMLE")
+
+# direct simulation from tergm object
+sim1 &lt;- simulate(samplk12, nw.start="last")
+
+# equivalent simulation from formula with network LHS;
+# must pass dynamic=TRUE for tergm simulation
+sim2 &lt;- simulate(samplk2 ~ Form(~edges+mutual+transitiveties+cyclicalties) +
+                           Diss(~edges+mutual+transitiveties+cyclicalties),
+                           coef = coef(samplk12),
+                           dynamic=TRUE)
+
+# the default simulate output is a networkDynamic, and we can simulate
+# with a networkDynamic LHS as well
+sim3 &lt;- simulate(sim2 ~ Form(~edges+mutual+transitiveties+cyclicalties) +
+                        Diss(~edges+mutual+transitiveties+cyclicalties),
+                        coef = coef(samplk12),
+                        dynamic=TRUE)
+
+</code></pre>
+
+
+</div>

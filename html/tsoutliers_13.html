@@ -1,0 +1,177 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>outliers.effects</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Create the Pattern of Different Types of Outliers</h2>
+
+<h3>Description</h3>
+
+<p>These functions create a unit or weighted impulse for the five types 
+of outliers considered in the package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">outliers.effects(mo, n, weights = FALSE, delta = 0.7, 
+  pars = NULL, freq = 12)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table><tr style="vertical-align: top;">
+<td><code>mo</code></td>
+<td>
+<p>a data frame defining the type, location and weight of the outliers to be created.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>a numeric. The length of the variable that will contain the outlier.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the outliers are weighted by the 
+values in column <code>"coefhat"</code> of the data frame <code>mo</code>. Otherwise, 
+unit weights are considered.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>delta</code></td>
+<td>
+<p>a numeric. Parameter of the temporary change type of outlier.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>a list containing the parameters of the time series model fitted to the data. 
+Only for innovational outlier. See the details section in <code>locate.outliers</code>.</p>
+</td>
+</tr></table>
+<table><tr style="vertical-align: top;">
+<td><code>freq</code></td>
+<td>
+<p>a numeric. The periodicity of the data. Only for seasonal level shift.</p>
+</td>
+</tr></table>
+<h3>Details</h3>
+
+<p>These functions delineate the effect of each type of outlier on the observed data. 
+See the example below for a representation of the outliers.
+</p>
+<p>The function <code>outliers.effects</code> operates directly on the output returned 
+by <code>time</code>. The remaining functions are called by 
+<code>outliers.effects</code> and can be used as a simpler interface to define some outliers.
+They generate the type of outliers indicated by their names.
+</p>
+<p>The column names of the data frame <code>mo</code> must follow the same convention as 
+the output returned by <code>locate.outliers</code>: the column containing the 
+observation at which the outlier sparks is named <code>"ind"</code>; 
+the column containing the weights is named <code>"coefhat"</code> and the type 
+of outlier is specified in a column named <code>"type"</code>. The column <code>"ind"</code> 
+should contain the index time point, not the time point in terms of year and season 
+as given by <code>time</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>n</code> <code class="reqn">\times</code> <code>nrow(mo)</code> or <code>n</code> <code class="reqn">\times</code> <code>length(ind)</code> matrix
+containing by columns each outlier.
+</p>
+
+
+<h3>References</h3>
+
+<p>Chen, C. and Liu, Lon-Mu (1993). 
+‘Joint Estimation of Model Parameters and Outlier Effects in Time Series’.
+<em>Journal of the American Statistical Association</em>,
+<b>88</b>(421), pp. 284-297.
+</p>
+<p>Gómez, V. and Maravall, A. (1996). 
+<em>Programs TRAMO and SEATS. Instructions for the user</em>.
+Banco de España, Servicio de Estudios. Working paper number 9628.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf</a>
+</p>
+<p>Kaiser, R., and Maravall, A. (1999). 
+<em>Seasonal Outliers in Time Series</em>.
+Banco de España, Servicio de Estudios. Working paper number 9915.
+<a href="http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf">http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/99/Fic/dt9915e.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>locate.outliers</code>, <code>remove.outliers</code>, 
+<code>tso</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 30
+# innovative outlier based on ARMA(3, 2) model
+mo &lt;- outliers("IO", 10)
+io &lt;- outliers.effects(mo, n, pars = list(arcoefs = c(0.8, -0.6, 0.2), 
+  macoefs = c(-0.5, 0.2)))
+plot(c(io[seq.int(10)], rep(NA, 20)), type = "s", ylim = range(io), 
+  ylab = "io", main = "IO based on ARMA(3,2)")
+lines(c(rep(NA, 9), io[-seq.int(9)]))
+
+# innovative outlier based on Airlines model ARIMA(0,1,1)(0,1,1)
+p1 &lt;- c(1, -1)
+p2 &lt;- c(1, rep(0, 3), -1)
+p1xp2 &lt;- c(1, -1, 0, 0, -1, 1)
+p1b &lt;- c(1, -0.6)
+p2b &lt;- c(1, rep(0, 3), -0.6)
+p2bxp2b &lt;- c(1, -0.6, 0, 0, -0.6, 0.36)
+io2 &lt;- outliers.effects(mo, n, pars = list(arcoefs = -p1xp2[-1], 
+  macoefs = p2bxp2b[-1]))
+plot(c(io2[seq.int(10)], rep(NA, 20)), type = "s", ylim = range(io2), 
+  main = "IO based on ARIMA(0,1,1)(0,1,1)", ylab = "io2")
+lines(c(rep(NA, 9), io2[-seq.int(9)]))
+
+# additive outlier
+mo &lt;- outliers("AO", 10)
+ao &lt;- outliers.effects(mo, n)
+plot(ao, type = "h", main = "AO: additive outlier")
+
+# level shift
+mo &lt;- outliers("LS", 10)
+ls &lt;- outliers.effects(mo, n)
+plot(ls, type = "s", main = "LS: level shift")
+
+# temporary change
+mo &lt;- outliers("TC", 10)
+tc &lt;- outliers.effects(mo, n)
+plot(c(tc[seq.int(10)], rep(NA, 20)), type = "s", 
+  main = "TC: temporary change", ylab = "tc")
+lines(c(rep(NA, 9), tc[-seq.int(9)]))
+
+# the temporary change with parameter 0.7 is equivalent to 
+# an IO for an AR(1) model with coefficient 0.7
+mo &lt;- outliers("IO", 10)
+io3 &lt;- outliers.effects(mo, n = n, pars = list(arcoefs = c(0.7), macoefs = c(0)))
+all.equal(io3, tc, check.attributes=FALSE)
+
+# the temporary change with parameter 0.7 is equivalent to 
+# an IO for an AR(1) model with coefficient 0.7
+mo &lt;- outliers("IO", 10)
+io4 &lt;- outliers.effects(mo, n = n, pars = list(arcoefs = 1, macoefs = 0))
+all.equal(io4, ls, check.attributes=FALSE)
+
+# seasonal level shift (quarterly data)
+mo &lt;- outliers("SLS", 10)
+sls &lt;- outliers.effects(mo, n, freq = 4)
+plot(sls, type = "h", main = "SLS: seasonal level shift")
+</code></pre>
+
+
+</div>

@@ -1,0 +1,138 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ee_extract_tidy</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>ee_extract_tidy</h2>
+
+<h3>Description</h3>
+
+<p>ee_extract_tidy
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ee_extract_tidy(
+  x,
+  y,
+  stat = "mean",
+  scale,
+  via = "getInfo",
+  container = "rgee_backup",
+  sf = TRUE,
+  lazy = FALSE,
+  quiet = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>tidyee, ee$Image, or ee$ImageCollection</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>sf or ee$feature or ee$FeatureCollection</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stat</code></td>
+<td>
+<p>zonal stat ("mean", "median" , "min","max" etc)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>A nominal scale in meters of the Image projection to work in. By default 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>via</code></td>
+<td>
+<p>Character. Method to export the image. Three method are implemented: "getInfo", "drive", "gcs".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>container</code></td>
+<td>
+<p>Character. Name of the folder ('drive') or bucket ('gcs') to be exported into (ignore if via is not defined as "drive" or "gcs").</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sf</code></td>
+<td>
+<p>Logical. Should return an sf object?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lazy</code></td>
+<td>
+<p>Logical. If TRUE, a future::sequential object is created to evaluate the task in the future. Ignore if via is set as "getInfo". See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quiet</code></td>
+<td>
+<p>Logical. Suppress info message.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional parameters</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>data.frame in long format with point estimates for each time-step and y feature based on statistic provided
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ee_extract</code> for information about ee_extract on ee$ImageCollections and ee$Images
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(rgee)
+library(tidyrgee)
+ee_Initizialize()
+modis_ic &lt;- ee$ImageCollection("MODIS/006/MOD13Q1")
+point_sample_buffered &lt;- tidyrgee::bgd_msna |&gt;
+    sample_n(3) |&gt;
+    sf::st_as_sf(coords=c("_gps_reading_longitude",
+                       "_gps_reading_latitude"), crs=4326) |&gt;
+    sf::st_transform(crs=32646) |&gt;
+    sf::st_buffer(dist = 500) |&gt;
+    dplyr::select(`_uuid`)
+modis_ic_tidy &lt;- as_tidyee(modis_ic)
+modis_monthly_baseline_mean &lt;- modis_ic_tidy |&gt;
+ select("NDVI") |&gt;
+ filter(year %in% 2000:2015) |&gt;
+  group_by(month) |&gt;
+ summarise(stat="mean")
+
+ndvi_monthly_mean_at_pt&lt;- modis_monthly_baseline_mean |&gt;
+   ee_extract(y = point_sample_buffered,
+            fun="mean",
+            scale = 500)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

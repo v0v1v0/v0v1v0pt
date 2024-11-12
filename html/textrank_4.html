@@ -1,0 +1,91 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>textrank_candidates_lsh</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Use locality-sensitive hashing to get combinations of sentences which contain words which are in the same minhash bucket</h2>
+
+<h3>Description</h3>
+
+<p>This functionality is usefull if there are a lot of sentences and most of the sentences have no overlapping
+words in there. In order not to compute the jaccard distance among all possible combinations of sentences as is
+done by using <code>textrank_candidates_all</code>, we can reduce the combinations of sentences by using the Minhash algorithm.
+This function sets up the combinations of sentences which are in the same Minhash bucket.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">textrank_candidates_lsh(x, sentence_id, minhashFUN, bands)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>a character vector of words or terms</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sentence_id</code></td>
+<td>
+<p>a character vector of identifiers of sentences where the words/terms provided in <code>x</code> are part of the sentence.
+The length of <code>sentence_id</code> should be the same length of <code>x</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minhashFUN</code></td>
+<td>
+<p>a function which returns a minhash of a character vector. See the examples or look at <code>minhash_generator</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bands</code></td>
+<td>
+<p>integer indicating to break down the minhashes in <code>bands</code> number of bands. Mark that
+the number of minhash signatures should always be a multiple of the number of local sensitive hashing bands. See the example</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a data.frame with 2 columns textrank_id_1 and textrank_id_2 containing identifiers of sentences <code>sentence_id</code>
+which contained terms in the same minhash bucket.
+This data.frame can be used as input in the <code>textrank_sentences</code> algorithm.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>textrank_sentences</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(textreuse)
+library(udpipe)
+lsh_probability(h = 1000, b = 500, s = 0.1) # A 10 percent Jaccard overlap will be detected well
+
+minhash &lt;- minhash_generator(n = 1000, seed = 123456789)
+
+data(joboffer)
+joboffer$textrank_id &lt;- unique_identifier(joboffer, c("doc_id", "paragraph_id", "sentence_id"))
+sentences &lt;- unique(joboffer[, c("textrank_id", "sentence")])
+terminology &lt;- subset(joboffer, upos %in% c("NOUN", "ADJ"), select = c("textrank_id", "lemma"))
+candidates &lt;- textrank_candidates_lsh(x = terminology$lemma, sentence_id = terminology$textrank_id,
+                                      minhashFUN = minhash, bands = 500)
+head(candidates)
+tr &lt;- textrank_sentences(data = sentences, terminology = terminology,
+                         textrank_candidates = candidates)
+summary(tr, n = 2)
+
+</code></pre>
+
+
+</div>

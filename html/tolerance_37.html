@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mvtol.region</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Multivariate Normal Tolerance Regions</h2>
+
+<h3>Description</h3>
+
+<p>Determines the appropriate tolerance factor for computing multivariate normal tolerance regions based on Monte Carlo methods or other approximations.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mvtol.region(x, alpha = 0.05, P = 0.99, B = 1000, M = 1000,
+             method = c("KM", "AM", "GM", "HM", "MHM", "V11", 
+             "HM.V11", "MC")) 
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>An <code>n</code>x<code>p</code> matrix of data assumed to be drawn from a <code>p</code>-dimensional multivariate normal
+distribution.  <code>n</code> pertains to the sample size.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>The level chosen such that <code>1-alpha</code> is the confidence level.  A vector of <code>alpha</code> values
+may be specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P</code></td>
+<td>
+<p>The proportion of the population to be covered by this tolerance region.  A vector of <code>P</code> values may be
+specified.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>The number of iterations used for the Monte Carlo algorithms (i.e., when <code>method = "KM"</code> or <code>"MC"</code>), which determines the tolerance factor.  The number of
+iterations should be at least as large as the default value of 1000.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>M</code></td>
+<td>
+<p>The number of iterations used for the inner loop of the Monte Carlo algorithm specified through <code>method = "MC"</code>.  The number of
+iterations should be at least as large as the default value of 1000.  Note that this is not required for <code>method = "KM"</code> since that algorithm handles the eigenvalues
+differently in the estimation of the tolerance factor.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>The method for estimating the tolerance factors. <code>"KM"</code> is the Krishnamoorthy-Mondal method, which is the method implemented in previous versions of the <code>tolerance</code>
+package.  It is one of the more accurate methods available.  <code>"AM"</code> is an approximation method based on the arithmetic mean.  <code>"GM"</code> is an approximation method based on the geometric
+mean.  <code>"HM"</code> is an approximation method based on the harmonic mean.  <code>"MHM"</code> is a modified approach based on the harmonic mean.  <code>"V11"</code> is a method that utilizes a certain
+partitioning of a Wishart random matrix for deriving an approximate tolerance factor.  <code>"HM.V11"</code> is a hybrid method of the <code>"HM"</code> and <code>"V11"</code> methods.  <code>"MC"</code> is a simple Monte
+Carlo approach to estimating the tolerance factor, which is computationally expensive as the values of <code>B</code> and <code>M</code> increase.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>All of the methods are outlined in the references that we provided.  In practice, we recommend using the Krishnamoorthy-Mondal approach.  A basic sketch of how the Krishnamoorthy-Mondal algorithm works is as follows:
+</p>
+<p>(1) Generate independent chi-square random variables and Wishart random matrices.
+</p>
+<p>(2) Compute the eigenvalues of the randomly generated Wishart matrices.
+</p>
+<p>(3) Iterate the above steps to generate a set of <code>B</code> sample values such that the <code>100(1-alpha)</code>-th percentile is an approximate tolerance factor.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>mvtol.region</code> returns a matrix where the rows pertain to each confidence level <code>1-alpha</code> specified and the columns
+pertain to each proportion level <code>P</code> specified.
+</p>
+
+
+<h3>References</h3>
+
+<p>Krishnamoorthy, K. and Mathew, T. (1999), Comparison of Approximation Methods for Computing Tolerance Factors for a Multivariate Normal Population, 
+<em>Technometrics</em>, <b>41</b>, 234–249.
+</p>
+<p>Krishnamoorthy, K. and Mondal, S. (2006), Improved Tolerance Factors for Multivariate Normal Distributions, 
+<em>Communications in Statistics - Simulation and Computation</em>, <b>35</b>, 461–478.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> 
+## 90%/90% bivariate normal tolerance region. 
+
+set.seed(100)
+x1 &lt;- rnorm(100, 0, 0.2)
+x2 &lt;- rnorm(100, 0, 0.5)
+x &lt;- cbind(x1, x2)
+
+out1 &lt;- mvtol.region(x = x, alpha = 0.10, P = 0.90, B = 1000,
+                     method = "KM")
+out1
+plottol(out1, x)
+
+## 90%/90% trivariate normal tolerance region. 
+
+set.seed(100)
+x1 &lt;- rnorm(100, 0, 0.2)
+x2 &lt;- rnorm(100, 0, 0.5)
+x3 &lt;- rnorm(100, 5, 1)
+x &lt;- cbind(x1, x2, x3)
+mvtol.region(x = x, alpha = c(0.10, 0.05, 0.01), 
+             P = c(0.90, 0.95, 0.99), B = 1000, method = "KM") 
+
+out2 &lt;- mvtol.region(x = x, alpha = 0.10, P = 0.90, B = 1000, 
+                     method = "KM")
+out2
+plottol(out2, x)
+</code></pre>
+
+
+</div>

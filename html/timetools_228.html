@@ -1,0 +1,204 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>split</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Divide into Groups and Reassemble (Time*DataFrame objects and POSIXct*)</h2>
+
+<h3>Description</h3>
+
+<p>‘split’ divides the data in the vector ‘x’
+into the groups defined by ‘f’.  The replacement
+forms replace values corresponding to such a division.
+Here are listed ‘split’ methods defined for Time
+objects defined in the timetools package
+<code>POSIXst</code>, <code>POSIXcti</code>, etc.). See
+sections below for complete list of methods.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">  ## S4 method for signature 'ANY,POSIXctp'
+split(x, f, drop = FALSE, ...)
+  ## S4 method for signature 'ANY,POSIXcti'
+split(x, f, drop = FALSE, ...)
+  ## S4 method for signature 'ANY,POSIXst'
+split(x, f, drop = FALSE, ...)
+
+  ## S4 method for signature 'TimeIntervalDataFrame,TimeIntervalDataFrame'
+split(x, f, ..., split.x=FALSE, keep.f=TRUE)
+  ## S4 method for signature 'TimeIntervalDataFrame,POSIXcti'
+split(x, f, ..., split.x=FALSE)
+  ## S4 method for signature 'TimeIntervalDataFrame,POSIXctp'
+split(x, f, ...,  split.x=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>data frame containing values to be divided into groups.
+TimeIntervalDataFrame as data.frame.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>f</code></td>
+<td>
+<p>Can be of different kind. Is used to defined the grouping.
+See details below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>drop</code></td>
+<td>
+<p>logical indicating if levels that do not
+occur should be dropped (if <code>f</code> is a <code>factor</code>
+or a list).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further potential arguments passed to
+methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split.x</code></td>
+<td>
+<p>logical indicating if data in <code>x</code>
+that are over several intervals or not completely included in
+one interval of <code>f</code> must be 'cut' to
+fit to new intervals (TRUE) or ignored (FALSE).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keep.f</code></td>
+<td>
+<p>logical indicating if <code>f</code> values must be kept
+on the resulting list.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each new split method defined in
+<code>timetools</code> a short description is given
+there.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The value returned from ‘split’ is a list of vectors
+containing the values for the groups.  The components of
+the list are named by the levels of <code>f</code> (after converting
+to a factor). The class of each element of the list is the one 
+of the initial <code>x</code> structure.
+</p>
+
+
+<h3>Split over POSIX*t* objects</h3>
+
+<p>Since POSIXst, POSIXctp and POSIXcti objects are similar to vector
+it must be possible to split other type of objects against those ones.
+</p>
+
+<dl>
+<dt>split(x, 'POSIXctp', drop=FALSE, ...)</dt>
+<dd>
+<p>'POSIXctp' is first
+cast as character (using format) and then the split is done.</p>
+</dd>
+<dt>split(x, 'POSIXcti', drop=FALSE, ...)</dt>
+<dd>
+<p>'POSIXcti' is first
+cast as character (using format) and then the split is done.
+The <code>...</code> argument is used to specify the format if needed.</p>
+</dd>
+<dt>split(x, 'POSIXst', drop=FALSE, ...)</dt>
+<dd>
+<p>'POSIXst' is first
+cast as numeric and then the split is done.</p>
+</dd>
+</dl>
+<h3>split('TimeIntervalDataFrame', 'TimeIntervalDataFrame', ..., split.x = FALSE, keep.f = TRUE)</h3>
+
+<p>Split a TimeIntervalDataFrame into another TimeIntervalDataFrame.
+</p>
+<p>The method takes each time interval of the first TimeIntervalDataFrame
+(TitDF) and searches with which time intervals of the second it
+intersects.
+</p>
+<p>Each time interval of the first TItDF can intersect with
+none, one or several time intervals of the second TItDF. The arguments
+'split.x' is defined to tell the method what to do : </p>
+
+<ul>
+<li>
+<p>if the time interval in the first TItDF (ti1) doesn't match
+any in the second TItDF, nothing to do
+</p>
+</li>
+<li>
+<p>if it (ti1) matches one in the second TItDF (ti2) and is
+included inside it, it (ti1) is entirely taken in the final result
+</p>
+</li>
+<li>
+<p>if it (ti1) intersects one and only one (ti2) inside the second
+TItDF, (ti1) is truncated to be included inside (ti2) if 'split.x' is
+TRUE and (ti1) is removed if 'split.x' is FALSE
+</p>
+</li>
+<li>
+<p>if it (ti1) is over several time intervals of the second TItDF
+(ti2.a, ti2.b, etc.) :</p>
+
+<ul>
+<li>
+<p>if 'split.x' is TRUE, (ti1) is truncated into each ti2.x to be
+included inside each one
+</p>
+</li>
+<li>
+<p>if 'split.x' is FALSE, (ti1) is removed.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>split('TimeIntervalDataFrame', 'POSIXctp', ..., split.x = FALSE)</h3>
+
+<p>Split a TimeIntervalDataFrame into a time period (of length 1).
+A TimeIntervalDataFrame is created (cf TimeIntervalDataFrame
+constructor) and the the above method is called.
+</p>
+
+
+<h3>split('TimeIntervalDataFrame', 'POSIXcti', ..., split.x = FALSE)</h3>
+
+<p>Split a TimeIntervalDataFrame into time intervals (POSIXcti).
+It is exactly the same as splitting a TimeIntervalDataFrame into
+another except that 'f' has not data.
+</p>
+<p>So a TimeIntervalDataFrame is created according to 'f' and the 
+the above method is called.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>split</code>,
+<code>TimeIntervalDataFrame-class</code>,
+<code>POSIXcti</code>,
+<code>POSIXst-class</code>, <code>POSIXctp-class</code>
+</p>
+
+
+</div>

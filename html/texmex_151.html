@@ -1,0 +1,497 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ggplot.mex</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Conditional multivariate extreme values modelling</h2>
+
+<h3>Description</h3>
+
+<p>Fit the conditional multivariate extreme value model of Heffernan and Tawn
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'mex'
+ggplot(
+  data = NULL,
+  mapping,
+  ptcol = "blue",
+  col = "cornflowerblue",
+  fill = "orange",
+  plot. = TRUE,
+  quantiles = seq(0.1, by = 0.2, len = 5),
+  ...,
+  environment
+)
+
+mex(
+  data,
+  which,
+  mth,
+  mqu,
+  dqu,
+  cov = "numeric",
+  family = gpd,
+  margins = "laplace",
+  constrain = TRUE,
+  v = 10,
+  penalty = "gaussian",
+  maxit = 10000,
+  trace = 0,
+  verbose = FALSE,
+  priorParameters = NULL
+)
+
+mexAll(data, mqu, dqu)
+
+## S3 method for class 'mexList'
+print(x, ...)
+
+## S3 method for class 'mex'
+plot(x, quantiles = seq(0.1, by = 0.2, len = 5), col = "grey", ...)
+
+## S3 method for class 'predict.mex'
+plot(x, pch = c(1, 3, 20), col = c(2, 8, 3), cex = c(1, 1, 1), ask = TRUE, ...)
+
+## S3 method for class 'predict.mex'
+ggplot(
+  data = NULL,
+  mapping,
+  xlab,
+  ylab,
+  main,
+  ptcol = c("grey", "dark blue", "orange"),
+  col = "dark blue",
+  fill = "orange",
+  shape = 16:18,
+  size = rep(1, 3),
+  plot. = TRUE,
+  ...,
+  environment
+)
+
+## S3 method for class 'mex'
+predict(
+  object,
+  which,
+  pqu = 0.99,
+  nsim = 1000,
+  trace = 10,
+  smoothZdistribution = FALSE,
+  ...
+)
+
+## S3 method for class 'predict.mex'
+summary(object, mth, probs = c(0.05, 0.5, 0.95), ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A numeric matrix or data.frame, the columns of which are to be
+modelled.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>col</code></td>
+<td>
+<p>In <code>plot</code> method for objects of class <code>mex</code>, the colour
+for points on scatterplots of residuals and original data respectively.  In
+<code>plot</code> method for objects of class <code>predict.mex</code>, the colours of
+points for observed, and simulated data (conditioning variable not the
+largest) and simulated data (conditioning variable is the largest)
+respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>quantiles</code></td>
+<td>
+<p>A vector of quantiles taking values between 0 and 1
+specifying the quantiles of the conditional distributions which will be
+plotted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed to methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which</code></td>
+<td>
+<p>The variable on which to condition.  This can be either scalar,
+indicating the column number of the conditioning variable, or character,
+giving the column name of the conditioning variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mth</code></td>
+<td>
+<p>Marginal thresholds. In <code>mex</code>, the threshold above which to
+fit generalized Pareto distributions.  If this is a vector of length 1, the
+same threshold will be used for each variable. Otherwise, it should be a
+vector whose length is equal to the number of columns in <code>data</code>.
+</p>
+<p>In <code>summary.predict.mex</code>, the thresholds over which to simulate data
+from the fitted multivariate model. If not supplied, it is taken to be the
+thresholds that were used to fit the dependence model on the scale of the
+original data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mqu</code></td>
+<td>
+<p>Marginal quantiles As an alternative to specifying the marginal
+GPD fitting thresholds via <code>mth</code>, you can specify the quantile (a
+probability) above which to fit generalized Pareto distributions. If this is
+a vector of length 1, the same quantile will be used for each variable.
+Otherwise, it should be a vector whose length is equal to the number of
+columns in <code>data</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dqu</code></td>
+<td>
+<p>Dependence quantile. Used to specify the quantile at which to
+threshold the conditioning variable data when estimating the dependence
+parameters.  For example <code>dqu=0.7</code> will result in the data with the
+highest 30% of values of the conditioning variable being used to estimate
+the dependence parameters.  The same threshold will be used for each
+dependent variable.  If not supplied then the default is to set
+<code>dqu=mqu[which]</code> the quantile corresponding to the threshold used to
+fit the marginal model to the tail of the conditioning variable.  Note that
+there is no requirement for the quantiles used for marginal fitting
+(<code>mqu</code>) and dependence fitting (<code>dqu</code>) to be the same, or for them
+to be ordered in any way.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cov</code></td>
+<td>
+<p>String, passed through to <code>evm</code>: how to estimate the covariance.
+Defaults to <code>cov = "observed"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>An object of class "texmexFamily". Should be either
+<code>family = gpd</code> or <code>family = cgpd</code> and defaults to the first of those.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>margins</code></td>
+<td>
+<p>See documentation for <code>mexDependence</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>constrain</code></td>
+<td>
+<p>See documentation for <code>mexDependence</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>v</code></td>
+<td>
+<p>See documentation for <code>mexDependence</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>penalty</code></td>
+<td>
+<p>How to penalize the likelihood when estimating the marginal
+generalized Pareto distributions. Defaults to “gaussian”. See the help
+file for <code>evm</code> for more information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxit</code></td>
+<td>
+<p>The maximum number of iterations to be used by the optimizer.
+defaults to <code>maxit = 10000</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace</code></td>
+<td>
+<p>Passed internally to <code>optim</code>. Whether or not to
+inform the user of the progress of the optimizer. Defaults to 0, indicating
+no trace.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Whether or not to keep the user informed of progress.
+Defaults to <code>verbose = FALSE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priorParameters</code></td>
+<td>
+<p>Parameters of prior/penalty used for estimation of
+the GPD parameters.  This is only used if <code>penalty = "gaussian"</code>.  It
+is a named list, each element of which contains two components: the first
+component should be a vector of length 2 corresponding to the location of
+the Gaussian distribution; the second a 2x2 matrix corresponding to the
+covariance matrix of the distribution.  The names should match the names of
+the columns of <code>data</code>.  If not provided, the default priors are
+independent normal, centred at zero, with variance 10000 for phi=log(sigma)
+and 0.25 for xi. See the details section.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x, object</code></td>
+<td>
+<p>Object of class <code>mex</code> or <code>summary.mex</code> as returned by these functions respectively.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pch, cex</code></td>
+<td>
+<p>Plotting characters: colours and symbol expansion. The
+observed and simulated data are plotted using different symbols, controlled
+by these arguments and <code>col</code>, each of which should be of length 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ask</code></td>
+<td>
+<p>Whether or not to ask before changing the plot. Defaults to
+<code>ask = TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shape, size, mapping, ptcol, fill, plot., environment, xlab, ylab, main</code></td>
+<td>
+<p>Further arguments to plot and ggplot methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pqu</code></td>
+<td>
+<p>Prediction quantile. Argument to <code>predict</code> method. The
+quantile of the conditioning variable above which it will be simulated for
+importance sampling based prediction.  Defaults to <code>pqu = .99 </code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nsim</code></td>
+<td>
+<p>Argument to <code>predict</code> method. The number of simulated
+observations to be generated for prediction.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>smoothZdistribution</code></td>
+<td>
+<p>In <code>predict.mex</code>, whether or not to sample
+from the smoothed distribution of the underlying residuals.  Defaults to
+<code>FALSE</code>, in which case no smoothing is carried out.  If <code>TRUE</code>
+then each margin of the underlying multivariate residual is smoothed
+independently, by using kernel smoothing with a normal kernel, and bandwith
+chosen using the <code>bw.nrd</code> function.  This can be useful for
+removing "stripeyness" in importance samples which have few values in the
+conditional tails.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs</code></td>
+<td>
+<p>In <code>summary</code> method for objects of class
+<code>predict.mex</code>: the quantiles of the conditional distribution(s) to
+calculate.  Defaults to 5%, 50% and 95%.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>mex</code> works as follows. First, Generalized Pareto
+distributions (GPD) are fitted to the upper tails of each of the marginal
+distributions of the data: the GPD parameters are estimated for each column
+of the data in turn, independently of all other columns. Then, the
+conditional multivariate approach of Heffernan and Tawn is used to model the
+dependence between variables. The returned object is of class "mex".
+</p>
+<p>This function is a wrapper for calls to <code>migpd</code> and
+<code>mexDependence</code>, which estimate parameters of the marginal and
+dependence components of the Heffernan and Tawn model respectively.  See
+documentation of these functions for details of modelling issues including
+the use of penalties / priors, threshold choice and checking for convergence
+of parameter estimates.
+</p>
+<p>The <code>plot</code> method produces diagnostic plots for the fitted dependence
+model described by Heffernan and Tawn, 2004.  The plots are best viewed by
+using the plotting area split by <code>par(mfcol=c(.,.))</code> rather than
+<code>mfrow</code>, see examples below.  Three diagnostic plots are produced for
+each dependent variable:
+</p>
+<p>1) Scatterplots of the residuals Z from the fitted model of Heffernan and
+Tawn (2004) are plotted against the quantile of the conditioning variable,
+with a lowess curve showing the local mean of these points.  2) The absolute
+value of <code>Z-mean(Z)</code> is also plotted, again with the lowess curve
+showing the local mean of these points.  Any trend in the location or
+scatter of these variables with the conditioning variable indicates a
+violation of the model assumption that the residuals Z are indepenendent of
+the conditioning variable.  This can be indicative of the dependence
+threshold used being too low. 3) The final plots show the original data (on
+the original scale) and the fitted quantiles (specified by <code>quantiles</code>)
+of the conditional distribution of each dependent variable given the
+conditioning variable.  A model that fits well will have good agreement
+between the distribution of the raw data (shown by the scatter plot) and the
+fitted quantiles. Note that the raw data are a sample from the joint
+distribution, whereas the quantiles are those of the estimated conditional
+distribution given the value of the conditioning variable, and while these
+two distributions should move into the same part of the sample space as the
+conditioning variable becomes more extreme, they are not the same thing!
+</p>
+<p>The <code>predict</code> method for <code>mex</code> works as follows. The returned
+object has class "predict.mex". Simulated values of the dependent variables
+are created, given that the conditioning variable is above its 100<code>pqu</code>
+quantile.  If <code>predict.mex</code> is passed an object <code>object</code> of class
+<code>"mex"</code> then the simulated values are based only on the point estimate
+of the dependence model parameters, and the original data.  If
+<code>predict.mex</code> is passed an object <code>object</code> of class
+<code>"bootmex"</code> then the returned value additionally contains simulated
+replicate data sets corresponding to the bootstrap model parameter
+estimates.  In both cases, the simulated values based on the original data
+and point estimates appear in component <code>object$data$simulated</code>. The
+simulated data from the bootstrap estimates appear in
+<code>object$replicates</code>.
+</p>
+<p>The <code>plot</code> method for class <code>"predict.mex"</code> displays both the
+original data and the simulated data generated above the threshold for
+prediction; it shows the threshold for prediction (vertical line) and also
+the curve joining equal quantiles of the marginal distributions – this is
+for reference: variables that are perfectly dependent will lie exactly on
+this curve.  Original data are shown with one plotting character and
+simulated data with another; colours of simulated point distinguish those
+points which have the conditioning variable as the largest (on a quantile
+scale) or not the largest.
+</p>
+<p>The function <code>mexAll</code> fits a collection of GPD and conditional
+dependence models, the same fitted GPD being used for all of the dependence
+model fits.  This can be used in turn to generate Monte Carlo samples from
+the entire sample space usign the collected dependence models.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A call to <code>mex</code> returns an list of class <code>mex</code> containing
+the following three items: </p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>margins</code></td>
+<td>
+<p>An object of class
+<code>migpd</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dependence</code></td>
+<td>
+<p>An object of class
+<code>mexDependence</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>This matches the original function
+call.</p>
+</td>
+</tr>
+</table>
+<p> There are <code>plot</code>, <code>summary</code>, <code>coef</code> and <code>predict</code>
+methods for this class.
+</p>
+<p>A call to <code>predict.mex</code> does the importance sampling for prediction,
+and returns a list of class <code>"predict.mex"</code> for which there are print
+and plot methods available.  The summary method for this class of object is
+intended to be used following a call to the predict method, to estimate
+quantiles or probabilities of threshold excesses for the fitted conditional
+distributions given the conditioning variable above the threshold for
+prediction.  See examples below.
+</p>
+<p>There are <code>print</code>, <code>summary</code> and <code>plot</code> methods available for
+the class "predict.mex".
+</p>
+
+
+<h3>Note</h3>
+
+<p>The package <code>texmex</code> is equipped to fit GPD models to the upper
+marginal tails only, not the lower tails.  This is appropriate for
+extrapolating into the tails of any dependent variable when dependence
+between this variable and the conditioning variable is positive.  In the
+case of negative dependence between the conditioning variable and any
+dependent variable, estimation of the conditional distribution of the
+dependent variable for extreme values of the conditioning variable would
+naturally visit the lower tail of the dependent variable.  Extrapolation
+beyond the range of the observed lower tail is not supported in the current
+version of <code>texmex</code>. In cases where negative dependence is observed and
+extrapolation is required into the lower tail of the dependent variable, the
+situation is trivially resolved by working with a reflection of the
+dependent variable (Y becomes -Y and so the upper and lower tails are
+swapped). Results can be calculated for the reflected variable then
+reflected back to the correct scale.  This is satisfactory when only the
+pair of variables (the conditioning and single dependent variable) are of
+interest, but when genuine multivariate (as opposed to simply bivariate)
+structure is of interest, this approach will destroy the dependence
+structure between the reflected dependent variable and the remaining
+dependent variables.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Harry Southworth, Janet E. Heffernan
+</p>
+
+
+<h3>References</h3>
+
+<p>J. E. Heffernan and J. A. Tawn, A conditional approach for
+multivariate extreme values, Journal of the Royal Statistical Society B, 66,
+497 - 546, 2004
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>migpd</code>, <code>mexDependence</code>,
+<code>bootmex</code>, <code>mexMonteCarlo</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+w &lt;- mex(winter, mqu=.7, dqu=0.7, which="O3")
+w
+par(mfcol=c(3, 2))
+plot(w)
+
+par(mfcol=c(2,2))
+p &lt;- predict(w)
+summary(p)
+summary(p,probs=c(0.01,0.2,0.5,0.8,0.99))
+summary(p,probs=0.5,mth=c(40,50,150,25,50))
+p
+plot(p)
+
+
+</code></pre>
+
+
+</div>

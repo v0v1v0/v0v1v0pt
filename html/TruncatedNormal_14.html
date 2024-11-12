@@ -1,0 +1,144 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>mvrandn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Truncated multivariate normal generator</h2>
+
+<h3>Description</h3>
+
+<p>Simulate <code class="reqn">n</code>  independent and identically distributed random vectors
+from the <code class="reqn">d</code>-dimensional <code class="reqn">N(0,\Sigma)</code> distribution
+(zero-mean normal with covariance <code class="reqn">\Sigma</code>) conditional on <code class="reqn">l&lt;X&lt;u</code>.
+Infinite values for <code class="reqn">l</code> and <code class="reqn">u</code> are accepted.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">mvrandn(l, u, Sig, n, mu = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>l</code></td>
+<td>
+<p>lower truncation limit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>u</code></td>
+<td>
+<p>upper truncation limit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Sig</code></td>
+<td>
+<p>covariance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>number of simulated vectors</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu</code></td>
+<td>
+<p>location parameter</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+
+<ul>
+<li>
+<p> Bivariate normal:
+Suppose we wish to simulate a bivariate <code class="reqn">X</code> from <code class="reqn">N(\mu,\Sigma)</code>, conditional on
+<code class="reqn">X_1-X_2&lt;-6</code>. We can recast this as the problem of simulation
+of <code class="reqn">Y</code> from <code class="reqn">N(0,A\Sigma A^\top)</code> (for an appropriate matrix <code class="reqn">A</code>)
+conditional on <code class="reqn">l-A\mu &lt; Y &lt; u-A\mu</code> and then setting <code class="reqn">X=\mu+A^{-1}Y</code>.
+See the example code below.
+</p>
+</li>
+<li>
+<p> Exact posterior simulation for Probit regression: Consider the
+Bayesian Probit Regression model applied to the <code>lupus</code> dataset.
+Let the prior for the regression coefficients <code class="reqn">\beta</code> be <code class="reqn">N(0,\nu^2 I)</code>. Then, to simulate from the Bayesian
+posterior exactly, we first simulate
+<code class="reqn">Z</code> from <code class="reqn">N(0,\Sigma)</code>, where  <code class="reqn">\Sigma=I+\nu^2 X X^\top,</code>
+conditional on <code class="reqn">Z\ge 0</code>. Then, we simulate the posterior regression coefficients, <code class="reqn">\beta</code>, of the Probit regression
+by drawing <code class="reqn">(\beta|Z)</code> from <code class="reqn">N(C X^\top Z,C)</code>, where <code class="reqn">C^{-1}=I/\nu^2+X^\top X</code>.
+See the example code below.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>a <code class="reqn">d</code> by <code class="reqn">n</code> matrix storing the random vectors, <code class="reqn">X</code>, drawn from <code class="reqn">N(0,\Sigma)</code>, conditional on <code class="reqn">l&lt;X&lt;u</code>;
+</p>
+
+
+<h3>Note</h3>
+
+<p>The algorithm may not work or be very inefficient if <code class="reqn">\Sigma</code> is close to being rank deficient.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>mvNqmc</code>, <code>mvNcdf</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"> # Bivariate example.
+
+ Sig &lt;- matrix(c(1,0.9,0.9,1), 2, 2);
+ mu &lt;- c(-3,0); l &lt;- c(-Inf,-Inf); u &lt;- c(-6,Inf);
+ A &lt;- matrix(c(1,0,-1,1),2,2);
+ n &lt;- 1e3; # number of sampled vectors
+ Y &lt;- mvrandn(l - A %*% mu, u - A %*% mu, A %*% Sig %*% t(A), n);
+ X &lt;- rep(mu, n) + solve(A, diag(2)) %*% Y;
+ # now apply the inverse map as explained above
+ plot(X[1,], X[2,]) # provide a scatterplot of exactly simulated points
+## Not run: 
+# Exact Bayesian Posterior Simulation Example.
+
+data("lupus"); # load lupus data
+Y = lupus[,1]; # response data
+X = lupus[,-1]  # construct design matrix
+m=dim(X)[1]; d=dim(X)[2]; # dimensions of problem
+ X=diag(2*Y-1) %*%X; # incorporate response into design matrix
+ nu=sqrt(10000); # prior scale parameter
+ C=solve(diag(d)/nu^2+t(X)%*%X);
+ L=t(chol(t(C))); # lower Cholesky decomposition
+ Sig=diag(m)+nu^2*X %*% t(X); # this is covariance of Z given beta
+ l=rep(0,m);u=rep(Inf,m);
+ est=mvNcdf(l,u,Sig,1e3);
+ # estimate acceptance probability of Crude Monte Carlo
+ print(est$upbnd/est$prob)
+ # estimate the reciprocal of acceptance probability
+ n=1e4 # number of iid variables
+ z=mvrandn(l,u,Sig,n);
+ # sample exactly from auxiliary distribution
+ beta=L %*% matrix(rnorm(d*n),d,n)+C %*% t(X) %*% z;
+ # simulate beta given Z and plot boxplots of marginals
+ boxplot(t(beta))
+ # plot the boxplots of the marginal
+ # distribution of the coefficients in beta
+ print(rowMeans(beta)) # output the posterior means
+ 
+## End(Not run)
+</code></pre>
+
+
+</div>

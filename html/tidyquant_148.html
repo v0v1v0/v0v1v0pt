@@ -1,0 +1,150 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tq_performance</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computes a wide variety of summary performance metrics from stock or portfolio returns</h2>
+
+<h3>Description</h3>
+
+<p>Asset and portfolio performance analysis is a deep field with a wide range of theories and
+methods for analyzing risk versus reward. The <code>PerformanceAnalytics</code> package
+consolidates many of the most widely used performance metrics as functions that can
+be applied to stock or portfolio returns. <code>tq_performance</code>
+implements these performance analysis functions in a tidy way, enabling scaling
+analysis using the split, apply, combine framework.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tq_performance(data, Ra, Rb = NULL, performance_fun, ...)
+
+tq_performance_(data, Ra, Rb = NULL, performance_fun, ...)
+
+tq_performance_fun_options()
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>tibble</code> (tidy data frame) of returns in tidy format (i.e long format).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Ra</code></td>
+<td>
+<p>The column of asset returns</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Rb</code></td>
+<td>
+<p>The column of baseline returns (for functions that require comparison to a baseline)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>performance_fun</code></td>
+<td>
+<p>The performance function from <code>PerformanceAnalytics</code>. See
+<code>tq_performance_fun_options()</code> for a complete list of integrated functions.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters passed to the <code>PerformanceAnalytics</code> function.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Important concept</strong>: Performance is based on the statistical properties of returns,
+and as a result this function uses stock or portfolio returns as opposed
+to stock prices.
+</p>
+<p><code>tq_performance</code> is a wrapper for various <code>PerformanceAnalytics</code> functions
+that return portfolio statistics.
+The main advantage is the ability to scale with the <code>tidyverse</code>.
+</p>
+<p><code>Ra</code> and <code>Rb</code> are the columns containing asset and baseline returns, respectively.
+These columns are mapped to the <code>PerformanceAnalytics</code> functions. Note that <code>Rb</code>
+is not always required, and in these instances the argument defaults to <code>Rb = NULL</code>.
+The user can tell if <code>Rb</code> is required by researching the underlying performance function.
+</p>
+<p><code>...</code> are additional arguments that are passed to the <code>PerformanceAnalytics</code>
+function. Search the underlying function to see what arguments can be passed through.
+</p>
+<p><code>tq_performance_fun_options</code> returns a list of compatible <code>PerformanceAnalytics</code> functions
+that can be supplied to the <code>performance_fun</code> argument.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns data in the form of a <code>tibble</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>tq_transmute()</code> which can be used to calculate period returns from a
+set of stock prices. Use <code>mutate_fun = periodReturn</code> with the appropriate periodicity
+such as <code>period = "monthly"</code>.
+</p>
+</li>
+<li> <p><code>tq_portfolio()</code> which can be used to aggregate period returns from
+multiple stocks to period returns for a portfolio.
+</p>
+</li>
+<li>
+<p> The <code>PerformanceAnalytics</code> package, which contains the underlying functions
+for the <code>performance_fun</code> argument. Additional parameters can be passed via <code>...</code>.
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Load libraries
+library(dplyr)
+
+# Use FANG data set
+
+# Get returns for individual stock components grouped by symbol
+Ra &lt;- FANG %&gt;%
+    group_by(symbol) %&gt;%
+    tq_transmute(adjusted, periodReturn, period = "monthly", col_rename = "Ra")
+
+# Get returns for SP500 as baseline
+Rb &lt;- "^GSPC" %&gt;%
+    tq_get(get  = "stock.prices",
+           from = "2010-01-01",
+           to   = "2015-12-31") %&gt;%
+    tq_transmute(adjusted, periodReturn, period = "monthly", col_rename = "Rb")
+
+# Merge stock returns with baseline
+RaRb &lt;- left_join(Ra, Rb, by = c("date" = "date"))
+
+##### Performance Metrics #####
+
+# View options
+tq_performance_fun_options()
+
+# Get performance metrics
+RaRb %&gt;%
+    tq_performance(Ra = Ra, performance_fun = SharpeRatio, p = 0.95)
+
+RaRb %&gt;%
+    tq_performance(Ra = Ra, Rb = Rb, performance_fun = table.CAPM)
+
+</code></pre>
+
+
+</div>

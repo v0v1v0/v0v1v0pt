@@ -1,0 +1,329 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>E_VOL_AB_HmDm_HT.f</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Estimate volume for stem and sections</h2>
+
+<h3>Description</h3>
+
+<p>Estimate volume for a complete stem from bottom to tip or 
+for a section defined by lower and upper diameter or height. Variances for
+estimated volumes are calculated.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">E_VOL_AB_HmDm_HT.f(
+  Hm,
+  Dm,
+  mHt,
+  sHt = 0,
+  A = NULL,
+  B = NULL,
+  iDH = "D",
+  par.lme,
+  Rfn = list(fn = "sig2"),
+  IA = F,
+  nGL = 51,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Hm</code></td>
+<td>
+<p>Numeric vector of stem heights (m) along which diameter 
+measurements were taken for calibration. Can be of length 1. Must be of same 
+length as <code>Dm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Dm</code></td>
+<td>
+<p>Numeric vector of diameter measurements (cm) taken for calibration.
+Can be of length 1. Must be of same length as <code>Hm</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mHt</code></td>
+<td>
+<p>Scalar. Tree height (m).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sHt</code></td>
+<td>
+<p>Scalar. Standard deviation of stem height. Can be 0 if height was 
+measured without error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>Numeric scalar defining the lower threshold of a stem section for 
+volume estimation. Depends on <code>iDH</code>. If <code>iDH</code> = "D", a diameter 
+(cm), if <code>iDH</code> = "H", a height (m). If NULL, section starts at lowest 
+point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>Numeric scalar defining the upper threshold of a stem section for 
+volume estimation. Depends on <code>iDH</code>. If <code>iDH</code> = "D", a diameter
+(cm), if <code>iDH</code> = "H", a height (m). If NULL, section ends at tip.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iDH</code></td>
+<td>
+<p>Character scalar. Either "D" or "H". Type of threshold for section
+volume estimation. See <code>A</code> or <code>B</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>par.lme</code></td>
+<td>
+<p>List of taper model parameters obtained by 
+<code>TapeR_FIT_LME.f</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Rfn</code></td>
+<td>
+<p>list with function name to provide estimated or assumed residual 
+variances for the given measurements, optionally parameters for such functions</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>IA</code></td>
+<td>
+<p>Logic scalar. If TRUE, variance calculation of height estimate 
+based on 2-point distribution. If FALSE, variance calculation of height
+estimate based on Normal approximation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nGL</code></td>
+<td>
+<p>Numeric scalar. Number of support points for numerical
+integration.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>not currently used</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>calculates the volume for a complete stem or sections defined by
+<code>A</code> and <code>B</code>, which might be defined as diameter or height. The
+parameter <code>Rfn</code> can be used to force the taper curve through the
+measured points (e.g. by <code>Rfn=list(fn="zero")</code>, cf. <code>resVar</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>a list holding nine elements:
+</p>
+
+<ul>
+<li>
+<p>E_VOL: Estimated volume (m^3).
+</p>
+</li>
+<li>
+<p>VAR_VOL: Variance of the volume estimate.
+</p>
+</li>
+<li>
+<p>Hm: Height of diameter measurement (m).
+</p>
+</li>
+<li>
+<p>Dm: Diameter measurement (cm).
+</p>
+</li>
+<li>
+<p>Ht: Tree height (m).
+</p>
+</li>
+<li>
+<p>Da: Diameter at lower section threshold (cm).
+</p>
+</li>
+<li>
+<p>Db: Diameter at upper section threshold (cm).
+</p>
+</li>
+<li>
+<p>Ha: Height at lower section threshold (m).
+</p>
+</li>
+<li>
+<p>Hb: Height at upper section threshold (m).
+</p>
+</li>
+<li>
+<p>Rfn: Function applied for estimated or assumed residual variance.
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Edgar Kublin
+</p>
+
+
+<h3>References</h3>
+
+<p>Kublin, E., Breidenbach, J., Kaendler, G. (2013) A flexible stem 
+taper and volume prediction method based on mixed-effects B-spline 
+regression, Eur J For Res, 132:983-997.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TapeR_FIT_LME.f</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># example data
+data(DxHx.df)
+# taper curve parameters based on all measured trees
+data(SK.par.lme)
+
+#select data of first tree
+Idi &lt;- (DxHx.df[,"Id"] == unique(DxHx.df$Id)[1])
+(tree1 &lt;- DxHx.df[Idi,])
+
+## Calculate the timber volume for the whole stem
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1],
+                          sHt = 0, # no height variance assumed
+                          par.lme = SK.par.lme)
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for the whole stem, using Rfn="zero"
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1],
+                          sHt = 0, # no height variance assumed
+                          par.lme = SK.par.lme,
+                          Rfn = list(fn="zero"))
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for the whole stem
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1],
+                          sHt = 1, # no height variance assumed
+                          par.lme = SK.par.lme)
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for the whole stem, using Rfn="zero"
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1],
+                          sHt = 1, #  height variance assumed
+                          par.lme = SK.par.lme,
+                          Rfn = list(fn="zero"))
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for a selected section given a height (0.3 - 5 m)
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1], 
+                          sHt = 1, 
+                          par.lme = SK.par.lme, 
+                          A=0.3, 
+                          B=5, 
+                          iDH = "H")
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for a selected section given a height (0.3 - 5 m)
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], 
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1], 
+                          sHt = 1, 
+                          par.lme = SK.par.lme, 
+                          A=0.3, 
+                          B=5, 
+                          iDH = "H", 
+                          Rfn=list(fn="zero"))
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+VOL$Rfn
+
+## Calculate the timber volume for a selected section given a diameter
+## threshold (30cm - 15cm) (negative value if A&lt;B)
+VOL &lt;- E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3],
+                          Dm=tree1$Dx[3], 
+                          mHt = tree1$Ht[1], 
+                          sHt = 1, 
+                          par.lme = SK.par.lme, 
+                          A=30, 
+                          B=15, 
+                          iDH = "D")
+VOL$E_VOL #' expected value
+VOL$VAR_VOL #' corresponding variance
+
+## Not run: 
+
+## The variance estimate resulting from the tree height uncertainty using
+## a Normal approximation takes much longer...
+ptm &lt;- proc.time()
+E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], Dm=tree1$Dx[3], mHt = tree1$Ht[1], 
+                   sHt = 1, par.lme = SK.par.lme, IA=FALSE)
+proc.time() - ptm
+
+
+##... than the calculation using a 2-point distribution...
+ptm &lt;- proc.time()
+E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], Dm=tree1$Dx[3], mHt = tree1$Ht[1],
+                   sHt = 1, par.lme = SK.par.lme, IA=TRUE)
+proc.time() - ptm
+
+##...fastest if no height variance is assumed
+ptm &lt;- proc.time()
+E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], Dm=tree1$Dx[3], mHt = tree1$Ht[1],
+                   sHt = 0, par.lme = SK.par.lme, IA=FALSE)
+proc.time() - ptm
+
+## Also the number of supportive points for the numerical integration
+## influences the calculation time
+ptm &lt;- proc.time()
+E_VOL_AB_HmDm_HT.f(Hm=tree1$Hx[3], Dm=tree1$Dx[3], mHt = tree1$Ht[1],
+                   sHt = 0, par.lme = SK.par.lme, IA=FALSE, nGL=10)
+proc.time() - ptm
+##' End(Not run)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,195 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>as_tibble.Spat</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Coerce a <code>SpatVector</code> or <code>SpatRaster</code> object to data frames</h2>
+
+<h3>Description</h3>
+
+<p><code>as_tibble()</code> methods for <code>SpatRaster</code> and <code>SpatVector</code> objects.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatRaster'
+as_tibble(x, ..., xy = FALSE, na.rm = FALSE, .name_repair = "unique")
+
+## S3 method for class 'SpatVector'
+as_tibble(x, ..., geom = NULL, .name_repair = "unique")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>SpatRaster</code> created with <code>terra::rast()</code> or a <code>SpatVector</code>
+created with <code>terra::vect()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed on to <code>terra::as.data.frame()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>xy</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, the coordinates of each raster cell are included</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na.rm</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, cells that have a <code>NA</code> value in at least one layer are removed. If the argument is set to <code>NA</code> only cells that have <code>NA</code> values in all layers are removed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name_repair</code></td>
+<td>
+<p>Treatment of problematic column names:
+</p>
+
+<ul>
+<li> <p><code>"minimal"</code>: No name repair or checks, beyond basic existence.
+</p>
+</li>
+<li> <p><code>"unique"</code>: Make sure names are unique and not empty.
+</p>
+</li>
+<li> <p><code>"check_unique"</code>: (default value), no name repair, but check they are
+<code>unique</code>.
+</p>
+</li>
+<li> <p><code>"universal"</code>: Make the names <code>unique</code> and syntactic.
+</p>
+</li>
+<li>
+<p> a function: apply custom name repair (e.g., <code>.name_repair = make.names</code>
+for names in the style of base <strong>R</strong>).
+</p>
+</li>
+<li>
+<p> A purrr-style anonymous function, see <code>rlang::as_function()</code>.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>geom</code></td>
+<td>
+<p>character or NULL. If not NULL, either "WKT" or "HEX", to get the geometry included in Well-Known-Text or hexadecimal notation. If <code>x</code> has point geometry, it can also be "XY" to add the coordinates of each point</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>tibble</code>.
+</p>
+
+
+<h3>
+<a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> equivalent</h3>
+
+<p><code>terra::as.data.frame()</code>
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>tibble::as_tibble()</code> function.
+</p>
+
+
+<h4>
+<code>SpatRaster</code> and <code>SpatVector</code>
+</h4>
+
+<p>The tibble is returned with an attribute including the crs of the initial
+object in WKT format (see <code>pull_crs()</code>).
+</p>
+
+
+
+<h3>About layer/column names</h3>
+
+<p>When coercing <code>SpatRaster</code> objects to data frames, <code>x</code> and <code>y</code> names are
+reserved for geographic coordinates of each cell of the <code>SpatRaster</code> It
+should be also noted that <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> allows layers with duplicated
+names.
+</p>
+<p>In the process of coercing a <code>SpatRaster</code> to a tibble, <a href="https://CRAN.R-project.org/package=tidyterra"><span class="pkg">tidyterra</span></a>
+may rename the layers of your <code>SpatRaster</code> for overcoming this issue.
+Specifically, layers may be renamed on the following cases:
+</p>
+
+<ul>
+<li>
+<p> Layers with duplicated names.
+</p>
+</li>
+<li>
+<p> When coercing to a tibble, if <code>xy = TRUE</code>, layers named <code>x</code> or <code>y</code> would be
+renamed.
+</p>
+</li>
+<li>
+<p> When working with tidyverse methods (i.e. <code>filter.SpatRaster()</code>), the
+latter would happen as well.
+</p>
+</li>
+</ul>
+<p><a href="https://CRAN.R-project.org/package=tidyterra"><span class="pkg">tidyterra</span></a> would display a message informing of the changes on the
+names of the layer.
+</p>
+<p>The same issue happens for <code>SpatVector</code> with names <code>geometry</code> (when
+<code>geom = c("WKT", "HEX")</code>) and <code>x</code>, <code>y</code> (when <code>geom = "XY"</code>). These are
+reserved names representing the geometry of the <code>SpatVector</code> (see
+<code>terra::as.data.frame()</code>). If <code>geom</code> is not <code>NULL</code> then the logic described
+for <code>SpatRaster</code> would apply as well for the columns of the <code>SpatVector</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tibble::as_tibble()</code>, <code>terra::as.data.frame()</code>
+</p>
+<p>Coercing objects:
+<code>as_coordinates()</code>,
+<code>as_sf()</code>,
+<code>as_spatraster()</code>,
+<code>as_spatvector()</code>,
+<code>fortify.Spat</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(terra)
+# SpatRaster
+f &lt;- system.file("extdata/cyl_temp.tif", package = "tidyterra")
+r &lt;- rast(f)
+
+as_tibble(r, na.rm = TRUE)
+
+as_tibble(r, xy = TRUE)
+
+# SpatVector
+
+f &lt;- system.file("extdata/cyl.gpkg", package = "tidyterra")
+v &lt;- vect(f)
+
+as_tibble(v)
+
+</code></pre>
+
+
+</div>

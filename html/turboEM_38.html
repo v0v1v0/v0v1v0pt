@@ -1,0 +1,326 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>turboem</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A suite of acceleration schemes for fixed-point iterations</h2>
+
+<h3>Description</h3>
+
+<p>Globally-convergent, partially monotone, acceleration schemes for accelerating the convergence of <em>any</em> smooth, monotone, slowly-converging contraction mapping. It can be used to accelerate the convergence of a wide variety of iterations including the expectation-maximization (EM) algorithms and its variants, majorization-minimization (MM) algorithm, power method for dominant eigenvalue-eigenvector, Google's page-rank algorithm, and multi-dimensional scaling.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">turboem(par, fixptfn, objfn, method = c("em","squarem","pem","decme","qn"), 
+        boundary, pconstr = NULL, project = NULL, parallel = FALSE, ..., 
+        control.method = replicate(length(method),list()), control.run = list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>par</code></td>
+<td>
+<p>A vector of parameters denoting the initial guess for the fixed point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixptfn</code></td>
+<td>
+<p>A vector function, <code class="reqn">F</code> that denotes the fixed-point mapping. This function is the most essential input in the package. It should accept a parameter vector as input and should return a parameter vector of same length. This function defines the fixed-point iteration: <code class="reqn">x_{k+1} = F(x_k)</code>. In the case of EM algorithm, <code class="reqn">F</code> defines a single E and M step.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objfn</code></td>
+<td>
+<p>This is a scalar function, <code class="reqn">L</code>, that denotes a “merit” function which attains its local minimum at the fixed-point of <code class="reqn">F</code>.  This function should accept a parameter vector as input and should return a scalar value.  In the EM algorithm, the merit function <code class="reqn">L</code> is the negative log-likelihood. In some problems, a natural merit function may not exist. However, this argument is required for all of the algorithms *except* Squarem (which defaults to Squarem-2 if <code>objfn</code> not provided) and EM.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Specifies which algorithm(s) will be applied. Must be a vector containing one or more of <code>c("em", "squarem", "pem", "decme", "qn")</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>boundary</code></td>
+<td>
+<p>Argument required for Dynamic ECME (<code>decme</code>) only. Function to define the subspaces over which the line search is conducted.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pconstr</code></td>
+<td>
+<p>Optional function for defining boundary constraints on parameter values. Function maps a vector of parameter values to TRUE if constraints are satisfied. Note that this argument is only used for the Squarem (<code>squarem</code>), Parabolic EM (<code>pem</code>), and quasi-Newton (<code>qn</code>) algorithms, and it has no effect on the other algorithms.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>project</code></td>
+<td>
+<p>Optional function for defining a projection that maps an out-of-bound parameter value into the constrained parameter space. Requires the <code>pconstr</code> argument to be specified in order for the <code>project</code> to be applied.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>parallel</code></td>
+<td>
+<p>Logical indicating whether the acceleration schemes will be run in parallel. Note that the parallel implementation is based on the <code>foreach</code> package, which depends on a <em>parallel backend</em> being registered prior to running <code>turboem()</code>. See *Details* of <code>foreach</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control.method</code></td>
+<td>
+<p>If <code>method = c(method1, method2, ...)</code>, then <code>control.method = list(list1, list2, ...)</code> where <code>list1</code> is the list of control parameters for <code>method1</code>, <code>list2</code> is the list of control parameters for <code>method2</code>, and so on. If <code>length(method) == 1</code>, then <code>control.method</code> is the list of control parameters for the acceleration scheme.  
+See *Details*.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control.run</code></td>
+<td>
+<p>List of control parameters for convergence and stopping the algorithms.
+See *Details*.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Arguments passed to <code>fixptfn</code> and  <code>objfn</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>turboem</code> is a general-purpose algorithm for accelerating the convergence of any slowly-convergent (smooth) fixed-point iteration.  
+</p>
+<p>The component lists of the <code>control.method</code> are used to specify any changes to default values of algorithm control parameters. Full names of control list elements must be specified, otherwise, user specifications are ignored. Default control parameters for <code>method="squarem"</code> are <code>K=1</code>, <code>square=TRUE</code>, <code>version=3</code>, <code>step.min0=1</code>, <code>step.max0=1</code>, <code>mstep=4</code>, <code>kr=1</code>, <code>objfn.inc=1</code>. Default control parameters for <code>method="pem"</code> are <code>l=10</code>, <code>h=0.1</code>, <code>a=1.5</code>, and <code>version="geometric"</code>. Default control parameters for <code>method="decme"</code> are <code>version="v2"</code> and <code>tol_op=0.01</code>. Default control parameters for <code>method="qn"</code> are <code>qn=5</code>.
+</p>
+<p>Default values of <code>control.run</code> are: <code>convtype = "parameter"</code>, <code>tol = 1.0e-07</code>, <code>stoptype = "maxiter"</code>, <code>maxiter = 1500</code>, <code>maxtime = 60</code>, <code>convfn.user = NULL</code>, <code>stopfn.user = NULL</code>, <code>trace = FALSE</code>, <code>keep.objfval = FALSE</code>, <code>keep.paramval = FALSE</code>.
+</p>
+<p>There are two ways the algorithm will terminate. Either the algorithm will terminate if convergence has been achieved, or the algorithm will terminate if convergence has not been achieved within a pre-specified maximum number of iterations or maximum running time. The arguments <code>convtype</code>, <code>tol</code>, and <code>convfn.user</code> control the convergence criterion. The arguments <code>stoptype</code>, <code>maxiter</code>, <code>maxtime</code>, and <code>stopfn.user</code> control the alternative stopping criterion.
+</p>
+<p>Two types of convergence criteria have been implemented, with an option for the user to define his/her own convergence criterion. If <code>convtype = "parameter"</code>, then the default convergence criterion is to terminate if <code>sqrt(crossprod(new - old)) &lt; tol</code>, where <code>new</code> denotes the current value of the fixed point and <code>old</code> denotes the previous fixed-point value. If <code>convtype = "objfn"</code>, then the default convergence criterion is to terminate if <code>abs(new - old) &lt; tol</code>, where <code>new</code> denotes the current value of the objective function and <code>old</code> denotes the previous value of the objective function.
+If the user desires alternate convergence criteria,  <code>convfn.user</code> may be specified as a function with inputs <code>new</code> and <code>old</code> that maps to a logical taking the value TRUE if convergence is achieved and the value FALSE if convergence is not achieved. 
+</p>
+<p>Two types of alternative stopping criteria have been implemented, with the option for the user to define his/her own stopping criterion. If <code>stoptype = "maxiter"</code>, then the algorithm will terminate if convergence has not been achieved within <code>maxiter</code> iterations of the acceleration scheme. If <code>stoptype = "maxtime"</code>, then the algorithm will terminate if convergence has not been achieved within <code>maxtime</code> seconds of running the acceleration scheme. Note: the running time of the acceleration scheme is calculated once every iteration. If the user desires different alternate stopping criteria than those implemented, <code>stopfn.user</code> may be specified as a function with no inputs that maps to a logical taking the value TRUE which leads to the algorithm being terminated or the value FALSE which leads to the algorithm proceeding as usual.
+</p>
+
+<dl>
+<dt><code>convtype</code></dt>
+<dd>
+<p>A character string equal to <code>"parameter"</code> or <code>"objfn"</code>. <code>"parameter"</code> indicates that the convergence criterion is a function of the current and previous value of the fixed point. <code>objfn</code> indicates that the convergence criterion is a function of the current and previous value of the objective function.</p>
+</dd>
+<dt><code>tol</code></dt>
+<dd>
+<p>A small, positive scalar that determines when convergence is achieved. See details above for convergence criteria currently implemented. Default is <code>1.e-07</code>.</p>
+</dd>
+<dt><code>stoptype</code></dt>
+<dd>
+<p>A character string equal to <code>"maxiter"</code> or <code>"maxtime"</code> that determines an alternative stopping rule for the algorithm. See details above for stopping rules currently implemented. Default is <code>"maxiter"</code>.</p>
+</dd>
+<dt><code>maxiter</code></dt>
+<dd>
+<p>If <code>stoptype = "maxiter"</code>, specifies the number of iterations after which the algorithm will be terminated if convergence has not been achieved. Default is 1500.</p>
+</dd>
+<dt><code>maxtime</code></dt>
+<dd>
+<p>If <code>stoptype = "maxtime"</code>, specifies the running time (in seconds) after which the algorithm will be terminated if convergence has not been achieved. Default is 60.</p>
+</dd>
+<dt><code>convfn.user</code></dt>
+<dd>
+<p>Optional, user-specified function for determining whether convergence has been achieved. Function should take as inputs <code>new</code> and <code>old</code>, where <code>new</code> is the current value (of the fixed point if <code>convtype = "parameter"</code> and of the objective function value if <code>convtype = "objfn"</code>) and <code>old</code> is the previous value. Function should map to a logical taking the value <code>TRUE</code> if convergence is achieved (and hence the algorithm is terminated) and the value <code>FALSE</code> if convergence is not achieved. Default is <code>NULL</code>.</p>
+</dd>
+<dt><code>stopfn.user</code></dt>
+<dd>
+<p>Optional, user-specified function for determining whether to terminate the algorithm if convergence has not been achieved. See details above for how to specify. Default is <code>NULL</code>.</p>
+</dd>
+<dt><code>trace</code></dt>
+<dd>
+<p>A logical variable denoting whether some of the intermediate results of iterations should be displayed to the user. Default is <code>FALSE</code>.</p>
+</dd>
+<dt><code>keep.objfval</code></dt>
+<dd>
+<p>A logical variable denoting whether the objective function value at each iteration should be stored. Default is <code>FALSE</code>.</p>
+</dd>
+<dt><code>keep.paramval</code></dt>
+<dd>
+<p>A logical variable denoting whether the parameter estimates at each iteration should be stored. Default is <code>FALSE</code>.</p>
+</dd>
+</dl>
+<h3>Value</h3>
+
+<p><code>turboem</code> returns an object of class <code>turbo</code>. An object of class <code>turbo</code> is a list containing at least the following components:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>fail</code></td>
+<td>
+<p>Vector of logical values whose <code class="reqn">j</code>th element indicates whether algorithm <code class="reqn">j</code> failed (produced an error)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value.objfn</code></td>
+<td>
+<p>Vector of the value of the objective function <code class="reqn">L</code> at termination for each algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itr</code></td>
+<td>
+<p>Vector of the number of iterations completed for each algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fpeval</code></td>
+<td>
+<p>Vector of the number of fixed-point evaluations completed for each algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>objfeval</code></td>
+<td>
+<p>Vector of the number of objective function evaluations completed for each algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>convergence</code></td>
+<td>
+<p>Vector of logical values whose <code class="reqn">j</code>th element indicates whether algorithm <code class="reqn">j</code> satisfied the convergence criterion before termination</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>runtime</code></td>
+<td>
+<p>Matrix whose <code class="reqn">j</code>th row contains the “user”, “system”, and “elapsed” time for running the <code class="reqn">j</code>th algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errors</code></td>
+<td>
+<p>Vector whose <code class="reqn">j</code>th element is either NA or contains the error message from running the <code class="reqn">j</code>th algorithm</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pars</code></td>
+<td>
+<p>Matrix whose <code class="reqn">j</code>th row contains the fixed-point parameter values at termination for the <code class="reqn">j</code>th algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace.objfval</code></td>
+<td>
+<p>If <code>control.run[["keep.objfval"]]=TRUE</code>, contains a list whose <code class="reqn">j</code>th component is a vector of objective function values across iterations for the <code class="reqn">j</code>th algorithm.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trace.paramval</code></td>
+<td>
+<p>If <code>control.run[["keep.paramval"]]=TRUE</code>, contains a list whose <code class="reqn">j</code>th component is a matrix of parameter estimates across iterations for the <code class="reqn">j</code>th algorithm.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+ 
+<p>R Varadhan and C Roland (2008). Simple and globally convergent numerical schemes for accelerating the convergence of any EM algorithm. <em>Scandinavian Journal of Statistics</em>, 35:335-353.
+</p>
+<p>A Berlinet and C Roland (2009). Parabolic acceleration of the EM algorithm. <em>Stat Comput</em>. 19 (1) 35-47.
+</p>
+<p>Y He and C Liu (2010) The Dynamic ECME Algorithm. Technical Report. arXiv:1004.0524v1.
+</p>
+<p>H Zhou, DH Alexander, and KL Lange (2011). A quasi-Newton acceleration for high-dimensional optimization algorithms. <em>Stat Comput</em>. 21 (2) 261-273.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>turbo</code> 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">###########################################################################
+# Also see the vignette by typing:
+#  vignette("turboEM")
+#
+# EM algorithm for Poisson mixture estimation 
+
+fixptfn &lt;- function(p,y) {
+# The fixed point mapping giving a single E and M step of the EM algorithm
+# 
+pnew &lt;- rep(NA,3)
+i &lt;- 0:(length(y)-1)
+zi &lt;- p[1]*exp(-p[2])*p[2]^i / (p[1]*exp(-p[2])*p[2]^i + (1 - p[1])*exp(-p[3])*p[3]^i)
+pnew[1] &lt;- sum(y*zi)/sum(y)
+pnew[2] &lt;- sum(y*i*zi)/sum(y*zi)
+pnew[3] &lt;- sum(y*i*(1-zi))/sum(y*(1-zi))
+p &lt;- pnew
+return(pnew)
+}
+
+objfn &lt;- function(p,y) {
+# Objective function whose local minimum is a fixed point 
+# negative log-likelihood of binary poisson mixture
+i &lt;- 0:(length(y)-1)
+loglik &lt;- y*log(p[1]*exp(-p[2])*p[2]^i/exp(lgamma(i+1)) + 
+		(1 - p[1])*exp(-p[3])*p[3]^i/exp(lgamma(i+1)))
+return ( -sum(loglik) )
+}
+
+# Real data from Hasselblad (JASA 1969)
+poissmix.dat &lt;- data.frame(death = 0:9, 
+	freq = c(162,267,271,185,111,61,27,8,3,1))
+y &lt;- poissmix.dat$freq
+
+# Use a preset seed so the example is reproducable. 
+require("setRNG")
+old.seed &lt;- setRNG(list(kind = "Mersenne-Twister", normal.kind = "Inversion",
+    seed = 54321))
+
+p0 &lt;- c(runif(1),runif(2,0,4))  # random starting value
+
+# Basic EM algorithm, SQUAREM, and parabolic EM, with default settings
+res1 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, objfn = objfn, 
+	method = c("EM", "squarem", "pem"))
+
+# To apply the dynamic ECME (decme) acceleration scheme, 
+# we need to include a boundary function
+boundary &lt;- function(par, dr) {
+	lower &lt;- c(0, 0, 0)
+	upper &lt;- c(1, 10000, 10000)
+	low1 &lt;- max(pmin((lower-par)/dr, (upper-par)/dr))
+	upp1 &lt;- min(pmax((lower-par)/dr, (upper-par)/dr))
+	return(c(low1, upp1))
+}
+res2 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, objfn = objfn, 
+	boundary = boundary, method = c("EM", "squarem", "pem", "decme"))
+
+# change some of the algorithm-specific default specifications (control.method), 
+# as well as the global control parameters (control.run)
+res3 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, objfn = objfn, 
+  boundary = boundary, method = c("em", "squarem", "squarem", "decme", "qn", "qn"), 
+	control.method = list(list(), list(K = 2), list(K = 3), 
+		list(version = "v3"), list(qn = 1), list(qn = 2)),
+	control.run = list(tol = 1e-12, stoptype = "maxtime", maxtime = 1))
+
+# Only the standard EM algorithm and SQUAREM *do not* require 
+# providing the objective function. 
+res4 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, 
+	method = c("em", "squarem", "squarem"), 
+	control.method = list(list(), list(K = 1), list(K = 2)))
+# If no objective function is provided, the "squarem" method defaults to Squarem-2 
+# Or, if control parameter K &gt; 1, it defaults to Cyclem-2. 
+# Compare Squarem with and without objective function provided:
+res5 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, method = "squarem")
+res5
+res6 &lt;- turboem(par = p0, y = y, fixptfn = fixptfn, objfn = objfn, method = "squarem")
+res6
+
+</code></pre>
+
+
+</div>

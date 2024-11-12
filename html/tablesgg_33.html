@@ -1,0 +1,107 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>entrySize_mm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate the Sizes of Table Entries, in Mm </h2>
+
+<h3>Description</h3>
+
+<p>Calculate the horizontal and vertical sizes, in millimeters, of the text
+strings in a <code>prEntries</code> object.  This is an internal function, not
+intended to be called by package users.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">entrySize_mm(entryInfo, allowWrap, sizeAdjust=c(1, 1))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>entryInfo</code></td>
+<td>
+<p>A <code>prEntries</code> object, currently implemented as a data frame with one
+row per table entry.  It must include columns <code>text</code>,
+<code>textspec</code>, <code>maxwidth</code>, and properties <code>size</code>,
+<code>family</code>, <code>fontface</code>, <code>hpad</code>, <code>vpad</code>, <code>angle</code>,
+and <code>lineheight</code>.  <code>size</code> should be in points, <code>angle</code> in
+degrees, and <code>lineheight</code> should be specified as a multiple of text
+size (see <code>?grid::gpar</code>).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>allowWrap</code></td>
+<td>
+<p>Logical scalar.  If TRUE, entry sizes will be calculated after any text
+wrapping required by <code>entryInfo$maxwidth</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sizeAdjust</code></td>
+<td>
+<p>Two-element numeric vector containing multipliers to adjust the calculated
+absolute size of table text.  The first element is applied to the
+horizontal dimension and the second to the vertical dimension.  Ignored if
+<code>allowWrap</code> is FALSE.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The dimensions are for an unrotated rectangle that just encloses the
+(possibly rotated) text.  (So <code>hsize</code> is always measured parallel to
+the x-axis and <code>vsize</code> parallel to the y-axis; i.e., they are with
+respect to the reference frame of the whole table.)
+</p>
+<p>This relies on the functions <code>grid::convertWidth</code> and
+<code>grid::convertHeight</code>.  They require that a graphics device to be
+open.  It would be natural to use the currently active device, if any, but
+this seems to generate empty pages on that device.  Therefore a temporary
+PDF device is silently opened, and then deleted at the end.
+</p>
+<p>String sizes may vary slightly between different graphics devices, even
+with the same graphics properties (font size, family, face, etc).
+</p>
+<p>The height of text processed with <code>richtext_grob</code> or
+<code>textbox_grob</code> differs from the same text processed with
+<code>textGrob</code>: (a) The former includes the height of character
+descenders (whether or not the text actually includes characters with
+descenders), whereas the latter does not.  (b) Interline spacing seems to
+be smaller with the former than with the latter.  Descender height is
+returned in column <code>descender</code>; it will be 0 for text not processed
+with <code>richtext_grob</code> or <code>textbox_grob</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Data frame with the same row names as <code>entryInfo</code>, and columns:
+<code>hsize</code> and <code>vsize</code> containing entry dimensions in millimeters;
+<code>horiz</code> (logical, TRUE if entry angle is 0 or 180 degrees);
+<code>descender</code> (amount of space included in <code>hsize</code> (if
+<code>horiz</code> is FALSE) or <code>vsize</code> (if <code>horiz</code> if TRUE) to allow
+for descenders); and <code>wrap</code> (logical, whether <code>text</code> needed to
+be wrapped to satisfy <code>maxwidth</code>).
+</p>
+<p>The data frame has an attribute <code>device</code>, containing the name of the
+graphics device used when calculating text sizes.  (Currently this is
+always "pdf".)
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Devices</code>
+</p>
+
+
+</div>

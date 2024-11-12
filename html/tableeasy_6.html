@@ -1,0 +1,175 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>table2</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Table 2</h2>
+
+<h3>Description</h3>
+
+<p>' Table 2 ' was created through regression analysis to research influence factor. The four regression methods include general linear regression, logistic regression, conditional logistic regression and cox proportional hazards regression.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">table2(
+  x,
+  y,
+  data,
+  y_time = NULL,
+  strata = NULL,
+  adj = c(),
+  div = list(),
+  div_num = list(),
+  ref = c(),
+  ref_num = c(),
+  continuous = FALSE,
+  case = 2,
+  method = "general",
+  outformat = 2
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A string. The independent variable to be summarized given as a string.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+<p>A string. The dependent variable to be summarized given as a string.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data frame in which these variables exist.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_time</code></td>
+<td>
+<p>A string. The survival time variable to be summarized given as a string. It only works when <code>method = "cox"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>strata</code></td>
+<td>
+<p>A string. The paired variable to be summarized given as a string. It only works when <code>method = "con_logistic"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>adj</code></td>
+<td>
+<p>A vector of strings, default = <code>c()</code>. Moderator variables to be summarized given as a character vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>div</code></td>
+<td>
+<p>A list containing Positive int greater than 1 or integer vector, If a positive integer greater than 1, it is the number of factor levels when x is split by quantile statistics. If a vector of integers, it is the strategy of grouping x by quantile statistics and then merging groups.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>div_num</code></td>
+<td>
+<p>A list containing numeric vectors, Elements in the list are custom values, and x can be split into at least two levels by elements in the list.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref</code></td>
+<td>
+<p>A vector of integers. The control level of factor levels when x is split by quantile statistics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ref_num</code></td>
+<td>
+<p>A vector of integers. The control level of factor levels when x is split by custom values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>continuous</code></td>
+<td>
+<p>Bool, default <code>= FALSE</code>. If default, then does not output the result when the independent variable is regarded as a continuous variable.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>case</code></td>
+<td>
+<p>A vector of integers, default <code>= 2</code>. The case level of y.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>(<code>"general"</code>, <code>"logistic"</code>, <code>"con_logistic"</code>, <code>"cox"</code>), default <code>= "general"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outformat</code></td>
+<td>
+<p><code>1</code> or <code>2</code>, default <code>= 2</code>, Output format. It only works when <code>method = "general"</code>. The table ouput mean(sd) when <code>outformat=1</code> and ouput median(IQR) when <code>outformat=2</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>An object researching influence factor.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Load Mayo Clinic Primary Biliary Cirrhosis Data
+library(survival)
+library(tableeasy)
+data(pbc)
+## Check variables
+head(pbc)
+##The censored data is not discussed here
+pbc_full &lt;- subset(pbc,status!=0)
+pbc_full$status &lt;- pbc_full$status-1
+## Make categorical variables factors
+varsToFactor &lt;- c('status','trt','ascites','hepato','spiders','edema','stage','sex')
+pbc_full[varsToFactor] &lt;- lapply(pbc_full[varsToFactor], factor)
+
+## Moderator variables
+adj_pbc &lt;- c('age','alk.phos','ast')
+
+## General linear regression:
+table2(x = 'albumin', y = 'bili',
+       adj = c(), data = pbc_full,
+       div = list(5,c(2,3)), div_num = list(c(3.2,4)),
+       ref = c(2,1), ref_num = c(2),
+       outformat = 2)
+
+## Logistic regression:
+table2(x ='albumin', y = 'status',
+       adj = adj_pbc, data = pbc_full,
+       div = list(5,c(2,3)),
+       method ='logistic')
+
+## Conditional logistic regression:
+table2(x = 'albumin', y = 'status', strata = 'trt',
+       adj = adj_pbc, data = pbc_full,
+       div = list(5,c(2,3)),
+       method = 'con_logistic')
+
+## Cox proportional hazards regression:
+table2(x = 'albumin', y = 'status', y_time = 'time',
+       adj = adj_pbc, data = pbc_full,
+       div = list(5,c(2,3)),
+       method = 'cox')
+</code></pre>
+
+
+</div>

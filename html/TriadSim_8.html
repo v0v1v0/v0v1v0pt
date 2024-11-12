@@ -1,0 +1,222 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TriadSim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Simulation main function</h2>
+
+<h3>Description</h3>
+
+<p>TriadSim can simulate genotypes for case-parent triads, case-control, and quantitative trait samples with realistic linkage
+diequilibrium structure and allele frequency distribution. For studies of epistasis one can simulate models that involve 
+specific SNPs at specific sets of loci, which we will refer to as "pathways". TriadSim generates genotype data by resampling 
+triad genotypes from existing data. It takes genotypes in PLINK format as the input files.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TriadSim(
+  input.plink.file,
+  out.put.file,
+  fr.desire,
+  pathways,
+  n.ped,
+  N.brk,
+  target.snp = NA,
+  P0,
+  is.OR,
+  risk.exposure,
+  risk.pathway.unexposed,
+  risk.pathway.exposed,
+  is.case = TRUE,
+  e.fr = NA,
+  pop1.frac = NA,
+  P0.ratio = 1,
+  rcmb.rate = NA,
+  no_cores = NA,
+  qtl = FALSE,
+  same.brk = FALSE,
+  flip = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input.plink.file</code></td>
+<td>
+<p>gives the filenames (as well as the path) of the source data used for resampling. The input files are in PLINK format.
+For simulations of a homogenous population, it is a vector of three character strings for the base filenames of the mother's
+father's and child's PLINK files. The PLINK files are in bed format and three files with 
+extensions .bed .bim and .fam are expected for each individual's genotypes. The mothers, fathers, and 
+children must be from the same set of triad families even though the ordering of the families can be different
+for the three sets of data. For simulations under population stratification it is a list of two vectors. Each vector is a vector 
+of three character strings giving the base filenames for the PLINK files as described above.The two vectors correspond to the 
+two subpopulations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>out.put.file</code></td>
+<td>
+<p>is a character string giving the pathway to and the base filename of the output file. The names of the final output files 
+also contain information on chromosome number. E.g., for a base filename "trio" and for chromosome 1 the final filenames for the PLILK files
+are "trio1.bim","trio1.bed" and "trio1.fam".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fr.desire</code></td>
+<td>
+<p>is a double number giving the desired frequency of the target SNPs.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pathways</code></td>
+<td>
+<p>is a list of vectors of integers. Each vector of integers denotes the SNPs involved in a particular pathway. E.g. list(1:4,5:8)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n.ped</code></td>
+<td>
+<p>is an integer giving the number of trios to be simulated</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N.brk</code></td>
+<td>
+<p>is an integer giving the number of breaks to be picked for each chromosome.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target.snp</code></td>
+<td>
+<p>is a vector of integers showing the row number of the target SNPs in the .bim file.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P0</code></td>
+<td>
+<p>gives the baseline disease prevalence in the unexposed individuals with 0 copies of the risk pathways.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is.OR</code></td>
+<td>
+<p>is a boolean varialbe denoting wether the input risk parameters are odds ratios. It is TRUE when the input risks are odds ratios.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>risk.exposure</code></td>
+<td>
+<p>is a double giving the relative risk (or odds ratio, if is.OR=TRUE) of the exposure main effect.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>risk.pathway.unexposed</code></td>
+<td>
+<p>is a vector of doubles giving the relative risk (or odds ratio, if is.OR=TRUE) of each risk pathways in the unexposed individuals 
+with the risk of unexposed individuals who carry no copies of the pathways as a reference.For scenarios that do not involve exposure the value 
+of this vector is for all individuals.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>risk.pathway.exposed</code></td>
+<td>
+<p>is a vector of doubles giving the relative risk (or odds ratio, if is.OR=TRUE) of each risk pathways in the exposed individuals. 
+with the risk of exposed individuals who carry no copies of the pathways as a reference. For scenarios that do not involve exposure the value 
+of this vector is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is.case</code></td>
+<td>
+<p>is a boolean variable. When is.case = TRUE case-parents trios will be simulated.Otherwise, control-parents trios will be simulated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>e.fr</code></td>
+<td>
+<p>is a double number between 0 and 1 which gives the exposure prevalence.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pop1.frac</code></td>
+<td>
+<p>is a double number between 0 and 1 which gives the fraction of population 1 for a population stratification scenario.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>P0.ratio</code></td>
+<td>
+<p>gives the ratio of the baseline disease prevalence in the second subpopulation to that of the first subpopulation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rcmb.rate</code></td>
+<td>
+<p>the default value is NA. rcmb.rate is a dataframe containing the recombination rates at each SNP. The ordering of the SNPs (in rows) should 
+be identical to that of snp.all2. It has 4 columns with the column names 'CHR','RS','POS', and 'RATE' representing "the chromosomal number", 
+"SNP rs number", "chromosomal position", and "recombination rate", respectively. The recombination rate represents the maximum recombination 
+rate in the chromosomal region between the current SNP and the SNP above (or the first basepair of the chromosome for the first SNP on a 
+chromosome).When no rcmb.rate is provided the function will pick the breaking points randomly.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>no_cores</code></td>
+<td>
+<p>is an integer which specifies the number of CPU cores to parallelized.contain values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>qtl</code></td>
+<td>
+<p>is a boolean variable denoting whether a quantitative trait (qtl=TRUE) or a binary trait (qtl=FALSE) is to be simulated. For a binary trait only affected 
+families will be kept. The default value is qtl=FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>same.brk</code></td>
+<td>
+<p>is an indicator variable to denote whether the same set of breaking points will be used for all simulated triads. The default value is FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>flip</code></td>
+<td>
+<p>is an indicator variable denoting whether the mother's and the father's genotypes will be swapped to wipe out potential maternal 
+effects in the orignal data. The default value is TRUE.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>this function simulates genotypes of parent-offspring triads and writes PLINK files into the designated directory. Genotypes on each
+chromosome will be written into a separate set of PLINK files. In each set of PLINK files genotypes of the mothers, fathers, and children
+are stacked on top of each other. The first third of the rows are genotypes of the mothers'.The seond third are those of the fathers' and 
+the last third are those of the children's. 
+The following files are also generated under specific scenarios:
+a file with name ending with "exp.txt" containing the exposure data when exposure is involved in the risk model.
+a file with name ending with "pop.txt" containing information on subpopulation membership when the simulation involves a stratified scenario.
+a file with name ending with "pheno.tx" containing quantitative trait phenotype when a quantitative trait is involved.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">m.file &lt;- file.path(system.file(package = "TriadSim"),'extdata/pop1_4chr_mom')
+f.file &lt;- file.path(system.file(package = "TriadSim"),'extdata/pop1_4chr_dad')
+k.file &lt;- file.path(system.file(package = "TriadSim"),'extdata/pop1_4chr_kid')
+input.plink.file &lt;- c(m.file, f.file, k.file)
+## Not run: TriadSim(input.plink.file, file.path(tempdir(),'triad'), fr.desire=0.05,pathways=list(1:4,5:8),
+       n.ped=1000, N.brk=3, target.snp=NA,P0=0.001,is.OR=FALSE,risk.exposure= 1,
+       risk.pathway.unexposed=c(1.5, 2), risk.pathway.exposed=c(1.5, 2), is.case=TRUE, e.fr=NA, 
+       pop1.frac=NA, P0.ratio=1, rcmb.rate, no_cores=1)
+## End(Not run)
+</code></pre>
+
+
+</div>

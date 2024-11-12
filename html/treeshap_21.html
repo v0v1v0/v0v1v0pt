@@ -1,0 +1,131 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ranger_surv.unify</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Unify ranger survival model</h2>
+
+<h3>Description</h3>
+
+<p>Convert your ranger model into a standardized representation.
+The returned representation is easy to be interpreted by the user and ready to be used as an argument in <code>treeshap()</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ranger_surv.unify(
+  rf_model,
+  data,
+  type = c("risk", "survival", "chf"),
+  times = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>rf_model</code></td>
+<td>
+<p>An object of <code>ranger</code> class. At the moment, models built on data with categorical features
+are not supported - please encode them before training.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>Reference dataset. A <code>data.frame</code> or <code>matrix</code> with the same columns as in the training set of the model. Usually dataset used to train model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>A character to define the type of model prediction to use. Either <code>"risk"</code> (default), which uses the risk score calculated as a sum of cumulative hazard function values, <code>"survival"</code>, which uses the survival probability at certain time-points for each observation, or <code>"chf"</code>, which used the cumulative hazard values at certain time-points for each observation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>times</code></td>
+<td>
+<p>A numeric vector of unique death times at which the prediction should be evaluated. By default <code>unique.death.times</code> from model are used.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The survival forest implemented in the <code>ranger</code> package stores cumulative hazard
+functions (CHFs) in the leaves of survival trees, as proposed for Random Survival Forests
+(Ishwaran et al. 2008). The final model prediction is made by averaging these CHFs
+from all the trees. To provide explanations in the form of a survival function,
+the CHFs from the leaves are converted into survival functions (SFs) using
+the formula SF(t) = exp(-CHF(t)).
+However, it is important to note that averaging these SFs does not yield the correct
+model prediction as the model prediction is the average of CHFs transformed in the same way.
+Therefore, when you obtain explanations based on the survival function,
+they are only proxies and may not be fully consistent with the model predictions
+obtained using for example <code>predict</code> function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>For <code>type = "risk"</code> a unified model representation is returned - a <code>model_unified.object</code> object. For <code>type = "survival"</code> or <code>type = "chf"</code> - a <code>model_unified_multioutput.object</code> object is returned, which is a list that contains unified model representation (<code>model_unified.object</code> object) for each time point. In this case, the list names are time points at which the survival function was evaluated.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>ranger.unify</code> for regression and classification <code>ranger models</code>
+</p>
+<p><code>lightgbm.unify</code> for <code>LightGBM models</code>
+</p>
+<p><code>gbm.unify</code> for <code>GBM models</code>
+</p>
+<p><code>xgboost.unify</code> for <code>XGBoost models</code>
+</p>
+<p><code>randomForest.unify</code> for <code>randomForest models</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(ranger)
+data_colon &lt;- data.table::data.table(survival::colon)
+data_colon &lt;- na.omit(data_colon[get("etype") == 2, ])
+surv_cols &lt;- c("status", "time", "rx")
+
+feature_cols &lt;- colnames(data_colon)[3:(ncol(data_colon) - 1)]
+
+train_x &lt;- model.matrix(
+  ~ -1 + .,
+  data_colon[, .SD, .SDcols = setdiff(feature_cols, surv_cols[1:2])]
+)
+train_y &lt;- survival::Surv(
+  event = (data_colon[, get("status")] |&gt;
+             as.character() |&gt;
+             as.integer()),
+  time = data_colon[, get("time")],
+  type = "right"
+)
+
+rf &lt;- ranger::ranger(
+  x = train_x,
+  y = train_y,
+  data = data_colon,
+  max.depth = 10,
+  num.trees = 10
+)
+unified_model_risk &lt;- ranger_surv.unify(rf, train_x, type = "risk")
+shaps &lt;- treeshap(unified_model_risk, train_x[1:2,])
+
+# compute shaps for 3 selected time points
+unified_model_surv &lt;- ranger_surv.unify(rf, train_x, type = "survival", times = c(23, 50, 73))
+shaps_surv &lt;- treeshap(unified_model_surv, train_x[1:2,])
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,234 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_resource</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Get Data From Trello API</h2>
+
+<h3>Description</h3>
+
+<p>Fetch resources using Trello API.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_resource(
+  parent = NULL,
+  child = NULL,
+  id = NULL,
+  token = NULL,
+  query = NULL,
+  url = NULL,
+  filter = NULL,
+  limit = 100,
+  on.error = c("stop", "warn", "message"),
+  retry.times = 1,
+  handle = NULL,
+  verbose = FALSE,
+  response,
+  paging,
+  bind.rows
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>parent</code></td>
+<td>
+<p>Parent resource, e.g. <code>"board"</code> or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>child</code></td>
+<td>
+<p>Child resource, eg. <code>"card"</code> or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>Resource ID or <code>NULL</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>token</code></td>
+<td>
+<p>An object of class <code>"Trello_API_token"</code>, a path or <code>NULL</code>.
+</p>
+
+<ul>
+<li>
+<p> If a <code>Token</code>, it is passed as is.
+</p>
+</li>
+<li>
+<p> If <code>NULL</code> and a cache file called <code>".httr-oauth"</code> exists, the newest token
+is read from it. If the file is not found, an error is thrown.
+</p>
+</li>
+<li>
+<p> If a character vector of length 1, it will be used as an alternative path
+to the cache file.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>query</code></td>
+<td>
+<p>Named list of key-value pairs, see <code>httr::GET()</code> for details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>url</code></td>
+<td>
+<p>Url for the GET request. Can be <code>NULL</code> if <code>parent</code> is specified,
+or a combination of <code>parent</code>, <code>child</code> and <code>id</code> is provided.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filter</code></td>
+<td>
+<p>Defaults to <code>"all"</code> which includes both open and archived cards
+or all action types, depending on what resource is requested.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>limit</code></td>
+<td>
+<p>Defaults to <code>100</code>. Set to <code>Inf</code> to get everything.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>on.error</code></td>
+<td>
+<p>Whether to <code>"stop"</code>, <code>"warn"</code> or <code>"message"</code> on API error.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>retry.times</code></td>
+<td>
+<p>How many times to re-try when a request fails. Defaults
+to 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>handle</code></td>
+<td>
+<p>The handle to use with this request, see <code>httr::RETRY()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Set to <code>TRUE</code> for verbose output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response, paging, bind.rows</code></td>
+<td>
+<p>Deprecated.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A data frame with API responses.
+</p>
+
+
+<h3>Request limits</h3>
+
+<p>At maximum, the API can retrieve 1000 results in a single call. Setting
+<code>limit &gt; 1000</code> will activate paging. When paging is used, the request will
+be issued repeatedly, retrieving new batch of results each time until
+the <code>limit</code> is reached or there is nothing else to fetch. Results are fetched
+chronologically, ie. newest results are retrieved first (eg. newest cards).
+Use <code>limit = Inf</code> to make sure you get all.
+</p>
+
+
+<h3>Errors</h3>
+
+<p>If the request fails, server error messages are reprinted on the console.
+Depending on the value of <code>on.error</code>, the request call can throw an error
+in R (this is the default), or can issue a warning/message. If the latter,
+the function returns a data frame containing the failed URL, HTTP status
+and an informative message (produced by the server).
+</p>
+
+
+<h3>Results</h3>
+
+<p>The API returns JSON objects which are parsed using <code>jsonlite::fromJSON()</code>.
+Non-JSON results throw an error, but these should never happen anyway. The
+result is always a data frame, or a <code>tibble</code> if the package is installed.
+</p>
+
+
+<h3>Filter</h3>
+
+<p>Both <code>filter</code> and <code>limit</code> exist as explicitly defined arguments, but you can
+ignore them in favor of supplying their values as query parameters, eg.
+<code>query = list(filter = "filter_value", limit = "limit_value")</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>get_token()</code>, <code>get_id()</code>, <code>httr::GET()</code>, <code>jsonlite::fromJSON()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# Public boards can be accessed without authorization, so there is no need
+# to create a token, just the board id:
+url = "https://trello.com/b/wVWPK9I4/r-client-for-the-trello-api"
+bid = get_id_board(url)
+
+# Getting resources from the whole board. `filter="all"` fetches archived
+# cards as well.
+labels = get_board_labels(bid)
+cards = get_board_cards(bid, filter = "all")
+
+# It is possible to call `get_resource()` directly:
+lists = get_resource(parent = "board", child = "lists", id = bid)
+
+# As with boards, cards can be queried for particular resources, in this case
+# to obtain custom fields:
+card = cards$id[5]
+acts = get_card_fields(card)
+
+# Set `limit` to specify the number of results. Pagination will be used
+# whenever limit exceeds 1000. Use `limit=Inf` to make sure you get all.
+
+## Not run: 
+all_actions = get_board_actions(bid, limit = Inf)
+
+## End(Not run)
+
+# For private and team boards, a secure token is required:
+
+## Not run: 
+key = Sys.getenv("MY_TRELLO_KEY")
+secret = Sys.getenv("MY_TRELLO_SECRET")
+
+token = get_token("my_app", key = key, secret = secret,
+                  scope = c("read", "write"))
+
+# Token is now cached, no need to pass it explicitly.
+cards_open = get_board_cards(board_id, filter = "open")
+
+## End(Not run)
+</code></pre>
+
+
+</div>

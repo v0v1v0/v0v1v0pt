@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fit_lmshift</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Regression-based model fitting</h2>
+
+<h3>Description</h3>
+
+<p>Regression-based model fitting
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fit_lmshift(x, tau, deg_poly = 0, ...)
+
+fit_lmshift_ar1(x, tau, ...)
+
+fit_trendshift(x, tau, ...)
+
+fit_trendshift_ar1(x, tau, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A time series</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tau</code></td>
+<td>
+<p>a set of indices representing a changepoint set</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deg_poly</code></td>
+<td>
+<p>integer indicating the degree of the polynomial spline to be
+fit. Passed to <code>stats::poly()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments passed to <code>stats::lm()</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These model-fitting functions use <code>stats::lm()</code> to fit the corresponding
+regression model to a time series, using the changepoints specified by the
+<code>tau</code> argument.
+Each changepoint is treated as a categorical fixed-effect, while the <code>deg_poly</code>
+argument controls the degree of the polynomial that interacts with those
+fixed-effects.
+For example, setting <code>deg_poly</code> equal to 0 will return the same model as
+calling <code>fit_meanshift_norm()</code>, but the latter is faster for larger changepoint
+sets because it doesn't have to fit all of the regression models.
+</p>
+<p>Setting <code>deg_poly</code> equal to 1 fits the <code>trendshift</code> model.
+</p>
+
+<ul><li> <p><code>fit_lmshift_ar1()</code>: will apply auto-regressive lag 1 errors
+</p>
+</li></ul>
+<ul><li> <p><code>fit_trendshift()</code>: will fit a line in each region
+</p>
+</li></ul>
+<ul><li> <p><code>fit_trendshift_ar1()</code>: will fit a line in each region and autoregress lag 1 errors
+</p>
+</li></ul>
+<h3>Value</h3>
+
+<p>A mod_cpt object
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other model-fitting: 
+<code>fit_meanshift()</code>,
+<code>fit_meanvar()</code>,
+<code>fit_nhpp()</code>,
+<code>model_args()</code>,
+<code>model_name()</code>,
+<code>new_fun_cpt()</code>,
+<code>whomademe()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Manually specify a changepoint set
+tau &lt;- c(365, 826)
+
+# Fit the model
+mod &lt;- fit_lmshift(DataCPSim, tau)
+
+# Retrieve model parameters
+logLik(mod)
+deg_free(mod)
+
+# Manually specify a changepoint set
+cpts &lt;- c(1700, 1739, 1988)
+ids &lt;- time2tau(cpts, as_year(time(CET)))
+
+# Fit the model
+mod &lt;- fit_lmshift(CET, tau = ids)
+
+# View model parameters
+glance(mod)
+glance(fit_lmshift(CET, tau = ids, deg_poly = 1))
+glance(fit_lmshift_ar1(CET, tau = ids))
+glance(fit_lmshift_ar1(CET, tau = ids, deg_poly = 1))
+glance(fit_lmshift_ar1(CET, tau = ids, deg_poly = 2))
+
+# Empty changepoint sets are allowed
+fit_lmshift(CET, tau = NULL)
+
+# Duplicate changepoints are removed
+fit_lmshift(CET, tau = c(42, 42))
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,174 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TCHazaRdsWindFields</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute the Wind and Pressure Spatial Hazards Field Associated with TC track.</h2>
+
+<h3>Description</h3>
+
+<p>Compute the Wind and Pressure Spatial Hazards Field Associated with TC track.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TCHazaRdsWindFields(
+  outdate = NULL,
+  GEO_land,
+  TC,
+  paramsTable,
+  outfile = NULL,
+  overwrite = FALSE,
+  returnWaves = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>outdate</code></td>
+<td>
+<p>array of POSITx date times to linearly interpolate TC track</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>GEO_land</code></td>
+<td>
+<p>SpatVector or dataframe hazard geometry generated with land_geometry</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>TC</code></td>
+<td>
+<p>SpatVector of Tropical cyclone track parameters for a single time step</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>paramsTable</code></td>
+<td>
+<p>Global parameters to compute TC Hazards</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>outfile</code></td>
+<td>
+<p>character. Output netcdf filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>TRUE/FALSE, option to overwrite outfile</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>returnWaves</code></td>
+<td>
+<p>Return ocean wave parameters (default = FALSE)</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRasterDataset with the following attributes.</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+   abbreviated attribute </td>
+<td style="text-align: left;"> description </td>
+<td style="text-align: left;"> units </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   P </td>
+<td style="text-align: left;"> Atmospheric pressure </td>
+<td style="text-align: left;"> hPa </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Uw </td>
+<td style="text-align: left;"> Meridional  wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Vw </td>
+<td style="text-align: left;"> Zonal wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Sw </td>
+<td style="text-align: left;"> Wind speed </td>
+<td style="text-align: left;"> m/s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Dw </td>
+<td style="text-align: left;"> The direction from which wind originates </td>
+<td style="text-align: left;"> deg clockwise from true north </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Hs0 </td>
+<td style="text-align: left;"> Deep water significant wave height </td>
+<td style="text-align: left;"> m </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Tp0 </td>
+<td style="text-align: left;"> Deep water Peak wave period </td>
+<td style="text-align: left;"> s </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+   Dp0 </td>
+<td style="text-align: left;"> The peak direction in which wave are heading </td>
+<td style="text-align: left;"> deg clockwise from true north. </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">require(terra)
+dem &lt;- rast(system.file("extdata/DEMs/YASI_dem.tif", package="TCHazaRds"))
+land &lt;- dem; land[land &gt; 0] = 0
+inland_proximity = distance(land,target = 0)
+GEO_land = land_geometry(dem,inland_proximity)
+
+TCi = vect(cbind(c(154,154),c(-26.1,-26)),"lines",crs="epsg:4283") #track line segment
+TCi$PRES = 950
+TCi$RMAX = 40
+TCi$VMAX = 60
+TCi$B = 1.4
+TCi$ISO_TIME = "2022-10-04 20:00:00"
+TCi$LON = geom(TCi)[1,3]
+TCi$LAT = geom(TCi)[1,4]
+TCi$STORM_SPD = perim(TCi)/(3*3600) #m/s
+TCi$thetaFm = 90-returnBearing(TCi)
+#OR
+TC &lt;- vect(system.file("extdata/YASI/YASI.shp", package="TCHazaRds"))
+TC$PRES &lt;- TC$BOM_PRES
+plot(dem);lines(TC,lwd = 4,col=2)
+
+paramsTable = read.csv(system.file("extdata/tuningParams/defult_params.csv",package = "TCHazaRds"))
+#calculate the wind hazard
+
+outdate = seq(strptime(TC$ISO_TIME[44],"%Y-%m-%d %H:%M:%S",tz="UTC"),
+              strptime(TC$ISO_TIME[46],"%Y-%m-%d %H:%M:%S",tz="UTC"),
+              3600*3)
+HAZi = TCHazaRdsWindFields(outdate=outdate,GEO_land=GEO_land,TC=TC,paramsTable=paramsTable)
+plot(min(HAZi$Pr))
+
+</code></pre>
+
+
+</div>

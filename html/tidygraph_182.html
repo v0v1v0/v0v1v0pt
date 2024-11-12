@@ -1,0 +1,100 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>iterate</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Repeatedly modify a graph by a function</h2>
+
+<h3>Description</h3>
+
+<p>The iterate family of functions allow you to call the same modification
+function on a graph until some condition is met. This can be used to create
+simple simulations in a tidygraph friendly API
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">iterate_n(.data, n, .f, ...)
+
+iterate_while(.data, cnd, .f, ..., max_n = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>tbl_graph</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>The number of times to iterate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.f</code></td>
+<td>
+<p>A function taking in a <code>tbl_graph</code> as the first argument and
+returning a <code>tbl_graph</code> object</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments passed on to <code>.f</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cnd</code></td>
+<td>
+<p>A condition that must evaluate to <code>TRUE</code> or <code>FALSE</code> determining if
+iteration should continue</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max_n</code></td>
+<td>
+<p>The maximum number of iterations in case <code>cnd</code> never evaluates
+to <code>FALSE</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code>tbl_graph</code> object
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Gradually remove edges from the least connected nodes while avoiding
+# isolates
+create_notable('zachary') |&gt;
+  iterate_n(20, function(gr) {
+    gr |&gt;
+      activate(nodes) |&gt;
+      mutate(deg = centrality_degree(), rank = order(deg)) |&gt;
+      activate(edges) |&gt;
+      slice(
+        -which(edge_is_incident(.N()$rank == sum(.N()$deg == 1) + 1))[1]
+      )
+  })
+
+# Remove a random edge until the graph is split in two
+create_notable('zachary') |&gt;
+  iterate_while(graph_component_count() == 1, function(gr) {
+    gr |&gt;
+      activate(edges) |&gt;
+      slice(-sample(graph_size(), 1))
+  })
+
+</code></pre>
+
+
+</div>

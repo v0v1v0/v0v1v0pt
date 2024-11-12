@@ -1,0 +1,226 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gof</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute goodness-of-fit measures between observed and simulated OD matrices</h2>
+
+<h3>Description</h3>
+
+<p>This function returns a data.frame where each row provides one or
+several goodness-of-fit measures between a simulated and an observed
+Origin-Destination matrix.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gof(
+  sim,
+  obs,
+  measures = "all",
+  distance = NULL,
+  bin_size = 2,
+  use_proba = FALSE,
+  check_names = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>sim</code></td>
+<td>
+<p>an object of class <code>TDLM</code> (output of <code>run_law_model()</code>,
+<code>run_law()</code> or <code>run_model()</code>).
+A matrix or a list of matrices can also be used (see Note).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs</code></td>
+<td>
+<p>a squared matrix representing the observed mobility flows.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>measures</code></td>
+<td>
+<p>a vector of string(s) indicating which goodness-of-fit
+measure(s) to chose (see Details). If <code>"all"</code> is specified, then all measures
+will be calculated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>distance</code></td>
+<td>
+<p>a squared matrix representing the distance between locations.
+Only necessary for the distance-based measures.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bin_size</code></td>
+<td>
+<p>a numeric value indicating the size of bin used to discretize
+the distance distribution to compute CPC_d (2 "km" by default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_proba</code></td>
+<td>
+<p>a boolean indicating if the <code>proba</code> matrix should be used
+instead of the simulated OD matrix to compute the measure(s). Only valid for
+the output from <code>run_law_model()</code> with argument <code>write_proba = TRUE</code> (see
+Note).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check_names</code></td>
+<td>
+<p>a boolean indicating if the ID location are used as matrix
+rownames and colnames and if they should be checked (see Note).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<script id="MathJax-script" async src="../../mathjaxr/doc/mathjax/es5/tex-chtml-full.js"></script><p>With \(n\) the number of locations, \(T_{ij}\) the
+observed flow between location \(i\) and location \(j\)
+(argument <code>obs</code>), \(\tilde{T}_{ij}\) a simulated flow
+between location \(i\) and location \(j\) (a matrix from
+argument <code>sim</code>), \(N=\sum_{i,j=1}^n T_{ij}\) the
+sum of observed flows and
+\(\tilde{N}=\sum_{i,j=1}^n \tilde{T}_{ij}\)
+the sum of simulated flows.
+</p>
+<p>Several goodness-of-fit measures have been considered
+<code>measures = c("CPC", "NRMSE", "KL", "CPL", "CPC_d", "KS")</code>. The Common Part
+of Commuters (Gargiulo et al. 2012; Lenormand et al. 2012; Lenormand et al. 2016),
+</p>
+<p>\(\displaystyle CPC(T,\tilde{T}) = \frac{2\cdot\sum_{i,j=1}^n min(T_{ij},\tilde{T}_{ij})}{N + \tilde{N}}\)
+</p>
+<p>the Normalized Root Mean Square Error (NRMSE),
+</p>
+<p>\(\displaystyle NRMSE(T,\tilde{T}) = \sqrt{\frac{\sum_{i,j=1}^n (T_{ij}-\tilde{T}_{ij})^2}{N}}\)
+</p>
+<p>the Kullback–Leibler divergence (Kullback and Leibler 1951),
+</p>
+<p>\(\displaystyle KL(T,\tilde{T}) = \sum_{i,j=1}^n \frac{T_{ij}}{N}\log\left(\frac{T_{ij}}{N}\frac{\tilde{N}}{\tilde{T}_{ij}}\right)\)
+</p>
+<p>the Common Part of Links (CPL) (Lenormand et al. 2016),
+</p>
+<p>\(\displaystyle CPL(T,\tilde{T}) = \frac{2\cdot\sum_{i,j=1}^n 1_{T_{ij}&gt;0} \cdot 1_{\tilde{T}_{ij}&gt;0}}{\sum_{i,j=1}^n 1_{T_{ij}&gt;0} + \sum_{i,j=1}^n 1_{\tilde{T}_{ij}&gt;0}}\)
+</p>
+<p>the Common Part of Commuters based on the disance
+(Lenormand et al. 2016), noted CPC_d. Let us consider
+\(N_k\) (and \(\tilde{N}_k\)) the
+sum of observed (and simulated) flows at a distance comprised in the bin
+[<code>bin_size</code>*k-<code>bin_size</code>, <code>bin_size</code>*k[.
+</p>
+<p>\(\displaystyle CPC_d(T,\tilde{T}) = \frac{2\cdot\sum_{k=1}^{\infty} min(N_{k},\tilde{N}_{k})}{N+\tilde{N}}\)
+</p>
+<p>and the Kolmogorv-Smirnov statistic and p-value (Massey 1951)
+, noted KS. It is based on the observed and simulated flow distance
+distribution and computed with the ks_test function from
+the <a href="https://cran.r-project.org/package=Ecume">Ecume</a> package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A data.frame providing one or several goodness-of-fit measure(s) between
+simulated OD(s) and an observed OD. Each row corresponds to a matrix sorted
+according to the list (or list of list) elements (names are used if
+provided).
+</p>
+
+
+<h3>Note</h3>
+
+<p>By default, if <code>sim</code> is an output of <code>run_law_model()</code>
+the measure(s) are computed only for the simulated OD matrices and
+not the <code>proba</code> matrix (included in the output when
+<code>write_proba = TRUE</code>). The argument <code>use_proba</code> can be used to compute the
+measure(s) based on the <code>proba</code> matrix instead of the simulated
+OD matrix. In this case the argument <code>obs</code> should also be a proba matrix.
+</p>
+<p>All the inputs should be based on the same number of
+locations sorted in the same order. It is recommended to use the location ID
+as matrix rownames and matrix colnames and to set
+<code>check_names = TRUE</code> to verify that everything is in order before running
+this function (<code>check_names = FALSE</code> by default). Note that the function
+<code>check_format_names()</code> can be used to control the validity of all the inputs
+before running the main package's functions.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Maxime Lenormand (<a href="mailto:maxime.lenormand@inrae.fr">maxime.lenormand@inrae.fr</a>)
+</p>
+
+
+<h3>References</h3>
+
+<p>Lenormand M, Bassolas A, Ramasco JJ (2016).
+“Systematic comparison of trip distribution laws and models.”
+<em>Journal of Transport Geography</em>, <b>51</b>, 158-169.
+</p>
+<p>Gargiulo F, Lenormand M, Huet S, Baqueiro Espinosa O (2012).
+“Commuting network model: getting to the essentials.”
+<em>Journal of Artificial Societies and Social Simulation</em>, <b>15</b>(2), 13.
+</p>
+<p>Lenormand M, Huet S, Gargiulo F, Deffuant G (2012).
+“A Universal Model of Commuting Networks.”
+<em>PLoS ONE</em>, <b>7</b>, e45985.
+</p>
+<p>Kullback S, Leibler RA (1951).
+“On Information and Sufficiency.”
+<em>The Annals of Mathematical Statistics</em>, <b>22</b>(1), 79 – 86.
+</p>
+<p>Massey FJ (1951).
+“The Kolmogorov-Smirnov test for goodness of fit.”
+<em>Journal of the American Statistical Association</em>, <b>46</b>(253), 68–78.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>run_law_model()</code> <code>run_law()</code> <code>run_model()</code> <code>run_law_model()</code>
+<code>check_format_names()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(mass)
+data(distance)
+data(od)
+
+mi &lt;- as.numeric(mass[, 1])
+mj &lt;- mi
+Oi &lt;- as.numeric(mass[, 2])
+Dj &lt;- as.numeric(mass[, 3])
+
+res &lt;- run_law_model(
+  law = "GravExp", mass_origin = mi, mass_destination = mj,
+  distance = distance, opportunity = NULL, param = 0.01,
+  model = "DCM", nb_trips = NULL, out_trips = Oi, in_trips = Dj,
+  average = FALSE, nbrep = 1, maxiter = 50, mindiff = 0.01,
+  write_proba = FALSE,
+  check_names = FALSE
+)
+
+gof(
+  sim = res, obs = od, measures = "CPC", distance = NULL, bin_size = 2,
+  use_proba = FALSE,
+  check_names = FALSE
+)
+
+
+</code></pre>
+
+
+</div>

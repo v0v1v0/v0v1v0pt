@@ -1,0 +1,141 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>doc_centrality</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Find a specified document centrality metric</h2>
+
+<h3>Description</h3>
+
+<p>Given a document-term matrix or a document-similarity matrix,
+this function returns specified text network-based centrality measures.
+Currently, this includes degree, eigenvector, betweenness, and
+spanning.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">doc_centrality(mat, method, alpha = 1L, two_mode = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>mat</code></td>
+<td>
+<p>Document-term matrix with terms as columns or a
+document-similarity matrix with documents as rows and columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>Character vector indicating centrality method, including
+"degree", "eigen", "span", and "between".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Number (default = 1) indicating the tuning parameter for
+weighted metrics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>two_mode</code></td>
+<td>
+<p>Logical (default = TRUE), indicating whether the input matrix
+is two mode (i.e. a document-term matrix) or one-mode
+(i.e. document-similarity matrix)</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If a document-term matrix is provided, the function obtains the one-mode
+document-level projection to get the document-similarity matrix using
+<code>tcrossprod()</code>. If a one-mode document-similarity matrix is provided, then
+this step is skipped. This way document similiarities may be obtained
+using other methods, such as Word-Mover's Distance (see <code>doc_similarity</code>).
+The diagonal is ignored in all calculations.
+</p>
+<p>Document centrality methods include:
+</p>
+
+<ul>
+<li>
+<p> degree: Opsahl's weighted degree centrality with tuning parameter "alpha"
+</p>
+</li>
+<li>
+<p> between: vertex betweenness centrality using Brandes' method
+</p>
+</li>
+<li>
+<p> eigen: eigenvector centrality using Freeman's method
+</p>
+</li>
+<li>
+<p> span: Modified Burt's constraint following Stoltz and Taylor's method,
+uses a tuning parameter "alpha" and the output is scaled.
+</p>
+</li>
+</ul>
+<h3>Value</h3>
+
+<p>A dataframe with two columns
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Dustin Stoltz
+</p>
+
+
+<h3>References</h3>
+
+<p>Brandes, Ulrik
+(2000) 'A faster algorithm for betweenness centrality'
+<em>Journal of Mathematical Sociology</em>. 25(2):163-177
+<a href="https://doi.org/10.1080/0022250X.2001.9990249">doi:10.1080/0022250X.2001.9990249</a>.<br>
+Opsahl, Tore, et al.
+(2010) 'Node centrality in weighted networks: Generalizing degree
+and shortest paths.' <em>Social Networks</em>. 32(3)245:251
+<a href="https://doi.org/10.1016/j.socnet.2010.03.006">doi:10.1016/j.socnet.2010.03.006</a><br>
+Stoltz, Dustin; Taylor, Marshall
+(2019) 'Textual Spanning: Finding Discursive Holes in Text Networks'
+<em>Socius</em>. <a href="https://doi.org/10.1177/2378023119827674">doi:10.1177/2378023119827674</a><br></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+# load example text
+data(jfk_speech)
+
+# minimal preprocessing
+jfk_speech$sentence &lt;- tolower(jfk_speech$sentence)
+jfk_speech$sentence &lt;- gsub("[[:punct:]]+", " ", jfk_speech$sentence)
+
+# create DTM
+dtm &lt;- dtm_builder(jfk_speech, sentence, sentence_id)
+
+ddeg &lt;- doc_centrality(dtm, method = "degree")
+deig &lt;- doc_centrality(dtm, method = "eigen")
+dbet &lt;- doc_centrality(dtm, method = "between")
+dspa &lt;- doc_centrality(dtm, method = "span")
+
+# with a document-similarity matrix (dsm)
+
+dsm &lt;- doc_similarity(dtm, method = "cosine")
+ddeg &lt;- doc_centrality(dsm, method = "degree", two_mode = FALSE)
+
+</code></pre>
+
+
+</div>

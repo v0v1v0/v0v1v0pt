@@ -1,0 +1,170 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>new_tidylda</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Construct a new object of class <code>tidylda</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Since all three of <code>tidylda</code>,
+<code>refit.tidylda</code>, and
+<code>predict.tidylda</code> call <code>fit_lda_c</code>,
+we need a way to format the resulting posteriors and other user-facing
+objects consistently. This function does that.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">new_tidylda(
+  lda,
+  dtm,
+  burnin,
+  is_prediction = FALSE,
+  alpha = NULL,
+  eta = NULL,
+  optimize_alpha = NULL,
+  calc_r2 = NULL,
+  calc_likelihood = NULL,
+  call = NULL,
+  threads
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>lda</code></td>
+<td>
+<p>list output of <code>fit_lda_c</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dtm</code></td>
+<td>
+<p>a document term matrix or term co-occurrence matrix of class <code>dgCMatrix</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>burnin</code></td>
+<td>
+<p>integer number of burnin iterations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>is_prediction</code></td>
+<td>
+<p>is this for a prediction (as opposed to initial fitting,
+or update)? Defaults to <code>FALSE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>output of <code>format_alpha</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>output of <code>format_eta</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>optimize_alpha</code></td>
+<td>
+<p>did you optimize <code>alpha</code> when making a call to
+<code>fit_lda_c</code>?  If <code>is_prediction = TRUE</code>, this
+argument is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_r2</code></td>
+<td>
+<p>did the user want to calculate R-squared when calculating the
+the model? If <code>is_prediction = TRUE</code>, this argument is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>calc_likelihood</code></td>
+<td>
+<p>did you calculate the log likelihood when making a call
+to <code>fit_lda_c</code>?  If <code>is_prediction = TRUE</code>, this
+argument is ignored.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>the result of calling <code>match.call</code> at the top of
+<code>tidylda</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threads</code></td>
+<td>
+<p>number of parallel threads</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Returns an S3 object of class <code>tidylda</code> with the following slots:
+</p>
+<p><code>beta</code> is a numeric matrix whose rows are the posterior estimates
+of P(token|topic)
+</p>
+<p><code>theta</code> is a numeric matrix  whose rows are the posterior estimates of
+P(topic|document)
+</p>
+<p><code>lambda</code> is a numeric matrix whose rows are the posterior estimates of
+P(topic|token), calculated using Bayes's rule.
+See <code>calc_lambda</code>.
+</p>
+<p><code>alpha</code> is the prior for topics over documents. If <code>optimize_alpha</code>
+is <code>FALSE</code>, <code>alpha</code> is what the user passed when calling
+<code>tidylda</code>. If <code>optimize_alpha</code> is <code>TRUE</code>,
+<code>alpha</code> is a numeric vector returned in the <code>alpha</code> slot from a
+call to <code>fit_lda_c</code>.
+</p>
+<p><code>eta</code> is the prior for tokens over topics. This is what the user passed
+when calling <code>tidylda</code>.
+</p>
+<p><code>summary</code> is the result of a call to <code>summarize_topics</code>
+</p>
+<p><code>call</code> is the result of <code>match.call</code> called at the top
+of <code>tidylda</code>
+</p>
+<p><code>log_likelihood</code> is a <code>tibble</code> whose columns are
+the iteration and log likelihood at that iteration. This slot is only populated
+if <code>calc_likelihood = TRUE</code>
+</p>
+<p><code>r2</code> is a numeric scalar resulting from a call to
+<code>calc_rsquared</code>. This slot only populated if
+<code>calc_r2 = TRUE</code>
+</p>
+
+
+<h3>Note</h3>
+
+<p>In general, the arguments of this function should be what the user passed
+when calling <code>tidylda</code>.
+</p>
+<p><code>burnin</code> is used only to determine whether or not burn in iterations
+were used when fitting the model. If <code>burnin &gt; -1</code> then posteriors
+are calculated using <code>lda$Cd_mean</code> and <code>lda$Cv_mean</code> respectively.
+Otherwise, posteriors are calculated using <code>lda$Cd_mean</code> and
+<code>lda$Cv_mean</code>.
+</p>
+<p>The class of <code>call</code> isn't checked. It's just passed through to the
+object returned by this function. Might be useful if you are using this
+function for troubleshooting or something.
+</p>
+
+
+</div>

@@ -1,0 +1,137 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfbrackets</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Accessing, evaluating, subsetting and subassigning <code>tf</code> vectors</h2>
+
+<h3>Description</h3>
+
+<p>These functions access, subset, replace and evaluate <code>tf</code> objects.
+For more information on creating <code>tf</code> objects and converting them to/from
+<code>list</code>, <code>data.frame</code> or <code>matrix</code>, see <code>tfd()</code> and <code>tfb()</code>. See Details.<br></p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tf'
+x[i, j, interpolate = TRUE, matrix = TRUE]
+
+## S3 replacement method for class 'tf'
+x[i] &lt;- value
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an <code>tf</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>i</code></td>
+<td>
+<p>index of the observations (<code>integer</code>ish, <code>character</code> or <code>logical</code>,
+usual R rules apply)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>j</code></td>
+<td>
+<p>The <code>arg</code> used to evaluate the functions. A (list of) <code>numeric</code>
+vectors. <em>NOT</em> interpreted as a column number but as the argument value of
+the respective functional datum.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>interpolate</code></td>
+<td>
+<p>should functions be evaluated (i.e., inter-/extrapolated)
+for values in <code>arg</code> for which no original data is available? Only relevant for
+the raw data class <code>tfd</code>, for which it defaults to <code>TRUE</code>. Basis-represented
+<code>tfb</code> are always "interpolated".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>matrix</code></td>
+<td>
+<p>should the result be returned as a <code>matrix</code> or as a list of
+<code>data.frame</code>s? If <code>TRUE</code>, <code>j</code> has to be a (list of a) single vector of
+<code>arg</code>. See return value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>value</code></td>
+<td>
+<p><code>tf</code> object for subassignment. This is typed more strictly
+than concatenation:  subassignment only happens if the common type of
+<code>value</code> and <code>x</code> is the same as the type of <code>x</code>,
+so subassignment never changes the type of <code>x</code> but may do a
+potentially lossy cast of <code>value</code> to the type of <code>x</code> (with a warning).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that these break certain (terrible) R conventions for vector-like objects:<br></p>
+
+<ul>
+<li>
+<p> no argument recycling,
+</p>
+</li>
+<li>
+<p> no indexing with <code>NA</code>,
+</p>
+</li>
+<li>
+<p> no indexing with names not present in <code>x</code>,
+</p>
+</li>
+<li>
+<p> no indexing with integers <code style="white-space: pre;">⁠&gt; length(x)⁠</code>
+</p>
+</li>
+</ul>
+<p>All of the above will trigger errors.
+</p>
+
+
+<h3>Value</h3>
+
+<p>If <code>j</code> is missing, a subset of the functions in <code>x</code> as given by
+<code>i</code>.<br> If <code>j</code> is given and <code>matrix == TRUE</code>, a numeric matrix of function
+evaluations in which each row represents one function and each column
+represents one <code>argval</code> as given in argument <code>j</code>, with an attribute
+<code>arg</code>=<code>j</code> and row- and column-names derived from <code>x[i]</code> and <code>j</code>.<br> If
+<code>j</code> is given and <code>matrix == FALSE</code>, a list of <code>tbl_df</code>s with columns
+<code>arg</code> = <code>j</code> and <code>value</code> = evaluations at <code>j</code> for each observation in
+<code>i</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- 1:3 * tfd(data = 0:10, arg = 0:10)
+plot(x)
+# this operator's 2nd argument is quite overloaded -- you can:
+# 1. simply extract elements from the vector if no second arg is given:
+x[1]
+x[c(TRUE, FALSE, FALSE)]
+x[-(2:3)]
+# 2. use the second argument and optional additional arguments to
+#    extract specific function evaluations in a number of formats:
+x[1:2, c(4.5, 9)] # returns a matrix of function evaluations
+x[1:2, c(4.5, 9), interpolate = FALSE] # NA for arg-values not in the original data
+x[-3, seq(1, 9, by = 2), matrix = FALSE] # list of data.frames for each function
+# in order to evaluate a set of observed functions on a new grid and
+# save them as a functional data vector again, use `tfd` or `tfb` instead:
+tfd(x, arg = seq(0, 10, by = 0.01))
+</code></pre>
+
+
+</div>

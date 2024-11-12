@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>app</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Apply a function to the cells of a SpatRaster</h2>
+
+<h3>Description</h3>
+
+ 
+<p>Apply a function to the values of each cell of a SpatRaster. Similar to <code>apply</code> – think of each layer in a SpatRaster as a column (or row) in a matrix. 
+</p>
+<p>This is generally used to summarize the values of multiple layers into one layer; but this is not required.
+</p>
+<p><code>app</code> calls function <code>fun</code> with the raster data as first argument. Depending on the function supplied, the raster data is represented as either a matrix in which each layer is a column, or a vector representing a cell. The function should return a vector or matrix that is divisible by ncell(x). Thus, both "sum" and "rowSums" can be used, but "colSums" cannot be used.
+</p>
+<p>You can also apply a function <code>fun</code> across datasets by layer of a <code>SpatRasterDataset</code>. In that case, summarization is by layer across SpatRasters. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+app(x, fun, ..., cores=1, filename="", overwrite=FALSE, wopt=list())
+
+## S4 method for signature 'SpatRasterDataset'
+app(x, fun, ..., cores=1, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster or SpatRasterDataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p>a function that operates on a vector or matrix. This can be a function that is defined in base-R or in a package, or a function you write yourself (see examples). Functions that return complex output (e.g. a list) may need to be wrapped in your own function to simplify the output to a vector or matrix. The following functions have been re-implemented in C++ for speed: "sum", "mean", "median", "modal", "which", "which.min", "which.max", "min", "max", "prod", "any", "all", "sd", "std", "first". To use the base-R function for say, "min", you could use something like <code>fun=function(i) min(i)</code> or the equivalent <code>fun = \(i) min(i)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments for <code>fun</code>. These are typically numerical constants. They should *never* be another SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cores</code></td>
+<td>
+<p>positive integer. If <code>cores &gt; 1</code>, a 'parallel' package cluster with that many cores is created and used. You can also supply a cluster object. Ignored for functions that are implemented by terra in C++ (see under fun)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>list with named options for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>To speed things up, parallelization is supported, but this is often not helpful, and it may actually be slower. There is only a speed gain if you have many cores (&gt; 8) and/or a very complex (slow) function <code>fun</code>. If you write <code>fun</code> yourself, consider supplying a <code>cppFunction</code> made with the Rcpp package instead (or go have a cup of tea while the computer works for you).
+</p>
+
+
+<h3>Value</h3>
+
+<p>SpatRaster
+</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>lapp</code>, <code>tapp</code>, <code>Math-methods</code>, <code>roll</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">r &lt;- rast(ncols=10, nrows=10)
+values(r) &lt;- 1:ncell(r)
+x &lt;- c(r, sqrt(r), r+50)
+s &lt;- app(x, fun=sum)
+s
+# for a few generic functions like 
+# "sum", "mean", and "max" you can also do
+sum(x)
+
+## SpatRasterDataset
+sd &lt;- sds(x, x*2, x/3)
+a &lt;- app(sd, max)
+a
+# same as 
+max(x, x*2, x/3)
+# and as (but slower)
+b &lt;- app(sd, function(i) max(i))
+
+
+## also works for a single layer
+f &lt;- function(i) (i+1) * 2 * i + sqrt(i)
+s &lt;- app(r, f)
+# same as above, but that is not memory-safe
+# and has no filename argument 
+s &lt;- f(r)
+
+## Not run: 
+#### multiple cores 
+test0 &lt;- app(x, sqrt) 
+test1 &lt;- app(x, sqrt, cores=2)
+
+testfun &lt;- function(i) { 2 * sqrt(i) }
+test2 &lt;- app(x, fun=testfun, cores =2)
+
+## this fails because testfun is not exported to the nodes
+# test3 &lt;- app(x, fun=function(i) testfun(i), cores=2)
+## to export it, add it as argument to fun
+test3 &lt;- app(x, fun=function(i, ff) ff(i), cores =3, ff=testfun)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

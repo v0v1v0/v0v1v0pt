@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>ts_clean_vec</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Replace Outliers &amp; Missing Values in a Time Series</h2>
+
+<h3>Description</h3>
+
+<p>This is mainly a wrapper for the outlier cleaning function,
+<code>tsclean()</code>, from the <code>forecast</code> R package.
+The <code>ts_clean_vec()</code> function includes arguments for applying
+seasonality to numeric vector (non-<code>ts</code>) via the <code>period</code> argument.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">ts_clean_vec(x, period = 1, lambda = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A numeric vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>period</code></td>
+<td>
+<p>A seasonal period to use during the transformation. If <code>period = 1</code>,
+seasonality is not included and <code>supsmu()</code> is used to fit a trend.
+If <code>period &gt; 1</code>, a robust STL decomposition is
+first performed and a linear interpolation is applied to the seasonally adjusted data.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>A box cox transformation parameter. If set to <code>"auto"</code>, performs
+automated lambda selection.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><strong>Cleaning Outliers</strong>
+</p>
+
+<ol>
+<li>
+<p> Non-Seasonal (<code>period = 1</code>): Uses <code>stats::supsmu()</code>
+</p>
+</li>
+<li>
+<p> Seasonal (<code>period &gt; 1</code>): Uses <code>forecast::mstl()</code> with <code>robust = TRUE</code> (robust STL decomposition)
+for seasonal series.
+</p>
+</li>
+</ol>
+<p>To estimate missing values and outlier replacements, linear interpolation is used on the
+(possibly seasonally adjusted) series. See <code>forecast::tsoutliers()</code> for the outlier detection method.
+</p>
+<p><strong>Box Cox Transformation</strong>
+</p>
+<p>In many circumstances, a Box Cox transformation can help. Especially if the series is multiplicative
+meaning the variance grows exponentially. A Box Cox transformation can be automated by setting <code>lambda = "auto"</code>
+or can be specified by setting <code style="white-space: pre;">⁠lambda = numeric value⁠</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>numeric</code> vector with the missing values and/or anomalies transformed to imputed values.
+</p>
+
+
+<h3>References</h3>
+
+
+<ul>
+<li> <p><a href="https://github.com/robjhyndman/forecast">Forecast R Package</a>
+</p>
+</li>
+<li> <p><a href="https://otexts.com/fpp2/missing-outliers.html">Forecasting Principles &amp; Practices: Dealing with missing values and outliers</a>
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+
+<ul>
+<li>
+<p> Box Cox Transformation: <code>box_cox_vec()</code>
+</p>
+</li>
+<li>
+<p> Lag Transformation: <code>lag_vec()</code>
+</p>
+</li>
+<li>
+<p> Differencing Transformation: <code>diff_vec()</code>
+</p>
+</li>
+<li>
+<p> Rolling Window Transformation: <code>slidify_vec()</code>
+</p>
+</li>
+<li>
+<p> Loess Smoothing Transformation: <code>smooth_vec()</code>
+</p>
+</li>
+<li>
+<p> Fourier Series: <code>fourier_vec()</code>
+</p>
+</li>
+<li>
+<p> Missing Value Imputation for Time Series: <code>ts_impute_vec()</code>
+</p>
+</li>
+<li>
+<p> Outlier Cleaning for Time Series: <code>ts_clean_vec()</code>
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+
+# --- VECTOR ----
+
+values &lt;- c(1,2,3, 4*2, 5,6,7, NA, 9,10,11, 12*2)
+values
+
+# Linear interpolation + Outlier Cleansing
+ts_clean_vec(values, period = 1, lambda = NULL)
+
+# Seasonal Interpolation: set period = 4
+ts_clean_vec(values, period = 4, lambda = NULL)
+
+# Seasonal Interpolation with Box Cox Transformation (internal)
+ts_clean_vec(values, period = 4, lambda = "auto")
+
+
+</code></pre>
+
+
+</div>

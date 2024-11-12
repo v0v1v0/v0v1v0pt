@@ -1,0 +1,156 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>writeCDF</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Write raster data to a NetCDF file</h2>
+
+<h3>Description</h3>
+
+<p>Write a SpatRaster or SpatRasterDataset to a NetCDF file. 
+</p>
+<p>When using a SpatRasterDataset, the varname, longname, and unit should be set in the object (see examples).
+</p>
+<p>Always use the <code>".nc"</code> or <code>".cdf"</code> file extension to assure that the file can be properly read again by GDAL
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+writeCDF(x, filename, varname, longname="", unit="", split=FALSE, ...)
+
+## S4 method for signature 'SpatRasterDataset'
+writeCDF(x, filename, overwrite=FALSE, zname="time", atts="", 
+    gridmap="", prec="float", compression=NA, missval, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster or SpatRasterDataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>varname</code></td>
+<td>
+<p>character. Name of the dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>longname</code></td>
+<td>
+<p>character. Long name of the dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>unit</code></td>
+<td>
+<p>character. Unit of the data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>split</code></td>
+<td>
+<p>logical. If <code>TRUE</code> each layer of <code>x</code> is treated as a sub-dataset</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>atts</code></td>
+<td>
+<p>character. A vector of additional global attributes to write. The must be formatted like c("x=a value", "y=abc")</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gridmap</code></td>
+<td>
+<p>character. The crs is always writting to the file in standard formats. With this argument you can also write the format commonly used in netcdf files. Something like <code>c("grid_mapping_name=lambert_azimuthal_equal_area", "longitude_of_projection_origin=10", "latitude_of_projection_origin=52", "false_easting=4321000", "false_northing=3210000")</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>zname</code></td>
+<td>
+<p>character. The name of the "time" dimension</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prec</code></td>
+<td>
+<p>character. One of "double", "float", "integer", "short", "byte" or "char"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>compression</code></td>
+<td>
+<p>Can be set to an integer between 1 (least compression) and 9 (most compression)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>missval</code></td>
+<td>
+<p>numeric, the number used to indicate missing values</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments passed on to the SpatRasterDataset method, and from there possibly to <code>ncvar_def</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster or SpatDataSet
+</p>
+
+
+<h3>See Also</h3>
+
+<p>see <code>writeRaster</code> for writing other file formats
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">f &lt;- system.file("ex/elev.tif", package="terra")
+r &lt;- rast(f)
+fname &lt;- paste0(tempfile(), ".nc")
+rr &lt;- writeCDF(r, fname, overwrite=TRUE, varname="alt", 
+      longname="elevation in m above sea level", unit="m")
+
+a &lt;- rast(ncols=5, nrows=5, nl=50)
+values(a) &lt;- 1:prod(dim(a))
+time(a) &lt;- as.Date("2020-12-31") + 1:nlyr(a)
+aa &lt;- writeCDF(a, fname, overwrite=TRUE, varname="power", 
+      longname="my nice data", unit="U/Pa")
+
+b &lt;- sqrt(a)
+s &lt;- sds(a, b)
+names(s) &lt;- c("temp", "prec")
+longnames(s) &lt;- c("temperature (C)", "precipitation (mm)")
+units(s) &lt;- c("°C", "mm")
+ss &lt;- writeCDF(s, fname, overwrite=TRUE)
+
+# for CRAN
+file.remove(fname)
+</code></pre>
+
+
+</div>

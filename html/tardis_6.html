@@ -1,0 +1,94 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tardis_multidict</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Analyze text with more than one dictionary</h2>
+
+<h3>Description</h3>
+
+<p>This convenience function takes a text and a set of dictionaries, and calls
+<code>tardis::tardis()</code> once for each dictionary. Other parameters are also passed
+along to <code>tardis()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tardis_multidict(input_text, text_column = NA, dictionaries, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>input_text</code></td>
+<td>
+<p>A text to be analyzed, either a <code>tbl_df</code> or a character vector.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>text_column</code></td>
+<td>
+<p>If <code>tbl_df</code> input, a character with the name of the input
+column containing the text to be analyzed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dictionaries</code></td>
+<td>
+<p>A single <code>tbl_df</code> with columns <code>dictionary</code>, <code>token</code>, and
+(optionally, for weighted dictionaries) <code>score</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed on to <code>tardis::tardis()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Dictionaries must be in a single <code>tbl_df</code> with at least two columns:
+<code>token</code>, containing the tokens belonging to each dictionary; and <code>dicionary</code>,
+which contains a unique identifier mapping each token to a dictionary.
+Weights, if present, must be in a column named <code>score</code>.
+</p>
+<p>Tokens can be mapped to multiple dictionaries, but each row maps one token
+to one dictionary.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>tbl_df</code> with new columns for each dictionary.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(magrittr)
+# Get NRC emotions dataset from textdata package
+nrc_emotion &lt;- textdata::lexicon_nrc() %&gt;%
+  dplyr::rename(token = word, dictionary = sentiment) %&gt;%
+  dplyr::mutate(score = 1)
+
+# set up some input text
+text &lt;- dplyr::tibble(body = c("I am so angry!", "I am angry.",
+  "I'm not angry.", "Your mother and I aren't angry, we're just disappointed."))
+
+emotions &lt;- tardis_multidict(input_text = text, text_column = "body",
+  dictionaries = nrc_emotion) %&gt;%
+  dplyr::select(body, score_anger, score_sadness)
+
+ emotions
+
+## End(Not run)
+</code></pre>
+
+
+</div>

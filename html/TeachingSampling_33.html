@@ -1,0 +1,164 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>PikHol</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Optimal Inclusion Probabilities Under Multi-purpose Sampling</h2>
+
+<h3>Description</h3>
+
+<p>Computes the population vector of optimal inclusion probabilities under the Holmbergs's Approach</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">PikHol(n, sigma, e, Pi)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n</code></td>
+<td>
+<p>Vector of optimal sample sizes for each of the characteristics of interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>A matrix containing the size measures for each characteristics of interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>e</code></td>
+<td>
+<p>Maximum allowed error under the ANOREL approach.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Pi</code></td>
+<td>
+<p>Matrix of first order inclusion probabilities. By default, this probabilites are
+proportional to each sigma.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Assuming that all of the characteristic of interest are equally important, the Holmberg's sampling design
+yields the following inclusion probabilities
+</p>
+<p style="text-align: center;"><code class="reqn">\pi_{(opt)k}=\frac{n^*\sqrt{a_{qk}}}{\sum_{k\in U}\sqrt{a_{qk}}}</code>
+</p>
+
+<p>where
+</p>
+<p style="text-align: center;"><code class="reqn">n^*\geq \frac{(\sum_{k\in U}\sqrt{a_{qk}})^2}{(1+c)Q+\sum_{k\in U}a_{qk}}</code>
+</p>
+
+<p>and
+</p>
+<p style="text-align: center;"><code class="reqn">a_{qk}= \sum_{q=1}^Q \frac{\sigma^2_{qk}}{\sum_{k\in U}\left( \frac{1}{\pi_{qk}}-1\right)\sigma^2_{qk}}</code>
+</p>
+
+<p>Note that <code class="reqn">\sigma^2_{qk}</code> is a size measure associated with the k-th element in the q-th characteristic of interest.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The function returns a vector of inclusion probabilities.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Hugo Andres Gutierrez Rojas <a href="mailto:hagutierrezro@gmail.com">hagutierrezro@gmail.com</a></p>
+
+
+<h3>References</h3>
+
+<p>Holmberg, A. (2002), On the Choice of Sampling Design under GREG Estimation in Multiparameter Surveys.
+<em>RD Department, Statistics Sweden</em>.<br>
+Sarndal, C-E. and Swensson, B. and Wretman, J. (1992), <em>Model Assisted Survey Sampling</em>. Springer.<br>
+Gutierrez, H. A. (2009), <em>Estrategias de muestreo: Diseno de encuestas y estimacion de parametros</em>.
+Editorial Universidad Santo Tomas
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#######################
+#### First example ####
+#######################
+
+# Uses the Lucy data to draw an otpimal sample
+# in a multipurpose survey context
+data(Lucy)
+attach(Lucy)
+# Different sample sizes for two characteristics of interest: Employees and Taxes
+N &lt;- dim(Lucy)[1]
+n &lt;- c(350,400)
+# The size measure is the same for both characteristics of interest,
+# but the relationship in between is different
+sigy1 &lt;- sqrt(Income^(1))
+sigy2 &lt;- sqrt(Income^(2))
+# The matrix containign the size measures for each characteristics of interest
+sigma&lt;-cbind(sigy1,sigy2)
+# The vector of optimal inclusion probabilities under the Holmberg's approach
+Piks&lt;-PikHol(n,sigma,0.03)
+# The optimal sample size is given by the sum of piks
+n=round(sum(Piks))
+# Performing the S.piPS function in order to select the optimal sample of size n
+res&lt;-S.piPS(n,Piks)
+sam &lt;- res[,1]
+# The information about the units in the sample is stored in an object called data
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+# Pik.s is the vector of inclusion probability of every single unit
+# in the selected sample
+Pik.s &lt;- res[,2]
+# The variables of interest are: Income, Employees and Taxes
+# This information is stored in a data frame called estima
+estima &lt;- data.frame(Income, Employees, Taxes)
+E.piPS(estima,Pik.s)
+
+########################
+#### Second example ####
+########################
+
+# We can define our own first inclusion probabilities
+data(Lucy)
+attach(Lucy)
+
+N &lt;- dim(Lucy)[1]
+n &lt;- c(350,400)
+
+sigy1 &lt;- sqrt(Income^(1))
+sigy2 &lt;- sqrt(Income^(2))
+sigma&lt;-cbind(sigy1,sigy2)
+pikas &lt;- cbind(rep(400/N, N), rep(400/N, N))
+
+Piks&lt;-PikHol(n,sigma,0.03, pikas)
+
+n=round(sum(Piks))
+n
+
+res&lt;-S.piPS(n,Piks)
+sam &lt;- res[,1]
+
+data &lt;- Lucy[sam,]
+attach(data)
+names(data)
+
+Pik.s &lt;- res[,2]
+estima &lt;- data.frame(Income, Employees, Taxes)
+E.piPS(estima,Pik.s)
+</code></pre>
+
+
+</div>

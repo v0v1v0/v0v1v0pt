@@ -1,0 +1,130 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gaussmedpd</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wasserstein Median of Gaussian Distributions in <code class="reqn">\mathbf{R}^p</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>Given a collection of <code class="reqn">p</code>-dimensional Gaussian distributions <code class="reqn">\mathcal{N}(\mu_i, \sigma_i^2)</code> for <code class="reqn">i=1,\ldots,n</code>,
+compute the Wasserstein median.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">gaussmedpd(means, vars, weights = NULL, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>means</code></td>
+<td>
+<p>an <code class="reqn">(n\times p)</code> matrix whose rows are mean vectors.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>a <code class="reqn">(p\times p\times n)</code> array where each slice is covariance matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weights</code></td>
+<td>
+<p>a weight of each image; if <code>NULL</code> (default), uniform weight is set. Otherwise, it should be a length-<code class="reqn">n</code> vector of nonnegative weights.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra parameters including </p>
+
+<dl>
+<dt>abstol</dt>
+<dd>
+<p>stopping criterion for iterations (default: 1e-8).</p>
+</dd>
+<dt>maxiter</dt>
+<dd>
+<p>maximum number of iterations (default: 496).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a named list containing </p>
+
+<dl>
+<dt>mean</dt>
+<dd>
+<p>a length-<code class="reqn">p</code> vector for mean of the estimated median distribution.</p>
+</dd>
+<dt>var</dt>
+<dd>
+<p>a <code class="reqn">(p\times p)</code> matrix for variance of the estimated median distribution.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>gaussmed1d()</code> for univariate case.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#----------------------------------------------------------------------
+#                         Three Gaussians in R^2
+#----------------------------------------------------------------------
+# GENERATE PARAMETERS
+# means
+par_mean = rbind(c(-4,0), c(0,0), c(5,-1))
+
+# covariances
+par_vars = array(0,c(2,2,3))
+par_vars[,,1] = cbind(c(2,-1),c(-1,2))
+par_vars[,,2] = cbind(c(4,+1),c(+1,4))
+par_vars[,,3] = diag(c(4,1))
+
+# COMPUTE THE MEDIAN
+gmeds = gaussmedpd(par_mean, par_vars)
+
+# COMPUTE THE BARYCENTER 
+gmean = gaussbarypd(par_mean, par_vars)
+
+# GET COORDINATES FOR DRAWING
+pt_type1 = gaussvis2d(par_mean[1,], par_vars[,,1])
+pt_type2 = gaussvis2d(par_mean[2,], par_vars[,,2])
+pt_type3 = gaussvis2d(par_mean[3,], par_vars[,,3])
+pt_gmean = gaussvis2d(gmean$mean, gmean$var)
+pt_gmeds = gaussvis2d(gmeds$mean, gmeds$var)
+
+# VISUALIZE
+opar &lt;- par(no.readonly=TRUE)
+plot(pt_gmean, lwd=2, col="red", type="l",
+     main="Three Gaussians", xlab="", ylab="", 
+     xlim=c(-6,8), ylim=c(-2.5,2.5))
+lines(pt_gmeds, lwd=2, col="blue")
+lines(pt_type1, lty=2, lwd=5)
+lines(pt_type2, lty=2, lwd=5)
+lines(pt_type3, lty=2, lwd=5)
+abline(h=0, col="grey80", lty=3)
+abline(v=0, col="grey80", lty=3)
+legend("topright", legend=c("Median","Barycenter"),
+       lwd=2, lty=1, col=c("blue","red"))
+par(opar)
+
+
+</code></pre>
+
+
+</div>

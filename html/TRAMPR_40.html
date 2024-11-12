@@ -1,0 +1,212 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TRAMPsamples</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>TRAMPsamples Objects</h2>
+
+<h3>Description</h3>
+
+<p>These functions create and interact with
+<code>TRAMPsamples</code> objects (collections of TRFLP patterns).  Samples
+contrast with “knowns” (see <code>TRAMPknowns</code>) in that
+samples contain primarily unidentified profiles.  In contrast with
+knowns, samples may have many peaks per enzyme/primer combination.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TRAMPsamples(data, info=NULL, warn.factors=TRUE, ...)
+
+## S3 method for class 'TRAMPsamples'
+labels(object, ...)
+## S3 method for class 'TRAMPsamples'
+summary(object, include.info=FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>data.frame containing peak information.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>info</code></td>
+<td>
+<p>(Optional) data.frame, describing individual samples (see
+Details for definitions of both data.frames).  If this is omitted,
+a basic data.frame will be generated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>warn.factors</code></td>
+<td>
+<p>Logical: Should a warning be given if any columns
+in <code>info</code> or <code>data</code> are converted into factors?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>A <code>TRAMPsamples</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>include.info</code></td>
+<td>
+<p>Logical: Should the output be augmented with the
+contents of the <code>info</code> component of the <code>TRAMPsamples</code>
+object?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p><code>TRAMPsamples</code>: Additional objects to incorportate
+into a <code>TRAMPsamples</code> object.  Other methods: Further arguments
+passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The object has at least two components, which relate to each other (in
+the sense of a relational database). <code>info</code> holds information
+about the individual samples, and <code>data</code> holds information about
+individual peaks (many of which belong to a single sample).
+</p>
+<p>Column definitions:
+</p>
+
+<ul>
+<li> <p><code>info</code>:
+</p>
+
+<dl>
+<dt><code>sample.pk</code></dt>
+<dd>
+<p>Unique positive integer, used to identify
+individual samples (i.e. a “primary key”).</p>
+</dd>
+<dt><code>species</code></dt>
+<dd>
+<p>Character, giving species name if samples
+were collected from an identified species.  If this column is
+missing, it will be initialised as <code>NA</code>.</p>
+</dd>
+</dl>
+</li>
+<li> <p><code>data</code>:
+</p>
+
+<dl>
+<dt><code>sample.fk</code></dt>
+<dd>
+<p>Positive integer, indicating which sample
+the peak belongs to (by matching against <code>info$sample.pk</code>)
+(i.e. a “foreign key”).</p>
+</dd>
+<dt>
+<code>primer</code>:</dt>
+<dd>
+<p>Character, giving the name of the primer
+used.</p>
+</dd>
+<dt>
+<code>enzyme</code>:</dt>
+<dd>
+<p>Character, giving the name of the
+restriction digest enzyme used.</p>
+</dd>
+<dt><code>size</code></dt>
+<dd>
+<p>Numeric, giving size (in base pairs) of the
+peak.</p>
+</dd>
+<dt><code>height</code></dt>
+<dd>
+<p>Numeric, giving the height (arbitrary units)
+of the peak.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Additional columns are allowed (and ignored) in both data.frames, and
+will be retained.  This allows notes on data quality and treatments to
+be easily included.  Additional objects are allowed as part of the
+<code>TRAMPsamples</code> object; any extra objects passed (via
+<code>...</code>) will be included in the final <code>TRAMPsamples</code> object.
+</p>
+<p>If <code>info</code> is omitted, then a basic data.frame will be generated,
+containing just the unique values of <code>sample.fk</code>, and
+<code>NA</code> for <code>species</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>TRAMPsamples</code></td>
+<td>
+<p>A new <code>TRAMPsamples</code> object, as described
+above.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels.TRAMPsamples</code></td>
+<td>
+<p>A sorted vector of the unique samples
+present in <code>x</code> (from <code>info$sample.pk</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>summary.TRAMPsamples</code></td>
+<td>
+<p>A data.frame, with the number of peaks
+per enzyme/primer combination, with each sample (indicated by
+<code>sample.pk</code>) as rows and each combination (in the format
+<code>&lt;primer&gt;_&lt;enzyme&gt;</code>) as columns.</p>
+</td>
+</tr>
+</table>
+<h3>Note</h3>
+
+<p>Across a <code>TRAMPsamples</code> object, primer and enzyme names must be
+<em>exactly</em> the same (including case and whitespace) to be
+considered the same.  For example <code>"ITS4"</code>, <code>"Its4"</code>,
+<code>"ITS4 "</code> and <code>"ITS 4"</code> would be considered to be four
+different primers.
+</p>
+<p>Factors will not merge correctly (with
+<code>combine.TRAMPsamples</code>).  <code>TRAMPsamples</code> will attempt
+to catch factor columns and convert them into characters for the
+<code>info</code> and <code>data</code> data.frames.  Other objects (passed as
+part of <code>...</code>) will not be altered.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>plot.TRAMPsamples</code> and
+<code>summary.TRAMPsamples</code>, for plotting and summarising
+<code>TRAMPsamples</code> objects.
+</p>
+<p><code>TRAMPknowns</code>, which constructs an analagous object to
+hold “knowns” data.
+</p>
+<p><code>TRAMP</code>, for analysing <code>TRAMPsamples</code>
+objects.
+</p>
+<p><code>load.abi</code>, which creates a <code>TRAMPsamples</code> object
+from Gene Mapper (Applied Biosystems) output.
+</p>
+
+
+</div>

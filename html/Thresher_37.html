@@ -1,0 +1,273 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>Thresher-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Class <code>"Thresher"</code>
+</h2>
+
+<h3>Description</h3>
+
+<p>The <code>Thresher</code> class represents the first step of an algorithm that
+combines outlier detection with clustering. The object combines the
+results of hierarchical clustering and principal components analysis
+(with a computation of its dimension) on the same data set.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">Thresher(data, nm = deparse(substitute(data)),
+         metric = "pearson", linkage="ward.D2",
+         method = c("auer.gervini", "broken.stick"),
+         scale = TRUE, agfun = agDimTwiceMean)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A data matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nm</code></td>
+<td>
+<p>A character string; the name of this object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>metric</code></td>
+<td>
+<p>A character string containing the name of a clustering metric
+recognized by either <code>dist</code> or
+<code>distanceMatrix</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linkage</code></td>
+<td>
+<p>A character string containing the name of a linkage rule
+recognized by <code>hclust</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>A character string describing the algorthim used from the
+<code>PCDimension</code> package to compute the number of
+significant components.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>A logical value; should the data be scaled before use?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>agfun</code></td>
+<td>
+<p>A function that will be accepted by the
+<code>AuerGervini</code> function in the
+<code>PCDimension</code> package.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>Thresher</code> operates on a data matrix that is assumed to be
+organized with rows equal to samples and columns equal to features
+(like genes or proteins).   The algorithm begins by centering and (by
+default, though this can be overridden with the <code>scale</code>
+parameter) standardizes the data columns. It then performs a principal
+components analysis, and uses the Auer-Gervini method, as automated in
+the <code>PCDimension</code> package, to determine the number, <code>D</code>, of
+statistically significant principal components. For each
+column-feature, it computes and remembers the length of its loading
+vector in D-dimensional space. (In case the Auer-Gervini method finds
+that <code class="reqn">D=0</code>, the length is instead computed using <code class="reqn">D=1</code>.) These
+loading-lengths will be used later to identify and remove features
+that act as outliers and do not contribute to clustering the
+samples. Finally, <code>Thresher</code> computes and saves the results of
+hierarchically clustering the features in the data set, using the
+specified distance <code>metric</code> and <code>linkage</code> rule.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The <code>Thresher</code> function constructs and returns an object of the
+<code>Thresher</code> class.
+</p>
+
+
+<h3>Objects from the Class</h3>
+
+<p>Objects should be defined using the <code>Thresher</code> constructor. In
+the simplest case, you simply pass in the data matrix that you want to
+cluster using the Thresher algorithm.
+</p>
+
+
+<h3>Slots</h3>
+
+
+<dl>
+<dt>
+<code>name</code>:</dt>
+<dd>
+<p>Object of class <code>"character"</code>; the name of
+this object. </p>
+</dd>
+<dt>
+<code>data</code>:</dt>
+<dd>
+<p>Object of class <code>"matrix"</code>; the data that
+was used for clustering. </p>
+</dd>
+<dt>
+<code>spca</code>:</dt>
+<dd>
+<p>Object of class <code>"SamplePCA"</code>; represents
+the results of performing a principal components analysis on the
+original <code>data</code>.</p>
+</dd>
+<dt>
+<code>loadings</code>:</dt>
+<dd>
+<p>Object of class <code>"matrix"</code>; the matrix
+of loading vectors from the principal components analysis.</p>
+</dd>
+<dt>
+<code>gc</code>:</dt>
+<dd>
+<p>Object of class <code>"hclust"</code>; the result of performing
+hierarchical clustering on the data columns.</p>
+</dd>
+<dt>
+<code>pcdim</code>:</dt>
+<dd>
+<p>Object of class <code>"numeric"</code>; the number of
+significant principal components.</p>
+</dd>
+<dt>
+<code>delta</code>:</dt>
+<dd>
+<p>Object of class <code>"numeric"</code>; the lengths of
+the loading vectors in the principal component space of dimension
+equal to <code>pcdim</code>.</p>
+</dd>
+<dt>
+<code>ag</code>:</dt>
+<dd>
+<p>Object of class <code>"AuerGervini"</code>; represents
+the result of running the automated Auer-Gervini algorithm to
+detemine the number of principal components.</p>
+</dd>
+<dt>
+<code>agfun</code>:</dt>
+<dd>
+<p>A function, which is used as the default method
+for computing the principal component dimension from the Auer-Gervini
+plot.</p>
+</dd>
+</dl>
+<h3>Methods</h3>
+
+
+<dl>
+<dt>screeplot</dt>
+<dd>
+<p><code>signature(x = "Thresher")</code>: Produce a scree
+plot of the PCA part of the Thresher object.</p>
+</dd>
+<dt>scatter</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>: Produce a
+scatter plot of the first two principal components.</p>
+</dd>
+<dt>plot</dt>
+<dd>
+<p><code>signature(x = "Thresher", y = "missing")</code>: In two
+dimensions, plot the loading vectors of the PCA part of the
+object.</p>
+</dd>
+<dt>heat</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>: Produce a heatmap
+of the data set.</p>
+</dd>
+<dt>makeFigures</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>: This is a
+convenience function to produce a standard set of figures for a
+<code>Thresher</code> object. These are (1) a scree plot, (2) a plot of
+teh Auer-Gervini slot, (3) a scatter plot of the firtst trwo
+principal components, (4) one or more plots of the loading
+vectors, depending on the PCV dimension, and (5) a heat map.
+If the <code>DIR</code> argument is
+non-null, it is treated as the name of an existing directory where the
+figures are stored as PNG files. Otherwise, the figures are
+displayed interactively, one at a time, in a window on screen.</p>
+</dd>
+<dt>getColors</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>: Returns the
+vector of colors assigned to the clustered columns in the data set.</p>
+</dd>
+<dt>getSplit</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>:  Returns the
+vector of colors assigned to the clustered rows in the data set.</p>
+</dd>
+<dt>getStyles</dt>
+<dd>
+<p><code>signature(object = "Thresher")</code>: I refuse to
+document this, since I am not convinced that it should actually exist.</p>
+</dd>
+</dl>
+<h3>Author(s)</h3>
+
+<p>Kevin R. Coombes &lt;krc@silicovore.com&gt;, Min Wang.
+</p>
+
+
+<h3>References</h3>
+
+<p>Wang M, Abrams ZB, Kornblau SM, Coombes KR.
+Thresher: determining the number of clusters while removing outliers.
+BMC Bioinformatics, 2018; 19(1):1-9. doi://10.1186/s12859-017-1998-9.
+</p>
+<p>Wang M, Kornblau SM, Coombes KR.
+Decomposing the Apoptosis Pathway Into Biologically Interpretable
+Principal Components.
+bioRxiv, 2017. doi://10.1101/237883.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>Thresher</code>, <code>Reaper-class</code>, <code>AuerGervini-class</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">set.seed(3928270)
+ranData &lt;- matrix(rnorm(100*12), ncol=12)
+colnames(ranData) &lt;- paste("G", 1:12, sep='')
+thresh &lt;- Thresher(ranData) # fit the model
+screeplot(thresh)           # check the scree plot; suggests dim = 4
+plot(thresh@ag, list(thresh@agfun)) # Auer-Gervini object; dim = 0
+scatter(thresh)             # PCA scatter plot  (rows = samples)
+plot(thresh)                # PCA loadings plot (cols = features)
+heat(thresh)                # ubiquitous 2-way heatmap
+</code></pre>
+
+
+</div>

@@ -1,0 +1,379 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tam.modelfit</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Model Fit Statistics in <span class="pkg">TAM</span>
+</h2>
+
+<h3>Description</h3>
+
+<p>The function <code>tam.modelfit</code> computes several model fit statistics.
+It includes the Q3 statistic (Yen, 1984) and an
+adjusted variant of it (see Details). Effect sizes of model fit
+(<code>MADaQ3</code>, <code class="reqn">MADRESIDCOV</code>,
+<code class="reqn">SRMR</code>) are also available.
+</p>
+<p>The function <code>IRT.modelfit</code> is a wrapper to <code>tam.modelfit</code>,
+but allows convenient model comparisons by using the
+<code>CDM::IRT.compareModels</code> function.
+</p>
+<p>The <code>tam.modelfit</code> function can also be used for fitted
+models outside the <span class="pkg">TAM</span> package by applying
+<code>tam.modelfit.IRT</code> or <code>tam.modelfit.args</code>.
+</p>
+<p>The function <code>tam.Q3</code> computes the <code class="reqn">Q_3</code> statistic based on
+weighted likelihood estimates (see <code>tam.wle</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tam.modelfit(tamobj, progress=TRUE)
+
+## S3 method for class 'tam.modelfit'
+summary(object,...)
+
+## S3 method for class 'tam.mml'
+IRT.modelfit(object, ...)
+## S3 method for class 'tam.mml.3pl'
+IRT.modelfit(object, ...)
+## S3 method for class 'tamaan'
+IRT.modelfit(object, ...)
+
+## S3 method for class 'IRT.modelfit.tam.mml'
+summary(object, ...)
+## S3 method for class 'IRT.modelfit.tam.mml.3pl'
+summary(object, ...)
+## S3 method for class 'IRT.modelfit.tamaan'
+summary(object, ...)
+
+tam.modelfit.IRT( object, progress=TRUE )
+
+tam.modelfit.args( resp, probs, theta, post, progress=TRUE )
+
+tam.Q3(tamobj, ... )
+
+## S3 method for class 'tam.Q3'
+summary(object,...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tamobj</code></td>
+<td>
+
+<p>Object of class <code>tam</code>
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>progress</code></td>
+<td>
+
+<p>An optional logical indicating whether progress should
+be displayed
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>Object of class <code>tam.modelfit</code> (for <code>summary</code>)
+or objects for which <code>IRT.data</code>, <code>IRT.irfprob</code>
+and <code>IRT.posterior</code> have been defined (for <code>tam.modelfit.IRT</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resp</code></td>
+<td>
+<p>Dataset with item responses</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>probs</code></td>
+<td>
+<p>Array with item response functions evaluated at <code>theta</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Matrix with used <code class="reqn">\bold{\theta}</code> grid</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post</code></td>
+<td>
+<p>Individual posterior distribution</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Further arguments to be passed</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For each item <code class="reqn">i</code> and each person <code class="reqn">n</code>, residuals
+<code class="reqn">e_{ni}=X_{ni}-E(X_{ni})</code> are computed. The expected
+value <code class="reqn">E(X_{ni})</code> is obtained by integrating the individual
+posterior distribution.
+</p>
+<p>The Q3 statistic of item pairs <code class="reqn">i</code> and <code class="reqn">j</code> is defined as the
+correlation <code class="reqn">Q3_{ij}=Cor( e_{ni}, e_{nj} )</code>. The residuals in
+<code>tam.modelfit</code> are
+calculated by integrating values of the individual posterior distribution.
+Residuals in <code>tam.Q3</code> are calculated by using weighted likelihood
+estimates (WLEs) from <code>tam.wle</code>.
+</p>
+<p>It is known that under local independence, the expected value of <code class="reqn">Q_3</code>
+is slightly smaller than zero. Therefore,
+an adjusted Q3 statistic (<code>aQ3</code>; <code class="reqn">aQ3_{ij}</code>)
+is computed by subtracting the average of all Q3 statistics from
+Q3. To control for multiple testing,
+a p value adjustment by the method of
+Holm (<code>p.holm</code>) is employed (see Chen, de la Torre &amp; Zhang, 2013).
+</p>
+<p>An effect size of model fit (<code>MADaQ3</code>) is defined as
+the average of absolute values of <code class="reqn">aQ3</code> statistics. An equivalent
+statistic based on the <code class="reqn">Q_3</code> statistic is similar to the
+standardized generalized dimensionality discrepancy measure (SGDDM; Levy,
+Xu, Yel &amp; Svetina, 2015).
+</p>
+<p>The SRMSR (standardized root mean square root of squared residuals,
+Maydeu-Olivaras, 2013) is based on comparing residual correlations
+of item pairs
+</p>
+<p style="text-align: center;"><code class="reqn"> SRMSR=\sqrt{ \frac{1}{ J(J-1)/2 } \sum_{i &lt; j}
+    ( r_{ij} - \hat{r}_{ij} )^2 } </code>
+</p>
+
+<p>Additionally, the SRMR is computed as
+</p>
+<p style="text-align: center;"><code class="reqn"> SRMR=\frac{1}{ J(J-1)/2 } \sum_{i &lt; j}
+     | r_{ij} - \hat{r}_{ij} | </code>
+</p>
+
+<p>The <code class="reqn">MADRESIDCOV</code> statistic (McDonald &amp; Mok, 1995) is based on comparing
+residual covariances of item pairs
+</p>
+<p style="text-align: center;"><code class="reqn"> MADRESIDCOV=\frac{1}{ J(J-1)/2 } \sum_{i &lt; j}
+    | c_{ij} - \hat{c}_{ij} |  </code>
+</p>
+
+<p>This statistic is just multiplied by 100 in the output of this function.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with following entries
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>stat.MADaQ3</code></td>
+<td>
+<p>Global fit statistic <code>MADaQ3</code> and
+global model test with <code>p</code> value obtained
+by Holm adjustment</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>chi2.stat</code></td>
+<td>
+<p>Data frame with chi square tests of conditional independence
+for every item pair (Chen &amp; Thissen, 1997)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fitstat</code></td>
+<td>
+<p>Model fit statistics <code class="reqn">100 \cdot MADRESIDCOV</code>,
+<code class="reqn">SRMR</code> and <code class="reqn">SRMSR</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>modelfit.test</code></td>
+<td>
+<p>Test statistic of global fit based on multiple
+testing correction of <code class="reqn">\chi^2</code> statistics
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stat.itempair</code></td>
+<td>
+<p>Q3 and adjusted Q3 statistic for all item pairs</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>residuals</code></td>
+<td>
+<p>Residuals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q3.matr</code></td>
+<td>
+<p>Matrix of <code class="reqn">Q_3</code> statistics</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>aQ3.matr</code></td>
+<td>
+<p>Matrix of adjusted <code class="reqn">Q_3</code> statistics</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q3_summary</code></td>
+<td>
+<p>Summary of <code class="reqn">Q_3</code> statistics</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N_itempair</code></td>
+<td>
+<p>Sample size for each item pair</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+<p>Chen, J., de la Torre, J., &amp; Zhang, Z. (2013).
+Relative and absolute fit evaluation in cognitive diagnosis modeling.
+<em>Journal of Educational Measurement, 50</em>, 123-140.
+<a href="https://doi.org/10.1111/j.1745-3984.2012.00185.x">doi:10.1111/j.1745-3984.2012.00185.x</a>
+</p>
+<p>Chen, W., &amp; Thissen, D. (1997). Local dependence indexes for item pairs
+using item response theory. <em>Journal of Educational and Behavioral Statistics,
+22</em>, 265-289.
+</p>
+<p>Levy, R., Xu, Y., Yel, N., &amp; Svetina, D. (2015). A standardized
+generalized dimensionality discrepancy measure and a standardized model-based
+covariance for dimensionality assessment for multidimensional models.
+<em>Journal of Educational Measurement, 52</em>(2), 144–158.
+<a href="https://doi.org/10.1111/jedm.12070">doi:10.1111/jedm.12070</a>
+</p>
+<p>Maydeu-Olivares, A. (2013). Goodness-of-fit assessment of item response
+theory models (with discussion).
+<em>Measurement: Interdisciplinary Research and Perspectives,
+11</em>, 71-137.
+<a href="https://doi.org/10.1080/15366367.2013.831680">doi:10.1080/15366367.2013.831680</a>
+</p>
+<p>McDonald, R. P., &amp; Mok, M. M.-C. (1995). Goodness of fit in item response models.
+<em>Multivariate Behavioral Research, 30</em>, 23-40.
+<a href="https://doi.org/10.1207/s15327906mbr3001_2">doi:10.1207/s15327906mbr3001_2</a>
+</p>
+<p>Yen, W. M. (1984). Effects of local item dependence on the fit and equating
+performance of the three-parameter logistic model.
+<em>Applied Psychological Measurement, 8</em>, 125-145.
+<a href="https://doi.org/10.1177/014662168400800201">doi:10.1177/014662168400800201</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: data.cqc01
+#############################################################################
+
+data(data.cqc01)
+dat &lt;- data.cqc01
+
+#*****************************************************
+#*** Model 1: Rasch model
+mod1 &lt;- TAM::tam.mml( dat )
+# assess model fit
+res1 &lt;- TAM::tam.modelfit( tamobj=mod1 )
+summary(res1)
+# display item pairs with five largest adjusted Q3 statistics
+res1$stat.itempair[1:5,c("item1","item2","aQ3","p","p.holm")]
+
+## Not run: 
+# IRT.modelfit
+fmod1 &lt;- IRT.modelfit(mod1)
+summary(fmod1)
+
+#*****************************************************
+#*** Model 2: 2PL model
+mod2 &lt;- TAM::tam.mml.2pl( dat )
+# IRT.modelfit
+fmod2 &lt;- IRT.modelfit(mod2)
+summary(fmod2)
+
+# model comparison
+IRT.compareModels(fmod1, fmod2 )
+
+#############################################################################
+# SIMULATED EXAMPLE 2: Rasch model
+#############################################################################
+
+set.seed(8766)
+N &lt;- 1000    # number of persons
+I &lt;- 20      # number of items
+# simulate responses
+library(sirt)
+dat &lt;- sirt::sim.raschtype( stats::rnorm(N), b=seq(-1.5,1.5,len=I) )
+#*** estimation
+mod1 &lt;- TAM::tam.mml( dat )
+summary(dat)
+#*** model fit
+res1 &lt;- TAM::tam.modelfit( tamobj=mod1)
+summary(res1)
+
+#############################################################################
+# EXAMPLE 3: Model fit data.gpcm | Partial credit model
+#############################################################################
+
+data(data.gpcm)
+dat &lt;- data.gpcm
+
+# estimate partial credit model
+mod1 &lt;- TAM::tam.mml( dat)
+summary(mod1)
+
+# assess model fit
+tmod1 &lt;- TAM::tam.modelfit( mod1 )
+summary(tmod1)
+
+#############################################################################
+# EXAMPLE 4: data.read | Comparison Q3 statistic
+#############################################################################
+
+library(sirt)
+data(data.read, package="sirt")
+dat &lt;- data.read
+
+#**** Model 1: 1PL model
+mod1 &lt;- TAM::tam.mml( dat )
+summary(mod1)
+
+#**** Model 2: 2PL model
+mod2 &lt;- TAM::tam.mml.2pl( dat )
+summary(mod2)
+
+#**** assess model fits
+# Q3 based on posterior
+fmod1 &lt;- TAM::tam.modelfit(mod1)
+fmod2 &lt;- TAM::tam.modelfit(mod2)
+# Q3 based on WLEs
+q3_mod1 &lt;- TAM::tam.Q3(mod1)
+q3_mod2 &lt;- TAM::tam.Q3(mod2)
+summary(fmod1)
+summary(fmod2)
+summary(q3_mod1)
+summary(q3_mod2)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

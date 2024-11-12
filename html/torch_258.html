@@ -1,0 +1,106 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_group_norm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group normalization</h2>
+
+<h3>Description</h3>
+
+<p>Applies Group Normalization over a mini-batch of inputs as described in
+the paper <a href="https://arxiv.org/abs/1803.08494">Group Normalization</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_group_norm(num_groups, num_channels, eps = 1e-05, affine = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_groups</code></td>
+<td>
+<p>(int): number of groups to separate the channels into</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>num_channels</code></td>
+<td>
+<p>(int): number of channels expected in input</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>a value added to the denominator for numerical stability. Default: 1e-5</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>affine</code></td>
+<td>
+<p>a boolean value that when set to <code>TRUE</code>, this module
+has learnable per-channel affine parameters initialized to ones (for weights)
+and zeros (for biases). Default: <code>TRUE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn">
+  y = \frac{x - \mathrm{E}[x]}{ \sqrt{\mathrm{Var}[x] + \epsilon}} * \gamma + \beta
+</code>
+</p>
+
+<p>The input channels are separated into <code>num_groups</code> groups, each containing
+<code>num_channels / num_groups</code> channels. The mean and standard-deviation are calculated
+separately over the each group. <code class="reqn">\gamma</code> and <code class="reqn">\beta</code> are learnable
+per-channel affine transform parameter vectors of size <code>num_channels</code> if
+<code>affine</code> is <code>TRUE</code>.
+The standard-deviation is calculated via the biased estimator, equivalent to
+<code>torch_var(input, unbiased=FALSE)</code>.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, C, *)</code> where <code class="reqn">C=\mbox{num\_channels}</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, C, *)</code>' (same shape as input)
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>This layer uses statistics computed from input data in both training and
+evaluation modes.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+input &lt;- torch_randn(20, 6, 10, 10)
+# Separate 6 channels into 3 groups
+m &lt;- nn_group_norm(3, 6)
+# Separate 6 channels into 6 groups (equivalent with [nn_instance_morm])
+m &lt;- nn_group_norm(6, 6)
+# Put all 6 channels into a single group (equivalent with [nn_layer_norm])
+m &lt;- nn_group_norm(1, 6)
+# Activating the module
+output &lt;- m(input)
+}
+</code></pre>
+
+
+</div>

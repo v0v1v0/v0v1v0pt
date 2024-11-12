@@ -1,0 +1,69 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>AEdemand</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Accident and Emergency demand in the UK</h2>
+
+<h3>Description</h3>
+
+<p>Weekly demand of Accident &amp; Emergency departments in the UK, 
+from 7 November 2010 to 7 June 2015.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">AEdemand
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>An object of class <code>ts</code>.</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(ggplot2)
+autoplot(AEdemand, xlab="Year", ylab="Demand ('000)") +
+  ggtitle("Accident &amp; Emergency Demand in the UK")
+
+## Not run: 
+
+# Demonstration of the adjustment of all temporal aggregates
+# using Total Emergency Admissions
+
+total &lt;- AEdemand[,12]
+totalagg &lt;- tsaggregates(total)
+plot(totalagg, main="Total Emergency Admissions")
+
+# Base forecasts
+base &lt;- list()
+for(i in 1:5)
+  base[[i]] &lt;- forecast(auto.arima(totalagg[[i]]))
+base[[6]] &lt;-  forecast(auto.arima(totalagg[[6]]), h=2)
+
+# Reconciled forecasts
+reconciled &lt;- reconcilethief(base)
+
+main &lt;- paste(names(totalagg)," (k=",
+           52/unlist(lapply(reconciled,frequency)),")",sep="")
+par(mfrow=c(2,3))
+for(i in 6:1)
+{
+  ylim &lt;- range(base[[i]]$mean, base[[i]]$x, reconciled[[i]]$mean)
+  plot(base[[i]], main=main[i], fcol='white',
+      plot.conf=FALSE, ylim=ylim, xlim=c(2010.5,2017.5))
+  polygon(c(2015.45, 2020, 2020, 2015.45),
+          c(0, 0, 1e5, 1e5), col='grey', border=FALSE)
+  lines(base[[i]]$mean, col='red', lty=2)
+  lines(reconciled[[i]]$mean, col='blue')
+}
+
+## End(Not run)
+</code></pre>
+
+
+</div>

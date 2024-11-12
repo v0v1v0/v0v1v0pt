@@ -1,0 +1,146 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tk_zoo</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Coerce time series objects and tibbles with date/date-time columns to xts.</h2>
+
+<h3>Description</h3>
+
+<p>Coerce time series objects and tibbles with date/date-time columns to xts.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tk_zoo(data, select = NULL, date_var = NULL, silent = FALSE, ...)
+
+tk_zoo_(data, select = NULL, date_var = NULL, silent = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A time-based tibble or time-series object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>select</code></td>
+<td>
+<p><strong>Applicable to tibbles and data frames only</strong>.
+The column or set of columns to be coerced to <code>ts</code> class.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>date_var</code></td>
+<td>
+<p><strong>Applicable to tibbles and data frames only</strong>.
+Column name to be used to <code>order.by</code>.
+<code>NULL</code> by default. If <code>NULL</code>, function will find the date or date-time column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>Used to toggle printing of messages and warnings.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional parameters to be passed to <code>xts::xts()</code>. Refer to <code>xts::xts()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>tk_zoo</code> is a wrapper for <code>zoo::zoo()</code> that is designed
+to coerce <code>tibble</code> objects that have a "time-base" (meaning the values vary with time)
+to <code>zoo</code> class objects. There are three main advantages:
+</p>
+
+<ol>
+<li>
+<p> Non-numeric columns that are not removed via <code>select</code> are dropped and the user is warned.
+This prevents an error or coercion issue from occurring.
+</p>
+</li>
+<li>
+<p> The date column is auto-detected if not specified by <code>date_var</code>. This takes
+the effort off the user to assign a date vector during coercion.
+</p>
+</li>
+<li> <p><code>ts</code> objects are automatically coerced if a "timetk index" is present. Refer to <code>tk_ts()</code>.
+</p>
+</li>
+</ol>
+<p>The <code>select</code> argument can be used to select subsets
+of columns from the incoming data.frame.
+Only columns containing numeric data are coerced.
+The <code>date_var</code> can be used to specify the column with the date index.
+If <code>date_var = NULL</code>, the date / date-time column is interpreted.
+Optionally, the <code>order.by</code> argument from the underlying <code>zoo::zoo()</code> function can be used.
+The user must pass a vector of dates or date-times if <code>order.by</code> is used.
+<em>Important Note: The <code>...</code> arguments are passed to <code>xts::xts()</code>, which
+enables additional information (e.g. time zone) to be an attribute of the <code>zoo</code> object.</em>
+</p>
+<p>For non-data.frame object classes (e.g. <code>xts</code>, <code>zoo</code>, <code>timeSeries</code>, etc) the objects are coerced
+using <code>zoo::zoo()</code>.
+</p>
+<p><code>tk_zoo_</code> is a nonstandard evaluation method.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a <code>zoo</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tk_tbl()</code>, <code>tk_xts()</code>, <code>tk_zooreg()</code>, <code>tk_ts()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+
+### tibble to zoo: Comparison between tk_zoo() and zoo::zoo()
+data_tbl &lt;- dplyr::tibble(
+    date = seq.Date(as.Date("2016-01-01"), by = 1, length.out = 5),
+    x    = rep("chr values", 5),
+    y    = cumsum(1:5),
+    z    = cumsum(11:15) * rnorm(1))
+
+# zoo: Characters will cause error; order.by must be passed a vector of dates
+zoo::zoo(data_tbl[,-c(1,2)], order.by = data_tbl$date)
+
+# tk_zoo: Character columns dropped with a warning; No need to specify dates (auto detected)
+tk_zoo(data_tbl)
+
+# ts can be coerced back to zoo
+data_tbl %&gt;%
+    tk_ts(start = 2016, freq = 365) %&gt;%
+    tk_zoo()
+
+
+### Using select and date_var
+tk_zoo(data_tbl, select = y, date_var = date)
+
+
+### NSE: Enables programming
+date_var &lt;- "date"
+select   &lt;- "y"
+tk_zoo_(data_tbl, select = select, date_var = date_var)
+
+</code></pre>
+
+
+</div>

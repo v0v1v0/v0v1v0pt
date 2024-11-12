@@ -1,0 +1,204 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tm_g_ci</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>teal Module: Confidence Interval Plot</h2>
+
+<h3>Description</h3>
+
+<p>This module produces a <code>ggplot2::ggplot()</code> type confidence interval plot consistent with the TLG Catalog template
+<code>CIG01</code> available <a href="https://insightsengineering.github.io/tlg-catalog/stable/graphs/other/cig01.html">here</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tm_g_ci(
+  label,
+  x_var,
+  y_var,
+  color,
+  stat = c("mean", "median"),
+  conf_level = teal.transform::choices_selected(c(0.95, 0.9, 0.8), 0.95, keep_order =
+    TRUE),
+  plot_height = c(700L, 200L, 2000L),
+  plot_width = NULL,
+  pre_output = NULL,
+  post_output = NULL,
+  ggplot2_args = teal.widgets::ggplot2_args()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>(<code>character</code>)<br> menu item label of the module in the teal app.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x_var</code></td>
+<td>
+<p>(<code>character</code>)<br> name of the treatment variable to put on the x-axis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>y_var</code></td>
+<td>
+<p>(<code>character</code>)<br> name of the response variable to put on the y-axis.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>color</code></td>
+<td>
+<p>(<code>data_extract_spec</code>)<br> the group variable used to determine the plot colors, shapes, and line types.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>stat</code></td>
+<td>
+<p>(<code>character</code>)<br> statistic to plot. Options are <code>"mean"</code> and <code>"median"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf_level</code></td>
+<td>
+<p>(<code>teal.transform::choices_selected()</code>)<br> object with
+all available choices and pre-selected option for the confidence level, each within range of (0, 1).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_height</code></td>
+<td>
+<p>(<code>numeric</code>) optional<br> vector of length three with <code>c(value, min, max)</code>. Specifies the
+height of the main plot and renders a slider on the plot to interactively adjust the plot height.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot_width</code></td>
+<td>
+<p>(<code>numeric</code>) optional<br> vector of length three with <code>c(value, min, max)</code>. Specifies the width
+of the main plot and renders a slider on the plot to interactively adjust the plot width.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pre_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed before the output to put the output into context.
+For example a title.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>post_output</code></td>
+<td>
+<p>(<code>shiny.tag</code>) optional,<br> with text placed after the output to put the output into context.
+For example the <code>shiny::helpText()</code> elements are useful.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ggplot2_args</code></td>
+<td>
+<p>(<code>ggplot2_args</code>) optional<br> object created by <code>teal.widgets::ggplot2_args()</code> with settings
+for the module plot. The argument is merged with option <code>teal.ggplot2_args</code> and with default module arguments
+(hard coded in the module body).
+For more details, see the vignette: <code>vignette("custom-ggplot2-arguments", package = "teal.widgets")</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a <code>teal_module</code> object.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>The <a href="https://insightsengineering.github.io/tlg-catalog/stable/">TLG Catalog</a> where additional example
+apps implementing this module can be found.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(nestcolor)
+
+ADSL &lt;- tmc_ex_adsl
+ADLB &lt;- tmc_ex_adlb
+
+app &lt;- init(
+  data = cdisc_data(
+    ADSL = ADSL,
+    ADLB = ADLB,
+    code = "
+      ADSL &lt;- tmc_ex_adsl
+      ADLB &lt;- tmc_ex_adlb
+    "
+  ),
+  modules = modules(
+    tm_g_ci(
+      label = "Confidence Interval Plot",
+      x_var = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          choices = c("ARMCD", "BMRKR2"),
+          selected = c("ARMCD"),
+          multiple = FALSE,
+          fixed = FALSE
+        )
+      ),
+      y_var = data_extract_spec(
+        dataname = "ADLB",
+        filter = list(
+          filter_spec(
+            vars = "PARAMCD",
+            choices = levels(ADLB$PARAMCD),
+            selected = levels(ADLB$PARAMCD)[1],
+            multiple = FALSE,
+            label = "Select lab:"
+          ),
+          filter_spec(
+            vars = "AVISIT",
+            choices = levels(ADLB$AVISIT),
+            selected = levels(ADLB$AVISIT)[1],
+            multiple = FALSE,
+            label = "Select visit:"
+          )
+        ),
+        select = select_spec(
+          label = "Analyzed Value",
+          choices = c("AVAL", "CHG"),
+          selected = "AVAL",
+          multiple = FALSE,
+          fixed = FALSE
+        )
+      ),
+      color = data_extract_spec(
+        dataname = "ADSL",
+        select = select_spec(
+          label = "Color by variable",
+          choices = c("SEX", "STRATA1", "STRATA2"),
+          selected = c("STRATA1"),
+          multiple = FALSE,
+          fixed = FALSE
+        )
+      )
+    )
+  ),
+  header = "Example of Confidence Interval Plot",
+  footer = tags$p(
+    class = "text-muted", "Source: `teal.modules.clinical::tm_g_ci`"
+  )
+)
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,220 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>SSModelBase-class</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Base class for estimating time-series growth curve models. Classes
+<code>SSModelDynamicGompertz</code> and <code>SSModelDynGompertzReinit</code> refer back
+to this base class.</h2>
+
+<h3>Description</h3>
+
+<p>Base class for estimating time-series growth curve models. Classes
+<code>SSModelDynamicGompertz</code> and <code>SSModelDynGompertzReinit</code> refer back
+to this base class.
+</p>
+
+
+<h3>Methods</h3>
+
+
+<dl>
+<dt><code>estimate(sea.type = "trigonometric", sea.period = 7)</code></dt>
+<dd>
+<p>Estimates the dynamic Gompertz curve model when applied to an object of
+class <code>SSModelDynamicGompertz</code> or <code>SSModelDynGompertzReinit</code>.
+</p>
+
+
+<h4>Parameters</h4>
+
+
+<ul>
+<li>
+<p><code>sea.type</code> Seasonal type. Options are
+<code>'trigonometric'</code> and <code>'none'</code>. <code>'trigonometric'</code> will
+yield a model with a trigonometric seasonal component and
+<code>'none'</code> will yield a model with no seasonal component.
+</p>
+</li>
+<li>
+<p><code>sea.period</code> The period of seasonality. For a
+day-of-the-week effect with daily data, this would be 7. Not required
+if <code>sea.type = 'none'</code>.
+</p>
+</li>
+</ul>
+<h4>Return Value</h4>
+
+<p>An object of class <code>FilterResults</code>
+containing the result output for the estimated dynamic Gompertz curve
+model.</p>
+</dd>
+<dt><code>get_dynamic_gompertz_model(
+  y,
+  q = NULL,
+  sea.type = "trigonometric",
+  sea.period = 7,
+  a1 = NULL,
+  P1 = NULL,
+  Q = NULL,
+  H = NULL
+)</code></dt>
+<dd>
+<p>Returns dynamic Gompertz curve model.
+</p>
+
+
+<h4>Parameters</h4>
+
+
+<ul>
+<li>
+<p><code>y</code> The cumulated variable
+</p>
+</li>
+<li>
+<p><code>q</code> The signal-to-noise ratio (ratio of slope to irregular
+variance). Defaults to <code>'NULL'</code>, in which case no signal-to-noise
+ratio will be imposed. Instead, it will be estimated.
+</p>
+</li>
+<li>
+<p><code>sea.type</code> Seasonal type. Options are <code>'trigonometric'</code>
+and <code>'none'</code>. <code>'trigonometric'</code> will yield a model with a
+trigonometric seasonal component and <code>'none'</code> will yield a model
+with no seasonal component.
+</p>
+</li>
+<li>
+<p><code>sea.period</code> The period of seasonality. For a day-of-the-week
+effect with daily data, this would be 7. Not required if
+<code>sea.type = 'none'</code>.
+</p>
+</li>
+<li>
+<p><code>a1</code> Optional parameter specifying the prior mean of the
+states. Defaults to <code>'NULL'</code>. Leave as <code>'NULL'</code> for a diffuse
+prior (no prior information). If a proper prior is to be specified, both
+<code>a1</code> and <code>P1</code> must be given.
+</p>
+</li>
+<li>
+<p><code>P1</code> Optional parameter specifying the prior mean of the
+states. Defaults to <code>'NULL'</code>. Leave as <code>'NULL'</code> for a diffuse
+prior (no prior information). If a proper prior is to be specified,
+both <code>a1</code> and <code>P1</code> must be given.
+</p>
+</li>
+<li>
+<p><code>Q</code> Optional parameter specifying the state error variances
+where these are to be imposed rather than estimated. Defaults to
+<code>'NULL'</code> which will see the variances estimated.
+</p>
+</li>
+<li>
+<p><code>H</code> Optional parameter specifying the irregular variance
+where this is to be imposed rather than estimated. Defaults to
+<code>'NULL'</code> which will see the variance estimated.
+</p>
+</li>
+</ul>
+<h4>Description</h4>
+
+<p>The dynamic Gompertz with an integrated random walk (IRW) trend is
+</p>
+<p style="text-align: center;"><code class="reqn">\ln g_{t}=\delta_{t}+\varepsilon_{t},  \;\;\;\;
+    \varepsilon_{t}\sim NID(0,\sigma_{\varepsilon }^{2}), \;\;\;\;
+    t=2,...,T, </code>
+</p>
+
+<p>where <code class="reqn">Y_t</code> is the cumulated variable, <code class="reqn">y_t = \Delta Y_t</code>,
+<code class="reqn">\ln g_{t}=\ln y_{t}-\ln Y_{t-1}</code> and
+</p>
+<p style="text-align: center;"><code class="reqn">\delta_{t} =\delta_{t-1}+\gamma_{t-1},</code>
+</p>
+
+<p style="text-align: center;"><code class="reqn">\gamma_{t} =\gamma_{t-1}+\zeta_{t}, \;\;\;\;
+    \zeta_{t}\sim NID(0,\sigma_{\zeta }^{2}),</code>
+</p>
+
+<p>where the observation disturbances <code class="reqn">\varepsilon_{t}</code>  and slope
+disturbances <code class="reqn">\zeta_{t}</code>, are iid Normal and mutually independent.
+Note that, the larger the signal-to-noise ratio,
+<code class="reqn">q_{\zeta }=\sigma_{\zeta }^{2}/\sigma_{\varepsilon }^{2}</code>,
+the faster the slope changes in response to new observations. Conversely,
+a lower signal-to-noise ratio induces smoothness.
+</p>
+<p>For the model without seasonal terms (<code>sea.type = 'none'</code>) the are
+priors are
+</p>
+<p style="text-align: center;"><code class="reqn">\begin{pmatrix} \delta_1 \ \gamma_1 \end{pmatrix}
+    \sim N(a_1,P_1)</code>
+</p>
+<p>.
+The diffuse prior has <code class="reqn">P_1 = \kappa I_{2\times 2}</code> with
+<code class="reqn">\kappa \to \infty</code>. Implementation of the diffuse prior is handled
+by the package <code>KFAS</code> (Helske, 2017). Where the model has a seasonal
+component (<code>sea.type = 'trigonometric'</code>), the vector of prior means
+<code class="reqn">a_1</code> and the prior covariance matrix <code class="reqn">P_1</code> are extended
+accordingly.
+</p>
+<p>See the vignette for details of the variance matrix <code class="reqn">Q</code>.
+<code class="reqn">H = \sigma^2_{\varepsilon}</code>.
+</p>
+
+</dd>
+<dt><code>update(pars, model, q, sea.type)</code></dt>
+<dd>
+<p>Update method for Kalman filter to implement the dynamic Gompertz curve
+model.
+A maximum of 3 parameters are used to set the observation noise
+(1 parameter), the transition equation slope and seasonal noise. If q (signal
+to noise ratio) is not null then the slope noise is set using this
+ratio.
+</p>
+
+
+<h4>Parameters</h4>
+
+
+<ul>
+<li>
+<p><code>pars</code> Vector of parameters.
+</p>
+</li>
+<li>
+<p><code>model</code> <code>KFS</code> model object.
+</p>
+</li>
+<li>
+<p><code>q</code> The signal-to-noise ratio (ratio of slope to irregular
+variance).
+</p>
+</li>
+<li>
+<p><code>sea.type</code> Seasonal type. Options are
+<code>'trigonometric'</code> and <code>'none'</code>.
+</p>
+</li>
+</ul>
+<h4>Return Value</h4>
+
+<p><code>KFS</code> model object.</p>
+</dd>
+</dl>
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tsgc)
+data(gauteng,package="tsgc")
+idx.est &lt;- zoo::index(gauteng) &lt;= as.Date("2020-07-06")
+
+# Specify a model
+model &lt;- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+# Estimate a specified model
+res &lt;- model$estimate()
+</code></pre>
+
+
+</div>

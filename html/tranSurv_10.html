@@ -1,0 +1,186 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trReg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Fitting regression model via structural transformation model</h2>
+
+<h3>Description</h3>
+
+<p><code>trReg</code> fits transformation model under dependent truncation and independent censoring via a structural transformation model.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trReg(
+  formula,
+  data,
+  subset,
+  tFun = "linear",
+  method = c("kendall", "adjust"),
+  B = 0,
+  control = list()
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula expression, of the form <code>response ~ predictors</code>.
+The <code>response</code> is assumed to be a <code>survival::Surv</code> object with both left truncation and right censoring.
+When there is no covariates, e.g., when the right hand side of the formula is <code>~ 1</code>, the <code>trReg()</code> function returns a <code>trSurvfit</code> object.
+See <code>?survival::Surv</code> for more details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>an optional data frame in which to interpret the variables occurring
+in the <code>formula</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subset</code></td>
+<td>
+<p>an optional vector specifying a subset of observations to be used in the fitting process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tFun</code></td>
+<td>
+<p>a character string specifying the transformation function or a user specified function indicating the relationship between <code class="reqn">X</code>, <code class="reqn">T</code>, and <code class="reqn">a</code>.
+When <code>tFun</code> is a character, the following are permitted:
+</p>
+
+<dl>
+<dt>linear</dt>
+<dd>
+<p>linear transformation structure,</p>
+</dd>
+<dt>log</dt>
+<dd>
+<p>log-linear transformation structure,</p>
+</dd>
+<dt>exp</dt>
+<dd>
+<p>exponential transformation structure.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>a character string specifying how the transformation parameter is estimated. The available options are <code>"kendall"</code> and <code>"adjust"</code>. See <b>Details</b>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>B</code></td>
+<td>
+<p>a numerical value specifies the bootstrap size for estimating the standard error.
+When <code>B = 0</code> (default), the bootstrap standard errors will not be computed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control</code></td>
+<td>
+<p>a list of control parameters. The following arguments are allowed:
+</p>
+
+<dl>
+<dt><code>lower</code></dt>
+<dd>
+<p>The lower bound to search for the transformation parameter; default at -1.</p>
+</dd>
+<dt><code>upper</code></dt>
+<dd>
+<p>The upper bound to search for the transformation parameter; default at 20.</p>
+</dd>
+<dt><code>tol</code></dt>
+<dd>
+<p>The tolerance used in the search for the transformation parameter; default at 0.01.</p>
+</dd>
+<dt><code>G</code></dt>
+<dd>
+<p>The number of grids used in the search for the transformation parameter; default is 50.
+A smaller <code>G</code> could results in faster search, but might be inaccurate.</p>
+</dd>
+<dt><code>Q</code></dt>
+<dd>
+<p>The number of cutpoints for the truncation time used when <code>method = "adjust"</code>. The default is 0.</p>
+</dd>
+<dt><code>P</code></dt>
+<dd>
+<p>The number of breakpoints to divide the event times into equally spaced segmenets.
+When <code>P &gt; 1</code>, the latent truncation time, <code class="reqn">T'(a)</code> will be computed in each subset.
+The transformation model is then applied to the aggregated data.</p>
+</dd> 
+<dt><code>a</code></dt>
+<dd>
+<p>The transformation parameter. When this is specified, the transformation model is applied based on the specified <code>a</code>.
+When this is not specified, an optimized <code>a</code> will be determined by optimization one of the quasi-independence measure. See <b>Details</b>.</p>
+</dd>
+<dt><code>parallel</code></dt>
+<dd>
+<p>an logical value indicating whether parallel computation will be applied when <code>B &gt; 0</code>.</p>
+</dd>
+<dt><code>parCl</code></dt>
+<dd>
+<p>an integer value specifying the number of CPU cores to be used when <code>parallel = TRUE</code>.
+The default value is half the CPU cores on the current host.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The main assumption on the structural transformation model is that it assumes there is a latent, quasi-independent truncation time
+that is associated with the observed dependent truncation time, the event time, and an unknown dependence parameter
+through a specified funciton.
+The structure of the transformation model is of the form:
+</p>
+<p style="text-align: center;"><code class="reqn">h(U) = (1 + a)^{-1} \times (h(T) + ah(X)),</code>
+</p>
+<p> where <code class="reqn">T</code> is the truncation time, <code class="reqn">X</code> is the observed failure time,
+<code class="reqn">U</code> is the transformed truncation time that is quasi-independent from <code class="reqn">X</code> and <code class="reqn">h(\cdot)</code> is a monotonic transformation function.
+The condition, <code class="reqn">T &lt; X</code>, is assumed to be satisfied.
+The quasi-independent truncation time, <code class="reqn">U</code>, is obtained by inverting the test for quasi-independence by one of the following methods:
+</p>
+
+<dl>
+<dt><code>method = "kendall"</code></dt>
+<dd>
+<p> by minimizing the absolute value of the restricted inverse probability weighted Kendall's tau or maximize the corresponding <code class="reqn">p</code>-value.
+This is the same procedure used in the <code>trSUrvfit()</code> function.</p>
+</dd>
+<dt><code>method = "adjust"</code></dt>
+<dd>
+<p> includes a function of latent truncation time, <code class="reqn">U</code>, as a covariate.
+A piece-wise function is constructed based on (<code class="reqn">Q + 1</code>) indicator functions on whether <code class="reqn">U</code> falls in the <code class="reqn">Q</code>th and the (<code class="reqn">Q+1</code>)th percentile,
+where <code class="reqn">Q</code> is the number of cutpoints used. See <code>control</code> for details. 
+The transformation parameter, <code class="reqn">a</code>, is then chosen to minimize the significance of the coefficient parameter.</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><code>trSurvfit</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(channing, package = "boot")
+chan &lt;- subset(channing, entry &lt; exit)
+trReg(Surv(entry, exit, cens) ~ sex, data = chan)
+
+</code></pre>
+
+
+</div>

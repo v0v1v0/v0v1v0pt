@@ -1,0 +1,127 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>approx_areas</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Approximate area sizes of the shapes</h2>
+
+<h3>Description</h3>
+
+<p>Approximate the area sizes of the polygons in real-world area units (such as sq km or sq mi), proportional numbers, or normalized numbers. Also, the areas can be calibrated to a prespecified area total. This function is a convenient wrapper around <code>st_area</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">approx_areas(shp, target = "metric", total.area = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>shp</code></td>
+<td>
+<p>shape object, i.e., an <code>sf</code> or <code>sp</code> object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>target unit, one of
+</p>
+
+<dl>
+<dt>
+<code>"prop"</code>:</dt>
+<dd>
+<p>Proportional numbers. In other words, the sum of the area sizes equals one.</p>
+</dd>
+<dt>
+<code>"norm"</code>:</dt>
+<dd>
+<p>Normalized numbers. All area sizes are normalized to the largest area, of which the area size equals one.</p>
+</dd>
+<dt>
+<code>"metric"</code> (default):</dt>
+<dd>
+<p>Output area sizes will be either <code>"km"</code> (kilometer) or <code>"m"</code> (meter) depending on the map scale</p>
+</dd>
+<dt>
+<code>"imperial"</code>:</dt>
+<dd>
+<p>Output area sizes will be either <code>"mi"</code> (miles) or <code>"ft"</code> (feet) depending on the map scale</p>
+</dd>
+<dt>other:</dt>
+<dd>
+<p>Predefined values are "km^2", "m^2", "mi^2", and "ft^2". Other values can be specified as well, in which case <code>to</code> is required).</p>
+</dd>
+</dl>
+<p>These units are the output units. See <code>orig</code> for the coordinate units used by the shape <code>shp</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>total.area</code></td>
+<td>
+<p>total area size of <code>shp</code> in number of target units (defined by <code>target</code>). Useful if the total area of the <code>shp</code> differs from a reference total area value. For <code>"metric"</code> and <code>"imperial"</code> units, please provide the total area in squared kilometers respectively miles.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Note that the method of determining areas is an approximation, since it depends on the used projection and the level of detail of the shape object. Projections with equal-area property are highly recommended. See <a href="https://en.wikipedia.org/wiki/List_of_map_projections">https://en.wikipedia.org/wiki/List_of_map_projections</a> for equal area world map projections.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Numeric vector of area sizes (class <code>units</code>).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>approx_distances</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (require(tmap) &amp;&amp; packageVersion("tmap") &gt;= "2.0") {
+    data(NLD_muni)
+
+    NLD_muni$area &lt;- approx_areas(NLD_muni, total.area = 33893)
+
+    tm_shape(NLD_muni) +
+        tm_bubbles(size="area", title.size=expression("Area in " * km^2))
+
+
+    # function that returns min, max, mean and sum of area values
+    summary_areas &lt;- function(x) {
+        list(min_area=min(x),
+             max_area=max(x),
+             mean_area=mean(x),
+             sum_area=sum(x))
+    }
+
+    # area of the polygons
+    approx_areas(NLD_muni) %&gt;% summary_areas()
+
+    # area of the polygons, adjusted corrected for a specified total area size
+    approx_areas(NLD_muni, total.area=33893) %&gt;% summary_areas()
+
+    # proportional area of the polygons
+    approx_areas(NLD_muni, target = "prop") %&gt;% summary_areas()
+
+    # area in squared miles
+    approx_areas(NLD_muni, target = "mi mi") %&gt;% summary_areas()
+
+    # area of the polygons when unprojected
+    approx_areas(NLD_muni %&gt;% sf::st_transform(crs = 4326)) %&gt;% summary_areas()
+}
+</code></pre>
+
+
+</div>

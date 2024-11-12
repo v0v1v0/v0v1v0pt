@@ -1,0 +1,210 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>run_simulation</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Run Clinical Trial Simulations Based on User Defined Trial Settings</h2>
+
+<h3>Description</h3>
+
+<p>Runs single or mutiple clinical trial (Time to event endpoint) simulations based on the clinical trial settings. Trial data summary will be provied for each simulation. Cox model will be fitted afther trial simulation. If stratification factors were provided, stratified cox model results will also be provided. If "N_simulation" is set to 1, one simulation dataset will be generated.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">run_simulation(samplesize, rand_ratio=c(1,1), blocksize, factors=NULL,trtHR=trtHR, 
+trt_timeinterval=NULL, accrual_interval=NULL, accrual_rate=NULL, rampuptime=NULL,
+acceleration=NULL, lambda, gamma, timeinterval=NULL, dropoutrate=0,gammac=1,
+censordist='exponential', eventtarget=NULL,maxlpfollowup=NULL, N_simulation=1,
+alpha=0.05)
+  
+
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>samplesize</code></td>
+<td>
+<p>Total number of patients in the simulated clinical trial</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rand_ratio</code></td>
+<td>
+<p>Randomization ratio between control and treatment</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>blocksize</code></td>
+<td>
+<p>The value of this parameter is used to define the size of the randomizaiton blocks. The actual blocksize is number of treatment levels mutipled by this parameter. Please refer to "blockrand" package for detailed usage.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>factors</code></td>
+<td>
+<p>stratification factors. Default is NULL</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trtHR</code></td>
+<td>
+<p>Hazard ratio between treatment groups (treatment vs control)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>trt_timeinterval</code></td>
+<td>
+<p>Time windows for trtHR when trtHR is piecewise. Always start with time 0. Example: c(0,10,30)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>accrual_interval</code></td>
+<td>
+<p>Time windows for accrual</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>accrual_rate</code></td>
+<td>
+<p>accrual rate for each accrual time window</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rampuptime</code></td>
+<td>
+<p>rampup time for linear increased accrual</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>acceleration</code></td>
+<td>
+<p>acceleration rate for linear increased accrual</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lambda</code></td>
+<td>
+<p>lambda for event hazard function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gamma</code></td>
+<td>
+<p>gamma for event hazard function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>timeinterval</code></td>
+<td>
+<p>time intervals for piecewise baseline hazard function</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dropoutrate</code></td>
+<td>
+<p>Patient dropout rate with range [0,1).  If dropoutrate contains only one number. The program will control the dropout rate at population level(treatment + control).  If dropoutrate contains two numbers (ie. c(0.2,0.1)), the program will control the dropout rate of control and treatment arm seperately, with the first dropout rate number for control and the second number for treatment. Default value is "0" (no dropout)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gammac</code></td>
+<td>
+<p>gamma for censor hazard function. Default is 1 (exponential)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>censordist</code></td>
+<td>
+<p>censor hazard distribution. Can be "weibull", "exponential" or "uniform". Default is exponential</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eventtarget</code></td>
+<td>
+<p>Number of target events</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxlpfollowup</code></td>
+<td>
+<p>maximum follow up time for the last enrolled patient</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>N_simulation</code></td>
+<td>
+<p>number of simulations to run</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Two sided alpha for testing power calculation</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>TrilInfo</code></td>
+<td>
+<p>Summary of the simulated trial data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ModelResult</code></td>
+<td>
+<p>Cox model results comparing treatment vs control</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>StraModelResult</code></td>
+<td>
+<p>Stratified Cox model results comparing treatment vs control</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Data</code></td>
+<td>
+<p>simulated dataset only if "N_simulateion" is set to 1</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+
+f1&lt;-list(name='Region', N_level=3, prevalence=c(0.1,0.2,0.7), HR=c(1,0.7,0.9), strata=TRUE)
+f2&lt;-list(name='Gender', N_level=2, prevalence=c(0.5,0.5), HR=c(1,0.9), strata=TRUE)
+f3&lt;-list(name='Stage', N_level=4, prevalence=c(0.2,0.25,0.3,0.25), HR=c(1,1.05,1.3,1.5),
+strata=TRUE)
+
+factors&lt;-list(f1,f2,f3)
+
+samplesize&lt;-400
+blocksize&lt;-2
+accrual_interval&lt;-c(0,5,10)
+accrual_rate&lt;-c(5,10,20)
+trtHR&lt;-0.7
+lambda&lt;-0.03
+gamma&lt;-1.2
+dropoutrate&lt;-0.2
+eventtarget&lt;-240
+N_simulation&lt;-10
+
+
+out&lt;-run_simulation(samplesize=samplesize,blocksize=blocksize,factors=factors,
+accrual_interval=accrual_interval,accrual_rate=accrual_rate, trtHR=trtHR, lambda=lambda,
+gamma=gamma,dropoutrate=dropoutrate,eventtarget=eventtarget,N_simulation=N_simulation)
+
+
+</code></pre>
+
+
+</div>

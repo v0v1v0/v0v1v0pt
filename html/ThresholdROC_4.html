@@ -1,0 +1,163 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>diagnostic</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Diagnostic accuracy measures of binary diagnostic tests
+</h2>
+
+<h3>Description</h3>
+
+<p>This function estimates common accuracy measures for binary diagnostic tests involving 2x2 contingency tables of classification results (usually, test outcome versus status tables).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">diagnostic(tab, method = c("par", "exact"),
+  casecontrol = FALSE, p = NULL, conf.level = 0.95)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tab</code></td>
+<td>
+
+<p>an object of class <code>table</code> or <code>matrix</code> in the following form:
+</p>
+<p>TP  FP
+</p>
+<p>FN  TN
+</p>
+<p>where TP=number of true positives, FP=number of false positives, FN=number of false negatives and TN=number of true negatives; that is, a table where the first row corresponds to the positive tests and the second row to the negative tests; the first column corresponds to the diseased subjects and the second one to the healthy individuals. <code>dim(tab)</code> should be <code>c(2, 2)</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>method for calculating the confidence intervals for sensitivity, specificity, predictive values, accuracy and error rate. The user can choose between <code>"par"</code> (parametric) and <code>"exact"</code> (exact). The last one is recommended for small sample sizes. Default, <code>"par"</code>. The user can specify just the initial letters. See <b>Details</b>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>casecontrol</code></td>
+<td>
+
+<p>were data collected in a case-control study? Default, <code>FALSE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+
+<p>disease prevalence (only when <code>casecontrol = TRUE</code>; otherwise, this parameter is ignored).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conf.level</code></td>
+<td>
+
+<p>confidence level for the confidence intervals. Default, 0.95 (95%).
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>For details about the expressions for the statistical measures calculated by this function, see <b>References</b>.
+</p>
+<p>Since sensitivity, specificity, predictive values, accuracy and error rate are proportions, their confidence intervals are calculated using the functions <code>prop.test</code> (if <code>method = "par"</code>) and <code>binom.test</code> (if <code>method = "exact"</code>) from the <code>stats</code> package.
+</p>
+<p>Confidence intervals for the likelihood ratios are calculated using the formulas proposed in Zhou et al (2002), Section 4.1.3. Furthermore, when likelihood ratios can not be calculated due to division by 0, the following correction is applied: 0.5 units are added to <code>tab</code>.
+</p>
+<p>Confidence intervals for the odds ratio are calculated using the formulas proposed in Zhou et al (2002), Section 4.1.4. The same correction described before is applied when odds ratio can not be calculated due to division by 0.
+</p>
+<p>Confidence intervals for the Youden index are calculated using the expression
+</p>
+<p style="text-align: center;"><code class="reqn">CI(1-\alpha) = (Y-z_{1-\alpha/2}*Var(Y), Y+z_{1-\alpha/2}*Var(Y)),</code>
+</p>
+
+<p>where <code class="reqn">Y</code> is the Youden index estimate, <code class="reqn">z_{1-\alpha/2}</code> is the <code class="reqn">1-\alpha/2</code> quantile of a <code class="reqn">N(0, 1)</code> distribution and <code class="reqn">Var(Y)</code> is the variance of the Youden index estimator, which is calculated as <code class="reqn">Var(Sensitivity)+Var(Specificity)</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A <code>data.frame</code> with ten rows and three columns containing the point estimate and confidence intervals for the following statistical measures: sensitivity, specificity, positive predictive value, negative predictive value, positive likelihood ratio, negative likelihood ratio, odds ratio, Youden index, accuracy and error rate. 
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Sara Perez-Jaume, Natalia Pallares
+</p>
+
+
+<h3>References</h3>
+
+<p>Youden, WJ. (1950). Index for rating diagnostic tests. Cancer 3:32-35.
+</p>
+<p>Zhou XH, Obuchowski NA and McClish DK. (2002). Statistical methods in diagnostic medicine. John Wiley and sons.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>thres2</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># example 1 (Zhou et al, 2002)
+japan &lt;- matrix(c(56, 23, 6, 78), ncol=2, byrow=TRUE)
+colnames(japan) &lt;- c("D", "nD")
+rownames(japan) &lt;- c("+", "-")
+japan
+p &lt;- 0.196 # disease prevalence
+diagnostic(japan, "par", casecontrol=TRUE, p=p)
+
+# example 2
+table &lt;- matrix(c(22, 2, 3, 3), ncol=2, byrow=TRUE)
+diagnostic(table, "par")
+diagnostic(table, "exact")
+
+# example 3
+table2 &lt;- matrix(c(22, 2, 0, 3), ncol=2, byrow=TRUE)
+diagnostic(table2, "exact")
+
+# example 4
+# generate a random sample of diseased and non-diased subjects
+n1 &lt;- 100
+n2 &lt;- 100
+set.seed(1234)
+par1.1 &lt;- 0
+par1.2 &lt;- 1
+par2.1 &lt;- 2
+par2.2 &lt;- 1
+k1 &lt;- rnorm(n1, par1.1, par1.2) # non-diseased
+k2 &lt;- rnorm(n2, par2.1, par2.2) # diseased
+# threshold estimation
+rho &lt;- 0.2 # prevalence
+thres &lt;- thres2(k1, k2, rho, method="equal", ci.method="delta")$T$thres
+# diagnostic test using the threshold estimate
+marker &lt;- c(k1, k2) # biomarker
+condition &lt;- c(rep("nD", length(k1)), rep("D", length(k2))) # condition
+test &lt;- ifelse(marker&lt;thres, "-", "+") # test outcome according to thres
+# build the table
+table3 &lt;- table(test, condition)[2:1, ]
+# diagnostic test
+round(diagnostic(table3), 3)
+</code></pre>
+
+
+</div>

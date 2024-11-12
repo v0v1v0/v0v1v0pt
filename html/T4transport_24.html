@@ -1,0 +1,129 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>swdist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sliced Wasserstein Distance</h2>
+
+<h3>Description</h3>
+
+<p>Sliced Wasserstein (SW) Distance (Rabin et al. 2012)
+is a popular alternative to the standard Wasserstein distance due to its computational
+efficiency on top of nice theoretical properties. For the <code class="reqn">d</code>-dimensional probability
+measures <code class="reqn">\mu</code> and <code class="reqn">\nu</code>, the SW distance is defined as
+</p>
+<p style="text-align: center;"><code class="reqn">\mathcal{SW}_p (\mu, \nu) = 
+\left( \int_{\mathbf{S}^{d-1}} \mathcal{W}_p^p (
+\langle \theta, \mu\rangle, \langle \theta, \nu \rangle d\lambda (\theta) \right)^{1/p},</code>
+</p>
+
+<p>where <code class="reqn">\mathbf{S}^{d-1}</code> is the <code class="reqn">(d-1)</code>-dimensional unit hypersphere and
+<code class="reqn">\lambda</code> is the uniform distribution on <code class="reqn">\mathbf{S}^{d-1}</code>. Practically,
+it is computed via Monte Carlo integration.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">swdist(X, Y, p = 2, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>an <code class="reqn">(M\times P)</code> matrix of row observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>an <code class="reqn">(N\times P)</code> matrix of row observations.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>an exponent for the order of the distance (default: 2).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>extra parameters including </p>
+
+<dl>
+<dt>nproj</dt>
+<dd>
+<p>the number of Monte Carlo samples for SW computation (default: 496).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>a named list containing</p>
+
+<dl>
+<dt>distance</dt>
+<dd>
+<p><code class="reqn">\mathcal{SW}_p</code> distance value.</p>
+</dd>
+<dt>projdist</dt>
+<dd>
+<p>a length-<code>niter</code> vector of projected univariate distances.</p>
+</dd>
+</dl>
+<h3>References</h3>
+
+<p>Rabin J, Peyré G, Delon J, Bernot M (2012).
+“Wasserstein Barycenter and Its Application to Texture Mixing.”
+In Bruckstein AM, ter Haar Romeny BM, Bronstein AM, Bronstein MM (eds.), <em>Scale Space and Variational Methods in Computer Vision</em>, volume 6667, 435–446.
+Springer Berlin Heidelberg, Berlin, Heidelberg.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+#-------------------------------------------------------------------
+#  Sliced-Wasserstein Distance between Two Bivariate Normal
+#
+# * class 1 : samples from Gaussian with mean=(-1, -1)
+# * class 2 : samples from Gaussian with mean=(+1, +1)
+#-------------------------------------------------------------------
+# SMALL EXAMPLE
+set.seed(100)
+m = 20
+n = 30
+X = matrix(rnorm(m*2, mean=-1),ncol=2) # m obs. for X
+Y = matrix(rnorm(n*2, mean=+1),ncol=2) # n obs. for Y
+
+# COMPUTE THE SLICED-WASSERSTEIN DISTANCE
+outsw &lt;- swdist(X, Y, nproj=100)
+
+# VISUALIZE
+# prepare ingredients for plotting
+plot_x = 1:1000
+plot_y = base::cumsum(outsw$projdist)/plot_x
+
+# draw
+opar &lt;- par(no.readonly=TRUE)
+plot(plot_x, plot_y, type="b", cex=0.1, lwd=2,
+     xlab="number of MC samples", ylab="distance",
+     main="Effect of MC Sample Size")
+abline(h=outsw$distance, col="red", lwd=2)
+legend("bottomright", legend="SW Distance", 
+       col="red", lwd=2)
+par(opar)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,188 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>matchLabels</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Match Arbitrary Class Assignments Across Methods
+</h2>
+
+<h3>Description</h3>
+
+<p>These functions provide a set of tools to find the best match between
+the labels used by two different algorithms to cluster the same set of
+samples.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">labelMatcher(tab, verbose = FALSE)
+matchLabels(tab)
+countAgreement(tab)
+labelAccuracy(data, labels, linkage="ward.D2")
+bestMetric(data, labels)
+remap(fix, vary)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tab</code></td>
+<td>
+<p>A contingency table, represented as a square <code>matrix</code>
+or <code>table</code> as an R object.  Both dimensions represent an
+assignment of class labels, with each row and column representing
+one of the labels.  Entries should be non-negative integer counts of
+the number of objects having the labels represented by the row and
+column.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>A logical value; should the routine print something out
+periodically so you know it's still working?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A matrix whose columns represent objects to be clustered
+and whose rows represent the anonymous features used to perform the
+clustering.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>A factor (or character vector) of class labels for the
+objects in the <code>data</code> matrix.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>linkage</code></td>
+<td>
+<p>A linkage rule accepted by the <code>hclust</code>
+function.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fix</code></td>
+<td>
+<p>A vector of cluater assignments.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vary</code></td>
+<td>
+<p>A vector of cluater assignments.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In the most general sense, clustering can be viewed as a function from
+the space of "objects" of interest into a space of "class labels".  In
+less mathematical terms, this simply means that each object gets
+assigned an (arbitrary) class label. This is all well-and-good until
+you try to compare the results of running two different clustering
+algorithms that use different labels (or even worse, use the same
+labels – typically the integers <code class="reqn">1, 2, \dots, K</code> – with
+different meanings).  When that happens, you need a way to decide
+which labels from the different sets are closest to meaning the
+"same thing".
+</p>
+<p>That's where this set of functions comes in. The core algorithm is
+implemented in the function <code>labelMatcher</code>, which works on a
+contingency table whose entries <code class="reqn">N_{ij}</code> are the number of samples
+with row-label = <code class="reqn">i</code> and column-label = <code class="reqn">j</code>.  To find  the
+best match, one computes (heuristically) the values <code class="reqn">F_{ij}</code> that
+describe the fraction of all entries in row <code class="reqn">i</code> and column <code class="reqn">j</code>
+represented by <code class="reqn">N_{ij}</code>.  Perfectly matched labels would consist
+of a row <code class="reqn">i</code> and a column <code class="reqn">j</code> where <code class="reqn">N_{ij}</code> is the only
+nonzero entry in its row and column, so <code class="reqn">F_{ij} = 1</code>. The largest
+value for <code class="reqn">F_{ij}</code> (with ties broken simply by which entry is
+closer to the upper-left corner of the matrix) defines the best
+match. The matched row and column are then removed from the matrix and
+the process repeats recursively.
+</p>
+<p>We apply this method to determine which distance metric, when used in
+hierarchical clustering, best matches a "gold standard" set of class
+labels.  (These may not really be gold, of course; they can also be a
+set of labels determined by k-means or another clustering algorithm.)
+The idea is to cluster the samples using a variety of different
+metrics, and select the one whose label assignments best macth the
+standard.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The <code>labelMatcher</code> function returns a list of two vectors of the
+same length.  These contain the matched label-indices, in the order
+they were matched by the algorithm.
+</p>
+<p>The <code>matchLabels</code> function is a user-friendly front-end to the
+<code>labelmatcher</code> function.  It returns a matrix, with the rows and
+columns reordered so the labels match.
+</p>
+<p>The <code>countAgreement</code> function returns an integer, the number of
+samples with the "same" labels, computed by summing the diagonal of
+the reordered matrix produced by <code>matchLabels</code>.
+</p>
+<p>The <code>labelAccuracy</code> function returns a vector indexed by the set
+of nine distance metrics hard-coded in the function.  Each entry is
+the fraction of samples whose hierarchical clusters match the
+prespecified <code>labels</code>.
+</p>
+<p>The <code>bestMetric</code> function is a user-friendly front-end to the
+<code>labelAccuracy</code> function.  It returns the name of the distance
+metric whose hierarchical clusters best match the prespecified
+<code>labels</code>.
+</p>
+<p>The <code>remap</code> function takes two sets of integer cluster
+assignments and returns a new set of labels for the target that best
+matches the source.
+</p>
+
+
+<h3>Note</h3>
+
+<p>The <code>labelAccuracy</code> function should probably allow the user
+to supply a list of distance metrics instead of relying on the
+hard-coded list internally.</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Kevin R. Coombes &lt;krc@silicovore.com&gt;</p>
+
+
+<h3>See Also</h3>
+
+<p>Hierarchical clustering is implemented in the <code>hclust</code>
+function.  We use the extended set of distance metrics provided by the
+<code>distanceMatrix</code> function from the ClassDiscovery package.
+This set includes all of the  metrics from the <code>dist</code>
+funciton. 
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">factor1 &lt;- sample(c("A", "B", "C"), 30, replace=TRUE)
+factor2 &lt;- rep(c("X", "Y", "Z"), each=10)
+tab &lt;- table(factor1, factor2)
+matchLabels(tab)
+labelMatcher(tab)
+R &lt;- remap(factor1, factor2)
+table(R, factor2) # remapping
+table(R, factor1) # cross-comparison
+</code></pre>
+
+
+</div>

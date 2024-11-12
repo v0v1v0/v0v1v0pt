@@ -1,0 +1,153 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>response_biomarkers_subgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tabulate biomarker effects on binary response by subgroup</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+</p>
+<p>The <code>tabulate_rsp_biomarkers()</code> function creates a layout element to tabulate the estimated biomarker effects on a
+binary response endpoint across subgroups, returning statistics including response rate and odds ratio for each
+population subgroup. The table is created from <code>df</code>, a list of data frames returned by <code>extract_rsp_biomarkers()</code>,
+with the statistics to include specified via the <code>vars</code> parameter.
+</p>
+<p>A forest plot can be created from the resulting table using the <code>g_forest()</code> function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tabulate_rsp_biomarkers(
+  df,
+  vars = c("n_tot", "n_rsp", "prop", "or", "ci", "pval"),
+  na_str = default_na_str(),
+  .indent_mods = 0L
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>df</code></td>
+<td>
+<p>(<code>data.frame</code>)<br> containing all analysis variables, as returned by
+<code>extract_rsp_biomarkers()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>(<code>character</code>)<br> the names of statistics to be reported among:
+</p>
+
+<ul>
+<li> <p><code>n_tot</code>: Total number of patients per group.
+</p>
+</li>
+<li> <p><code>n_rsp</code>: Total number of responses per group.
+</p>
+</li>
+<li> <p><code>prop</code>: Total response proportion per group.
+</p>
+</li>
+<li> <p><code>or</code>: Odds ratio.
+</p>
+</li>
+<li> <p><code>ci</code>: Confidence interval of odds ratio.
+</p>
+</li>
+<li> <p><code>pval</code>: p-value of the effect.
+Note, the statistics <code>n_tot</code>, <code>or</code> and <code>ci</code> are required.
+</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>na_str</code></td>
+<td>
+<p>(<code>string</code>)<br> string used to replace all <code>NA</code> or empty values in the output.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.indent_mods</code></td>
+<td>
+<p>(named <code>integer</code>)<br> indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>These functions create a layout starting from a data frame which contains
+the required statistics. The tables are then typically used as input for forest plots.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An <code>rtables</code> table summarizing biomarker effects on binary response by subgroup.
+</p>
+
+
+<h3>Note</h3>
+
+<p>In contrast to <code>tabulate_rsp_subgroups()</code> this tabulation function does
+not start from an input layout <code>lyt</code>. This is because internally the table is
+created by combining multiple subtables.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>h_tab_rsp_one_biomarker()</code> which is used internally, <code>extract_rsp_biomarkers()</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(dplyr)
+library(forcats)
+
+adrs &lt;- tern_ex_adrs
+adrs_labels &lt;- formatters::var_labels(adrs)
+
+adrs_f &lt;- adrs %&gt;%
+  filter(PARAMCD == "BESRSPI") %&gt;%
+  mutate(rsp = AVALC == "CR")
+formatters::var_labels(adrs_f) &lt;- c(adrs_labels, "Response")
+
+df &lt;- extract_rsp_biomarkers(
+  variables = list(
+    rsp = "rsp",
+    biomarkers = c("BMRKR1", "AGE"),
+    covariates = "SEX",
+    subgroups = "BMRKR2"
+  ),
+  data = adrs_f
+)
+
+
+## Table with default columns.
+tabulate_rsp_biomarkers(df)
+
+## Table with a manually chosen set of columns: leave out "pval", reorder.
+tab &lt;- tabulate_rsp_biomarkers(
+  df = df,
+  vars = c("n_rsp", "ci", "n_tot", "prop", "or")
+)
+
+## Finally produce the forest plot.
+g_forest(tab, xlim = c(0.7, 1.4))
+
+
+</code></pre>
+
+
+</div>

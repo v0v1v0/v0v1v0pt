@@ -1,0 +1,98 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>princomp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>SpatRaster PCA with princomp</h2>
+
+<h3>Description</h3>
+
+<p>Compute principal components for SpatRaster layers. This method can use all values to compute the principal components, even for very large rasters. This is because it computes the covariance matrix by processing the data in chunks, if necessary, using <code>layerCor</code>. The population covariance is used (not the sample, with <code>n-1</code> denominator, covariance). 
+</p>
+<p>Alternatively, you can specify <code>maxcell</code> or sample raster values to a data.frame to speed up calculations for very large rasters (see the examples below). 
+</p>
+<p>See <code>prcomp</code> for an alternative method that has higher numerical accuracy, but is slower, and for very large rasters can only be accomplished with a sample since all values must be read into memory.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+princomp(x, cor=FALSE, fix_sign=TRUE, use="pairwise.complete.obs", maxcell=Inf)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cor</code></td>
+<td>
+<p>logical. If <code>FALSE</code>, the covariance matrix is used. Otherwise the correlation matrix is used</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fix_sign</code></td>
+<td>
+<p>logical.  If <code>TRUE</code>, the signs of the loadings and scores are chosen so that the first element of each loading is non-negative</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use</code></td>
+<td>
+<p>character. To decide how to handle missing values. This must be (an abbreviation of) one of the strings "everything", "complete.obs", "pairwise.complete.obs", or "masked.complete". With "pairwise.complete.obs", the covariance between a pair of layers is computed for all cells that are not <code>NA</code> in that pair. Therefore, it may be that the (number of) cells used varies between pairs. The benefit of this approach is that all available data is used. Use "complete.obs", if you want to only use the values from cells that are not <code>NA</code> in any of the layers. By using "masked.complete" you indicate that all layers have NA values in the same cells</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxcell</code></td>
+<td>
+<p>positive integer. The maximum number of cells to be used. If this is smaller than ncell(x), a regular sample of <code>x</code> is used</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>princomp object
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Alex Ilich and Robert Hijmans, based on a similar method by Benjamin Leutner</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>prcomp</code> <code>princomp</code></p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">f &lt;- system.file("ex/logo.tif", package = "terra")
+r &lt;- rast(f)
+pca &lt;- princomp(r)
+x &lt;- predict(r, pca)
+
+# use "index" to get a subset of the components
+p &lt;- predict(r, pca, index=1:2)
+
+### use princomp directly
+pca2 &lt;- princomp(values(r),  fix_sign = TRUE)
+p2 &lt;- predict(r, pca2)
+
+### may need to use sampling with a large raster 
+### here with prcomp instead of princomp
+sr &lt;- spatSample(r, 100000, "regular")
+pca3 &lt;- prcomp(sr)
+p3 &lt;- predict(r, pca3)
+</code></pre>
+
+
+</div>

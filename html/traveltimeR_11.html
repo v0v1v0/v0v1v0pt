@@ -1,0 +1,100 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>time_filter</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Distance Matrix (Time Filter)</h2>
+
+<h3>Description</h3>
+
+<p>Given origin and destination points filter out points that cannot be reached within specified time limit.
+Find out travel times, distances and costs between an origin and up to 2,000 destination points.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">time_filter(locations, departure_searches = NULL, arrival_searches = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>locations</code></td>
+<td>
+<p>One or more objects created by <code>make_location</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>departure_searches</code></td>
+<td>
+<p>One or more objects created by <code>make_search</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>arrival_searches</code></td>
+<td>
+<p>One or more objects created by <code>make_search</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <a href="https://docs.traveltime.com/api/reference/travel-time-distance-matrix/">https://docs.traveltime.com/api/reference/travel-time-distance-matrix/</a> for details
+</p>
+
+
+<h3>Value</h3>
+
+<p>API response parsed as a list and as a raw json
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+locationsDF &lt;- data.frame(
+  id = c('London center', 'Hyde Park', 'ZSL London Zoo'),
+  lat = c(51.508930, 51.508824, 51.536067),
+  lng = c(-0.131387, -0.167093, -0.153596)
+  )
+locations &lt;- apply(locationsDF, 1, function(x)
+  make_location(id = x['id'], coords = list(lat = as.numeric(x["lat"]),
+                                            lng = as.numeric(x["lng"]))))
+locations &lt;- unlist(locations, recursive = FALSE)
+
+departure_search &lt;-
+  make_search(id = "forward search example",
+              departure_location_id = "London center",
+              arrival_location_ids = list("Hyde Park", "ZSL London Zoo"),
+              departure_time = strftime(as.POSIXlt(Sys.time(), "UTC"), "%Y-%m-%dT%H:%M:%SZ"),
+              travel_time = 1800,
+              transportation = list(type = "bus"),
+              properties = list('travel_time'),
+              range = list(enabled = TRUE, width = 600, max_results = 3))
+
+arrival_search &lt;-
+  make_search(id = "backward search example",
+              arrival_location_id = "London center",
+              departure_location_ids = list("Hyde Park", "ZSL London Zoo"),
+              arrival_time = strftime(as.POSIXlt(Sys.time(), "UTC"), "%Y-%m-%dT%H:%M:%SZ"),
+              travel_time = 1800,
+              transportation = list(type = "public_transport"),
+              properties = list('travel_time', "distance", "distance_breakdown", "fares"),
+              range = list(enabled = TRUE, width = 600, max_results = 3))
+
+result &lt;-
+  time_filter(
+    departure_searches = departure_search,
+    arrival_searches = arrival_search,
+    locations = locations
+  )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

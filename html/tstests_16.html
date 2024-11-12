@@ -1,0 +1,77 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>garch_forecast</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Sample GARCH Forecast Data</h2>
+
+<h3>Description</h3>
+
+<p>A pre-computed backtest of the SPY log returns data
+using a GARCH(1,1)-JSU model (see details for replication code).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">garch_forecast
+</code></pre>
+
+
+<h3>Format</h3>
+
+
+
+<h4><code>garch_forecast</code></h4>
+
+<p>A data.table with 250 rows and 5 columns:
+</p>
+
+<dl>
+<dt>date</dt>
+<dd>
+<p>the forecast date</p>
+</dd>
+<dt>actual</dt>
+<dd>
+<p>the realized values</p>
+</dd>
+<dt>forecast</dt>
+<dd>
+<p>the forecast mu</p>
+</dd>
+<dt>sigma</dt>
+<dd>
+<p>the forecast sigma</p>
+</dd>
+<dt>skew</dt>
+<dd>
+<p>the estimated skew of the jsu distribution</p>
+</dd>
+<dt>shape</dt>
+<dd>
+<p>the estimated shape of the jsu distribution</p>
+</dd>
+</dl>
+<h3>Details</h3>
+
+<p>The replication code for the backtest based 1-step ahead forecast distribution
+is as follows:
+</p>
+<div class="sourceCode r"><pre>library(xts)
+library(tsgarch)
+data("spy", package = "tstests")
+spyr &lt;- na.omit(diff(log(spy)))
+n &lt;- NROW(spyr)
+spec &lt;- garch_modelspec(spyr, model = "garch", constant = T,
+distribution = "jsu")
+b &lt;- tsbacktest(spec, start = (n - 250), end = n, h = 1, estimate_every = 30,
+rolling = T, trace = T)
+garch_forecast &lt;- data.table(date = b$table$forecast_date,
+actual = b$table$actual, forecast = b$table$mu, sigma = b$table$sigma,
+skew = b$table$skew, shape = b$table$shape)
+</pre></div>
+
+
+</div>

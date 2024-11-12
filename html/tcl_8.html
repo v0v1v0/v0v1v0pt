@@ -1,0 +1,240 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>powerChange</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Power analysis of tests in context of measurement of change using LLTM</h2>
+
+<h3>Description</h3>
+
+<p>Returns power of Wald (W), likelihood ratio (LR), Rao score (RS)
+and gradient (GR) test given probability of error of first kind <code class="reqn">\alpha</code>, sample size, and
+a deviation from the hypothesis to be tested. The latter states that the shift parameter
+quantifying the constant change for all items between time points 1 and 2 equals 0.
+The alternative states that the shift parameter is not equal to 0.
+It is assumed that the same items are presented at both time points. See function <code>change_test</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">powerChange(n_total, eta, alpha = 0.05, persons = rnorm(10^6))
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>n_total</code></td>
+<td>
+<p>Total sample size for which power shall be determined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eta</code></td>
+<td>
+<p>A vector of eta parameters of the LLTM. The last element represents the constant change or shift for all items
+between time points 1 and 2. The other elements of the vector are the item parameters at time point 1. A choice of the eta
+parameters constitutes a scenario of deviation from the hypothesis of no change.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>Probability of the error of first kind.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>persons</code></td>
+<td>
+<p>A vector of person parameters (drawn from a specified distribution). By default <code class="reqn">10^6</code> parameters are drawn at
+random from the standard normal distribution. The larger this number the more accurate are the computations. See Details.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In general, the power of the tests is determined from the assumption that the approximate distributions of
+the four test statistics are from the family of noncentral <code class="reqn">\chi^2</code> distributions with <code class="reqn">df = 1</code> and noncentrality
+parameter <code class="reqn">\lambda</code>. The latter depends on a scenario of deviation from the hypothesis to be tested and a specified sample size.
+Given the probability of the error of the first kind <code class="reqn">\alpha</code> the power of the tests can be determined from <code class="reqn">\lambda</code>.
+More details about the distributions of the test statistics and the relationship between <code class="reqn">\lambda</code>, power, and sample size can be found
+in Draxler and Alexandrowicz (2015).
+</p>
+<p>As regards the concept of sample size a distinction between informative and total sample size has to be made since the power
+of the tests depends only on the informative sample size. In the conditional maximum likelihood context, the responses of
+persons with minimum or maximum person score are completely uninformative. They do not contribute to the value of the test
+statistic. Thus, the informative sample size does not include these persons. The total sample size is composed of all persons.
+</p>
+<p>In particular, the determination of <code class="reqn">\lambda</code> and the power of the tests, respectively, is based on a simple Monte Carlo approach.
+Data (responses of a large number of persons to a number of items presented at two time points) are generated given a
+user-specified scenario of a deviation from the hypothesis to be tested. The hypothesis to be tested assumes no change
+between time points 1 and 2. A scenario of a deviation is given by a choice of the item parameters at time point 1 and
+the shift parameter, i.e., the LLTM eta parameters, as well as the person parameters (to be drawn randomly from a specified
+distribution). The shift parameter represents a constant change of all item parameters from time point 1 to time point 2.
+A test statistic <code class="reqn">T</code> (Wald, LR, score, or gradient) is computed from the simulated data. The observed value <code class="reqn">t</code> of the test
+statistic is then divided by the informative sample size <code class="reqn">n_{infsim}</code> observed in the simulated data. This yields the so-called
+global deviation <code class="reqn">e = t / n_{infsim}</code>, i.e., the chosen scenario of a deviation from the hypothesis to be tested being represented
+by a single number. The power of the tests can be determined given a user-specified total sample size denoted by <code class="reqn">n_{total}</code>.
+The noncentrality parameter <code class="reqn">\lambda</code> can then be expressed by <code class="reqn">\lambda = n_{total}* (n_{infsim} / n_{totalsim}) * e</code>,
+where <code class="reqn">n_{totalsim}</code> denotes the total number of persons in the simulated data and <code class="reqn">n_{infsim} / n_{totalsim}</code> is the proportion of
+informative persons in the sim. data. Let <code class="reqn">q_{\alpha}</code> be the <code class="reqn">1 - \alpha</code> quantile of the central <code class="reqn">\chi^2</code> distribution with <code class="reqn">df = 1</code>.
+Then,
+</p>
+<p style="text-align: center;"><code class="reqn">power = 1 - F_{df, \lambda} (q_{\alpha}),</code>
+</p>
+
+<p>where <code class="reqn">F_{df, \lambda}</code> is the cumulative distribution function of the noncentral <code class="reqn">\chi^2</code> distribution with <code class="reqn">df = 1</code> and
+<code class="reqn">\lambda = n_{total} * (n_{infsim} / n_{totalsim}) * e</code>. Thereby, it is assumed that <code class="reqn">n_{total}</code> is composed of a frequency distribution
+of person scores that is proportional to the observed distribution of person scores in the simulated data.
+</p>
+<p>Note that in this approach the data have to be generated only once. There are no replications needed. Thus, the procedure is
+computationally not very time-consuming.
+</p>
+<p>Since <code class="reqn">e</code> is determined from the value of the test statistic observed in the simulated data it has to be treated as a realized
+value of a random variable <code class="reqn">E</code>. The same holds true for <code class="reqn">\lambda</code> as well as the power of the tests. Thus, the power is a realized
+value of a random variable that shall be denoted by <code class="reqn">P</code>. Consequently, the (realized) value of the power of the tests need
+not be equal to the exact power that follows from the user-specified <code class="reqn">n_{total}</code>, <code class="reqn">\alpha</code>, and the chosen item parameters and shift
+parameter used for the simulation of the data. If the CML estimates of these parameters computed from the simulated data are
+close to the predetermined parameters the power of the tests will be close to the exact value. This will generally be the
+case if the number of person parameters used for simulating the data is large, e.g., <code class="reqn">10^5</code> or even <code class="reqn">10^6</code> persons. In such
+cases, the possible random error of the computation procedure based on the sim. data may not be of practical relevance
+any more. That is why a large number (of persons for the simulation process) is generally recommended.
+</p>
+<p>For theoretical reasons, the random error involved in computing the power of the tests can be pretty well approximated.
+A suitable approach is the well-known delta method. Basically, it is a Taylor polynomial of first order, i.e., a linear
+approximation of a function. According to it the variance of a function of a random variable can be linearly approximated
+by multiplying the variance of this random variable with the square of the first derivative of the respective function.
+In the present problem, the variance of the test statistic <code class="reqn">T</code> is (approximately) given by the variance of a noncentral
+<code class="reqn">\chi^2</code> distribution. Thus, <code class="reqn">Var(T) = 2 (df + 2 \lambda)</code>,
+with <code class="reqn">df = 1</code> and <code class="reqn">\lambda = t</code>.
+Since the global deviation <code class="reqn">e = (1 / n_{infsim})* t</code> it follows for the variance of the corresponding random variable <code class="reqn">E</code>
+that <code class="reqn">Var(E) = (1 / n_{infsim})^2 * Var(T)</code>. The power of the tests is a function of <code class="reqn">e</code> which is given by
+<code class="reqn">F_{df, \lambda} (q_{\alpha})</code>, where <code class="reqn">\lambda = n_{total} * (n_{infsim} / n_{totalsim}) * e</code> and <code class="reqn">df = 1</code>.
+Then, by the delta method one obtains (for the variance of <code class="reqn">P</code>)
+</p>
+<p style="text-align: center;"><code class="reqn">Var(P) = Var(E) * (F'_{df, \lambda} (q_{\alpha}))^2,</code>
+</p>
+
+<p>where <code class="reqn">F'_{df, \lambda}</code> is the derivative of <code class="reqn">F_{df, \lambda}</code> with respect to <code class="reqn">e</code>. This derivative is determined
+numerically and evaluated at <code class="reqn">e</code> using the package numDeriv. The square root of <code class="reqn">Var(P)</code> is then used to quantify the random
+error of the suggested Monte Carlo computation procedure. It is called Monte Carlo error of power.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of results.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>power</code></td>
+<td>
+<p>Power value for each test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MC error of power</code></td>
+<td>
+<p>Monte Carlo error of power computation for each test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>deviation</code></td>
+<td>
+<p>Shift parameter estimated from the simulated data representing the constant shift of item parameters between time points 1 and 2.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>person score distribution</code></td>
+<td>
+<p>Relative frequencies of person scores observed in simulated data. Uninformative scores,
+i.e., minimum and maximum score, are omitted. Note that the person score distribution does also have an influence on the power of the tests.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>degrees of freedom</code></td>
+<td>
+<p>Degrees of freedom <code class="reqn">df</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>noncentrality parameter</code></td>
+<td>
+<p>Noncentrality parameter <code class="reqn">\lambda</code> of <code class="reqn">\chi^2</code> distribution from which power is determined.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>call</code></td>
+<td>
+<p>The matched call.</p>
+</td>
+</tr>
+</table>
+<h3>References</h3>
+
+
+<p>Draxler, C., &amp; Alexandrowicz, R. W. (2015). Sample size determination within the scope of conditional
+maximum likelihood estimation with special focus on testing the Rasch model. Psychometrika, 80(4), 897-919.
+</p>
+<p>Fischer, G. H. (1995). The Linear Logistic Test Model. In G. H. Fischer &amp; I. W. Molenaar (Eds.),
+Rasch models: Foundations, Recent Developments, and Applications (pp. 131-155). New York: Springer.
+</p>
+<p>Fischer, G. H. (1983). Logistic Latent Trait Models with Linear Constraints. Psychometrika, 48(1), 3-26.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>sa_sizeChange</code>, and <code>post_hocChange</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+
+# Numerical example: 4 items presented twice, thus 8 virtual items
+
+# eta Parameter, first 4 are nuisance
+# (easiness parameters of the 4 items at time point 1),
+# last one is the shift parameter
+eta &lt;- c(-2,-1,1,2,0.5)
+res &lt;- powerChange(n_total = 150, eta = eta, persons=rnorm(10^6))
+
+# &gt; res
+# $power
+#     W    LR    RS    GR
+# 0.905 0.910 0.908 0.911
+#
+# $`MC error of power`
+#     W    LR    RS    GR
+# 0.002 0.002 0.002 0.002
+#
+# $`deviation (estimate of shift parameter)`
+# [1] 0.499
+#
+# $`person score distribution`
+#
+#     1     2     3     4     5     6     7
+# 0.034 0.093 0.181 0.249 0.228 0.147 0.068
+#
+# $`degrees of freedom`
+# [1] 1
+#
+# $`noncentrality parameter`
+#      W     LR     RS     GR
+# 10.692 10.877 10.815 10.939
+#
+# $call
+# powerChange(alpha = 0.05, n_total = 150, eta = eta, persons = rnorm(10^6))
+#
+
+## End(Not run)
+</code></pre>
+
+
+</div>

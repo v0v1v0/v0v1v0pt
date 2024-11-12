@@ -1,0 +1,263 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>optionalSelectInput</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Wrapper for <code>pickerInput</code>
+</h2>
+
+<h3>Description</h3>
+
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#stable"><img src="../help/figures/lifecycle-stable.svg" alt="[Stable]"></a>
+Wrapper for <code>shinyWidgets::pickerInput()</code> with additional features.
+When <code>fixed = TRUE</code> or when the number of <code>choices</code> is less or equal to 1 (see <code>fixed_on_single</code>),
+the <code>pickerInput</code> widget is hidden and non-interactive widget will be displayed
+instead. Toggle of <code>HTML</code> elements is just the visual effect to avoid displaying
+<code>pickerInput</code> widget when there is only one choice.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">optionalSelectInput(
+  inputId,
+  label = NULL,
+  choices = NULL,
+  selected = NULL,
+  multiple = FALSE,
+  sep = NULL,
+  options = list(),
+  label_help = NULL,
+  fixed = FALSE,
+  fixed_on_single = FALSE,
+  width = NULL
+)
+
+updateOptionalSelectInput(
+  session,
+  inputId,
+  label = NULL,
+  selected = NULL,
+  choices = NULL
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>inputId</code></td>
+<td>
+<p>The <code>input</code> slot that will be used to access the value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label</code></td>
+<td>
+<p>Display label for the control, or <code>NULL</code> for no label.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>choices</code></td>
+<td>
+<p>List of values to select from. If elements of the
+list are named then that name rather than the value is displayed to the user.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>selected</code></td>
+<td>
+<p>The initially selected value (or multiple values if <code>multiple = TRUE</code>).
+If not specified then defaults to the first value for single-select lists
+and no values for multiple select lists.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>multiple</code></td>
+<td>
+<p>Is selection of multiple items allowed?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sep</code></td>
+<td>
+<p>(<code>character(1)</code>)<br>
+A separator string to split the <code>choices</code> or <code>selected</code> inputs into the values of the different
+columns.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>options</code></td>
+<td>
+<p>List of options, see pickerOptions for all available options.
+To limit the number of selection possible, see example below.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>label_help</code></td>
+<td>
+<p>(<code>shiny.tag</code> optional)<br>
+e.g. an object returned by <code>shiny::helpText()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed</code></td>
+<td>
+<p>(<code>logical(1)</code> optional)<br>
+whether to block user to select choices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fixed_on_single</code></td>
+<td>
+<p>(<code>logical(1)</code> optional)<br>
+whether to block user to select a choice when there is only one or less choice.
+When <code>FALSE</code>, user is still able to select or deselect the choice.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>width</code></td>
+<td>
+<p>(<code>character(1)</code>)<br>
+The width of the input passed to <code>pickerInput</code>  e.g. <code>'auto'</code>, <code>'fit'</code>, <code>'100px'</code> or <code>'75%'</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>session</code></td>
+<td>
+<p>(<code>shiny.session</code>)<br></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>(<code>shiny.tag</code>) HTML tag with <code>pickerInput</code> widget and
+non-interactive element listing selected values.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(shiny)
+
+# Create a minimal example data frame
+data &lt;- data.frame(
+  AGE = c(25, 30, 40, 35, 28),
+  SEX = c("Male", "Female", "Male", "Female", "Male"),
+  PARAMCD = c("Val1", "Val2", "Val3", "Val4", "Val5"),
+  PARAM = c("Param1", "Param2", "Param3", "Param4", "Param5"),
+  AVISIT = c("Visit1", "Visit2", "Visit3", "Visit4", "Visit5"),
+  stringsAsFactors = TRUE
+)
+
+ui_grid &lt;- function(...) {
+  fluidPage(
+    fluidRow(
+      lapply(list(...), function(x) column(4, wellPanel(x)))
+    )
+  )
+}
+
+
+app &lt;- shinyApp(
+  ui = ui_grid(
+    div(
+      optionalSelectInput(
+        inputId = "c1",
+        label = "Fixed choices",
+        choices = LETTERS[1:5],
+        selected = c("A", "B"),
+        fixed = TRUE
+      ),
+      verbatimTextOutput(outputId = "c1_out")
+    ),
+    div(
+      optionalSelectInput(
+        inputId = "c2",
+        label = "Single choice",
+        choices = "A",
+        selected = "A"
+      ),
+      verbatimTextOutput(outputId = "c2_out")
+    ),
+    div(
+      optionalSelectInput(
+        inputId = "c3",
+        label = "NULL choices",
+        choices = NULL
+      ),
+      verbatimTextOutput(outputId = "c3_out")
+    ),
+    div(
+      optionalSelectInput(
+        inputId = "c4",
+        label = "Default",
+        choices = LETTERS[1:5],
+        selected = "A"
+      ),
+      verbatimTextOutput(outputId = "c4_out")
+    ),
+    div(
+      optionalSelectInput(
+        inputId = "c5",
+        label = "Named vector",
+        choices = c(`A - value A` = "A", `B - value B` = "B", `C - value C` = "C"),
+        selected = "A"
+      ),
+      verbatimTextOutput(outputId = "c5_out")
+    ),
+    div(
+      selectInput(
+        inputId = "c6_choices", label = "Update choices", choices = letters, multiple = TRUE
+      ),
+      optionalSelectInput(
+        inputId = "c6",
+        label = "Updated choices",
+        choices = NULL,
+        multiple = TRUE,
+        fixed_on_single = TRUE
+      ),
+      verbatimTextOutput(outputId = "c6_out")
+    )
+  ),
+  server = function(input, output, session) {
+    observeEvent(input$c6_choices, ignoreNULL = FALSE, {
+      updateOptionalSelectInput(
+        session = session,
+        inputId = "c6",
+        choices = input$c6_choices,
+        selected = input$c6_choices
+      )
+    })
+
+    output$c1_out &lt;- renderPrint({
+      input$c1
+    })
+    output$c2_out &lt;- renderPrint({
+      input$c2
+    })
+    output$c3_out &lt;- renderPrint({
+      input$c3
+    })
+    output$c4_out &lt;- renderPrint({
+      input$c4
+    })
+    output$c5_out &lt;- renderPrint({
+      input$c5
+    })
+    output$c6_out &lt;- renderPrint({
+      input$c6
+    })
+  }
+)
+
+if (interactive()) {
+  shinyApp(app$ui, app$server)
+}
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,183 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>data.timssAusTwn</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Dataset TIMSS 2011 of Australian and Taiwanese Students
+</h2>
+
+<h3>Description</h3>
+
+<p>Mathematics items of TIMSS 2011 of 1773 Australian and
+Taiwanese students. The dataset <code>data.timssAusTwn</code> contains raw
+responses while <code>data.timssAusTwn.scored</code> contains scored item
+responses.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">data(data.timssAusTwn)
+data(data.timssAusTwn.scored)
+</code></pre>
+
+
+<h3>Format</h3>
+
+<p>A data frame with 1773 observations on the following 14 variables.
+</p>
+
+<dl>
+<dt><code>M032166</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032721</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032757</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032760A</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032760B</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032760C</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032761</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032692</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032626</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032595</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>M032673</code></dt>
+<dd>
+<p>a mathematics item</p>
+</dd>
+<dt><code>IDCNTRY</code></dt>
+<dd>
+<p>Country identifier</p>
+</dd>
+<dt><code>ITSEX</code></dt>
+<dd>
+<p>Gender</p>
+</dd>
+<dt><code>IDBOOK</code></dt>
+<dd>
+<p>Booklet identifier</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+<p><a href="http://www.edmeasurementsurveys.com/TAM/Tutorials/5PartialCredit.htm">http://www.edmeasurementsurveys.com/TAM/Tutorials/5PartialCredit.htm</a>
+</p>
+<p><a href="http://www.edmeasurementsurveys.com/TAM/Tutorials/6Population.htm">http://www.edmeasurementsurveys.com/TAM/Tutorials/6Population.htm</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(data.timssAusTwn)
+raw_resp &lt;- data.timssAusTwn
+
+#Recode data
+resp &lt;- raw_resp[,1:11]
+      #Column 12 is country code. Column 13 is gender code. Column 14 is Book ID.
+all.na &lt;- rowMeans( is.na(resp) )==1
+        #Find records where all responses are missing.
+resp &lt;- resp[!all.na,]              #Delete records with all missing responses
+resp[resp==20 | resp==21] &lt;- 2      #TIMSS double-digit coding: "20" or "21" is a score of 2
+resp[resp==10 | resp==11] &lt;- 1      #TIMSS double-digit coding: "10" or "11" is a score of 1
+resp[resp==70 | resp==79] &lt;- 0      #TIMSS double-digit coding: "70" or "79" is a score of 0
+resp[resp==99] &lt;- 0                 #"99" is omitted responses. Score it as wrong here.
+resp[resp==96 | resp==6] &lt;- NA      #"96" and "6" are not-reached items. Treat these as missing.
+
+#Score multiple-choice items        #"resp" contains raw responses for MC items.
+Scored &lt;- resp
+Scored[,9] &lt;- (resp[,9]==4)*1       #Key for item 9 is D.
+Scored[,c(1,2)] &lt;- (resp[,c(1,2)]==2)*1  #Key for items 1 and 2 is B.
+Scored[,c(10,11)] &lt;- (resp[,c(10,11)]==3)*1  #Key for items 10 and 11 is C.
+
+#Run IRT analysis for partial credit model (MML estimation)
+mod1 &lt;- TAM::tam.mml(Scored)
+
+#Item parameters
+mod1$xsi
+
+#Thurstonian thresholds
+tthresh &lt;- TAM::tam.threshold(mod1)
+tthresh
+
+## Not run: 
+#Plot Thurstonian thresholds
+windows (width=8, height=7)
+par(ps=9)
+dotchart(t(tthresh), pch=19)
+# plot expected response curves
+plot( mod1, ask=TRUE)
+
+#Re-run IRT analysis in JML
+mod1.2 &lt;- TAM::tam.jml(Scored)
+stats::var(mod1.2$WLE)
+
+#Re-run the model with "not-reached" coded as incorrect.
+Scored2 &lt;- Scored
+Scored2[is.na(Scored2)] &lt;- 0
+
+#Prepare anchor parameter values
+nparam &lt;- length(mod1$xsi$xsi)
+xsi &lt;- mod1$xsi$xsi
+anchor &lt;- matrix(c(seq(1,nparam),xsi), ncol=2)
+
+#Run IRT with item parameters anchored on mod1 values
+mod2 &lt;- TAM::tam.mml(Scored2, xsi.fixed=anchor)
+
+#WLE ability estimates
+ability &lt;- TAM::tam.wle(mod2)
+ability
+
+#CTT statistics
+ctt &lt;- TAM::tam.ctt(resp, ability$theta)
+write.csv(ctt,"TIMSS_CTT.csv")
+
+#plot histograms of ability and item parameters in the same graph
+windows(width=4.45, height=4.45, pointsize=12)
+layout(matrix(c(1,1,2),3,byrow=TRUE))
+layout.show(2)
+hist(ability$theta,xlim=c(-3,3),breaks=20)
+hist(tthresh,xlim=c(-3,3),breaks=20)
+
+#Extension
+#Score equivalence table
+dummy &lt;- matrix(0,nrow=16,ncol=11)
+dummy[lower.tri(dummy)] &lt;- 1
+dummy[12:16,c(3,4,7,8)][lower.tri(dummy[12:16,c(3,4,7,8)])]&lt;-2
+
+mod3 &lt;- TAM::tam.mml(dummy, xsi.fixed=anchor)
+wle3 &lt;- TAM::tam.wle(mod3)
+
+## End(Not run)
+</code></pre>
+
+
+</div>

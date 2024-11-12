@@ -1,0 +1,140 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>guided_section_tour</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A guided section tour path.</h2>
+
+<h3>Description</h3>
+
+<p>The guided section tour is a variation of the guided tour that is
+using a section pursuit index for the selection of target planes.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">guided_section_tour(
+  index_f,
+  d = 2,
+  alpha = 0.5,
+  cooling = 0.99,
+  max.tries = 25,
+  max.i = Inf,
+  v_rel = NULL,
+  anchor = NULL,
+  search_f = search_geodesic,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>index_f</code></td>
+<td>
+<p>the section pursuit index function to optimise. The function
+needs to take three arguments, the projected data, the vector of distances
+from the current projection plane, and the slice thickness h.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d</code></td>
+<td>
+<p>target dimensionality</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>the initial size of the search window, in radians</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cooling</code></td>
+<td>
+<p>the amount the size of the search window should be adjusted
+by after each step</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.tries</code></td>
+<td>
+<p>the maximum number of unsuccessful attempts to find
+a better projection before giving up</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>max.i</code></td>
+<td>
+<p>the maximum index value, stop search if a larger value is found</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>v_rel</code></td>
+<td>
+<p>relative volume of the slice. If not set, suggested value
+is calculated and printed to the screen.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>anchor</code></td>
+<td>
+<p>A vector specifying the reference point to anchor the slice.
+If NULL (default) the slice will be anchored at the data center.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>search_f</code></td>
+<td>
+<p>the search strategy to use</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>arguments sent to the search_f</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Usually, you will not call this function directly, but will pass it to
+a method that works with tour paths like <code>animate_slice</code>,
+<code>save_history</code> or <code>render</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>slice_index</code> for an example of an index functions.
+<code>search_geodesic</code>, <code>search_better</code>,
+<code>search_better_random</code> for different search strategies
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># Generate samples on a 3d hollow sphere using the geozoo package
+set.seed(12345)
+sphere3 &lt;- geozoo::sphere.hollow(3)$points
+# Columns need to be named before launching the tour
+colnames(sphere3) &lt;- c("x1", "x2", "x3")
+# Off-center anchoring
+anchor3 &lt;- matrix(rep(0.75, 3), ncol=3)
+# Index setup
+r_breaks &lt;- linear_breaks(5, 0, 1)
+a_breaks &lt;- angular_breaks(10)
+eps &lt;- estimate_eps(nrow(sphere3), ncol(sphere3), 0.1 / 1, 5 * 10, 10, r_breaks)
+idx &lt;- slice_index(r_breaks, a_breaks, eps, bintype = "polar", power = 1, reweight = TRUE, p = 3)
+# Running the guided section tour select sections showing a big hole in the center
+animate_slice(sphere3, guided_section_tour(idx, v_rel = 0.1, anchor = anchor3, max.tries = 5),
+  v_rel = 0.1, anchor = anchor3
+)
+</code></pre>
+
+
+</div>

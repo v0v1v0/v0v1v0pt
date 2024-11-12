@@ -1,0 +1,144 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>trendsegment</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Detecting linear trend changes for univariate time series</h2>
+
+<h3>Description</h3>
+
+<p>The main function of the package <code>trendsegmentR</code>. This function estimates the number and locations of change-points in linear trend of noisy data. The estimated change-points may contain point anomalies (segments including only one data point) if any. It also returns the estimated signal, the best linear fit for each segment between a pair of adjacent change-points. The algorithm includes three steps, Tail-Greedy Unbalanced Wavelet (TGUW) transform (<code>TGUW</code>), thresholding (<code>thresholding</code>) and inverse TGUW transform (<code>invTGUW</code>).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">trendsegment(
+  x,
+  indep = FALSE,
+  th.const = krt.hvt(x)$thr,
+  p = 0.04,
+  bal = 0,
+  minsegL = floor(0.9 * log(length(x))),
+  continuous = FALSE,
+  connected = FALSE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A data vector to be examined for change-point detection.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indep</code></td>
+<td>
+<p>If x is known to be independent over time, let indep=TRUE, otherwise the default is indep=FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>th.const</code></td>
+<td>
+<p>Robust thresholding parameter used in <code>thresholding</code>. The default is obtained by considering sample kurtosis and long run standard deviation. The exact magnitude of the threshold also depends on <code>sigma</code> which is estimated by Median Absolute Deviation (MAD) method under the i.i.d. Gaussian noise assumption.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>p</code></td>
+<td>
+<p>Proportion of all possible remaining merges which specifies the number of merges allowed in a single pass over the data. This is used in <code>TGUW</code> and the default is 0.04.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bal</code></td>
+<td>
+<p>The minimum ratio of the length of the shorter region to the length of the entire merging region especially when the merges of Type 2 (merging one initial and a paired smooth coefficient) or of Type 3 (merging two sets of (paired) smooth coefficients) are performed. The default is set to 0.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minsegL</code></td>
+<td>
+<p>The minimum segment length of estimated signal returned by <code>trendsegment</code>. The default is set to <code>sigma * log(n)</code> for the noise which is possibly dependent and/or non-Gaussian.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>continuous</code></td>
+<td>
+<p>If continuous=TRUE, the estimated signal returned by <code>trendsegment</code> is continuous at change-points, otherwise discontinuous at change-points. The default is set to FALSE.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>connected</code></td>
+<td>
+<p>If connected=TRUE, the <code>trendsegment</code> algorithm puts the connected rule above the <code>minsegL</code>, otherwise it makes keeping the <code>minsegL</code> a priority. The default is set to FALSE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The algorithm is described in H. Maeng and P. Fryzlewicz (2023), Detecting linear trend changes in data sequences.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list with the following.
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>The original input vector <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>est</code></td>
+<td>
+<p>The estimated piecewise-linear signal of <code>x</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>no.of.cpt</code></td>
+<td>
+<p>The estimated number of change-points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cpt</code></td>
+<td>
+<p>The estimated locations of change-points.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Hyeyoung Maeng <a href="mailto:hyeyoung.maeng@durham.ac.uk">hyeyoung.maeng@durham.ac.uk</a>, Piotr Fryzlewicz <a href="mailto:p.fryzlewicz@lse.ac.uk">p.fryzlewicz@lse.ac.uk</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TGUW</code>, <code>thresholding</code>, <code>invTGUW</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">x &lt;- c(rep(0,100), seq(0, 4, length.out = 100), rep(3, 100), seq(3, -1, length.out=99))
+n &lt;- length(x)
+x &lt;- x + rnorm(n)
+tsfit &lt;- trendsegment(x = x)
+tsfit
+
+plot(x, type = "b", ylim = range(x, tsfit$est))
+lines(tsfit$est, col=2, lwd=2)
+abline(v=tsfit$cpt, col=3, lty=2, lwd=2)
+</code></pre>
+
+
+</div>

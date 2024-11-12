@@ -1,0 +1,437 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tfunHDDC</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+tfunHDDC: Function for Model-Based Clustering of Functional Data with Outliers Using the t-Distribution.
+</h2>
+
+<h3>Description</h3>
+
+<p>tfunHDDC is an adaptation of funHDDC (Schmutz et al., 2018) that uses t-distributions for robust clustering in the presence of outliers.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tfunHDDC(data, K=1:10, model="AkjBkQkDk", known=NULL,dfstart=50, dfupdate="approx",
+           dfconstr="no", threshold=0.1, itermax=200, eps=1e-6, init='random',
+           criterion="bic", d_select="Cattell", init.vector=NULL,
+           show=TRUE, mini.nb=c(5, 10), min.individuals=2, mc.cores=1, nb.rep=2,
+           keepAllRes=TRUE, kmeans.control = list(), d_max=100, d_range=2,
+           verbose = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+
+<p>In the univariate case: a functional data object produced by the fda package. In the multivariate case: a list of functional data objects.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>K</code></td>
+<td>
+
+<p>The number of clusters or list of clusters to try, for example K=2:10.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfstart</code></td>
+<td>
+
+<p>The df (degrees of freedom) to which we initialize the t-distribution.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfupdate</code></td>
+<td>
+
+<p>Either "numeric", or "approx". The default is "approx" indicating a closed form approximation be used. Alternatively, "numeric" can be specified which makes use of <code>uniroot</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>dfconstr</code></td>
+<td>
+
+<p>"yes" when df (degrees of freedom) for the t-distribution should be the same between all clusters; "no" when df may be different between clusters.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+
+<p>The chosen model among 'AkjBkQkDk', 'AkjBQkDk', 'AkBkQkDk', 'ABkQkDk', 'AkBQkDk', 'ABQkDk'. 'AkjBkQkDk' is the default. We can test multiple models at the same time with the command c(). For example c("AkjBkQkDk","AkjBQkDk").
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>threshold</code></td>
+<td>
+
+<p>The threshold of the Cattell' scree-test used for selecting the group-specific intrinsic dimensions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>known</code></td>
+<td>
+
+<p>A vector of known classifications that can be numeric or <code>NA</code>. It is optional for clustering. For classification, curves with unknown classification should be given the value <code>NA</code> within <code>known</code> (see the examples below). Must be the same length as the number of curves in the data set. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itermax</code></td>
+<td>
+
+<p>The maximum number of iterations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+
+<p>The threshold of the convergence criterion.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init</code></td>
+<td>
+
+<p>A character string. It is the way to initialize the EM algorithm. There are five ways of initialization: “kmeans” (default), “param”, “random”, “mini-em”, “vector”, or "tkmeans". See details for more information. It can also be directly initialized with a vector containing the prior classes of the observations.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>criterion</code></td>
+<td>
+
+<p>The criterion used for model selection: bic (default) or icl. 
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d_select</code></td>
+<td>
+
+<p>“Cattell” (default), “BIC”, or "grid". This parameter selects which method to use to select the intrinsic dimensions of subgroups. "grid" will select d based on thecriterion value after running each combination of d1, d2, ..., dK for the groups. d used for each group is based on the values for d_range. "grid" will only work for a single value of K (not a list). See details for more information.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>init.vector</code></td>
+<td>
+
+<p>A vector of integers or factors. It is a user-given initialization. It should be of the same length as of the data. Only used when init="vector".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>show</code></td>
+<td>
+
+<p>Use show = FALSE to settle off the informations that may be printed.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mini.nb</code></td>
+<td>
+
+<p>A vector of integers of length two. This parameter is used in the “mini-em” initialization. The first integer sets how many times the algorithm is repeated; the second sets the maximum number of iterations the algorithm will do each time. For example, if init=“mini-em” and mini.nb=c(5,10), the algorithm wil be launched 5 times, doing each time 10 iterations; finally the algorithm will begin with the initialization that maximizes the log-likelihood.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>min.individuals</code></td>
+<td>
+
+<p>This parameter is used to control for the minimum population of a class. If the population of a class becomes stricly inferior to 'min.individuals' then the algorithm stops and gives the message: 'pop&lt;min.indiv.'. Here the meaning of "population of a class" is the sum of its posterior probabilities. The value of 'min.individuals' cannot be lower than 2.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mc.cores</code></td>
+<td>
+
+<p>Positive integer, default is 1. If mc.cores&gt;1, then parallel computing is used, using mc.cores cores. Warning for Windows users only: the parallel computing can sometimes be slower than using one single core (due to how parLapply works).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nb.rep</code></td>
+<td>
+
+<p>A positive integer (default is 1 for kmeans initialization and 20 for random initialization). Each estimation (i.e. combination of (model, K, threshold)) is repeated nb.rep times and only the estimation with the highest log-likelihood is kept.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>keepAllRes</code></td>
+<td>
+
+<p>Logical. Should the results of all runs be kept? If so, an argument all_results is created in the results. Default is TRUE.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kmeans.control</code></td>
+<td>
+
+<p>A list. The elements of this list should match the parameters of the <code>kmeans</code> initialization (see kmeans help for details). The parameters are “iter.max”, “nstart” and “algorithm”. "alpha" is an added parameter for the <code>tkmeans</code> initialization (see tkmeans help for details)
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d_max</code></td>
+<td>
+
+<p>A positive integer. The maximum number of dimensions to be computed. Default is 100. It means that the instrinsic dimension of any cluster cannot be larger than d_max. It quickens a lot the algorithm for datasets with a large number of variables (e.g. thousands).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>d_range</code></td>
+<td>
+
+<p>Vector of values to use for the intrinsic dimension for each group when d_select="grid".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+
+<p>Whether to print progress and approximate timing information as tfunHDDC executes. TRUE (default when running in serial) or FALSE (default when running parallel).
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>If we choose init="random", the algorithm is run 20 times with the same model options and the solution which maximises the log-likelihood is printed. This explains why sometimes with this initialization it runs a bit slower than with 'kmeans' initialization.
+</p>
+<p>If the warning message: "In tfunHDDC(...) : All models diverged" is printed, it means that the algorithm found less classes that the chosen number (parameter K). Because the EM algorithm is used, it could be because of a bad initialization of the EM algorithm. So we have to restart the algorithm multiple times in order to check if with a new initialization of the EM algorithm the model converges, or if there is no solution with the chosen number K.
+</p>
+<p>The different initializations are:
+</p>
+<p>“mini-em”:
+it is an initialization strategy for which the classes are randomly initialized and the EM algorithm is run for several iterations.  This action is repetead a few times (the default is 5 iterations and 10 times). At the end, the initialization chosen is the one which maximise the log-likelihood (see mini.nb for more information about its parameters).
+</p>
+<p>“random”:
+the classes are randomly given using a multinomial distribution
+</p>
+<p>“kmeans”:
+the classes are initialized using the kmeans function (with algorithm="Hartigan-Wong"; nstart=4; iter.max=50); note that the user can use his own arguments for kmeans using the dot-dot-dot argument
+</p>
+<p>“tkmeans”:
+the classes are initialized using the tkmeans function (with same default initialization as kmeans); note that the user can use his own arguments for tkmeans using the dot-dot-dot argument
+</p>
+<p>A prior class "vector":
+It can also be directly initialized with a vector containing the prior classes of the observations. To do so use init="vector" and provide the vector in the argument init.vector.
+</p>
+<p>Note that the BIC criterion used in this function is to be maximized and is defined as 2*LL-k*log(n) where LL is the log-likelihood, k is the number of parameters and n is the number of observations.
+</p>
+<p>There are three methods for selecting the intrinsic dimension using d_select:
+</p>
+<p>"Cattell":
+Runs a Cattell's scree test to approximate the intrinsic dimension that yields the greatest improvement in clustering.
+</p>
+<p>"BIC":
+At each iteration we tests each value for each group's intrinsic dimension and sets the intrinsic dimension that yields the best BIC.
+</p>
+<p>"grid":
+Runs every combination of hyperparameters (eg. K=2, threshold = 0.05, model = ...) for every combination of intrinsic dimensions that can be set with the given d_range (with K = 2 and d_range = c(2, 10) it would set (2,2), (2, 10), (10, 2), and (10, 10)). Due to the sharp increase in test cases it is recommended that this mode is run in parallel if possible. Doing an intial short run to approximate the timing with verbose = TRUE is suggested as well.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>d</code></td>
+<td>
+<p>The number of dimensions for each cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>a</code></td>
+<td>
+<p>Values of parameter a for each cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>b</code></td>
+<td>
+<p>Values of parameter b for each cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mu</code></td>
+<td>
+<p>The mean of each cluster in the original space.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prop</code></td>
+<td>
+<p>The proportion of individuals in each cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loglik</code></td>
+<td>
+<p>The maximum of log-likelihood.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>loglik_all</code></td>
+<td>
+<p>The log-likelihood at each iteration.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>posterior</code></td>
+<td>
+<p>The posterior probability for each individual to belong to each cluster.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>class</code></td>
+<td>
+<p>The clustering partition.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>BIC</code></td>
+<td>
+<p>The BIC value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ICL</code></td>
+<td>
+<p>The ICL value.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>complexity</code></td>
+<td>
+<p>the number of parameters that are estimated.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>all_results</code></td>
+<td>
+<p>if multiple number of clusters or models are considered, results for each model are stored here</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nux</code></td>
+<td>
+<p>Values for the degrees of freedom of the t-distributions for each group.</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Cristina Anton, Iain Smith, and Malcolm Nielsen
+</p>
+
+
+<h3>References</h3>
+
+<p>- Andrews JL and McNicholas PD. “Model-based clustering, classification, and discriminant analysis with the multivariate <em>t</em>-distribution: The <em>t</em>EIGEN family” <em>Statistics and Computing</em> 22(5), 1021–1029.
+</p>
+<p>- Andrews JL, McNicholas PD, and Subedi S (2011) “Model-based classification via mixtures of multivariate t-distributions” <em>Computational Statistics and Data Analysis</em> 55, 520–529.
+</p>
+<p>- C.Bouveyron and J.Jacques, Model-based Clustering of Time Series in Group-specific Functional Subspaces, Advances in Data Analysis and Classification, vol. 5 (4), pp. 281-300, 2011 &lt;doi:10.1007/s11634-011-0095-6&gt;
+</p>
+<p>- Schmutz A, Jacques J, Bouveyron C, et al (2020) Clustering multivariate functional data in group-specific functional subspaces. Comput Stat 35:1101-1131
+</p>
+<p>- Cristina Anton, Iain Smith Model-based clustering of functional data via mixtures of <code class="reqn">t</code> distributions. Advances in Data Analysis and Classification (to appear).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>teigen</code>, <code>kmeans</code>, <code>tkmeans</code>,<code>predict.tfunHDDC</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+set.seed(1027)
+#simulataed univariate data
+
+data = genModelFD(ncurves=300, nsplines=35, alpha=c(0.9,0.9,0.9),
+                  eta=c(10, 7, 17))
+
+plot(data$fd, col = data$groupd)
+
+clm = data$groupd
+
+model1=c("AkjBkQkDk", "AkjBQkDk", "AkBkQkDk", "ABkQkDk", "AkBQkDk", "ABQkDk")
+
+t1&lt;-tfunHDDC(data$fd,K=3,threshold=0.2,init="kmeans",nb.rep=1,dfconstr="no", 
+             dfupdate="numeric", model=model1[1], itermax=10)
+
+if (!is.null(t1$class)) table(clm, t1$class)
+
+###############example when some classifications are known
+
+known1=rep(NA,1,300)
+
+known1[1]=clm[1]
+
+known1[103]=clm[103]
+
+known1[250]=clm[250]
+
+t2&lt;-tfunHDDC(data$fd,K=3,threshold=0.2,init="kmeans",nb.rep=1,dfconstr="no", 
+             dfupdate="numeric", model=model1[1],known=known1, itermax=10)
+if (!is.null(t2$class)) table(clm, t2$class)
+
+####### example when some classifications are known 
+
+known1=rep(NA,1,300)
+
+known1[1:100]=rep(3,1,50)
+
+t3&lt;-tfunHDDC(data$fd,K=3,threshold=0.2,init="kmeans",nb.rep=1,dfconstr="no", 
+             dfupdate="numeric", model=model1[1],known=known1, itermax=10)
+
+if (!is.null(t3$class)) table(clm, t3$class)
+
+############################multivariate simulated data
+set.seed(1027)
+
+conTrig &lt;- genTriangles()
+
+cls = conTrig$groupd # groups 5 and 6 (contaminated) into 1 and 3 respectively
+
+res_s = tfunHDDC(conTrig$fd, K=4, dfconstr="no", dfupdate="numeric", 
+                 model="ABKQKDK", init="kmeans", threshold=0.2, nb.rep=1, 
+                 itermax=10)
+
+if (!is.null(res_s$class)) table(cls, res_s$class)
+
+</code></pre>
+
+
+</div>

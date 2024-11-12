@@ -1,0 +1,283 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>get_tiles</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>A user-friendly way to get USGS National Map data tiles for an area</h2>
+
+<h3>Description</h3>
+
+<p>This function splits the area contained within a bounding box into a set of
+tiles, and retrieves data from the USGS National map for each tile. As of
+version 0.5.0, the method for lists has been deprecated.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+
+## S3 method for class 'sf'
+get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+
+## S3 method for class 'sfc'
+get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+
+## S3 method for class 'Raster'
+get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+
+## S3 method for class 'SpatRaster'
+get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+
+## S3 method for class 'list'
+get_tiles(
+  data,
+  output_prefix = tempfile(),
+  side_length = NULL,
+  resolution = 1,
+  services = "elevation",
+  verbose = FALSE,
+  georeference = TRUE,
+  projected = NULL,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>An <code>sf</code> or <code>SpatRaster</code> object; tiles will be downloaded for the
+full extent of the provided object.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>output_prefix</code></td>
+<td>
+<p>The file prefix to use when saving tiles.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>side_length</code></td>
+<td>
+<p>The length, in meters, of each side of tiles to download.
+If <code>NULL</code>, defaults to the maximum side length permitted by the least
+permissive service requested.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>resolution</code></td>
+<td>
+<p>How many meters are represented by each pixel? The default
+value of 1 means that 1 pixel = 1 meter, while a value of 2 means that
+1 pixel = 2 meters, and so on.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>services</code></td>
+<td>
+<p>A character vector of services to download data from. Current
+options include "3DEPElevation", "USGSNAIPPlus", and "nhd". Users can also
+use short codes to download a specific type of data without specifying the
+source; current options for short codes include "elevation" (equivalent to
+"3DEPElevation"), "ortho" (equivalent to "USGSNAIPPlus), and "hydro" ("nhd").
+Short codes are
+not guaranteed to refer to the same source across releases. Short codes are
+converted to their service name and then duplicates are removed, so any given
+source will only be queried once per tile.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical: should tile retrieval functions run in verbose mode?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>georeference</code></td>
+<td>
+<p>Logical: should tiles be downloaded as PNGs without
+georeferencing, or should they be downloaded as georeferenced TIFF files?
+This option does nothing when only elevation data is being downloaded.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>projected</code></td>
+<td>
+<p>Logical: is <code>data</code> in a projected coordinate reference
+system? If <code>NULL</code>, the default, inferred from sf::st_is_longlat.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional arguments passed to hit_national_map_api.
+These can be used to change default query parameters or as additional options
+for the National Map services. See below for more details.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A list of the same length as the number of unique services requested,
+containing named vectors of where data files were saved to. Returned
+invisibly.
+</p>
+
+
+<h3>Available Datasources</h3>
+
+<p>The following services are currently available
+(with short codes in parentheses where applicable). See links for API
+documentation.
+</p>
+
+<ul>
+<li> <p><a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">3DEPElevation</a>
+(short code: elevation)
+</p>
+</li>
+<li> <p><a href="https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage">USGSNAIPPlus</a>
+(short code: ortho)
+</p>
+</li>
+<li> <p><a href="https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer">USGSNAIPImagery</a>
+</p>
+</li>
+<li> <p><a href="https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer">nhd</a>
+(short code: hydro)
+</p>
+</li>
+<li> <p><a href="https://carto.nationalmap.gov/arcgis/rest/services/govunits/MapServer">govunits</a>
+</p>
+</li>
+<li> <p><a href="https://carto.nationalmap.gov/arcgis/rest/services/contours/MapServer">contours</a>
+</p>
+</li>
+<li> <p><a href="https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer">geonames</a>
+</p>
+</li>
+<li> <p><a href="https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer">NHDPlus_HR</a>
+</p>
+</li>
+<li> <p><a href="https://carto.nationalmap.gov/arcgis/rest/services/structures/MapServer">structures</a>
+</p>
+</li>
+<li> <p><a href="https://carto.nationalmap.gov/arcgis/rest/services/transportation/MapServer">transportation</a>
+</p>
+</li>
+<li> <p><a href="https://hydro.nationalmap.gov/arcgis/rest/services/wbd/MapServer">wbd</a>
+("short code": watersheds)
+</p>
+</li>
+<li> <p><a href="https://www.usgs.gov/centers/geosciences-and-environmental-change-science-center/science/global-ecosystems">ecosystems</a>
+</p>
+</li>
+<li> <p><a href="https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer">USGSTopo</a>
+</p>
+</li>
+<li> <p><a href="https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer">USGSShadedReliefOnly</a>
+</p>
+</li>
+<li> <p><a href="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer">USGSImageryOnly</a>
+</p>
+</li>
+<li> <p><a href="https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer">USGSHydroCached</a>
+</p>
+</li>
+<li> <p><a href="https://basemap.nationalmap.gov/arcgis/rest/services/USGSTNMBlank/MapServer">USGSTNMBlank</a>
+</p>
+</li>
+</ul>
+<h3>Additional Arguments</h3>
+
+<p>The <code>...</code> argument can be used to pass additional arguments to the
+National Map API or to edit the hard-coded defaults used by this function.
+More information on common arguments to change can be found in
+hit_national_map_api. Note that <code>...</code> can also be used to change
+the formats returned by the server, but that doing so while using this
+function will likely cause the function to error (or corrupt the output
+data). To download files in different formats, use hit_national_map_api.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>Other data retrieval functions: 
+<code>hit_national_map_api()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+simulated_data &lt;- data.frame(
+  id = seq(1, 100, 1),
+  lat = runif(100, 44.04905, 44.17609),
+  lng = runif(100, -74.01188, -73.83493)
+)
+
+simulated_data &lt;- sf::st_as_sf(simulated_data, coords = c("lng", "lat"))
+
+get_tiles(simulated_data, tempfile())
+
+## End(Not run)
+
+</code></pre>
+
+
+</div>

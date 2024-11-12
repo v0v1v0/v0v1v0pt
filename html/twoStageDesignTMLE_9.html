@@ -1,0 +1,254 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>twoStageTMLEmsm</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>twoStageTMLEmsm</h2>
+
+<h3>Description</h3>
+
+<p>Inverse probability of censoring weighted TMLE for evaluating MSM
+parameters when the full set of covariates is available on only
+a subset of observations, as in a 2-stage design.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">twoStageTMLEmsm(
+  Y,
+  A,
+  W,
+  V,
+  Delta.W,
+  W.stage2,
+  Delta = rep(1, length(Y)),
+  pi = NULL,
+  piform = NULL,
+  pi.SL.library = c("SL.glm", "SL.gam", "SL.glmnet", "tmle.SL.dbarts.k.5"),
+  V.pi = 10,
+  pi.discreteSL = TRUE,
+  condSetNames = c("A", "V", "W", "Y"),
+  id = NULL,
+  Q.family = "gaussian",
+  augmentW = TRUE,
+  augW.SL.library = c("SL.glm", "SL.glmnet", "tmle.SL.dbarts2"),
+  rareOutcome = FALSE,
+  verbose = FALSE,
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>outcome of interest (missingness allowed)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>binary treatment indicator</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>matrix or data.frame of covariates measured on entire population</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+<p>vector, matrix, or dataframe of covariates used to define MSM strata</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Delta.W</code></td>
+<td>
+<p>Indicator of inclusion in subset with additional information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W.stage2</code></td>
+<td>
+<p>matrix or data.frame of covariates measured in subset population</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Delta</code></td>
+<td>
+<p>binary indicator that outcome Y is observed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pi</code></td>
+<td>
+<p>optional vector of sampling probabilities</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>piform</code></td>
+<td>
+<p>optional parametric regression model for estimating pi</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pi.SL.library</code></td>
+<td>
+<p>optional SL library specification for estimating pi
+(ignored when piform or pi is provided)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.pi</code></td>
+<td>
+<p>optional number of cross-validation folds for super learning
+(ignored when piform or pi is provided)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pi.discreteSL</code></td>
+<td>
+<p>flag to indicate whether to use ensemble or discrete
+super learning (ignored when piform or pi is provided)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>condSetNames</code></td>
+<td>
+<p>variables to condition on when estimating pi. Default is
+covariates in <code>V</code> and <code>W</code>.Can optionally also condition
+on <code>A</code> and/or <code>Y</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>optional indicator of independent units of observation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.family</code></td>
+<td>
+<p>outcome regression family, "gaussian" or "binomial"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>augmentW</code></td>
+<td>
+<p>set to <code>TRUE</code> to augment <code>W</code> with predicted outcome
+values when <code>A = 0</code> and <code>A = 1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>augW.SL.library</code></td>
+<td>
+<p>super learner library for preliminary outcome
+regression model (ignored when <code>augmentW</code> is <code>FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rareOutcome</code></td>
+<td>
+<p>when <code>TRUE</code> sets <code>V.Q = 20, Q.discreteSL = TRUE</code>,
+<code>Q.SL.library</code> includes glm, glmnet, bart</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>when <code>TRUE</code> prints informative messages</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>other arugments passed to the <code>tmleMSM</code> function</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+
+<p>Object of class "twoStageTMLE"
+</p>
+<dl>
+<dt>tmle</dt>
+<dd>
+<p>Treatment effect estimates and summary information from
+call to <code>tmleMSM</code> function</p>
+</dd>
+<dt>twoStage</dt>
+<dd>
+<p>IPCW weight estimation summary,
+<code>pi</code> are the probabilities,<code>coef</code> are SL weights or coefficients
+from glm fit, <code>type</code> of estimation procedure,
+<code>discreteSL</code> flag indicating whether discrete super learning was used</p>
+</dd>
+<dt>augW</dt>
+<dd>
+<p>Matrix of predicted outcomes based on stage 1 covariates only</p>
+</dd>
+</dl>
+<h3>See Also</h3>
+
+
+<ul>
+<li> <p><code>tmle::tmleMSM()</code> for details on customizing the estimation procedure
+</p>
+</li>
+<li> <p><code>twoStageTMLE()</code> for estimating marginal effects
+</p>
+</li>
+</ul>
+<h3>Examples</h3>
+
+<pre><code class="language-R">n &lt;- 1000
+set.seed(10)
+W1 &lt;- rnorm(n)
+W2 &lt;- rnorm(n)
+W3 &lt;- rnorm(n)
+A &lt;- rbinom(n, 1, plogis(-1 + .2*W1 + .3*W2 + .1*W3))
+Y &lt;- 10 + A + W1 + W2 + A*W1 + W3 + rnorm(n)
+Y.bin &lt;- rbinom(n, 1, plogis(-4.6 - 1.8* A + W1 + W2 -.3 *A*W1 + W3))
+# Set 400 obs with data on W3, more likely if W1 &gt; 1
+n.sample &lt;- 400
+p.sample &lt;- 0.5 + .2*(W1 &gt; 1)
+rows.sample &lt;- sample(1:n, size = n.sample, p = p.sample)
+Delta.W &lt;- rep(0,n)
+Delta.W[rows.sample] &lt;- 1
+W3.stage2 &lt;- cbind(W3 = W3[Delta.W==1])
+
+# 1. specify parametric models, misspecified outcome model (not recommended)
+result1.MSM &lt;- twoStageTMLEmsm(Y=Y, A=A, V= cbind(W1), W=cbind(W2), 
+Delta.W = Delta.W, W.stage2 = W3.stage2, augmentW = FALSE,
+piform = "Delta.W~ I(W1 &gt; 0)", MSM = "A*W1", augW.SL.library = "SL.glm",
+Qform = "Y~A+W1",gform="A~W1 + W2 +W3", hAVform = "A~1", verbose=TRUE)
+summary(result1.MSM)
+
+# 2. Call again, passing in previously estimated observation weights, 
+# note that specifying a correct model for Q improves efficiency
+result2.MSM &lt;- twoStageTMLEmsm(Y=Y, A=A, V= cbind(W1), W=cbind(W2), 
+Delta.W = Delta.W, W.stage2 = W3.stage2, augmentW = FALSE,
+pi = result1.MSM$twoStage$pi, MSM = "A*W1",
+Qform = "Y~ A + W1 + W2 + A*W1 + W3",gform="A~W1 + W2 +W3", hAVform = "A~1")
+cbind(SE.Qmis = result1.MSM$tmle$se, SE.Qcor = result2.MSM$tmle$se)
+
+
+#Binary outcome, augmentW, rareOutcome
+result3.MSM &lt;- twoStageTMLEmsm(Y=Y.bin, A=A, V= cbind(W1), W=cbind(W2), 
+Delta.W = Delta.W, W.stage2 = W3.stage2, augmentW = TRUE,
+piform = "Delta.W~ I(W1 &gt; 0)", MSM = "A*W1", gform="A~W1 + W2 +W3",
+ Q.family = "binomial", rareOutcome=TRUE)
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,118 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>preprocess.tspred</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Preprocess method for <code>tspred</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>Performs preprocessing of the time series data contained in a <code>tspred</code> class object
+based on a particular set of transformation methods. Each transformation method is defined
+by a <code>processing</code> object in the list contained in the <code>tspred</code> class object.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'tspred'
+preprocess(obj, prep_test = FALSE, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>obj</code></td>
+<td>
+<p>An object of class <code>tspred</code> defining a particular time series prediction process.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prep_test</code></td>
+<td>
+<p>Should the testing set of data be preprocessed as well?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Other parameters passed to the method <code>preprocess</code> of
+the <code>processing</code> objects from <code>obj</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The function <code>preprocess.tspred</code> recursively calls the method <code>preprocess</code>
+on each <code>processing</code> object contained in <code>obj</code>. The preprocessed time series
+resulting from each of these calls is used as input to the next call. Thus, the order of the
+list of <code>processing</code> objects in <code>obj</code> becomes important. Finally, the produced
+preprocessed time series data are introduced in the structure of the <code>tspred</code> class object in <code>obj</code>.
+</p>
+<p>If any transformation method parameters are computed during preprocessing, they are duly updated
+in the structure of the <code>tspred</code> class object in <code>obj</code>. This is important not
+only for provenance and reprodutibility of the prediction process, but it is also crucial
+for the postprocessing step, since the same parameters must be used for reversing any transformations.
+Furthermore, if <code>prep_test</code> is <code>TRUE</code>, testing sets are preprocessed
+with the same parameters saved from preprocessing the training set.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of class <code>tspred</code> with updated structure containing
+preprocessed time series data.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Rebecca Pontes Salles
+</p>
+
+
+<h3>See Also</h3>
+
+<p>[tspred()] for defining a particular time series prediction process,
+and [LT()] for defining a time series transformation method.
+</p>
+<p>Other preprocess: 
+<code>postprocess.tspred()</code>,
+<code>subset()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(CATS)
+
+#Obtaining objects of the processing class
+proc1 &lt;- subsetting(test_len=20)
+proc2 &lt;- BoxCoxT(lambda=NULL)
+proc3 &lt;- WT(level=1, filter="bl14")
+
+#Obtaining objects of the modeling class
+modl1 &lt;- ARIMA()
+
+#Obtaining objects of the evaluating class
+eval1 &lt;- MSE_eval()
+
+#Defining a time series prediction process
+tspred_1 &lt;- tspred(subsetting=proc1,
+                   processing=list(BCT=proc2,
+                                   WT=proc3),
+                   modeling=modl1,
+                   evaluating=list(MSE=eval1)
+)
+summary(tspred_1)
+
+tspred_1 &lt;- subset(tspred_1, data=CATS[3])
+tspred_1 &lt;- preprocess(tspred_1,prep_test=FALSE)
+
+</code></pre>
+
+
+</div>

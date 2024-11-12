@@ -1,0 +1,104 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>make_rowgroups</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group Rows of a Table into Sets of Fixed Size </h2>
+
+<h3>Description</h3>
+
+<p>Create blocks representing groups of consecutive rows of a table, of
+specified size.  (This is an internal utility function, not intended to be
+called directly by package users.)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">make_rowgroups(stdblks, rowheadruns, rowgroupSize)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>stdblks</code></td>
+<td>
+<p>A data frame containing the standard set of table blocks created by
+<code>tblBlocks</code> (without row groups).  Specifically, the row header
+hierarchy blocks <code>rowblock/A/i/j</code> and <code>rowblock/C/i/j</code> are
+required, along with <code>rowhead_and_body</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rowheadruns</code></td>
+<td>
+<p>A list with one data frame per layer of row headers (from outer to inner),
+containing information about the hierarchical structure of the row
+headers.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rowgroupSize</code></td>
+<td>
+<p>Numeric scalar.  If not 0 or NA, blocks will be created by grouping
+consecutive rows of the table body into sets of this size.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This is an internal support function for <code>tblBlocks</code> and
+<code>tblHvrules</code>.  The code relies on the standard naming of table blocks
+in <code>tblBlocks</code>.
+</p>
+<p>When a table has many rows within a given level of the row header
+hierarchy, the table may be easier to read if rows are grouped into
+smaller sets of fixed size (groups of 5, for example), with some extra
+space inserted between groups.  To facilitate this, this function creates
+blocks representing such groups.  The block type is "rowblock" and subtype
+is "G".
+</p>
+<p>Grouping respects the row header hierarchy: the innermost header layer
+that has runs of repeated values is identified (layer <code>i</code> say), and
+grouping is done separately within each of its levels.  The block
+representing a row group spans all columns of the table body as well as
+row header layers out to layer <code>i-1</code>.  Block ID's have the form
+<code>rowblock/G/i/j/k</code>, where <code>j</code> is the level number (within layer
+<code>i</code>) that contains the group, and <code>k</code> is the group number within
+that level.  Thus <code>i</code>, <code>j</code>, and <code>k</code> are the values of
+<code>headlayer</code>, <code>level_in_layer</code>, and <code>group_in_level</code> for the
+block.
+</p>
+<p>However if the table has no row headers, or none of the row header layers
+have runs of repeated values, table rows are simply grouped into sets of
+size <code>rowgroupSize</code>.  <code>headlayer</code> and <code>level_in_layer</code> will
+be NA for the group blocks, and block ID's will have the form
+<code>rowblock/G///k</code>, where <code>k</code> is the group number (and value of
+<code>group_in_level</code>).
+</p>
+
+
+<h3>Value</h3>
+
+<p>An S3 object of class <code>tblBlocks</code>, containing (just) the newly
+created row group blocks.  These have type "rowblock" and subtype "G".
+</p>
+<p>If <code>rowgroupSize</code> is not a finite positive value, the returned object
+will have no blocks (no rows).
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>tblBlocks</code>; <code>headerRuns</code> creates the list
+required by argument <code>rowheadruns</code>.
+</p>
+
+
+</div>

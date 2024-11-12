@@ -1,0 +1,74 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>autograd_function</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Records operation history and defines formulas for differentiating ops.</h2>
+
+<h3>Description</h3>
+
+<p>Every operation performed on Tensor's creates a new function object, that
+performs the computation, and records that it happened. The history is
+retained in the form of a DAG of functions, with edges denoting data
+dependencies (input &lt;- output). Then, when backward is called, the graph is
+processed in the topological ordering, by calling <code>backward()</code> methods of each
+Function object, and passing returned gradients on to next Function's.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">autograd_function(forward, backward)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>forward</code></td>
+<td>
+<p>Performs the operation. It must accept a context <code>ctx</code> as the first argument,
+followed by any number of arguments (tensors or other types). The context can be
+used to store tensors that can be then retrieved during the backward pass.
+See AutogradContext for more information about context methods.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>backward</code></td>
+<td>
+<p>Defines a formula for differentiating the operation. It must accept
+a context <code>ctx</code> as the first argument, followed by as many outputs ad <code>forward()</code>
+returned (as a <code>list()</code>). The names of the arguments don't matter and they are passed
+in the order in which they were returned by <code>forward()</code>. The function should
+return a named list, where each argument is the gradient w.r.t
+the given output, and each element in the returned list should be the gradient
+w.r.t. the corresponding input. The context can be used to retrieve tensors saved
+during the forward pass. It also has an attribute <code>ctx$needs_input_grad</code> as a
+named list of booleans representing whether each input needs gradient.
+E.g., <code>backward()</code> will have <code>ctx$needs_input_grad$input = TRUE</code> if the <code>input</code>
+argument to <code>forward()</code> needs gradient computated w.r.t. the output.
+See AutogradContext for more information about context methods.</p>
+</td>
+</tr>
+</table>
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+
+exp2 &lt;- autograd_function(
+  forward = function(ctx, i) {
+    result &lt;- i$exp()
+    ctx$save_for_backward(result = result)
+    result
+  },
+  backward = function(ctx, grad_output) {
+    list(i = grad_output * ctx$saved_variable$result)
+  }
+)
+}
+</code></pre>
+
+
+</div>

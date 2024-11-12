@@ -1,0 +1,128 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>threg</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>fit a threshold regression model</h2>
+
+<h3>Description</h3>
+
+<p>This function can be used to fit a threshold regressio model based on the first-hitting-time of a boundary by the sample path of a Wiener diffusion process. It uses maximum likelihood estimation method for calculating regression coefficient estimates, asymptotic standard errors and p-values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">threg(formula, data)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>formula</code></td>
+<td>
+<p>a formula object, with the response on the left of a ~ operator, and the independent variables on the right. The response must be a survival object as returned by the Surv function. On the right of the ~ operator, a | operator must be used: on the left of the | operator, users specify independent variables that will be used in the linear regression function for <code class="reqn">\ln{y_0}</code> in the threshold regression model; on the right of the | operator, users specify independent variables that will be used in the linear regression function for <code class="reqn">\mu</code> in the threshold regression model. If users just want to use a constant <code class="reqn">\ln{y_0}</code> or <code class="reqn">\mu</code>, he or she can put 0 or 1 as a placeholder on the left or right of the | operator, instead of listing the independent variables for <code class="reqn">\ln{y_0}</code> or <code class="reqn">\mu</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>input dataset. Such dataset must be a survival dataset including at least the survival time variable and censoring variable. For the censoring variable, 1 should be used to indicate the subjects with failure observed, and 0 should be used to indicate the subjects that are right censored. The dataset can also include other independent variables that will be used in the threshold regression model.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Threshold regression is a recently developed regression methodology to analyze time to event data. For a review of this regression model, see Lee and Whitmore (2006, 2010). A unique feature of threshold regression is that the event time is considered as the time when an underlying stochastic process first hits a boundary threshold. In the context of survival data, for example, the event can be death. The death time of an individual is considered as the time when his/her latent health status  decreases to the zero boundary.
+</p>
+<p>In the <code>threg</code> package, a Wiener process <code class="reqn">Y(t)</code> is used to model the latent health status process. An event is observed when <code class="reqn">Y(t)</code> reaches <code class="reqn">0</code> for the first time. Three parameters of the Wiener process are involved: <code class="reqn">\mu</code>, <code class="reqn">y_0</code> and <code class="reqn">\sigma</code>. Parameter <code class="reqn">\mu</code>, called the drift of the Wiener process, is the rate per unit time at which the level of the sample path is changing. The sample path approaches the threshold if <code class="reqn">\mu &lt;0</code>. Parameter <code class="reqn">y_0</code> is the initial value of the process and is taken as positive. Parameter <code class="reqn">\sigma</code> represents the variability per unit time of the process (Lee and Whitmore 2006). The first hitting time (FHT) of a Wiener process with <code class="reqn">\mu</code>, <code class="reqn">y_0</code> and <code class="reqn">\sigma</code> is an inverse Gaussian distribution with probability density function (p.d.f):
+</p>
+<p style="text-align: center;"><code class="reqn">f(t|\mu,{\sigma}^2,y_0)=\frac{y_0}{\sqrt{2\pi{\sigma^2}t^3}}\exp\left[-\frac{(y_0+\mu t)^2}{2\sigma^2 t}\right],</code>
+</p>
+
+<p>where <code class="reqn">-\infty &lt;\mu &lt;\infty , \sigma^2 &gt;0, \mbox{ and } y_0&gt;0</code>. The p.d.f. is proper if <code class="reqn">\mu \leq 0</code>. The cumulative distribution function of the FHT is:
+</p>
+<p style="text-align: center;"><code class="reqn">F(t|\mu,{\sigma}^2,y_0)=\Phi\left[-\frac{(y_0+\mu t)^2}{\sqrt{\sigma^2 t}}\right]+\exp \left(-\frac{2y_0 \mu}{\sigma^2}\right)\Phi\left[\frac{\mu t - y_0}{\sqrt{\sigma^2 t}}\right],</code>
+</p>
+
+<p>where <code class="reqn">\Phi(\cdot)</code> is the cumulative distribution function of the standard normal distribution. Note that if <code class="reqn">\mu&gt;0</code>, the Wiener process may never hit the boundary at zero and hence there is a probability that the FHT is
+<code class="reqn">\infty</code>, that is, <code class="reqn">P(FHT=\infty)=1-\exp(-2y_0\mu/\sigma^2)</code>.
+</p>
+<p>Since the health status process is usually latent (i.e., unobserved), an arbitrary unit can be used to measure such a process. Hence the variance parameter <code class="reqn">\sigma^2</code> of the process is set to 1 in the <code>threg</code> package to fix the measurement unit of the process. Then we can regress the other two process parameters, <code class="reqn">y_0</code> and <code class="reqn">\mu</code> on covariate data. We assume that <code class="reqn">\mu</code> and <code class="reqn">\ln(y_0)</code> are linear in regression coefficients.
+</p>
+<p>Suppose that the covariate vector is <code class="reqn">\bm{Z'}=(1, Z_1, \cdots, Z_k)</code>, where <code class="reqn">Z_1, \cdots, Z_k</code> are covariates and the leading 1 in <code class="reqn">\bm{Z'}</code> allows for a constant term in the regression relationship. Then <code class="reqn">\ln(y_0)</code> can be linked to the covariates with the following regression form:
+</p>
+<p style="text-align: center;"><code class="reqn">\ln(y_0)=\gamma_0+\gamma_1 Z_1+\cdots + \gamma_k Z_k=\bm{Z' \gamma}</code>
+</p>
+<p> and <code class="reqn">\mu</code> can be linked to the covariates with the following regression form:
+</p>
+<p style="text-align: center;"><code class="reqn">\mu=\beta_0+\beta_1 Z_1+\cdots + \beta_k Z_k=\bm{Z' \beta}</code>
+</p>
+
+<p>Vectors <code class="reqn">\gamma</code> and <code class="reqn">\beta</code> are regression coefficients for <code class="reqn">\ln(y_0)</code> and <code class="reqn">\mu</code>, respectively, with <code class="reqn">\gamma'=(\gamma_0,\cdots,\gamma_k)</code> and <code class="reqn">\beta'=(\beta_0,\cdots,\beta_k)</code>. Note that researchers can set some elements in <code class="reqn">\gamma</code> or <code class="reqn">\beta</code> to zero if they feel the corresponding covariates are not important in predicting <code class="reqn">\ln(y_0)</code> or <code class="reqn">\mu</code>. For example, if covariate <code class="reqn">Z_1</code> in the vector <code class="reqn">Z'</code> is considered not important to predict <code class="reqn">\ln(y_0)</code>, we can remove the <code class="reqn">Z_1</code> term by setting <code class="reqn">\gamma_1</code> to zero.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Tao Xiao
+</p>
+<p>Maintainer: Tao Xiao &lt;taoxiao1@gmail.com&gt;
+</p>
+
+
+<h3>References</h3>
+
+<p>Lee, M-L. T., Whitmore, G. A. (2010)
+Proportional hazards and threshold regression: their theoretical and practical connections., <em>Lifetime Data Analysis
+</em> 16, 2: 196-214.
+</p>
+<p>Lee, M-L. T., Whitmore, G. A. (2006)
+Threshold regression for survival analysis: modeling event times by a stochastic process, <em>Statistical Science
+</em> 21: 501-513.
+</p>
+<p>Klein, J. P., Moeschberger, M. L. (2003)
+<em>Survival Analysis: Techniques for Censored and Truncated Data</em>. 2 edition. Springer-Verlag New York, Inc.
+</p>
+<p>Garrett, J. M. (1997)
+Odds ratios and confidence intervals for logistic regression
+models with effect modification. <em>Stata Technical Bulletin</em>, 36, 1522. Reprinted in <em>Stata
+Technical Bulletin Reprints</em>, vol. 6, pp. 104-114. College Station, TX: Stata Press.
+</p>
+<p>Xiao, T., Whitmore, G. A., He, Xin, Lee, M-L. T. (2015)
+The R Package threg to Implement Threshold Regression Models. <em>Journal of Statistical Software</em>, 66(8), 1-16. URL http://www.jstatsoft.org/v66/i08/.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#load the data "lkr"
+data("lkr")
+
+#Transform the "treatment2" variable into factor variable "f.treatment2" .
+lkr$f.treatment2=factor(lkr$treatment2)
+
+#fit the threshold regression model on the factor variable "f.treatment2", 
+fit&lt;-threg(Surv(weeks, relapse)~ f.treatment2|f.treatment2,data = lkr)
+fit
+
+#load the data "bmt"
+data("bmt")
+
+#Transform the "group" and "fab" variables into factor variables 
+#"f.group" and "f.fab".
+bmt$f.group=factor(bmt$group)
+bmt$f.fab=factor(bmt$fab)
+
+#fit a threshold regression model on the "bmt" dataset, by using "recipient_age" and 
+#"f.fab" as the predictors for ln(y0), and "f.group" and "f.fab" as predictors for mu.
+fit&lt;-threg(Surv(time, indicator)~ recipient_age+f.fab|f.group+f.fab, data = bmt)
+fit
+
+</code></pre>
+
+
+</div>

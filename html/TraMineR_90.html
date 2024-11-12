@@ -1,0 +1,735 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqdist</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Distances (dissimilarities) between sequences</h2>
+
+<h3>Description</h3>
+
+<p>Computes pairwise dissimilarities between sequences or dissimilarity from
+a reference sequence. Several dissimilarity measures can be chosen, including
+optimal matching (OM) and many of its variants, distance based on the count
+of common attributes, and distances between state distributions within sequences.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqdist(seqdata, method, refseq = NULL, norm = "none", indel = "auto", sm = NULL,
+  with.missing = FALSE, full.matrix = TRUE, kweights = rep(1.0, ncol(seqdata)),
+  tpow = 1.0, expcost = 0.5, context, link = "mean", h = 0.5, nu,
+  transindel = "constant", otto, previous = FALSE, add.column = TRUE,
+  breaks = NULL, step = 1, overlap = FALSE, weighted = TRUE,
+  global.pdotj = NULL, prox = NULL, check.max.size=TRUE,
+  opt.args = list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+
+<p>State sequence object of class <code>stslist</code>.
+The sequence data to use.
+Use <code>seqdef</code> to create such an object.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+
+<p>String.
+The dissimilarity measure to use.
+It can be <code>"OM"</code>, <code>"OMloc"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>,
+<code>"OMstran"</code>, <code>"HAM"</code>, <code>"DHD"</code>, <code>"CHI2"</code>, <code>"EUCLID"</code>,
+<code>"LCS"</code>, <code>"LCP"</code>, <code>"RLCP"</code>, <code>"NMS"</code>, <code>"NMSMST"</code>,
+<code>"SVRspell"</code>, or <code>"TWED"</code>. See the Details section.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>refseq</code></td>
+<td>
+
+<p><code>NULL</code>, Integer, State Sequence Object, or List.
+Default: <code>NULL</code>.
+The baseline sequence to compute the distances from.
+</p>
+<p>When an integer, the index of a sequence in <code>seqdata</code> or <code>0</code> for the most frequent sequence.
+</p>
+<p>When a state sequence object, it must contain a single sequence and have the same
+alphabet as <code>seqdata</code>.
+</p>
+<p>When a list, it must be a list of two sets of indexes of <code>seqdata</code> rows.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>norm</code></td>
+<td>
+
+<p>String.
+Default: <code>"none"</code>.
+The normalization to use when <code>method</code> is one of <code>"OM"</code>,
+<code>"OMloc"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>,
+<code>"OMstran"</code>, <code>"TWED"</code>, <code>"HAM"</code>, <code>"DHD"</code>, <code>"LCS"</code>,
+<code>"LCP"</code>, <code>"RLCP"</code>, <code>"CHI2"</code>, <code>"EUCLID"</code>.
+It can be <code>"none"</code>, <code>"auto"</code>, or, except for
+<code>"CHI2"</code> and <code>"EUCLID"</code>, <code>"maxlength"</code>,
+<code>"gmean"</code>, <code>"maxdist"</code>, or <code>"YujianBo"</code>. <code>"auto"</code> is
+equivalent to <code>"maxlength"</code> when <code>method</code> is one of <code>"OM"</code>,
+<code>"HAM"</code>, or <code>"DHD"</code>, to <code>"gmean"</code> when <code>method</code> is one
+of <code>"LCS"</code>, <code>"LCP"</code>, or <code>"RLCP"</code>, to <code>YujianBo</code> when
+<code>method</code> is one of <code>"OMloc"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>,
+<code>"OMstran"</code>, <code>"TWED"</code>. See the Details section.
+
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>indel</code></td>
+<td>
+
+<p>Double, Vector of Doubles, or String.
+Default: <code>"auto"</code>.
+Insertion/deletion cost(s). Applies when <code>method</code> is one of <code>"OM"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>,
+or <code>"OMstran"</code>.
+</p>
+<p>The single state-independent insertion/deletion cost when a double.
+
+</p>
+<p>The state-dependent insertion/deletion costs when a vector of doubles.
+The vector should contain an indel cost by state in the order of the alphabet.
+</p>
+<p>When <code>"auto"</code>, the indel is set as <code>max(sm)/2</code> when <code>sm</code> is
+a matrix and is computed by means of <code>seqcost</code> when <code>sm</code> is
+a string specifying a cost method.
+</p>
+
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sm</code></td>
+<td>
+
+<p><code>NULL</code>, Matrix, Array, or String. Substitution costs.
+Default: <code>NULL</code>.
+</p>
+<p>The substitution-cost matrix when a matrix and <code>method</code> is one of
+<code>"OM"</code>, <code>"OMloc"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>,
+<code>"OMstran"</code>, <code>"HAM"</code>, or <code>"TWED"</code>.
+</p>
+<p>The series of the substitution-cost matrices when an array and
+<code>method = "DHD"</code>. They are grouped in a 3-dimensional array with the
+third index referring to the position in the sequence.
+</p>
+<p>One of the strings <code>"CONSTANT"</code>, <code>"INDELS"</code>, <code>"INDELSLOG"</code>,
+or <code>"TRATE"</code>. Designates a <code>seqcost</code> method
+to build <code>sm</code>. <code>"CONSTANT"</code> is not relevant for <code>"DHD"</code>.
+</p>
+
+
+
+
+<p><code>sm</code> is mandatory when <code>method</code> is one of <code>"OM"</code>,
+<code>"OMloc"</code>, <code>"OMslen"</code>, <code>"OMspell"</code>, <code>"OMstran"</code>,
+or <code>"TWED"</code>.
+</p>
+<p><code>sm</code> is autogenerated when <code>method</code> is one of <code>"HAM"</code> or
+<code>"DHD"</code> and <code>sm = NULL</code>. See the Details section.
+</p>
+<p>Note: With <code>method = "NMS"</code> or <code>method = "SVRspell"</code>, use
+<code>prox</code> instead.
+</p>
+
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+
+<p>Logical.
+Default: <code>FALSE</code>.
+Should the non-deleted missing value be added to the alphabet as an additional
+state? If <code>FALSE</code> and <code>seqdata</code> or <code>refseq</code> contains such
+gaps, an error is raised.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>full.matrix</code></td>
+<td>
+
+<p>Logical.
+Default: <code>TRUE</code>.
+When <code>refseq = NULL</code>, if <code>TRUE</code>, the full distance matrix is
+returned, if <code>FALSE</code>, an object of class <code>dist</code> is returned,
+that is, a vector containing only values from the lower triangle of the
+distance matrix. Objects of class <code>dist</code> are smaller and can be passed
+directly as arguments to most clustering functions.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>kweights</code></td>
+<td>
+
+<p>Double or vector of doubles.
+Default: vector of <code>1</code>s.
+The weights applied to subsequences when <code>method</code> is one of <code>"NMS"</code>,
+<code>"NMSMST"</code>, or <code>"SVRspell"</code>. It contains at position <code class="reqn">k</code> the
+weight applied to the subsequences of length <code class="reqn">k</code>. It must be positive.
+Its length should be equal to the number of columns of <code>seqdata</code>. If shorter,
+longer subsequences are ignored. If a scalar, it is transformed into
+<code>rep(kweights,ncol(sedata))</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tpow</code></td>
+<td>
+
+<p>Double.
+Default: <code>1.0</code>.
+The exponential weight of spell length when <code>method</code> is one of
+<code>"OMspell"</code>, <code>"NMSMST"</code>, or <code>"SVRspell"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>expcost</code></td>
+<td>
+
+<p>Double.
+Default: <code>0.5</code>.
+The cost of spell length transformation when <code>method = "OMloc"</code> or
+<code>method = "OMspell"</code>. It must be positive. The exact interpretation is
+distance-dependent.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>context</code></td>
+<td>
+
+<p>Double.
+Default: <code>1-2*expcost</code>.
+The cost of local insertion when <code>method = "OMloc"</code>. It must be positive.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>link</code></td>
+<td>
+
+<p>String.
+Default: <code>"mean"</code>.
+The function used to compute substitution costs when <code>method = "OMslen"</code>.
+One of <code>"mean"</code> (arithmetic average) or <code>"gmean"</code> (geometric mean
+as in the original proposition of Halpin 2010).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>h</code></td>
+<td>
+
+<p>Double.
+Default: <code>0.5</code>.
+It must be greater than or equal to 0.
+</p>
+<p>The exponential weight of spell length when <code>method = "OMslen"</code>.
+</p>
+<p>The gap penalty when <code>method = "TWED"</code>. It corresponds to the lambda
+in <cite>Halpin (2014), p 88</cite>. It is usually chosen in the range [0,1]
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nu</code></td>
+<td>
+
+<p>Double.
+Stiffness when <code>method = "TWED"</code>. It must be strictly greater than 0
+and is usually less than 1.
+See <cite>Halpin (2014), p 88</cite>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>transindel</code></td>
+<td>
+
+<p>String.
+Default: <code>"constant"</code>.
+Method for computing transition indel costs when <code>method = "OMstran"</code>.
+One of <code>"constant"</code> (single indel of 1.0), <code>"subcost"</code> (based on
+substitution costs), or <code>"prob"</code> (based on transition probabilities).
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>otto</code></td>
+<td>
+
+<p>Double.
+The origin-transition trade-off weight when <code>method = "OMstran"</code>. It
+must be in [0, 1].
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>previous</code></td>
+<td>
+
+<p>Logical.
+Default: <code>FALSE</code>.
+When <code>method = "OMstran"</code>, should we also account for the transition
+from the previous state?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>add.column</code></td>
+<td>
+
+<p>Logical.
+Default: <code>TRUE</code>.
+When <code>method = "OMstran"</code>, should the last column (and also the first
+column when <code>previous = TRUE</code>) be duplicated? When sequences have different
+lengths, should the last (first) valid state be duplicated.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>breaks</code></td>
+<td>
+
+<p>List of ordered pairs of integers.
+Default: <code>NULL</code>.
+The list of the possibly overlapping intervals when <code>method = "CHI2"</code>
+or <code>method = "EUCLID"</code>. Each interval is defined by the pair <code>c(t1,t2)</code> of the start <code>t1</code> and end <code>t2</code> positions of the interval.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>step</code></td>
+<td>
+
+<p>Integer.
+Default: <code>1</code>.
+The length of the intervals when <code>method = "CHI2"</code> or
+<code>method = "EUCLID"</code> and <code>breaks = NULL</code>. It must be positive.
+It must also be even when <code>overlap = TRUE</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overlap</code></td>
+<td>
+
+<p>Logical.
+Default: <code>FALSE</code>.
+When <code>method = "CHI2"</code> or <code>method = "EUCLID"</code> and
+<code>breaks = NULL</code>, should the intervals overlap?
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+
+<p>Logical.
+Default: <code>TRUE</code>.
+When <code>method</code> is <code>"CHI2"</code> or when <code>sm</code> is a string (method),
+should the distributions of the states account for the sequence weights
+in <code>seqdata</code>? See <code>seqdef</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>global.pdotj</code></td>
+<td>
+
+<p>Numerical vector, <code>"obs"</code>, or <code>NULL</code>.
+Default: <code>NULL</code>.
+Only for <code>method = "CHI2"</code>.
+The vector of state proportions to be used as marginal distribution. When <code>NULL</code>, the state distribution on the corresponding interval is used. When <code>"obs"</code>, the overall state distribution in <code>seqdata</code> is used for all intervals. When a vector of proportions, it is used as marginal distribution for all intervals.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prox</code></td>
+<td>
+
+<p><code>NULL</code> or Matrix.
+Default: <code>NULL</code>.
+The matrix of state proximities when <code>method = "NMS"</code> or
+<code>method = "SVRspell"</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>check.max.size</code></td>
+<td>
+
+<p>Logical. Should <code>seqdist</code> stop when maximum allowed number of unique sequences is exceeded? Caution, setting <code>FALSE</code> may produce unexpected results or even crash R.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>opt.args</code></td>
+<td>
+
+<p>List. List of additional non-documented arguments for development usage.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The <code>seqdist</code> function returns a matrix of distances between sequences
+or a vector of distances from the reference sequence when <code>refseq</code> is set.
+The available metrics (see <code>method</code> option) include:
+</p>
+
+<ul>
+<li>
+<p><em>Edit distances</em>: optimal matching (<code>"OM"</code>), localized OM
+(<code>"OMloc"</code>), spell-length-sensitive OM (<code>"OMslen"</code>), OM of spell
+sequences (<code>"OMspell"</code>), OM of transition sequences (<code>"OMstran"</code>),
+Hamming (<code>"HAM"</code>), dynamic Hamming (<code>"DHD"</code>), and the time warp edit
+distance (<code>"TWED"</code>).
+
+</p>
+</li>
+<li>
+<p><em>Metrics based on counts of common attributes</em>: distance based on
+the longest common subsequence (<code>"LCS"</code>), on the longest common prefix
+(<code>"LCP"</code>), on the longest common suffix (<code>"RLCP"</code>), on the number
+of matching subsequences (<code>"NMS"</code>), on the number of matching
+subsequences weighted by the minimum shared time (<code>"NMSMST"</code>) and,
+the subsequence vectorial representation distance (<code>"SVRspell"</code>).
+
+</p>
+</li>
+<li>
+<p><em>Distances between state distributions</em>: Euclidean (<code>"EUCLID"</code>),
+Chi-squared (<code>"CHI2"</code>).
+
+</p>
+</li>
+</ul>
+<p>See <cite>Studer and Ritschard (2014, 2016)</cite> for a description and the comparison
+of the above dissimilarity measures except <code>"TWED"</code> for which we refer to
+<cite>Marteau (2009)</cite> and <cite>Halpin (2014)</cite>.
+</p>
+<p>Each method can be controlled with the following parameters:
+</p>
+
+<table>
+<tr>
+<td style="text-align: left;">
+    method </td>
+<td style="text-align: left;"> parameters </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    ------------------ </td>
+<td style="text-align: left;"> ---------------------------------</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠OM⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, indel, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠OMloc⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, expcost, context, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠OMslen⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, indel, link, h, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠OMspell⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, indel, norm, tpow, expcost, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠OMstran⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, indel, transindel, otto, previous, add.column, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠HAM, DHD⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, norm⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠CHI2⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠breaks, step, overlap, norm, weighted, global.pdotj, norm⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠EUCLID⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠breaks, step, overlap, norm⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠LCS, LCP, RLCP⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠norm⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠NMS⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠prox, kweights⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠NMSMST⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠kweights, tpow⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠SVRspell⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠prox, kweights, tpow⁠</code>
+</td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    <code style="white-space: pre;">⁠TWED⁠</code> </td>
+<td style="text-align: left;"> <code style="white-space: pre;">⁠sm, (indel), h, nu, norm⁠</code> </td>
+</tr>
+<tr>
+<td style="text-align: left;">
+    ------------------ </td>
+<td style="text-align: left;"> ---------------------------------
+  </td>
+</tr>
+</table>
+<p><code>"LCS"</code> is <code>"OM"</code> with a substitution cost of 2 (<code>sm = "CONSTANT",
+  cval = 2</code>) and an <code>indel</code> of <code>1.0</code>. <code>"HAM"</code> is <code>"OM"</code> without
+indels. <code>"DHD"</code> is <code>"HAM"</code> with specific substitution costs at each
+position.
+</p>
+<p><code>"HAM"</code> and <code>"DHD"</code> apply only to sequences of equal length.
+</p>
+<p>For <code>"TWED"</code>, the (single) indel serves only for empty sequences.
+The distance to an empty sequence is set as <code class="reqn">n*</code><code>indel</code>, where <code class="reqn">n</code> is
+the length of the non empty sequence. By default (<code>indel="auto"</code>), indel is set
+as <code>2 * max(sm) + nu + h</code>.
+</p>
+
+<p>When <code>sm = NULL</code>, the substitution-cost matrix is automatically created
+for <code>"HAM"</code> with a single substitution cost of 1 and for <code>"DHD"</code> with
+the costs derived from the transition rates at the successive positions, i.e. with
+<code>sm = "TRATE"</code>.
+</p>
+<p>Some distances can optionally be normalized by means of the <code>norm</code> argument.
+Let <code class="reqn">d</code> be the distance, <code class="reqn">m</code> the maximum possible of the distance
+given the lengths <code class="reqn">p</code> and <code class="reqn">q</code> of the two sequences, and <code class="reqn">k</code> the
+length of the longer sequence. Normalization <code>"maxlength"</code> is <code class="reqn">d/k</code>
+(Abbott's normalization), <code>"gmean"</code> is <code class="reqn">1-(m-d)/(p*q)^.5</code> (Elzinga's
+normalization), <code>"maxdist"</code> is <code class="reqn">d/m</code>, and "YujianBo" is <code class="reqn">2*d/(m+d)</code>.
+For more details, see  <cite>Gabadinho et al. (2009, 2011)</cite>.
+Actually, to avoid negative outcomes, the length <code class="reqn">p</code>, <code class="reqn">q</code>, and <code class="reqn">k</code> are
+set as (max) indel times the corresponding length. For some distances, <code class="reqn">m</code> is
+only a possibly non-reachable upper bound.
+</p>
+<p>When <code>norm="auto"</code>, <code>"gmean"</code> is applied to <code>"LCS"</code>,
+<code>"LCP"</code> and <code>"RLCP"</code> distances, <code>"maxlength"</code> is applied to <code>"OM"</code>, <code>"HAM"</code>
+and <code>"DHD"</code>, and the normalization "YujianBo" of <cite>Yujian and Bo (2007)</cite> that preserves the
+triangle inequality is used in the other cases except <code>"CHI2"</code> and <code>"EUCLID"</code>.
+For the latter two, the square of the
+distances are normalized by the number of intervals and the maximal distance
+on each interval. Note that for 'CHI2' the maximal distance on each interval
+depends on the state distribution on the interval.
+</p>
+<p>When sequences contain gaps and the <code>left = NA</code>, <code>gaps = NA</code>, or <code>right = NA</code>
+option was passed to
+<code>seqdef</code> (i.e. when there are non deleted missing values), the
+<code>with.missing</code> argument should be set as <code>TRUE</code>. If left as
+<code>FALSE</code> the function stops when it encounters a gap. This is to make the
+user aware that there are gaps in the sequences. For methods that need an
+<code>sm</code> value, <code>seqdist</code> expects a substitution-cost matrix with a row
+and a column entry for the missing state (symbol defined with the <code>nr</code>
+option of <code>seqdef</code>). Substitution-cost matrices returned by
+<code>seqcost</code> (and so <code>seqsubm</code>) include these additional
+entries when the function is called with <code>with.missing = TRUE</code>. More
+details on how to compute distances with sequences containing gaps can be
+found in <cite>Gabadinho et al. (2009)</cite>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>When <code>refseq</code> is <code>NULL</code> (default), the whole matrix of pairwise
+distances between sequences or, if <code>full.matrix = FALSE</code>,
+the corresponding <code>dist</code> object of pairwise distances between sequences.
+</p>
+<p>When <code>refseq</code> is a <code>list</code> of two sets of indexes, the matrix
+of distances from the first set of sequences (rows) to the second set (columns).
+</p>
+<p>Otherwise, a vector with distances from the sequences in the
+state sequence object to the reference sequence specified with <code>refseq</code>.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthias Studer, Gilbert Ritschard, Pierre-Alexandre Fonta, Alexis Gabadinho, Nicolas S. Müller.
+</p>
+
+
+<h3>References</h3>
+
+<p>Studer, M. and G. Ritschard (2016), "What matters in differences between life
+trajectories: A comparative review of sequence dissimilarity measures",
+<em>Journal of the Royal Statistical Society, Series A</em>. <b>179</b>(2),
+481-511, <a href="https://doi.org/10.1111/rssa.12125">doi:10.1111/rssa.12125</a>
+</p>
+<p>Studer, M. and G. Ritschard (2014). "A Comparative Review of Sequence
+Dissimilarity Measures". <em>LIVES Working Papers</em>, <b>33</b>. NCCR LIVES,
+Switzerland, <a href="https://doi.org/10.12682/lives.2296-1658.2014.33">doi:10.12682/lives.2296-1658.2014.33</a>
+</p>
+<p>Gabadinho, A., G. Ritschard, N. S. Müller and M. Studer (2011). Analyzing and
+Visualizing State Sequences in R with TraMineR. <em>Journal of Statistical
+Software</em> <b>40</b>(4), 1–37.
+</p>
+<p>Gabadinho, A., G. Ritschard, M. Studer and N. S. Müller (2009). Mining
+Sequence Data in <code>R</code> with the <code>TraMineR</code> package: A user's guide.
+Department of Econometrics and Laboratory of Demography, University of Geneva
+</p>
+<p>Halpin, B. (2014). Three Narratives of Sequence Analysis, in Blanchard, P.,
+Bühlmann, F. and Gauthier, J.-A. (Eds.) <em>Advances in Sequence Analysis:
+Theory, Method, Applications</em>, Vol 2 of Series <em>Life Course Research and
+Social Policies</em>, pages 75–103, Heidelberg: Springer. <a href="https://doi.org/10.1007/978-3-319-04969-4_5">doi:10.1007/978-3-319-04969-4_5</a>
+</p>
+<p>Marteau, P.-F. (2009). Time Warp Edit Distances with Stiffness Adjustment for
+Time Series Matching. <em>IEEE Transactions on Pattern Analysis and Machine
+Intelligence</em>, <b>31</b>(2), 306–318. <a href="https://doi.org/10.1109/TPAMI.2008.76">doi:10.1109/TPAMI.2008.76</a>
+</p>
+<p>Yujian, L. and Bo, L. (2007). A normalized Levenshtein distance metric.
+<em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em>,
+<b>29</b>(6), 1091–1095. <a href="https://doi.org/10.1109/TPAMI.2007.1078">doi:10.1109/TPAMI.2007.1078</a>
+</p>
+<p>See also all references in <cite>Studer and Ritschard (2014, 2016)</cite>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>seqcost</code>, <code>seqsubm</code>, <code>seqdef</code>, and <code>seqMD</code> for
+multidomain (multichannel) distances using the cost additive trick.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## =========================
+## Examples without missings
+## =========================
+
+## Defining a sequence object with columns 10 to 25
+## of a subset of the 'biofam' data set
+data(biofam)
+biofam.seq &lt;- seqdef(biofam[501:600, 10:25])
+
+## OM distances using the vector of indels and substitution
+## costs derived from the estimated state frequencies
+costs &lt;- seqcost(biofam.seq, method = "INDELSLOG")
+biofam.om &lt;- seqdist(biofam.seq, method = "OM",
+                     indel = costs$indel, sm = costs$sm)
+
+## OM between sequences of transitions
+biofam.omstran &lt;- seqdist(biofam.seq, method = "OMstran",
+                     indel = costs$indel, sm = costs$sm,
+                     otto=.3, transindel="subcost")
+
+## Normalized LCP distances
+biofam.lcp.n &lt;- seqdist(biofam.seq, method = "LCP",
+                        norm = "auto")
+
+## Normalized LCS distances to the most frequent sequence
+biofam.dref1 &lt;- seqdist(biofam.seq, method = "LCS",
+                        refseq = 0, norm = "auto")
+
+## LCS distances to an external sequence
+ref &lt;- seqdef(as.matrix("(0,5)-(3,5)-(4,6)"), informat = "SPS",
+              alphabet = alphabet(biofam.seq))
+biofam.dref2 &lt;- seqdist(biofam.seq, method = "LCS",
+                        refseq = ref)
+
+## LCS distances between two subsets of sequences
+set1 &lt;- 1:10
+set2 &lt;- 31:36
+biofam.dref2 &lt;- seqdist(biofam.seq, method = "LCS",
+                        refseq = list(set1,set2))
+
+
+## Chi-squared distance over the full observed timeframe
+biofam.chi.full &lt;- seqdist(biofam.seq, method = "CHI2",
+                           step = max(seqlength(biofam.seq)))
+
+## Chi-squared distance over successive overlapping
+## intervals of length 4
+biofam.chi.ostep &lt;- seqdist(biofam.seq, method = "CHI2",
+                            step = 4, overlap = TRUE)
+
+
+## ======================
+## Examples with missings
+## ======================
+data(ex1)
+## Ignore empty row 7
+ex1.seq &lt;- seqdef(ex1[1:6, 1:13])
+
+## OM with indel and substitution costs based on
+## log of inverse state frequencies
+costs.ex1 &lt;- seqcost(ex1.seq, method = "INDELSLOG",
+                     with.missing = TRUE)
+ex1.om &lt;- seqdist(ex1.seq, method = "OM",
+                  indel = costs.ex1$indel, sm = costs.ex1$sm,
+                  with.missing = TRUE)
+
+## Localized OM
+ex1.omloc &lt;- seqdist(ex1.seq, method = "OMloc",
+                     sm = costs.ex1$sm, expcost=.1, context = .4,
+                     with.missing = TRUE)
+
+## OMspell with a scalar indel
+indel &lt;- max(costs.ex1$indel)
+## OM of spells
+ex1.omspell &lt;- seqdist(ex1.seq, method = "OMspell",
+                       indel = indel, sm = costs.ex1$sm,
+                       with.missing = TRUE)
+
+## Distance based on number of matching subsequences
+ex1.nms &lt;- seqdist(ex1.seq, method = "NMS",
+                   with.missing = TRUE)
+
+## Using the sequence vectorial representation metric
+costs.fut &lt;- seqcost(ex1.seq, method = "FUTURE", lag = 4,
+                     proximities = TRUE, with.missing = TRUE)
+ex1.svr &lt;- seqdist(ex1.seq, method = "SVRspell",
+                   prox = costs.fut$prox, with.missing = TRUE)
+</code></pre>
+
+
+</div>

@@ -1,0 +1,161 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Nest and unnest</h2>
+
+<h3>Description</h3>
+
+<p>Analogous function for <code>nest</code> and <code>unnest</code> in <span class="pkg">tidyr</span>.
+<code>unnest</code> will automatically remove other list-columns except for the
+target list-columns (which would be unnested later). Also, <code>squeeze</code> is
+designed to merge multiple columns into list column.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nest(.data, ..., mcols = NULL, .name = "ndt")
+
+unnest(.data, ...)
+
+squeeze(.data, ..., .name = "ndt")
+
+chop(.data, ...)
+
+unchop(.data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>data.table, nested or unnested</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>The variables for nest group(for <code>nest</code>),
+columns to be nested(for <code>squeeze</code> and <code>chop</code>),
+or column(s) to be unnested(for <code>unnest</code>).
+Could recieve anything that <code>select_dt</code> could receive.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mcols</code></td>
+<td>
+<p>Name-variable pairs in the list, form like</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.name</code></td>
+<td>
+<p>Character. The nested column name. Defaults to "ndt".
+<code>list(petal="^Pe",sepal="^Se")</code>, see example.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In the <code>nest</code>, the data would be nested to a column named 'ndt',
+which is short for nested data.table.
+</p>
+<p>The <code>squeeze</code> would not remove the originial columns.
+</p>
+<p>The <code>unchop</code> is the reverse operation of <code>chop</code>.
+</p>
+<p>These functions are experiencing the experimental stage, especially
+the <code>unnest</code>. If they don't work on some circumtances, try <span class="pkg">tidyr</span>
+package.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data.table, nested or unnested
+</p>
+
+
+<h3>References</h3>
+
+<p>https://www.r-bloggers.com/much-faster-unnesting-with-data-table/
+</p>
+<p>https://stackoverflow.com/questions/25430986/create-nested-data-tables-by-collapsing-rows-into-new-data-tables
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>nest</code>, <code>chop</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+mtcars = as.data.table(mtcars)
+iris = as.data.table(iris)
+
+# examples for nest
+
+# nest by which columns?
+ mtcars %&gt;% nest(cyl)
+ mtcars %&gt;% nest("cyl")
+ mtcars %&gt;% nest(cyl,vs)
+ mtcars %&gt;% nest(vs:am)
+ mtcars %&gt;% nest("cyl|vs")
+ mtcars %&gt;% nest(c("cyl","vs"))
+
+# nest two columns directly
+iris %&gt;% nest(mcols = list(petal="^Pe",sepal="^Se"))
+
+# nest more flexibly
+iris %&gt;% nest(mcols = list(ndt1 = 1:3,
+  ndt2 = "Pe",
+  ndt3 = Sepal.Length:Sepal.Width))
+
+# examples for unnest
+# unnest which column?
+ mtcars %&gt;% nest("cyl|vs") %&gt;%
+   unnest(ndt)
+ mtcars %&gt;% nest("cyl|vs") %&gt;%
+   unnest("ndt")
+
+df &lt;- data.table(
+  a = list(c("a", "b"), "c"),
+  b = list(c(TRUE,TRUE),FALSE),
+  c = list(3,c(1,2)),
+  d = c(11, 22)
+)
+
+df
+df %&gt;% unnest(a)
+df %&gt;% unnest(2)
+df %&gt;% unnest("c")
+df %&gt;% unnest(cols = names(df)[3])
+
+# You can unnest multiple columns simultaneously
+df %&gt;% unnest(1:3)
+df %&gt;% unnest(a,b,c)
+df %&gt;% unnest("a|b|c")
+
+# examples for squeeze
+# nest which columns?
+iris %&gt;% squeeze(1:2)
+iris %&gt;% squeeze("Se")
+iris %&gt;% squeeze(Sepal.Length:Petal.Width)
+
+# examples for chop
+df &lt;- data.table(x = c(1, 1, 1, 2, 2, 3), y = 1:6, z = 6:1)
+df %&gt;% chop(y,z)
+df %&gt;% chop(y,z) %&gt;% unchop(y,z)
+</code></pre>
+
+
+</div>

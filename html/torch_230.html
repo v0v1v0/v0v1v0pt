@@ -1,0 +1,134 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>nn_batch_norm2d</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>BatchNorm2D</h2>
+
+<h3>Description</h3>
+
+<p>Applies Batch Normalization over a 4D input (a mini-batch of 2D inputs
+additional channel dimension) as described in the paper
+<a href="https://arxiv.org/abs/1502.03167">Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift</a>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">nn_batch_norm2d(
+  num_features,
+  eps = 1e-05,
+  momentum = 0.1,
+  affine = TRUE,
+  track_running_stats = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>num_features</code></td>
+<td>
+<p><code class="reqn">C</code> from an expected input of size
+<code class="reqn">(N, C, H, W)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>eps</code></td>
+<td>
+<p>a value added to the denominator for numerical stability.
+Default: 1e-5</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>momentum</code></td>
+<td>
+<p>the value used for the running_mean and running_var
+computation. Can be set to <code>None</code> for cumulative moving average
+(i.e. simple average). Default: 0.1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>affine</code></td>
+<td>
+<p>a boolean value that when set to <code>TRUE</code>, this module has
+learnable affine parameters. Default: <code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>track_running_stats</code></td>
+<td>
+<p>a boolean value that when set to <code>TRUE</code>, this
+module tracks the running mean and variance, and when set to <code>FALSE</code>,
+this module does not track such statistics and uses batch statistics instead
+in both training and eval modes if the running mean and variance are <code>None</code>.
+Default: <code>TRUE</code></p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p style="text-align: center;"><code class="reqn">
+  y = \frac{x - \mathrm{E}[x]}{ \sqrt{\mathrm{Var}[x] + \epsilon}} * \gamma + \beta
+</code>
+</p>
+
+<p>The mean and standard-deviation are calculated per-dimension over
+the mini-batches and <code class="reqn">\gamma</code> and <code class="reqn">\beta</code> are learnable parameter vectors
+of size <code>C</code> (where <code>C</code> is the input size). By default, the elements of <code class="reqn">\gamma</code> are set
+to 1 and the elements of <code class="reqn">\beta</code> are set to 0. The standard-deviation is calculated
+via the biased estimator, equivalent to <code>torch_var(input, unbiased=FALSE)</code>.
+Also by default, during training this layer keeps running estimates of its
+computed mean and variance, which are then used for normalization during
+evaluation. The running estimates are kept with a default <code>momentum</code>
+of 0.1.
+</p>
+<p>If <code>track_running_stats</code> is set to <code>FALSE</code>, this layer then does not
+keep running estimates, and batch statistics are instead used during
+evaluation time as well.
+</p>
+
+
+<h3>Shape</h3>
+
+
+<ul>
+<li>
+<p> Input: <code class="reqn">(N, C, H, W)</code>
+</p>
+</li>
+<li>
+<p> Output: <code class="reqn">(N, C, H, W)</code> (same shape as input)
+</p>
+</li>
+</ul>
+<h3>Note</h3>
+
+<p>This <code>momentum</code> argument is different from one used in optimizer
+classes and the conventional notion of momentum. Mathematically, the
+update rule for running statistics here is
+<code class="reqn">\hat{x}_{\mbox{new}} = (1 - \mbox{momentum}) \times \hat{x} + \mbox{momentum} \times x_t</code>,
+where <code class="reqn">\hat{x}</code> is the estimated statistic and <code class="reqn">x_t</code> is the
+new observed value.
+Because the Batch Normalization is done over the <code>C</code> dimension, computing statistics
+on <code style="white-space: pre;">⁠(N, H, W)⁠</code> slices, it's common terminology to call this Spatial Batch Normalization.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">if (torch_is_installed()) {
+# With Learnable Parameters
+m &lt;- nn_batch_norm2d(100)
+# Without Learnable Parameters
+m &lt;- nn_batch_norm2d(100, affine = FALSE)
+input &lt;- torch_randn(20, 100, 35, 45)
+output &lt;- m(input)
+}
+</code></pre>
+
+
+</div>

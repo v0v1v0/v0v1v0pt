@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>fChernoff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Chernoff Bound.</h2>
+
+<h3>Description</h3>
+
+<p>Function to bound the total losses via the Chernoff inequality.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">fChernoff(ELT, s, t = 1, theta = 0, cap = Inf, nk = 1001,
+  verbose = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>ELT</code></td>
+<td>
+<p>Data frame containing two numeric columns. The column <code>Loss</code> contains the expected losses from each single occurrence of event. The column <code>Rate</code> contains the arrival rates of a single occurrence of event.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>s</code></td>
+<td>
+<p>Scalar or numeric vector containing the total losses of interest.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>t</code></td>
+<td>
+<p>Scalar representing the time period of interest. The default value is <code>t</code> = 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+<p>Scalar containing information about the variance of the Gamma distribution: <code class="reqn">sd[X] = x * </code><code>theta</code>. The default value is <code>theta</code> = 0: the loss associated to an event is considered as a constant.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cap</code></td>
+<td>
+<p>Scalar representing the financial cap on losses for a single event, i.e. the maximum possible loss caused by a single event. The default value is <code>cap</code> = Inf.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>nk</code></td>
+<td>
+<p>Number of optimisation points.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>Logical. If <code>TRUE</code> attaches the minimising index. The default is <code>verbose</code> = FALSE.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Chernoff's inequality states:
+</p>
+<p style="text-align: center;"><code class="reqn">\Pr(S \geq s) \leq \inf_{k &gt; 0} e^{-k s} M_S(k) </code>
+</p>
+
+<p>where <code class="reqn">M_S(k)</code> is the Moment Generating Function (MGF) of the total loss S.
+The <code>fChernoff</code> function optimises the bound over a fixed set of <code>nk</code> discrete values.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A numeric matrix, containing the pre-specified losses <code>s</code> in the first column and the upper bound for the exceedance probabilities in the second column.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(UShurricane)
+
+# Compress the table to millions of dollars
+
+USh.m &lt;- compressELT(ELT(UShurricane), digits = -6)
+EPC.Chernoff &lt;- fChernoff(USh.m, s = 1:40)
+EPC.Chernoff
+plot(EPC.Chernoff, type = "l", ylim = c(0, 1))
+# Assuming the losses follow a Gamma with E[X] = x, and Var[X] = 2 * x
+EPC.Chernoff.Gamma &lt;- fChernoff(USh.m, s = 1:40, theta = 2, cap = 5)
+EPC.Chernoff.Gamma
+plot(EPC.Chernoff.Gamma, type = "l", ylim = c(0, 1))
+# Compare the two results:
+plot(EPC.Chernoff, type = "l", main = "Exceedance Probability Curve", ylim = c(0, 1))
+lines(EPC.Chernoff.Gamma, col = 2, lty = 2)
+legend("topright", c("Dirac Delta", expression(paste("Gamma(",
+alpha[i] == 1 / theta^2, ", ", beta[i] ==1 / (x[i] * theta^2), ")", " cap =", 5))),
+lwd = 2, lty = 1:2, col = 1:2)
+</code></pre>
+
+
+</div>

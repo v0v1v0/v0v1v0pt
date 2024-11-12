@@ -1,0 +1,177 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tblEntries</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Assemble Information About Each Entry in a Table into a Data Frame </h2>
+
+<h3>Description</h3>
+
+<p>Assemble information about each entry in a table into a data frame with
+one row per entry, and columns for entry content and position in the
+table.  This is an internal function, not intended to be called by package
+users.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tblEntries(x, mergeRuns=c(TRUE, TRUE), rowheadInside=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>A <code>textTable</code> object, or something that can be coerced to one.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mergeRuns</code></td>
+<td>
+<p>Two-element logical vector, the first element applying to row headers, the
+second to column headers.  If TRUE (the default) then header cells that
+contain runs of the same value will be merged into a single entry that
+spans multiple rows or columns.  Note that runs in the outermost row
+header layer are always merged when <code>rowheadInside</code> is TRUE, even if
+<code>mergeRuns[1]</code> is FALSE.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>rowheadInside</code></td>
+<td>
+<p>Logical scalar.  If TRUE, the outermost layer of row headers is moved
+inside the table by using its levels to divide the table into groups of
+rows, with each group labeled by their level.
+</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Entries include all parts of the table: the body of the table, row and
+column headers, titles, subtitles, and foot lines.  This function calls
+<code>textTable(x)</code> to convert table entries to character strings if
+necessary.
+</p>
+<p>If the text for an entry is missing (NA) the entry will be disabled, with
+a warning.  If the text is an empty string (""), the entry will be
+disabled by default; this is so that blocks containing only empty cells
+will not have hvrules generated for them.
+</p>
+<p>Row and column numbers used in creating default entry ID's are
+<code>partrow</code> and <code>partcol</code>, and thus with respect to the dimensions
+of the table part the entry belongs to, not the augmented row-column grid.
+If an entry spans more than one row or column, the minimum row/column
+number of the spanned cells is used.
+</p>
+<p>The <code>rowhier</code> and <code>colhier</code> attributes are included primarily to
+assist creation of table blocks by function <code>tblBlocks</code>.
+</p>
+<p>The inclusion of the <code>hjust</code> column is not tidy, since it is really a
+graphical display property.  However it is needed to carry forward
+justification information that <code>x</code> may have inherited from a
+<code>tabular</code> object.
+</p>
+<p>The <code>tblEntries</code> method for <code>textTable</code> is the inverse of this
+function: it will re-create a <code>textTable</code> from a <code>tblEntries</code>
+object.
+</p>
+
+
+<h3>Value</h3>
+
+<p>An object of S3 class <code>tblEntries</code>.  This is a data frame with one
+row per entry in the table.  It contains descriptors with information
+about the nature and position of each entry within the table.  Column
+descriptions are in the documentation for the <code>elements</code> function.
+Additional details for certain columns are:
+</p>
+<table>
+<tr style="vertical-align: top;">
+<td><code>subpart</code></td>
+<td>
+<p>For row and column headers, the subpart will be the name of the
+corresponding column in <code>x$rowhead</code> or row in <code>x$colhead</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>level_in_layer</code></td>
+<td>
+<p>Numbering of entries within a given part and headlayer.  For row and
+column headers this is based their hierarchical structure (see
+<code>tblBlocks</code>), and assumes <code>mergeRuns</code> is TRUE (so multiple
+entries within a layer may have the same level number).  For other table
+parts it is just an integer from 1 to the number of entries in that layer
+of that part.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Character string identifying the type of value the entry represents (e.g.,
+"numeric").  This is taken from the <code>type</code> attributes of components
+of <code>x</code>, and may be NA for unknown or unspecified type.  The default
+for table annotation (<code>title</code>, <code>subtitle</code>, <code>foot</code>) and
+<code>rowheadLabels</code> is "character".
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>textspec</code></td>
+<td>
+<p>Character string indicating any special features of the text in
+<code>text</code>.  Currently supported values are "plain", "plotmath", and
+"markdown".  The default is "plain", but any entry whose text begins with
+"MATH_" or "MKDN_" will have <code>textspec</code> set to "plotmath" or
+"markdown", respectively, and the prefix will be removed from <code>text</code>.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>enabled</code></td>
+<td>
+<p>Logical indicating whether the entry is to be displayed.  This function
+sets <code>enabled</code> to FALSE for entries whose <code>text</code> is NA (with a
+warning) or the empty string "", and to TRUE for all other entries.
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hjust</code></td>
+<td>
+<p>Numeric horizontal justification specification for entry text (0=left,
+0.5=center, 1=right, NA=unspecified).  This is set based on the
+<code>justification</code> attributes of components of <code>x</code> if present, NA
+if not.
+</p>
+</td>
+</tr>
+</table>
+<p>Row names for the data frame are set equal to <code>id</code>.  The data frame
+has attributes <code>mergeRuns</code> and <code>rowheadInside</code>, based on the
+arguments.  It also has attributes <code>rowhier</code> and <code>colhier</code>,
+containing information about the row and column header hierarchies.  They
+are lists of data frames, copied from the corresponding components of
+<code>x</code>.  They reflect the logical structure of the headers and are
+unaffected by display choices such as <code>mergeRuns</code> and
+<code>rowheadInside</code>.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>textTable</code>, <code>tblParts</code>;
+<code>as.tblEntries</code>, <code>elements</code>.
+</p>
+
+
+</div>

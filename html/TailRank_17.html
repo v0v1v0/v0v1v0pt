@@ -1,0 +1,152 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TailRankTest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>The Tail-Rank Test</h2>
+
+<h3>Description</h3>
+
+<p>Perform a tail-rank test to find candidate biomarkers in a microarray
+data set.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TailRankTest(data, classes, specificity = 0.95, tolerance = 0.50,
+             model=c("bb", "betabinomial", "binomial"),
+             confidence = 0.95, direction = "up")
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A matrix or data.frame containing numerical measurements on
+which to perform the tail-rank test.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>classes</code></td>
+<td>
+<p>A logical vector or factor splitting the data into two
+parts. The length of this vector should equal the number of columns
+in the <code>data</code>. The <code>TRUE</code> portion (or the first level of
+the factor) represents a "base" or "healthy" group of samples; the
+other samples are the "test" or "cancer" group.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>specificity</code></td>
+<td>
+<p>a real number between 0 and 1; the desired
+specificity used in the test to estimate a quantile from the
+"base" group. This is an optional argument with default value 0.95.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tolerance</code></td>
+<td>
+<p>a real number between 0 and 1; the upper tolerance
+bound used to estimate the threshold. This is an optional argument
+with default value 0.90.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>model</code></td>
+<td>
+<p>a character string that determines whther significance
+comes from a binomial model or a beta-binomial (bb) model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>confidence</code></td>
+<td>
+<p>a real number between 0 and 1; the confidence level
+that there are no false positives. This is an optional argument with
+default value 0.50, which is equivalent to ignoring the tolerance.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>direction</code></td>
+<td>
+<p>a character string representing the direction of the
+test; can be "up", "down", or "two-sided". The default value is "up".</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function computes the tail rank statistic for each gene (viewed as
+one row of the data matrix). The data is split into two groups. The
+first ("base") group is used to estimate a tolerance bound (defaults to
+50%) on a specific quantile (defaults to 95%) of the distribution of
+each gene. The tail-rank statistic is the defined as the number of
+samples in the second ("test") group that lie outside the bound. The
+test can be applied in the "up", "down", or "two-sided" direction,
+depending on the kinds of markers being sought. Also computes the cutoff
+for significance based on a confidence level that is "1 - FWER" for a
+desired family-wise error rate.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The return value is an object of class
+TailRankTest.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Kevin R. Coombes &lt;krc@silicovore.com&gt;</p>
+
+
+<h3>References</h3>
+
+<p>http://bioinformatics.mdanderson.org</p>
+
+
+<h3>See Also</h3>
+
+<p><code>TailRankTest-class</code>,
+<code>tailRankPower</code>,
+<code>biomarkerPowerTable</code>,
+<code>toleranceBound</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># generate some fake data to use in the example
+nr &lt;- 40000
+nc &lt;- 110
+fake.data &lt;- matrix(rnorm(nr*nc), ncol=nc)
+fake.class &lt;- rep(c(TRUE, FALSE), c(40, 70))
+
+# perform the tail-rank test
+null.tr &lt;- TailRankTest(fake.data, fake.class)
+
+# get a summary of the results
+summary(null.tr)
+
+# plot a histogram of the statistics
+hist(null.tr, overlay=TRUE)
+
+# get the actual statistics
+stats &lt;- getStatistic(null.tr)
+
+# get a vector that selects the "positive" calls for the test
+is.marker &lt;- as.logical(null.tr)
+
+# the following line should evaluate to the number of rows, nr = 40000
+sum( is.marker == (stats &gt; null.tr@cutoff) )
+</code></pre>
+
+
+</div>

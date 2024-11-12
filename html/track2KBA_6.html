@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>indEffectTest</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Test site fidelity</h2>
+
+<h3>Description</h3>
+
+<p><code>indEffectTest</code> tests whether the variance in overlap between space use 
+areas within a group (e.g within individuals) is significant compared to 
+between groups (e.g. between individuals).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">indEffectTest(
+  tracks,
+  tripID,
+  groupVar,
+  plot = TRUE,
+  method = c("HR", "PHR", "VI", "BA", "UDOI", "HD"),
+  conditional = TRUE,
+  levelUD = 50,
+  scale,
+  grid = 500,
+  iterations = 1000
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>tracks</code></td>
+<td>
+<p>SpatialPointsDataFrame. Must be projected into an equal-area 
+coordinate system. If not, first run <code>projectTracks</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tripID</code></td>
+<td>
+<p>character. Column in <em>tracks</em> corresponding to the within 
+group ID (e.g. trip-individual combination)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>groupVar</code></td>
+<td>
+<p>character. Column in <em>tracks</em> corresponding to the 
+between group ID (e.g. individual or track)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>plot</code></td>
+<td>
+<p>logical scalar (TRUE/FALSE). Do you want to output a boxplot of 
+the result?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>method</code></td>
+<td>
+<p>character. Which method of overlap estimation to use? See 
+<code>kerneloverlap</code> for descriptions of each method.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>conditional</code></td>
+<td>
+<p>logical scalar (T/F). If TRUE, the function sets to 0 the
+pixels of the grid over which the UD is estimated, outside the home range of
+the animal estimated at a level of probability equal to percent. Note that
+this argument has no effect when meth="HR" 
+(from <code>kerneloverlap</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>levelUD</code></td>
+<td>
+<p>numeric. The desired contour level of the utilization 
+distribution to be used in overlap estimation. NOTE: this is irrelevant if 
+<em>conditional=FALSE</em>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>numeric (in kilometers). Smoothing ('H') parameter for 
+kernel density estimation.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>grid</code></td>
+<td>
+<p>numeric or SpatialPixels. If numeric, specify the desired number 
+of grid cells over which the utilization distributions will be esimated. 
+A default grid of 500 cells is used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>iterations</code></td>
+<td>
+<p>numeric. Indicate the desired number of Kolmogorov-Smirnov 
+iterations to run. 500 is an advisable minimum for statistical rigor.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This function works by producing kernel density areas at a desired contour 
+level (i.e. <em>UDLEv</em>) for each level of <em>tripID</em> and estimating the 
+degree of overlap between all pairwise comparisons using the desired overlap 
+<em>method</em>. Then, comparisons are split into 'within' and 'between' 
+groups, determined by the grouping variable (i.e <em>groupVar</em>) argument.
+</p>
+<p>If <em>conditional=TRUE</em> then the overlap estimates will range from 0 to 
+<em>levelUD</em> (unless <em>method="HR"</em>).
+</p>
+<p>Then, the empirical distribution of each group is compared in a bootstrapped 
+Kolmogorov-Smirnov test, to check whether differences in the distributions 
+are significant. If so, it indicates that individuals within the 
+<em>groupVar</em> reuse sites more than expected by chance.
+</p>
+<p>NOTE: Because <code>indEffectTest</code> relies on 
+<code>kerneloverlap</code> to estimate overlap, it was not 
+possible to implement a <em>res</em> argument as is done in other track2KBA 
+functions. Therefore, it is advised to either leave the default of 500 cells,
+or ascertain the number of cells in the grid of chosen <em>res</em> from the 
+output of estSpaceUse.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>indEffectTest</code> returns a list containing three objects. In the 
+first slot 'Overlap Matrix', the full matrix of overlap comparisons. In the '
+Overlap' slot, a dataframe with a column identifying whether each overlap 
+estimate corresponds to a within-group, or a between-group comparison. 
+In the third slot 'Kolmogorov-Smirnov' is the test output of the 
+Kolmogorov-Smirnov test, indicating the D parameter and significance 
+estimates.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">tracks_raw &lt;- track2KBA::boobies
+## format data
+tracks_formatted &lt;- formatFields(
+  dataGroup = tracks_raw,
+  fieldID   = "track_id",
+  fieldLat  ="latitude",
+  fieldLon  ="longitude",
+  fieldDate ="date_gmt",
+  fieldTime ="time_gmt"
+)
+
+colony &lt;- data.frame(
+  Longitude = tracks_formatted$Longitude[1], 
+  Latitude = tracks_formatted$Latitude[1]
+)
+## Split into trips
+Trips &lt;- tripSplit(tracks_formatted,
+                   colony=colony,
+                   innerBuff=2,
+                   returnBuff=20,
+                   duration=1,
+                   nests = FALSE,
+                   rmNonTrip = TRUE
+)
+## project dataset
+tracks_prj &lt;- projectTracks(
+  Trips,
+  projType = "azim",
+  custom = "TRUE"
+)
+## estimate fidelity of individuals across trips
+result &lt;- indEffectTest(
+  tracks_prj, 
+  tripID = "tripID", 
+  groupVar = "ID", 
+  scale = 30
+)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,193 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>summary.mc</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Summarize the Results of a Monte Carlo Simulation</h2>
+
+<h3>Description</h3>
+
+<p>Summarize the results of a Monte Carlo Simulation run by <code>future_mc()</code> with
+(optionally) user-defined summary functions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'mc'
+summary(object, sum_funs = NULL, which_path = "all", ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>object</code></td>
+<td>
+<p>An object of class <code>mc</code>,
+for which holds <code>simple_output = TRUE</code>.
+See value of <code>future_mc()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sum_funs</code></td>
+<td>
+<p>A named (nested) list containing summary functions.
+See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>which_path</code></td>
+<td>
+<p>A character vector containing the names of (some of)
+the named outputs
+(the names of the returned list of <code>fun</code> in <code>future_mc()</code>),
+for which to return a "path" of the
+stepwise calculation of the result of the summary function.
+Alternatively, <code>"all"</code> or <code>"none"</code> can be used to return either
+the path for all or none of the
+numeric outputs.
+Default: <code>"all"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Ignored</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>In order to use <code>summary()</code>,
+the output of <code>future_mc()</code> has to be "simple",
+which is the case if the return value of <code>fun</code> is a named list of scalars.
+If the
+returned value of <code>fun</code> is a named list of more complex data structures,
+<code>summary()</code>
+cannot be used.
+</p>
+<p>With <code>sum_funs</code> the user can define (different) functions which summarize
+the simulation results for each output
+(return values of <code>fun</code> in <code>future_mc()</code>)
+and each parameter combination.
+Thus, the functions inside <code>sum_funs</code> only take one argument,
+which is the output vector (with length <code>repetitions</code>) of one output
+of one specific parameter combination.
+</p>
+<p>The default summary functions are <code>base::mean()</code> for numeric outputs and
+<code>base::summary()</code> for outputs with non-numeric data types.
+</p>
+<p>The user can define summary functions by supplying a named
+(nested) list to <code>sum_funs</code>. When
+the functions provided for each output return only one numeric value
+the results are twofold:
+first, a single scalar result of the
+function evaluating the whole output vector.
+Second, a "path" with length <code>repetitions</code> of the
+stepwise calculation of the function's result
+across the output vector
+(assumed that the output is contained in <code>which_path</code>).
+</p>
+<p>If the user wants to summarize the simulation results of a respective output
+in the same way
+for each parameter combination, a list whose components are named after the
+outputs (the names of the returned
+list of <code>fun</code> in <code>future_mc()</code>) is supplied and each component is
+a function which only takes the vector of results
+of one output as the main argument.
+</p>
+<p>If the user wants to summarize the simulation
+results of a respective output differently for
+different parameter combinations, a nested list has to be supplied.
+The components of the outer list
+must be equal in length and naming to the <code>nice_names</code> of the parameter
+combinations (see value of <code>future_mc()</code>) and each component is another
+list (inner list). The components of the inner list are then defined the
+same way as above
+(components named after the outputs and each component is a function).
+</p>
+<p>The provided summary functions are not restricted regarding the complexity
+of their return value.
+However, the path of the summarized output over all simulation repetitions
+is only returned if the
+provided summary functions return a single numeric value
+(and the output is contained in <code>which_path</code>).
+Thus, <code>plot.summary.mc()</code> will only work in this specific case.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A list of type <code>summary.mc</code> containing the
+result of the summary functions of the simulation
+results of a respective output and parameter combination.
+</p>
+<p>If the provided summary functions return a single numeric value,
+the path of the summarized output
+(which are contained in <code>which_path</code>)
+over all simulation repetitions is also returned.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">test_func &lt;- function(param = 0.1, n = 100, x1 = 1, x2 = 2){
+
+  data &lt;- rnorm(n, mean = param) + x1 + x2
+  stat &lt;- mean(data)
+  stat_2 &lt;- var(data)
+
+  if (x2 == 5){
+    stop("x2 can't be 5!")
+  }
+
+  return(list(mean = stat, var = stat_2))
+}
+
+param_list &lt;- list(param = seq(from = 0, to = 1, by = 0.5),
+                   x1 = 1:2)
+
+set.seed(101)
+test_mc &lt;- future_mc(
+  fun = test_func,
+  repetitions = 1000,
+  param_list = param_list,
+  n = 10,
+  x2 = 2
+)
+
+summary(test_mc)
+summary(test_mc, sum_funs = list(mean = mean, var = sd))
+
+sum_funcs &lt;- list(
+  list(
+    mean = mean, var = sd
+  ),
+  list(
+    mean = mean, var = summary
+  ),
+  list(
+    mean = max, var = min
+  ),
+  list(
+    mean = mean, var = sd
+  ),
+  list(
+    mean = mean, var = summary
+  ),
+  list(
+    mean = max, var = min
+  )
+)
+
+names(sum_funcs) &lt;- test_mc$nice_names
+
+summary(test_mc, sum_funs = sum_funcs)
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,151 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>focalCpp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Compute focal values with an iterating C++ function</h2>
+
+<h3>Description</h3>
+
+<p>Calculate focal values with a C++ function that iterates over cells to speed up computations by avoiding an R loop (with apply).
+</p>
+<p>See <code>focal</code> for an easier to use method. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+focalCpp(x, w=3, fun, ..., fillvalue=NA, 
+		silent=TRUE, filename="", overwrite=FALSE, wopt=list())
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>w</code></td>
+<td>
+<p>window. The window can be defined as one (for a square) or two numbers (row, col); or with an odd-sized weights matrix. See the Details section in <code>focal</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fun</code></td>
+<td>
+<p><code>cppFunction</code> that iterates over cells. For C++ functions that operate on a single focal window, or for R functions use <code>focal</code> instead. The function must have at least three arguments. The first argument can have any name, but it must be a <code>Rcpp::NumericVector</code>, <code>Rcpp::IntegerVector</code> or a <code>std::vector&lt;double&gt;</code>. This is the container that receives the focal values. The other two arguments <code>ni</code> and <code>wi</code> must be of type <code>size_t</code>. <code>ni</code> represents the number of cells and <code>nw</code> represents the size of (number of elements in) the window</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments to <code>fun</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fillvalue</code></td>
+<td>
+<p>numeric. The value of the cells in the virtual rows and columns outside of the raster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>silent</code></td>
+<td>
+<p>logical. If <code>TRUE</code> error messages are printed that may occur when trying <code>fun</code> to determine the length of the returned value. This can be useful in debugging a <code>fun</code> that does not work</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. Output filename</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite</code></td>
+<td>
+<p>logical. If <code>TRUE</code>, <code>filename</code> is overwritten</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>wopt</code></td>
+<td>
+<p>additional arguments for writing files as in <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster</p>
+
+
+<h3>See Also</h3>
+
+ <p><code>focal</code>, <code>focalValues</code> </p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Not run: 
+library(Rcpp)
+cppFunction( 
+	'NumericVector sum_and_multiply(NumericVector x, double m, size_t ni, size_t nw) {
+		NumericVector out(ni);
+		// loop over cells
+		size_t start = 0;
+		for (size_t i=0; i&lt;ni; i++) {
+			size_t end = start + nw;
+			// compute something for a window
+			double v = 0;
+			// loop over the values of a window
+			for (size_t j=start; j&lt;end; j++) {
+				v += x[j];
+			}
+			out[i] = v * m;
+			start = end;
+		}
+		return out;
+	}'
+)
+
+nr &lt;- nc &lt;- 10
+r &lt;- rast(ncols=nc, nrows=nr, ext= c(0, nc, 0, nr))
+values(r) &lt;- 1:ncell(r)
+
+raw &lt;- focalCpp(r, w=3, fun=sum_and_multiply, fillvalue=0, m=10)
+
+# same as
+f1 &lt;- focal(r, w=3, fun=sum, fillvalue=0) *10
+all(values(f1) == values(raw))
+
+# and as
+ffun &lt;- function(x, m) { sum(x) * m }
+f2 &lt;- focal(r, w=3, fun=ffun, fillvalue=0, m=10)
+
+
+# You can also use an R function with focalCpp but this
+# is not recommended 
+
+R_sm_iter &lt;- function(x, m, ni, nw) {
+	out &lt;- NULL
+	for (i in 1:ni) {
+		start &lt;- (i-1) * nw + 1
+		out[i] &lt;- sum(x[start:(start+nw-1)]) * m
+	}
+	out
+}
+
+fr &lt;- focalCpp(r, w=3, fun=R_sm_iter, fillvalue=0, m=10)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

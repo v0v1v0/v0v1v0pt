@@ -1,0 +1,126 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>render_anim</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Render a set of animation frames</h2>
+
+<h3>Description</h3>
+
+<p>This function takes a set of frames as produced by
+save_history(), and creates the projected data and axes
+in for format needed to create the animation using plotly.
+It will be useful for showing a tour where mouseover can
+be used to identify points.
+Note that for now this only works for 2D projections.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">render_anim(
+  data,
+  vars = NULL,
+  frames,
+  edges = NULL,
+  axis_labels = NULL,
+  obs_labels = NULL,
+  limits = 1,
+  position = "center"
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>matrix, or data frame containing numeric columns,
+should be standardised to have mean 0, sd 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>vars</code></td>
+<td>
+<p>numeric columns of data to be projected, as a vector, eg 1:4</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>frames</code></td>
+<td>
+<p>array of projection matrices, should be interpolated already</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>edges</code></td>
+<td>
+<p>to and from of row id's to connect with an line</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>axis_labels</code></td>
+<td>
+<p>labels of the axes to be displayed</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obs_labels</code></td>
+<td>
+<p>labels of the observations to be available for interactive mouseover</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>limits</code></td>
+<td>
+<p>value setting the lower and upper limits of
+projected data, default 1</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>position</code></td>
+<td>
+<p>position of the axes: center (default),
+left of data or off</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>list containing indexed projected data, edges, circle and segments for axes
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">data(flea)
+flea_std &lt;- apply(flea[,1:6], 2, function(x) (x-mean(x))/sd(x))
+t1 &lt;- save_history(flea_std, max=2)
+t1i &lt;- tourr::interpolate(t1, 0.1)
+p &lt;- render_anim(data=flea_std, frames=t1i)
+if (require(ggplot2)) {
+  pg &lt;- ggplot() +
+    geom_path(data=p$circle, aes(x=c1, y=c2, frame=frame)) +
+    geom_segment(data=p$axes, aes(x=x1, y=y1, xend=x2, yend=y2, frame=frame)) +
+    geom_text(data=p$axes, aes(x=x2, y=y2, frame=frame, label=axis_labels)) +
+    geom_point(data=p$frames, aes(x=P1, y=P2, frame=frame, label=obs_labels)) +
+    coord_equal() +
+    theme_bw() +
+    theme(axis.text=element_blank(),
+        axis.title=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank())
+  if (interactive()) {
+    require(plotly)
+    ggplotly(pg, width=500, height=500) |&gt;
+      animation_button(label="Go") |&gt;
+      animation_slider(len=0.8, x=0.5, xanchor="center") |&gt;
+      animation_opts(easing="linear", transition=0, redraw=FALSE)
+  }
+}
+</code></pre>
+
+
+</div>

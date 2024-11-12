@@ -1,0 +1,185 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>filter.Spat</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Subset cells/geometries of <code style="white-space: pre;">⁠Spat*⁠</code> objects</h2>
+
+<h3>Description</h3>
+
+<p>The <code>filter()</code> function is used to subset <code style="white-space: pre;">⁠Spat*⁠</code> objects, retaining all
+cells/geometries that satisfy your conditions. To be retained, the
+cell/geometry must produce a value of <code>TRUE</code> for all conditions.
+</p>
+<p><strong>It is possible to filter a <code>SpatRaster</code> by its geographic coordinates</strong>.
+You need to use <code>filter(.data, x &gt; 42)</code>. Note that <code>x</code> and <code>y</code> are reserved
+names on <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a>, since they refer to the geographic coordinates of
+the layer.
+</p>
+<p>See <strong>Examples</strong> and section <strong>About layer names</strong> on <code>as_tibble.Spat()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatRaster'
+filter(.data, ..., .preserve = FALSE, .keep_extent = TRUE)
+
+## S3 method for class 'SpatVector'
+filter(.data, ..., .preserve = FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>.data</code></td>
+<td>
+<p>A <code>SpatRaster</code> created with <code>terra::rast()</code> or a <code>SpatVector</code>
+created with <code>terra::vect()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>data-masking</code>&gt; Expressions that
+return a logical value, and are defined in terms of the layers/attributes
+in <code>.data</code>. If multiple expressions are included, they are combined with
+the <code>&amp;</code> operator. Only cells/geometries for which all conditions evaluate
+to <code>TRUE</code> are kept. See <strong>Methods</strong>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.preserve</code></td>
+<td>
+<p>Ignored for <code style="white-space: pre;">⁠Spat*⁠</code> objects.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>.keep_extent</code></td>
+<td>
+<p>Should the extent of the resulting <code>SpatRaster</code> be kept?
+On <code>FALSE</code>, <code>terra::trim()</code> is called so the extent of the result may be
+different of the extent of the output. See also <code>drop_na.SpatRaster()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>A <code style="white-space: pre;">⁠Spat*⁠</code> object  of the same class than <code>.data</code>. See <strong>Methods</strong>.
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>dplyr::filter()</code> function.
+</p>
+
+
+<h4><code>SpatRaster</code></h4>
+
+<p>Cells that do not fulfill the conditions on <code>...</code> are returned with value
+<code>NA</code>. On a multi-layer <code>SpatRaster</code> the <code>NA</code> is propagated across all the
+layers.
+</p>
+<p>If <code>.keep_extent = TRUE</code> the returning <code>SpatRaster</code> has the same crs, extent,
+resolution and hence the same number of cells than <code>.data</code>. If
+<code>.keep_extent = FALSE</code> the outer <code>NA</code> cells are trimmed with <code>terra::trim()</code>,
+so the extent and number of cells may differ. The output would present in
+any case the same crs and resolution than <code>.data</code>.
+</p>
+<p><code>x</code> and <code>y</code> variables (i.e. the longitude and latitude of the <code>SpatRaster</code>)
+are also available internally for filtering. See <strong>Examples</strong>.
+</p>
+
+
+
+<h4><code>SpatVector</code></h4>
+
+<p>The result is a <code>SpatVector</code> with all the geometries that produce a value of
+<code>TRUE</code> for all conditions.
+</p>
+
+
+
+<h3>See Also</h3>
+
+<p><code>dplyr::filter()</code>
+</p>
+<p>Other single table verbs: 
+<code>arrange.SpatVector()</code>,
+<code>mutate.Spat</code>,
+<code>rename.Spat</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on rows:
+<code>arrange.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>slice.Spat</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_cols.SpatVector</code>,
+<code>bind_rows.SpatVector</code>,
+<code>count.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>rowwise.SpatVector()</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+library(terra)
+f &lt;- system.file("extdata/cyl_temp.tif", package = "tidyterra")
+
+r &lt;- rast(f) %&gt;% select(tavg_04)
+
+plot(r)
+
+
+# Filter temps
+r_f &lt;- r %&gt;% filter(tavg_04 &gt; 11.5)
+
+# Extent is kept
+plot(r_f)
+
+
+# Filter temps and extent
+r_f2 &lt;- r %&gt;% filter(tavg_04 &gt; 11.5, .keep_extent = FALSE)
+
+# Extent has changed
+plot(r_f2)
+
+
+# Filter by geographic coordinates
+r2 &lt;- project(r, "epsg:4326")
+
+r2 %&gt;% plot()
+
+r2 %&gt;%
+  filter(
+    x &gt; -4,
+    x &lt; -2,
+    y &gt; 42
+  ) %&gt;%
+  plot()
+</code></pre>
+
+
+</div>

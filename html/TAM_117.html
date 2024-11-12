@@ -1,0 +1,104 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>IRTLikelihood.ctt</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Computes Individual Likelihood from Classical Test Theory Estimates
+</h2>
+
+<h3>Description</h3>
+
+<p>Computes individual likelihood from classical test theory estimates
+under a unidimensional normal distribution of measurement errors.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">IRTLikelihood.ctt(y, errvar, theta=NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>y</code></td>
+<td>
+
+<p>Vector of observed scores
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>errvar</code></td>
+<td>
+
+<p>Vector of error variances
+</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>theta</code></td>
+<td>
+
+<p>Optional vector for <code class="reqn">\theta</code> grid.
+</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Object of class <code>IRT.likelihood</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#############################################################################
+# EXAMPLE 1: Individual likelihood and latent regression in CTT
+#############################################################################
+
+set.seed(75)
+
+#--- simulate data
+N &lt;- 2000
+x1 &lt;- stats::rnorm(N)
+x2 &lt;- .7 * x1 + stats::runif(N)
+# simulate true score
+theta &lt;- 1.2 + .6*x1 + .3 *x2 + stats::rnorm(N, sd=sqrt(.50) )
+var(theta)
+# simulate measurement error variances
+errvar &lt;- stats::runif( N, min=.6, max=.9 )
+# simulate observed scores
+y &lt;- theta + stats::rnorm( N, sd=sqrt( errvar) )
+
+#--- create likelihood object
+like1 &lt;- TAM::IRTLikelihood.ctt( y=y, errvar=errvar, theta=NULL )
+
+#--- estimate latent regression
+X &lt;- data.frame(x1,x2)
+mod1 &lt;- TAM::tam.latreg( like=like1, Y=X )
+
+## Not run: 
+#--- draw plausible values
+pv1 &lt;- TAM::tam.pv( mod1, normal.approx=TRUE )
+
+#--- create datalist
+datlist1 &lt;- TAM::tampv2datalist( pv1, pvnames="thetaPV", Y=X )
+
+#--- statistical inference on plausible values using mitools package
+library(mitools)
+datlist1a &lt;- mitools::imputationList(datlist1)
+
+# fit linear regression and apply Rubin formulas
+mod2 &lt;- with( datlist1a, stats::lm( thetaPV ~ x1 + x2 ) )
+summary( mitools::MIcombine(mod2) )
+
+## End(Not run)
+</code></pre>
+
+
+</div>

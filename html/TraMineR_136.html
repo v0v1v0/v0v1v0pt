@@ -1,0 +1,116 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>seqlogp</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Logarithm of the probabilities of state sequences
+</h2>
+
+<h3>Description</h3>
+
+<p>Logarithm of the probabilities of state sequences. The probability of a sequence is defined as the product of the probabilities of the successive states in the sequence. State probabilities can either be provided or be computed with one of a few basic models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">seqlogp(seqdata, prob="trate", time.varying=TRUE,
+        begin="freq", weighted=TRUE, with.missing=FALSE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>seqdata</code></td>
+<td>
+<p>A state sequence object as produced by <code>seqdef</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prob</code></td>
+<td>
+<p>String or numeric array. If a string, either <code>"trate"</code> or <code>"freq"</code> to select a probability model to compute the state probabilities. If a numeric array, a matrix or 3-dimensional array of transition probabilities. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time.varying</code></td>
+<td>
+<p>Logical. If <code>TRUE</code>, the probabilities (transitions or frequencies) are computed separately for each time <code class="reqn">t</code> point.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>begin</code></td>
+<td>
+<p>String of numeric vector. Distribution used to determine the probability of the first state. If a vector, the probabilites to use. If a string, either <code>"freq"</code> or <code>global.freq</code>. With <code>freq</code>, the observed distribution at first position is used. If <code>global.freq</code>, the overall distribution is used. Default is <code>"freq"</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>weighted</code></td>
+<td>
+<p>Logical. Should we account for the weights when present in <code>seqdata</code>? Default is <code>TRUE</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>with.missing</code></td>
+<td>
+<p>Logical. Should non void missing states be treated as regular values? Default is <code>FALSE</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>The sequence likelihood <code class="reqn">P(s)</code> is defined as the product of the probability with which each of its observed successive state is supposed to occur at its position.
+Let <code class="reqn">s=s_{1}s_{2} \cdots s_{\ell}</code> be a sequence of length <code class="reqn">\ell</code>. Then
+</p>
+<p style="text-align: center;"><code class="reqn">
+	P(s)=P(s_{1},1) \cdot P(s_{2},2) \cdots P(s_{\ell},\ell)
+</code>
+</p>
+
+<p>with <code class="reqn">P(s_{t},t)</code> the probability to observe state <code class="reqn">s_t</code> at position <code class="reqn">t</code>.
+</p>
+<p>There are different ways to determine the state probabilities <code class="reqn">P(s_t,t)</code>. The method is chosen by means of the <code>prob</code> argument.
+</p>
+<p>With <code>prop = "freq"</code>, the probability <code class="reqn">P(s_{t},t)</code> is set as the observed relative frequency at position <code class="reqn">t</code>. In that case, the probability does not depend on the probabilities of transition. By default (<code>time.varying=TRUE</code>), the relative frequencies are computed separately for each position <code class="reqn">t</code>. With <code>time.varying=FALSE</code>, the relative frequencies are computed over the entire covered period, i.e. the same frequencies are used at each <code class="reqn">t</code>.
+</p>
+<p>Option <code>prop = "trate"</code> assumes that each <code class="reqn">P(s_t,t)</code>, <code class="reqn">t&gt;1</code> is set as the transition probability <code class="reqn">p(s_t|s_{t-1})</code>. The state distribution used to determine the probability of the first state <code class="reqn">s_1</code> is set by means of the <code>begin</code> argument (see below). With the default <code>time.varying=TRUE</code>), the transition probabilities are estimated separately at each position, yielding an array of transition matrices. With <code>time.varying=FALSE</code>, the transition probabilities are assumed to be constant over the successive positions and  are estimated over the entire sequence duration, i.e. from all observed transitions.
+</p>
+<p>Custom transition probabilities can be provided by passing a matrix or a 3-dimensional array as <code>prob</code> argument.
+</p>
+<p>The distribution used at the first position is set by means of the <code>begin</code> argument. You can either pass the distribution (probabilities of the states in the alphabet including the missing value when <code>with.missing=TRUE</code>), or specify <code>"freq"</code> for the observed distribution at the first position, or <code>global.freq</code> for the overall state distribution.
+</p>
+<p>The likelihood <code class="reqn">P(s)</code> being generally very small, <code>seqlogp</code> returns <code class="reqn">-\log P(s)</code>. The latter quantity is minimal when <code class="reqn">P(s)</code> is equal to <code class="reqn">1</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Vector of the negative logarithm <code class="reqn">-\log P(s)</code> of the sequence probabilities.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Matthias Studer, Alexis Gabadinho, and Gilbert Ritschard</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">## Creating the sequence objects using weigths
+data(biofam)
+biofam.seq &lt;-  seqdef(biofam, 10:25, weights=biofam$wp00tbgs)
+
+## Computing sequence probabilities
+biofam.prob &lt;- seqlogp(biofam.seq)
+## Comparing the probability of each cohort
+cohort &lt;- biofam$birthyr&gt;1940
+boxplot(biofam.prob~cohort)
+
+</code></pre>
+
+
+</div>

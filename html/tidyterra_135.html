@@ -1,0 +1,154 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>rowwise.SpatVector</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Group <code>SpatVector</code> objects by rows</h2>
+
+<h3>Description</h3>
+
+<p><code>rowwise()</code> allows you to compute on a <code>SpatVector</code> a row-at-a-time.
+This is most useful when a vectorised function doesn't exist.
+</p>
+<p>Most <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs implementation in <a href="https://CRAN.R-project.org/package=tidyterra"><span class="pkg">tidyterra</span></a> preserve
+row-wise grouping, with the exception of <code>summarise.SpatVector()</code>. You can
+explicitly ungroup with <code>ungroup.SpatVector()</code> or <code>as_tibble()</code>, or convert
+to a grouped <code>SpatVector</code> with <code>group_by.SpatVector()</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S3 method for class 'SpatVector'
+rowwise(data, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>data</code></td>
+<td>
+<p>A <code>SpatVector</code> object. See <strong>Methods</strong>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>&lt;<code>tidy-select</code>&gt; Variables to be
+preserved when calling <code>summarise.SpatVector()</code>. This is typically a set
+of variables whose combination uniquely identify each row. See
+<code>dplyr::rowwise()</code>.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>See <strong>Details</strong> on <code>dplyr::rowwise()</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p>The same <code>SpatVector</code> object with an additional attribute.
+</p>
+
+
+<h3>Methods</h3>
+
+<p>Implementation of the <strong>generic</strong> <code>dplyr::rowwise()</code> function for
+<code>SpatVector</code> objects.
+</p>
+<p><strong>When mixing</strong> <a href="https://CRAN.R-project.org/package=terra"><span class="pkg">terra</span></a> <strong>and</strong> <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> <strong>syntax</strong> on a
+row-wise <code>SpatVector</code> (i.e, subsetting a <code>SpatVector</code> like <code>v[1:3,1:2]</code>) the
+<code>groups</code> attribute can be corrupted. <a href="https://CRAN.R-project.org/package=tidyterra"><span class="pkg">tidyterra</span></a> would try to
+re-generate the <code>SpatVector</code>. This would be triggered the next time you use
+a <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verb on your <code>SpatVector</code>.
+</p>
+<p>Note also that some operations (as <code>terra::spatSample()</code>) would create a new
+<code>SpatVector</code>. In these cases, the result won't preserve the <code>groups</code>
+attribute. Use <code>rowwise.SpatVector()</code> to re-group.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>dplyr::rowwise()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> verbs that operate on group of rows:
+<code>count.SpatVector()</code>,
+<code>group-by.SpatVector</code>,
+<code>summarise.SpatVector()</code>
+</p>
+<p>Other <a href="https://CRAN.R-project.org/package=dplyr"><span class="pkg">dplyr</span></a> methods:
+<code>arrange.SpatVector()</code>,
+<code>bind_cols.SpatVector</code>,
+<code>bind_rows.SpatVector</code>,
+<code>count.SpatVector()</code>,
+<code>distinct.SpatVector()</code>,
+<code>filter-joins.SpatVector</code>,
+<code>filter.Spat</code>,
+<code>glimpse.Spat</code>,
+<code>group-by.SpatVector</code>,
+<code>mutate-joins.SpatVector</code>,
+<code>mutate.Spat</code>,
+<code>pull.Spat</code>,
+<code>relocate.Spat</code>,
+<code>rename.Spat</code>,
+<code>select.Spat</code>,
+<code>slice.Spat</code>,
+<code>summarise.SpatVector()</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(terra)
+library(dplyr)
+
+v &lt;- terra::vect(system.file("shape/nc.shp", package = "sf"))
+
+# Select new births
+nb &lt;- v %&gt;%
+  select(starts_with("NWBIR")) %&gt;%
+  glimpse()
+
+# Compute the mean of NWBIR on each geometry
+nb %&gt;%
+  rowwise() %&gt;%
+  mutate(nb_mean = mean(c(NWBIR74, NWBIR79)))
+
+# Additional examples
+
+# use c_across() to more easily select many variables
+nb %&gt;%
+  rowwise() %&gt;%
+  mutate(m = mean(c_across(NWBIR74:NWBIR79)))
+
+# Compute the minimum of x and y in each row
+
+nb %&gt;%
+  rowwise() %&gt;%
+  mutate(min = min(c_across(NWBIR74:NWBIR79)))
+
+# Summarising
+v %&gt;%
+  rowwise() %&gt;%
+  summarise(mean_bir = mean(BIR74, BIR79)) %&gt;%
+  glimpse() %&gt;%
+  autoplot(aes(fill = mean_bir))
+
+# Supply a variable to be kept
+v %&gt;%
+  mutate(id2 = as.integer(CNTY_ID / 100)) %&gt;%
+  rowwise(id2) %&gt;%
+  summarise(mean_bir = mean(BIR74, BIR79)) %&gt;%
+  glimpse() %&gt;%
+  autoplot(aes(fill = as.factor(id2)))
+
+</code></pre>
+
+
+</div>

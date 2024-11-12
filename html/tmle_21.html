@@ -1,0 +1,435 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tmleMSM</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>
+Targeted Maximum Likelihood Estimation of Parameter of MSM</h2>
+
+<h3>Description</h3>
+
+<p>Targeted maximum likelihood estimation of the parameter of a marginal structural model (MSM) for binary point treatment effects. The <code>tmleMSM</code> function is minimally called with arguments <code>(Y,A,W, MSM)</code>, where  <code>Y</code> is a continuous or binary outcome variable, <code>A</code> is a binary treatment variable, (<code>A=1</code> for treatment, <code>A=0</code> for control), and <code>W</code> is a matrix or dataframe of baseline covariates. MSM is a valid regression formula for regressing <code>Y</code> on any combination of <code>A, V, W, T</code>, where <code>V</code> defines strata and <code>T</code> represents the time at which repeated measures on subjects are made.  Missingness in the outcome is accounted for in the estimation procedure if missingness indicator <code>Delta</code> is 0 for some observations.  Repeated measures can be identified using the <code>id</code> argument. Observation weigths (sampling weights) may optionally be provided</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tmleMSM(Y, A, W, V, T = rep(1,length(Y)), Delta = rep(1, length(Y)), MSM, 
+        v = NULL, Q = NULL, Qform = NULL, Qbounds = c(-Inf, Inf), 
+        Q.SL.library = c("SL.glm", "tmle.SL.dbarts2", "SL.glmnet"), 
+        cvQinit = TRUE, hAV = NULL, hAVform = NULL, g1W = NULL, 
+        gform = NULL, pDelta1 = NULL, g.Deltaform = NULL, 
+	g.SL.library = c("SL.glm", "tmle.SL.dbarts.k.5", "SL.gam"),
+	g.Delta.SL.library = c("SL.glm", "tmle.SL.dbarts.k.5", "SL.gam"),
+	ub = sqrt(sum(Delta))* log(sum(Delta)) / 5, family = "gaussian", 
+	fluctuation = "logistic", alpha  = 0.995, id = 1:length(Y), 
+	V.Q = 10, V.g = 10, V.Delta = 10, inference = TRUE, verbose = FALSE, 
+	Q.discreteSL = FALSE, g.discreteSL = FALSE, alpha.sig = 0.05, obsWeights = NULL)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>Y</code></td>
+<td>
+<p>continuous or binary outcome variable</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>A</code></td>
+<td>
+<p>binary treatment indicator, <code>1</code> - treatment, <code>0</code> - control</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>W</code></td>
+<td>
+<p>vector, matrix, or dataframe containing baseline covariates. Factors are not currently allowed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V</code></td>
+<td>
+<p>vector, matrix, or dataframe of covariates used to define strata</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>T</code></td>
+<td>
+<p>optional time for repeated measures data</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Delta</code></td>
+<td>
+<p>indicator of missing outcome or treatment assignment.  <code>1</code> - observed, <code>0</code> - missing</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>MSM</code></td>
+<td>
+<p>MSM of interest, specified as valid right hand side of a regression formula (see examples)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>v</code></td>
+<td>
+<p>optional value defining the strata of interest (<code class="reqn">V=v</code>) for stratified estimation of MSM parameter</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q</code></td>
+<td>
+<p>optional <code class="reqn">n \times 2</code> matrix of initial values for <code class="reqn">Q</code> portion of the likelihood, <code class="reqn">(E(Y|A=0,W), E(Y|A=1,W))</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qform</code></td>
+<td>
+<p>optional regression formula for estimation of <code class="reqn">E(Y|A, W)</code>, suitable for call to <code>glm</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qbounds</code></td>
+<td>
+<p>vector of upper and lower bounds on <code>Y</code> and predicted values for initial <code>Q</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of initial <code>Q</code> </p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cvQinit</code></td>
+<td>
+<p>logical, if <code>TRUE</code>, estimates cross-validated predicted values using discrete super learning, default=<code>TRUE</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hAV</code></td>
+<td>
+<p>optional <code class="reqn">n \times 2</code> matrix used in numerator of weights for updating covariate and the influence curve. If unspecified, defaults to conditional probabilities <code class="reqn">P(A=1|V)</code> or <code class="reqn">P(A=1|T)</code>, for repeated measures data. For unstabilized weights, pass in an <code class="reqn">n \times 2</code> matrix of all 1s</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>hAVform</code></td>
+<td>
+<p>optionalregression formula of the form <code>A~V+T</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g1W</code></td>
+<td>
+<p>optional vector of conditional treatment assingment probabilities, <code class="reqn">P(A=1|W)</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gform</code></td>
+<td>
+<p>optional regression formula of the form <code>A~W</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pDelta1</code></td>
+<td>
+<p>optional <code class="reqn">n \times 2</code> matrix of conditional probabilities for missingness mechanism,<code class="reqn">P(Delta=1|A=0,V,W,T), P(Delta=1|A=1,V,W,T)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Deltaform</code></td>
+<td>
+<p>optional regression formula of the form <code>Delta~A+W</code>, if specified this overrides the call to <code>SuperLearner</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of <code>g1W</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.Delta.SL.library</code></td>
+<td>
+<p>optional vector of prediction algorithms to use for <code>SuperLearner</code> estimation of<code>pDelta1</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ub</code></td>
+<td>
+<p>upper bound on inverse probability weights. See <code>Details</code> section for more information</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>family</code></td>
+<td>
+<p>family specification for working regression models, generally ‘gaussian’ for continuous outcomes (default), ‘binomial’ for binary outcomes</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>fluctuation</code></td>
+<td>
+<p>‘logistic’ (default), or ‘linear’</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha</code></td>
+<td>
+<p>used to keep predicted initial values bounded away from (0,1) for logistic fluctuation</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>id</code></td>
+<td>
+<p>optional subject identifier</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.Q</code></td>
+<td>
+<p>number of cross-validation folds for Super Learner estimation of Q</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.g</code></td>
+<td>
+<p>number of cross-validation folds for Super Learner estimation of g</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>V.Delta</code></td>
+<td>
+<p>number of cross-validation folds for Super Learner estimation of g_Delta</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>inference</code></td>
+<td>
+<p>if <code>TRUE</code>, variance-covariance matrix, standard errors, pvalues, and 95% confidence intervals are calculated. Setting to FALSE saves a little time when bootstrapping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>verbose</code></td>
+<td>
+<p>status messages printed if set to <code>TRUE</code> (default=<code>FALSE</code>)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Q.discreteSL</code></td>
+<td>
+<p>If true, use discrete SL to estimate Q, otherwise ensembleSL by default. Ignored when SL is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.discreteSL</code></td>
+<td>
+<p>If true, use discrete SL to estimate each component of g, otherwise ensembleSL by default. Ignored when SL is not used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>alpha.sig</code></td>
+<td>
+<p>significance level for constructing <code>1-alpha.sig</code> confidence intervals</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>obsWeights</code></td>
+<td>
+<p>optional weights for biased sampling and two-stage designs.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p><code>ub</code> bounds the IC by bounding the factor <code class="reqn">h(A,V)/[g(A,V,W)P(Delta=1|A,V,W)]</code> between 0 and <code>ub</code>, default value based on sample size.
+</p>
+
+
+<h3>Value</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>psi</code></td>
+<td>
+<p>MSM parameter estimate</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>sigma</code></td>
+<td>
+<p>variance covariance matrix</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>se</code></td>
+<td>
+<p>standard errors extracted from sigma</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>pvalue</code></td>
+<td>
+<p>two-sided p-value</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>lb</code></td>
+<td>
+<p>lower bound on 95% confidence interval</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>ub</code></td>
+<td>
+<p>upper bound on 95% confidence interval</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>epsilon</code></td>
+<td>
+<p>fitted value of epsilon used to target initial <code>Q</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>psi.Qinit</code></td>
+<td>
+<p>MSM parameter estimate based on untargeted initial <code>Q</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qstar</code></td>
+<td>
+<p>targeted estimate of <code>Q</code>, an <code class="reqn">n \times 2</code> matrix with predicted values for <code>Q(0,W), Q(1,W)</code> using the updated fit</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>Qinit</code></td>
+<td>
+<p>initial estimate of <code>Q</code>. <code>Qinit$coef</code> are the coefficients for a <code>glm</code> model for <code>Q</code>, if applicable.  <code>Qinit$Q</code> is an <code class="reqn">n \times 2</code> matrix, where <code>n</code> is the number of observations.  Columns contain predicted values for <code>Q(0,W),Q(1,W)</code> using the initial fit.  <code>Qinit$type</code> is method for estimating <code>Q</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g</code></td>
+<td>
+<p>treatment mechanism estimate. A list with three items: <code>g$g1W</code> contains estimates of <code class="reqn">P(A=1|W)</code> for each observation, <code>g$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g$type</code> estimation procedure</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g.AV</code></td>
+<td>
+<p>estimate for h(A,V) or h(A,T). A list with three items: <code>g.AV$g1W</code> an <code class="reqn">n \times 2</code> matrix containing values of <code class="reqn">P(A=0|V,T), P(A=1|V,T)</code> for each observation, <code>g.AV$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g.AV$type</code> estimation procedure</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>g_Delta</code></td>
+<td>
+<p>missingness mechanism estimate. A list with three items: <code>g_Delta$g1W</code> an <code class="reqn">n \times 2</code> matrix containing values of <code class="reqn">P(Delta=1|A,V,W,T)</code> for each observation, <code>g_Delta$coef</code> the coefficients for the model for <code class="reqn">g</code> when <code>glm</code> used, <code>g_Delta$type</code> estimation procedure</p>
+</td>
+</tr>
+</table>
+<h3>Author(s)</h3>
+
+<p>Susan Gruber <a href="mailto:sgruber@cal.berkeley.edu">sgruber@cal.berkeley.edu</a>, in collaboration with Mark van der Laan.</p>
+
+
+<h3>References</h3>
+
+<p>1. Gruber, S. and van der Laan, M.J. (2012), tmle: An R Package for Targeted Maximum Likelihood Estimation. <em>Journal of Statistical Software</em>, 51(13), 1-35. <a href="https://www.jstatsoft.org/v51/i13/">https://www.jstatsoft.org/v51/i13/</a>
+</p>
+<p>2. Rosenblum, M. and van der Laan, M.J. (2010), Targeted Maximum Likelihood Estimation of the Parameter of a Marginal Structural Model. <em>The International Journal of Biostatistics</em>,6(2), 2010.
+</p>
+<p>3. Gruber, S., Phillips, R.V., Lee, H., van der Laan, M.J. Data-Adaptive Selection of the Propensity Score Truncation Level for Inverse Probability Weighted and Targeted Maximum Likelihood Estimators of Marginal Point Treatment Effects. <em>American Journal of Epidemiology</em> 2022; 191(9), 1640-1651.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.tmleMSM</code>,
+<code>estimateQ</code>,
+<code>estimateG</code>,
+<code>calcSigma</code>,
+<code>tmle</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">library(tmle)
+# Example 1. Estimating MSM parameter with correctly specified regression formulas
+# MSM: psi0 + psi1*A + psi2*V + psi3*A*V  (saturated)
+# true parameter value: psi = (0, 1, -2, 0.5) 
+# generate data
+  set.seed(100)
+  n &lt;- 1000
+  W &lt;- matrix(rnorm(n*3), ncol = 3)
+  colnames(W) &lt;- c("W1", "W2", "W3")
+  V &lt;- rbinom(n, 1, 0.5)
+  A &lt;- rbinom(n, 1, 0.5)
+  Y &lt;- rbinom(n, 1, plogis(A - 2*V + 0.5*A*V))
+  result.ex1 &lt;- tmleMSM(Y, A, W, V, MSM = "A*V", Qform = "Y~.", gform = "A~1", 
+                        hAVform = "A~1", family = "binomial")
+  print(result.ex1)
+## Not run: 
+
+# Example 2. Biased sampling from example 1 population
+# (observations having V = 1 twice as likely to be included in the dataset
+  retain.ex2 &lt;- sample(1:n, size = n/2, p = c(1/3 + 1/3*V))
+  wt.ex2 &lt;- 1/(1/3 + 1/3*V)
+  result.ex2 &lt;- tmleMSM(Y[retain.ex2], A[retain.ex2], W[retain.ex2,], 
+			V[retain.ex2], MSM = "A*V", Qform = "Y~.", gform = "A~1", 
+                        hAVform = "A~1", family = "binomial",
+			obsWeight = wt.ex2[retain.ex2])
+  print(result.ex2)
+
+# Example 3. Repeated measures data, two observations per id
+# (e.g., crossover study design)
+# MSM: psi0 + psi1*A + psi2*V + psi3*V^2 + psi4*T
+# true parameter value: psi = (-2, 1, 0, -2, 0 )
+# generate data in wide format (id,  W1, Y(t),  W2(t), V(t), A(t)) 
+   set.seed(10)
+   n &lt;- 250
+   id &lt;- rep(1:n)
+   W1   &lt;- rbinom(n, 1, 0.5)
+   W2.1 &lt;- rnorm(n)
+   W2.2 &lt;- rnorm(n)  
+   V.1   &lt;- rnorm(n)  
+   V.2   &lt;- rnorm(n)
+   A.1 &lt;- rbinom(n, 1, plogis(0.5 + 0.3 * W2.1))
+   A.2 &lt;- 1-A.1
+   Y.1  &lt;- -2 + A.1 - 2*V.1^2 + W2.1 + rnorm(n)
+   Y.2  &lt;- -2 + A.2 - 2*V.2^2 + W2.2 + rnorm(n)
+   d &lt;- data.frame(id, W1, W2=W2.1, W2.2, V=V.1, V.2, A=A.1, A.2, Y=Y.1, Y.2)
+
+# change dataset from wide to long format
+   longd &lt;- reshape(d, 
+          varying = cbind(c(3, 5, 7, 9), c(4, 6, 8, 10)),
+          idvar = "id",
+          direction = "long",
+          timevar = "T",
+          new.row.names = NULL,
+          sep = "")
+# misspecified model for initial Q, partial misspecification for g. 
+# V set to 2 for Q and g to save time, not recommended at this sample size
+   result.ex3 &lt;- tmleMSM(Y = longd$Y, A = longd$A, W = longd[,c("W1", "W2")], V = longd$V, 
+          T = longd$T, MSM = "A + V + I(V^2) + T", Qform = "Y ~ A + V", gform = "A ~ W2", 
+	id = longd$id, V.Q=2, V.g=2)
+   print(result.ex3)
+
+
+# Example 4:  Introduce 20
+# V set to 2 for Q and g to save time, not recommended at this sample size
+  Delta &lt;- rbinom(nrow(longd), 1, 0.8)
+  result.ex4 &lt;- tmleMSM(Y = longd$Y, A = longd$A, W = longd[,c("W1", "W2")], V = longd$V, T=longd$T,
+          Delta = Delta, MSM = "A + V + I(V^2) + T", Qform = "Y ~ A + V", gform = "A ~ W2",
+	  g.Deltaform = "Delta ~ 1", id=longd$id, verbose = TRUE, V.Q=2, V.g=2)
+  print(result.ex4)
+
+
+## End(Not run)
+</code></pre>
+
+
+</div>

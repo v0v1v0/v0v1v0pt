@@ -1,0 +1,204 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>aaa2_tinycodet_import</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Overview of the 'tinycodet' Import System</h2>
+
+<h3>Description</h3>
+
+<p>The 'tinycodet' R-package introduces a new package import system. <br><br>
+One can <b>use</b> a package <b>without attaching</b> the package -
+for example by using the :: operator. <br>
+Or, one can explicitly <b>attach</b> a package -
+for example by using the library function. <br>
+The advantages and disadvantages
+of <b>using without attaching</b> a package versus <b>attaching</b> a package,
+at least those relevant here,
+are compactly presented in the following list: <br><br>
+(1) Prevent masking functions from other packages: <br><img src="../help/figures/usewithoutattach-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><br><br>
+(2) Prevent masking core R functions: <br><img src="../help/figures/usewithoutattach-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><br><br>
+(3) Clarify which function came from which package: <br><img src="../help/figures/usewithoutattach-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><br><br>
+(4) Enable functions only in current/local environment instead of globally: <br><img src="../help/figures/usewithoutattach-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><br><br>
+(5) Prevent namespace pollution: <br><img src="../help/figures/usewithoutattach-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><br><br>
+(6) Minimise typing - especially for infix operators <br>
+(i.e. typing <code>package::`%op%`(x, y)</code> instead of <code>x %op% y</code> is cumbersome): <br><img src="../help/figures/usewithoutattach-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><br><br>
+(7) Use multiple related packages,
+without constantly switching between package prefixes <br>
+(i.e. doing <code>packagename1::some_function1()</code>; <br><code>packagename2::some_function2()</code>; <br><code>packagename3::some_function3()</code> is chaotic and cumbersome): <br><img src="../help/figures/usewithoutattach-No(disadvantage)-red.svg" alt="[NO(DISADVANTAGE)]"><code style="white-space: pre;">⁠ ⁠</code>
+<img src="../help/figures/attaching-Yes(advantage)-darkgreen.svg" alt="[YES(ADVANTAGE)]"><br><br></p>
+<p>What 'tinycodet' attempts to do with its import system,
+is to somewhat find the best of both worlds.
+It does this by introducing the following functions: <br></p>
+
+<ul>
+<li> <p>import_as:
+Import a main package,
+and optionally its re-exports + its direct dependencies + its direct extensions,
+under a single alias.
+This essentially combines the attaching advantage of using multiple related packages (item 7 on the list),
+whilst keeping most advantages of using without attaching a package.
+</p>
+</li>
+<li> <p>import_inops:
+Expose infix operators from a package or an alias object to the current environment.
+This gains the attaching advantage of less typing (item 6 on the list),
+whilst simultaneously avoiding the disadvantage of attaching functions from a package globally (item 4 on the list).
+</p>
+</li>
+<li> <p>import_data:
+Directly return a data set from a package,
+to allow straight-forward assignment.
+</p>
+</li>
+</ul>
+<p>Furthermore, there are two miscellaneous <code>import_</code> - functions:
+import_LL and import_int. <br><br>
+The import system also includes general helper functions:
+</p>
+
+<ul>
+<li>
+<p> The x.import functions:
+helper functions specifically for the 'tinycodet' import system.
+</p>
+</li>
+<li>
+<p> The pversion_ functions:
+check mismatch between loaded package version and package version in library path.
+</p>
+</li>
+<li>
+<p> The pkgs - functions:
+general helper functions regarding packages.
+</p>
+</li>
+</ul>
+<p>See the examples section below
+to get an idea of how the 'tinycodet' import system works in practice.
+More examples can be found on the website (<a href="https://tony-aw.github.io/tinycodet/">https://tony-aw.github.io/tinycodet/</a>)
+</p>
+
+
+<h3>Details</h3>
+
+<p><b>When to Use or Not to Use the 'tinycodet' Import System</b> <br>
+The 'tinycodet' import system is helpful particularly
+for packages that have at least one of the following properties:
+</p>
+
+<ul>
+<li>
+<p> The namespace of the package(s) conflicts with other packages.
+</p>
+</li>
+<li>
+<p> The namespace of the package(s) conflicts with core R,
+or with those of recommended R packages.
+</p>
+</li>
+<li>
+<p> The package(s) have function names that are generic enough,
+such that it is not obvious which function came from which package.
+</p>
+</li>
+</ul>
+<p>See examples below. <br><br>
+There is no necessity for using the 'tinycodet' import system with every single package.
+One can safely attach the 'stringi' package, for example,
+as 'stringi' uses a unique and immediately recognisable naming scheme
+(virtually all 'stringi' functions start with "<code>stri_</code>"),
+and this naming scheme does not conflict with core R, nor with most other packages. <br><br>
+Of course, if one wishes to use a package (like
+'stringi') <b>only</b> within a specific environment,
+it becomes advantageous to still import the package using the 'tinycodet' import system.
+In that case the import_LL function would be most applicable. <br><br><br><b>Some Additional Comments on the 'tinycodet' Import System</b> <br></p>
+
+<ul>
+<li>
+<p> (S3) Methods will automatically be registered.
+</p>
+</li>
+<li>
+<p> Pronouns, such as the <code>.data</code> and <code>.env</code> pronouns
+from the 'rlang' package, will work without any prefixes required.
+</p>
+</li>
+<li>
+<p> All functions imported by the
+import_as, import_inops, or import_LL functions
+have a "package" attribute,
+so you will always know which function came from which package.
+</p>
+</li>
+</ul>
+<h3>See Also</h3>
+
+<p>tinycodet_help
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+all(c("dplyr", "powerjoin", "magrittr") %installed in% .libPaths())
+
+
+
+
+# NO packages are being attached in any of the following code
+
+# import 'dplyr' + its re-exports + extension 'powerjoin', under alias "dpr.":
+import_as(
+  ~ dpr., "dplyr", re_exports = TRUE, extensions = "powerjoin"
+)
+
+# exposing infix operators from 'magrrittr' to current environment:
+import_inops("magrittr")
+
+# directly assigning dplyr's "starwars" dataset to object "d":
+d &lt;- import_data("dplyr", "starwars")
+
+# See it in Action:
+d %&gt;% dpr.$filter(species == "Droid") %&gt;%
+  dpr.$select(name, dpr.$ends_with("color"))
+
+male_penguins &lt;- dpr.$tribble(
+  ~name,    ~species,     ~island, ~flipper_length_mm, ~body_mass_g,
+  "Giordan",    "Gentoo",    "Biscoe",               222L,        5250L,
+  "Lynden",    "Adelie", "Torgersen",               190L,        3900L,
+  "Reiner",    "Adelie",     "Dream",               185L,        3650L
+)
+
+female_penguins &lt;- dpr.$tribble(
+  ~name,    ~species,  ~island, ~flipper_length_mm, ~body_mass_g,
+  "Alonda",    "Gentoo", "Biscoe",               211,        4500L,
+  "Ola",    "Adelie",  "Dream",               190,        3600L,
+  "Mishayla",    "Gentoo", "Biscoe",               215,        4750L,
+)
+dpr.$check_specs()
+
+dpr.$power_inner_join(
+  male_penguins[c("species", "island")],
+  female_penguins[c("species", "island")]
+)
+
+mypaste &lt;- function(x, y) {
+  import_LL("stringi", selection = "stri_c")
+  stringi::stri_c(x, y)
+}
+mypaste("hello ", "world")
+
+
+
+</code></pre>
+
+
+</div>

@@ -1,0 +1,109 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>tw_write_search_to_cache</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Writes search to cache</h2>
+
+<h3>Description</h3>
+
+<p>Writes search to cache. Typically used internally, but exported to enable custom caching solutions.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">tw_write_search_to_cache(
+  search_df,
+  type = "item",
+  language = tidywikidatar::tw_get_language(),
+  response_language = tidywikidatar::tw_get_language(),
+  cache = NULL,
+  overwrite_cache = FALSE,
+  cache_connection = NULL,
+  disconnect_db = TRUE
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>search_df</code></td>
+<td>
+<p>A data frame with four columns typically generated with <code>tw_search(include_search = TRUE)</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>type</code></td>
+<td>
+<p>Defaults to "item". Either "item" or "property".</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>language</code></td>
+<td>
+<p>Language to be used for the search. Can be set once per session with <code>tw_set_language()</code>. If not set, defaults to "en". For a full list, see https://www.wikidata.org/wiki/Help:Wikimedia_language_codes/lists/all</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>response_language</code></td>
+<td>
+<p>Language to be used for the returned labels and descriptions. Corresponds to the <code>uselang</code> parameter of the MediaWiki API: https://www.wikidata.org/w/api.php?action=help&amp;modules=wbsearchentities. Can be set once per session with <code>tw_set_language()</code>. If not set, defaults to "en". For a full list, see https://www.wikidata.org/wiki/Help:Wikimedia_language_codes/lists/all</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache</code></td>
+<td>
+<p>Defaults to NULL. If given, it should be given either TRUE or FALSE. Typically set with <code>tw_enable_cache()</code> or <code>tw_disable_cache()</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>overwrite_cache</code></td>
+<td>
+<p>Defaults to FALSE. If TRUE, overwrites cache.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>cache_connection</code></td>
+<td>
+<p>Defaults to NULL. If NULL, and caching is enabled, <code>tidywikidatar</code> will use a local sqlite database. A custom connection to other databases can be given (see vignette <code>caching</code> for details).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>disconnect_db</code></td>
+<td>
+<p>Defaults to TRUE. If FALSE, leaves the connection to cache open.</p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>Nothing, used for its side effects.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+tw_set_cache_folder(path = fs::path(tempdir(), paste(sample(letters, 24), collapse = "")))
+tw_create_cache_folder(ask = FALSE)
+tw_disable_cache()
+
+search_from_api &lt;- tw_search(search = "Sylvia Pankhurst", include_search = TRUE)
+
+search_from_cache &lt;- tw_get_cached_search("Sylvia Pankhurst")
+
+nrow(search_from_cache) == 0 # expect TRUE, as nothing has yet been stored in cache
+
+tw_write_search_to_cache(search_df = search_from_api)
+
+search_from_cache &lt;- tw_get_cached_search("Sylvia Pankhurst")
+
+search_from_cache
+</code></pre>
+
+
+</div>

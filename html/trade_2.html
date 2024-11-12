@@ -1,0 +1,232 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>bargaining_tariff</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Tariff Simulation With A Nash Bargaining Game</h2>
+
+<h3>Description</h3>
+
+<p>Simulate the effect of tariffs when firms play a Nash Bargaining game and consumer demand is Logit.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">bargaining_tariff(
+  demand = c("logit"),
+  prices,
+  shares,
+  margins,
+  owner = NULL,
+  mktElast = NA_real_,
+  insideSize = NA_real_,
+  diversions,
+  tariffPre = rep(0, length(shares)),
+  tariffPost = rep(0, length(shares)),
+  bargpowerPre = rep(0.5, length(prices)),
+  bargpowerPost = bargpowerPre,
+  normIndex = ifelse(isTRUE(all.equal(sum(shares), 1, check.names = FALSE)), 1, NA),
+  priceOutside = ifelse(demand == "logit", 0, 1),
+  priceStart,
+  control.slopes,
+  control.equ,
+  labels = paste("Prod", 1:length(shares), sep = ""),
+  ...
+)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>demand</code></td>
+<td>
+<p>A character vector indicating which demand system to use. Currently allows logit (default).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>prices</code></td>
+<td>
+<p>A length k vector product prices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>shares</code></td>
+<td>
+<p>A length k vector of product shares. Values must be between 0 and 1.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>margins</code></td>
+<td>
+<p>A length k vector of product margins. All margins must be in <strong>levels</strong> (not w.r.t to price), or NA.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>owner</code></td>
+<td>
+<p>EITHER a vector of length k whose values indicate which firm produced a product before the tariff OR a k x k matrix of pre-merger ownership shares.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mktElast</code></td>
+<td>
+<p>A negative number equal to the industry pre-merger price elasticity. Default is NA .</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>insideSize</code></td>
+<td>
+<p>An integer equal to total pre-merger units sold.
+If shares sum to one, this also equals the size of the market.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>diversions</code></td>
+<td>
+<p>A k x k matrix of diversion ratios with diagonal elements equal to -1. Default is missing, in which case diversion according to revenue share is assumed.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tariffPre</code></td>
+<td>
+<p>A vector of length k where each element equals the <strong>current</strong> <em>ad valorem</em> tariff
+(expressed as a proportion of the consumer price) imposed on each product. Default is 0, which assumes no tariff.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tariffPost</code></td>
+<td>
+<p>A vector of length k where each element equals the <strong>new</strong>  <em>ad valorem</em> tariff
+(expressed as a proportion of the consumer price) imposed on each product. Default is 0, which assumes no tariff.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bargpowerPre</code></td>
+<td>
+<p>A length k vector of pre-tariff bargaining power parameters. Values
+must be between 0 (sellers have the power) and 1 (buyers the power). NA values are allowed,
+though must be calibrated from additional margin and share data. Default is 0.5.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>bargpowerPost</code></td>
+<td>
+<p>A length k vector of post-tariff bargaining power parameters. Values
+must be between 0 (sellers have the power) and 1 (buyers the power). NA values are allowed,
+though must be calibrated from additional margin and share data. Default is ‘bargpowerPre’.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>normIndex</code></td>
+<td>
+<p>An integer equalling the index (position) of the
+inside product whose mean valuation will be normalized to 1. Default
+is 1, unless ‘shares’ sum to less than 1, in which case the default is
+NA and an outside good is assumed to exist.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priceOutside</code></td>
+<td>
+<p>price of the outside good. Equals 0 for logit and 1 for ces. Not used for aids.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>priceStart</code></td>
+<td>
+<p>For aids, a vector of length k who elements equal to an initial guess of the proportional change in price caused by the merger.
+The default is to draw k random elements from a [0,1] uniform distribution. For ces and logit, the default is prices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control.slopes</code></td>
+<td>
+<p>A list of  <code>optim</code>  control parameters passed to the calibration routine optimizer (typically the <code>calcSlopes</code> method).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>control.equ</code></td>
+<td>
+<p>A list of  <code>BBsolve</code> control parameters passed to the non-linear equation solver (typically the <code>calcPrices</code> method).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>labels</code></td>
+<td>
+<p>A k-length vector of labels.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>Additional options to feed to the <code>BBsolve</code> optimizer used to solve for equilibrium prices.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Let k denote the number of products produced by all firms.
+Using price, and quantity, information for all products
+in each market, as well as margin information for at least
+one products in each market, <code>bargaining_tariff</code> is able to
+recover the slopes and intercepts of a Logit  demand
+system. These parameters are then used to simulate the price
+effects of an <em>ad valorem</em> tariff under the assumption that the firms are playing a
+Nash Bargaining game.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>bargaining_tariff</code> returns an instance of class <code>TariffBargainingLogit</code>
+</p>
+
+
+<h3>References</h3>
+
+<p>Simon P. Anderson, Andre de Palma, Brent Kreider, Tax incidence in differentiated product oligopoly,
+Journal of Public Economics, Volume 81, Issue 2, 2001, Pages 173-192.
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>bertrand_tariff</code> to simulate the effects of a tariff under a Bertrand pricing game and <code>monopolistic_competition_tariff</code> to simulate the effects of a tariff under monopolistic competition.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+## Calibration and simulation results from a 10% tariff on non-US beers "OTHER-LITE"
+## and "OTHER-REG"
+## Source: Epstein/Rubenfeld 2004, pg 80
+
+prodNames &lt;- c("BUD","OLD STYLE","MILLER","MILLER-LITE","OTHER-LITE","OTHER-REG")
+owner &lt;-c("BUD","OLD STYLE","MILLER","MILLER","OTHER-LITE","OTHER-REG")
+price    &lt;- c(.0441,.0328,.0409,.0396,.0387,.0497)
+shares   &lt;- c(.066,.172,.253,.187,.099,.223)
+margins &lt;- c(.3830,.5515,.5421,.5557,.4453,.3769) # margins in terms of price
+tariff &lt;- c(0,0,0,0,.1,.1)
+
+names(price) &lt;-
+ names(shares) &lt;-
+ names(margins) &lt;-
+ prodNames
+
+
+result.barg &lt;- bargaining_tariff(demand = "logit",prices=price,shares=shares,
+                                margins = margins,owner=owner,
+                                 tariffPost = tariff, labels=prodNames)
+
+print(result.barg)           # return predicted price change
+summary(result.barg)         # summarize merger simulation
+
+</code></pre>
+
+
+</div>

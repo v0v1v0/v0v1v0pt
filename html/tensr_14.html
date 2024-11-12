@@ -1,0 +1,210 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>holq</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Calculate the incredible higher-order LQ decomposition (HOLQ).</h2>
+
+<h3>Description</h3>
+
+<p>This function calculates a generalization of the LQ decomposition to tensors.
+This decomposition has a close connection to likelihood inference in
+Kronecker structured covariande models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">holq(X, tol = 10^-9, itermax = 1000, mode_rep = NULL, mode_diag = NULL,
+  mode_ldu = NULL, print_diff = TRUE, start_vals = "identity",
+  use_sig = TRUE)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>X</code></td>
+<td>
+<p>An array of numerics.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>tol</code></td>
+<td>
+<p>A numeric. The maximum difference in frobenius norm between two
+successive core arrays before stopping. Or maximum difference of the ratio
+of sigs from 1 before stopping (which depends on the value of
+<code>use_sig</code>).</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>itermax</code></td>
+<td>
+<p>An integer. The maximum number of iterations of the LQ
+decomposition to do before stopping.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_rep</code></td>
+<td>
+<p>A vector of integers. The optional mode(s) to be considered
+identity matrices.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_diag</code></td>
+<td>
+<p>A vector of integers. The optional mode(s) to be considered
+as independent but heteroscedastic.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>mode_ldu</code></td>
+<td>
+<p>A vector of integers. The optional modes(s) to be considered
+as having unit diagonal.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>print_diff</code></td>
+<td>
+<p>A logical. Should the updates be printed to the screen each
+iteration?</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>start_vals</code></td>
+<td>
+<p>Determines how to start the optimization algorithm. Either
+'identity' (default), or 'residuals', which results in using the cholesky
+square roots of the sample covariance matrices along each mode scaled to
+have unit determinant. You can also use your own start values.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>use_sig</code></td>
+<td>
+<p>A logical. What stopping criterion should we use? Frobenius
+norm of difference of cores (FALSE) or absolute value of difference of
+ratio of <code>sig</code> from 1 (TRUE).</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>Given an array <code>X</code>, the default version of this function will calculate
+(1) <code>L</code> a list of lower triangular matricies with positive diagonal
+elements and unit determinant, <code>Z</code> an array of the same dimensions as
+<code>X</code> that has special orthogonal properties, and (3) <code>sig</code> a numeric
+such that <code>X</code> is the same as <code>sig * atrans(Z,L)</code> up to numeric
+precision.
+</p>
+<p>This output (1) can be considered a generalization of the LQ decomposition to
+tensors, (2) solves an optimization problem which the matrix LQ decomposition
+solves, and (3) has a special connection to likelihood inference in the array
+normal model.
+</p>
+<p>There are options to constrain the matrices in <code>L</code> to either be
+diagonal, lower triangular with unit diagonal, or the identity matrix. Each
+of these correspond to submodels in Kronecker structured covariance models.
+The core array corresponding to each of these options has different
+properities (see <a href="https://doi.org/10.1016/j.laa.2016.04.033">Gerard and Hoff
+(2016)</a>). These more constrained tensor decompositions are called HOLQ
+juniors.
+</p>
+<p>The MLE of the <code class="reqn">i</code>th component covariance matrix under <em>any</em>
+elliptically contoured Kronecker structured covariance model is given by
+<code>L[[i]] %*% t(L[[i]])</code>. The MLE for the total variation pamarameter
+will be different depending on the distribution of the array, but for the
+array normal it is <code>sig ^ 2 / prod(p)</code> (the "variance" form for the
+total variation parameter).
+</p>
+<p>The likelihood ratio test statistic depends only on <code>sig</code> and can be
+implemented in <code>lrt_stat</code>.
+</p>
+<p>The algorithm used to fit the HOLQ iteratively repeats the LQ decomposition
+along each mode.
+</p>
+<p>For more details on the incredible HOLQ, see
+<a href="https://doi.org/10.1016/j.laa.2016.04.033">Gerard and Hoff (2016)</a>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>Z</code> The core array with scaled all-orthonormality property.
+</p>
+<p><code>A</code> A list of matrices.
+</p>
+<p><code>sig</code> A numeric. The total variation parameter. This is the "standard
+deviation" form.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>David Gerard.
+</p>
+
+
+<h3>References</h3>
+
+<p>Gerard, D., &amp; Hoff, P. (2016). A higher-order LQ
+decomposition for separable covariance models.
+<em>Linear Algebra and its Applications</em>, 505, 57-84.
+<a href="https://doi.org/10.1016/j.laa.2016.04.033">https://doi.org/10.1016/j.laa.2016.04.033</a>
+<a href="http://arxiv.org/pdf/1410.1094v1.pdf">http://arxiv.org/pdf/1410.1094v1.pdf</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>array_bic_aic</code> for using the output of <code>holq</code> to
+calculate AIC and BIC,
+</p>
+<p><code>get_isvd</code> for using the output of <code>holq</code> to calculate a
+tensor generalization of the singular value decomposition.
+</p>
+<p><code>lq</code> for the matrix LQ decomposition.
+</p>
+<p><code>lrt_stat</code> for using the output of <code>holq</code> to calculate
+likelihood ratio test statistics.
+</p>
+<p><code>mle_from_holq</code> for using the output of <code>holq</code> to
+calculate the maximum likelihood estimates of the component covariance
+matrices under the array normal model.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">#Genrate random data.
+p &lt;- c(2, 3, 4)
+X &lt;- array(stats::rnorm(prod(p)), dim = p)
+
+#Calculate HOLQ with unit diagonal on 2nd mode,
+#  and diagonal along 3rd mode.
+holq_x &lt;- holq(X, mode_ldu = 2, mode_diag = 3)
+Z &lt;- holq_x$Z
+A &lt;- holq_x$A
+sig &lt;- holq_x$sig
+
+#Reconstruct X
+trim(X - sig * atrans(Z, A), 10^-5)
+
+#Properties of core
+#First mode has orthonormal rows.
+trim(mat(Z, 1) %*% t(mat(Z, 1)), 10^-5)
+
+#Second mode has orthogonal rows.
+trim(mat(Z, 2) %*% t(mat(Z, 2)), 10^-5)
+
+#Third mode has unit diagonal (up to scale).
+diag(mat(Z, 3) %*% t(mat(Z, 3)))
+</code></pre>
+
+
+</div>

@@ -1,0 +1,294 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>TcGSA.LR</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Computing the Likelihood Ratios for the Gene Sets under Scrutiny</h2>
+
+<h3>Description</h3>
+
+<p>This function computes the Likelihood Ratios for the gene sets under
+scrutiny, as well as estimations of genes dynamics inside those gene sets
+through mixed models.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">TcGSA.LR(
+  expr,
+  gmt,
+  design,
+  subject_name = "Patient_ID",
+  time_name = "TimePoint",
+  crossedRandom = FALSE,
+  covariates_fixed = "",
+  time_covariates = "",
+  time_func = "linear",
+  group_name = "",
+  separateSubjects = FALSE,
+  minGSsize = 10,
+  maxGSsize = 500
+)
+
+## S3 method for class 'TcGSA'
+print(x, ...)
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>expr</code></td>
+<td>
+<p>a matrix or dataframe of gene expression.  Its dimension are
+<code class="reqn">n</code>x<code class="reqn">p</code>, with the <code class="reqn">p</code> samples in column and the <code class="reqn">n</code> genes in
+row.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>gmt</code></td>
+<td>
+<p>a <b>gmt</b> object containing the gene sets definition.  See
+<code>GSA.read.gmt</code> and definition on 
+<a href="https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats">www.software.broadinstitute.org</a>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>design</code></td>
+<td>
+<p>a matrix or dataframe containing the experimental variables that used in the model,
+namely <code>subject_name</code>, <code>time_name</code>, and <code>covariates_fixed</code> 
+and <code>time_covariates</code> if applicable.  Its dimension are <code class="reqn">p</code>x<code class="reqn">m</code> 
+and its row are is in the same order as the columns of <code>expr</code>.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>subject_name</code></td>
+<td>
+<p>the name of the factor variable from <code>design</code> that contains the information on 
+the repetition units used in the mixed model, such as the patient identifiers for instance.  
+Default is <code>'Patient_ID'</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_name</code></td>
+<td>
+<p>the name of a numeric variable from <code>design</code> that contains 
+the information on the time replicates (the time points at which gene 
+expression was measured).  Default is <code>'TimePoint'</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>crossedRandom</code></td>
+<td>
+<p>logical flag indicating whether the random effects of the subjects and of the time points
+should be modeled as one crossed random effect or as two separated random effects.  
+Default is <code>FALSE</code>. See details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>covariates_fixed</code></td>
+<td>
+<p>a character vector with the names of numeric or factor variables from the <code>design</code> 
+matrix that should appear as fixed effects in the model.  See details.
+Default is <code>""</code>, which corresponds to no covariates in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_covariates</code></td>
+<td>
+<p>a character vector with the names of numeric or factor variables from the <code>design</code> 
+matrix that should appear as fixed effects interaction with the <code>time_name</code> 
+variable in the model.  See details.  Default is <code>""</code>, which corresponds 
+to no covariates in the model.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>time_func</code></td>
+<td>
+<p>the form of the time trend. Can be either one of <code>"linear"</code>,
+<code>"cubic"</code>, <code>"splines"</code> or specified by the user, or the column name of 
+a factor variable from <code>design</code>. If specified by the user, 
+it must be as an expression using only names of variables from the <code>design</code> matrix 
+with only the three following operators: <code>+</code>, <code>*</code>, <code>/</code> . 
+The <code>"splines"</code> form corresponds to the natural cubic B-splines 
+(see also <code>ns</code>).  If there are only a few timepoints, 
+a <code>"linear"</code> form should be sufficient. Otherwise, the <code>"cubic"</code> form is 
+more parsimonious than the <code>"splines"</code> form, and should be sufficiently flexible.
+If the column name of a factor variable from <code>design</code> is supplied, 
+then time is considered as discrete in the analysis.
+If the user specify a formula using column names from design, both factor and numeric
+variables can be used.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>group_name</code></td>
+<td>
+<p>in the case of several treatment groups, the name of a factor variable 
+from the <code>design</code> matrix.  It indicates to which treatment group each sample
+belongs to.  Default is <code>""</code>, which means that there is only one 
+treatment group.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>separateSubjects</code></td>
+<td>
+<p>logical flag indicating that the analysis identifies
+gene sets that discriminates patients rather than gene sets than have a
+significant trend over time.  Default is <code>FALSE</code>.  See Details.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>minGSsize</code></td>
+<td>
+<p>the minimum number of genes in a gene set.  If there are
+less genes than this number in one of the gene sets under scrutiny, the
+Likelihood Ratio of this gene set is not computed (the mixed model are not
+fitted). Default is <code>10</code> genes as the minimum.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxGSsize</code></td>
+<td>
+<p>the maximum number of genes in a gene set.  If there are
+more genes than this number in one of the gene sets under scrutiny, the
+Likelihood Ratio of this gene set is not computed (the mixed model are not
+fitted).  This is to avoid very long computation times.  Default is
+<code>500</code> genes as the maximum.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>an object of class '<code>TcGSA</code>'.</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>further arguments passed to or from other methods.</p>
+</td>
+</tr>
+</table>
+<h3>Details</h3>
+
+<p>This Time-course Gene Set Analysis aims at identifying gene sets that are not
+stable over time, either homogeneously or heterogeneously (see <em>Hejblum
+et al, 2012</em>)in terms of their probes.  And when the argument
+<code>separateSubjects</code> is <code>TRUE</code>, instead of identifying gene sets that
+have a significant trend over time, <em>TcGSA</em> identifies gene sets that
+have significantly different trends over time depending on <code>Subjects</code>.
+</p>
+
+
+<h3>Value</h3>
+
+<p><code>TcGSA.LR</code> returns a <code>tcgsa</code> object, which is a list with
+the 5 following elements:
+</p>
+
+<ul>
+<li>
+<p> fit a data frame that contains the 3 following variables:
+</p>
+ 
+<ul>
+<li> <p><code>LR</code>: the likelihood ratio between the model under the
+null hypothesis and the model under the alternative hypothesis.  
+</p>
+</li>
+<li>
+<p><code>CVG_H0</code>: convergence status of the model under the null hypothesis.
+</p>
+</li>
+<li> <p><code>CVG_H1</code>: convergence status of the model under the alternative
+hypothesis.
+</p>
+</li>
+</ul>
+</li>
+<li> <p><code>time_func</code>: a character string passing along the value of the
+<code>time_func</code> argument used in the call.
+</p>
+</li>
+<li> <p><code>GeneSets_gmt</code>: a <code>gmt</code> object passing along the value of the
+<code>gmt</code> argument used in the call.
+</p>
+</li>
+<li> <p><code>group.var</code>: a factor passing along the <code>group_name</code> variable
+from the <code>design</code> matrix.
+</p>
+</li>
+<li> <p><code>separateSubjects</code>: a logical flag passing along the value of the
+<code>separateSubjects</code> argument used in the call.
+</p>
+</li>
+<li> <p><code>Estimations</code>: a list of 3 dimensions arrays.  Each element of the
+list (i.e. each array) corresponds to the estimations of gene expression
+dynamics for each of the gene sets under scrutiny (obtained from mixed
+models).  The first dimension of those arrays is the genes included in the
+concerned gene set, the second dimension is the <code>Patient_ID</code>, and the
+third dimension is the <code>TimePoint</code>.  The values inside those arrays are
+estimated gene expressions.
+</p>
+</li>
+<li> <p><code>time_DF</code>: the degree of freedom of the natural splines functions
+</p>
+</li>
+</ul>
+<h3>Author(s)</h3>
+
+<p>Boris P. Hejblum
+</p>
+
+
+<h3>References</h3>
+
+<p>Hejblum BP, Skinner J, Thiebaut R, (2015) 
+Time-Course Gene Set Analysis for Longitudinal Gene Expression Data. 
+<em>PLOS Comput. Biol.</em> 11(6):e1004310.
+doi: 10.1371/journal.pcbi.1004310
+</p>
+
+
+<h3>See Also</h3>
+
+<p><code>summary.TcGSA</code>, <code>plot.TcGSA</code>, 
+and <code>TcGSA.LR.parallel</code> for an implementation using 
+parallel computing
+</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R">
+if(interactive()){
+data(data_simu_TcGSA)
+
+tcgsa_sim_1grp &lt;- TcGSA.LR(expr=expr_1grp, gmt=gmt_sim, design=design, 
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE)
+tcgsa_sim_1grp
+summary(tcgsa_sim_1grp)
+
+plot(x=tcgsa_sim_1grp, expr=expr_1grp, 
+    Subject_ID=design$Patient_ID, TimePoint=design$TimePoint,
+    baseline=1, 
+    B=100,
+    time_unit="H"
+    )
+       
+tcgsa_sim_2grp &lt;- TcGSA.LR(expr=expr_2grp, gmt=gmt_sim, design=design,
+                          subject_name="Patient_ID", time_name="TimePoint",
+                          time_func="linear", crossedRandom=FALSE, 
+                          group_name="group.var")
+tcgsa_sim_2grp
+
+}
+</code></pre>
+
+
+</div>

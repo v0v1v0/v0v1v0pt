@@ -1,0 +1,101 @@
+<div class="container">
+
+<table style="width: 100%;"><tr>
+<td>gridDistance</td>
+<td style="text-align: right;">R Documentation</td>
+</tr></table>
+<h2>Distance on a grid</h2>
+
+<h3>Description</h3>
+
+<p>The function calculates the distance to cells of a SpatRaster when the path has to go through the centers of the eight neighboring raster cells.
+</p>
+<p>The default distance (when <code>scale=1</code>, is meters if the coordinate reference system (CRS) of the SpatRaster is longitude/latitude (<code>+proj=longlat</code>) and in the linear units of the CRS (typically meters) in other cases. 
+</p>
+<p>Distances are computed by summing local distances between cells, which are connected with their neighbors in 8 directions.
+</p>
+<p>The shortest distance to the cells with the <code>target</code> value is computed for all cells that are not <code>NA</code>. Cells that are <code>NA</code> cannot be traversed and are ignored, unless the target itself is <code>NA</code>, in which case the distance to the nearest cell that is not <code>NA</code> is computed for all cells that are <code>NA</code>. 
+</p>
+
+
+<h3>Usage</h3>
+
+<pre><code class="language-R">## S4 method for signature 'SpatRaster'
+gridDist(x, target=0, scale=1, maxiter=50, filename="", ...) 
+</code></pre>
+
+
+<h3>Arguments</h3>
+
+<table>
+<tr style="vertical-align: top;">
+<td><code>x</code></td>
+<td>
+<p>SpatRaster</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>target</code></td>
+<td>
+<p>numeric. value of the target cells (where to compute distance to)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>scale</code></td>
+<td>
+<p>numeric. Scale factor. For longitude/latitude data 1 = "m" and 1000 = "km". For planar data that is also the case of the distance unit of the crs is "m"</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>maxiter</code></td>
+<td>
+<p>numeric. The maximum number of iterations. Increase this number if you get the warning that <code>costDistance</code> did not converge. Only relevant when target is not <code>NA</code></p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>filename</code></td>
+<td>
+<p>character. output filename (optional)</p>
+</td>
+</tr>
+<tr style="vertical-align: top;">
+<td><code>...</code></td>
+<td>
+<p>additional arguments as for <code>writeRaster</code></p>
+</td>
+</tr>
+</table>
+<h3>Value</h3>
+
+<p>SpatRaster</p>
+
+
+<h3>See Also</h3>
+
+<p>See <code>distance</code> for "as the crow flies" distance, and <code>costDist</code> for distance across a landscape with variable friction</p>
+
+
+<h3>Examples</h3>
+
+<pre><code class="language-R"># global lon/lat raster
+r &lt;- rast(ncol=10,nrow=10, vals=1)
+r[48] &lt;- 0
+r[66:68] &lt;- NA
+d &lt;- gridDist(r) 
+plot(d)
+
+
+# planar
+crs(r) &lt;- "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+d &lt;- gridDist(r) 
+plot(d)
+
+# distance to cells that are not NA 
+rr &lt;- classify(r, cbind(1, NA))
+dd &lt;- gridDist(rr, NA) 
+
+
+</code></pre>
+
+
+</div>
